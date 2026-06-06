@@ -18,6 +18,8 @@ type LabReport = {
   created_at: string;
 };
 
+const organOrder = ["Heart", "Lung", "Kidney", "Liver", "Brain", "Metabolic"];
+
 export default function OrganReportPage() {
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [labReport, setLabReport] = useState<LabReport | null>(null);
@@ -51,13 +53,18 @@ export default function OrganReportPage() {
       .from("organ_assessments")
       .select("organ_name, score, risk_level, notes, created_at")
       .eq("user_id", user.id)
-      .order("organ_name", { ascending: true });
+      .order("created_at", { ascending: false });
 
     if (organError) {
       setMessage("Organ database error: " + organError.message);
       setLoading(false);
       return;
     }
+
+    const sortedOrganData = (organData || []).sort(
+      (a, b) =>
+        organOrder.indexOf(a.organ_name) - organOrder.indexOf(b.organ_name)
+    );
 
     const { data: labData, error: labError } = await supabase
       .from("lab_reports")
@@ -73,7 +80,7 @@ export default function OrganReportPage() {
       return;
     }
 
-    setAssessments(organData || []);
+    setAssessments(sortedOrganData);
     setLabReport(labData || null);
     setLoading(false);
   }
@@ -85,7 +92,9 @@ export default function OrganReportPage() {
 
   const overallScore =
     allScores.length > 0
-      ? Math.round(allScores.reduce((sum, score) => sum + score, 0) / allScores.length)
+      ? Math.round(
+          allScores.reduce((sum, score) => sum + score, 0) / allScores.length
+        )
       : 0;
 
   function getStatus(score: number) {
@@ -235,7 +244,9 @@ export default function OrganReportPage() {
       );
 
       y += 12;
+
       pdf.line(margin, y, pageWidth - margin, y);
+
       y += 10;
     }
 
