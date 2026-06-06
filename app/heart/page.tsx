@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { supabase } from "../../lib/supabase";
 
 export default function HeartPage() {
   const [age, setAge] = useState("");
@@ -8,6 +9,7 @@ export default function HeartPage() {
   const [cholesterol, setCholesterol] = useState("");
   const [diabetes, setDiabetes] = useState("No");
   const [smoking, setSmoking] = useState("No");
+  const [saveMessage, setSaveMessage] = useState("");
 
   const [result, setResult] = useState<null | {
     score: number;
@@ -15,7 +17,33 @@ export default function HeartPage() {
     message: string;
   }>(null);
 
-  function calculateRisk() {
+  async function saveAssessment(score: number, level: string, message: string) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      setSaveMessage("Result calculated locally. Login to save it to your profile.");
+      return;
+    }
+
+    const { error } = await supabase.from("organ_assessments").insert({
+      user_id: user.id,
+      organ_name: "Heart",
+      score,
+      risk_level: level,
+      notes: message,
+    });
+
+    if (error) {
+      setSaveMessage("Could not save result: " + error.message);
+      return;
+    }
+
+    setSaveMessage("Heart assessment saved to your profile.");
+  }
+
+  async function calculateRisk() {
     let riskPoints = 0;
 
     const ageNumber = Number(age);
@@ -62,6 +90,8 @@ export default function HeartPage() {
 
     localStorage.setItem("heartScore", String(score));
     localStorage.setItem("heartLevel", level);
+
+    await saveAssessment(score, level, message);
   }
 
   return (
@@ -145,6 +175,8 @@ export default function HeartPage() {
               <h2>{result.score}/100</h2>
               <h3>{result.level}</h3>
               <p>{result.message}</p>
+
+              {saveMessage && <p>{saveMessage}</p>}
 
               <a href="/organ-report">
                 <button className="secondaryBtn">View Organ Report</button>
