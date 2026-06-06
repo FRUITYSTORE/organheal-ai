@@ -19,12 +19,10 @@ export default function HeartPage() {
 
   async function saveAssessment(score: number, level: string, message: string) {
     setSaveMessage("Saving heart assessment...");
-    console.log("Saving heart assessment started");
 
     const { data, error: userError } = await supabase.auth.getUser();
 
     if (userError) {
-      console.log("Auth error:", userError);
       setSaveMessage("Auth error: " + userError.message);
       return;
     }
@@ -32,12 +30,11 @@ export default function HeartPage() {
     const user = data.user;
 
     if (!user) {
-      console.log("No user logged in");
       setSaveMessage("Result calculated locally. Please login to save it.");
       return;
     }
 
-    const { data: updatedData, error } = await supabase
+    const { error: upsertError } = await supabase
       .from("organ_assessments")
       .upsert(
         {
@@ -50,14 +47,23 @@ export default function HeartPage() {
         {
           onConflict: "user_id,organ_name",
         }
-      )
-      .select();
+      );
 
-    console.log("Heart upsert data:", updatedData);
-    console.log("Heart upsert error:", error);
+    if (upsertError) {
+      setSaveMessage("Database error: " + upsertError.message);
+      return;
+    }
 
-    if (error) {
-      setSaveMessage("Database error: " + error.message);
+    const { error: historyError } = await supabase.from("health_history").insert({
+      user_id: user.id,
+      module_name: "Heart",
+      score: score,
+      status: level,
+      notes: message,
+    });
+
+    if (historyError) {
+      setSaveMessage("History error: " + historyError.message);
       return;
     }
 
