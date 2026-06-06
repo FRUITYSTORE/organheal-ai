@@ -130,7 +130,41 @@ export default function OrganReportPage() {
   function resetPDFColor(pdf: jsPDF) {
     pdf.setTextColor(0, 0, 0);
   }
+function generateExecutiveSummary() {
+  if (assessments.length === 0) {
+    return "No assessment data available.";
+  }
 
+  const strongest = [...assessments].sort(
+    (a, b) => b.score - a.score
+  )[0];
+
+  const weakest = [...assessments].sort(
+    (a, b) => a.score - b.score
+  )[0];
+
+  return `
+Overall Health Intelligence Score: ${overallScore}/100.
+
+Your strongest health area is ${strongest.organ_name}
+with a score of ${strongest.score}/100.
+
+The area requiring the most attention is
+${weakest.organ_name} with a score of
+${weakest.score}/100.
+
+${
+  labReport
+    ? `Your latest laboratory analysis score is ${labReport.score}/100.`
+    : ""
+}
+
+This report is educational and intended to help
+identify areas that may benefit from lifestyle
+improvement, monitoring, or professional medical
+discussion.
+`;
+}
   function formatValue(value: number | null) {
     if (value === null || value === undefined) return "Not available";
     return String(value);
@@ -176,13 +210,35 @@ export default function OrganReportPage() {
 
     y += 10;
 
-    pdf.line(margin, y, pageWidth - margin, y);
+pdf.line(margin, y, pageWidth - margin, y);
 
-    y += 14;
+y += 12;
 
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(16);
-    pdf.text("Overall Health Intelligence Score", margin, y);
+pdf.setFont("helvetica", "bold");
+pdf.setFontSize(15);
+pdf.text("AI Executive Summary", margin, y);
+
+y += 10;
+
+pdf.setFont("helvetica", "normal");
+pdf.setFontSize(10);
+
+const summaryLines = pdf.splitTextToSize(
+  generateExecutiveSummary(),
+  pageWidth - margin * 2
+);
+
+pdf.text(summaryLines, margin, y);
+
+y += summaryLines.length * 5 + 10;
+
+pdf.line(margin, y, pageWidth - margin, y);
+
+y += 12;
+
+pdf.setFont("helvetica", "bold");
+pdf.setFontSize(15);
+pdf.text("Organ Assessment Summary", margin, y);
 
     y += 12;
 
@@ -214,123 +270,65 @@ export default function OrganReportPage() {
 
     y += 10;
 
-    assessments.forEach((item, index) => {
-      if (y > pageHeight - 50) {
-        pdf.addPage();
-        y = 20;
-      }
+pdf.line(margin, y, pageWidth - margin, y);
 
-      pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(13);
-      pdf.text(`${index + 1}. ${item.organ_name}`, margin, y);
+y += 14;
 
-      y += 7;
+pdf.setFont("helvetica", "bold");
+pdf.setFontSize(16);
+pdf.text("Overall Health Intelligence Score", margin, y);
 
-      pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(11);
+y += 12;
 
-      setStatusColor(pdf, item.score);
-      pdf.text(`Score: ${item.score}/100`, margin + 5, y);
-      resetPDFColor(pdf);
+pdf.setFontSize(28);
+setStatusColor(pdf, overallScore);
+pdf.text(`${overallScore}/100`, margin, y);
+resetPDFColor(pdf);
 
-      y += 6;
+y += 9;
 
-      pdf.text(`Status: ${getStatus(item.score)}`, margin + 5, y);
+pdf.setFont("helvetica", "normal");
+pdf.setFontSize(13);
+pdf.text(`Status: ${getStatus(overallScore)}`, margin, y);
 
-      y += 6;
+y += 8;
 
-      const noteLines = pdf.splitTextToSize(
-        `Notes: ${item.notes}`,
-        pageWidth - margin * 2 - 5
-      );
+pdf.setFontSize(10);
+pdf.text(`Generated on: ${new Date().toLocaleString()}`, margin, y);
 
-      pdf.text(noteLines, margin + 5, y);
+y += 14;
 
-      y += noteLines.length * 5 + 4;
+pdf.line(margin, y, pageWidth - margin, y);
 
-      pdf.setFontSize(9);
-      pdf.text(
-        `Last saved: ${new Date(item.created_at).toLocaleString()}`,
-        margin + 5,
-        y
-      );
+y += 12;
 
-      y += 10;
+pdf.setFont("helvetica", "bold");
+pdf.setFontSize(15);
+pdf.text("AI Executive Summary", margin, y);
 
-      pdf.line(margin, y, pageWidth - margin, y);
+y += 10;
 
-      y += 9;
-    });
+pdf.setFont("helvetica", "normal");
+pdf.setFontSize(10);
 
-    if (labReport) {
-      if (y > pageHeight - 85) {
-        pdf.addPage();
-        y = 20;
-      }
+const summaryLines = pdf.splitTextToSize(
+  generateExecutiveSummary(),
+  pageWidth - margin * 2
+);
 
-      pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(15);
-      pdf.text("Lab Analyzer Summary", margin, y);
+pdf.text(summaryLines, margin, y);
 
-      y += 10;
+y += summaryLines.length * 5 + 10;
 
-      pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(11);
+pdf.line(margin, y, pageWidth - margin, y);
 
-      setStatusColor(pdf, labReport.score);
-      pdf.text(`Lab Score: ${labReport.score}/100`, margin + 5, y);
-      resetPDFColor(pdf);
+y += 12;
 
-      y += 6;
+pdf.setFont("helvetica", "bold");
+pdf.setFontSize(15);
+pdf.text("Organ Assessment Summary", margin, y);
 
-      pdf.text(`Status: ${getStatus(labReport.score)}`, margin + 5, y);
-
-      y += 9;
-
-      pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(12);
-      pdf.text("Lab Values", margin + 5, y);
-
-      y += 7;
-
-      pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(10);
-
-      const labValues = [
-        `Total Cholesterol: ${formatValue(labReport.total_cholesterol)}`,
-        `LDL: ${formatValue(labReport.ldl)}`,
-        `HDL: ${formatValue(labReport.hdl)}`,
-        `Triglycerides: ${formatValue(labReport.triglycerides)}`,
-        `HbA1c: ${formatValue(labReport.hba1c)}`,
-        `Vitamin D: ${formatValue(labReport.vitamin_d)}`,
-      ];
-
-      labValues.forEach((value) => {
-        pdf.text(value, margin + 8, y);
-        y += 6;
-      });
-
-      y += 3;
-
-      const labLines = pdf.splitTextToSize(
-        `Interpretation: ${labReport.interpretation}`,
-        pageWidth - margin * 2 - 5
-      );
-
-      pdf.text(labLines, margin + 5, y);
-
-      y += labLines.length * 5 + 4;
-
-      pdf.setFontSize(9);
-      pdf.text(
-        `Last saved: ${new Date(labReport.created_at).toLocaleString()}`,
-        margin + 5,
-        y
-      );
-
-      y += 12;
-
-      pdf.line(margin, y, pageWidth - margin, y);
+y += 10;
 
       y += 10;
     }
