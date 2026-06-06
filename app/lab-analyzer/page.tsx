@@ -1,248 +1,273 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
+import jsPDF from "jspdf";
 
-export default function LabAnalyzerPage() {
-  const [totalCholesterol, setTotalCholesterol] = useState("");
-  const [ldl, setLdl] = useState("");
-  const [hdl, setHdl] = useState("");
-  const [triglycerides, setTriglycerides] = useState("");
-  const [hba1c, setHba1c] = useState("");
-  const [vitaminD, setVitaminD] = useState("");
-  const [saveMessage, setSaveMessage] = useState("");
+type Assessment = {
+  organ_name: string;
+  score: number;
+  risk_level: string;
+  notes: string;
+  created_at: string;
+};
 
-  const [result, setResult] = useState<null | {
-    score: number;
-    interpretation: string;
-  }>(null);
+export default function OrganReportPage() {
+  const [assessments, setAssessments] = useState<Assessment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
 
-  async function saveLabReport(score: number, interpretation: string) {
-    setSaveMessage("Saving lab report...");
+  useEffect(() => {
+    fetchAssessments();
+  }, []);
 
-    const { data, error: userError } = await supabase.auth.getUser();
+  async function fetchAssessments() {
+    setLoading(true);
+
+    const { data: userData, error: userError } = await supabase.auth.getUser();
 
     if (userError) {
-      setSaveMessage("Auth error: " + userError.message);
+      setMessage("Auth error: " + userError.message);
+      setLoading(false);
       return;
     }
 
-    const user = data.user;
+    const user = userData.user;
 
     if (!user) {
-      setSaveMessage("Please login to save your lab report.");
+      setMessage("Please login to view your organ report.");
+      setLoading(false);
       return;
     }
 
-    const { error } = await supabase.from("lab_reports").insert({
-      user_id: user.id,
-      total_cholesterol: Number(totalCholesterol),
-      ldl: Number(ldl),
-      hdl: Number(hdl),
-      triglycerides: Number(triglycerides),
-      hba1c: Number(hba1c),
-      vitamin_d: Number(vitaminD),
-      score: score,
-      interpretation: interpretation,
-    });
+    const { data, error } = await supabase
+      .from("organ_assessments")
+      .select("organ_name, score, risk_level, notes, created_at")
+      .eq("user_id", user.id)
+      .order("organ_name", { ascending: true });
 
     if (error) {
-      setSaveMessage("Database error: " + error.message);
+      setMessage("Database error: " + error.message);
+      setLoading(false);
       return;
     }
 
-    setSaveMessage("Lab report saved successfully.");
+    setAssessments(data || []);
+    setLoading(false);
   }
 
-  async function analyzeLabs() {
-    setSaveMessage("");
+  const overallScore =
+    assessments.length > 0
+      ? Math.round(
+          assessments.reduce((sum, item) => sum + item.score, 0) /
+            assessments.length
+        )
+      : 0;
 
-    if (
-      !totalCholesterol ||
-      !ldl ||
-      !hdl ||
-      !triglycerides ||
-      !hba1c ||
-      !vitaminD
-    ) {
-      setSaveMessage("Please complete all lab values.");
-      return;
-    }
+  function getStatus(score: number) {
+    if (score >= 80) return "Good";
+    if (score >= 50) return "Moderate";
+    return "High Risk";
+  }
 
-    let riskPoints = 0;
-    const findings: string[] = [];
+  function generateProfessionalPDF() {
+    const pdf = new jsPDF("p", "mm", "a4");
 
-    const totalCholesterolNumber = Number(totalCholesterol);
-    const ldlNumber = Number(ldl);
-    const hdlNumber = Number(hdl);
-    const triglyceridesNumber = Number(triglycerides);
-    const hba1cNumber = Number(hba1c);
-    const vitaminDNumber = Number(vitaminD);
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
 
-    if (
-      totalCholesterolNumber <= 0 ||
-      ldlNumber <= 0 ||
-      hdlNumber <= 0 ||
-      triglyceridesNumber <= 0 ||
-      hba1cNumber <= 0 ||
-      vitaminDNumber <= 0
-    ) {
-      setSaveMessage("Please enter valid positive numbers.");
-      return;
-    }
+    const margin = 18;
+    let y = 20;
 
-    if (totalCholesterolNumber >= 200) {
-      riskPoints += 10;
-      findings.push("Total cholesterol is above the desirable range.");
-    }
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(22);
+    pdf.text("OrganHeal AI", margin, y);
 
-    if (ldlNumber >= 130) {
-      riskPoints += 15;
-      findings.push("LDL cholesterol is elevated.");
-    }
+    y += 8;
 
-    if (ldlNumber >= 160) {
-      riskPoints += 10;
-      findings.push("LDL cholesterol is significantly elevated.");
-    }
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(11);
+    pdf.text("Comprehensive Organ Health Report", margin, y);
 
-    if (hdlNumber < 40) {
-      riskPoints += 15;
-      findings.push("HDL cholesterol is low.");
-    }
+    y += 10;
 
-    if (triglyceridesNumber >= 150) {
-      riskPoints += 15;
-      findings.push("Triglycerides are elevated.");
-    }
+    pdf.setDrawColor(80);
+    pdf.line(margin, y, pageWidth - margin, y);
 
-    if (triglyceridesNumber >= 200) {
-      riskPoints += 10;
-      findings.push("Triglycerides are high.");
-    }
+    y += 14;
 
-    if (hba1cNumber >= 5.7) {
-      riskPoints += 15;
-      findings.push("HbA1c is in a higher-risk range.");
-    }
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(16);
+    pdf.text("Overall Health Intelligence Score", margin, y);
 
-    if (hba1cNumber >= 6.5) {
-      riskPoints += 20;
-      findings.push("HbA1c is in the diabetes range.");
-    }
+    y += 12;
 
-    if (vitaminDNumber < 30) {
-      riskPoints += 10;
-      findings.push("Vitamin D is below the commonly accepted sufficient range.");
-    }
+    pdf.setFontSize(28);
+    pdf.text(`${overallScore}/100`, margin, y);
 
-    const score = Math.max(0, 100 - riskPoints);
+    y += 9;
 
-    let interpretation =
-      "Your lab pattern looks generally reassuring based on the values entered.";
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(13);
+    pdf.text(`Status: ${getStatus(overallScore)}`, margin, y);
 
-    if (findings.length > 0) {
-      interpretation =
-        findings.join(" ") +
-        " This educational tool does not diagnose disease. Please discuss abnormal results with a healthcare professional.";
-    }
+    y += 10;
 
-    setResult({
-      score,
-      interpretation,
+    pdf.setFontSize(10);
+    pdf.text(
+      `Generated on: ${new Date().toLocaleString()}`,
+      margin,
+      y
+    );
+
+    y += 14;
+
+    pdf.setDrawColor(120);
+    pdf.line(margin, y, pageWidth - margin, y);
+
+    y += 12;
+
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(15);
+    pdf.text("Organ Assessment Summary", margin, y);
+
+    y += 10;
+
+    assessments.forEach((item, index) => {
+      if (y > pageHeight - 45) {
+        pdf.addPage();
+        y = 20;
+      }
+
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(13);
+      pdf.text(`${index + 1}. ${item.organ_name}`, margin, y);
+
+      y += 7;
+
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(11);
+      pdf.text(`Score: ${item.score}/100`, margin + 5, y);
+
+      y += 6;
+
+      pdf.text(`Risk Level: ${item.risk_level}`, margin + 5, y);
+
+      y += 6;
+
+      const noteLines = pdf.splitTextToSize(
+        `Notes: ${item.notes}`,
+        pageWidth - margin * 2 - 5
+      );
+
+      pdf.text(noteLines, margin + 5, y);
+
+      y += noteLines.length * 5 + 4;
+
+      pdf.setFontSize(9);
+      pdf.text(
+        `Last saved: ${new Date(item.created_at).toLocaleString()}`,
+        margin + 5,
+        y
+      );
+
+      y += 10;
+
+      pdf.setDrawColor(220);
+      pdf.line(margin, y, pageWidth - margin, y);
+
+      y += 9;
     });
 
-    await saveLabReport(score, interpretation);
+    if (y > pageHeight - 40) {
+      pdf.addPage();
+      y = 20;
+    }
+
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(12);
+    pdf.text("Important Educational Disclaimer", margin, y);
+
+    y += 7;
+
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(10);
+
+    const disclaimer = pdf.splitTextToSize(
+      "This report is for educational and wellness tracking purposes only. It does not provide a medical diagnosis, treatment plan, or emergency medical advice. Please discuss concerning symptoms or abnormal results with a licensed healthcare professional.",
+      pageWidth - margin * 2
+    );
+
+    pdf.text(disclaimer, margin, y);
+
+    const totalPages = pdf.getNumberOfPages();
+
+    for (let i = 1; i <= totalPages; i++) {
+      pdf.setPage(i);
+      pdf.setFontSize(9);
+      pdf.text(
+        `Page ${i} of ${totalPages}`,
+        pageWidth / 2,
+        pageHeight - 10,
+        { align: "center" }
+      );
+      pdf.text("OrganHeal AI", margin, pageHeight - 10);
+    }
+
+    pdf.save("OrganHeal_Professional_Report.pdf");
   }
 
   return (
     <main className="assistantPage">
       <div className="assistantContainer">
         <div className="assistantHeader">
-          <p className="assistantBadge">LAB ANALYZER</p>
-          <h1>Lab Analyzer</h1>
+          <p className="assistantBadge">ORGAN HEALTH REPORT</p>
+          <h1>Your Organ Health Report</h1>
           <p>
-            Enter key lab values to receive a simple educational interpretation
-            and a lab health score.
+            This report summarizes your saved organ assessments from Supabase.
           </p>
         </div>
 
         <div className="chatWindow">
-          <div className="assessmentForm">
-            <div className="formGroup">
-              <label>Total Cholesterol</label>
-              <input
-                type="number"
-                placeholder="e.g. 180"
-                value={totalCholesterol}
-                onChange={(event) => setTotalCholesterol(event.target.value)}
-              />
-            </div>
+          {loading && <p>Loading your report...</p>}
 
-            <div className="formGroup">
-              <label>LDL</label>
-              <input
-                type="number"
-                placeholder="e.g. 100"
-                value={ldl}
-                onChange={(event) => setLdl(event.target.value)}
-              />
-            </div>
+          {!loading && message && <p>{message}</p>}
 
-            <div className="formGroup">
-              <label>HDL</label>
-              <input
-                type="number"
-                placeholder="e.g. 45"
-                value={hdl}
-                onChange={(event) => setHdl(event.target.value)}
-              />
-            </div>
+          {!loading && !message && assessments.length === 0 && (
+            <p>No organ assessments found yet.</p>
+          )}
 
-            <div className="formGroup">
-              <label>Triglycerides</label>
-              <input
-                type="number"
-                placeholder="e.g. 140"
-                value={triglycerides}
-                onChange={(event) => setTriglycerides(event.target.value)}
-              />
-            </div>
+          {!loading && assessments.length > 0 && (
+            <>
+              <button className="primaryBtn" onClick={generateProfessionalPDF}>
+                Download Professional PDF Report
+              </button>
 
-            <div className="formGroup">
-              <label>HbA1c</label>
-              <input
-                type="number"
-                step="0.1"
-                placeholder="e.g. 5.4"
-                value={hba1c}
-                onChange={(event) => setHba1c(event.target.value)}
-              />
-            </div>
+              <div className="resultBox">
+                <p className="sectionLabel">Overall Organ Health Score</p>
+                <h2>{overallScore}/100</h2>
+                <h3>{getStatus(overallScore)}</h3>
+                <p>
+                  This score is calculated from the average of your saved organ
+                  assessment scores.
+                </p>
+              </div>
 
-            <div className="formGroup">
-              <label>Vitamin D</label>
-              <input
-                type="number"
-                placeholder="e.g. 35"
-                value={vitaminD}
-                onChange={(event) => setVitaminD(event.target.value)}
-              />
-            </div>
-
-            <button className="primaryBtn" onClick={analyzeLabs}>
-              Analyze Labs
-            </button>
-
-            {saveMessage && <p>{saveMessage}</p>}
-          </div>
-
-          {result && (
-            <div className="resultBox">
-              <p className="sectionLabel">Lab Health Score</p>
-              <h2>{result.score}/100</h2>
-              <p>{result.interpretation}</p>
-            </div>
+              <div className="assessmentForm">
+                {assessments.map((item) => (
+                  <div className="resultBox" key={item.organ_name}>
+                    <p className="sectionLabel">{item.organ_name}</p>
+                    <h2>{item.score}/100</h2>
+                    <h3>{item.risk_level}</h3>
+                    <p>{item.notes}</p>
+                    <p>
+                      Last saved:{" "}
+                      {new Date(item.created_at).toLocaleString()}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       </div>
