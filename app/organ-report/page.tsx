@@ -31,6 +31,7 @@ export default function OrganReportPage() {
   const [labReport, setLabReport] = useState<LabReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [userEmail, setUserEmail] = useState("");
 
   useEffect(() => {
     fetchReportData();
@@ -48,6 +49,7 @@ export default function OrganReportPage() {
     }
 
     const user = userData.user;
+    setUserEmail(user?.email || "");
 
     if (!user) {
       setMessage("Please login to view your organ report.");
@@ -110,26 +112,40 @@ export default function OrganReportPage() {
     if (score >= 50) return "Moderate";
     return "High Risk";
   }
-function setStatusColor(pdf: jsPDF, score: number) {
-  if (score >= 80) {
-    pdf.setTextColor(34, 197, 94); // Green
-    return;
+
+  function setStatusColor(pdf: jsPDF, score: number) {
+    if (score >= 80) {
+      pdf.setTextColor(34, 197, 94);
+      return;
+    }
+
+    if (score >= 50) {
+      pdf.setTextColor(245, 158, 11);
+      return;
+    }
+
+    pdf.setTextColor(239, 68, 68);
   }
 
-  if (score >= 50) {
-    pdf.setTextColor(245, 158, 11); // Orange
-    return;
+  function resetPDFColor(pdf: jsPDF) {
+    pdf.setTextColor(0, 0, 0);
   }
 
-  pdf.setTextColor(239, 68, 68); // Red
-}
-
-function resetPDFColor(pdf: jsPDF) {
-  pdf.setTextColor(0, 0, 0);
-}
   function formatValue(value: number | null) {
     if (value === null || value === undefined) return "Not available";
     return String(value);
+  }
+
+  function drawLogo(pdf: jsPDF, x: number, y: number) {
+    pdf.setFillColor(15, 23, 42);
+    pdf.circle(x, y, 8, "F");
+
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(9);
+    pdf.text("OH", x, y + 3, { align: "center" });
+
+    resetPDFColor(pdf);
   }
 
   function generateProfessionalPDF() {
@@ -141,15 +157,22 @@ function resetPDFColor(pdf: jsPDF) {
     const margin = 18;
     let y = 20;
 
+    drawLogo(pdf, margin + 8, y + 2);
+
     pdf.setFont("helvetica", "bold");
     pdf.setFontSize(22);
-    pdf.text("OrganHeal AI", margin, y);
+    pdf.text("OrganHeal AI", margin + 22, y);
 
     y += 8;
 
     pdf.setFont("helvetica", "normal");
     pdf.setFontSize(11);
-    pdf.text("Comprehensive Health Intelligence Report", margin, y);
+    pdf.text("Comprehensive Health Intelligence Report", margin + 22, y);
+
+    y += 6;
+
+    pdf.setFontSize(10);
+    pdf.text(`User: ${userEmail || "Unknown user"}`, margin + 22, y);
 
     y += 10;
 
@@ -164,9 +187,9 @@ function resetPDFColor(pdf: jsPDF) {
     y += 12;
 
     pdf.setFontSize(28);
-setStatusColor(pdf, overallScore);
-pdf.text(`${overallScore}/100`, margin, y);
-resetPDFColor(pdf);
+    setStatusColor(pdf, overallScore);
+    pdf.text(`${overallScore}/100`, margin, y);
+    resetPDFColor(pdf);
 
     y += 9;
 
@@ -205,13 +228,14 @@ resetPDFColor(pdf);
 
       pdf.setFont("helvetica", "normal");
       pdf.setFontSize(11);
-setStatusColor(pdf, item.score);
-pdf.text(`Score: ${item.score}/100`, margin + 5, y);
-resetPDFColor(pdf);
+
+      setStatusColor(pdf, item.score);
+      pdf.text(`Score: ${item.score}/100`, margin + 5, y);
+      resetPDFColor(pdf);
 
       y += 6;
 
-      pdf.text(`Risk Level: ${item.risk_level}`, margin + 5, y);
+      pdf.text(`Status: ${getStatus(item.score)}`, margin + 5, y);
 
       y += 6;
 
@@ -252,9 +276,10 @@ resetPDFColor(pdf);
 
       pdf.setFont("helvetica", "normal");
       pdf.setFontSize(11);
+
       setStatusColor(pdf, labReport.score);
-pdf.text(`Lab Score: ${labReport.score}/100`, margin + 5, y);
-resetPDFColor(pdf);
+      pdf.text(`Lab Score: ${labReport.score}/100`, margin + 5, y);
+      resetPDFColor(pdf);
 
       y += 6;
 
@@ -387,7 +412,7 @@ resetPDFColor(pdf);
                   <div className="resultBox" key={item.organ_name}>
                     <p className="sectionLabel">{item.organ_name}</p>
                     <h2>{item.score}/100</h2>
-                    <h3>{item.risk_level}</h3>
+                    <h3>{getStatus(item.score)}</h3>
                     <p>{item.notes}</p>
                     <p>
                       Last saved:{" "}
