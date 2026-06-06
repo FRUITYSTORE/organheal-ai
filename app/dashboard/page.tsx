@@ -91,35 +91,6 @@ export default function DashboardPage() {
     return assessments.find((item) => item.organ_name === organName);
   }
 
-  const allScores = [
-    ...assessments.map((item) => item.score),
-    ...(labReport ? [labReport.score] : []),
-  ];
-
-  const completedAssessments = assessments.length;
-  const totalModules = organs.length + 1;
-
-  const overallScore =
-    allScores.length > 0
-      ? Math.round(
-          allScores.reduce((sum, score) => sum + score, 0) / allScores.length
-        )
-      : 0;
-
-  const strongestAssessment =
-    assessments.length > 0
-      ? [...assessments].sort((a, b) => b.score - a.score)[0]
-      : null;
-
-  const weakestAssessment =
-    assessments.length > 0
-      ? [...assessments].sort((a, b) => a.score - b.score)[0]
-      : null;
-
-  const latestDate = [...assessments.map((item) => item.created_at)]
-    .concat(labReport ? [labReport.created_at] : [])
-    .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0];
-
   function getStatus(score: number) {
     if (score >= 80) return "Good";
     if (score >= 50) return "Moderate";
@@ -138,6 +109,53 @@ export default function DashboardPage() {
     return "linear-gradient(90deg, #ef4444, #f97316)";
   }
 
+  const allScores = [
+    ...assessments.map((item) => item.score),
+    ...(labReport ? [labReport.score] : []),
+  ];
+
+  const overallScore =
+    allScores.length > 0
+      ? Math.round(
+          allScores.reduce((sum, score) => sum + score, 0) / allScores.length
+        )
+      : 0;
+
+  const dashboardInsights = {
+    overallScore,
+
+    status: allScores.length > 0 ? getStatus(overallScore) : "No Data Yet",
+
+    topStrength:
+      assessments.length > 0
+        ? [...assessments].sort((a, b) => b.score - a.score)[0]
+        : null,
+
+    priorityAttention:
+      assessments.length > 0
+        ? [...assessments].sort((a, b) => a.score - b.score)[0]
+        : null,
+
+    latestLab: labReport,
+
+    latestDate: [...assessments.map((item) => item.created_at)]
+      .concat(labReport ? [labReport.created_at] : [])
+      .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0],
+
+    completedModules: assessments.length + (labReport ? 1 : 0),
+
+    totalModules: organs.length + 1,
+
+    healthCoachMessage:
+      assessments.length > 0
+        ? `Based on your current assessments, ${
+            [...assessments].sort((a, b) => a.score - b.score)[0].organ_name
+          } requires the highest attention, while ${
+            [...assessments].sort((a, b) => b.score - a.score)[0].organ_name
+          } is your strongest area. Continue monitoring your results and discuss concerning findings with a healthcare professional.`
+        : "Complete your organ assessments to receive personalized health guidance.",
+  };
+
   return (
     <main className="assistantPage">
       <div className="assistantContainer">
@@ -146,7 +164,7 @@ export default function DashboardPage() {
           <h1>Dashboard Intelligence</h1>
           <p>
             View your overall health intelligence, priority areas, strongest
-            score, and latest saved assessments.
+            score, latest lab score, and personalized guidance.
           </p>
         </div>
 
@@ -160,20 +178,21 @@ export default function DashboardPage() {
               <div className="resultBox">
                 <p className="sectionLabel">Overall Health Intelligence</p>
 
-                <h2 className={getScoreClass(overallScore)}>
-                  {overallScore}/100
+                <h2 className={getScoreClass(dashboardInsights.overallScore)}>
+                  {dashboardInsights.overallScore}/100
                 </h2>
 
-                <h3>{allScores.length > 0 ? getStatus(overallScore) : "No Data Yet"}</h3>
+                <h3>{dashboardInsights.status}</h3>
 
                 <p>
-                  Completed modules: {completedAssessments}
-                  {labReport ? " + Lab Analyzer" : ""} / {totalModules}
+                  Completed modules: {dashboardInsights.completedModules} /{" "}
+                  {dashboardInsights.totalModules}
                 </p>
 
-                {latestDate && (
+                {dashboardInsights.latestDate && (
                   <p>
-                    Last updated: {new Date(latestDate).toLocaleString()}
+                    Last updated:{" "}
+                    {new Date(dashboardInsights.latestDate).toLocaleString()}
                   </p>
                 )}
 
@@ -189,9 +208,11 @@ export default function DashboardPage() {
                 >
                   <div
                     style={{
-                      width: `${overallScore}%`,
+                      width: `${dashboardInsights.overallScore}%`,
                       height: "100%",
-                      background: getProgressColor(overallScore),
+                      background: getProgressColor(
+                        dashboardInsights.overallScore
+                      ),
                       borderRadius: "999px",
                     }}
                   />
@@ -201,13 +222,20 @@ export default function DashboardPage() {
               <div className="assessmentForm">
                 <div className="resultBox">
                   <p className="sectionLabel">🏆 Top Strength</p>
-                  {strongestAssessment ? (
+
+                  {dashboardInsights.topStrength ? (
                     <>
-                      <h2 className={getScoreClass(strongestAssessment.score)}>
-                        {strongestAssessment.organ_name}
+                      <h2
+                        className={getScoreClass(
+                          dashboardInsights.topStrength.score
+                        )}
+                      >
+                        {dashboardInsights.topStrength.organ_name}
                       </h2>
-                      <h3>{strongestAssessment.score}/100</h3>
-                      <p>{getStatus(strongestAssessment.score)}</p>
+
+                      <h3>{dashboardInsights.topStrength.score}/100</h3>
+
+                      <p>{getStatus(dashboardInsights.topStrength.score)}</p>
                     </>
                   ) : (
                     <p>No organ assessment data yet.</p>
@@ -216,13 +244,26 @@ export default function DashboardPage() {
 
                 <div className="resultBox">
                   <p className="sectionLabel">⚠️ Priority Attention</p>
-                  {weakestAssessment ? (
+
+                  {dashboardInsights.priorityAttention ? (
                     <>
-                      <h2 className={getScoreClass(weakestAssessment.score)}>
-                        {weakestAssessment.organ_name}
+                      <h2
+                        className={getScoreClass(
+                          dashboardInsights.priorityAttention.score
+                        )}
+                      >
+                        {dashboardInsights.priorityAttention.organ_name}
                       </h2>
-                      <h3>{weakestAssessment.score}/100</h3>
-                      <p>{getStatus(weakestAssessment.score)}</p>
+
+                      <h3>
+                        {dashboardInsights.priorityAttention.score}/100
+                      </h3>
+
+                      <p>
+                        {getStatus(
+                          dashboardInsights.priorityAttention.score
+                        )}
+                      </p>
                     </>
                   ) : (
                     <p>No organ assessment data yet.</p>
@@ -231,18 +272,26 @@ export default function DashboardPage() {
 
                 <div className="resultBox">
                   <p className="sectionLabel">🧪 Latest Lab Score</p>
-                  {labReport ? (
+
+                  {dashboardInsights.latestLab ? (
                     <>
-                      <h2 className={getScoreClass(labReport.score)}>
-                        {labReport.score}/100
+                      <h2
+                        className={getScoreClass(
+                          dashboardInsights.latestLab.score
+                        )}
+                      >
+                        {dashboardInsights.latestLab.score}/100
                       </h2>
-                      <h3>{getStatus(labReport.score)}</h3>
-                      <p>{labReport.interpretation}</p>
+
+                      <h3>{getStatus(dashboardInsights.latestLab.score)}</h3>
+
+                      <p>{dashboardInsights.latestLab.interpretation}</p>
                     </>
                   ) : (
                     <>
                       <h2>No lab score yet</h2>
                       <p>Complete the Lab Analyzer to include it here.</p>
+
                       <a href="/lab-analyzer">
                         <button className="primaryBtn">
                           Start Lab Analyzer
@@ -250,6 +299,12 @@ export default function DashboardPage() {
                       </a>
                     </>
                   )}
+                </div>
+
+                <div className="resultBox">
+                  <p className="sectionLabel">🤖 AI Health Coach</p>
+                  <h2>Personalized Guidance</h2>
+                  <p>{dashboardInsights.healthCoachMessage}</p>
                 </div>
               </div>
 
