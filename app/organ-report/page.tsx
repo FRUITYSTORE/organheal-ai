@@ -110,7 +110,23 @@ export default function OrganReportPage() {
     if (score >= 50) return "Moderate";
     return "High Risk";
   }
+function setStatusColor(pdf: jsPDF, score: number) {
+  if (score >= 80) {
+    pdf.setTextColor(34, 197, 94); // Green
+    return;
+  }
 
+  if (score >= 50) {
+    pdf.setTextColor(245, 158, 11); // Orange
+    return;
+  }
+
+  pdf.setTextColor(239, 68, 68); // Red
+}
+
+function resetPDFColor(pdf: jsPDF) {
+  pdf.setTextColor(0, 0, 0);
+}
   function formatValue(value: number | null) {
     if (value === null || value === undefined) return "Not available";
     return String(value);
@@ -148,7 +164,9 @@ export default function OrganReportPage() {
     y += 12;
 
     pdf.setFontSize(28);
-    pdf.text(`${overallScore}/100`, margin, y);
+setStatusColor(pdf, overallScore);
+pdf.text(`${overallScore}/100`, margin, y);
+resetPDFColor(pdf);
 
     y += 9;
 
@@ -187,7 +205,9 @@ export default function OrganReportPage() {
 
       pdf.setFont("helvetica", "normal");
       pdf.setFontSize(11);
-      pdf.text(`Score: ${item.score}/100`, margin + 5, y);
+setStatusColor(pdf, item.score);
+pdf.text(`Score: ${item.score}/100`, margin + 5, y);
+resetPDFColor(pdf);
 
       y += 6;
 
@@ -232,7 +252,9 @@ export default function OrganReportPage() {
 
       pdf.setFont("helvetica", "normal");
       pdf.setFontSize(11);
-      pdf.text(`Lab Score: ${labReport.score}/100`, margin + 5, y);
+      setStatusColor(pdf, labReport.score);
+pdf.text(`Lab Score: ${labReport.score}/100`, margin + 5, y);
+resetPDFColor(pdf);
 
       y += 6;
 
