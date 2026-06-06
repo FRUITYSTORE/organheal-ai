@@ -258,7 +258,43 @@ This report is educational and intended to help identify areas that may benefit 
     pdf.text("Organ Assessment Summary", margin, y);
 
     y += 10;
+pdf.setFont("helvetica", "bold");
+pdf.setFontSize(13);
+pdf.text("Organ Health Chart", margin, y);
 
+y += 10;
+
+const chartWidth = 100;
+
+assessments.forEach((item) => {
+  let barColor: [number, number, number] = [239, 68, 68];
+
+  if (item.score >= 80) {
+    barColor = [34, 197, 94];
+  } else if (item.score >= 50) {
+    barColor = [245, 158, 11];
+  }
+
+  pdf.setFontSize(10);
+  pdf.setTextColor(0, 0, 0);
+  pdf.text(item.organ_name, margin, y);
+
+  pdf.setFillColor(barColor[0], barColor[1], barColor[2]);
+
+  pdf.rect(
+    margin + 35,
+    y - 4,
+    (item.score / 100) * chartWidth,
+    5,
+    "F"
+  );
+
+  pdf.text(`${item.score}`, margin + 140, y);
+
+  y += 8;
+});
+
+y += 10;
     assessments.forEach((item, index) => {
       if (y > pageHeight - 50) {
         pdf.addPage();
