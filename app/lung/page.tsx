@@ -35,16 +35,21 @@ export default function LungPage() {
       return;
     }
 
-    const { data: insertedData, error } = await supabase
-      .from("organ_assessments")
-      .upsert({
-        user_id: data.user.id,
-        organ_name: "Lung",
-        score: score,
-        risk_level: level,
-        notes: message,
-      })
-      .select();
+const { data: insertedData, error } = await supabase
+  .from("organ_assessments")
+  .upsert(
+    {
+      user_id: data.user.id,
+      organ_name: "Lung",
+      score: score,
+      risk_level: level,
+      notes: message,
+    },
+    {
+      onConflict: "user_id,organ_name",
+    }
+  )
+  .select();
 
     console.log("Inserted lung:", insertedData);
     console.log("Insert error:", error);

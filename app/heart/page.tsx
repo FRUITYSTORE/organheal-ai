@@ -34,15 +34,20 @@ export default function HeartPage() {
       return;
     }
 
-    const { error } = await supabase.from("organ_assessments").upsert([
-      {
-        user_id: user.id,
-        organ_name: "Heart",
-        score: score,
-        risk_level: level,
-        notes: message,
-      },
-    ]);
+const { error } = await supabase
+  .from("organ_assessments")
+  .upsert(
+    {
+      user_id: user.id,
+      organ_name: "Heart",
+      score: score,
+      risk_level: level,
+      notes: message,
+    },
+    {
+      onConflict: "user_id,organ_name",
+    }
+  );
 
     if (error) {
       console.error("Supabase insert error:", error);
