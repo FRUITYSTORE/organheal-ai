@@ -37,7 +37,7 @@ export default function LungPage() {
 
     const { data: insertedData, error } = await supabase
       .from("organ_assessments")
-      .insert({
+      .upsert({
         user_id: data.user.id,
         organ_name: "Lung",
         score: score,

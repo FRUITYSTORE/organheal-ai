@@ -34,7 +34,7 @@ export default function HeartPage() {
       return;
     }
 
-    const { error } = await supabase.from("organ_assessments").insert([
+    const { error } = await supabase.from("organ_assessments").upsert([
       {
         user_id: user.id,
         organ_name: "Heart",
