@@ -11,6 +11,12 @@ type Assessment = {
   created_at: string;
 };
 
+type LabReport = {
+  score: number;
+  interpretation: string;
+  created_at: string;
+};
+
 const organs = [
   { name: "Heart", icon: "❤️", path: "/heart" },
   { name: "Lung", icon: "🫁", path: "/lung" },
@@ -22,14 +28,15 @@ const organs = [
 
 export default function DashboardPage() {
   const [assessments, setAssessments] = useState<Assessment[]>([]);
+  const [labReport, setLabReport] = useState<LabReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    fetchAssessments();
+    fetchDashboardData();
   }, []);
 
-  async function fetchAssessments() {
+  async function fetchDashboardData() {
     setLoading(true);
 
     const { data: userData, error: userError } =
@@ -49,19 +56,34 @@ export default function DashboardPage() {
       return;
     }
 
-    const { data, error } = await supabase
+    const { data: organData, error: organError } = await supabase
       .from("organ_assessments")
       .select("organ_name, score, risk_level, notes, created_at")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
-    if (error) {
-      setMessage("Database error: " + error.message);
+    if (organError) {
+      setMessage("Organ database error: " + organError.message);
       setLoading(false);
       return;
     }
 
-    setAssessments(data || []);
+    const { data: labData, error: labError } = await supabase
+      .from("lab_reports")
+      .select("score, interpretation, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (labError && labError.code !== "PGRST116") {
+      setMessage("Lab database error: " + labError.message);
+      setLoading(false);
+      return;
+    }
+
+    setAssessments(organData || []);
+    setLabReport(labData || null);
     setLoading(false);
   }
 
@@ -69,15 +91,34 @@ export default function DashboardPage() {
     return assessments.find((item) => item.organ_name === organName);
   }
 
+  const allScores = [
+    ...assessments.map((item) => item.score),
+    ...(labReport ? [labReport.score] : []),
+  ];
+
   const completedAssessments = assessments.length;
+  const totalModules = organs.length + 1;
 
   const overallScore =
-    completedAssessments > 0
+    allScores.length > 0
       ? Math.round(
-          assessments.reduce((sum, item) => sum + item.score, 0) /
-            completedAssessments
+          allScores.reduce((sum, score) => sum + score, 0) / allScores.length
         )
       : 0;
+
+  const strongestAssessment =
+    assessments.length > 0
+      ? [...assessments].sort((a, b) => b.score - a.score)[0]
+      : null;
+
+  const weakestAssessment =
+    assessments.length > 0
+      ? [...assessments].sort((a, b) => a.score - b.score)[0]
+      : null;
+
+  const latestDate = [...assessments.map((item) => item.created_at)]
+    .concat(labReport ? [labReport.created_at] : [])
+    .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0];
 
   function getStatus(score: number) {
     if (score >= 80) return "Good";
@@ -91,15 +132,21 @@ export default function DashboardPage() {
     return "riskScore";
   }
 
+  function getProgressColor(score: number) {
+    if (score >= 80) return "linear-gradient(90deg, #22c55e, #38bdf8)";
+    if (score >= 50) return "linear-gradient(90deg, #f59e0b, #facc15)";
+    return "linear-gradient(90deg, #ef4444, #f97316)";
+  }
+
   return (
     <main className="assistantPage">
       <div className="assistantContainer">
         <div className="assistantHeader">
           <p className="assistantBadge">ORGANHEAL DASHBOARD</p>
-          <h1>Your Health Dashboard</h1>
+          <h1>Dashboard Intelligence</h1>
           <p>
-            Track your organ assessment scores and continue your saved health
-            evaluations.
+            View your overall health intelligence, priority areas, strongest
+            score, and latest saved assessments.
           </p>
         </div>
 
@@ -111,22 +158,29 @@ export default function DashboardPage() {
           {!loading && !message && (
             <>
               <div className="resultBox">
-                <p className="sectionLabel">Overall Organ Health Score</p>
+                <p className="sectionLabel">Overall Health Intelligence</p>
 
                 <h2 className={getScoreClass(overallScore)}>
                   {overallScore}/100
                 </h2>
 
-                <h3>{completedAssessments > 0 ? getStatus(overallScore) : "No Data Yet"}</h3>
+                <h3>{allScores.length > 0 ? getStatus(overallScore) : "No Data Yet"}</h3>
 
                 <p>
-                  Completed assessments: {completedAssessments} / {organs.length}
+                  Completed modules: {completedAssessments}
+                  {labReport ? " + Lab Analyzer" : ""} / {totalModules}
                 </p>
+
+                {latestDate && (
+                  <p>
+                    Last updated: {new Date(latestDate).toLocaleString()}
+                  </p>
+                )}
 
                 <div
                   style={{
                     width: "100%",
-                    height: "12px",
+                    height: "14px",
                     background: "rgba(255,255,255,0.12)",
                     borderRadius: "999px",
                     overflow: "hidden",
@@ -137,10 +191,65 @@ export default function DashboardPage() {
                     style={{
                       width: `${overallScore}%`,
                       height: "100%",
-                      background: "linear-gradient(90deg, #22c55e, #38bdf8)",
+                      background: getProgressColor(overallScore),
                       borderRadius: "999px",
                     }}
                   />
+                </div>
+              </div>
+
+              <div className="assessmentForm">
+                <div className="resultBox">
+                  <p className="sectionLabel">🏆 Top Strength</p>
+                  {strongestAssessment ? (
+                    <>
+                      <h2 className={getScoreClass(strongestAssessment.score)}>
+                        {strongestAssessment.organ_name}
+                      </h2>
+                      <h3>{strongestAssessment.score}/100</h3>
+                      <p>{getStatus(strongestAssessment.score)}</p>
+                    </>
+                  ) : (
+                    <p>No organ assessment data yet.</p>
+                  )}
+                </div>
+
+                <div className="resultBox">
+                  <p className="sectionLabel">⚠️ Priority Attention</p>
+                  {weakestAssessment ? (
+                    <>
+                      <h2 className={getScoreClass(weakestAssessment.score)}>
+                        {weakestAssessment.organ_name}
+                      </h2>
+                      <h3>{weakestAssessment.score}/100</h3>
+                      <p>{getStatus(weakestAssessment.score)}</p>
+                    </>
+                  ) : (
+                    <p>No organ assessment data yet.</p>
+                  )}
+                </div>
+
+                <div className="resultBox">
+                  <p className="sectionLabel">🧪 Latest Lab Score</p>
+                  {labReport ? (
+                    <>
+                      <h2 className={getScoreClass(labReport.score)}>
+                        {labReport.score}/100
+                      </h2>
+                      <h3>{getStatus(labReport.score)}</h3>
+                      <p>{labReport.interpretation}</p>
+                    </>
+                  ) : (
+                    <>
+                      <h2>No lab score yet</h2>
+                      <p>Complete the Lab Analyzer to include it here.</p>
+                      <a href="/lab-analyzer">
+                        <button className="primaryBtn">
+                          Start Lab Analyzer
+                        </button>
+                      </a>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -160,7 +269,7 @@ export default function DashboardPage() {
                             {assessment.score}/100
                           </h2>
 
-                          <h3>{assessment.risk_level}</h3>
+                          <h3>{getStatus(assessment.score)}</h3>
 
                           <p>{assessment.notes}</p>
 
@@ -197,9 +306,15 @@ export default function DashboardPage() {
                 })}
               </div>
 
-              <a href="/organ-report">
-                <button className="primaryBtn">View Full Organ Report</button>
-              </a>
+              <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+                <a href="/organ-report">
+                  <button className="primaryBtn">View Full Organ Report</button>
+                </a>
+
+                <a href="/lab-analyzer">
+                  <button className="secondaryBtn">Open Lab Analyzer</button>
+                </a>
+              </div>
             </>
           )}
         </div>
