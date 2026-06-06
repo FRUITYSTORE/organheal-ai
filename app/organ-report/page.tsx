@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { supabase } from "../../lib/supabase";
 
 type OrganScore = {
   name: string;
@@ -9,29 +10,84 @@ type OrganScore = {
   message: string;
 };
 
+type AssessmentRow = {
+  organ_name: string;
+  score: number;
+  risk_level: string | null;
+  notes: string | null;
+  created_at: string;
+};
+
 export default function OrganReportPage() {
   const [scores, setScores] = useState<OrganScore[]>([]);
   const [overallScore, setOverallScore] = useState<number | null>(null);
+  const [statusMessage, setStatusMessage] = useState("Loading report...");
 
-  function loadScores() {
+  async function loadScores() {
+    setStatusMessage("Loading report...");
+
     const organs = [
-      { key: "heartScore", name: "Heart", icon: "❤️" },
-      { key: "lungScore", name: "Lung", icon: "🫁" },
-      { key: "kidneyScore", name: "Kidney", icon: "🫘" },
-      { key: "liverScore", name: "Liver", icon: "🟤" },
-      { key: "brainScore", name: "Brain", icon: "🧠" },
-      { key: "metabolicScore", name: "Metabolic", icon: "🩸" },
+      { name: "Heart", icon: "❤️" },
+      { name: "Lung", icon: "🫁" },
+      { name: "Kidney", icon: "🫘" },
+      { name: "Liver", icon: "🟤" },
+      { name: "Brain", icon: "🧠" },
+      { name: "Metabolic", icon: "🩸" },
     ];
 
+    const { data, error: userError } = await supabase.auth.getUser();
+
+    if (userError) {
+      setStatusMessage("Auth error: " + userError.message);
+      return;
+    }
+
+    const user = data.user;
+
+    if (!user) {
+      setStatusMessage("Please login to view your saved report.");
+      setScores(
+        organs.map((organ) => ({
+          name: organ.name,
+          icon: organ.icon,
+          score: null,
+          message: `Login and complete the ${organ.name.toLowerCase()} assessment to generate this score.`,
+        }))
+      );
+      setOverallScore(null);
+      return;
+    }
+
+    const { data: assessments, error } = await supabase
+      .from("organ_assessments")
+      .select("organ_name, score, risk_level, notes, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      setStatusMessage("Database error: " + error.message);
+      return;
+    }
+
+    const latestByOrgan: Record<string, AssessmentRow> = {};
+
+    (assessments as AssessmentRow[]).forEach((assessment) => {
+      if (!latestByOrgan[assessment.organ_name]) {
+        latestByOrgan[assessment.organ_name] = assessment;
+      }
+    });
+
     const updatedScores = organs.map((organ) => {
-      const savedScore = localStorage.getItem(organ.key);
+      const saved = latestByOrgan[organ.name];
 
       return {
         name: organ.name,
         icon: organ.icon,
-        score: savedScore ? Number(savedScore) : null,
-        message: savedScore
-          ? `${organ.name} assessment result is included in this report.`
+        score: saved ? saved.score : null,
+        message: saved
+          ? `${organ.name} assessment saved. Risk level: ${
+              saved.risk_level || "Not specified"
+            }.`
           : `Complete the ${organ.name.toLowerCase()} assessment to generate this score.`,
       };
     });
@@ -46,28 +102,42 @@ export default function OrganReportPage() {
         completedScores.length;
 
       setOverallScore(Math.round(average));
+      setStatusMessage("Report loaded from Supabase.");
     } else {
       setOverallScore(null);
+      setStatusMessage("No saved assessments found yet.");
     }
 
     setScores(updatedScores);
   }
 
-  function resetReport() {
-    localStorage.removeItem("heartScore");
-    localStorage.removeItem("heartLevel");
-    localStorage.removeItem("lungScore");
-    localStorage.removeItem("lungLevel");
-    localStorage.removeItem("kidneyScore");
-    localStorage.removeItem("kidneyLevel");
-    localStorage.removeItem("liverScore");
-    localStorage.removeItem("liverLevel");
-    localStorage.removeItem("brainScore");
-    localStorage.removeItem("brainLevel");
-    localStorage.removeItem("metabolicScore");
-    localStorage.removeItem("metabolicLevel");
+  async function resetReport() {
+    const { data, error: userError } = await supabase.auth.getUser();
 
-    loadScores();
+    if (userError) {
+      setStatusMessage("Auth error: " + userError.message);
+      return;
+    }
+
+    const user = data.user;
+
+    if (!user) {
+      setStatusMessage("Please login to reset your report.");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("organ_assessments")
+      .delete()
+      .eq("user_id", user.id);
+
+    if (error) {
+      setStatusMessage("Database error: " + error.message);
+      return;
+    }
+
+    setStatusMessage("Report reset successfully.");
+    await loadScores();
   }
 
   useEffect(() => {
@@ -122,6 +192,7 @@ export default function OrganReportPage() {
             <h2>{overallScore !== null ? `${overallScore}/100` : "--/100"}</h2>
             <h3>{overallLevel}</h3>
             <p>{overallMessage}</p>
+            <p>{statusMessage}</p>
           </div>
 
           <div className="reportGrid">

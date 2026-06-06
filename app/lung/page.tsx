@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { supabase } from "../../lib/supabase";
 
 export default function LungPage() {
   const [smoking, setSmoking] = useState("No");
@@ -8,13 +9,57 @@ export default function LungPage() {
   const [chronicCough, setChronicCough] = useState("No");
   const [asthma, setAsthma] = useState("No");
   const [activityLevel, setActivityLevel] = useState("Good");
+  const [saveMessage, setSaveMessage] = useState("");
+
   const [result, setResult] = useState<null | {
     score: number;
     level: string;
     message: string;
   }>(null);
 
-  function calculateLungScore() {
+  async function saveAssessment(score: number, level: string, message: string) {
+    setSaveMessage("Saving lung assessment...");
+    console.log("Saving lung assessment started");
+
+    const { data, error: userError } = await supabase.auth.getUser();
+
+    if (userError) {
+      console.log("Auth error:", userError);
+      setSaveMessage("Auth error: " + userError.message);
+      return;
+    }
+
+    if (!data.user) {
+      console.log("No user logged in");
+      setSaveMessage("Please login to save your assessment.");
+      return;
+    }
+
+    const { data: insertedData, error } = await supabase
+      .from("organ_assessments")
+      .insert({
+        user_id: data.user.id,
+        organ_name: "Lung",
+        score: score,
+        risk_level: level,
+        notes: message,
+      })
+      .select();
+
+    console.log("Inserted lung:", insertedData);
+    console.log("Insert error:", error);
+
+    if (error) {
+      setSaveMessage("Database error: " + error.message);
+      return;
+    }
+
+    setSaveMessage("Lung assessment saved successfully.");
+  }
+
+  async function calculateLungScore() {
+    console.log("Lung button clicked");
+
     let riskPoints = 0;
 
     if (smoking === "Yes") riskPoints += 25;
@@ -43,8 +88,7 @@ export default function LungPage() {
 
     setResult({ score, level, message });
 
-    localStorage.setItem("lungScore", String(score));
-    localStorage.setItem("lungLevel", level);
+    await saveAssessment(score, level, message);
   }
 
   return (
@@ -79,7 +123,9 @@ export default function LungPage() {
               <label>Shortness of Breath?</label>
               <select
                 value={shortnessOfBreath}
-                onChange={(event) => setShortnessOfBreath(event.target.value)}
+                onChange={(event) =>
+                  setShortnessOfBreath(event.target.value)
+                }
               >
                 <option>No</option>
                 <option>Yes</option>
@@ -121,8 +167,10 @@ export default function LungPage() {
             </div>
 
             <button className="primaryBtn" onClick={calculateLungScore}>
-              Calculate Lung Score
+              TEST LUNG BUTTON
             </button>
+
+            {saveMessage && <p>{saveMessage}</p>}
           </div>
 
           {result && (
