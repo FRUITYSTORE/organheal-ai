@@ -19,43 +19,51 @@ export default function LungPage() {
 
   async function saveAssessment(score: number, level: string, message: string) {
     setSaveMessage("Saving lung assessment...");
-    console.log("Saving lung assessment started");
 
     const { data, error: userError } = await supabase.auth.getUser();
 
     if (userError) {
-      console.log("Auth error:", userError);
       setSaveMessage("Auth error: " + userError.message);
       return;
     }
 
-    if (!data.user) {
-      console.log("No user logged in");
+    const user = data.user;
+
+    if (!user) {
       setSaveMessage("Please login to save your assessment.");
       return;
     }
 
-const { data: insertedData, error } = await supabase
-  .from("organ_assessments")
-  .upsert(
-    {
-      user_id: data.user.id,
-      organ_name: "Lung",
-      score: score,
-      risk_level: level,
-      notes: message,
-    },
-    {
-      onConflict: "user_id,organ_name",
+    const { error: upsertError } = await supabase
+      .from("organ_assessments")
+      .upsert(
+        {
+          user_id: user.id,
+          organ_name: "Lung",
+          score: score,
+          risk_level: level,
+          notes: message,
+        },
+        {
+          onConflict: "user_id,organ_name",
+        }
+      );
+
+    if (upsertError) {
+      setSaveMessage("Database error: " + upsertError.message);
+      return;
     }
-  )
-  .select();
 
-    console.log("Inserted lung:", insertedData);
-    console.log("Insert error:", error);
+    const { error: historyError } = await supabase.from("health_history").insert({
+      user_id: user.id,
+      module_name: "Lung",
+      score: score,
+      status: level,
+      notes: message,
+    });
 
-    if (error) {
-      setSaveMessage("Database error: " + error.message);
+    if (historyError) {
+      setSaveMessage("History error: " + historyError.message);
       return;
     }
 
@@ -63,8 +71,6 @@ const { data: insertedData, error } = await supabase
   }
 
   async function calculateLungScore() {
-    console.log("Lung button clicked");
-
     let riskPoints = 0;
 
     if (smoking === "Yes") riskPoints += 25;
@@ -172,7 +178,7 @@ const { data: insertedData, error } = await supabase
             </div>
 
             <button className="primaryBtn" onClick={calculateLungScore}>
-              TEST LUNG BUTTON
+              Calculate Lung Score
             </button>
 
             {saveMessage && <p>{saveMessage}</p>}
