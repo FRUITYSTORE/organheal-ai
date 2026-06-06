@@ -18,11 +18,13 @@ export default function HeartPage() {
   }>(null);
 
   async function saveAssessment(score: number, level: string, message: string) {
-    setSaveMessage("Saving...");
+    setSaveMessage("Saving heart assessment...");
+    console.log("Saving heart assessment started");
 
     const { data, error: userError } = await supabase.auth.getUser();
 
     if (userError) {
+      console.log("Auth error:", userError);
       setSaveMessage("Auth error: " + userError.message);
       return;
     }
@@ -30,27 +32,31 @@ export default function HeartPage() {
     const user = data.user;
 
     if (!user) {
+      console.log("No user logged in");
       setSaveMessage("Result calculated locally. Please login to save it.");
       return;
     }
 
-const { error } = await supabase
-  .from("organ_assessments")
-  .upsert(
-    {
-      user_id: user.id,
-      organ_name: "Heart",
-      score: score,
-      risk_level: level,
-      notes: message,
-    },
-    {
-      onConflict: "user_id,organ_name",
-    }
-  );
+    const { data: updatedData, error } = await supabase
+      .from("organ_assessments")
+      .upsert(
+        {
+          user_id: user.id,
+          organ_name: "Heart",
+          score: score,
+          risk_level: level,
+          notes: message,
+        },
+        {
+          onConflict: "user_id,organ_name",
+        }
+      )
+      .select();
+
+    console.log("Heart upsert data:", updatedData);
+    console.log("Heart upsert error:", error);
 
     if (error) {
-      console.error("Supabase insert error:", error);
       setSaveMessage("Database error: " + error.message);
       return;
     }
@@ -107,13 +113,11 @@ const { error } = await supabase
         "Your inputs suggest multiple cardiovascular risk factors. This does not diagnose disease, but it is important to seek professional medical advice.";
     }
 
-    const finalResult = {
+    setResult({
       score,
       level,
       message,
-    };
-
-    setResult(finalResult);
+    });
 
     localStorage.setItem("heartScore", String(score));
     localStorage.setItem("heartLevel", level);
