@@ -4,7 +4,7 @@ export default function Navbar() {
   return (
     <nav className="navbar">
       <Link href="/" className="logo">
-        <span className="logoIcon">🧠❤️🫁</span>
+        <span className="logoIcon">🧠 ❤️ 🫁</span>
         <span>OrganHeal AI</span>
       </Link>
 
@@ -14,6 +14,8 @@ export default function Navbar() {
         <Link href="/lab-analyzer">Lab Analyzer</Link>
         <Link href="/library">Library</Link>
         <Link href="/organ-report">Report</Link>
+        <Link href="/login">Login</Link>
+        <Link href="/signup">Sign Up</Link>
       </div>
     </nav>
   );
