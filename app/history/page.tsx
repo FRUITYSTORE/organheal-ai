@@ -2,6 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+} from "recharts";
 
 type HistoryItem = {
   id: number;
@@ -117,6 +126,18 @@ export default function HistoryPage() {
 
   const moduleNames = Object.keys(groupedHistory);
 
+  function getChartData(records: HistoryItem[]) {
+    return [...records]
+      .sort(
+        (a, b) =>
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      )
+      .map((record) => ({
+        date: new Date(record.created_at).toLocaleDateString(),
+        score: record.score,
+      }));
+  }
+
   return (
     <main className="assistantPage">
       <div className="assistantContainer">
@@ -124,7 +145,8 @@ export default function HistoryPage() {
           <p className="assistantBadge">HEALTH HISTORY</p>
           <h1>Your Health History & Trends</h1>
           <p>
-            Track your previous organ and lab assessment results over time.
+            Track your previous organ and lab assessment results over time with
+            score trends.
           </p>
         </div>
 
@@ -170,6 +192,30 @@ export default function HistoryPage() {
                         Latest saved:{" "}
                         {new Date(latestRecord.created_at).toLocaleString()}
                       </p>
+
+                      <div
+                        style={{
+                          width: "100%",
+                          height: "220px",
+                          marginTop: "18px",
+                        }}
+                      >
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart data={getChartData(records)}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="date" />
+                            <YAxis domain={[0, 100]} />
+                            <Tooltip />
+                            <Line
+                              type="monotone"
+                              dataKey="score"
+                              stroke="#38bdf8"
+                              strokeWidth={3}
+                              dot={{ r: 5 }}
+                            />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
 
                       <div
                         style={{
