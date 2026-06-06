@@ -34,7 +34,7 @@ export default function MetabolicPage() {
       return;
     }
 
-    const { error } = await supabase
+    const { error: upsertError } = await supabase
       .from("organ_assessments")
       .upsert(
         {
@@ -49,8 +49,21 @@ export default function MetabolicPage() {
         }
       );
 
-    if (error) {
-      setSaveMessage("Database error: " + error.message);
+    if (upsertError) {
+      setSaveMessage("Database error: " + upsertError.message);
+      return;
+    }
+
+    const { error: historyError } = await supabase.from("health_history").insert({
+      user_id: user.id,
+      module_name: "Metabolic",
+      score: score,
+      status: level,
+      notes: message,
+    });
+
+    if (historyError) {
+      setSaveMessage("History error: " + historyError.message);
       return;
     }
 
