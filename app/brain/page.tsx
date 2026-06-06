@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { supabase } from "../../lib/supabase";
 
 export default function BrainPage() {
   const [sleep, setSleep] = useState("Good");
@@ -8,6 +9,7 @@ export default function BrainPage() {
   const [memory, setMemory] = useState("No");
   const [headache, setHeadache] = useState("No");
   const [activity, setActivity] = useState("Good");
+  const [saveMessage, setSaveMessage] = useState("");
 
   const [result, setResult] = useState<null | {
     score: number;
@@ -15,11 +17,54 @@ export default function BrainPage() {
     message: string;
   }>(null);
 
-  function calculateBrainScore() {
+  async function saveAssessment(score: number, level: string, message: string) {
+    setSaveMessage("Saving brain assessment...");
+
+    const { data, error: userError } = await supabase.auth.getUser();
+
+    if (userError) {
+      setSaveMessage("Auth error: " + userError.message);
+      return;
+    }
+
+    const user = data.user;
+
+    if (!user) {
+      setSaveMessage("Please login to save your assessment.");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("organ_assessments")
+      .upsert(
+        {
+          user_id: user.id,
+          organ_name: "Brain",
+          score: score,
+          risk_level: level,
+          notes: message,
+        },
+        {
+          onConflict: "user_id,organ_name",
+        }
+      );
+
+    if (error) {
+      setSaveMessage("Database error: " + error.message);
+      return;
+    }
+
+    setSaveMessage("Brain assessment saved successfully.");
+  }
+
+  async function calculateBrainScore() {
+    setSaveMessage("");
+
     let riskPoints = 0;
 
     if (sleep === "Poor") riskPoints += 20;
-    if (stress === "High") riskPoints += 20;
+    if (stress === "Moderate") riskPoints += 15;
+    if (stress === "High") riskPoints += 30;
     if (memory === "Yes") riskPoints += 20;
     if (headache === "Yes") riskPoints += 15;
     if (activity === "Poor") riskPoints += 15;
@@ -28,24 +73,22 @@ export default function BrainPage() {
 
     let level = "Good Brain Health Pattern";
     let message =
-      "Your answers suggest a generally healthier brain wellbeing pattern. Continue prioritizing sleep, stress control, activity, and preventive care.";
+      "Your answers suggest a generally healthier brain wellness pattern. Continue good sleep, stress control, physical activity, and regular checkups when symptoms appear.";
 
     if (score < 75 && score >= 45) {
-      level = "Moderate Brain Health Risk";
+      level = "Moderate Brain Wellness Risk";
       message =
-        "Your answers suggest some brain health and lifestyle risk factors. Consider improving sleep, managing stress, and discussing persistent symptoms with a healthcare professional.";
+        "Your answers suggest some brain wellness risk factors such as sleep, stress, headaches, or memory concerns. Consider lifestyle improvement and professional advice if symptoms continue.";
     }
 
     if (score < 45) {
-      level = "Higher Brain Health Risk";
+      level = "Higher Brain Wellness Risk";
       message =
-        "Your answers suggest multiple brain health-related risk factors. This tool does not diagnose neurological disease, but professional medical advice is recommended if symptoms persist or worsen.";
+        "Your answers suggest multiple brain wellness risk factors. This tool does not diagnose disease, but medical evaluation is recommended if symptoms are persistent or worsening.";
     }
 
     setResult({ score, level, message });
-
-    localStorage.setItem("brainScore", String(score));
-    localStorage.setItem("brainLevel", level);
+    await saveAssessment(score, level, message);
   }
 
   return (
@@ -53,12 +96,10 @@ export default function BrainPage() {
       <div className="assistantContainer">
         <div className="assistantHeader">
           <p className="assistantBadge">BRAIN HEALTH ASSESSMENT</p>
-
           <h1>Brain Health Assessment</h1>
-
           <p>
-            Answer a few questions about sleep, stress, memory, headaches, and
-            activity level to receive educational brain health guidance.
+            Evaluate brain wellness factors including sleep, stress, memory,
+            headaches, and activity level.
           </p>
         </div>
 
@@ -89,7 +130,7 @@ export default function BrainPage() {
             </div>
 
             <div className="formGroup">
-              <label>Memory or Concentration Issues?</label>
+              <label>Memory or concentration problems?</label>
               <select
                 value={memory}
                 onChange={(event) => setMemory(event.target.value)}
@@ -100,7 +141,7 @@ export default function BrainPage() {
             </div>
 
             <div className="formGroup">
-              <label>Frequent Headaches?</label>
+              <label>Frequent headaches?</label>
               <select
                 value={headache}
                 onChange={(event) => setHeadache(event.target.value)}
@@ -111,7 +152,7 @@ export default function BrainPage() {
             </div>
 
             <div className="formGroup">
-              <label>Physical Activity Level</label>
+              <label>Physical Activity</label>
               <select
                 value={activity}
                 onChange={(event) => setActivity(event.target.value)}
@@ -125,6 +166,8 @@ export default function BrainPage() {
             <button className="primaryBtn" onClick={calculateBrainScore}>
               Calculate Brain Score
             </button>
+
+            {saveMessage && <p>{saveMessage}</p>}
           </div>
 
           {result && (
