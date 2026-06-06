@@ -17,6 +17,12 @@ export default function LabAnalyzerPage() {
     interpretation: string;
   }>(null);
 
+  function getStatus(score: number) {
+    if (score >= 80) return "Good";
+    if (score >= 50) return "Moderate";
+    return "High Risk";
+  }
+
   async function saveLabReport(score: number, interpretation: string) {
     setSaveMessage("Saving lab report...");
 
@@ -34,7 +40,7 @@ export default function LabAnalyzerPage() {
       return;
     }
 
-    const { error } = await supabase
+    const { error: labError } = await supabase
       .from("lab_reports")
       .upsert(
         {
@@ -53,8 +59,21 @@ export default function LabAnalyzerPage() {
         }
       );
 
-    if (error) {
-      setSaveMessage("Database error: " + error.message);
+    if (labError) {
+      setSaveMessage("Database error: " + labError.message);
+      return;
+    }
+
+    const { error: historyError } = await supabase.from("health_history").insert({
+      user_id: user.id,
+      module_name: "Lab Analyzer",
+      score: score,
+      status: getStatus(score),
+      notes: interpretation,
+    });
+
+    if (historyError) {
+      setSaveMessage("History error: " + historyError.message);
       return;
     }
 
@@ -248,7 +267,12 @@ export default function LabAnalyzerPage() {
             <div className="resultBox">
               <p className="sectionLabel">Lab Health Score</p>
               <h2>{result.score}/100</h2>
+              <h3>{getStatus(result.score)}</h3>
               <p>{result.interpretation}</p>
+
+              <a href="/history">
+                <button className="secondaryBtn">View Health History</button>
+              </a>
             </div>
           )}
         </div>
