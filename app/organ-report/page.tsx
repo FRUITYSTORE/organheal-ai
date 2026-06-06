@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 type Assessment = {
   organ_name: string;
@@ -76,6 +78,30 @@ export default function OrganReportPage() {
     return "riskScore";
   }
 
+  async function downloadPDF() {
+    const reportElement = document.getElementById("report-content");
+
+    if (!reportElement) {
+      return;
+    }
+
+    const canvas = await html2canvas(reportElement, {
+      scale: 2,
+      useCORS: true,
+    });
+
+    const imgData = canvas.toDataURL("image/png");
+
+    const pdf = new jsPDF("p", "mm", "a4");
+
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+    pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+
+    pdf.save("OrganHeal_Report.pdf");
+  }
+
   return (
     <main className="assistantPage">
       <div className="assistantContainer">
@@ -98,36 +124,46 @@ export default function OrganReportPage() {
 
           {!loading && assessments.length > 0 && (
             <>
-              <div className="resultBox">
-                <p className="sectionLabel">Overall Organ Health Score</p>
-                <h2 className={getScoreClass(overallScore)}>
-                  {overallScore}/100
-                </h2>
-                <h3>{getStatus(overallScore)}</h3>
-                <p>
-                  This score is calculated from the average of your saved organ
-                  assessment scores.
-                </p>
-              </div>
+              <button className="primaryBtn" onClick={downloadPDF}>
+                Download PDF Report
+              </button>
 
-              <div className="assessmentForm">
-                {assessments.map((item) => (
-                  <div className="resultBox" key={item.organ_name}>
-                    <p className="sectionLabel">{item.organ_name}</p>
+              <div id="report-content">
+                <div className="resultBox">
+                  <p className="sectionLabel">Overall Organ Health Score</p>
 
-                    <h2 className={getScoreClass(item.score)}>
-                      {item.score}/100
-                    </h2>
+                  <h2 className={getScoreClass(overallScore)}>
+                    {overallScore}/100
+                  </h2>
 
-                    <h3>{item.risk_level}</h3>
-                    <p>{item.notes}</p>
+                  <h3>{getStatus(overallScore)}</h3>
 
-                    <p>
-                      Last saved:{" "}
-                      {new Date(item.created_at).toLocaleString()}
-                    </p>
-                  </div>
-                ))}
+                  <p>
+                    This score is calculated from the average of your saved
+                    organ assessment scores.
+                  </p>
+                </div>
+
+                <div className="assessmentForm">
+                  {assessments.map((item) => (
+                    <div className="resultBox" key={item.organ_name}>
+                      <p className="sectionLabel">{item.organ_name}</p>
+
+                      <h2 className={getScoreClass(item.score)}>
+                        {item.score}/100
+                      </h2>
+
+                      <h3>{item.risk_level}</h3>
+
+                      <p>{item.notes}</p>
+
+                      <p>
+                        Last saved:{" "}
+                        {new Date(item.created_at).toLocaleString()}
+                      </p>
+                    </div>
+                  ))}
+                </div>
               </div>
             </>
           )}
