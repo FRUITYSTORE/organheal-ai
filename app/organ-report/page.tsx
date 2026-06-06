@@ -13,6 +13,12 @@ type Assessment = {
 };
 
 type LabReport = {
+  total_cholesterol: number | null;
+  ldl: number | null;
+  hdl: number | null;
+  triglycerides: number | null;
+  hba1c: number | null;
+  vitamin_d: number | null;
   score: number;
   interpretation: string;
   created_at: string;
@@ -68,7 +74,9 @@ export default function OrganReportPage() {
 
     const { data: labData, error: labError } = await supabase
       .from("lab_reports")
-      .select("score, interpretation, created_at")
+      .select(
+        "total_cholesterol, ldl, hdl, triglycerides, hba1c, vitamin_d, score, interpretation, created_at"
+      )
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(1)
@@ -101,6 +109,11 @@ export default function OrganReportPage() {
     if (score >= 80) return "Good";
     if (score >= 50) return "Moderate";
     return "High Risk";
+  }
+
+  function formatValue(value: number | null) {
+    if (value === null || value === undefined) return "Not available";
+    return String(value);
   }
 
   function generateProfessionalPDF() {
@@ -206,7 +219,7 @@ export default function OrganReportPage() {
     });
 
     if (labReport) {
-      if (y > pageHeight - 60) {
+      if (y > pageHeight - 85) {
         pdf.addPage();
         y = 20;
       }
@@ -225,7 +238,32 @@ export default function OrganReportPage() {
 
       pdf.text(`Status: ${getStatus(labReport.score)}`, margin + 5, y);
 
-      y += 6;
+      y += 9;
+
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(12);
+      pdf.text("Lab Values", margin + 5, y);
+
+      y += 7;
+
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(10);
+
+      const labValues = [
+        `Total Cholesterol: ${formatValue(labReport.total_cholesterol)}`,
+        `LDL: ${formatValue(labReport.ldl)}`,
+        `HDL: ${formatValue(labReport.hdl)}`,
+        `Triglycerides: ${formatValue(labReport.triglycerides)}`,
+        `HbA1c: ${formatValue(labReport.hba1c)}`,
+        `Vitamin D: ${formatValue(labReport.vitamin_d)}`,
+      ];
+
+      labValues.forEach((value) => {
+        pdf.text(value, margin + 8, y);
+        y += 6;
+      });
+
+      y += 3;
 
       const labLines = pdf.splitTextToSize(
         `Interpretation: ${labReport.interpretation}`,
@@ -341,7 +379,31 @@ export default function OrganReportPage() {
                     <p className="sectionLabel">Lab Analyzer</p>
                     <h2>{labReport.score}/100</h2>
                     <h3>{getStatus(labReport.score)}</h3>
+
+                    <p>
+                      <strong>Total Cholesterol:</strong>{" "}
+                      {formatValue(labReport.total_cholesterol)}
+                    </p>
+                    <p>
+                      <strong>LDL:</strong> {formatValue(labReport.ldl)}
+                    </p>
+                    <p>
+                      <strong>HDL:</strong> {formatValue(labReport.hdl)}
+                    </p>
+                    <p>
+                      <strong>Triglycerides:</strong>{" "}
+                      {formatValue(labReport.triglycerides)}
+                    </p>
+                    <p>
+                      <strong>HbA1c:</strong> {formatValue(labReport.hba1c)}
+                    </p>
+                    <p>
+                      <strong>Vitamin D:</strong>{" "}
+                      {formatValue(labReport.vitamin_d)}
+                    </p>
+
                     <p>{labReport.interpretation}</p>
+
                     <p>
                       Last saved:{" "}
                       {new Date(labReport.created_at).toLocaleString()}
