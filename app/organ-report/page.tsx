@@ -179,7 +179,69 @@ This report is educational and intended to help identify areas that may benefit 
 
     const margin = 18;
     let y = 20;
+// COVER PAGE
+pdf.setFillColor(15, 23, 42);
+pdf.rect(0, 0, pageWidth, pageHeight, "F");
 
+drawLogo(pdf, pageWidth / 2, 40);
+
+pdf.setTextColor(255, 255, 255);
+pdf.setFont("helvetica", "bold");
+pdf.setFontSize(28);
+pdf.text("OrganHeal AI", pageWidth / 2, 62, { align: "center" });
+
+pdf.setFont("helvetica", "normal");
+pdf.setFontSize(14);
+pdf.text("Health Intelligence Report", pageWidth / 2, 74, {
+  align: "center",
+});
+
+pdf.setFontSize(11);
+pdf.text(`User: ${userEmail || "Unknown user"}`, pageWidth / 2, 90, {
+  align: "center",
+});
+
+pdf.text(`Generated: ${new Date().toLocaleString()}`, pageWidth / 2, 98, {
+  align: "center",
+});
+
+if (overallScore >= 80) {
+  pdf.setFillColor(34, 197, 94);
+} else if (overallScore >= 50) {
+  pdf.setFillColor(245, 158, 11);
+} else {
+  pdf.setFillColor(239, 68, 68);
+}
+
+pdf.circle(pageWidth / 2, 135, 30, "F");
+
+pdf.setTextColor(255, 255, 255);
+pdf.setFont("helvetica", "bold");
+pdf.setFontSize(30);
+pdf.text(String(overallScore), pageWidth / 2, 139, { align: "center" });
+
+pdf.setFontSize(12);
+pdf.text("/100", pageWidth / 2, 151, { align: "center" });
+
+pdf.setFontSize(16);
+pdf.text(getStatus(overallScore).toUpperCase(), pageWidth / 2, 180, {
+  align: "center",
+});
+
+pdf.setFont("helvetica", "normal");
+pdf.setFontSize(10);
+pdf.text(
+  "Educational wellness report. Not a medical diagnosis.",
+  pageWidth / 2,
+  265,
+  { align: "center" }
+);
+
+resetPDFColor(pdf);
+
+pdf.addPage();
+
+y = 20;
     drawLogo(pdf, margin + 8, y + 2);
 
     pdf.setFont("helvetica", "bold");
