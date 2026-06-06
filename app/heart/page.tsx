@@ -18,37 +18,59 @@ export default function HeartPage() {
   }>(null);
 
   async function saveAssessment(score: number, level: string, message: string) {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    setSaveMessage("Saving...");
+
+    const { data, error: userError } = await supabase.auth.getUser();
+
+    if (userError) {
+      setSaveMessage("Auth error: " + userError.message);
+      return;
+    }
+
+    const user = data.user;
 
     if (!user) {
-      setSaveMessage("Result calculated locally. Login to save it to your profile.");
+      setSaveMessage("Result calculated locally. Please login to save it.");
       return;
     }
 
-    const { error } = await supabase.from("organ_assessments").insert({
-      user_id: user.id,
-      organ_name: "Heart",
-      score,
-      risk_level: level,
-      notes: message,
-    });
+    const { error } = await supabase.from("organ_assessments").insert([
+      {
+        user_id: user.id,
+        organ_name: "Heart",
+        score: score,
+        risk_level: level,
+        notes: message,
+      },
+    ]);
 
     if (error) {
-      setSaveMessage("Could not save result: " + error.message);
+      console.error("Supabase insert error:", error);
+      setSaveMessage("Database error: " + error.message);
       return;
     }
 
-    setSaveMessage("Heart assessment saved to your profile.");
+    setSaveMessage("Heart assessment saved successfully.");
   }
 
   async function calculateRisk() {
-    let riskPoints = 0;
+    setSaveMessage("");
 
     const ageNumber = Number(age);
     const bpNumber = Number(bloodPressure);
     const cholesterolNumber = Number(cholesterol);
+
+    if (!age || !bloodPressure || !cholesterol) {
+      setSaveMessage("Please complete all required fields.");
+      return;
+    }
+
+    if (ageNumber <= 0 || bpNumber <= 0 || cholesterolNumber <= 0) {
+      setSaveMessage("Please enter valid numbers.");
+      return;
+    }
+
+    let riskPoints = 0;
 
     if (ageNumber >= 45) riskPoints += 15;
     if (ageNumber >= 60) riskPoints += 15;
@@ -167,6 +189,8 @@ export default function HeartPage() {
             <button className="primaryBtn" onClick={calculateRisk}>
               Calculate Heart Risk
             </button>
+
+            {saveMessage && <p>{saveMessage}</p>}
           </div>
 
           {result && (
@@ -175,8 +199,6 @@ export default function HeartPage() {
               <h2>{result.score}/100</h2>
               <h3>{result.level}</h3>
               <p>{result.message}</p>
-
-              {saveMessage && <p>{saveMessage}</p>}
 
               <a href="/organ-report">
                 <button className="secondaryBtn">View Organ Report</button>
