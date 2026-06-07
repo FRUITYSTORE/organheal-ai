@@ -757,83 +757,42 @@ button {
 .navLogoutBtn:hover {
   color: white;
   background: rgba(239, 68, 68, 0.18);
-}.hero .badge,
 .hero h1,
 .hero .tagline,
-.hero .description,
-.hero p,
-.hero a,
-.hero button {
-  background: transparent !important;
+.hero .description {
+  background: none !important;
+  background-color: transparent !important;
   box-shadow: none !important;
 }
 
 .hero h1 {
-  display: block;
   color: #ffffff !important;
+  font-size: 76px;
+  font-weight: 800;
   text-shadow:
-    0 4px 28px rgba(0, 0, 0, 0.85),
-    0 0 24px rgba(34, 211, 238, 0.35);
-}
-
-.hero .tagline,
-.hero .description {
-  color: #ffffff !important;
-  text-shadow:
-    0 3px 20px rgba(0, 0, 0, 0.9),
-    0 0 16px rgba(34, 211, 238, 0.25);
-}
-
-.hero .badge {
-  background: rgba(2, 6, 23, 0.35) !important;
-  backdrop-filter: blur(8px);
-}
-
-.hero .primaryBtn,
-.hero .secondaryBtn {
-  background: rgba(2, 6, 23, 0.28) !important;
-  border: 1px solid rgba(255, 255, 255, 0.55);
-  color: white !important;
-  backdrop-filter: blur(6px);
-}.hero h1 {
-  background: linear-gradient(135deg, #ffffff, #dbeafe, #67e8f9);
-  -webkit-background-clip: text;
-  color: transparent !important;
-  text-shadow:
-    0 4px 20px rgba(0, 0, 0, 0.65),
-    0 0 28px rgba(56, 189, 248, 0.55);
+    0 5px 25px rgba(0, 0, 0, 0.85),
+    0 0 26px rgba(56, 189, 248, 0.65);
 }
 
 .hero .tagline {
   color: #e0f2fe !important;
+  font-weight: 800;
   text-shadow:
-    0 3px 18px rgba(0, 0, 0, 0.7),
-    0 0 20px rgba(59, 130, 246, 0.55);
+    0 4px 18px rgba(0, 0, 0, 0.9),
+    0 0 20px rgba(59, 130, 246, 0.65);
 }
 
 .hero .description {
   color: #f8fafc !important;
   text-shadow:
-    0 3px 16px rgba(0, 0, 0, 0.75),
-    0 0 14px rgba(14, 165, 233, 0.35);
+    0 4px 18px rgba(0, 0, 0, 0.9),
+    0 0 14px rgba(14, 165, 233, 0.45);
 }
 
 .hero .primaryBtn,
 .hero .secondaryBtn {
-  background: rgba(15, 23, 42, 0.45) !important;
-  color: #ffffff !important;
+  background: rgba(15, 23, 42, 0.35) !important;
+  color: white !important;
   border: 1px solid rgba(191, 219, 254, 0.75);
   backdrop-filter: blur(8px);
-  box-shadow:
-    0 0 16px rgba(59, 130, 246, 0.28),
-    inset 0 0 18px rgba(255, 255, 255, 0.08);
-}
-
-.hero .primaryBtn:hover,
-.hero .secondaryBtn:hover {
-  background: rgba(37, 99, 235, 0.35) !important;
-  border-color: rgba(125, 211, 252, 0.95);
-  box-shadow:
-    0 0 24px rgba(56, 189, 248, 0.45),
-    inset 0 0 20px rgba(255, 255, 255, 0.12);
 }
