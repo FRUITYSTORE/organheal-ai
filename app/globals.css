@@ -610,4 +610,11 @@ button {
   color: #cbd5e1;
   font-size: 18px;
   margin-bottom: 28px;
+}.navLinks a {
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.logo span:last-child {
+  white-space: nowrap;
 }
