@@ -700,4 +700,17 @@ button {
 
 button {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+}.navLogoutBtn {
+  background: transparent;
+  color: #fca5a5;
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.navLogoutBtn:hover {
+  color: white;
+  background: rgba(239, 68, 68, 0.18);
 }
