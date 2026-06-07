@@ -148,7 +148,7 @@ export default function OrganReportPage() {
     resetPDFColor(pdf);
   }
 
- function getStrongestAssessment() {
+function getStrongestAssessment() {
   if (assessments.length === 0) return null;
 
   return [...assessments].sort((a, b) => b.score - a.score)[0];
@@ -213,15 +213,6 @@ Recommended focus: ${getAIRecommendation(weakest.organ_name)}
 
 This report is educational and intended to help identify areas that may benefit from lifestyle improvement, monitoring, or professional medical discussion.`;
 }
-    if (assessments.length === 0) {
-      return "No assessment data available.";
-    }
-
-    const strongest = [...assessments].sort((a, b) => b.score - a.score)[0];
-    const weakest = [...assessments].sort((a, b) => a.score - b.score)[0];
-
-    return `Overall Health Intelligence Score: ${overallScore}/100.
-
 Your strongest health area is ${strongest.organ_name} with a score of ${strongest.score}/100.
 
 The area requiring the most attention is ${weakest.organ_name} with a score of ${weakest.score}/100.
@@ -371,11 +362,73 @@ y = 20;
       pageWidth - margin * 2
     );
 
-    pdf.text(summaryLines, margin, y);
+pdf.text(summaryLines, margin, y);
 
-    y += summaryLines.length * 5 + 10;
+y += summaryLines.length * 5 + 10;
 
-    pdf.line(margin, y, pageWidth - margin, y);
+const strongest = getStrongestAssessment();
+const weakest = getWeakestAssessment();
+
+if (strongest && weakest) {
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(15);
+  pdf.text("AI Health Insights", margin, y);
+
+  y += 10;
+
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(11);
+
+  pdf.text(
+    `Strongest Area: ${strongest.organ_name} (${strongest.score}/100)`,
+    margin,
+    y
+  );
+
+  y += 7;
+
+  pdf.text(
+    `Priority Area: ${weakest.organ_name} (${weakest.score}/100)`,
+    margin,
+    y
+  );
+
+  y += 7;
+
+  pdf.text(`Overall Status: ${getStatus(overallScore)}`, margin, y);
+
+  y += 10;
+
+  const recommendationLines = pdf.splitTextToSize(
+    `Recommendation: ${getAIRecommendation(weakest.organ_name)}`,
+    pageWidth - margin * 2
+  );
+
+  pdf.text(recommendationLines, margin, y);
+
+  y += recommendationLines.length * 5 + 8;
+
+  if (weakest.score < 50) {
+    pdf.setFillColor(127, 29, 29);
+    pdf.rect(margin, y, pageWidth - margin * 2, 18, "F");
+
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(10);
+
+    pdf.text(
+      `Priority Alert: ${weakest.organ_name} currently has the lowest score (${weakest.score}/100).`,
+      margin + 4,
+      y + 11
+    );
+
+    resetPDFColor(pdf);
+
+    y += 26;
+  }
+}
+
+pdf.line(margin, y, pageWidth - margin, y);
 
     y += 12;
 
