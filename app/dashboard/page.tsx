@@ -199,6 +199,21 @@ export default function DashboardPage() {
         </div>
 
         <div className="chatWindow">
+            {dashboardInsights.priorityAttention && (
+  <div className="priorityAlert">
+    <h3>🚨 Health Priority Alert</h3>
+
+    <p>
+      <strong>
+        {dashboardInsights.priorityAttention.organ_name}
+      </strong>{" "}
+      currently has the lowest score (
+      {dashboardInsights.priorityAttention.score}/100).
+    </p>
+
+    <p>{dashboardInsights.aiRecommendation}</p>
+  </div>
+)}
           {loading && <p>Loading dashboard...</p>}
 
           {!loading && message && <p>{message}</p>}

@@ -148,7 +148,71 @@ export default function OrganReportPage() {
     resetPDFColor(pdf);
   }
 
-  function generateExecutiveSummary() {
+ function getStrongestAssessment() {
+  if (assessments.length === 0) return null;
+
+  return [...assessments].sort((a, b) => b.score - a.score)[0];
+}
+
+function getWeakestAssessment() {
+  if (assessments.length === 0) return null;
+
+  return [...assessments].sort((a, b) => a.score - b.score)[0];
+}
+
+function getAIRecommendation(moduleName: string | null) {
+  if (!moduleName) {
+    return "Complete assessments to receive health insights.";
+  }
+
+  switch (moduleName) {
+    case "Heart":
+      return "Focus on blood pressure, cholesterol management, regular cardiovascular exercise, and preventive follow-up.";
+
+    case "Lung":
+      return "Avoid smoking exposure, maintain physical activity, and monitor respiratory symptoms such as cough or shortness of breath.";
+
+    case "Kidney":
+      return "Maintain hydration, monitor blood pressure, and consider follow-up kidney function and urine testing with a healthcare professional.";
+
+    case "Liver":
+      return "Focus on healthy nutrition, weight control, avoiding unnecessary liver stressors, and monitoring liver enzymes when needed.";
+
+    case "Brain":
+      return "Improve sleep quality, reduce stress, stay physically active, and seek medical advice if headaches or memory concerns persist.";
+
+    case "Metabolic":
+      return "Focus on blood sugar control, weight management, regular activity, and lipid profile monitoring.";
+
+    default:
+      return "Continue preventive health monitoring and healthy lifestyle habits.";
+  }
+}
+
+function generateExecutiveSummary() {
+  const strongest = getStrongestAssessment();
+  const weakest = getWeakestAssessment();
+
+  if (!strongest || !weakest) {
+    return "No assessment data available.";
+  }
+
+  return `Overall Health Intelligence Score: ${overallScore}/100.
+
+Your strongest health area is ${strongest.organ_name} with a score of ${strongest.score}/100.
+
+The area requiring the most attention is ${weakest.organ_name} with a score of ${weakest.score}/100.
+
+${
+  labReport
+    ? `Your latest laboratory analysis score is ${labReport.score}/100.`
+    : ""
+}
+
+Recommended focus: ${getAIRecommendation(weakest.organ_name)}
+
+This report is educational and intended to help identify areas that may benefit from lifestyle improvement, monitoring, or professional medical discussion.`;
+}
     if (assessments.length === 0) {
       return "No assessment data available.";
     }
