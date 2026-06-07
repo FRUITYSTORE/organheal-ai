@@ -81,8 +81,12 @@ a {
   max-width: 1200px;
   margin: 0 auto;
   text-align: center;
-  padding: 80px 20px 120px;
+  padding: 90px 20px 130px;
   overflow: hidden;
+  border-radius: 32px;
+  z-index: 0;
+  border: 1px solid rgba(34, 211, 238, 0.22);
+  box-shadow: 0 24px 80px rgba(34, 211, 238, 0.08);
 }
 
 .hero::before {
@@ -92,27 +96,42 @@ a {
 
   background:
     linear-gradient(
-      rgba(2,6,23,0.75),
-      rgba(2,6,23,0.75)
+      rgba(2, 6, 23, 0.58),
+      rgba(2, 6, 23, 0.82)
     ),
     url("/hero-medical.png");
 
   background-size: cover;
   background-position: center;
+  background-repeat: no-repeat;
 
-  border-radius: 32px;
+  z-index: 0;
+}
 
-  z-index: -1;
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at center, rgba(34, 211, 238, 0.13), transparent 35%),
+    linear-gradient(to bottom, transparent, rgba(2, 6, 23, 0.42));
+  z-index: 0;
+}
+
+.hero > * {
+  position: relative;
+  z-index: 1;
 }
 
 .badge {
   display: inline-block;
   margin-bottom: 24px;
   padding: 10px 18px;
-  border: 1px solid rgba(34, 211, 238, 0.5);
+  border: 1px solid rgba(34, 211, 238, 0.65);
   border-radius: 999px;
   color: #67e8f9;
-  background: rgba(8, 47, 73, 0.35);
+  background: rgba(8, 47, 73, 0.55);
+  backdrop-filter: blur(10px);
   font-size: 14px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -123,19 +142,21 @@ h1 {
   font-size: 76px;
   line-height: 1;
   font-weight: 800;
+  text-shadow: 0 0 34px rgba(34, 211, 238, 0.22);
 }
 
 .tagline {
   margin-top: 24px;
   font-size: 28px;
-  color: #22d3ee;
-  font-weight: 600;
+  color: #67e8f9;
+  font-weight: 700;
+  text-shadow: 0 0 20px rgba(34, 211, 238, 0.18);
 }
 
 .description {
   max-width: 760px;
   margin: 24px auto 36px;
-  color: #cbd5e1;
+  color: #e2e8f0;
   font-size: 19px;
   line-height: 1.7;
 }
