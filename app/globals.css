@@ -795,4 +795,45 @@ button {
   border: 1px solid rgba(255, 255, 255, 0.55);
   color: white !important;
   backdrop-filter: blur(6px);
+}.hero h1 {
+  background: linear-gradient(135deg, #ffffff, #dbeafe, #67e8f9);
+  -webkit-background-clip: text;
+  color: transparent !important;
+  text-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.65),
+    0 0 28px rgba(56, 189, 248, 0.55);
+}
+
+.hero .tagline {
+  color: #e0f2fe !important;
+  text-shadow:
+    0 3px 18px rgba(0, 0, 0, 0.7),
+    0 0 20px rgba(59, 130, 246, 0.55);
+}
+
+.hero .description {
+  color: #f8fafc !important;
+  text-shadow:
+    0 3px 16px rgba(0, 0, 0, 0.75),
+    0 0 14px rgba(14, 165, 233, 0.35);
+}
+
+.hero .primaryBtn,
+.hero .secondaryBtn {
+  background: rgba(15, 23, 42, 0.45) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(191, 219, 254, 0.75);
+  backdrop-filter: blur(8px);
+  box-shadow:
+    0 0 16px rgba(59, 130, 246, 0.28),
+    inset 0 0 18px rgba(255, 255, 255, 0.08);
+}
+
+.hero .primaryBtn:hover,
+.hero .secondaryBtn:hover {
+  background: rgba(37, 99, 235, 0.35) !important;
+  border-color: rgba(125, 211, 252, 0.95);
+  box-shadow:
+    0 0 24px rgba(56, 189, 248, 0.45),
+    inset 0 0 20px rgba(255, 255, 255, 0.12);
 }
