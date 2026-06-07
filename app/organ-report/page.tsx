@@ -422,18 +422,24 @@ This report is educational and intended to help identify areas that may benefit 
 
     y += 12;
 
-    // Organ chart
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(15);
-    pdf.text("Organ Assessment Summary", margin, y);
+// Organ chart
 
-    y += 10;
+if (y > pageHeight - 120) {
+  pdf.addPage();
+  y = 20;
+}
 
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(13);
-    pdf.text("Organ Health Chart", margin, y);
+pdf.setFont("helvetica", "bold");
+pdf.setFontSize(15);
+pdf.text("Organ Assessment Summary", margin, y);
 
-    y += 10;
+y += 10;
+
+pdf.setFont("helvetica", "bold");
+pdf.setFontSize(13);
+pdf.text("Organ Health Chart", margin, y);
+
+y += 10;
 
     const chartWidth = 100;
 
@@ -468,7 +474,7 @@ This report is educational and intended to help identify areas that may benefit 
 
     // Organ details
     assessments.forEach((item, index) => {
-      if (y > pageHeight - 50) {
+      if (y > pageHeight - 70) {
         pdf.addPage();
         y = 20;
       }
