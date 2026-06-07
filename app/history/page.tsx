@@ -37,20 +37,21 @@ export default function HistoryPage() {
       await supabase.auth.getUser();
 
     if (userError) {
-      setMessage("Auth error: " + userError.message);
+      setMessage("Please login or sign up to access your health history.");
       setLoading(false);
       return;
     }
 
-const user = userData.user;
+    const user = userData.user;
 
-if (!user) {
-  window.location.href = "/login";
-  return;
-}
+    if (!user) {
+      setMessage("Please login or sign up to access your health history.");
+      setLoading(false);
+      return;
+    }
 
-const { data, error } = await supabase
-  .from("health_history")
+    const { data, error } = await supabase
+      .from("health_history")
       .select("id, module_name, score, status, notes, created_at")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
@@ -181,7 +182,30 @@ const { data, error } = await supabase
         <div className="chatWindow" style={{ paddingTop: "28px" }}>
           {loading && <p>Loading health history...</p>}
 
-          {!loading && message && <p>{message}</p>}
+          {!loading && message && (
+            <div className="resultBox">
+              <p className="sectionLabel">Login Required</p>
+              <h2>Access Protected</h2>
+              <p>{message}</p>
+
+              <div
+                style={{
+                  display: "flex",
+                  gap: "12px",
+                  justifyContent: "center",
+                  flexWrap: "wrap",
+                }}
+              >
+                <a href="/login">
+                  <button className="primaryBtn">Login</button>
+                </a>
+
+                <a href="/signup">
+                  <button className="secondaryBtn">Sign Up</button>
+                </a>
+              </div>
+            </div>
+          )}
 
           {!loading && !message && history.length === 0 && (
             <p>No health history found yet.</p>

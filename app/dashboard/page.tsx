@@ -43,17 +43,18 @@ export default function DashboardPage() {
       await supabase.auth.getUser();
 
     if (userError) {
-      setMessage("Auth error: " + userError.message);
+      setMessage("Please login or sign up to access your dashboard.");
       setLoading(false);
       return;
     }
 
     const user = userData.user;
 
-if (!user) {
-  window.location.href = "/login";
-  return;
-}
+    if (!user) {
+      setMessage("Please login or sign up to access your dashboard.");
+      setLoading(false);
+      return;
+    }
 
     const { data: organData, error: organError } = await supabase
       .from("organ_assessments")
@@ -62,7 +63,7 @@ if (!user) {
       .order("created_at", { ascending: false });
 
     if (organError) {
-      setMessage("Organ database error: " + organError.message);
+      setMessage("Database error: " + organError.message);
       setLoading(false);
       return;
     }
@@ -76,7 +77,7 @@ if (!user) {
       .single();
 
     if (labError && labError.code !== "PGRST116") {
-      setMessage("Lab database error: " + labError.message);
+      setMessage("Database error: " + labError.message);
       setLoading(false);
       return;
     }
@@ -116,22 +117,16 @@ if (!user) {
     switch (moduleName) {
       case "Heart":
         return "Focus on blood pressure, cholesterol management, regular cardiovascular exercise, and preventive follow-up.";
-
       case "Lung":
         return "Avoid smoking exposure, maintain physical activity, and monitor respiratory symptoms such as cough or shortness of breath.";
-
       case "Kidney":
         return "Maintain hydration, monitor blood pressure, and consider follow-up kidney function and urine testing with a healthcare professional.";
-
       case "Liver":
         return "Focus on healthy nutrition, weight control, avoiding unnecessary liver stressors, and monitoring liver enzymes when needed.";
-
       case "Brain":
         return "Improve sleep quality, reduce stress, stay physically active, and seek medical advice if headaches or memory concerns persist.";
-
       case "Metabolic":
         return "Focus on blood sugar control, weight management, regular activity, and lipid profile monitoring.";
-
       default:
         return "Continue preventive health monitoring and healthy lifestyle habits.";
     }
@@ -177,11 +172,7 @@ if (!user) {
     ),
     healthCoachMessage:
       assessments.length > 0
-        ? `Based on your current assessments, ${
-            priorityAttention?.organ_name
-          } requires the highest attention, while ${
-            topStrength?.organ_name
-          } is your strongest area. Continue monitoring your results and discuss concerning findings with a healthcare professional.`
+        ? `Based on your current assessments, ${priorityAttention?.organ_name} requires the highest attention, while ${topStrength?.organ_name} is your strongest area. Continue monitoring your results and discuss concerning findings with a healthcare professional.`
         : "Complete your organ assessments to receive personalized health guidance.",
   };
 
@@ -198,27 +189,49 @@ if (!user) {
         </div>
 
         <div className="chatWindow">
-            {dashboardInsights.priorityAttention && (
-  <div className="priorityAlert">
-    <h3>🚨 Health Priority Alert</h3>
-
-    <p>
-      <strong>
-        {dashboardInsights.priorityAttention.organ_name}
-      </strong>{" "}
-      currently has the lowest score (
-      {dashboardInsights.priorityAttention.score}/100).
-    </p>
-
-    <p>{dashboardInsights.aiRecommendation}</p>
-  </div>
-)}
           {loading && <p>Loading dashboard...</p>}
 
-          {!loading && message && <p>{message}</p>}
+          {!loading && message && (
+            <div className="resultBox">
+              <p className="sectionLabel">Login Required</p>
+              <h2>Access Protected</h2>
+              <p>{message}</p>
+
+              <div
+                style={{
+                  display: "flex",
+                  gap: "12px",
+                  justifyContent: "center",
+                  flexWrap: "wrap",
+                }}
+              >
+                <a href="/login">
+                  <button className="primaryBtn">Login</button>
+                </a>
+
+                <a href="/signup">
+                  <button className="secondaryBtn">Sign Up</button>
+                </a>
+              </div>
+            </div>
+          )}
 
           {!loading && !message && (
             <>
+              {dashboardInsights.priorityAttention && (
+                <div className="priorityAlert">
+                  <h3>🚨 Health Priority Alert</h3>
+                  <p>
+                    <strong>
+                      {dashboardInsights.priorityAttention.organ_name}
+                    </strong>{" "}
+                    currently has the lowest score (
+                    {dashboardInsights.priorityAttention.score}/100).
+                  </p>
+                  <p>{dashboardInsights.aiRecommendation}</p>
+                </div>
+              )}
+
               <div className="resultBox">
                 <p className="sectionLabel">Overall Health Intelligence</p>
 

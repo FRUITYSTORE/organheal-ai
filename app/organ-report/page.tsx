@@ -43,7 +43,7 @@ export default function OrganReportPage() {
     const { data: userData, error: userError } = await supabase.auth.getUser();
 
     if (userError) {
-      setMessage("Auth error: " + userError.message);
+      setMessage("Please login or sign up to access your health report.");
       setLoading(false);
       return;
     }
@@ -51,10 +51,11 @@ export default function OrganReportPage() {
     const user = userData.user;
     setUserEmail(user?.email || "");
 
-if (!user) {
-  window.location.href = "/login";
-  return;
-}
+    if (!user) {
+      setMessage("Please login or sign up to access your health report.");
+      setLoading(false);
+      return;
+    }
 
     const { data: organData, error: organError } = await supabase
       .from("organ_assessments")
@@ -63,7 +64,7 @@ if (!user) {
       .order("created_at", { ascending: false });
 
     if (organError) {
-      setMessage("Organ database error: " + organError.message);
+      setMessage("Database error: " + organError.message);
       setLoading(false);
       return;
     }
@@ -84,7 +85,7 @@ if (!user) {
       .single();
 
     if (labError && labError.code !== "PGRST116") {
-      setMessage("Lab database error: " + labError.message);
+      setMessage("Database error: " + labError.message);
       setLoading(false);
       return;
     }
@@ -123,29 +124,21 @@ if (!user) {
   }
 
   function getAIRecommendation(moduleName: string | null) {
-    if (!moduleName) {
-      return "Complete assessments to receive health insights.";
-    }
+    if (!moduleName) return "Complete assessments to receive health insights.";
 
     switch (moduleName) {
       case "Heart":
         return "Focus on blood pressure, cholesterol management, regular cardiovascular exercise, and preventive follow-up.";
-
       case "Lung":
         return "Avoid smoking exposure, maintain physical activity, and monitor respiratory symptoms such as cough or shortness of breath.";
-
       case "Kidney":
         return "Maintain hydration, monitor blood pressure, and consider follow-up kidney function and urine testing with a healthcare professional.";
-
       case "Liver":
         return "Focus on healthy nutrition, weight control, avoiding unnecessary liver stressors, and monitoring liver enzymes when needed.";
-
       case "Brain":
         return "Improve sleep quality, reduce stress, stay physically active, and seek medical advice if headaches or memory concerns persist.";
-
       case "Metabolic":
         return "Focus on blood sugar control, weight management, regular activity, and lipid profile monitoring.";
-
       default:
         return "Continue preventive health monitoring and healthy lifestyle habits.";
     }
@@ -190,9 +183,7 @@ if (!user) {
     const strongest = getStrongestAssessment();
     const weakest = getWeakestAssessment();
 
-    if (!strongest || !weakest) {
-      return "No assessment data available.";
-    }
+    if (!strongest || !weakest) return "No assessment data available.";
 
     return `Overall Health Intelligence Score: ${overallScore}/100.
 
@@ -223,7 +214,6 @@ This report is educational and intended to help identify areas that may benefit 
     const strongest = getStrongestAssessment();
     const weakest = getWeakestAssessment();
 
-    // Cover page
     pdf.setFillColor(15, 23, 42);
     pdf.rect(0, 0, pageWidth, pageHeight, "F");
 
@@ -286,7 +276,6 @@ This report is educational and intended to help identify areas that may benefit 
     pdf.addPage();
     y = 20;
 
-    // Page header
     drawLogo(pdf, margin + 8, y + 2);
 
     pdf.setFont("helvetica", "bold");
@@ -338,7 +327,6 @@ This report is educational and intended to help identify areas that may benefit 
 
     y += 12;
 
-    // Executive summary
     pdf.setFont("helvetica", "bold");
     pdf.setFontSize(15);
     pdf.text("AI Executive Summary", margin, y);
@@ -357,7 +345,6 @@ This report is educational and intended to help identify areas that may benefit 
 
     y += summaryLines.length * 5 + 10;
 
-    // AI Health Insights
     if (strongest && weakest) {
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(15);
@@ -421,24 +408,22 @@ This report is educational and intended to help identify areas that may benefit 
 
     y += 12;
 
-// Organ chart
+    if (y > pageHeight - 120) {
+      pdf.addPage();
+      y = 20;
+    }
 
-if (y > pageHeight - 120) {
-  pdf.addPage();
-  y = 20;
-}
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(15);
+    pdf.text("Organ Assessment Summary", margin, y);
 
-pdf.setFont("helvetica", "bold");
-pdf.setFontSize(15);
-pdf.text("Organ Assessment Summary", margin, y);
+    y += 10;
 
-y += 10;
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(13);
+    pdf.text("Organ Health Chart", margin, y);
 
-pdf.setFont("helvetica", "bold");
-pdf.setFontSize(13);
-pdf.text("Organ Health Chart", margin, y);
-
-y += 10;
+    y += 10;
 
     const chartWidth = 100;
 
@@ -461,7 +446,6 @@ y += 10;
       pdf.text(item.organ_name, margin, y);
 
       pdf.setFillColor(barColor[0], barColor[1], barColor[2]);
-
       pdf.rect(margin + 35, y - 4, (item.score / 100) * chartWidth, 5, "F");
 
       pdf.text(`${item.score}`, margin + 140, y);
@@ -471,7 +455,6 @@ y += 10;
 
     y += 10;
 
-    // Organ details
     assessments.forEach((item, index) => {
       if (y > pageHeight - 70) {
         pdf.addPage();
@@ -520,7 +503,6 @@ y += 10;
       y += 9;
     });
 
-    // Lab analyzer
     if (labReport) {
       if (y > pageHeight - 85) {
         pdf.addPage();
@@ -537,7 +519,11 @@ y += 10;
       pdf.setFontSize(11);
 
       setStatusColor(pdf, labReport.score);
-      pdf.text(`Latest Lab Intelligence Score: ${labReport.score}/100`, margin + 5, y);
+      pdf.text(
+        `Latest Lab Intelligence Score: ${labReport.score}/100`,
+        margin + 5,
+        y
+      );
       resetPDFColor(pdf);
 
       y += 6;
@@ -594,7 +580,6 @@ y += 10;
       y += 10;
     }
 
-    // Disclaimer
     if (y > pageHeight - 45) {
       pdf.addPage();
       y = 20;
@@ -645,7 +630,30 @@ y += 10;
         <div className="chatWindow">
           {loading && <p>Loading your report...</p>}
 
-          {!loading && message && <p>{message}</p>}
+          {!loading && message && (
+            <div className="resultBox">
+              <p className="sectionLabel">Login Required</p>
+              <h2>Access Protected</h2>
+              <p>{message}</p>
+
+              <div
+                style={{
+                  display: "flex",
+                  gap: "12px",
+                  justifyContent: "center",
+                  flexWrap: "wrap",
+                }}
+              >
+                <a href="/login">
+                  <button className="primaryBtn">Login</button>
+                </a>
+
+                <a href="/signup">
+                  <button className="secondaryBtn">Sign Up</button>
+                </a>
+              </div>
+            </div>
+          )}
 
           {!loading && !message && allScores.length === 0 && (
             <p>No saved organ assessments or lab reports found yet.</p>
