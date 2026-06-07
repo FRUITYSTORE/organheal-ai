@@ -115,6 +115,44 @@ export default function DashboardPage() {
   ];
 
   const overallScore =
+  const strongestAssessment =
+  assessments.length > 0
+    ? [...assessments].sort((a, b) => b.score - a.score)[0]
+    : null;
+
+const weakestAssessment =
+  assessments.length > 0
+    ? [...assessments].sort((a, b) => a.score - b.score)[0]
+    : null;
+
+function getAIRecommendation() {
+  if (!weakestAssessment) {
+    return "Complete assessments to receive AI insights.";
+  }
+
+  switch (weakestAssessment.organ_name) {
+    case "Heart":
+      return "Focus on blood pressure, cholesterol management, and regular cardiovascular exercise.";
+
+    case "Lung":
+      return "Avoid smoking exposure, maintain physical activity, and monitor respiratory symptoms.";
+
+    case "Kidney":
+      return "Maintain hydration, monitor blood pressure, and follow kidney function testing.";
+
+    case "Liver":
+      return "Focus on weight control, healthy nutrition, and liver health monitoring.";
+
+    case "Brain":
+      return "Improve sleep quality, stress management, and regular physical activity.";
+
+    case "Metabolic":
+      return "Focus on blood sugar control, weight management, and lifestyle improvement.";
+
+    default:
+      return "Continue preventive health monitoring and healthy lifestyle habits.";
+  }
+}
     allScores.length > 0
       ? Math.round(
           allScores.reduce((sum, score) => sum + score, 0) / allScores.length
@@ -272,7 +310,33 @@ export default function DashboardPage() {
 
                 <div className="resultBox">
                   <p className="sectionLabel">🧪 Latest Lab Score</p>
+<div className="resultBox">
+  <p className="sectionLabel">AI Health Insights</p>
 
+  <p>
+    <strong>Strongest Area:</strong>{" "}
+    {strongestAssessment
+      ? `${strongestAssessment.organ_name} (${strongestAssessment.score}/100)`
+      : "N/A"}
+  </p>
+
+  <p>
+    <strong>Needs Attention:</strong>{" "}
+    {weakestAssessment
+      ? `${weakestAssessment.organ_name} (${weakestAssessment.score}/100)`
+      : "N/A"}
+  </p>
+
+  <p>
+    <strong>Overall Status:</strong> {getStatus(overallScore)}
+  </p>
+
+  <p>
+    <strong>AI Recommendation:</strong>
+  </p>
+
+  <p>{getAIRecommendation()}</p>
+</div>
                   {dashboardInsights.latestLab ? (
                     <>
                       <h2
