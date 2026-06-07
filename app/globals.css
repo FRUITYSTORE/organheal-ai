@@ -77,10 +77,32 @@ a {
 }
 
 .hero {
-  max-width: 900px;
+  position: relative;
+  max-width: 1200px;
   margin: 0 auto;
   text-align: center;
-  padding: 40px 20px 100px;
+  padding: 80px 20px 120px;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background:
+    linear-gradient(
+      rgba(2,6,23,0.75),
+      rgba(2,6,23,0.75)
+    ),
+    url("/hero-medical.jpg");
+
+  background-size: cover;
+  background-position: center;
+
+  border-radius: 32px;
+
+  z-index: -1;
 }
 
 .badge {
