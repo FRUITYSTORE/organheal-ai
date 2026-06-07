@@ -9,6 +9,7 @@ export default function Navbar() {
       </Link>
 
       <div className="navLinks">
+        <a href="/profile">Profile</a>
         <Link href="/assistant">Assistant</Link>
         <Link href="/assessment">Organ Assessment</Link>
         <Link href="/lab-analyzer">Lab Analyzer</Link>
