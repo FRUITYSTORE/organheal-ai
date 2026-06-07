@@ -14,6 +14,7 @@ export default function Navbar() {
         <Link href="/lab-analyzer">Lab Analyzer</Link>
         <Link href="/library">Library</Link>
         <Link href="/organ-report">Report</Link>
+        <a href="/history">History</a>
         <Link href="/login">Login</Link>
         <Link href="/signup">Sign Up</Link>
       </div>
