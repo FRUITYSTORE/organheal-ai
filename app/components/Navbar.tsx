@@ -13,6 +13,7 @@ export default function Navbar() {
         <Link href="/assessment">Organ Assessment</Link>
         <Link href="/lab-analyzer">Lab Analyzer</Link>
         <Link href="/library">Library</Link>
+        <a href="/dashboard">Dashboard</a>
         <Link href="/organ-report">Report</Link>
         <a href="/history">History</a>
         <Link href="/login">Login</Link>
