@@ -51,11 +51,10 @@ export default function OrganReportPage() {
     const user = userData.user;
     setUserEmail(user?.email || "");
 
-    if (!user) {
-      setMessage("Please login to view your organ report.");
-      setLoading(false);
-      return;
-    }
+if (!user) {
+  window.location.href = "/login";
+  return;
+}
 
     const { data: organData, error: organError } = await supabase
       .from("organ_assessments")

@@ -42,16 +42,15 @@ export default function HistoryPage() {
       return;
     }
 
-    const user = userData.user;
+const user = userData.user;
 
-    if (!user) {
-      setMessage("Please login to view your health history.");
-      setLoading(false);
-      return;
-    }
+if (!user) {
+  window.location.href = "/login";
+  return;
+}
 
-    const { data, error } = await supabase
-      .from("health_history")
+const { data, error } = await supabase
+  .from("health_history")
       .select("id, module_name, score, status, notes, created_at")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
