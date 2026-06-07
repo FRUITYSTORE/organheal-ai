@@ -80,7 +80,13 @@ export default function Home() {
             <p>Analyze key lab values and generate a lab health score.</p>
           </div>
         </a>
-
+<a href="/lab-upload" style={{ textDecoration: "none" }}>
+  <div className="reportCard clickableCard">
+    <h3>📄 PDF Analyzer</h3>
+    <span>Upload</span>
+    <p>Upload PDF or photo lab reports for future AI-powered analysis.</p>
+  </div>
+</a>
         <a href="/dashboard" style={{ textDecoration: "none" }}>
           <div className="reportCard clickableCard">
             <h3>📊 Dashboard</h3>

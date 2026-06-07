@@ -21,6 +21,7 @@ export default function Navbar() {
         <Link href="/dashboard">Dashboard</Link>
         <Link href="/assessment">Assessment</Link>
         <Link href="/lab-analyzer">Labs</Link>
+        <Link href="/lab-upload">PDF Analyzer</Link>
         <Link href="/organ-report">Report</Link>
         <Link href="/history">History</Link>
         <Link href="/profile">Profile</Link>
