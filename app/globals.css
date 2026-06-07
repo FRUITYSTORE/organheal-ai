@@ -92,7 +92,7 @@ a {
       rgba(2, 6, 23, 0.50),
       rgba(2, 6, 23, 0.72)
     ),
-    url("/hero-medical.png");
+    url("/hero-medical-v2.png");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -760,39 +760,8 @@ button {
 .hero h1,
 .hero .tagline,
 .hero .description {
-  background: none !important;
+  background: transparent !important;
   background-color: transparent !important;
   box-shadow: none !important;
-}
-
-.hero h1 {
-  color: #ffffff !important;
-  font-size: 76px;
-  font-weight: 800;
-  text-shadow:
-    0 5px 25px rgba(0, 0, 0, 0.85),
-    0 0 26px rgba(56, 189, 248, 0.65);
-}
-
-.hero .tagline {
-  color: #e0f2fe !important;
-  font-weight: 800;
-  text-shadow:
-    0 4px 18px rgba(0, 0, 0, 0.9),
-    0 0 20px rgba(59, 130, 246, 0.65);
-}
-
-.hero .description {
-  color: #f8fafc !important;
-  text-shadow:
-    0 4px 18px rgba(0, 0, 0, 0.9),
-    0 0 14px rgba(14, 165, 233, 0.45);
-}
-
-.hero .primaryBtn,
-.hero .secondaryBtn {
-  background: rgba(15, 23, 42, 0.35) !important;
-  color: white !important;
-  border: 1px solid rgba(191, 219, 254, 0.75);
-  backdrop-filter: blur(8px);
+  display: block;
 }
