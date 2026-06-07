@@ -109,87 +109,79 @@ export default function DashboardPage() {
     return "linear-gradient(90deg, #ef4444, #f97316)";
   }
 
+  function getAIRecommendation(moduleName: string | null) {
+    if (!moduleName) {
+      return "Complete assessments to receive AI health insights.";
+    }
+
+    switch (moduleName) {
+      case "Heart":
+        return "Focus on blood pressure, cholesterol management, regular cardiovascular exercise, and preventive follow-up.";
+
+      case "Lung":
+        return "Avoid smoking exposure, maintain physical activity, and monitor respiratory symptoms such as cough or shortness of breath.";
+
+      case "Kidney":
+        return "Maintain hydration, monitor blood pressure, and consider follow-up kidney function and urine testing with a healthcare professional.";
+
+      case "Liver":
+        return "Focus on healthy nutrition, weight control, avoiding unnecessary liver stressors, and monitoring liver enzymes when needed.";
+
+      case "Brain":
+        return "Improve sleep quality, reduce stress, stay physically active, and seek medical advice if headaches or memory concerns persist.";
+
+      case "Metabolic":
+        return "Focus on blood sugar control, weight management, regular activity, and lipid profile monitoring.";
+
+      default:
+        return "Continue preventive health monitoring and healthy lifestyle habits.";
+    }
+  }
+
   const allScores = [
     ...assessments.map((item) => item.score),
     ...(labReport ? [labReport.score] : []),
   ];
 
   const overallScore =
-  const strongestAssessment =
-  assessments.length > 0
-    ? [...assessments].sort((a, b) => b.score - a.score)[0]
-    : null;
-
-const weakestAssessment =
-  assessments.length > 0
-    ? [...assessments].sort((a, b) => a.score - b.score)[0]
-    : null;
-
-function getAIRecommendation() {
-  if (!weakestAssessment) {
-    return "Complete assessments to receive AI insights.";
-  }
-
-  switch (weakestAssessment.organ_name) {
-    case "Heart":
-      return "Focus on blood pressure, cholesterol management, and regular cardiovascular exercise.";
-
-    case "Lung":
-      return "Avoid smoking exposure, maintain physical activity, and monitor respiratory symptoms.";
-
-    case "Kidney":
-      return "Maintain hydration, monitor blood pressure, and follow kidney function testing.";
-
-    case "Liver":
-      return "Focus on weight control, healthy nutrition, and liver health monitoring.";
-
-    case "Brain":
-      return "Improve sleep quality, stress management, and regular physical activity.";
-
-    case "Metabolic":
-      return "Focus on blood sugar control, weight management, and lifestyle improvement.";
-
-    default:
-      return "Continue preventive health monitoring and healthy lifestyle habits.";
-  }
-}
     allScores.length > 0
       ? Math.round(
           allScores.reduce((sum, score) => sum + score, 0) / allScores.length
         )
       : 0;
 
+  const topStrength =
+    assessments.length > 0
+      ? [...assessments].sort((a, b) => b.score - a.score)[0]
+      : null;
+
+  const priorityAttention =
+    assessments.length > 0
+      ? [...assessments].sort((a, b) => a.score - b.score)[0]
+      : null;
+
+  const latestDate = [...assessments.map((item) => item.created_at)]
+    .concat(labReport ? [labReport.created_at] : [])
+    .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0];
+
   const dashboardInsights = {
     overallScore,
-
     status: allScores.length > 0 ? getStatus(overallScore) : "No Data Yet",
-
-    topStrength:
-      assessments.length > 0
-        ? [...assessments].sort((a, b) => b.score - a.score)[0]
-        : null,
-
-    priorityAttention:
-      assessments.length > 0
-        ? [...assessments].sort((a, b) => a.score - b.score)[0]
-        : null,
-
+    topStrength,
+    priorityAttention,
     latestLab: labReport,
-
-    latestDate: [...assessments.map((item) => item.created_at)]
-      .concat(labReport ? [labReport.created_at] : [])
-      .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0],
-
+    latestDate,
     completedModules: assessments.length + (labReport ? 1 : 0),
-
     totalModules: organs.length + 1,
-
+    aiRecommendation: getAIRecommendation(
+      priorityAttention ? priorityAttention.organ_name : null
+    ),
     healthCoachMessage:
       assessments.length > 0
         ? `Based on your current assessments, ${
-            [...assessments].sort((a, b) => a.score - b.score)[0].organ_name
+            priorityAttention?.organ_name
           } requires the highest attention, while ${
-            [...assessments].sort((a, b) => b.score - a.score)[0].organ_name
+            topStrength?.organ_name
           } is your strongest area. Continue monitoring your results and discuss concerning findings with a healthcare professional.`
         : "Complete your organ assessments to receive personalized health guidance.",
   };
@@ -310,33 +302,7 @@ function getAIRecommendation() {
 
                 <div className="resultBox">
                   <p className="sectionLabel">🧪 Latest Lab Score</p>
-<div className="resultBox">
-  <p className="sectionLabel">AI Health Insights</p>
 
-  <p>
-    <strong>Strongest Area:</strong>{" "}
-    {strongestAssessment
-      ? `${strongestAssessment.organ_name} (${strongestAssessment.score}/100)`
-      : "N/A"}
-  </p>
-
-  <p>
-    <strong>Needs Attention:</strong>{" "}
-    {weakestAssessment
-      ? `${weakestAssessment.organ_name} (${weakestAssessment.score}/100)`
-      : "N/A"}
-  </p>
-
-  <p>
-    <strong>Overall Status:</strong> {getStatus(overallScore)}
-  </p>
-
-  <p>
-    <strong>AI Recommendation:</strong>
-  </p>
-
-  <p>{getAIRecommendation()}</p>
-</div>
                   {dashboardInsights.latestLab ? (
                     <>
                       <h2
@@ -363,6 +329,35 @@ function getAIRecommendation() {
                       </a>
                     </>
                   )}
+                </div>
+
+                <div className="resultBox">
+                  <p className="sectionLabel">🤖 AI Health Insights</p>
+
+                  <p>
+                    <strong>Strongest Area:</strong>{" "}
+                    {dashboardInsights.topStrength
+                      ? `${dashboardInsights.topStrength.organ_name} (${dashboardInsights.topStrength.score}/100)`
+                      : "N/A"}
+                  </p>
+
+                  <p>
+                    <strong>Needs Attention:</strong>{" "}
+                    {dashboardInsights.priorityAttention
+                      ? `${dashboardInsights.priorityAttention.organ_name} (${dashboardInsights.priorityAttention.score}/100)`
+                      : "N/A"}
+                  </p>
+
+                  <p>
+                    <strong>Overall Status:</strong>{" "}
+                    {dashboardInsights.status}
+                  </p>
+
+                  <p>
+                    <strong>Recommendation:</strong>
+                  </p>
+
+                  <p>{dashboardInsights.aiRecommendation}</p>
                 </div>
 
                 <div className="resultBox">
@@ -432,6 +427,10 @@ function getAIRecommendation() {
 
                 <a href="/lab-analyzer">
                   <button className="secondaryBtn">Open Lab Analyzer</button>
+                </a>
+
+                <a href="/history">
+                  <button className="secondaryBtn">View Health History</button>
                 </a>
               </div>
             </>
