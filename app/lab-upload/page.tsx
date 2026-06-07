@@ -1,13 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
+
+type UploadedFile = {
+  id: number;
+  file_name: string;
+  file_path: string;
+  file_url: string | null;
+  created_at: string;
+};
 
 export default function LabUploadPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState("");
   const [message, setMessage] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+
+  useEffect(() => {
+    fetchUploadedFiles();
+  }, []);
 
   function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -17,6 +30,29 @@ export default function LabUploadPage() {
     setSelectedFile(file);
     setFileName(file.name);
     setMessage("");
+  }
+
+  async function fetchUploadedFiles() {
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+
+    if (userError || !userData.user) {
+      return;
+    }
+
+    const user = userData.user;
+
+    const { data, error } = await supabase
+      .from("uploaded_lab_files")
+      .select("id, file_name, file_path, file_url, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      setMessage("Database error: " + error.message);
+      return;
+    }
+
+    setUploadedFiles(data || []);
   }
 
   async function uploadFile() {
@@ -38,7 +74,6 @@ export default function LabUploadPage() {
 
     const user = userData.user;
 
-    const fileExt = selectedFile.name.split(".").pop();
     const safeFileName = selectedFile.name.replace(/[^a-zA-Z0-9.-]/g, "_");
     const filePath = `${user.id}/${Date.now()}-${safeFileName}`;
 
@@ -82,7 +117,24 @@ export default function LabUploadPage() {
       "File uploaded successfully. AI analysis will be connected in the next phase."
     );
 
+    setSelectedFile(null);
+    setFileName("");
     setUploading(false);
+
+    await fetchUploadedFiles();
+  }
+
+  async function openFile(filePath: string) {
+    const { data, error } = await supabase.storage
+      .from("lab-reports")
+      .createSignedUrl(filePath, 60 * 60);
+
+    if (error) {
+      setMessage("File open error: " + error.message);
+      return;
+    }
+
+    window.open(data.signedUrl, "_blank");
   }
 
   return (
@@ -136,6 +188,38 @@ export default function LabUploadPage() {
               <div className="resultBox">
                 <p>{message}</p>
               </div>
+            )}
+          </div>
+
+          <div className="resultBox">
+            <p className="sectionLabel">Uploaded Lab Reports</p>
+
+            {uploadedFiles.length === 0 ? (
+              <p>No uploaded lab reports yet.</p>
+            ) : (
+              uploadedFiles.map((file) => (
+                <div
+                  key={file.id}
+                  style={{
+                    padding: "14px 0",
+                    borderBottom: "1px solid rgba(255,255,255,0.12)",
+                  }}
+                >
+                  <h3>{file.file_name}</h3>
+
+                  <p>
+                    Uploaded on:{" "}
+                    {new Date(file.created_at).toLocaleString()}
+                  </p>
+
+                  <button
+                    className="secondaryBtn"
+                    onClick={() => openFile(file.file_path)}
+                  >
+                    Open File
+                  </button>
+                </div>
+              ))
             )}
           </div>
 
