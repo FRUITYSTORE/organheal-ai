@@ -291,12 +291,9 @@ function getTrend(item: HealthHistory) {
   {achievements.map((achievement, index) => (
   <p key={index}>{achievement}</p>
 ))}
-  ...
-</div>
-
-<div className="resultBox">
 
 </div>
+
               <div className="resultBox">
                 <p className="sectionLabel">Timeline</p>
 
