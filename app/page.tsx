@@ -1,21 +1,22 @@
 export default function Home() {
   return (
     <main className="homepage">
-<section className="hero">
-<section className="hero">
-  <div className="badge">AI-Powered Health Intelligence</div>
+      <section className="hero">
+        <div className="badge">AI-Powered Health Intelligence</div>
 
-  <h1 className="heroTitle">OrganHeal AI</h1>
+        <h1 className="heroTitle">OrganHeal AI</h1>
 
-  <p className="heroTagline">Understand Your Body. Empower Your Health.</p>
+        <p className="heroTagline">
+          Understand Your Body. Empower Your Health.
+        </p>
 
-  <p className="heroDescription">
-    AI-powered health intelligence platform designed to help people
-    understand organ health, interpret laboratory results, track health
-    trends, and access trusted medical education.
-  </p>
+        <p className="heroDescription">
+          AI-powered health intelligence platform designed to help people
+          understand organ health, interpret laboratory results, track health
+          trends, and access trusted medical education.
+        </p>
 
-  <div className="buttons">
+        <div className="buttons">
           <a href="/dashboard">
             <button className="primaryBtn">Open Dashboard</button>
           </a>
@@ -28,8 +29,7 @@ export default function Home() {
             <button className="secondaryBtn">View Report</button>
           </a>
         </div>
-      </div>
-    </section>
+      </section>
 
       <section className="features">
         <div className="sectionHeader">
@@ -41,19 +41,27 @@ export default function Home() {
           <div className="featureCard">
             <div className="iconBox">📝</div>
             <h3>1. Complete Assessments</h3>
-            <p>Answer guided questions for heart, lung, kidney, liver, brain, and metabolic health.</p>
+            <p>
+              Answer guided questions for heart, lung, kidney, liver, brain,
+              and metabolic health.
+            </p>
           </div>
 
           <div className="featureCard">
             <div className="iconBox">🧪</div>
             <h3>2. Analyze Lab Values</h3>
-            <p>Enter key lab results and receive an educational lab health score.</p>
+            <p>
+              Enter key lab results and receive an educational lab health score.
+            </p>
           </div>
 
           <div className="featureCard">
             <div className="iconBox">📊</div>
             <h3>3. View Insights</h3>
-            <p>See your dashboard, trends, priority alerts, and AI health insights.</p>
+            <p>
+              See your dashboard, trends, priority alerts, and AI health
+              insights.
+            </p>
           </div>
         </div>
       </section>
@@ -82,13 +90,15 @@ export default function Home() {
             <p>Analyze key lab values and generate a lab health score.</p>
           </div>
         </a>
-<a href="/lab-upload" style={{ textDecoration: "none" }}>
-  <div className="reportCard clickableCard">
-    <h3>📄 PDF Analyzer</h3>
-    <span>Upload</span>
-    <p>Upload PDF or photo lab reports for future AI-powered analysis.</p>
-  </div>
-</a>
+
+        <a href="/lab-upload" style={{ textDecoration: "none" }}>
+          <div className="reportCard clickableCard">
+            <h3>📄 PDF Analyzer</h3>
+            <span>Upload</span>
+            <p>Upload PDF or photo lab reports for future AI-powered analysis.</p>
+          </div>
+        </a>
+
         <a href="/dashboard" style={{ textDecoration: "none" }}>
           <div className="reportCard clickableCard">
             <h3>📊 Dashboard</h3>
@@ -135,8 +145,8 @@ export default function Home() {
           <p className="sectionLabel">Important Medical Disclaimer</p>
           <h2>Educational Health Intelligence, Not Diagnosis</h2>
           <p>
-            OrganHeal AI is designed for education, wellness tracking, and health
-            awareness. It does not diagnose disease, replace a licensed
+            OrganHeal AI is designed for education, wellness tracking, and
+            health awareness. It does not diagnose disease, replace a licensed
             healthcare professional, or provide emergency medical advice.
           </p>
         </div>
@@ -144,7 +154,10 @@ export default function Home() {
 
       <section className="homeCTA">
         <h2>Start your health intelligence journey today</h2>
-        <p>Track your scores, understand your trends, and generate your health report.</p>
+        <p>
+          Track your scores, understand your trends, and generate your health
+          report.
+        </p>
 
         <div className="buttons">
           <a href="/dashboard">
@@ -158,39 +171,4 @@ export default function Home() {
       </section>
     </main>
   );
-}.heroOverlay {
-  all: unset;
-}
-
-.heroTitle,
-.heroTagline,
-.heroDescription {
-  background: none !important;
-  background-color: transparent !important;
-  box-shadow: none !important;
-  text-shadow: none !important;
-}
-
-.heroTitle {
-  display: block;
-  color: #ffffff !important;
-  font-size: 76px;
-  font-weight: 800;
-  line-height: 1.05;
-}
-
-.heroTagline {
-  display: block;
-  color: #e0f2fe !important;
-  font-size: 28px;
-  font-weight: 800;
-}
-
-.heroDescription {
-  display: block;
-  max-width: 850px;
-  margin: 24px auto 36px;
-  color: #f8fafc !important;
-  font-size: 19px;
-  line-height: 1.7;
 }
