@@ -1,20 +1,21 @@
 export default function Home() {
   return (
     <main className="homepage">
-      <section className="hero">
-<div className="badge">AI-Powered Health Intelligence</div>
+<section className="hero">
+  <div className="heroOverlay">
+    <div className="badge">AI-Powered Health Intelligence</div>
 
-<h1 className="heroTitle">OrganHeal AI</h1>
+    <h1 className="heroTitle">OrganHeal AI</h1>
 
-<p className="heroTagline">Understand Your Body. Empower Your Health.</p>
+    <p className="heroTagline">Understand Your Body. Empower Your Health.</p>
 
-<p className="heroDescription">
-          AI-powered health intelligence platform designed to help people
-          understand organ health, interpret laboratory results, track health
-          trends, and access trusted medical education.
-        </p>
+    <p className="heroDescription">
+      AI-powered health intelligence platform designed to help people
+      understand organ health, interpret laboratory results, track health
+      trends, and access trusted medical education.
+    </p>
 
-        <div className="buttons">
+    <div className="buttons">
           <a href="/dashboard">
             <button className="primaryBtn">Open Dashboard</button>
           </a>
@@ -27,7 +28,8 @@ export default function Home() {
             <button className="secondaryBtn">View Report</button>
           </a>
         </div>
-      </section>
+      </div>
+    </section>
 
       <section className="features">
         <div className="sectionHeader">
