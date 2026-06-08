@@ -764,11 +764,10 @@ button {
 .heroTitle,
 .heroTagline,
 .heroDescription {
-  background: transparent !important;
+  background: none !important;
   background-color: transparent !important;
   box-shadow: none !important;
   text-shadow: none !important;
-  -webkit-text-fill-color: #ffffff !important;
 }
 
 .heroTitle {
@@ -776,14 +775,12 @@ button {
   font-size: 76px;
   font-weight: 800;
   line-height: 1.05;
-  -webkit-text-stroke: 0.8px rgba(2, 6, 23, 0.75);
 }
 
 .heroTagline {
   color: #e0f2fe !important;
   font-size: 28px;
   font-weight: 800;
-  -webkit-text-stroke: 0.35px rgba(2, 6, 23, 0.75);
 }
 
 .heroDescription {
@@ -792,41 +789,4 @@ button {
   color: #f8fafc !important;
   font-size: 19px;
   line-height: 1.7;
-  -webkit-text-stroke: 0.25px rgba(2, 6, 23, 0.75);
-}.heroOverlay {
-  max-width: 920px;
-  margin: 0 auto;
-  padding: 34px 28px;
-  border-radius: 30px;
-  background: rgba(2, 6, 23, 0.14);
-  backdrop-filter: blur(1px);
-}
-
-.heroOverlay * {
-  background: transparent !important;
-  box-shadow: none !important;
-}
-
-.heroTitle {
-  color: #ffffff !important;
-  font-size: 76px;
-  font-weight: 800;
-  line-height: 1.05;
-  text-shadow: none !important;
-}
-
-.heroTagline {
-  color: #e0f2fe !important;
-  font-size: 28px;
-  font-weight: 800;
-  text-shadow: none !important;
-}
-
-.heroDescription {
-  max-width: 850px;
-  margin: 24px auto 36px;
-  color: #f8fafc !important;
-  font-size: 19px;
-  line-height: 1.7;
-  text-shadow: none !important;
 }
