@@ -81,7 +81,7 @@ export default function HistoryPage() {
     filteredHistory.length > 0
       ? Math.min(...filteredHistory.map((item) => item.score))
       : 0;
-
+  const achievements = getAchievements();
   const averageScore =
     filteredHistory.length > 0
       ? Math.round(
@@ -134,6 +134,49 @@ function getTrend(item: HealthHistory) {
     symbol: "→",
     className: "moderateScore",
   };
+}function getAchievements() {
+  const achievements = [];
+
+  if (history.length >= 1) {
+    achievements.push("🏅 First Assessment Completed");
+  }
+
+  if (history.length >= 5) {
+    achievements.push("🏅 Completed 5 Assessments");
+  }
+
+  if (history.length >= 10) {
+    achievements.push("🏅 Consistent Health Tracker");
+  }
+
+  const highScore = history.some((item) => item.score >= 80);
+
+  if (highScore) {
+    achievements.push("🏅 Score Above 80");
+  }
+
+  const heartHistory = history
+    .filter((item) => item.module_name === "Heart")
+    .sort(
+      (a, b) =>
+        new Date(a.created_at).getTime() -
+        new Date(b.created_at).getTime()
+    );
+
+  if (heartHistory.length >= 2) {
+    const first = heartHistory[0].score;
+    const latest = heartHistory[heartHistory.length - 1].score;
+
+    if (latest - first >= 10) {
+      achievements.push("🏅 Heart Improved by 10+ Points");
+    }
+
+    if (latest - first >= 20) {
+      achievements.push("🏅 Heart Improved by 20+ Points");
+    }
+  }
+
+  return achievements;
 }
   return (
     <main className="assistantPage">
@@ -240,7 +283,15 @@ function getTrend(item: HealthHistory) {
                   ))}
                 </div>
               </div>
+<div className="resultBox">
+  <p className="sectionLabel">🏅 Health Achievements</p>
+  ...
+</div>
 
+<div className="resultBox">
+  <p className="sectionLabel">Timeline</p>
+  ...
+</div>
               <div className="resultBox">
                 <p className="sectionLabel">Timeline</p>
 
