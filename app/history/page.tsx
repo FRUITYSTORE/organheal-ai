@@ -89,7 +89,52 @@ export default function HistoryPage() {
             filteredHistory.length
         )
       : 0;
+function getTrend(item: HealthHistory) {
+  const sameModuleRecords = history
+    .filter((record) => record.module_name === item.module_name)
+    .sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
 
+  const currentIndex = sameModuleRecords.findIndex(
+    (record) => record.id === item.id
+  );
+
+  const previousRecord = sameModuleRecords[currentIndex + 1];
+
+  if (!previousRecord) {
+    return {
+      text: "First recorded result",
+      symbol: "•",
+      className: "",
+    };
+  }
+
+  const difference = item.score - previousRecord.score;
+
+  if (difference > 0) {
+    return {
+      text: `Improved by +${difference} points`,
+      symbol: "↑",
+      className: "goodScore",
+    };
+  }
+
+  if (difference < 0) {
+    return {
+      text: `Declined by ${difference} points`,
+      symbol: "↓",
+      className: "riskScore",
+    };
+  }
+
+  return {
+    text: "No change since previous result",
+    symbol: "→",
+    className: "moderateScore",
+  };
+}
   return (
     <main className="assistantPage">
       <div className="assistantContainer">
@@ -203,43 +248,49 @@ export default function HistoryPage() {
                   <p>No records found for this filter.</p>
                 ) : (
                   <div style={{ display: "grid", gap: "14px" }}>
-                    {filteredHistory.map((item) => (
-                      <div
-                        key={item.id}
-                        style={{
-                          display: "grid",
-                          gridTemplateColumns: "1fr auto",
-                          gap: "12px",
-                          alignItems: "center",
-                          padding: "16px",
-                          borderRadius: "16px",
-                          background: "rgba(15, 23, 42, 0.75)",
-                          border: "1px solid rgba(34, 211, 238, 0.18)",
-                          textAlign: "left",
-                        }}
-                      >
-                        <div>
-                          <h3 style={{ margin: "0 0 6px" }}>
-                            {item.module_name}
-                          </h3>
+                    {filteredHistory.map((item) => {
+  const trend = getTrend(item);
 
-                          <p style={{ margin: "0 0 6px" }}>{item.status}</p>
+  return (
+    <div
+      key={item.id}
+      style={{
+        display: "grid",
+        gridTemplateColumns: "1fr auto",
+        gap: "12px",
+        alignItems: "center",
+        padding: "16px",
+        borderRadius: "16px",
+        background: "rgba(15, 23, 42, 0.75)",
+        border: "1px solid rgba(34, 211, 238, 0.18)",
+        textAlign: "left",
+      }}
+    >
+      <div>
+        <h3 style={{ margin: "0 0 6px" }}>{item.module_name}</h3>
 
-                          <p style={{ margin: 0 }}>
-                            {new Date(item.created_at).toLocaleString()}
-                          </p>
-                        </div>
+        <p style={{ margin: "0 0 6px" }}>{item.status}</p>
 
-                        <div style={{ textAlign: "right" }}>
-                          <h2
-                            className={getScoreClass(item.score)}
-                            style={{ margin: 0 }}
-                          >
-                            {item.score}/100
-                          </h2>
-                        </div>
-                      </div>
-                    ))}
+        <p style={{ margin: 0 }}>
+          {new Date(item.created_at).toLocaleString()}
+        </p>
+
+        <p
+          className={trend.className}
+          style={{ margin: "8px 0 0", fontWeight: 800 }}
+        >
+          {trend.symbol} {trend.text}
+        </p>
+      </div>
+
+      <div style={{ textAlign: "right" }}>
+        <h2 className={getScoreClass(item.score)} style={{ margin: 0 }}>
+          {item.score}/100
+        </h2>
+      </div>
+    </div>
+  );
+})}
                   </div>
                 )}
               </div>
