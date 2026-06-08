@@ -2,13 +2,13 @@ export default function Home() {
   return (
     <main className="homepage">
       <section className="hero">
-        <div className="badge">AI-Powered Health Intelligence</div>
+<div className="badge">AI-Powered Health Intelligence</div>
 
-        <h1>OrganHeal AI</h1>
+<h1 className="heroTitle">OrganHeal AI</h1>
 
-        <p className="tagline">Understand Your Body. Empower Your Health.</p>
+<p className="heroTagline">Understand Your Body. Empower Your Health.</p>
 
-        <p className="description">
+<p className="heroDescription">
           AI-powered health intelligence platform designed to help people
           understand organ health, interpret laboratory results, track health
           trends, and access trusted medical education.
