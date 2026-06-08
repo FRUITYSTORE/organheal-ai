@@ -5,7 +5,7 @@ export default function Home() {
   <div className="heroOverlay">
     <div className="badge">AI-Powered Health Intelligence</div>
 
-    <h1 className="heroTitle">OrganHeal AI</h1>
+    <h1 className="heroTitle">TEST ORGANHEAL</h1>
 
     <p className="heroTagline">Understand Your Body. Empower Your Health.</p>
 
