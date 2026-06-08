@@ -54,33 +54,35 @@ export default function HeartPage() {
       return;
     }
 
-    const { error: historyError } = await supabase.from("health_history").insert({
-      user_id: user.id,
-      module_name: "Heart",
-      score: score,
-      status: level,
-      notes: message,
-    });
+    const { error: historyError } = await supabase
+      .from("health_history")
+      .insert({
+        user_id: user.id,
+        module_name: "Heart",
+        score: score,
+        status: level,
+        notes: message,
+      });
 
     if (historyError) {
       setSaveMessage("History error: " + historyError.message);
       return;
     }
 
-    setSaveMessage("Heart assessment saved successfully.");
+    setSaveMessage("Heart assessment saved successfully and added to history.");
   }
 
   async function calculateRisk() {
     setSaveMessage("");
 
-    const ageNumber = Number(age);
-    const bpNumber = Number(bloodPressure);
-    const cholesterolNumber = Number(cholesterol);
-
     if (!age || !bloodPressure || !cholesterol) {
       setSaveMessage("Please complete all required fields.");
       return;
     }
+
+    const ageNumber = Number(age);
+    const bpNumber = Number(bloodPressure);
+    const cholesterolNumber = Number(cholesterol);
 
     if (ageNumber <= 0 || bpNumber <= 0 || cholesterolNumber <= 0) {
       setSaveMessage("Please enter valid numbers.");
