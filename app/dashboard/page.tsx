@@ -109,28 +109,107 @@ export default function DashboardPage() {
     return "linear-gradient(90deg, #ef4444, #f97316)";
   }
 
-  function getAIRecommendation(moduleName: string | null) {
-    if (!moduleName) {
-      return "Complete assessments to receive AI health insights.";
-    }
-
-    switch (moduleName) {
-      case "Heart":
-        return "Focus on blood pressure, cholesterol management, regular cardiovascular exercise, and preventive follow-up.";
-      case "Lung":
-        return "Avoid smoking exposure, maintain physical activity, and monitor respiratory symptoms such as cough or shortness of breath.";
-      case "Kidney":
-        return "Maintain hydration, monitor blood pressure, and consider follow-up kidney function and urine testing with a healthcare professional.";
-      case "Liver":
-        return "Focus on healthy nutrition, weight control, avoiding unnecessary liver stressors, and monitoring liver enzymes when needed.";
-      case "Brain":
-        return "Improve sleep quality, reduce stress, stay physically active, and seek medical advice if headaches or memory concerns persist.";
-      case "Metabolic":
-        return "Focus on blood sugar control, weight management, regular activity, and lipid profile monitoring.";
-      default:
-        return "Continue preventive health monitoring and healthy lifestyle habits.";
-    }
+function getAIRecommendation(
+  moduleName: string | null,
+  score?: number
+) {
+  if (!moduleName) {
+    return {
+      priority: "No Data",
+      explanation:
+        "Complete your assessments to receive personalized health insights.",
+      action:
+        "Start the organ assessments and lab analyzer.",
+      followUp:
+        "No follow-up recommendations available yet.",
+    };
   }
+
+  switch (moduleName) {
+    case "Heart":
+      return {
+        priority:
+          score && score < 50 ? "High Priority" : "Monitor",
+        explanation:
+          "Your responses suggest cardiovascular risk factors that may benefit from lifestyle improvement and professional review.",
+        action:
+          "Monitor blood pressure, cholesterol, physical activity, and body weight.",
+        followUp:
+          "Consider blood pressure assessment, lipid profile, and cardiovascular evaluation.",
+      };
+
+    case "Lung":
+      return {
+        priority:
+          score && score < 50 ? "High Priority" : "Monitor",
+        explanation:
+          "Your responses suggest respiratory health factors that deserve attention.",
+        action:
+          "Avoid smoking exposure and monitor symptoms such as cough, wheezing, or shortness of breath.",
+        followUp:
+          "Consider lung function assessment if symptoms persist.",
+      };
+
+    case "Kidney":
+      return {
+        priority:
+          score && score < 50 ? "High Priority" : "Monitor",
+        explanation:
+          "Your assessment indicates kidney-related factors that may require closer monitoring.",
+        action:
+          "Maintain hydration, monitor blood pressure, and avoid unnecessary kidney stressors.",
+        followUp:
+          "Consider kidney function tests, urine analysis, and healthcare review.",
+      };
+
+    case "Liver":
+      return {
+        priority:
+          score && score < 50 ? "High Priority" : "Monitor",
+        explanation:
+          "Your assessment suggests possible liver-health concerns.",
+        action:
+          "Focus on healthy nutrition, weight control, and limiting liver stressors.",
+        followUp:
+          "Consider liver enzyme testing and medical follow-up when appropriate.",
+      };
+
+    case "Brain":
+      return {
+        priority:
+          score && score < 50 ? "High Priority" : "Monitor",
+        explanation:
+          "Your responses suggest areas where cognitive wellness and stress management may help.",
+        action:
+          "Improve sleep quality, physical activity, and stress reduction habits.",
+        followUp:
+          "Discuss persistent headaches, memory concerns, or neurological symptoms with a healthcare professional.",
+      };
+
+    case "Metabolic":
+      return {
+        priority:
+          score && score < 50 ? "High Priority" : "Monitor",
+        explanation:
+          "Your assessment suggests metabolic risk factors that may benefit from lifestyle improvement.",
+        action:
+          "Focus on blood sugar control, healthy weight, physical activity, and nutrition.",
+        followUp:
+          "Consider HbA1c, glucose monitoring, and lipid profile review.",
+      };
+
+    default:
+      return {
+        priority: "Monitor",
+        explanation:
+          "Continue monitoring your health and maintaining healthy lifestyle habits.",
+        action:
+          "Stay active, eat a balanced diet, and attend regular checkups.",
+        followUp:
+          "Discuss any persistent symptoms with a healthcare professional.",
+      };
+  }
+}
 
   const allScores = [
     ...assessments.map((item) => item.score),
@@ -167,9 +246,10 @@ export default function DashboardPage() {
     latestDate,
     completedModules: assessments.length + (labReport ? 1 : 0),
     totalModules: organs.length + 1,
-    aiRecommendation: getAIRecommendation(
-      priorityAttention ? priorityAttention.organ_name : null
-    ),
+aiRecommendation: getAIRecommendation(
+  priorityAttention ? priorityAttention.organ_name : null,
+  priorityAttention ? priorityAttention.score : undefined
+),
     healthCoachMessage:
       assessments.length > 0
         ? `Based on your current assessments, ${priorityAttention?.organ_name} requires the highest attention, while ${topStrength?.organ_name} is your strongest area. Continue monitoring your results and discuss concerning findings with a healthcare professional.`
@@ -361,28 +441,25 @@ export default function DashboardPage() {
                 <div className="resultBox">
                   <p className="sectionLabel">🤖 AI Health Insights</p>
 
-                  <p>
-                    <strong>Strongest Area:</strong>{" "}
-                    {dashboardInsights.topStrength
-                      ? `${dashboardInsights.topStrength.organ_name} (${dashboardInsights.topStrength.score}/100)`
-                      : "N/A"}
-                  </p>
+<p>
+  <strong>Priority:</strong>{" "}
+  {dashboardInsights.aiRecommendation.priority}
+</p>
 
-                  <p>
-                    <strong>Needs Attention:</strong>{" "}
-                    {dashboardInsights.priorityAttention
-                      ? `${dashboardInsights.priorityAttention.organ_name} (${dashboardInsights.priorityAttention.score}/100)`
-                      : "N/A"}
-                  </p>
+<p>
+  <strong>Explanation:</strong>{" "}
+  {dashboardInsights.aiRecommendation.explanation}
+</p>
 
-                  <p>
-                    <strong>Overall Status:</strong>{" "}
-                    {dashboardInsights.status}
-                  </p>
+<p>
+  <strong>Recommended Action:</strong>{" "}
+  {dashboardInsights.aiRecommendation.action}
+</p>
 
-                  <p>
-                    <strong>Recommendation:</strong>
-                  </p>
+<p>
+  <strong>Suggested Follow-Up:</strong>{" "}
+  {dashboardInsights.aiRecommendation.followUp}
+</p>
 
                   <p>{dashboardInsights.aiRecommendation}</p>
                 </div>
