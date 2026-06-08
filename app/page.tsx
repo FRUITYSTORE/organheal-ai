@@ -2,20 +2,20 @@ export default function Home() {
   return (
     <main className="homepage">
 <section className="hero">
-  <div className="heroOverlay">
-    <div className="badge">AI-Powered Health Intelligence</div>
+<section className="hero">
+  <div className="badge">AI-Powered Health Intelligence</div>
 
-    <h1 className="heroTitle">TEST ORGANHEAL</h1>
+  <h1 className="heroTitle">OrganHeal AI</h1>
 
-    <p className="heroTagline">Understand Your Body. Empower Your Health.</p>
+  <p className="heroTagline">Understand Your Body. Empower Your Health.</p>
 
-    <p className="heroDescription">
-      AI-powered health intelligence platform designed to help people
-      understand organ health, interpret laboratory results, track health
-      trends, and access trusted medical education.
-    </p>
+  <p className="heroDescription">
+    AI-powered health intelligence platform designed to help people
+    understand organ health, interpret laboratory results, track health
+    trends, and access trusted medical education.
+  </p>
 
-    <div className="buttons">
+  <div className="buttons">
           <a href="/dashboard">
             <button className="primaryBtn">Open Dashboard</button>
           </a>
@@ -158,4 +158,39 @@ export default function Home() {
       </section>
     </main>
   );
+}.heroOverlay {
+  all: unset;
+}
+
+.heroTitle,
+.heroTagline,
+.heroDescription {
+  background: none !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+.heroTitle {
+  display: block;
+  color: #ffffff !important;
+  font-size: 76px;
+  font-weight: 800;
+  line-height: 1.05;
+}
+
+.heroTagline {
+  display: block;
+  color: #e0f2fe !important;
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.heroDescription {
+  display: block;
+  max-width: 850px;
+  margin: 24px auto 36px;
+  color: #f8fafc !important;
+  font-size: 19px;
+  line-height: 1.7;
 }
