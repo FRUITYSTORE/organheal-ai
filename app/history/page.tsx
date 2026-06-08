@@ -91,7 +91,7 @@ export default function HistoryPage() {
       : 0;
 
       const achievements = getAchievements();
-      
+
 function getTrend(item: HealthHistory) {
   const sameModuleRecords = history
     .filter((record) => record.module_name === item.module_name)
@@ -288,6 +288,9 @@ function getTrend(item: HealthHistory) {
               </div>
 <div className="resultBox">
   <p className="sectionLabel">🏅 Health Achievements</p>
+  {achievements.map((achievement, index) => (
+  <p key={index}>{achievement}</p>
+))}
   ...
 </div>
 
