@@ -817,4 +817,26 @@ button {
   font-size: 19px;
   line-height: 1.7;
   text-shadow: 0 2px 9px rgba(0, 0, 0, 0.55) !important;
+}.hero h1,
+.heroTitle {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  text-shadow: none !important;
+  -webkit-text-stroke: 1px rgba(15, 23, 42, 0.55);
+}
+
+.hero .tagline,
+.heroTagline,
+.hero .description,
+.heroDescription {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+  text-shadow: none !important;
+  -webkit-text-stroke: 0.4px rgba(15, 23, 42, 0.55);
 }
