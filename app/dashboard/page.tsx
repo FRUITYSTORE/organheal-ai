@@ -468,7 +468,65 @@ aiRecommendation: getAIRecommendation(
                   <p>{dashboardInsights.healthCoachMessage}</p>
                 </div>
               </div>
+<div className="resultBox">
+  <p className="sectionLabel">🎯 AI Health Plan</p>
 
+  <h2>
+    {dashboardInsights.priorityAttention?.organ_name || "No Priority Area"}
+  </h2>
+
+  <p>
+    <strong>Immediate Action:</strong>
+  </p>
+
+  <p>
+    {dashboardInsights.aiRecommendation.action}
+  </p>
+
+  <p>
+    <strong>This Week:</strong>
+  </p>
+
+  <p>
+    Complete follow-up activities related to{" "}
+    {dashboardInsights.priorityAttention?.organ_name || "your assessments"}.
+  </p>
+
+  <p>
+    <strong>Next Follow-Up:</strong>
+  </p>
+
+  <p>
+    {dashboardInsights.aiRecommendation.followUp}
+  </p>
+
+  <p>
+    <strong>Improvement Goal:</strong>
+  </p>
+
+  <p>
+    Raise{" "}
+    {dashboardInsights.priorityAttention?.organ_name || "Health"} score by
+    at least 20 points during the next assessment cycle.
+  </p>
+</div>
+<div className="resultBox">
+  <p className="sectionLabel">🗺️ Health Roadmap</p>
+
+  <p>✅ Assessment Completed</p>
+
+  <p>📌 Week 1: Follow recommended actions</p>
+
+  <p>📌 Week 2: Complete suggested laboratory tests</p>
+
+  <p>📌 Week 4: Reassess priority organ</p>
+
+  <p>
+    🎯 Goal:
+    Improve {dashboardInsights.priorityAttention?.organ_name || "Health"} score
+    and reduce overall risk level.
+  </p>
+</div>
               <div className="assessmentForm">
                 {organs.map((organ) => {
                   const assessment = getAssessment(organ.name);
