@@ -789,4 +789,32 @@ button {
   color: #f8fafc !important;
   font-size: 19px;
   line-height: 1.7;
+}.heroTitle,
+.heroTagline,
+.heroDescription {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+.heroTitle {
+  color: #ffffff !important;
+  font-size: 76px;
+  font-weight: 800;
+  line-height: 1.05;
+}
+
+.heroTagline {
+  color: #e0f2fe !important;
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.heroDescription {
+  max-width: 850px;
+  margin: 24px auto 36px;
+  color: #f8fafc !important;
+  font-size: 19px;
+  line-height: 1.7;
 }
