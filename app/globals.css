@@ -744,6 +744,8 @@ button {
 
 button {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
 .navLogoutBtn {
   background: transparent;
   color: #fca5a5;
@@ -766,4 +768,12 @@ button {
   background-color: transparent !important;
   box-shadow: none !important;
   display: block;
+}
+
+.hero h1 {
+  color: #ffffff !important;
+  text-shadow:
+    0 0 20px rgba(125, 211, 252, 0.8),
+    0 0 40px rgba(56, 189, 248, 0.6),
+    0 4px 20px rgba(0, 0, 0, 0.8);
 }
