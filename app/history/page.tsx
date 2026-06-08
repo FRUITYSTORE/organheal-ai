@@ -143,17 +143,13 @@ function getTrend(item: HealthHistory) {
   if (history.length >= 1) {
     achievements.push("🏅 First Assessment Completed");
   }
-
   if (history.length >= 5) {
     achievements.push("🏅 Completed 5 Assessments");
   }
-
   if (history.length >= 10) {
     achievements.push("🏅 Consistent Health Tracker");
   }
-
   const highScore = history.some((item) => item.score >= 80);
-
   if (highScore) {
     achievements.push("🏅 Score Above 80");
   }
