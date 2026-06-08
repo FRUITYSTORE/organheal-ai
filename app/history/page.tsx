@@ -81,7 +81,7 @@ export default function HistoryPage() {
     filteredHistory.length > 0
       ? Math.min(...filteredHistory.map((item) => item.score))
       : 0;
-  const achievements = getAchievements();
+
   const averageScore =
     filteredHistory.length > 0
       ? Math.round(
@@ -89,6 +89,9 @@ export default function HistoryPage() {
             filteredHistory.length
         )
       : 0;
+
+      const achievements = getAchievements();
+      
 function getTrend(item: HealthHistory) {
   const sameModuleRecords = history
     .filter((record) => record.module_name === item.module_name)
