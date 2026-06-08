@@ -441,27 +441,26 @@ aiRecommendation: getAIRecommendation(
                 <div className="resultBox">
                   <p className="sectionLabel">🤖 AI Health Insights</p>
 
-<p>
-  <strong>Priority:</strong>{" "}
-  {dashboardInsights.aiRecommendation.priority}
-</p>
+                  <p>
+                    <strong>Priority:</strong>{" "}
+                    {dashboardInsights.aiRecommendation.priority}
+                  </p>
 
-<p>
-  <strong>Explanation:</strong>{" "}
-  {dashboardInsights.aiRecommendation.explanation}
-</p>
+                  <p>
+                    <strong>Explanation:</strong>{" "}
+                    {dashboardInsights.aiRecommendation.explanation}
+                  </p>
 
-<p>
-  <strong>Recommended Action:</strong>{" "}
-  {dashboardInsights.aiRecommendation.action}
-</p>
+                  <p>
+                    <strong>Recommended Action:</strong>{" "}
+                    {dashboardInsights.aiRecommendation.action}
+                  </p>
 
-<p>
-  <strong>Suggested Follow-Up:</strong>{" "}
-  {dashboardInsights.aiRecommendation.followUp}
-</p>
-
-
+                  <p>
+                    <strong>Suggested Follow-Up:</strong>{" "}
+                    {dashboardInsights.aiRecommendation.followUp}
+                  </p>
+                </div>
 
                 <div className="resultBox">
                   <p className="sectionLabel">🤖 AI Health Coach</p>
