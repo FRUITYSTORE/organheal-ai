@@ -308,7 +308,7 @@ aiRecommendation: getAIRecommendation(
                     currently has the lowest score (
                     {dashboardInsights.priorityAttention.score}/100).
                   </p>
-                  <p>{dashboardInsights.aiRecommendation}</p>
+                  <p>{dashboardInsights.aiRecommendation.action}</p>
                 </div>
               )}
 
@@ -461,8 +461,7 @@ aiRecommendation: getAIRecommendation(
   {dashboardInsights.aiRecommendation.followUp}
 </p>
 
-                  <p>{dashboardInsights.aiRecommendation}</p>
-                </div>
+
 
                 <div className="resultBox">
                   <p className="sectionLabel">🤖 AI Health Coach</p>
