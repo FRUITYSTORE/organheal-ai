@@ -289,8 +289,7 @@ function getTrend(item: HealthHistory) {
 </div>
 
 <div className="resultBox">
-  <p className="sectionLabel">Timeline</p>
-  ...
+
 </div>
               <div className="resultBox">
                 <p className="sectionLabel">Timeline</p>
