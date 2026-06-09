@@ -710,7 +710,78 @@ y += 12;
 pdf.line(margin, y, pageWidth - margin, y);
 
 y += 10;
+if (assessments.length > 0) {
+  if (y > pageHeight - 85) {
+    pdf.addPage();
+    y = 20;
+  }
 
+  const rankedAssessments = [...assessments].sort(
+    (a, b) => a.score - b.score
+  );
+
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(15);
+  pdf.text("Executive Risk Matrix", margin, y);
+
+  y += 10;
+
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(10);
+
+  rankedAssessments.forEach((item, index) => {
+    if (y > pageHeight - 25) {
+      pdf.addPage();
+      y = 20;
+    }
+
+    setStatusColor(pdf, item.score);
+    pdf.text(
+      `${index + 1}. ${item.organ_name}: ${item.score}/100 - ${getStatus(
+        item.score
+      )}`,
+      margin + 5,
+      y
+    );
+    resetPDFColor(pdf);
+
+    y += 7;
+  });
+
+  const priority = rankedAssessments[0];
+
+  y += 5;
+
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(12);
+  pdf.text(`Immediate Priority: ${priority.organ_name}`, margin + 5, y);
+
+  y += 8;
+
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(10);
+
+  const focusLines = pdf.splitTextToSize(
+    `Recommended Focus: ${getAIRecommendation(priority.organ_name)}`,
+    pageWidth - margin * 2 - 5
+  );
+
+  pdf.text(focusLines, margin + 5, y);
+
+  y += focusLines.length * 5 + 5;
+
+  pdf.text(
+    `Target: Improve ${priority.organ_name} score by at least 20 points within the next assessment cycle.`,
+    margin + 5,
+    y
+  );
+
+  y += 12;
+
+  pdf.line(margin, y, pageWidth - margin, y);
+
+  y += 10;
+}
     if (y > pageHeight - 45) {
       pdf.addPage();
       y = 20;
