@@ -16,7 +16,11 @@ type LabReport = {
   interpretation: string;
   created_at: string;
 };
-
+type DailyCheckIn = {
+  mood: string;
+  wellness_score: number;
+  created_at: string;
+};
 const organs = [
   { name: "Heart", icon: "❤️", path: "/heart" },
   { name: "Lung", icon: "🫁", path: "/lung" },
@@ -26,14 +30,29 @@ const organs = [
   { name: "Metabolic", icon: "⚡", path: "/metabolic" },
 ];
 
-export default function DashboardPage() {
-  const [assessments, setAssessments] = useState<Assessment[]>([]);
-  const [labReport, setLabReport] = useState<LabReport | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState("");
+const [assessments, setAssessments] = useState<Assessment[]>([]);
+const [labReport, setLabReport] = useState<LabReport | null>(null);
+const [dailyCheckIn, setDailyCheckIn] = useState<DailyCheckIn | null>(null);
+const [loading, setLoading] = useState(true);
+const [message, setMessage] = useState("");
 
   useEffect(() => {
     fetchDashboardData();
+    const { data: checkInData, error: checkInError } = await supabase
+  .from("daily_checkins")
+  .select("mood, wellness_score, created_at")
+  .eq("user_id", user.id)
+  .order("created_at", { ascending: false })
+  .limit(1)
+  .single();
+
+if (checkInError && checkInError.code !== "PGRST116") {
+  setMessage("Database error: " + checkInError.message);
+  setLoading(false);
+  return;
+}
+
+setDailyCheckIn(checkInData || null);
   }, []);
 
   async function fetchDashboardData() {
