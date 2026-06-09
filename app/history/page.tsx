@@ -245,7 +245,63 @@ export default function HistoryPage() {
       className: "moderateScore",
     };
   }
+function getHealthForecasts() {
+  const modules = filters.filter((item) => item !== "All");
 
+  return modules
+    .map((module) => {
+      const records = history
+        .filter((item) => item.module_name === module)
+        .sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() -
+            new Date(a.created_at).getTime()
+        );
+
+      if (records.length < 2) {
+        return null;
+      }
+
+      const latest = records[0];
+      const previous = records[1];
+      const difference = latest.score - previous.score;
+
+      let trend = "Stable";
+      let message =
+        "Your score is stable compared with the previous assessment.";
+      let forecast =
+        "Continue monitoring this area and repeat assessment after 4 weeks.";
+      let className = "moderateScore";
+
+      if (difference > 0) {
+        trend = "Improving";
+        message = `${module} improved by ${difference} points compared with the previous assessment.`;
+        forecast = `If this trend continues, ${module} may improve by another 5–15 points in the next assessment cycle.`;
+        className = "goodScore";
+      }
+
+      if (difference < 0) {
+        trend = "Declining";
+        message = `${module} declined by ${Math.abs(
+          difference
+        )} points compared with the previous assessment.`;
+        forecast = `${module} needs closer attention. Follow the recommended plan and reassess after 4 weeks.`;
+        className = "riskScore";
+      }
+
+      return {
+        module,
+        latestScore: latest.score,
+        previousScore: previous.score,
+        difference,
+        trend,
+        message,
+        forecast,
+        className,
+      };
+    })
+    .filter(Boolean);
+}
   const filteredHistory =
     selectedFilter === "All"
       ? history
@@ -273,6 +329,7 @@ export default function HistoryPage() {
 
   const achievements = getAchievements();
   const wellnessTrend = getWellnessTrend();
+  const healthForecasts = getHealthForecasts();
 
   const chartData = filteredHistory
     .slice()
@@ -483,7 +540,46 @@ export default function HistoryPage() {
 
                 <p>{wellnessTrend.message}</p>
               </div>
+<div className="resultBox">
+  <p className="sectionLabel">🔮 Health Forecast Engine</p>
 
+  {healthForecasts.length === 0 ? (
+    <p>
+      Complete at least two assessments for the same organ to generate health
+      forecasts.
+    </p>
+  ) : (
+    <div style={{ display: "grid", gap: "14px" }}>
+      {healthForecasts.map((item: any) => (
+        <div
+          key={item.module}
+          style={{
+            padding: "16px",
+            borderRadius: "16px",
+            background: "rgba(15, 23, 42, 0.75)",
+            border: "1px solid rgba(34, 211, 238, 0.18)",
+            textAlign: "left",
+          }}
+        >
+          <h3 style={{ margin: "0 0 8px" }}>{item.module}</h3>
+
+          <p>
+            Previous: {item.previousScore}/100 → Current:{" "}
+            {item.latestScore}/100
+          </p>
+
+          <h3 className={item.className}>{item.trend}</h3>
+
+          <p>{item.message}</p>
+
+          <p>
+            <strong>Forecast:</strong> {item.forecast}
+          </p>
+        </div>
+      ))}
+    </div>
+  )}
+</div>
               <div className="resultBox">
                 <p className="sectionLabel">📈 Health Progress Chart</p>
 
