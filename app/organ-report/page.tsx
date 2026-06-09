@@ -29,6 +29,12 @@ const organOrder = ["Heart", "Lung", "Kidney", "Liver", "Brain", "Metabolic"];
 export default function OrganReportPage() {
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [labReport, setLabReport] = useState<LabReport | null>(null);
+  const [dailyCheckIn, setDailyCheckIn] = useState<DailyCheckIn | null>(null);
+  type DailyCheckIn = {
+  mood: string;
+  wellness_score: number;
+  created_at: string;
+};
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [userEmail, setUserEmail] = useState("");
@@ -84,15 +90,30 @@ export default function OrganReportPage() {
       .limit(1)
       .single();
 
-    if (labError && labError.code !== "PGRST116") {
-      setMessage("Database error: " + labError.message);
-      setLoading(false);
-      return;
-    }
+if (labError && labError.code !== "PGRST116") {
+  setMessage("Database error: " + labError.message);
+  setLoading(false);
+  return;
+}
 
-    setAssessments(sortedOrganData);
-    setLabReport(labData || null);
-    setLoading(false);
+const { data: checkInData, error: checkInError } = await supabase
+  .from("daily_checkins")
+  .select("mood, wellness_score, created_at")
+  .eq("user_id", user.id)
+  .order("created_at", { ascending: false })
+  .limit(1)
+  .single();
+
+if (checkInError && checkInError.code !== "PGRST116") {
+  setMessage("Database error: " + checkInError.message);
+  setLoading(false);
+  return;
+}
+
+setAssessments(sortedOrganData);
+setLabReport(labData || null);
+setDailyCheckIn(checkInData || null);
+setLoading(false);
   }
 
   const allScores = [
@@ -579,7 +600,47 @@ This report is educational and intended to help identify areas that may benefit 
 
       y += 10;
     }
+if (dailyCheckIn) {
+  if (y > pageHeight - 65) {
+    pdf.addPage();
+    y = 20;
+  }
 
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(15);
+  pdf.text("Daily Wellness Check-In Summary", margin, y);
+
+  y += 10;
+
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(11);
+
+  setStatusColor(pdf, dailyCheckIn.wellness_score);
+  pdf.text(
+    `Latest Wellness Score: ${dailyCheckIn.wellness_score}/100`,
+    margin + 5,
+    y
+  );
+  resetPDFColor(pdf);
+
+  y += 7;
+
+  pdf.text(`Mood: ${dailyCheckIn.mood}`, margin + 5, y);
+
+  y += 7;
+
+  pdf.text(
+    `Last check-in: ${new Date(dailyCheckIn.created_at).toLocaleString()}`,
+    margin + 5,
+    y
+  );
+
+  y += 12;
+
+  pdf.line(margin, y, pageWidth - margin, y);
+
+  y += 10;
+}
     if (y > pageHeight - 45) {
       pdf.addPage();
       y = 20;
