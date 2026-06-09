@@ -326,10 +326,48 @@ function getHealthForecasts() {
             filteredHistory.length
         )
       : 0;
+function getHealthGoals() {
+  const modules = filters.filter((item) => item !== "All");
 
+  return modules
+    .map((module) => {
+      const records = history
+        .filter((item) => item.module_name === module)
+        .sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() -
+            new Date(a.created_at).getTime()
+        );
+
+      if (records.length === 0) return null;
+
+      const latest = records[0];
+      const targetScore = latest.score < 50 ? 70 : latest.score < 80 ? 85 : 95;
+
+      const progress = Math.min(
+        100,
+        Math.round((latest.score / targetScore) * 100)
+      );
+
+      return {
+        module,
+        currentScore: latest.score,
+        targetScore,
+        progress,
+        status:
+          progress >= 100
+            ? "Goal Reached"
+            : progress >= 75
+            ? "Close to Goal"
+            : "In Progress",
+      };
+    })
+    .filter(Boolean);
+}
   const achievements = getAchievements();
   const wellnessTrend = getWellnessTrend();
   const healthForecasts = getHealthForecasts();
+  const healthGoals = getHealthGoals();
 
   const chartData = filteredHistory
     .slice()
@@ -542,6 +580,110 @@ function getHealthForecasts() {
               </div>
 <div className="resultBox">
   <p className="sectionLabel">🔮 Health Forecast Engine</p>
+  <div className="resultBox">
+  <p className="sectionLabel">🎯 Health Goals System</p>
+
+  {healthGoals.length === 0 ? (
+    <p>Complete assessments to generate health goals.</p>
+  ) : (
+    <div style={{ display: "grid", gap: "14px" }}>
+      {healthGoals.map((goal: any) => (
+        <div
+          key={goal.module}
+          style={{
+            padding: "16px",
+            borderRadius: "16px",
+            background: "rgba(15, 23, 42, 0.75)",
+            border: "1px solid rgba(34, 211, 238, 0.18)",
+            textAlign: "left",
+          }}
+        >
+          <h3 style={{ margin: "0 0 8px" }}>{goal.module}</h3>
+
+          <p>
+            Current: {goal.currentScore}/100 → Target: {goal.targetScore}/100
+          </p>
+
+          <h3>{goal.status}</h3>
+
+          <div
+            style={{
+              width: "100%",
+              height: "12px",
+              background: "rgba(255,255,255,0.12)",
+              borderRadius: "999px",
+              overflow: "hidden",
+              marginTop: "12px",
+            }}
+          >
+            <div
+              style={{
+                width: `${goal.progress}%`,
+                height: "100%",
+                background: "linear-gradient(90deg, #22c55e, #38bdf8)",
+                borderRadius: "999px",
+              }}
+            />
+          </div>
+
+          <p style={{ marginTop: "8px" }}>{goal.progress}% complete</p>
+        </div>
+      ))}
+    </div>
+  )}
+</div>
+  <div className="resultBox">
+  <p className="sectionLabel">🎯 Health Goals System</p>
+
+  {healthGoals.length === 0 ? (
+    <p>Complete assessments to generate health goals.</p>
+  ) : (
+    <div style={{ display: "grid", gap: "14px" }}>
+      {healthGoals.map((goal: any) => (
+        <div
+          key={goal.module}
+          style={{
+            padding: "16px",
+            borderRadius: "16px",
+            background: "rgba(15, 23, 42, 0.75)",
+            border: "1px solid rgba(34, 211, 238, 0.18)",
+            textAlign: "left",
+          }}
+        >
+          <h3 style={{ margin: "0 0 8px" }}>{goal.module}</h3>
+
+          <p>
+            Current: {goal.currentScore}/100 → Target: {goal.targetScore}/100
+          </p>
+
+          <h3>{goal.status}</h3>
+
+          <div
+            style={{
+              width: "100%",
+              height: "12px",
+              background: "rgba(255,255,255,0.12)",
+              borderRadius: "999px",
+              overflow: "hidden",
+              marginTop: "12px",
+            }}
+          >
+            <div
+              style={{
+                width: `${goal.progress}%`,
+                height: "100%",
+                background: "linear-gradient(90deg, #22c55e, #38bdf8)",
+                borderRadius: "999px",
+              }}
+            />
+          </div>
+
+          <p style={{ marginTop: "8px" }}>{goal.progress}% complete</p>
+        </div>
+      ))}
+    </div>
+  )}
+</div>
 
   {healthForecasts.length === 0 ? (
     <p>
