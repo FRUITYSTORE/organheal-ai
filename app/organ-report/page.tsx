@@ -199,10 +199,40 @@ setLoading(false);
 
     resetPDFColor(pdf);
   }
+function generateHealthOutlook() {
+  const wellnessScore = dailyCheckIn?.wellness_score || overallScore;
 
+  const combinedScore = Math.round((overallScore + wellnessScore) / 2);
+
+  if (combinedScore >= 80) {
+    return {
+      status: "Stable",
+      message:
+        "Your current health trajectory appears stable. Continue your current health habits and regular monitoring.",
+      potential: "+5 to +10 points",
+    };
+  }
+
+  if (combinedScore >= 60) {
+    return {
+      status: "Improving Potential",
+      message:
+        "Several areas show room for improvement. Following your health plan may improve future scores.",
+      potential: "+10 to +20 points",
+    };
+  }
+
+  return {
+    status: "Needs Attention",
+    message:
+      "Current results suggest important opportunities for improvement. Focus on your priority health area and daily wellness habits.",
+    potential: "+15 to +25 points",
+  };
+}
   function generateExecutiveSummary() {
     const strongest = getStrongestAssessment();
     const weakest = getWeakestAssessment();
+    const healthOutlook = generateHealthOutlook();
 
     if (!strongest || !weakest) return "No assessment data available.";
 
@@ -234,6 +264,7 @@ This report is educational and intended to help identify areas that may benefit 
 
     const strongest = getStrongestAssessment();
     const weakest = getWeakestAssessment();
+    const healthOutlook = generateHealthOutlook();
 
     pdf.setFillColor(15, 23, 42);
     pdf.rect(0, 0, pageWidth, pageHeight, "F");
@@ -641,6 +672,45 @@ if (dailyCheckIn) {
 
   y += 10;
 }
+if (y > pageHeight - 65) {
+  pdf.addPage();
+  y = 20;
+}
+
+pdf.setFont("helvetica", "bold");
+pdf.setFontSize(15);
+pdf.text("Health Outlook", margin, y);
+
+y += 10;
+
+pdf.setFont("helvetica", "normal");
+pdf.setFontSize(11);
+
+pdf.text(`Current Outlook: ${healthOutlook.status}`, margin + 5, y);
+
+y += 7;
+
+const outlookLines = pdf.splitTextToSize(
+  healthOutlook.message,
+  pageWidth - margin * 2 - 5
+);
+
+pdf.text(outlookLines, margin + 5, y);
+
+y += outlookLines.length * 5 + 5;
+
+pdf.text(
+  `Estimated Improvement Potential: ${healthOutlook.potential}`,
+  margin + 5,
+  y
+);
+
+y += 12;
+
+pdf.line(margin, y, pageWidth - margin, y);
+
+y += 10;
+
     if (y > pageHeight - 45) {
       pdf.addPage();
       y = 20;
