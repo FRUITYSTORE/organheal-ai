@@ -637,18 +637,22 @@ function generateCoachMessage(
               </div>
 
               <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-                <a href="/organ-report">
-                  <button className="primaryBtn">View Full Organ Report</button>
-                </a>
+  <a href="/organ-report">
+    <button className="primaryBtn">View Full Organ Report</button>
+  </a>
 
-                <a href="/lab-analyzer">
-                  <button className="secondaryBtn">Open Lab Analyzer</button>
-                </a>
+  <a href="/lab-analyzer">
+    <button className="secondaryBtn">Open Lab Analyzer</button>
+  </a>
 
-                <a href="/history">
-                  <button className="secondaryBtn">View Health History</button>
-                </a>
-              </div>
+  <a href="/history">
+    <button className="secondaryBtn">View Health History</button>
+  </a>
+
+  <a href="/checkin">
+    <button className="primaryBtn">Daily Check-In</button>
+  </a>
+</div>
             </>
           )}
         </div>

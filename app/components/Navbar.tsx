@@ -20,6 +20,7 @@ export default function Navbar() {
         <Link href="/">Home</Link>
         <Link href="/dashboard">Dashboard</Link>
         <Link href="/assessment">Assessment</Link>
+        <Link href="/checkin">Daily Check-In</Link>
         <Link href="/lab-analyzer">Labs</Link>
         <Link href="/lab-upload">PDF Analyzer</Link>
         <Link href="/organ-report">Report</Link>
