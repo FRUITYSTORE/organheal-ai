@@ -377,7 +377,27 @@ function generateHealthOutlook(
         </div>
 
         <div className="chatWindow">
-          {loading && <p>Loading dashboard...</p>}
+          {loading && (
+  <div className="resultBox">
+    <p className="sectionLabel">Loading Dashboard</p>
+    <h2>Preparing your health intelligence...</h2>
+
+    <div style={{ display: "grid", gap: "16px", marginTop: "20px" }}>
+      {[1, 2, 3, 4].map((item) => (
+        <div
+          key={item}
+          style={{
+            height: "90px",
+            borderRadius: "18px",
+            background:
+              "linear-gradient(90deg, rgba(255,255,255,0.08), rgba(34,211,238,0.18), rgba(255,255,255,0.08))",
+            animation: "pulse 1.5s infinite",
+          }}
+        />
+      ))}
+    </div>
+  </div>
+)}
 
           {!loading && message && (
             <div className="resultBox">
