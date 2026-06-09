@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 
@@ -12,8 +13,15 @@ export default function Navbar() {
   return (
     <nav className="navbar">
       <Link href="/" className="logo">
-        <span className="logoIcon">🧠❤️🫁</span>
-        <span>OrganHeal AI</span>
+        <Image
+          src="/icon.png"
+          alt="OrganHeal logo"
+          width={34}
+height={34}
+          priority
+        />
+
+        <span>OrganHeal</span>
       </Link>
 
       <div className="navLinks">
