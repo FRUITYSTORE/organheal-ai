@@ -210,7 +210,59 @@ function getAIRecommendation(
       };
   }
 }
+function generateCoachMessage(
+  priorityOrgan: string,
+  strongestOrgan: string,
+  overallScore: number
+) {
+  let message = "";
 
+  if (overallScore >= 80) {
+    message +=
+      "Excellent progress. Your overall health profile is currently strong. ";
+  } else if (overallScore >= 60) {
+    message +=
+      "Your health profile shows moderate performance with opportunities for improvement. ";
+  } else {
+    message +=
+      "Several health areas require closer attention and follow-up. ";
+  }
+
+  message += `Your strongest area is ${strongestOrgan}. `;
+  message += `Your current priority area is ${priorityOrgan}. `;
+
+  switch (priorityOrgan) {
+    case "Heart":
+      message +=
+        "Focus on blood pressure, cholesterol management, exercise, and smoking avoidance.";
+      break;
+    case "Lung":
+      message +=
+        "Focus on respiratory health, physical activity, smoking avoidance, and symptom monitoring.";
+      break;
+    case "Kidney":
+      message +=
+        "Focus on hydration, blood pressure control, and kidney function follow-up.";
+      break;
+    case "Liver":
+      message +=
+        "Focus on healthy nutrition, weight control, and reducing liver stressors.";
+      break;
+    case "Brain":
+      message +=
+        "Focus on sleep quality, stress management, and cognitive wellness.";
+      break;
+    case "Metabolic":
+      message +=
+        "Focus on blood sugar control, weight management, and physical activity.";
+      break;
+    default:
+      message +=
+        "Continue regular health monitoring and preventive assessments.";
+  }
+
+  return message;
+}
   const allScores = [
     ...assessments.map((item) => item.score),
     ...(labReport ? [labReport.score] : []),
@@ -238,23 +290,24 @@ function getAIRecommendation(
     .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0];
 
   const dashboardInsights = {
-    overallScore,
-    status: allScores.length > 0 ? getStatus(overallScore) : "No Data Yet",
-    topStrength,
-    priorityAttention,
-    latestLab: labReport,
-    latestDate,
-    completedModules: assessments.length + (labReport ? 1 : 0),
-    totalModules: organs.length + 1,
-aiRecommendation: getAIRecommendation(
-  priorityAttention ? priorityAttention.organ_name : null,
-  priorityAttention ? priorityAttention.score : undefined
-),
-    healthCoachMessage:
-      assessments.length > 0
-        ? `Based on your current assessments, ${priorityAttention?.organ_name} requires the highest attention, while ${topStrength?.organ_name} is your strongest area. Continue monitoring your results and discuss concerning findings with a healthcare professional.`
-        : "Complete your organ assessments to receive personalized health guidance.",
-  };
+  overallScore,
+  status: allScores.length > 0 ? getStatus(overallScore) : "No Data Yet",
+  topStrength,
+  priorityAttention,
+  latestLab: labReport,
+  latestDate,
+  completedModules: assessments.length + (labReport ? 1 : 0),
+  totalModules: organs.length + 1,
+  aiRecommendation: getAIRecommendation(
+    priorityAttention ? priorityAttention.organ_name : null,
+    priorityAttention ? priorityAttention.score : undefined
+  ),
+  healthCoachMessage: generateCoachMessage(
+    priorityAttention?.organ_name || "General Health",
+    topStrength?.organ_name || "General Health",
+    overallScore
+  ),
+};
 
   return (
     <main className="assistantPage">
