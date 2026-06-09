@@ -6,8 +6,8 @@ import { supabase } from "../../lib/supabase";
 function OrganHealLogo() {
   return (
     <svg
-      width="34"
-      height="34"
+     width={56}
+height={56}
       viewBox="0 0 512 512"
       xmlns="http://www.w3.org/2000/svg"
       aria-label="OrganHeal logo"
@@ -67,7 +67,32 @@ export default function Navbar() {
     <nav className="navbar">
       <Link href="/" className="logo">
         <OrganHealLogo />
-        <span>OrganHeal</span>
+        <div
+  style={{
+    display: "flex",
+    flexDirection: "column",
+    lineHeight: "1",
+  }}
+>
+  <span
+    style={{
+      fontWeight: 800,
+      fontSize: "1.35rem",
+    }}
+  >
+    OrganHeal
+  </span>
+
+  <span
+    style={{
+      fontSize: "0.7rem",
+      opacity: 0.7,
+      letterSpacing: "1px",
+    }}
+  >
+    AI HEALTH INTELLIGENCE
+  </span>
+</div>
       </Link>
 
       <div className="navLinks">
