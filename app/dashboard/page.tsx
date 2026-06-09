@@ -264,7 +264,18 @@ export default function DashboardPage() {
 
     return coachMessage;
   }
+function generateTodayMission(priorityOrgan: string, currentScore: number) {
+  const targetScore = currentScore < 50 ? 70 : currentScore < 80 ? 85 : 95;
+  const progress = Math.min(100, Math.round((currentScore / targetScore) * 100));
 
+  return {
+    priorityOrgan,
+    currentScore,
+    targetScore,
+    progress,
+    nextReview: "7 days",
+  };
+}
   const allScores = [
     ...assessments.map((item) => item.score),
     ...(labReport ? [labReport.score] : []),
@@ -324,12 +335,15 @@ function generateHealthOutlook(
       "Current results suggest important opportunities for improvement. Focus on your priority health area and daily wellness habits.",
     potential: "+15 to +25 points",
   };
-}
+}const todayMission = priorityAttention
+  ? generateTodayMission(priorityAttention.organ_name, priorityAttention.score)
+  : null;
   const dashboardInsights = {
     overallScore,
     status: allScores.length > 0 ? getStatus(overallScore) : "No Data Yet",
     topStrength,
     priorityAttention,
+    todayMission,
     latestLab: labReport,
     latestCheckIn: dailyCheckIn,
     latestDate,
@@ -414,7 +428,55 @@ function generateHealthOutlook(
                 </h2>
 
                 <h3>{dashboardInsights.status}</h3>
+{dashboardInsights.todayMission && (
+  <div className="resultBox">
+    <p className="sectionLabel">🎯 Today's Health Mission</p>
 
+    <h2>{dashboardInsights.todayMission.priorityOrgan}</h2>
+
+    <p>
+      Current Score: {dashboardInsights.todayMission.currentScore}/100
+    </p>
+
+    <p>
+      Target Score: {dashboardInsights.todayMission.targetScore}/100
+    </p>
+
+    <p>
+      Progress: {dashboardInsights.todayMission.progress}%
+    </p>
+
+    <div
+      style={{
+        width: "100%",
+        height: "12px",
+        background: "rgba(255,255,255,0.12)",
+        borderRadius: "999px",
+        overflow: "hidden",
+        marginTop: "12px",
+      }}
+    >
+      <div
+        style={{
+          width: `${dashboardInsights.todayMission.progress}%`,
+          height: "100%",
+          background: "linear-gradient(90deg, #22c55e, #38bdf8)",
+          borderRadius: "999px",
+        }}
+      />
+    </div>
+
+    <p style={{ marginTop: "14px" }}>
+      Recommended Action: {dashboardInsights.aiRecommendation.action}
+    </p>
+
+    <p>Next Review: {dashboardInsights.todayMission.nextReview}</p>
+
+    <a href="/health-plan">
+      <button className="primaryBtn">Start Mission</button>
+    </a>
+  </div>
+)}
                 <p>
                   Completed modules: {dashboardInsights.completedModules} /{" "}
                   {dashboardInsights.totalModules}
