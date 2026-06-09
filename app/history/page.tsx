@@ -2,6 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
 type HealthHistory = {
   id: string;
@@ -91,6 +99,17 @@ export default function HistoryPage() {
       : 0;
 
       const achievements = getAchievements();
+      const chartData = filteredHistory
+  .slice()
+  .sort(
+    (a, b) =>
+      new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+  )
+  .map((item) => ({
+    date: new Date(item.created_at).toLocaleDateString(),
+    score: item.score,
+    module: item.module_name,
+  }));
 
 function getTrend(item: HealthHistory) {
   const sameModuleRecords = history
@@ -296,7 +315,30 @@ function getAchievements() {
 {achievements.map((achievement, index) => (
   <div key={index}>{achievement}</div>
 ))}
+<div className="resultBox">
+  <p className="sectionLabel">📈 Health Progress Chart</p>
 
+  {chartData.length < 2 ? (
+    <p>Complete at least two assessments to view progress trends.</p>
+  ) : (
+    <div style={{ width: "100%", height: "320px" }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={chartData}>
+          <XAxis dataKey="date" />
+          <YAxis domain={[0, 100]} />
+          <Tooltip />
+          <Line
+            type="monotone"
+            dataKey="score"
+            strokeWidth={4}
+            dot={{ r: 6 }}
+            activeDot={{ r: 8 }}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  )}
+</div>
 </div>
 
               <div className="resultBox">
