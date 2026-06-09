@@ -292,7 +292,39 @@ export default function DashboardPage() {
     .concat(labReport ? [labReport.created_at] : [])
     .concat(dailyCheckIn ? [dailyCheckIn.created_at] : [])
     .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0];
+function generateHealthOutlook(
+  overallScore: number,
+  wellnessScore?: number
+) {
+  const combinedScore = Math.round(
+    (overallScore + (wellnessScore || overallScore)) / 2
+  );
 
+  if (combinedScore >= 80) {
+    return {
+      status: "Stable",
+      message:
+        "Your current health trajectory appears stable. Continue your current health habits and monitoring.",
+      potential: "+5 to +10 points",
+    };
+  }
+
+  if (combinedScore >= 60) {
+    return {
+      status: "Improving Potential",
+      message:
+        "Several areas show room for improvement. Following your health plan may significantly improve future scores.",
+      potential: "+10 to +20 points",
+    };
+  }
+
+  return {
+    status: "Needs Attention",
+    message:
+      "Current results suggest important opportunities for improvement. Focus on your priority health area and daily wellness habits.",
+    potential: "+15 to +25 points",
+  };
+}
   const dashboardInsights = {
     overallScore,
     status: allScores.length > 0 ? getStatus(overallScore) : "No Data Yet",
@@ -313,7 +345,10 @@ export default function DashboardPage() {
       topStrength?.organ_name || "General Health",
       overallScore
     ),
-  };
+  };const healthOutlook = generateHealthOutlook(
+  overallScore,
+  dailyCheckIn?.wellness_score
+);
 
   return (
     <main className="assistantPage">
@@ -563,6 +598,18 @@ export default function DashboardPage() {
                   <p>{dashboardInsights.healthCoachMessage}</p>
                 </div>
               </div>
+              <div className="resultBox">
+  <p className="sectionLabel">🔮 Health Outlook</p>
+
+  <h2>{healthOutlook.status}</h2>
+
+  <p>{healthOutlook.message}</p>
+
+  <p>
+    <strong>Improvement Potential:</strong>{" "}
+    {healthOutlook.potential}
+  </p>
+</div>
 
               <div className="resultBox">
                 <p className="sectionLabel">🎯 AI Health Plan</p>
