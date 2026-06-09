@@ -562,6 +562,9 @@ function generateCoachMessage(
     {dashboardInsights.priorityAttention?.organ_name || "Health"} score by
     at least 20 points during the next assessment cycle.
   </p>
+  <a href="/health-plan">
+  <button className="primaryBtn">Start Health Improvement Plan</button>
+</a>
 </div>
 <div className="resultBox">
   <p className="sectionLabel">🗺️ Health Roadmap</p>
