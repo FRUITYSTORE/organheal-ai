@@ -16,11 +16,13 @@ type LabReport = {
   interpretation: string;
   created_at: string;
 };
+
 type DailyCheckIn = {
   mood: string;
   wellness_score: number;
   created_at: string;
 };
+
 const organs = [
   { name: "Heart", icon: "❤️", path: "/heart" },
   { name: "Lung", icon: "🫁", path: "/lung" },
@@ -30,50 +32,29 @@ const organs = [
   { name: "Metabolic", icon: "⚡", path: "/metabolic" },
 ];
 
-const [assessments, setAssessments] = useState<Assessment[]>([]);
-const [labReport, setLabReport] = useState<LabReport | null>(null);
-const [dailyCheckIn, setDailyCheckIn] = useState<DailyCheckIn | null>(null);
-const [loading, setLoading] = useState(true);
-const [message, setMessage] = useState("");
+export default function DashboardPage() {
+  const [assessments, setAssessments] = useState<Assessment[]>([]);
+  const [labReport, setLabReport] = useState<LabReport | null>(null);
+  const [dailyCheckIn, setDailyCheckIn] = useState<DailyCheckIn | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     fetchDashboardData();
-    const { data: checkInData, error: checkInError } = await supabase
-  .from("daily_checkins")
-  .select("mood, wellness_score, created_at")
-  .eq("user_id", user.id)
-  .order("created_at", { ascending: false })
-  .limit(1)
-  .single();
-
-if (checkInError && checkInError.code !== "PGRST116") {
-  setMessage("Database error: " + checkInError.message);
-  setLoading(false);
-  return;
-}
-
-setDailyCheckIn(checkInData || null);
   }, []);
 
   async function fetchDashboardData() {
     setLoading(true);
 
-    const { data: userData, error: userError } =
-      await supabase.auth.getUser();
+    const { data: userData, error: userError } = await supabase.auth.getUser();
 
-    if (userError) {
+    if (userError || !userData.user) {
       setMessage("Please login or sign up to access your dashboard.");
       setLoading(false);
       return;
     }
 
     const user = userData.user;
-
-    if (!user) {
-      setMessage("Please login or sign up to access your dashboard.");
-      setLoading(false);
-      return;
-    }
 
     const { data: organData, error: organError } = await supabase
       .from("organ_assessments")
@@ -101,8 +82,23 @@ setDailyCheckIn(checkInData || null);
       return;
     }
 
+    const { data: checkInData, error: checkInError } = await supabase
+      .from("daily_checkins")
+      .select("mood, wellness_score, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (checkInError && checkInError.code !== "PGRST116") {
+      setMessage("Database error: " + checkInError.message);
+      setLoading(false);
+      return;
+    }
+
     setAssessments(organData || []);
     setLabReport(labData || null);
+    setDailyCheckIn(checkInData || null);
     setLoading(false);
   }
 
@@ -128,163 +124,151 @@ setDailyCheckIn(checkInData || null);
     return "linear-gradient(90deg, #ef4444, #f97316)";
   }
 
-function getAIRecommendation(
-  moduleName: string | null,
-  score?: number
-) {
-  if (!moduleName) {
-    return {
-      priority: "No Data",
-      explanation:
-        "Complete your assessments to receive personalized health insights.",
-      action:
-        "Start the organ assessments and lab analyzer.",
-      followUp:
-        "No follow-up recommendations available yet.",
-    };
+  function getAIRecommendation(moduleName: string | null, score?: number) {
+    if (!moduleName) {
+      return {
+        priority: "No Data",
+        explanation:
+          "Complete your assessments to receive personalized health insights.",
+        action: "Start the organ assessments and lab analyzer.",
+        followUp: "No follow-up recommendations available yet.",
+      };
+    }
+
+    switch (moduleName) {
+      case "Heart":
+        return {
+          priority: score && score < 50 ? "High Priority" : "Monitor",
+          explanation:
+            "Your responses suggest cardiovascular risk factors that may benefit from lifestyle improvement and professional review.",
+          action:
+            "Monitor blood pressure, cholesterol, physical activity, and body weight.",
+          followUp:
+            "Consider blood pressure assessment, lipid profile, and cardiovascular evaluation.",
+        };
+
+      case "Lung":
+        return {
+          priority: score && score < 50 ? "High Priority" : "Monitor",
+          explanation:
+            "Your responses suggest respiratory health factors that deserve attention.",
+          action:
+            "Avoid smoking exposure and monitor symptoms such as cough, wheezing, or shortness of breath.",
+          followUp: "Consider lung function assessment if symptoms persist.",
+        };
+
+      case "Kidney":
+        return {
+          priority: score && score < 50 ? "High Priority" : "Monitor",
+          explanation:
+            "Your assessment indicates kidney-related factors that may require closer monitoring.",
+          action:
+            "Maintain hydration, monitor blood pressure, and avoid unnecessary kidney stressors.",
+          followUp:
+            "Consider kidney function tests, urine analysis, and healthcare review.",
+        };
+
+      case "Liver":
+        return {
+          priority: score && score < 50 ? "High Priority" : "Monitor",
+          explanation: "Your assessment suggests possible liver-health concerns.",
+          action:
+            "Focus on healthy nutrition, weight control, and limiting liver stressors.",
+          followUp:
+            "Consider liver enzyme testing and medical follow-up when appropriate.",
+        };
+
+      case "Brain":
+        return {
+          priority: score && score < 50 ? "High Priority" : "Monitor",
+          explanation:
+            "Your responses suggest areas where cognitive wellness and stress management may help.",
+          action:
+            "Improve sleep quality, physical activity, and stress reduction habits.",
+          followUp:
+            "Discuss persistent headaches, memory concerns, or neurological symptoms with a healthcare professional.",
+        };
+
+      case "Metabolic":
+        return {
+          priority: score && score < 50 ? "High Priority" : "Monitor",
+          explanation:
+            "Your assessment suggests metabolic risk factors that may benefit from lifestyle improvement.",
+          action:
+            "Focus on blood sugar control, healthy weight, physical activity, and nutrition.",
+          followUp: "Consider HbA1c, glucose monitoring, and lipid profile review.",
+        };
+
+      default:
+        return {
+          priority: "Monitor",
+          explanation:
+            "Continue monitoring your health and maintaining healthy lifestyle habits.",
+          action: "Stay active, eat a balanced diet, and attend regular checkups.",
+          followUp:
+            "Discuss any persistent symptoms with a healthcare professional.",
+        };
+    }
   }
 
-  switch (moduleName) {
-    case "Heart":
-      return {
-        priority:
-          score && score < 50 ? "High Priority" : "Monitor",
-        explanation:
-          "Your responses suggest cardiovascular risk factors that may benefit from lifestyle improvement and professional review.",
-        action:
-          "Monitor blood pressure, cholesterol, physical activity, and body weight.",
-        followUp:
-          "Consider blood pressure assessment, lipid profile, and cardiovascular evaluation.",
-      };
+  function generateCoachMessage(
+    priorityOrgan: string,
+    strongestOrgan: string,
+    overallScore: number
+  ) {
+    let coachMessage = "";
 
-    case "Lung":
-      return {
-        priority:
-          score && score < 50 ? "High Priority" : "Monitor",
-        explanation:
-          "Your responses suggest respiratory health factors that deserve attention.",
-        action:
-          "Avoid smoking exposure and monitor symptoms such as cough, wheezing, or shortness of breath.",
-        followUp:
-          "Consider lung function assessment if symptoms persist.",
-      };
+    if (overallScore >= 80) {
+      coachMessage +=
+        "Excellent progress. Your overall health profile is currently strong. ";
+    } else if (overallScore >= 60) {
+      coachMessage +=
+        "Your health profile shows moderate performance with opportunities for improvement. ";
+    } else {
+      coachMessage +=
+        "Several health areas require closer attention and follow-up. ";
+    }
 
-    case "Kidney":
-      return {
-        priority:
-          score && score < 50 ? "High Priority" : "Monitor",
-        explanation:
-          "Your assessment indicates kidney-related factors that may require closer monitoring.",
-        action:
-          "Maintain hydration, monitor blood pressure, and avoid unnecessary kidney stressors.",
-        followUp:
-          "Consider kidney function tests, urine analysis, and healthcare review.",
-      };
+    coachMessage += `Your strongest area is ${strongestOrgan}. `;
+    coachMessage += `Your current priority area is ${priorityOrgan}. `;
 
-    case "Liver":
-      return {
-        priority:
-          score && score < 50 ? "High Priority" : "Monitor",
-        explanation:
-          "Your assessment suggests possible liver-health concerns.",
-        action:
-          "Focus on healthy nutrition, weight control, and limiting liver stressors.",
-        followUp:
-          "Consider liver enzyme testing and medical follow-up when appropriate.",
-      };
+    switch (priorityOrgan) {
+      case "Heart":
+        coachMessage +=
+          "Focus on blood pressure, cholesterol management, regular activity, and smoking avoidance.";
+        break;
+      case "Lung":
+        coachMessage +=
+          "Focus on respiratory health, physical activity, smoking avoidance, and monitoring breathing symptoms.";
+        break;
+      case "Kidney":
+        coachMessage +=
+          "Focus on hydration, blood pressure control, and kidney function follow-up.";
+        break;
+      case "Liver":
+        coachMessage +=
+          "Focus on weight control, liver-friendly nutrition, and reducing metabolic risk factors.";
+        break;
+      case "Brain":
+        coachMessage +=
+          "Focus on sleep quality, stress management, mental wellness, and regular activity.";
+        break;
+      case "Metabolic":
+        coachMessage +=
+          "Focus on glucose control, cholesterol optimization, weight management, and physical activity.";
+        break;
+      default:
+        coachMessage +=
+          "Continue regular health monitoring and complete your pending assessments.";
+    }
 
-    case "Brain":
-      return {
-        priority:
-          score && score < 50 ? "High Priority" : "Monitor",
-        explanation:
-          "Your responses suggest areas where cognitive wellness and stress management may help.",
-        action:
-          "Improve sleep quality, physical activity, and stress reduction habits.",
-        followUp:
-          "Discuss persistent headaches, memory concerns, or neurological symptoms with a healthcare professional.",
-      };
-
-    case "Metabolic":
-      return {
-        priority:
-          score && score < 50 ? "High Priority" : "Monitor",
-        explanation:
-          "Your assessment suggests metabolic risk factors that may benefit from lifestyle improvement.",
-        action:
-          "Focus on blood sugar control, healthy weight, physical activity, and nutrition.",
-        followUp:
-          "Consider HbA1c, glucose monitoring, and lipid profile review.",
-      };
-
-    default:
-      return {
-        priority: "Monitor",
-        explanation:
-          "Continue monitoring your health and maintaining healthy lifestyle habits.",
-        action:
-          "Stay active, eat a balanced diet, and attend regular checkups.",
-        followUp:
-          "Discuss any persistent symptoms with a healthcare professional.",
-      };
-  }
-}
-function generateCoachMessage(
-  priorityOrgan: string,
-  strongestOrgan: string,
-  overallScore: number
-) {
-  let message = "";
-
-  if (overallScore >= 80) {
-    message +=
-      "Excellent progress. Your overall health profile is currently strong. ";
-  } else if (overallScore >= 60) {
-    message +=
-      "Your health profile shows moderate performance with opportunities for improvement. ";
-  } else {
-    message +=
-      "Several health areas require closer attention and follow-up. ";
+    return coachMessage;
   }
 
-  message += `Your strongest area is ${strongestOrgan}. `;
-  message += `Your current priority area is ${priorityOrgan}. `;
-
-  switch (priorityOrgan) {
-    case "Heart":
-      message +=
-        "Focus on blood pressure, cholesterol management, exercise, and smoking avoidance.";
-      break;
-    case "Lung":
-      message +=
-        "Focus on respiratory health, physical activity, smoking avoidance, and symptom monitoring.";
-      break;
-    case "Kidney":
-      message +=
-        "Focus on hydration, blood pressure control, and kidney function follow-up.";
-      break;
-    case "Liver":
-      message +=
-        "Focus on healthy nutrition, weight control, and reducing liver stressors.";
-      break;
-    case "Brain":
-      message +=
-        "Focus on sleep quality, stress management, and cognitive wellness.";
-      break;
-    case "Metabolic":
-      message +=
-        "Focus on blood sugar control, weight management, and physical activity.";
-      break;
-    default:
-      message +=
-        "Continue regular health monitoring and preventive assessments.";
-  }
-
-  return message;
-}
   const allScores = [
     ...assessments.map((item) => item.score),
     ...(labReport ? [labReport.score] : []),
+    ...(dailyCheckIn ? [dailyCheckIn.wellness_score] : []),
   ];
 
   const overallScore =
@@ -306,27 +290,30 @@ function generateCoachMessage(
 
   const latestDate = [...assessments.map((item) => item.created_at)]
     .concat(labReport ? [labReport.created_at] : [])
+    .concat(dailyCheckIn ? [dailyCheckIn.created_at] : [])
     .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0];
 
- const dashboardInsights = {
-  overallScore,
-  status: allScores.length > 0 ? getStatus(overallScore) : "No Data Yet",
-  topStrength,
-  priorityAttention,
-  latestLab: labReport,
-  latestDate,
-  completedModules: assessments.length + (labReport ? 1 : 0),
-  totalModules: organs.length + 1,
-  aiRecommendation: getAIRecommendation(
-    priorityAttention ? priorityAttention.organ_name : null,
-    priorityAttention ? priorityAttention.score : undefined
-  ),
-  healthCoachMessage: generateCoachMessage(
-    priorityAttention?.organ_name || "General Health",
-    topStrength?.organ_name || "General Health",
-    overallScore
-  ),
-};
+  const dashboardInsights = {
+    overallScore,
+    status: allScores.length > 0 ? getStatus(overallScore) : "No Data Yet",
+    topStrength,
+    priorityAttention,
+    latestLab: labReport,
+    latestCheckIn: dailyCheckIn,
+    latestDate,
+    completedModules:
+      assessments.length + (labReport ? 1 : 0) + (dailyCheckIn ? 1 : 0),
+    totalModules: organs.length + 2,
+    aiRecommendation: getAIRecommendation(
+      priorityAttention ? priorityAttention.organ_name : null,
+      priorityAttention ? priorityAttention.score : undefined
+    ),
+    healthCoachMessage: generateCoachMessage(
+      priorityAttention?.organ_name || "General Health",
+      topStrength?.organ_name || "General Health",
+      overallScore
+    ),
+  };
 
   return (
     <main className="assistantPage">
@@ -336,7 +323,7 @@ function generateCoachMessage(
           <h1>Dashboard Intelligence</h1>
           <p>
             View your overall health intelligence, priority areas, strongest
-            score, latest lab score, and personalized guidance.
+            score, latest lab score, daily check-in, and personalized guidance.
           </p>
         </div>
 
@@ -464,9 +451,7 @@ function generateCoachMessage(
                         {dashboardInsights.priorityAttention.organ_name}
                       </h2>
 
-                      <h3>
-                        {dashboardInsights.priorityAttention.score}/100
-                      </h3>
+                      <h3>{dashboardInsights.priorityAttention.score}/100</h3>
 
                       <p>
                         {getStatus(
@@ -511,6 +496,44 @@ function generateCoachMessage(
                 </div>
 
                 <div className="resultBox">
+                  <p className="sectionLabel">☀️ Latest Daily Check-In</p>
+
+                  {dashboardInsights.latestCheckIn ? (
+                    <>
+                      <h2
+                        className={getScoreClass(
+                          dashboardInsights.latestCheckIn.wellness_score
+                        )}
+                      >
+                        {dashboardInsights.latestCheckIn.wellness_score}/100
+                      </h2>
+
+                      <h3>{dashboardInsights.latestCheckIn.mood}</h3>
+
+                      <p>
+                        Last check-in:{" "}
+                        {new Date(
+                          dashboardInsights.latestCheckIn.created_at
+                        ).toLocaleString()}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <h2>No check-in yet</h2>
+                      <p>
+                        Complete your daily check-in to track wellness patterns.
+                      </p>
+
+                      <a href="/checkin">
+                        <button className="primaryBtn">
+                          Start Daily Check-In
+                        </button>
+                      </a>
+                    </>
+                  )}
+                </div>
+
+                <div className="resultBox">
                   <p className="sectionLabel">🤖 AI Health Insights</p>
 
                   <p>
@@ -540,68 +563,65 @@ function generateCoachMessage(
                   <p>{dashboardInsights.healthCoachMessage}</p>
                 </div>
               </div>
-<div className="resultBox">
-  <p className="sectionLabel">🎯 AI Health Plan</p>
 
-  <h2>
-    {dashboardInsights.priorityAttention?.organ_name || "No Priority Area"}
-  </h2>
+              <div className="resultBox">
+                <p className="sectionLabel">🎯 AI Health Plan</p>
 
-  <p>
-    <strong>Immediate Action:</strong>
-  </p>
+                <h2>
+                  {dashboardInsights.priorityAttention?.organ_name ||
+                    "No Priority Area"}
+                </h2>
 
-  <p>
-    {dashboardInsights.aiRecommendation.action}
-  </p>
+                <p>
+                  <strong>Immediate Action:</strong>
+                </p>
+                <p>{dashboardInsights.aiRecommendation.action}</p>
 
-  <p>
-    <strong>This Week:</strong>
-  </p>
+                <p>
+                  <strong>This Week:</strong>
+                </p>
+                <p>
+                  Complete follow-up activities related to{" "}
+                  {dashboardInsights.priorityAttention?.organ_name ||
+                    "your assessments"}.
+                </p>
 
-  <p>
-    Complete follow-up activities related to{" "}
-    {dashboardInsights.priorityAttention?.organ_name || "your assessments"}.
-  </p>
+                <p>
+                  <strong>Next Follow-Up:</strong>
+                </p>
+                <p>{dashboardInsights.aiRecommendation.followUp}</p>
 
-  <p>
-    <strong>Next Follow-Up:</strong>
-  </p>
+                <p>
+                  <strong>Improvement Goal:</strong>
+                </p>
+                <p>
+                  Raise{" "}
+                  {dashboardInsights.priorityAttention?.organ_name || "Health"}{" "}
+                  score by at least 20 points during the next assessment cycle.
+                </p>
 
-  <p>
-    {dashboardInsights.aiRecommendation.followUp}
-  </p>
+                <a href="/health-plan">
+                  <button className="primaryBtn">
+                    Start Health Improvement Plan
+                  </button>
+                </a>
+              </div>
 
-  <p>
-    <strong>Improvement Goal:</strong>
-  </p>
+              <div className="resultBox">
+                <p className="sectionLabel">🗺️ Health Roadmap</p>
 
-  <p>
-    Raise{" "}
-    {dashboardInsights.priorityAttention?.organ_name || "Health"} score by
-    at least 20 points during the next assessment cycle.
-  </p>
-  <a href="/health-plan">
-  <button className="primaryBtn">Start Health Improvement Plan</button>
-</a>
-</div>
-<div className="resultBox">
-  <p className="sectionLabel">🗺️ Health Roadmap</p>
+                <p>✅ Assessment Completed</p>
+                <p>📌 Week 1: Follow recommended actions</p>
+                <p>📌 Week 2: Complete suggested laboratory tests</p>
+                <p>📌 Week 4: Reassess priority organ</p>
 
-  <p>✅ Assessment Completed</p>
+                <p>
+                  🎯 Goal: Improve{" "}
+                  {dashboardInsights.priorityAttention?.organ_name || "Health"}{" "}
+                  score and reduce overall risk level.
+                </p>
+              </div>
 
-  <p>📌 Week 1: Follow recommended actions</p>
-
-  <p>📌 Week 2: Complete suggested laboratory tests</p>
-
-  <p>📌 Week 4: Reassess priority organ</p>
-
-  <p>
-    🎯 Goal:
-    Improve {dashboardInsights.priorityAttention?.organ_name || "Health"} score
-    and reduce overall risk level.
-  </p>
-</div>
               <div className="assessmentForm">
                 {organs.map((organ) => {
                   const assessment = getAssessment(organ.name);
@@ -656,22 +676,22 @@ function generateCoachMessage(
               </div>
 
               <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-  <a href="/organ-report">
-    <button className="primaryBtn">View Full Organ Report</button>
-  </a>
+                <a href="/organ-report">
+                  <button className="primaryBtn">View Full Organ Report</button>
+                </a>
 
-  <a href="/lab-analyzer">
-    <button className="secondaryBtn">Open Lab Analyzer</button>
-  </a>
+                <a href="/lab-analyzer">
+                  <button className="secondaryBtn">Open Lab Analyzer</button>
+                </a>
 
-  <a href="/history">
-    <button className="secondaryBtn">View Health History</button>
-  </a>
+                <a href="/history">
+                  <button className="secondaryBtn">View Health History</button>
+                </a>
 
-  <a href="/checkin">
-    <button className="primaryBtn">Daily Check-In</button>
-  </a>
-</div>
+                <a href="/checkin">
+                  <button className="primaryBtn">Daily Check-In</button>
+                </a>
+              </div>
             </>
           )}
         </div>
