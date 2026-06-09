@@ -132,50 +132,59 @@ function getTrend(item: HealthHistory) {
     };
   }
 
-  return {
-    text: "No change since previous result",
-    symbol: "→",
-    className: "moderateScore",
-  };
-}function getAchievements() {
-  const achievements = [];
+return {
+  text: "No change since previous result",
+  symbol: "→",
+  className: "moderateScore",
+};
+}
 
-  if (history.length >= 1) {
-    achievements.push("🏅 First Assessment Completed");
-  }
-  if (history.length >= 5) {
-    achievements.push("🏅 Completed 5 Assessments");
-  }
-  if (history.length >= 10) {
-    achievements.push("🏅 Consistent Health Tracker");
-  }
-  const highScore = history.some((item) => item.score >= 80);
-  if (highScore) {
-    achievements.push("🏅 Score Above 80");
+function getAchievements() {
+  const milestones = [];
+
+  const hasAllOrgans = filters
+    .filter((item) => item !== "All")
+    .every((organ) => history.some((item) => item.module_name === organ));
+
+  if (hasAllOrgans) {
+    milestones.push("✅ Full Organ Review Completed");
   }
 
-  const heartHistory = history
+  const highRiskArea = history.find((item) => item.score < 50);
+
+  if (highRiskArea) {
+    milestones.push(`⚠️ ${highRiskArea.module_name} Needs Priority Follow-up`);
+  }
+
+  const bestArea = history
+    .filter((item) => item.score >= 80)
+    .sort((a, b) => b.score - a.score)[0];
+
+  if (bestArea) {
+    milestones.push(`🌟 Strong Area Identified: ${bestArea.module_name}`);
+  }
+
+  const heartRecords = history
     .filter((item) => item.module_name === "Heart")
     .sort(
       (a, b) =>
-        new Date(a.created_at).getTime() -
-        new Date(b.created_at).getTime()
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
     );
 
-  if (heartHistory.length >= 2) {
-    const first = heartHistory[0].score;
-    const latest = heartHistory[heartHistory.length - 1].score;
+  if (heartRecords.length >= 2) {
+    const first = heartRecords[0].score;
+    const latest = heartRecords[heartRecords.length - 1].score;
 
-    if (latest - first >= 10) {
-      achievements.push("🏅 Heart Improved by 10+ Points");
+    if (latest > first) {
+      milestones.push(`📈 Heart Improved by ${latest - first} Points`);
     }
 
-    if (latest - first >= 20) {
-      achievements.push("🏅 Heart Improved by 20+ Points");
+    if (latest < first) {
+      milestones.push(`📉 Heart Declined by ${first - latest} Points`);
     }
   }
 
-  return achievements;
+  return milestones;
 }
   return (
     <main className="assistantPage">
@@ -283,9 +292,9 @@ function getTrend(item: HealthHistory) {
                 </div>
               </div>
 <div className="resultBox">
-  <p className="sectionLabel">🏅 Health Achievements</p>
-  {achievements.map((achievement, index) => (
-  <p key={index}>{achievement}</p>
+  <p className="sectionLabel">🏅 Health Milestones</p>
+{achievements.map((achievement, index) => (
+  <div key={index}>{achievement}</div>
 ))}
 
 </div>
