@@ -19,7 +19,17 @@ type HealthHistory = {
   notes: string;
   created_at: string;
 };
-
+type DailyCheckIn = {
+  id: string;
+  mood: string;
+  energy_level: number;
+  stress_level: number;
+  sleep_quality: number;
+  hydration: number;
+  physical_activity: number;
+  wellness_score: number;
+  created_at: string;
+};
 const filters = [
   "All",
   "Heart",
@@ -32,6 +42,7 @@ const filters = [
 
 export default function HistoryPage() {
   const [history, setHistory] = useState<HealthHistory[]>([]);
+  const [dailyCheckIns, setDailyCheckIns] = useState<DailyCheckIn[]>([]);
   const [selectedFilter, setSelectedFilter] = useState("All");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
@@ -63,8 +74,23 @@ export default function HistoryPage() {
       return;
     }
 
-    setHistory(data || []);
-    setLoading(false);
+    const { data: checkInData, error: checkInError } = await supabase
+  .from("daily_checkins")
+  .select(
+    "id, mood, energy_level, stress_level, sleep_quality, hydration, physical_activity, wellness_score, created_at"
+  )
+  .eq("user_id", userData.user.id)
+  .order("created_at", { ascending: false });
+
+if (checkInError) {
+  setMessage("Database error: " + checkInError.message);
+  setLoading(false);
+  return;
+}
+
+setHistory(data || []);
+setDailyCheckIns(checkInData || []);
+setLoading(false);
   }
 
   function getScoreClass(score: number) {
@@ -315,6 +341,58 @@ function getAchievements() {
 {achievements.map((achievement, index) => (
   <div key={index}>{achievement}</div>
 ))}
+<div className="resultBox">
+  <p className="sectionLabel">☀️ Daily Wellness History</p>
+
+  {dailyCheckIns.length === 0 ? (
+    <>
+      <h2>No check-ins yet</h2>
+      <p>Complete your daily check-in to start tracking wellness patterns.</p>
+
+      <a href="/checkin">
+        <button className="primaryBtn">Start Daily Check-In</button>
+      </a>
+    </>
+  ) : (
+    <div style={{ display: "grid", gap: "14px" }}>
+      {dailyCheckIns.slice(0, 7).map((item) => (
+        <div
+          key={item.id}
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr auto",
+            gap: "12px",
+            alignItems: "center",
+            padding: "16px",
+            borderRadius: "16px",
+            background: "rgba(15, 23, 42, 0.75)",
+            border: "1px solid rgba(34, 211, 238, 0.18)",
+            textAlign: "left",
+          }}
+        >
+          <div>
+            <h3 style={{ margin: "0 0 6px" }}>{item.mood}</h3>
+
+            <p style={{ margin: "0 0 6px" }}>
+              Energy {item.energy_level}/5 · Sleep {item.sleep_quality}/5 ·
+              Stress {item.stress_level}/5
+            </p>
+
+            <p style={{ margin: 0 }}>
+              {new Date(item.created_at).toLocaleString()}
+            </p>
+          </div>
+
+          <div style={{ textAlign: "right" }}>
+            <h2 className={getScoreClass(item.wellness_score)} style={{ margin: 0 }}>
+              {item.wellness_score}/100
+            </h2>
+          </div>
+        </div>
+      ))}
+    </div>
+  )}
+</div>
 <div className="resultBox">
   <p className="sectionLabel">📈 Health Progress Chart</p>
 
