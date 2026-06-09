@@ -289,7 +289,7 @@ function generateCoachMessage(
     .concat(labReport ? [labReport.created_at] : [])
     .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0];
 
-  const dashboardInsights = {
+ const dashboardInsights = {
   overallScore,
   status: allScores.length > 0 ? getStatus(overallScore) : "No Data Yet",
   topStrength,
