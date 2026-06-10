@@ -2,108 +2,85 @@ export default function Home() {
   return (
     <main className="homepage">
       <section className="hero">
-        <div className="badge">AI-Powered Health Intelligence</div>
+        <div className="badge">AI-Powered Health Intelligence Platform</div>
 
-        <h1 className="heroTitle">OrganHeal AI</h1>
+        <h1 className="heroTitle">OrganHeal</h1>
 
         <p className="heroTagline">
-          Understand Your Body. Empower Your Health.
+          Turn health data into clear, actionable insight.
         </p>
 
         <p className="heroDescription">
-          AI-powered health intelligence platform designed to help people
-          understand organ health, interpret laboratory results, track health
-          trends, and access trusted medical education.
+          OrganHeal helps you track organ wellness, understand lab results,
+          monitor daily health patterns, generate professional reports, and
+          follow personalized improvement plans.
         </p>
 
         <div className="buttons">
-          <a href="/dashboard">
-            <button className="primaryBtn">Open Dashboard</button>
-          </a>
-
           <a href="/assessment">
-            <button className="secondaryBtn">Start Assessment</button>
+            <button className="primaryBtn">Start Free Assessment</button>
           </a>
 
-          <a href="/organ-report">
-            <button className="secondaryBtn">View Report</button>
+          <a href="/dashboard">
+            <button className="secondaryBtn">Open Dashboard</button>
+          </a>
+
+          <a href="/checkin">
+            <button className="secondaryBtn">Daily Check-In</button>
           </a>
         </div>
       </section>
 
       <section className="features">
         <div className="sectionHeader">
-          <p className="sectionLabel">How It Works</p>
-          <h2>From Assessment to Health Intelligence</h2>
+          <p className="sectionLabel">Why OrganHeal</p>
+          <h2>One platform for health awareness, trends, and action</h2>
         </div>
 
         <div className="featureGrid">
           <div className="featureCard">
-            <div className="iconBox">📝</div>
-            <h3>1. Complete Assessments</h3>
+            <div className="iconBox">📊</div>
+            <h3>Health Intelligence Dashboard</h3>
             <p>
-              Answer guided questions for heart, lung, kidney, liver, brain,
-              and metabolic health.
+              See your overall health score, priority area, daily wellness,
+              health mission, and personalized guidance in one focused view.
             </p>
           </div>
 
           <div className="featureCard">
             <div className="iconBox">🧪</div>
-            <h3>2. Analyze Lab Values</h3>
+            <h3>Lab & Wellness Tracking</h3>
             <p>
-              Enter key lab results and receive an educational lab health score.
+              Track lab scores, daily check-ins, organ assessments, and health
+              history over time.
             </p>
           </div>
 
           <div className="featureCard">
-            <div className="iconBox">📊</div>
-            <h3>3. View Insights</h3>
+            <div className="iconBox">🎯</div>
+            <h3>Personalized Health Plan</h3>
             <p>
-              See your dashboard, trends, priority alerts, and AI health
-              insights.
+              Follow a 4-week improvement plan based on your current priority
+              area, health goals, and wellness patterns.
             </p>
           </div>
         </div>
       </section>
 
       <section className="reportGrid">
-        <a href="/assistant" style={{ textDecoration: "none" }}>
-          <div className="reportCard clickableCard">
-            <h3>🧠 AI Assistant</h3>
-            <span>24/7</span>
-            <p>Educational health conversations and guided health questions.</p>
-          </div>
-        </a>
-
-        <a href="/assessment" style={{ textDecoration: "none" }}>
-          <div className="reportCard clickableCard">
-            <h3>❤️ Organ Assessments</h3>
-            <span>6</span>
-            <p>Heart, Lung, Kidney, Liver, Brain, and Metabolic modules.</p>
-          </div>
-        </a>
-
-        <a href="/lab-analyzer" style={{ textDecoration: "none" }}>
-          <div className="reportCard clickableCard">
-            <h3>🧪 Lab Analyzer</h3>
-            <span>Score</span>
-            <p>Analyze key lab values and generate a lab health score.</p>
-          </div>
-        </a>
-
-        <a href="/lab-upload" style={{ textDecoration: "none" }}>
-          <div className="reportCard clickableCard">
-            <h3>📄 PDF Analyzer</h3>
-            <span>Upload</span>
-            <p>Upload PDF or photo lab reports for future AI-powered analysis.</p>
-          </div>
-        </a>
-
         <a href="/dashboard" style={{ textDecoration: "none" }}>
           <div className="reportCard clickableCard">
             <h3>📊 Dashboard</h3>
             <span>Live</span>
-            <p>View your overall score, AI insights, and priority alerts.</p>
+            <p>View your health score, mission, check-in, and AI guidance.</p>
+          </div>
+        </a>
+
+        <a href="/health-plan" style={{ textDecoration: "none" }}>
+          <div className="reportCard clickableCard">
+            <h3>🎯 Health Plan</h3>
+            <span>4 Weeks</span>
+            <p>Follow a personalized improvement roadmap based on your results.</p>
           </div>
         </a>
 
@@ -111,61 +88,97 @@ export default function Home() {
           <div className="reportCard clickableCard">
             <h3>📈 Health History</h3>
             <span>Trends</span>
-            <p>Track saved results and follow your health score over time.</p>
-          </div>
-        </a>
-
-        <a href="/library" style={{ textDecoration: "none" }}>
-          <div className="reportCard clickableCard">
-            <h3>📚 Medical Library</h3>
-            <span>6+</span>
-            <p>Trusted medical education topics and health knowledge.</p>
+            <p>Review progress charts, forecasts, milestones, and goals.</p>
           </div>
         </a>
 
         <a href="/organ-report" style={{ textDecoration: "none" }}>
           <div className="reportCard clickableCard">
-            <h3>📄 Health Report</h3>
+            <h3>📄 Professional Report</h3>
             <span>PDF</span>
-            <p>Generate a professional health intelligence PDF report.</p>
+            <p>Generate a professional health intelligence report.</p>
           </div>
         </a>
 
-        <a href="/profile" style={{ textDecoration: "none" }}>
+        <a href="/lab-analyzer" style={{ textDecoration: "none" }}>
           <div className="reportCard clickableCard">
-            <h3>👤 Profile</h3>
-            <span>Account</span>
-            <p>Access your account summary and quick health actions.</p>
+            <h3>🧪 Lab Analyzer</h3>
+            <span>Score</span>
+            <p>Analyze key lab values and receive educational insights.</p>
           </div>
         </a>
+
+        <a href="/assistant" style={{ textDecoration: "none" }}>
+          <div className="reportCard clickableCard">
+            <h3>🤖 AI Assistant</h3>
+            <span>Guide</span>
+            <p>Ask educational health questions and receive guided support.</p>
+          </div>
+        </a>
+      </section>
+
+      <section className="features">
+        <div className="sectionHeader">
+          <p className="sectionLabel">How It Works</p>
+          <h2>From assessment to health intelligence</h2>
+        </div>
+
+        <div className="featureGrid">
+          <div className="featureCard">
+            <div className="iconBox">1</div>
+            <h3>Complete Assessments</h3>
+            <p>
+              Start with guided educational assessments and daily wellness
+              check-ins.
+            </p>
+          </div>
+
+          <div className="featureCard">
+            <div className="iconBox">2</div>
+            <h3>Understand Your Trends</h3>
+            <p>
+              Review your history, progress charts, milestones, health goals,
+              and forecast insights.
+            </p>
+          </div>
+
+          <div className="featureCard">
+            <div className="iconBox">3</div>
+            <h3>Take Action</h3>
+            <p>
+              Use your health plan, daily mission, and professional PDF report
+              to support better health conversations.
+            </p>
+          </div>
+        </div>
       </section>
 
       <section className="trustSection">
         <div className="trustBox">
           <p className="sectionLabel">Important Medical Disclaimer</p>
-          <h2>Educational Health Intelligence, Not Diagnosis</h2>
+          <h2>Educational health intelligence, not diagnosis</h2>
           <p>
-            OrganHeal AI is designed for education, wellness tracking, and
-            health awareness. It does not diagnose disease, replace a licensed
+            OrganHeal is designed for education, wellness tracking, and health
+            awareness. It does not diagnose disease, replace a licensed
             healthcare professional, or provide emergency medical advice.
           </p>
         </div>
       </section>
 
       <section className="homeCTA">
-        <h2>Start your health intelligence journey today</h2>
+        <h2>Start building your health intelligence profile</h2>
         <p>
-          Track your scores, understand your trends, and generate your health
-          report.
+          Complete your first assessment, track your daily wellness, and unlock
+          your personalized dashboard.
         </p>
 
         <div className="buttons">
-          <a href="/dashboard">
-            <button className="primaryBtn">Open Dashboard</button>
+          <a href="/assessment">
+            <button className="primaryBtn">Start Assessment</button>
           </a>
 
-          <a href="/assessment">
-            <button className="secondaryBtn">Start Assessment</button>
+          <a href="/dashboard">
+            <button className="secondaryBtn">View Dashboard</button>
           </a>
         </div>
       </section>
