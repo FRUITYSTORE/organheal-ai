@@ -244,7 +244,14 @@ export default function HistoryPage() {
         "Your wellness score stayed the same compared with your previous check-in. Continue tracking your daily patterns.",
       className: "moderateScore",
     };
-  }
+  }function getForecastConfidence(change: number) {
+  const absChange = Math.abs(change);
+
+  if (absChange >= 15) return "High";
+  if (absChange >= 5) return "Moderate";
+
+  return "Low";
+}
 function getHealthForecasts() {
   const modules = filters.filter((item) => item !== "All");
 
@@ -265,7 +272,12 @@ function getHealthForecasts() {
       const latest = records[0];
       const previous = records[1];
       const difference = latest.score - previous.score;
+const expectedNextScore = Math.max(
+  0,
+  Math.min(100, latest.score + difference)
+);
 
+const confidence = getForecastConfidence(difference);
       let trend = "Stable";
       let message =
         "Your score is stable compared with the previous assessment.";
@@ -290,9 +302,11 @@ function getHealthForecasts() {
       }
 
       return {
-        module,
-        latestScore: latest.score,
-        previousScore: previous.score,
+  module,
+  latestScore: latest.score,
+  previousScore: previous.score,
+  expectedNextScore,
+  confidence,
         difference,
         trend,
         message,
@@ -722,6 +736,15 @@ const priorityOrgan =
           <p>
             <strong>Forecast:</strong> {item.forecast}
           </p>
+          <p>
+  <strong>Expected Next Score:</strong>{" "}
+  {item.expectedNextScore}/100
+</p>
+
+<p>
+  <strong>Confidence:</strong>{" "}
+  {item.confidence}
+</p>
         </div>
       ))}
     </div>
