@@ -992,4 +992,12 @@ button {
   .blogGrid {
     grid-template-columns: 1fr;
   }
+}.reportCard {
+  text-decoration: none;
+  color: inherit;
+}
+
+.primaryBtn,
+.secondaryBtn {
+  text-decoration: none;
 }

@@ -1,25 +1,29 @@
+import Link from "next/link";
+
 export default function Home() {
   const schema = {
-  "@context": "https://schema.org",
-  "@type": "MedicalWebPage",
-  name: "OrganHeal AI",
-  description:
-    "AI-powered health intelligence platform for organ health assessment, laboratory interpretation, and personalized health insights.",
-  url: "https://organheal.com",
-  publisher: {
-    "@type": "Organization",
+    "@context": "https://schema.org",
+    "@type": "MedicalWebPage",
     name: "OrganHeal AI",
+    description:
+      "AI-powered health intelligence platform for organ health assessment, laboratory interpretation, and personalized health insights.",
     url: "https://organheal.com",
-  },
-};
+    publisher: {
+      "@type": "Organization",
+      name: "OrganHeal AI",
+      url: "https://organheal.com",
+    },
+  };
+
   return (
     <main className="homepage">
       <script
-  type="application/ld+json"
-  dangerouslySetInnerHTML={{
-    __html: JSON.stringify(schema),
-  }}
-/>
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(schema),
+        }}
+      />
+
       <section className="hero">
         <div className="badge">AI-Powered Health Intelligence Platform</div>
 
@@ -36,17 +40,17 @@ export default function Home() {
         </p>
 
         <div className="buttons">
-          <a href="/assessment">
-            <button className="primaryBtn">Start Free Assessment</button>
-          </a>
+          <Link href="/assessment" className="primaryBtn">
+            Start Free Assessment
+          </Link>
 
-          <a href="/dashboard">
-            <button className="secondaryBtn">Open Dashboard</button>
-          </a>
+          <Link href="/dashboard" className="secondaryBtn">
+            Open Dashboard
+          </Link>
 
-          <a href="/checkin">
-            <button className="secondaryBtn">Daily Check-In</button>
-          </a>
+          <Link href="/checkin" className="secondaryBtn">
+            Daily Check-In
+          </Link>
         </div>
       </section>
 
@@ -87,53 +91,41 @@ export default function Home() {
       </section>
 
       <section className="reportGrid">
-        <a href="/dashboard" style={{ textDecoration: "none" }}>
-          <div className="reportCard clickableCard">
-            <h3>📊 Dashboard</h3>
-            <span>Live</span>
-            <p>View your health score, mission, check-in, and AI guidance.</p>
-          </div>
-        </a>
+        <Link href="/dashboard" className="reportCard clickableCard">
+          <h3>📊 Dashboard</h3>
+          <span>Live</span>
+          <p>View your health score, mission, check-in, and AI guidance.</p>
+        </Link>
 
-        <a href="/health-plan" style={{ textDecoration: "none" }}>
-          <div className="reportCard clickableCard">
-            <h3>🎯 Health Plan</h3>
-            <span>4 Weeks</span>
-            <p>Follow a personalized improvement roadmap based on your results.</p>
-          </div>
-        </a>
+        <Link href="/health-plan" className="reportCard clickableCard">
+          <h3>🎯 Health Plan</h3>
+          <span>4 Weeks</span>
+          <p>Follow a personalized improvement roadmap based on your results.</p>
+        </Link>
 
-        <a href="/history" style={{ textDecoration: "none" }}>
-          <div className="reportCard clickableCard">
-            <h3>📈 Health History</h3>
-            <span>Trends</span>
-            <p>Review progress charts, forecasts, milestones, and goals.</p>
-          </div>
-        </a>
+        <Link href="/history" className="reportCard clickableCard">
+          <h3>📈 Health History</h3>
+          <span>Trends</span>
+          <p>Review progress charts, forecasts, milestones, and goals.</p>
+        </Link>
 
-        <a href="/organ-report" style={{ textDecoration: "none" }}>
-          <div className="reportCard clickableCard">
-            <h3>📄 Professional Report</h3>
-            <span>PDF</span>
-            <p>Generate a professional health intelligence report.</p>
-          </div>
-        </a>
+        <Link href="/organ-report" className="reportCard clickableCard">
+          <h3>📄 Professional Report</h3>
+          <span>PDF</span>
+          <p>Generate a professional health intelligence report.</p>
+        </Link>
 
-        <a href="/lab-analyzer" style={{ textDecoration: "none" }}>
-          <div className="reportCard clickableCard">
-            <h3>🧪 Lab Analyzer</h3>
-            <span>Score</span>
-            <p>Analyze key lab values and receive educational insights.</p>
-          </div>
-        </a>
+        <Link href="/lab-analyzer" className="reportCard clickableCard">
+          <h3>🧪 Lab Analyzer</h3>
+          <span>Score</span>
+          <p>Analyze key lab values and receive educational insights.</p>
+        </Link>
 
-        <a href="/assistant" style={{ textDecoration: "none" }}>
-          <div className="reportCard clickableCard">
-            <h3>🤖 AI Assistant</h3>
-            <span>Guide</span>
-            <p>Ask educational health questions and receive guided support.</p>
-          </div>
-        </a>
+        <Link href="/assistant" className="reportCard clickableCard">
+          <h3>🤖 AI Assistant</h3>
+          <span>Guide</span>
+          <p>Ask educational health questions and receive guided support.</p>
+        </Link>
       </section>
 
       <section className="features">
@@ -192,13 +184,13 @@ export default function Home() {
         </p>
 
         <div className="buttons">
-          <a href="/assessment">
-            <button className="primaryBtn">Start Assessment</button>
-          </a>
+          <Link href="/assessment" className="primaryBtn">
+            Start Assessment
+          </Link>
 
-          <a href="/dashboard">
-            <button className="secondaryBtn">View Dashboard</button>
-          </a>
+          <Link href="/dashboard" className="secondaryBtn">
+            View Dashboard
+          </Link>
         </div>
       </section>
     </main>
