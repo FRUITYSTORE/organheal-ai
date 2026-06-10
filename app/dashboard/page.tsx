@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import DashboardEmptyState from "../components/DashboardEmptyState";
+import { getTranslations } from "../../lib/translations";
 
 type Assessment = {
   organ_name: string;
@@ -31,6 +32,16 @@ export default function DashboardPage() {
   const [dailyCheckIn, setDailyCheckIn] = useState<DailyCheckIn | null>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [language, setLanguage] = useState<"en" | "ar">("en");
+
+useEffect(() => {
+  const savedLanguage =
+    (localStorage.getItem("organheal-language") as "en" | "ar") || "en";
+
+  setLanguage(savedLanguage);
+}, []);
+
+const t = getTranslations(language);
 
   useEffect(() => {
     fetchDashboardData();
@@ -264,12 +275,7 @@ const onboardingProgress = Math.round(
     <main className="assistantPage">
       <div className="assistantContainer">
         <div className="assistantHeader">
-          <p className="assistantBadge">ORGANHEAL DASHBOARD</p>
-          <h1>Dashboard Intelligence</h1>
-          <p>
-            A focused overview of your health intelligence, daily wellness, and
-            next recommended action.
-          </p>
+          assistantBadge">ORGANHEAL DASHBOARD
         </div>
 
         <div className="chatWindow">
@@ -334,7 +340,7 @@ const onboardingProgress = Math.round(
             <div className="resultBox">
   <p className="sectionLabel">🚀 Getting Started</p>
 
-  <h2>Welcome to OrganHeal</h2>
+  <h2>{t.dashboard.onboarding}</h2>
 
   <p>
     Complete your health setup to unlock the full OrganHeal experience.
@@ -508,7 +514,7 @@ const onboardingProgress = Math.round(
 
               <div className="resultBox">
                 <p className="sectionLabel">🔔 Notifications Center</p>
-                <h2>Health Notifications</h2>
+                <h2>{t.dashboard.notifications}</h2>
 
                 {notifications.length > 0 ? (
                   <div
