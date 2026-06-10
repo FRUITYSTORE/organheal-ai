@@ -4,6 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 
+type OrganScore = {
+  organ: string;
+  score: number;
+};
+
 type SharedReport = {
   id: string;
   user_id: string;
@@ -15,21 +20,14 @@ type SharedReport = {
   lab_score: number | null;
   priority_organ: string | null;
   latest_checkin_score: number | null;
-  organ_scores:
-    | {
-        organ: string;
-        score: number;
-      }[]
-    | null;
+  organ_scores: OrganScore[] | null;
   recommendations: string | null;
   report_summary: string | null;
 };
 
 export default function DoctorPortalPage() {
   const [shareCode, setShareCode] = useState("");
-  const [verifiedReport, setVerifiedReport] = useState<SharedReport | null>(
-    null
-  );
+  const [verifiedReport, setVerifiedReport] = useState<SharedReport | null>(null);
   const [message, setMessage] = useState("");
 
   async function verifyShareCode() {
@@ -46,21 +44,7 @@ export default function DoctorPortalPage() {
     const { data, error } = await supabase
       .from("shared_reports")
       .select(
-        `
-        id,
-        user_id,
-        share_code,
-        report_type,
-        expires_at,
-        created_at,
-        overall_score,
-        lab_score,
-        priority_organ,
-        latest_checkin_score,
-        organ_scores,
-        recommendations,
-        report_summary
-      `
+        "id, user_id, share_code, report_type, expires_at, created_at, overall_score, lab_score, priority_organ, latest_checkin_score, organ_scores, recommendations, report_summary"
       )
       .eq("share_code", cleanCode)
       .single();
@@ -70,10 +54,7 @@ export default function DoctorPortalPage() {
       return;
     }
 
-    const now = new Date();
-    const expiryDate = new Date(data.expires_at);
-
-    if (expiryDate < now) {
+    if (new Date(data.expires_at) < new Date()) {
       setMessage("This share code has expired.");
       return;
     }
@@ -86,40 +67,24 @@ export default function DoctorPortalPage() {
     <main className="assistantPage">
       <div className="assistantContainer">
         <section className="assistantHeader">
-          <p className="assistantBadge">DOCTOR PORTAL MVP</p>
-
+          <p className="assistantBadge">DOCTOR PORTAL</p>
           <h1>Doctor Intelligence Portal</h1>
-
           <p>
-            Review patient-shared OrganHeal reports, organ scores, lab
-            intelligence, and follow-up summaries.
+            Secure access to patient-shared OrganHeal health intelligence
+            reports.
           </p>
-
-          <div className="buttons">
-            <Link href="/dashboard">
-              <button className="primaryBtn">Open Patient Dashboard</button>
-            </Link>
-
-            <Link href="/organ-report">
-              <button className="secondaryBtn">View Patient Report</button>
-            </Link>
-          </div>
         </section>
 
         <section className="chatWindow">
           <div className="resultBox">
             <p className="sectionLabel">PATIENT REPORT ACCESS</p>
-            <h2>Enter Patient Share Code</h2>
-
-            <p>
-              Enter a patient-generated OrganHeal share code to verify temporary
-              report access.
-            </p>
+            <h2>Enter Share Code</h2>
+            <p>Enter a valid OrganHeal share code provided by the patient.</p>
 
             <div className="chatInput">
               <input
                 type="text"
-                placeholder="Example: OH-4F82K9"
+                placeholder="OH-XXXXXX"
                 value={shareCode}
                 onChange={(event) => setShareCode(event.target.value)}
               />
@@ -127,37 +92,58 @@ export default function DoctorPortalPage() {
               <button onClick={verifyShareCode}>Verify</button>
             </div>
 
-            {message && <p>{message}</p>}
+            {message && (
+              <p
+                style={{
+                  marginTop: "12px",
+                  color: message.includes("success") ? "#22c55e" : "#f97316",
+                  fontWeight: 600,
+                }}
+              >
+                {message}
+              </p>
+            )}
           </div>
 
           {verifiedReport && (
-            <div className="resultBox">
-              <p className="sectionLabel">ACCESS VERIFIED</p>
+            <>
+              <div className="resultBox">
+                <p className="sectionLabel">ACCESS VERIFIED</p>
 
-              <h2>{verifiedReport.share_code}</h2>
+                <h2
+                  style={{
+                    color: "#22c55e",
+                    fontWeight: 800,
+                  }}
+                >
+                  {verifiedReport.share_code}
+                </h2>
 
-              <p>
-                Report Type: <strong>{verifiedReport.report_type}</strong>
-              </p>
+                <p>
+                  <strong>Report Type:</strong> {verifiedReport.report_type}
+                </p>
 
-              <p>
-                Created:{" "}
-                <strong>
+                <p>
+                  <strong>Created:</strong>{" "}
                   {new Date(verifiedReport.created_at).toLocaleString()}
-                </strong>
-              </p>
+                </p>
 
-              <p>
-                Expires:{" "}
-                <strong>
+                <p>
+                  <strong>Expires:</strong>{" "}
                   {new Date(verifiedReport.expires_at).toLocaleString()}
-                </strong>
-              </p>
+                </p>
+              </div>
 
-              <div className="assessmentForm">
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+                  gap: "20px",
+                }}
+              >
                 <div className="resultBox">
                   <p className="sectionLabel">PATIENT SUMMARY</p>
-                  <h2>Health Intelligence Preview</h2>
+                  <h2>Health Intelligence Summary</h2>
 
                   <p>
                     <strong>Overall Score:</strong>{" "}
@@ -179,7 +165,7 @@ export default function DoctorPortalPage() {
                   </p>
 
                   <p>
-                    <strong>Latest Check-In Score:</strong>{" "}
+                    <strong>Latest Check-In:</strong>{" "}
                     {verifiedReport.latest_checkin_score !== null
                       ? `${verifiedReport.latest_checkin_score}/100`
                       : "Not available"}
@@ -193,13 +179,13 @@ export default function DoctorPortalPage() {
                   />
 
                   <p>
-                    <strong>Report Summary:</strong>
+                    <strong>Report Summary</strong>
                   </p>
 
                   <p>{verifiedReport.report_summary || "Not available"}</p>
 
-                  <p>
-                    <strong>Recommendations:</strong>
+                  <p style={{ marginTop: "16px" }}>
+                    <strong>Recommendations</strong>
                   </p>
 
                   <p>{verifiedReport.recommendations || "Not available"}</p>
@@ -207,9 +193,10 @@ export default function DoctorPortalPage() {
 
                 <div className="resultBox">
                   <p className="sectionLabel">ORGAN SCORES</p>
-                  <h2>Shared Organ Health Scores</h2>
+                  <h2>Shared Organ Scores</h2>
 
-                  {verifiedReport.organ_scores?.length ? (
+                  {verifiedReport.organ_scores &&
+                  verifiedReport.organ_scores.length > 0 ? (
                     <div
                       style={{
                         display: "grid",
@@ -225,7 +212,8 @@ export default function DoctorPortalPage() {
                             justifyContent: "space-between",
                             padding: "12px",
                             borderRadius: "12px",
-                            background: "rgba(255,255,255,0.04)",
+                            background: "rgba(255,255,255,0.06)",
+                            border: "1px solid rgba(255,255,255,0.08)",
                           }}
                         >
                           <span>{item.organ}</span>
@@ -241,62 +229,35 @@ export default function DoctorPortalPage() {
                 <div className="resultBox">
                   <p className="sectionLabel">REPORT STATUS</p>
                   <h2>Temporary Access Active</h2>
-
+                  <p>Access remains active until:</p>
                   <p>
-                    This code is valid until{" "}
-                    {new Date(verifiedReport.expires_at).toLocaleDateString()}.
+                    <strong>
+                      {new Date(verifiedReport.expires_at).toLocaleDateString()}
+                    </strong>
                   </p>
                 </div>
               </div>
-            </div>
+            </>
           )}
 
-          <div className="assessmentForm">
-            <div className="resultBox">
-              <p className="sectionLabel">PATIENT REPORTS</p>
-              <h2>Shared Reports</h2>
-              <p>
-                Doctors will be able to review professional health intelligence
-                reports shared by patients.
-              </p>
-            </div>
-
-            <div className="resultBox">
-              <p className="sectionLabel">ORGAN SCORES</p>
-              <h2>Organ Health Overview</h2>
-              <p>
-                View heart, lung, kidney, liver, brain, metabolic, and lab
-                intelligence scores in one clinical overview.
-              </p>
-            </div>
-
-            <div className="resultBox">
-              <p className="sectionLabel">LAB SUMMARY</p>
-              <h2>Lab Intelligence</h2>
-              <p>
-                Review lab score, priority marker, affected organ, and suggested
-                educational follow-up areas.
-              </p>
-            </div>
-
-            <div className="resultBox">
-              <p className="sectionLabel">FOLLOW-UP</p>
-              <h2>Clinical Notes</h2>
-              <p>
-                Future versions will allow doctors to add structured follow-up
-                notes and patient recommendations.
-              </p>
-            </div>
+          <div className="resultBox">
+            <p className="sectionLabel">IMPORTANT NOTICE</p>
+            <h2>Educational Use Only</h2>
+            <p>
+              OrganHeal Doctor Portal supports health education, communication,
+              and structured health awareness. It does not replace professional
+              diagnosis, treatment, or clinical judgment.
+            </p>
           </div>
 
-          <div className="resultBox">
-            <p className="sectionLabel">IMPORTANT NOTE</p>
-            <h2>Educational and support use only</h2>
-            <p>
-              OrganHeal Doctor Portal is intended to support health education,
-              health awareness, and better communication. It does not replace
-              licensed clinical judgment, diagnosis, or treatment decisions.
-            </p>
+          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+            <Link href="/dashboard">
+              <button className="secondaryBtn">Dashboard</button>
+            </Link>
+
+            <Link href="/organ-report">
+              <button className="secondaryBtn">Organ Report</button>
+            </Link>
           </div>
         </section>
       </div>
