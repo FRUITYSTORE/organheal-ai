@@ -41,6 +41,7 @@ export default function OrganReportPage() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [userEmail, setUserEmail] = useState("");
+  const [shareCode, setShareCode] = useState("");
   const [language, setLanguage] = useState<"en" | "ar">("en");
 
 useEffect(() => {
@@ -427,7 +428,10 @@ This report is educational and intended to support health awareness and better c
 
     pdf.save("OrganHeal_Professional_Report_v2.pdf");
   }
-
+function generateShareCode() {
+  const randomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+  setShareCode(`OH-${randomCode}`);
+}
   return (
     <main className="assistantPage">
       <div className="assistantContainer">
@@ -473,9 +477,40 @@ This report is educational and intended to support health awareness and better c
 
           {!loading && !message && allScores.length > 0 && (
             <>
-              <button className="primaryBtn" onClick={generateProfessionalPDF}>
-              {t.report.download}
-              </button>
+              <div
+  style={{
+    display: "flex",
+    gap: "12px",
+    justifyContent: "center",
+    flexWrap: "wrap",
+  }}
+>
+  <button className="primaryBtn" onClick={generateProfessionalPDF}>
+    {t.report.download}
+  </button>
+
+  <button className="secondaryBtn" onClick={generateShareCode}>
+    {isArabic ? "إنشاء كود مشاركة للطبيب" : "Generate Doctor Share Code"}
+  </button>
+</div>
+
+{shareCode && (
+  <div className="resultBox">
+    <p className="sectionLabel">
+      {isArabic ? "كود مشاركة الطبيب" : "Doctor Share Code"}
+    </p>
+
+    <h2>{shareCode}</h2>
+
+    <p>
+      {isArabic
+        ? "شارك هذا الكود مع الطبيب للسماح بمراجعة مؤقتة للتقرير."
+        : "Share this code with a doctor to allow temporary report review."}
+    </p>
+
+    <p>{isArabic ? "صلاحية تجريبية: 7 أيام" : "Demo validity: 7 days"}</p>
+  </div>
+)}
 
               <div className="resultBox">
                 <p className="sectionLabel">Overall Health Intelligence Score</p>
