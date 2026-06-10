@@ -9,6 +9,12 @@ type Assessment = {
   risk_level: string;
 };
 
+type DailyCheckIn = {
+  mood: string;
+  wellness_score: number;
+  created_at: string;
+};
+
 const taskPlans: Record<string, string[]> = {
   Heart: [
     "Monitor blood pressure at least 3 times this week",
@@ -61,18 +67,65 @@ const taskPlans: Record<string, string[]> = {
   ],
 };
 
+const weeklyPlan: Record<string, string[]> = {
+  Heart: [
+    "Week 1: Record blood pressure and review major lifestyle risk factors.",
+    "Week 2: Improve activity routine and reduce high-salt meals.",
+    "Week 3: Review cholesterol-related habits and repeat daily check-ins.",
+    "Week 4: Repeat Heart assessment and compare trend in Health History.",
+  ],
+  Lung: [
+    "Week 1: Track respiratory symptoms and avoid smoke exposure.",
+    "Week 2: Add light daily breathing or walking activity.",
+    "Week 3: Reduce exposure to dust, perfumes, and irritants.",
+    "Week 4: Repeat Lung assessment and review symptom trend.",
+  ],
+  Kidney: [
+    "Week 1: Track hydration and blood pressure if relevant.",
+    "Week 2: Review kidney stressors and avoid unnecessary NSAIDs unless advised.",
+    "Week 3: Complete kidney function or urine testing if recommended.",
+    "Week 4: Repeat Kidney assessment and compare progress.",
+  ],
+  Liver: [
+    "Week 1: Reduce sugary and high-fat meals.",
+    "Week 2: Focus on balanced nutrition and weight control.",
+    "Week 3: Review liver enzyme results if available.",
+    "Week 4: Repeat Liver assessment and monitor improvement.",
+  ],
+  Brain: [
+    "Week 1: Improve sleep timing and reduce late-night screen time.",
+    "Week 2: Practice stress reduction for 10 minutes daily.",
+    "Week 3: Add regular physical activity and hydration tracking.",
+    "Week 4: Repeat Brain assessment and review cognitive wellness trend.",
+  ],
+  Metabolic: [
+    "Week 1: Track weight, sugar intake, and activity level.",
+    "Week 2: Reduce refined carbohydrates and sugary drinks.",
+    "Week 3: Review glucose, HbA1c, or lipid results if available.",
+    "Week 4: Repeat Metabolic assessment and compare progress.",
+  ],
+  General: [
+    "Week 1: Complete your priority assessment and daily check-ins.",
+    "Week 2: Follow dashboard recommendations.",
+    "Week 3: Review history and trends.",
+    "Week 4: Repeat assessment and compare results.",
+  ],
+};
+
 export default function HealthPlanPage() {
   const [priorityOrgan, setPriorityOrgan] = useState("General");
   const [priorityScore, setPriorityScore] = useState<number | null>(null);
+  const [riskLevel, setRiskLevel] = useState("");
+  const [dailyCheckIn, setDailyCheckIn] = useState<DailyCheckIn | null>(null);
   const [completedTasks, setCompletedTasks] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    fetchPriorityOrgan();
+    fetchHealthPlanData();
   }, []);
 
-  async function fetchPriorityOrgan() {
+  async function fetchHealthPlanData() {
     setLoading(true);
 
     const { data: userData, error: userError } = await supabase.auth.getUser();
@@ -83,7 +136,7 @@ export default function HealthPlanPage() {
       return;
     }
 
-    const { data, error } = await supabase
+    const { data: priorityData, error: priorityError } = await supabase
       .from("organ_assessments")
       .select("organ_name, score, risk_level")
       .eq("user_id", userData.user.id)
@@ -91,19 +144,46 @@ export default function HealthPlanPage() {
       .limit(1)
       .single();
 
-    if (error) {
+    if (priorityError) {
       setMessage("Complete at least one organ assessment to generate a health plan.");
       setLoading(false);
       return;
     }
 
-    setPriorityOrgan(data?.organ_name || "General");
-    setPriorityScore(data?.score ?? null);
+    const { data: checkInData, error: checkInError } = await supabase
+      .from("daily_checkins")
+      .select("mood, wellness_score, created_at")
+      .eq("user_id", userData.user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (checkInError && checkInError.code !== "PGRST116") {
+      setMessage("Database error: " + checkInError.message);
+      setLoading(false);
+      return;
+    }
+
+    setPriorityOrgan(priorityData?.organ_name || "General");
+    setPriorityScore(priorityData?.score ?? null);
+    setRiskLevel(priorityData?.risk_level || "");
+    setDailyCheckIn(checkInData || null);
     setCompletedTasks([]);
     setLoading(false);
   }
 
   const planTasks = taskPlans[priorityOrgan] || taskPlans.General;
+  const weekPlan = weeklyPlan[priorityOrgan] || weeklyPlan.General;
+
+  const targetScore =
+    priorityScore === null ? 0 : priorityScore < 50 ? 70 : priorityScore < 80 ? 85 : 95;
+
+  const scoreProgress =
+    priorityScore && targetScore
+      ? Math.min(100, Math.round((priorityScore / targetScore) * 100))
+      : 0;
+
+  const taskProgress = Math.round((completedTasks.length / planTasks.length) * 100);
 
   function toggleTask(task: string) {
     if (completedTasks.includes(task)) {
@@ -113,26 +193,35 @@ export default function HealthPlanPage() {
     }
   }
 
-  const progress = Math.round((completedTasks.length / planTasks.length) * 100);
+  function getPlanIntensity() {
+    if (priorityScore === null) return "General";
+    if (priorityScore < 50) return "High Priority";
+    if (priorityScore < 80) return "Moderate Priority";
+    return "Maintenance";
+  }
 
   return (
     <main className="assistantPage">
       <div className="assistantContainer">
         <div className="assistantHeader">
-          <p className="assistantBadge">HEALTH IMPROVEMENT PLAN</p>
+          <p className="assistantBadge">HEALTH PLAN ENGINE</p>
 
-          <h1>
-            {priorityOrgan} 4-Week Improvement Plan
-          </h1>
+          <h1>{priorityOrgan} 4-Week Improvement Plan</h1>
 
           <p>
-            A simple educational action plan based on your current priority
-            health area. This plan does not replace medical advice.
+            A personalized educational action plan based on your current
+            priority health area, latest assessment score, and daily wellness
+            tracking.
           </p>
         </div>
 
         <div className="chatWindow">
-          {loading && <p>Loading health plan...</p>}
+          {loading && (
+            <div className="resultBox">
+              <p className="sectionLabel">Loading Plan</p>
+              <h2>Preparing your personalized health plan...</h2>
+            </div>
+          )}
 
           {!loading && message && (
             <div className="resultBox">
@@ -150,16 +239,32 @@ export default function HealthPlanPage() {
             <>
               <div className="resultBox">
                 <p className="sectionLabel">Priority Area</p>
+
                 <h2>{priorityOrgan}</h2>
+
                 <p>
-                  Current score:{" "}
+                  Current Score:{" "}
                   {priorityScore !== null ? `${priorityScore}/100` : "N/A"}
                 </p>
+
+                <p>Target Score: {targetScore}/100</p>
+
+                <p>Risk Level: {riskLevel || getPlanIntensity()}</p>
+
+                <p>Plan Intensity: {getPlanIntensity()}</p>
+
+                {dailyCheckIn && (
+                  <p>
+                    Latest Wellness Check-In: {dailyCheckIn.wellness_score}/100
+                    · Mood: {dailyCheckIn.mood}
+                  </p>
+                )}
               </div>
 
               <div className="resultBox">
-                <p className="sectionLabel">Progress</p>
-                <h2>{progress}% Complete</h2>
+                <p className="sectionLabel">Goal Progress</p>
+
+                <h2>{scoreProgress}% Toward Target</h2>
 
                 <div
                   style={{
@@ -173,7 +278,7 @@ export default function HealthPlanPage() {
                 >
                   <div
                     style={{
-                      width: `${progress}%`,
+                      width: `${scoreProgress}%`,
                       height: "100%",
                       background: "linear-gradient(90deg, #22c55e, #38bdf8)",
                       borderRadius: "999px",
@@ -183,7 +288,53 @@ export default function HealthPlanPage() {
               </div>
 
               <div className="resultBox">
-                <p className="sectionLabel">Weekly Action Tasks</p>
+                <p className="sectionLabel">Task Progress</p>
+
+                <h2>{taskProgress}% Complete</h2>
+
+                <div
+                  style={{
+                    width: "100%",
+                    height: "14px",
+                    background: "rgba(255,255,255,0.12)",
+                    borderRadius: "999px",
+                    overflow: "hidden",
+                    marginTop: "16px",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: `${taskProgress}%`,
+                      height: "100%",
+                      background: "linear-gradient(90deg, #22c55e, #38bdf8)",
+                      borderRadius: "999px",
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div className="resultBox">
+                <p className="sectionLabel">Weekly Roadmap</p>
+
+                <div style={{ display: "grid", gap: "12px", marginTop: "16px" }}>
+                  {weekPlan.map((week) => (
+                    <div
+                      key={week}
+                      style={{
+                        padding: "14px",
+                        borderRadius: "14px",
+                        border: "1px solid rgba(255,255,255,0.16)",
+                        background: "rgba(15, 23, 42, 0.55)",
+                      }}
+                    >
+                      {week}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="resultBox">
+                <p className="sectionLabel">Action Tasks</p>
 
                 <div style={{ display: "grid", gap: "14px", marginTop: "20px" }}>
                   {planTasks.map((task) => (
@@ -212,11 +363,12 @@ export default function HealthPlanPage() {
 
               <div className="resultBox">
                 <p className="sectionLabel">Next Step</p>
+
                 <h2>Reassess After 4 Weeks</h2>
+
                 <p>
-                  After completing your weekly actions, repeat your{" "}
-                  {priorityOrgan} assessment and compare your progress in Health
-                  History.
+                  After completing your weekly actions, repeat your {priorityOrgan}
+                  assessment and compare your progress in Health History.
                 </p>
 
                 <div
@@ -235,6 +387,10 @@ export default function HealthPlanPage() {
                     <button className="secondaryBtn">
                       Reassess {priorityOrgan}
                     </button>
+                  </a>
+
+                  <a href="/dashboard">
+                    <button className="secondaryBtn">Back to Dashboard</button>
                   </a>
                 </div>
               </div>
