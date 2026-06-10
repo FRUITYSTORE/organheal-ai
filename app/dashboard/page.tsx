@@ -550,7 +550,7 @@ const healthIntelligenceSummary = isArabic
                   <p>{getAIRecommendation(priorityAttention.organ_name)}</p>
                 </div>
               )}
-الذكاء الصحي العام
+              
               <div className="resultBox">
                 <p className="sectionLabel">
                   {isArabic
