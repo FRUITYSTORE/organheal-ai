@@ -26,26 +26,36 @@ type DailyCheckIn = {
   created_at: string;
 };
 
+type Language = "en" | "ar";
+
 export default function DashboardPage() {
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [labReport, setLabReport] = useState<LabReport | null>(null);
   const [dailyCheckIn, setDailyCheckIn] = useState<DailyCheckIn | null>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
-  const [language, setLanguage] = useState<"en" | "ar">("en");
-
-useEffect(() => {
-  const savedLanguage =
-    (localStorage.getItem("organheal-language") as "en" | "ar") || "en";
-
-  setLanguage(savedLanguage);
-}, []);
-
-const t = getTranslations(language);
+  const [language, setLanguage] = useState<Language>("en");
 
   useEffect(() => {
     fetchDashboardData();
+
+    const savedLanguage =
+      (localStorage.getItem("organheal-language") as Language) || "en";
+
+    setLanguage(savedLanguage);
+
+    const interval = setInterval(() => {
+      const currentLanguage =
+        (localStorage.getItem("organheal-language") as Language) || "en";
+
+      setLanguage(currentLanguage);
+    }, 300);
+
+    return () => clearInterval(interval);
   }, []);
+
+  const t = getTranslations(language);
+  const isArabic = language === "ar";
 
   async function fetchDashboardData() {
     setLoading(true);
@@ -53,7 +63,11 @@ const t = getTranslations(language);
     const { data: userData, error: userError } = await supabase.auth.getUser();
 
     if (userError || !userData.user) {
-      setMessage("Please login or sign up to access your dashboard.");
+      setMessage(
+        isArabic
+          ? "يرجى تسجيل الدخول أو إنشاء حساب للوصول إلى لوحة التحكم."
+          : "Please login or sign up to access your dashboard."
+      );
       setLoading(false);
       return;
     }
@@ -107,6 +121,12 @@ const t = getTranslations(language);
   }
 
   function getStatus(score: number) {
+    if (isArabic) {
+      if (score >= 80) return "جيد";
+      if (score >= 50) return "متوسط";
+      return "مرتفع الخطورة";
+    }
+
     if (score >= 80) return "Good";
     if (score >= 50) return "Moderate";
     return "High Risk";
@@ -125,6 +145,25 @@ const t = getTranslations(language);
   }
 
   function getAIRecommendation(moduleName: string | null) {
+    if (isArabic) {
+      switch (moduleName) {
+        case "Heart":
+          return "راقب ضغط الدم، الكوليسترول، النشاط البدني، والوزن.";
+        case "Lung":
+          return "تجنب التدخين والتعرض للدخان، وراقب السعال أو ضيق التنفس.";
+        case "Kidney":
+          return "حافظ على الترطيب، راقب ضغط الدم، وناقش وظائف الكلى مع مختص صحي عند الحاجة.";
+        case "Liver":
+          return "ركز على التغذية الصحية، التحكم بالوزن، وتقليل العوامل التي تجهد الكبد.";
+        case "Brain":
+          return "حسن جودة النوم، النشاط البدني، وتقليل التوتر.";
+        case "Metabolic":
+          return "ركز على ضبط السكر، الوزن الصحي، النشاط البدني، والتغذية.";
+        default:
+          return "استمر في المتابعة الصحية الوقائية وإكمال التقييمات.";
+      }
+    }
+
     switch (moduleName) {
       case "Heart":
         return "Monitor blood pressure, cholesterol, physical activity, and body weight.";
@@ -146,14 +185,33 @@ const t = getTranslations(language);
   function generateCoachMessage(
     priorityOrgan: string,
     strongestOrgan: string,
-    overallScore: number
+    currentOverallScore: number
   ) {
+    if (isArabic) {
+      let coachMessage = "";
+
+      if (currentOverallScore >= 80) {
+        coachMessage += "تقدم ممتاز. ملفك الصحي العام يبدو قويًا حاليًا. ";
+      } else if (currentOverallScore >= 60) {
+        coachMessage +=
+          "ملفك الصحي يظهر أداءً متوسطًا مع وجود فرص للتحسين. ";
+      } else {
+        coachMessage += "هناك عدة مناطق صحية تحتاج إلى متابعة واهتمام أكبر. ";
+      }
+
+      coachMessage += `أقوى منطقة لديك هي ${strongestOrgan}. `;
+      coachMessage += `منطقة الأولوية الحالية هي ${priorityOrgan}. `;
+      coachMessage += getAIRecommendation(priorityOrgan);
+
+      return coachMessage;
+    }
+
     let coachMessage = "";
 
-    if (overallScore >= 80) {
+    if (currentOverallScore >= 80) {
       coachMessage +=
         "Excellent progress. Your overall health profile is currently strong. ";
-    } else if (overallScore >= 60) {
+    } else if (currentOverallScore >= 60) {
       coachMessage +=
         "Your health profile shows moderate performance with opportunities for improvement. ";
     } else {
@@ -180,7 +238,7 @@ const t = getTranslations(language);
       currentScore,
       targetScore,
       progress,
-      nextReview: "7 days",
+      nextReview: isArabic ? "7 أيام" : "7 days",
     };
   }
 
@@ -223,51 +281,62 @@ const t = getTranslations(language);
           topStrength?.organ_name || "General Health",
           overallScore
         )
+      : isArabic
+      ? "أكمل أول تقييم صحي للحصول على إرشادات صحية شخصية."
       : "Complete your first organ assessment to receive personalized health guidance.";
 
-  const notifications = [];
   const onboardingSteps = [
-  {
-    title: "Complete Assessment",
-    completed: assessments.length > 0,
-  },
-  {
-    title: "Complete Daily Check-In",
-    completed: !!dailyCheckIn,
-  },
-  {
-    title: "Generate First Report",
-    completed: assessments.length > 0,
-  },
-];
+    {
+      title: isArabic ? "إكمال التقييم" : "Complete Assessment",
+      completed: assessments.length > 0,
+    },
+    {
+      title: isArabic ? "إكمال التسجيل الصحي اليومي" : "Complete Daily Check-In",
+      completed: !!dailyCheckIn,
+    },
+    {
+      title: isArabic ? "إنشاء أول تقرير" : "Generate First Report",
+      completed: assessments.length > 0,
+    },
+  ];
 
-const completedSteps = onboardingSteps.filter(
-  (step) => step.completed
-).length;
+  const completedSteps = onboardingSteps.filter((step) => step.completed).length;
 
-const onboardingProgress = Math.round(
-  (completedSteps / onboardingSteps.length) * 100
-);
+  const onboardingProgress = Math.round(
+    (completedSteps / onboardingSteps.length) * 100
+  );
+
+  const notifications: string[] = [];
 
   if (assessments.length === 0) {
     notifications.push(
-      "Complete your first organ assessment to unlock health intelligence."
+      isArabic
+        ? "أكمل أول تقييم للأعضاء لفتح الذكاء الصحي."
+        : "Complete your first organ assessment to unlock health intelligence."
     );
   }
 
   if (!dailyCheckIn) {
-    notifications.push("Daily Check-In pending. Track today's wellness status.");
+    notifications.push(
+      isArabic
+        ? "التسجيل الصحي اليومي لم يكتمل بعد. تابع حالتك الصحية اليوم."
+        : "Daily Check-In pending. Track today's wellness status."
+    );
   }
 
   if (!labReport) {
     notifications.push(
-      "No lab report found. Upload laboratory results for deeper insights."
+      isArabic
+        ? "لا يوجد تقرير مختبر محفوظ. أضف نتائج المختبر للحصول على فهم أعمق."
+        : "No lab report found. Upload laboratory results for deeper insights."
     );
   }
 
   if (priorityAttention) {
     notifications.push(
-      `${priorityAttention.organ_name} currently requires the most attention.`
+      isArabic
+        ? `${priorityAttention.organ_name} هي منطقة تحتاج إلى اهتمام أكبر حاليًا.`
+        : `${priorityAttention.organ_name} currently requires the most attention.`
     );
   }
 
@@ -275,14 +344,22 @@ const onboardingProgress = Math.round(
     <main className="assistantPage">
       <div className="assistantContainer">
         <div className="assistantHeader">
-          assistantBadge">ORGANHEAL DASHBOARD
+          <p className="assistantBadge">{t.dashboard.badge}</p>
+          <h1>{t.dashboard.title}</h1>
+          <p>{t.dashboard.description}</p>
         </div>
 
         <div className="chatWindow">
           {loading && (
             <div className="resultBox">
-              <p className="sectionLabel">Loading Dashboard</p>
-              <h2>Preparing your health intelligence...</h2>
+              <p className="sectionLabel">
+                {isArabic ? "تحميل لوحة التحكم" : "Loading Dashboard"}
+              </p>
+              <h2>
+                {isArabic
+                  ? "جاري تجهيز الذكاء الصحي الخاص بك..."
+                  : "Preparing your health intelligence..."}
+              </h2>
 
               <div style={{ display: "grid", gap: "16px", marginTop: "20px" }}>
                 {[1, 2, 3, 4].map((item) => (
@@ -303,8 +380,10 @@ const onboardingProgress = Math.round(
 
           {!loading && message && (
             <div className="resultBox">
-              <p className="sectionLabel">Login Required</p>
-              <h2>Access Protected</h2>
+              <p className="sectionLabel">
+                {isArabic ? "تسجيل الدخول مطلوب" : "Login Required"}
+              </p>
+              <h2>{isArabic ? "الوصول محمي" : "Access Protected"}</h2>
               <p>{message}</p>
 
               <div
@@ -316,11 +395,15 @@ const onboardingProgress = Math.round(
                 }}
               >
                 <Link href="/login">
-                  <button className="primaryBtn">Login</button>
+                  <button className="primaryBtn">
+                    {isArabic ? "تسجيل الدخول" : "Login"}
+                  </button>
                 </Link>
 
                 <Link href="/signup">
-                  <button className="secondaryBtn">Sign Up</button>
+                  <button className="secondaryBtn">
+                    {isArabic ? "إنشاء حساب" : "Sign Up"}
+                  </button>
                 </Link>
               </div>
             </div>
@@ -328,76 +411,98 @@ const onboardingProgress = Math.round(
 
           {!loading && !message && allScores.length === 0 && (
             <DashboardEmptyState
-              title="Your Dashboard Is Ready"
-              description="Start your first organ assessment to unlock your health score, health plan, and professional report."
-              buttonText="Start First Assessment"
+              title={
+                isArabic ? "لوحة التحكم جاهزة" : "Your Dashboard Is Ready"
+              }
+              description={
+                isArabic
+                  ? "ابدأ أول تقييم للأعضاء لفتح الدرجة الصحية، الخطة الصحية، والتقرير الاحترافي."
+                  : "Start your first organ assessment to unlock your health score, health plan, and professional report."
+              }
+              buttonText={
+                isArabic ? "ابدأ أول تقييم" : "Start First Assessment"
+              }
               href="/assessment"
             />
           )}
 
           {!loading && !message && allScores.length > 0 && (
             <>
-            <div className="resultBox">
-  <p className="sectionLabel">🚀 Getting Started</p>
+              <div className="resultBox">
+                <p className="sectionLabel">
+                  {isArabic ? "🚀 البداية" : "🚀 Getting Started"}
+                </p>
 
-  <h2>{t.dashboard.onboarding}</h2>
+                <h2>{t.dashboard.onboarding}</h2>
 
-  <p>
-    Complete your health setup to unlock the full OrganHeal experience.
-  </p>
+                <p>
+                  {isArabic
+                    ? "أكمل إعداد ملفك الصحي لفتح تجربة OrganHeal الكاملة."
+                    : "Complete your health setup to unlock the full OrganHeal experience."}
+                </p>
 
-  <div
-    style={{
-      width: "100%",
-      height: "12px",
-      background: "rgba(255,255,255,0.12)",
-      borderRadius: "999px",
-      overflow: "hidden",
-      marginTop: "18px",
-    }}
-  >
-    <div
-      style={{
-        width: `${onboardingProgress}%`,
-        height: "100%",
-        background:
-          "linear-gradient(90deg, #22c55e, #38bdf8)",
-      }}
-    />
-  </div>
+                <div
+                  style={{
+                    width: "100%",
+                    height: "12px",
+                    background: "rgba(255,255,255,0.12)",
+                    borderRadius: "999px",
+                    overflow: "hidden",
+                    marginTop: "18px",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: `${onboardingProgress}%`,
+                      height: "100%",
+                      background: "linear-gradient(90deg, #22c55e, #38bdf8)",
+                    }}
+                  />
+                </div>
 
-  <p style={{ marginTop: "12px" }}>
-    Progress: {onboardingProgress}%
-  </p>
+                <p style={{ marginTop: "12px" }}>
+                  {isArabic ? "التقدم" : "Progress"}: {onboardingProgress}%
+                </p>
 
-  <div
-    style={{
-      display: "grid",
-      gap: "10px",
-      marginTop: "18px",
-      textAlign: "left",
-    }}
-  >
-    {onboardingSteps.map((step, index) => (
-      <div key={index}>
-        {step.completed ? "✅" : "⬜"} {step.title}
-      </div>
-    ))}
-  </div>
-</div>
+                <div
+                  style={{
+                    display: "grid",
+                    gap: "10px",
+                    marginTop: "18px",
+                    textAlign: isArabic ? "right" : "left",
+                  }}
+                >
+                  {onboardingSteps.map((step, index) => (
+                    <div key={index}>
+                      {step.completed ? "✅" : "⬜"} {step.title}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               {priorityAttention && (
                 <div className="priorityAlert">
-                  <h3>🚨 Health Priority Alert</h3>
+                  <h3>
+                    {isArabic
+                      ? "🚨 تنبيه أولوية صحية"
+                      : "🚨 Health Priority Alert"}
+                  </h3>
                   <p>
-                    <strong>{priorityAttention.organ_name}</strong> currently
-                    has the lowest score ({priorityAttention.score}/100).
+                    <strong>{priorityAttention.organ_name}</strong>{" "}
+                    {isArabic
+                      ? `لديها حاليًا أقل درجة (${priorityAttention.score}/100).`
+                      : `currently has the lowest score (${priorityAttention.score}/100).`}
                   </p>
                   <p>{getAIRecommendation(priorityAttention.organ_name)}</p>
                 </div>
               )}
 
               <div className="resultBox">
-                <p className="sectionLabel">Overall Health Intelligence</p>
+                <p className="sectionLabel">
+                  {isArabic
+                    ? "الذكاء الصحي العام"
+                    : "Overall Health Intelligence"}
+                </p>
 
                 <h2 className={getScoreClass(overallScore)}>
                   {overallScore}/100
@@ -406,14 +511,17 @@ const onboardingProgress = Math.round(
                 <h3>{getStatus(overallScore)}</h3>
 
                 <p>
-                  Completed data sources:{" "}
+                  {isArabic ? "مصادر البيانات المكتملة" : "Completed data sources"}:{" "}
                   {assessments.length +
                     (labReport ? 1 : 0) +
                     (dailyCheckIn ? 1 : 0)}
                 </p>
 
                 {latestDate && (
-                  <p>Last updated: {new Date(latestDate).toLocaleString()}</p>
+                  <p>
+                    {isArabic ? "آخر تحديث" : "Last updated"}:{" "}
+                    {new Date(latestDate).toLocaleString()}
+                  </p>
                 )}
 
                 <div
@@ -439,49 +547,46 @@ const onboardingProgress = Math.round(
 
               {todayMission && (
                 <div className="resultBox">
-                  <p className="sectionLabel">🎯 Today's Health Mission</p>
+                  <p className="sectionLabel">
+                    {isArabic ? "🎯 مهمة الصحة اليوم" : "🎯 Today's Health Mission"}
+                  </p>
 
                   <h2>{todayMission.priorityOrgan}</h2>
 
-                  <p>Current Score: {todayMission.currentScore}/100</p>
-                  <p>Target Score: {todayMission.targetScore}/100</p>
-                  <p>Progress: {todayMission.progress}%</p>
-
-                  <div
-                    style={{
-                      width: "100%",
-                      height: "12px",
-                      background: "rgba(255,255,255,0.12)",
-                      borderRadius: "999px",
-                      overflow: "hidden",
-                      marginTop: "12px",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: `${todayMission.progress}%`,
-                        height: "100%",
-                        background: "linear-gradient(90deg, #22c55e, #38bdf8)",
-                        borderRadius: "999px",
-                      }}
-                    />
-                  </div>
+                  <p>
+                    {isArabic ? "الدرجة الحالية" : "Current Score"}:{" "}
+                    {todayMission.currentScore}/100
+                  </p>
+                  <p>
+                    {isArabic ? "الهدف" : "Target Score"}:{" "}
+                    {todayMission.targetScore}/100
+                  </p>
+                  <p>
+                    {isArabic ? "التقدم" : "Progress"}: {todayMission.progress}%
+                  </p>
 
                   <p style={{ marginTop: "14px" }}>
-                    Recommended Action:{" "}
+                    {isArabic ? "الإجراء الموصى به" : "Recommended Action"}:{" "}
                     {getAIRecommendation(todayMission.priorityOrgan)}
                   </p>
 
-                  <p>Next Review: {todayMission.nextReview}</p>
+                  <p>
+                    {isArabic ? "المراجعة القادمة" : "Next Review"}:{" "}
+                    {todayMission.nextReview}
+                  </p>
 
                   <Link href="/health-plan">
-                    <button className="primaryBtn">Start Mission</button>
+                    <button className="primaryBtn">
+                      {isArabic ? "ابدأ المهمة" : "Start Mission"}
+                    </button>
                   </Link>
                 </div>
               )}
 
               <div className="resultBox">
-                <p className="sectionLabel">☀️ Latest Daily Check-In</p>
+                <p className="sectionLabel">
+                  {isArabic ? "☀️ آخر تسجيل صحي يومي" : "☀️ Latest Daily Check-In"}
+                </p>
 
                 {dailyCheckIn ? (
                   <>
@@ -492,20 +597,24 @@ const onboardingProgress = Math.round(
                     <h3>{dailyCheckIn.mood}</h3>
 
                     <p>
-                      Last check-in:{" "}
+                      {isArabic ? "آخر تسجيل" : "Last check-in"}:{" "}
                       {new Date(dailyCheckIn.created_at).toLocaleString()}
                     </p>
                   </>
                 ) : (
                   <>
-                    <h2>No check-in yet</h2>
+                    <h2>{isArabic ? "لا يوجد تسجيل بعد" : "No check-in yet"}</h2>
                     <p>
-                      Complete your daily check-in to track wellness patterns.
+                      {isArabic
+                        ? "أكمل التسجيل الصحي اليومي لتتبع أنماط العافية."
+                        : "Complete your daily check-in to track wellness patterns."}
                     </p>
 
                     <Link href="/checkin">
                       <button className="primaryBtn">
-                        Start Daily Check-In
+                        {isArabic
+                          ? "ابدأ التسجيل اليومي"
+                          : "Start Daily Check-In"}
                       </button>
                     </Link>
                   </>
@@ -513,7 +622,9 @@ const onboardingProgress = Math.round(
               </div>
 
               <div className="resultBox">
-                <p className="sectionLabel">🔔 Notifications Center</p>
+                <p className="sectionLabel">
+                  {isArabic ? "🔔 مركز الإشعارات" : "🔔 Notifications Center"}
+                </p>
                 <h2>{t.dashboard.notifications}</h2>
 
                 {notifications.length > 0 ? (
@@ -539,31 +650,43 @@ const onboardingProgress = Math.round(
                     ))}
                   </div>
                 ) : (
-                  <p>No active notifications.</p>
+                  <p>{isArabic ? "لا توجد إشعارات نشطة." : "No active notifications."}</p>
                 )}
               </div>
 
               <div className="resultBox">
-                <p className="sectionLabel">🤖 AI Health Coach</p>
-                <h2>Personalized Guidance</h2>
+                <p className="sectionLabel">
+                  {isArabic ? "🤖 المدرب الصحي الذكي" : "🤖 AI Health Coach"}
+                </p>
+                <h2>
+                  {isArabic ? "توجيهات شخصية" : "Personalized Guidance"}
+                </h2>
                 <p>{healthCoachMessage}</p>
               </div>
 
               <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
                 <Link href="/health-plan">
-                  <button className="primaryBtn">Health Plan</button>
+                  <button className="primaryBtn">
+                    {isArabic ? "الخطة الصحية" : "Health Plan"}
+                  </button>
                 </Link>
 
                 <Link href="/history">
-                  <button className="secondaryBtn">Health History</button>
+                  <button className="secondaryBtn">
+                    {isArabic ? "السجل الصحي" : "Health History"}
+                  </button>
                 </Link>
 
                 <Link href="/organ-report">
-                  <button className="secondaryBtn">Full Report</button>
+                  <button className="secondaryBtn">
+                    {isArabic ? "التقرير الكامل" : "Full Report"}
+                  </button>
                 </Link>
 
                 <Link href="/checkin">
-                  <button className="secondaryBtn">Daily Check-In</button>
+                  <button className="secondaryBtn">
+                    {isArabic ? "التسجيل اليومي" : "Daily Check-In"}
+                  </button>
                 </Link>
               </div>
             </>
