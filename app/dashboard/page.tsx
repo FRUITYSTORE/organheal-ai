@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
+import DashboardEmptyState from "../components/DashboardEmptyState";
 
 type Assessment = {
   organ_name: string;
@@ -271,45 +272,17 @@ export default function DashboardPage() {
               </div>
             </div>
           )}
-
+{!loading && !message && allScores.length === 0 && (
+  <DashboardEmptyState
+    title="Your Dashboard Is Ready"
+    description="Start your first organ assessment to unlock your health score, health plan, and professional report."
+    buttonText="Start First Assessment"
+    href="/assessment"
+  />
+)}
           {!loading && !message && allScores.length > 0 && (
             <>
-            {!loading && !message && allScores.length === 0 && (
-  <div className="resultBox">
-    <p className="sectionLabel">WELCOME TO ORGANHEAL</p>
-    <h2>Your health intelligence journey starts here</h2>
-
-    <p>
-      Complete your first steps to unlock your dashboard, health score,
-      personalized plan, and professional report.
-    </p>
-
-    <div style={{ display: "grid", gap: "12px", marginTop: "20px" }}>
-      <p>✅ Step 1: Complete your first organ assessment</p>
-      <p>☀️ Step 2: Submit your daily health check-in</p>
-      <p>🧪 Step 3: Add or review your lab values</p>
-      <p>📊 Step 4: Unlock your health intelligence dashboard</p>
-    </div>
-
-    <div
-      style={{
-        display: "flex",
-        gap: "12px",
-        justifyContent: "center",
-        flexWrap: "wrap",
-        marginTop: "20px",
-      }}
-    >
-      <a href="/assessment">
-        <button className="primaryBtn">Start First Assessment</button>
-      </a>
-
-      <a href="/checkin">
-        <button className="secondaryBtn">Daily Check-In</button>
-      </a>
-    </div>
-  </div>
-)}
+            
               {priorityAttention && (
                 <div className="priorityAlert">
                   <h3>🚨 Health Priority Alert</h3>

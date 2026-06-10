@@ -817,4 +817,116 @@ button {
   color: #f8fafc !important;
   font-size: 19px;
   line-height: 1.7;
+}@keyframes pulse {
+  0% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.45;
+  }
+}.emptyStateCard {
+  background: linear-gradient(135deg, #ffffff, #f8fbff);
+  border: 1px solid #e5edf5;
+  border-radius: 20px;
+  padding: 32px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+.emptyStateIcon {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 18px;
+  border-radius: 50%;
+  background: #eaf6f6;
+  color: #0f766e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.emptyStateCard h3 {
+  font-size: 20px;
+  color: #102a43;
+  margin-bottom: 10px;
+}
+
+.emptyStateCard p {
+  color: #64748b;
+  max-width: 420px;
+  margin: 0 auto 22px;
+  line-height: 1.6;
+}
+
+.emptyStateButton {
+  display: inline-block;
+  background: #0f766e;
+  color: white;
+  padding: 12px 22px;
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: 0.2s ease;
+}
+
+.emptyStateButton:hover {
+  background: #115e59;
+  transform: translateY(-1px);
+}.aboutGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.aboutCard {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 18px;
+  padding: 22px;
+}
+
+.aboutCard h3 {
+  color: #f8fafc;
+  margin-bottom: 10px;
+  font-size: 1.05rem;
+}
+
+.aboutCard p {
+  color: #cbd5e1;
+  line-height: 1.6;
+}
+
+.aboutModuleGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.aboutModuleCard {
+  background: linear-gradient(
+    135deg,
+    rgba(34, 197, 94, 0.16),
+    rgba(20, 184, 166, 0.12),
+    rgba(59, 130, 246, 0.14)
+  );
+  border: 1px solid rgba(45, 212, 191, 0.25);
+  border-radius: 16px;
+  padding: 18px;
+  text-align: center;
+  color: #f8fafc;
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .aboutGrid,
+  .aboutModuleGrid {
+    grid-template-columns: 1fr;
+  }
 }

@@ -97,6 +97,7 @@ export default function Navbar() {
 
       <div className="navLinks">
         <Link href="/">Home</Link>
+        <Link href="/about">About</Link>
         <Link href="/dashboard">Dashboard</Link>
         <Link href="/assessment">Assessment</Link>
         <Link href="/checkin">Daily Check-In</Link>
