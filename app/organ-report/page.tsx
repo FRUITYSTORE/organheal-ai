@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import jsPDF from "jspdf";
 
@@ -24,17 +25,18 @@ type LabReport = {
   created_at: string;
 };
 
+type DailyCheckIn = {
+  mood: string;
+  wellness_score: number;
+  created_at: string;
+};
+
 const organOrder = ["Heart", "Lung", "Kidney", "Liver", "Brain", "Metabolic"];
 
 export default function OrganReportPage() {
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [labReport, setLabReport] = useState<LabReport | null>(null);
   const [dailyCheckIn, setDailyCheckIn] = useState<DailyCheckIn | null>(null);
-  type DailyCheckIn = {
-  mood: string;
-  wellness_score: number;
-  created_at: string;
-};
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [userEmail, setUserEmail] = useState("");
@@ -48,20 +50,14 @@ export default function OrganReportPage() {
 
     const { data: userData, error: userError } = await supabase.auth.getUser();
 
-    if (userError) {
+    if (userError || !userData.user) {
       setMessage("Please login or sign up to access your health report.");
       setLoading(false);
       return;
     }
 
     const user = userData.user;
-    setUserEmail(user?.email || "");
-
-    if (!user) {
-      setMessage("Please login or sign up to access your health report.");
-      setLoading(false);
-      return;
-    }
+    setUserEmail(user.email || "");
 
     const { data: organData, error: organError } = await supabase
       .from("organ_assessments")
@@ -90,35 +86,36 @@ export default function OrganReportPage() {
       .limit(1)
       .single();
 
-if (labError && labError.code !== "PGRST116") {
-  setMessage("Database error: " + labError.message);
-  setLoading(false);
-  return;
-}
+    if (labError && labError.code !== "PGRST116") {
+      setMessage("Database error: " + labError.message);
+      setLoading(false);
+      return;
+    }
 
-const { data: checkInData, error: checkInError } = await supabase
-  .from("daily_checkins")
-  .select("mood, wellness_score, created_at")
-  .eq("user_id", user.id)
-  .order("created_at", { ascending: false })
-  .limit(1)
-  .single();
+    const { data: checkInData, error: checkInError } = await supabase
+      .from("daily_checkins")
+      .select("mood, wellness_score, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
 
-if (checkInError && checkInError.code !== "PGRST116") {
-  setMessage("Database error: " + checkInError.message);
-  setLoading(false);
-  return;
-}
+    if (checkInError && checkInError.code !== "PGRST116") {
+      setMessage("Database error: " + checkInError.message);
+      setLoading(false);
+      return;
+    }
 
-setAssessments(sortedOrganData);
-setLabReport(labData || null);
-setDailyCheckIn(checkInData || null);
-setLoading(false);
+    setAssessments(sortedOrganData);
+    setLabReport(labData || null);
+    setDailyCheckIn(checkInData || null);
+    setLoading(false);
   }
 
   const allScores = [
     ...assessments.map((item) => item.score),
     ...(labReport ? [labReport.score] : []),
+    ...(dailyCheckIn ? [dailyCheckIn.wellness_score] : []),
   ];
 
   const overallScore =
@@ -144,6 +141,11 @@ setLoading(false);
     return [...assessments].sort((a, b) => a.score - b.score)[0];
   }
 
+  function formatValue(value: number | null) {
+    if (value === null || value === undefined) return "Not available";
+    return String(value);
+  }
+
   function getAIRecommendation(moduleName: string | null) {
     if (!moduleName) return "Complete assessments to receive health insights.";
 
@@ -165,433 +167,209 @@ setLoading(false);
     }
   }
 
-  function setStatusColor(pdf: jsPDF, score: number) {
-    if (score >= 80) {
-      pdf.setTextColor(34, 197, 94);
-      return;
-    }
-
-    if (score >= 50) {
-      pdf.setTextColor(245, 158, 11);
-      return;
-    }
-
-    pdf.setTextColor(239, 68, 68);
-  }
-
-  function resetPDFColor(pdf: jsPDF) {
-    pdf.setTextColor(0, 0, 0);
-  }
-
-  function formatValue(value: number | null) {
-    if (value === null || value === undefined) return "Not available";
-    return String(value);
-  }
-
-  function drawLogo(pdf: jsPDF, x: number, y: number) {
-    pdf.setFillColor(15, 23, 42);
-    pdf.circle(x, y, 8, "F");
-
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(9);
-    pdf.text("OH", x, y + 3, { align: "center" });
-
-    resetPDFColor(pdf);
-  }
-function generateHealthOutlook() {
-  const wellnessScore = dailyCheckIn?.wellness_score || overallScore;
-
-  const combinedScore = Math.round((overallScore + wellnessScore) / 2);
-
-  if (combinedScore >= 80) {
-    return {
-      status: "Stable",
-      message:
-        "Your current health trajectory appears stable. Continue your current health habits and regular monitoring.",
-      potential: "+5 to +10 points",
-    };
-  }
-
-  if (combinedScore >= 60) {
-    return {
-      status: "Improving Potential",
-      message:
-        "Several areas show room for improvement. Following your health plan may improve future scores.",
-      potential: "+10 to +20 points",
-    };
-  }
-
-  return {
-    status: "Needs Attention",
-    message:
-      "Current results suggest important opportunities for improvement. Focus on your priority health area and daily wellness habits.",
-    potential: "+15 to +25 points",
-  };
-}
   function generateExecutiveSummary() {
     const strongest = getStrongestAssessment();
     const weakest = getWeakestAssessment();
-    const healthOutlook = generateHealthOutlook();
 
-    if (!strongest || !weakest) return "No assessment data available.";
+    if (!strongest || !weakest) {
+      return "No assessment data available yet.";
+    }
 
     return `Overall Health Intelligence Score: ${overallScore}/100.
 
-Your strongest health area is ${strongest.organ_name} with a score of ${strongest.score}/100.
+Strongest Area: ${strongest.organ_name} (${strongest.score}/100).
 
-The area requiring the most attention is ${weakest.organ_name} with a score of ${weakest.score}/100.
+Priority Area: ${weakest.organ_name} (${weakest.score}/100).
 
 ${
   labReport
-    ? `Your latest laboratory analysis score is ${labReport.score}/100.`
-    : ""
+    ? `Latest Lab Intelligence Score: ${labReport.score}/100.`
+    : "No lab report found."
 }
 
-Recommended focus: ${getAIRecommendation(weakest.organ_name)}
+${
+  dailyCheckIn
+    ? `Latest Daily Wellness Score: ${dailyCheckIn.wellness_score}/100 with mood: ${dailyCheckIn.mood}.`
+    : "No daily check-in found."
+}
 
-This report is educational and intended to help identify areas that may benefit from lifestyle improvement, monitoring, or professional medical discussion.`;
+Recommended Focus: ${getAIRecommendation(weakest.organ_name)}
+
+This report is educational and intended to support health awareness and better conversations with licensed healthcare professionals.`;
   }
 
   function generateProfessionalPDF() {
     const pdf = new jsPDF("p", "mm", "a4");
-
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
-
     const margin = 18;
-    let y = 20;
+    let y = 24;
 
     const strongest = getStrongestAssessment();
     const weakest = getWeakestAssessment();
-    const healthOutlook = generateHealthOutlook();
+
+    function footer() {
+      const totalPages = pdf.getNumberOfPages();
+
+      for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i);
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(9);
+        pdf.setTextColor(120, 120, 120);
+        pdf.text("OrganHeal AI", margin, pageHeight - 10);
+        pdf.text(`Page ${i} of ${totalPages}`, pageWidth / 2, pageHeight - 10, {
+          align: "center",
+        });
+      }
+    }
+
+    function addSectionTitle(title: string) {
+      if (y > pageHeight - 40) {
+        pdf.addPage();
+        y = 24;
+      }
+
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(16);
+      pdf.setTextColor(15, 23, 42);
+      pdf.text(title, margin, y);
+      y += 9;
+      pdf.setDrawColor(20, 184, 166);
+      pdf.line(margin, y, pageWidth - margin, y);
+      y += 10;
+    }
+
+    function addWrappedText(text: string, fontSize = 10) {
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(fontSize);
+      pdf.setTextColor(40, 40, 40);
+
+      const lines = pdf.splitTextToSize(text, pageWidth - margin * 2);
+      pdf.text(lines, margin, y);
+      y += lines.length * 5 + 6;
+    }
+
+    function addScoreBadge(label: string, score: number, x: number, yPos: number) {
+      if (score >= 80) pdf.setFillColor(34, 197, 94);
+      else if (score >= 50) pdf.setFillColor(245, 158, 11);
+      else pdf.setFillColor(239, 68, 68);
+
+      pdf.roundedRect(x, yPos, 50, 24, 4, 4, "F");
+
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(16);
+      pdf.text(`${score}/100`, x + 25, yPos + 11, { align: "center" });
+
+      pdf.setFontSize(8);
+      pdf.text(label, x + 25, yPos + 19, { align: "center" });
+    }
 
     pdf.setFillColor(15, 23, 42);
     pdf.rect(0, 0, pageWidth, pageHeight, "F");
 
-    drawLogo(pdf, pageWidth / 2, 40);
-
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(28);
-    pdf.text("OrganHeal AI", pageWidth / 2, 62, { align: "center" });
-
-    pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(14);
-    pdf.text("Health Intelligence Report", pageWidth / 2, 74, {
-      align: "center",
-    });
-
-    pdf.setFontSize(11);
-    pdf.text(`User: ${userEmail || "Unknown user"}`, pageWidth / 2, 90, {
-      align: "center",
-    });
-
-    pdf.text(`Generated: ${new Date().toLocaleString()}`, pageWidth / 2, 98, {
-      align: "center",
-    });
-
-    if (overallScore >= 80) {
-      pdf.setFillColor(34, 197, 94);
-    } else if (overallScore >= 50) {
-      pdf.setFillColor(245, 158, 11);
-    } else {
-      pdf.setFillColor(239, 68, 68);
-    }
-
-    pdf.circle(pageWidth / 2, 135, 30, "F");
-
     pdf.setTextColor(255, 255, 255);
     pdf.setFont("helvetica", "bold");
     pdf.setFontSize(30);
-    pdf.text(String(overallScore), pageWidth / 2, 139, { align: "center" });
+    pdf.text("OrganHeal AI", pageWidth / 2, 48, { align: "center" });
 
-    pdf.setFontSize(12);
-    pdf.text("/100", pageWidth / 2, 151, { align: "center" });
+    pdf.setFontSize(18);
+    pdf.text("Professional Health Intelligence Report", pageWidth / 2, 65, {
+      align: "center",
+    });
 
-    pdf.setFontSize(16);
-    pdf.text(getStatus(overallScore).toUpperCase(), pageWidth / 2, 180, {
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(11);
+    pdf.text(`User: ${userEmail || "Unknown user"}`, pageWidth / 2, 84, {
+      align: "center",
+    });
+    pdf.text(`Generated: ${new Date().toLocaleString()}`, pageWidth / 2, 92, {
+      align: "center",
+    });
+
+    addScoreBadge("Overall Score", overallScore, pageWidth / 2 - 25, 120);
+
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(15);
+    pdf.text(`Status: ${getStatus(overallScore)}`, pageWidth / 2, 160, {
       align: "center",
     });
 
     pdf.setFont("helvetica", "normal");
     pdf.setFontSize(10);
     pdf.text(
-      "Educational wellness report. Not a medical diagnosis.",
+      "Educational health intelligence report. Not a medical diagnosis.",
       pageWidth / 2,
-      265,
+      260,
       { align: "center" }
     );
 
-    resetPDFColor(pdf);
-
     pdf.addPage();
-    y = 20;
+    y = 24;
 
-    drawLogo(pdf, margin + 8, y + 2);
-
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(22);
-    pdf.text("OrganHeal AI", margin + 22, y);
-
-    y += 8;
-
-    pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(11);
-    pdf.text("Comprehensive Health Intelligence Report", margin + 22, y);
-
-    y += 6;
-
-    pdf.setFontSize(10);
-    pdf.text(`User: ${userEmail || "Unknown user"}`, margin + 22, y);
-
-    y += 10;
-
-    pdf.line(margin, y, pageWidth - margin, y);
-
-    y += 14;
-
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(16);
-    pdf.text("Overall Health Intelligence Score", margin, y);
-
-    y += 12;
-
-    pdf.setFontSize(28);
-    setStatusColor(pdf, overallScore);
-    pdf.text(`${overallScore}/100`, margin, y);
-    resetPDFColor(pdf);
-
-    y += 9;
-
-    pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(13);
-    pdf.text(`Status: ${getStatus(overallScore)}`, margin, y);
-
-    y += 8;
-
-    pdf.setFontSize(10);
-    pdf.text(`Generated on: ${new Date().toLocaleString()}`, margin, y);
-
-    y += 14;
-
-    pdf.line(margin, y, pageWidth - margin, y);
-
-    y += 12;
-
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(15);
-    pdf.text("AI Executive Summary", margin, y);
-
-    y += 10;
-
-    pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(10);
-
-    const summaryLines = pdf.splitTextToSize(
-      generateExecutiveSummary(),
-      pageWidth - margin * 2
-    );
-
-    pdf.text(summaryLines, margin, y);
-
-    y += summaryLines.length * 5 + 10;
+    addSectionTitle("1. Executive Summary");
+    addWrappedText(generateExecutiveSummary(), 10);
 
     if (strongest && weakest) {
+      addSectionTitle("2. Health Intelligence Highlights");
+
       pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(15);
-      pdf.text("AI Health Insights", margin, y);
-
-      y += 10;
-
-      pdf.setFont("helvetica", "normal");
       pdf.setFontSize(11);
-
-      pdf.text(
-        `Strongest Area: ${strongest.organ_name} (${strongest.score}/100)`,
-        margin,
-        y
-      );
-
+      pdf.setTextColor(15, 23, 42);
+      pdf.text(`Top Strength: ${strongest.organ_name}`, margin, y);
       y += 7;
 
-      pdf.text(
-        `Priority Area: ${weakest.organ_name} (${weakest.score}/100)`,
-        margin,
-        y
-      );
-
+      pdf.text(`Priority Area: ${weakest.organ_name}`, margin, y);
       y += 7;
 
       pdf.text(`Overall Status: ${getStatus(overallScore)}`, margin, y);
-
       y += 10;
 
-      const recommendationLines = pdf.splitTextToSize(
-        `Recommendation: ${getAIRecommendation(weakest.organ_name)}`,
-        pageWidth - margin * 2
-      );
+      addWrappedText(`Recommended Focus: ${getAIRecommendation(weakest.organ_name)}`);
+    }
 
-      pdf.text(recommendationLines, margin, y);
+    addSectionTitle("3. Organ Assessment Breakdown");
 
-      y += recommendationLines.length * 5 + 8;
+    if (assessments.length === 0) {
+      addWrappedText("No organ assessments available.");
+    } else {
+      assessments.forEach((item) => {
+        if (y > pageHeight - 40) {
+          pdf.addPage();
+          y = 24;
+        }
 
-      if (weakest.score < 50) {
-        pdf.setFillColor(127, 29, 29);
-        pdf.rect(margin, y, pageWidth - margin * 2, 18, "F");
-
-        pdf.setTextColor(255, 255, 255);
         pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(10);
+        pdf.setFontSize(12);
+        pdf.setTextColor(15, 23, 42);
+        pdf.text(`${item.organ_name}`, margin, y);
 
-        pdf.text(
-          `Priority Alert: ${weakest.organ_name} currently has the lowest score (${weakest.score}/100).`,
-          margin + 4,
-          y + 11
-        );
+        pdf.setFont("helvetica", "normal");
+        pdf.text(`${item.score}/100 - ${getStatus(item.score)}`, margin + 60, y);
 
-        resetPDFColor(pdf);
+        y += 7;
 
-        y += 26;
-      }
+        pdf.setFillColor(230, 230, 230);
+        pdf.rect(margin, y, 120, 5, "F");
+
+        if (item.score >= 80) pdf.setFillColor(34, 197, 94);
+        else if (item.score >= 50) pdf.setFillColor(245, 158, 11);
+        else pdf.setFillColor(239, 68, 68);
+
+        pdf.rect(margin, y, (item.score / 100) * 120, 5, "F");
+
+        y += 10;
+
+        addWrappedText(item.notes || "No notes available.", 9);
+      });
     }
-
-    pdf.line(margin, y, pageWidth - margin, y);
-
-    y += 12;
-
-    if (y > pageHeight - 120) {
-      pdf.addPage();
-      y = 20;
-    }
-
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(15);
-    pdf.text("Organ Assessment Summary", margin, y);
-
-    y += 10;
-
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(13);
-    pdf.text("Organ Health Chart", margin, y);
-
-    y += 10;
-
-    const chartWidth = 100;
-
-    assessments.forEach((item) => {
-      if (y > pageHeight - 30) {
-        pdf.addPage();
-        y = 20;
-      }
-
-      let barColor: [number, number, number] = [239, 68, 68];
-
-      if (item.score >= 80) {
-        barColor = [34, 197, 94];
-      } else if (item.score >= 50) {
-        barColor = [245, 158, 11];
-      }
-
-      pdf.setFontSize(10);
-      pdf.setTextColor(0, 0, 0);
-      pdf.text(item.organ_name, margin, y);
-
-      pdf.setFillColor(barColor[0], barColor[1], barColor[2]);
-      pdf.rect(margin + 35, y - 4, (item.score / 100) * chartWidth, 5, "F");
-
-      pdf.text(`${item.score}`, margin + 140, y);
-
-      y += 8;
-    });
-
-    y += 10;
-
-    assessments.forEach((item, index) => {
-      if (y > pageHeight - 70) {
-        pdf.addPage();
-        y = 20;
-      }
-
-      pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(13);
-      pdf.text(`${index + 1}. ${item.organ_name}`, margin, y);
-
-      y += 7;
-
-      pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(11);
-
-      setStatusColor(pdf, item.score);
-      pdf.text(`Score: ${item.score}/100`, margin + 5, y);
-      resetPDFColor(pdf);
-
-      y += 6;
-
-      pdf.text(`Status: ${getStatus(item.score)}`, margin + 5, y);
-
-      y += 6;
-
-      const noteLines = pdf.splitTextToSize(
-        `Notes: ${item.notes}`,
-        pageWidth - margin * 2 - 5
-      );
-
-      pdf.text(noteLines, margin + 5, y);
-
-      y += noteLines.length * 5 + 4;
-
-      pdf.setFontSize(9);
-      pdf.text(
-        `Last saved: ${new Date(item.created_at).toLocaleString()}`,
-        margin + 5,
-        y
-      );
-
-      y += 10;
-
-      pdf.line(margin, y, pageWidth - margin, y);
-
-      y += 9;
-    });
 
     if (labReport) {
-      if (y > pageHeight - 85) {
-        pdf.addPage();
-        y = 20;
-      }
+      addSectionTitle("4. Lab Analyzer Summary");
 
-      pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(15);
-      pdf.text("Lab Analyzer Summary", margin, y);
-
-      y += 10;
-
-      pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(11);
-
-      setStatusColor(pdf, labReport.score);
-      pdf.text(
-        `Latest Lab Intelligence Score: ${labReport.score}/100`,
-        margin + 5,
-        y
-      );
-      resetPDFColor(pdf);
-
-      y += 6;
-
-      pdf.text(`Status: ${getStatus(labReport.score)}`, margin + 5, y);
-
-      y += 9;
-
-      pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(12);
-      pdf.text("Lab Values", margin + 5, y);
-
-      y += 7;
-
-      pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(10);
+      addWrappedText(`Latest Lab Intelligence Score: ${labReport.score}/100`);
+      addWrappedText(`Status: ${getStatus(labReport.score)}`);
 
       const labValues = [
         `Total Cholesterol: ${formatValue(labReport.total_cholesterol)}`,
@@ -602,219 +380,40 @@ This report is educational and intended to help identify areas that may benefit 
         `Vitamin D: ${formatValue(labReport.vitamin_d)}`,
       ];
 
-      labValues.forEach((value) => {
-        pdf.text(value, margin + 8, y);
-        y += 6;
-      });
+      labValues.forEach((value) => addWrappedText(value, 9));
+      addWrappedText(`Interpretation: ${labReport.interpretation}`, 9);
+    }
 
-      y += 3;
+    if (dailyCheckIn) {
+      addSectionTitle("5. Daily Wellness Summary");
 
-      const labLines = pdf.splitTextToSize(
-        `Interpretation: ${labReport.interpretation}`,
-        pageWidth - margin * 2 - 5
+      addWrappedText(`Latest Wellness Score: ${dailyCheckIn.wellness_score}/100`);
+      addWrappedText(`Mood: ${dailyCheckIn.mood}`);
+      addWrappedText(
+        `Last Check-In: ${new Date(dailyCheckIn.created_at).toLocaleString()}`
       );
+    }
 
-      pdf.text(labLines, margin + 5, y);
+    addSectionTitle("6. Personalized Recommendations");
 
-      y += labLines.length * 5 + 4;
-
-      pdf.setFontSize(9);
-      pdf.text(
-        `Last saved: ${new Date(labReport.created_at).toLocaleString()}`,
-        margin + 5,
-        y
+    if (weakest) {
+      addWrappedText(getAIRecommendation(weakest.organ_name));
+      addWrappedText(
+        `Suggested next step: Focus on improving ${weakest.organ_name} and repeat the assessment after following your health plan.`
       );
-
-      y += 12;
-
-      pdf.line(margin, y, pageWidth - margin, y);
-
-      y += 10;
-    }
-if (dailyCheckIn) {
-  if (y > pageHeight - 65) {
-    pdf.addPage();
-    y = 20;
-  }
-
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(15);
-  pdf.text("Daily Wellness Check-In Summary", margin, y);
-
-  y += 10;
-
-  pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(11);
-
-  setStatusColor(pdf, dailyCheckIn.wellness_score);
-  pdf.text(
-    `Latest Wellness Score: ${dailyCheckIn.wellness_score}/100`,
-    margin + 5,
-    y
-  );
-  resetPDFColor(pdf);
-
-  y += 7;
-
-  pdf.text(`Mood: ${dailyCheckIn.mood}`, margin + 5, y);
-
-  y += 7;
-
-  pdf.text(
-    `Last check-in: ${new Date(dailyCheckIn.created_at).toLocaleString()}`,
-    margin + 5,
-    y
-  );
-
-  y += 12;
-
-  pdf.line(margin, y, pageWidth - margin, y);
-
-  y += 10;
-}
-if (y > pageHeight - 65) {
-  pdf.addPage();
-  y = 20;
-}
-
-pdf.setFont("helvetica", "bold");
-pdf.setFontSize(15);
-pdf.text("Health Outlook", margin, y);
-
-y += 10;
-
-pdf.setFont("helvetica", "normal");
-pdf.setFontSize(11);
-
-pdf.text(`Current Outlook: ${healthOutlook.status}`, margin + 5, y);
-
-y += 7;
-
-const outlookLines = pdf.splitTextToSize(
-  healthOutlook.message,
-  pageWidth - margin * 2 - 5
-);
-
-pdf.text(outlookLines, margin + 5, y);
-
-y += outlookLines.length * 5 + 5;
-
-pdf.text(
-  `Estimated Improvement Potential: ${healthOutlook.potential}`,
-  margin + 5,
-  y
-);
-
-y += 12;
-
-pdf.line(margin, y, pageWidth - margin, y);
-
-y += 10;
-if (assessments.length > 0) {
-  if (y > pageHeight - 85) {
-    pdf.addPage();
-    y = 20;
-  }
-
-  const rankedAssessments = [...assessments].sort(
-    (a, b) => a.score - b.score
-  );
-
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(15);
-  pdf.text("Executive Risk Matrix", margin, y);
-
-  y += 10;
-
-  pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(10);
-
-  rankedAssessments.forEach((item, index) => {
-    if (y > pageHeight - 25) {
-      pdf.addPage();
-      y = 20;
+    } else {
+      addWrappedText("Complete your first organ assessment to unlock recommendations.");
     }
 
-    setStatusColor(pdf, item.score);
-    pdf.text(
-      `${index + 1}. ${item.organ_name}: ${item.score}/100 - ${getStatus(
-        item.score
-      )}`,
-      margin + 5,
-      y
-    );
-    resetPDFColor(pdf);
+    addSectionTitle("7. Important Educational Disclaimer");
 
-    y += 7;
-  });
-
-  const priority = rankedAssessments[0];
-
-  y += 5;
-
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(12);
-  pdf.text(`Immediate Priority: ${priority.organ_name}`, margin + 5, y);
-
-  y += 8;
-
-  pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(10);
-
-  const focusLines = pdf.splitTextToSize(
-    `Recommended Focus: ${getAIRecommendation(priority.organ_name)}`,
-    pageWidth - margin * 2 - 5
-  );
-
-  pdf.text(focusLines, margin + 5, y);
-
-  y += focusLines.length * 5 + 5;
-
-  pdf.text(
-    `Target: Improve ${priority.organ_name} score by at least 20 points within the next assessment cycle.`,
-    margin + 5,
-    y
-  );
-
-  y += 12;
-
-  pdf.line(margin, y, pageWidth - margin, y);
-
-  y += 10;
-}
-    if (y > pageHeight - 45) {
-      pdf.addPage();
-      y = 20;
-    }
-
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(12);
-    pdf.text("Important Educational Disclaimer", margin, y);
-
-    y += 7;
-
-    pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(10);
-
-    const disclaimer = pdf.splitTextToSize(
-      "This report is for educational and wellness tracking purposes only. It does not provide a medical diagnosis, treatment plan, or emergency medical advice. Please discuss concerning symptoms or abnormal results with a licensed healthcare professional.",
-      pageWidth - margin * 2
+    addWrappedText(
+      "This report is for educational and wellness tracking purposes only. It does not provide a medical diagnosis, treatment plan, or emergency medical advice. Please discuss concerning symptoms or abnormal results with a licensed healthcare professional."
     );
 
-    pdf.text(disclaimer, margin, y);
+    footer();
 
-    const totalPages = pdf.getNumberOfPages();
-
-    for (let i = 1; i <= totalPages; i++) {
-      pdf.setPage(i);
-      pdf.setFontSize(9);
-      pdf.text(`Page ${i} of ${totalPages}`, pageWidth / 2, pageHeight - 10, {
-        align: "center",
-      });
-      pdf.text("OrganHeal AI", margin, pageHeight - 10);
-    }
-
-    pdf.save("OrganHeal_Professional_Report.pdf");
+    pdf.save("OrganHeal_Professional_Report_v2.pdf");
   }
 
   return (
@@ -824,8 +423,8 @@ if (assessments.length > 0) {
           <p className="assistantBadge">ORGAN HEALTH REPORT</p>
           <h1>Your Organ Health Report</h1>
           <p>
-            This report summarizes your saved organ assessments and latest lab
-            analyzer score from Supabase.
+            This report summarizes your saved organ assessments, lab analyzer
+            score, and daily wellness data from OrganHeal.
           </p>
         </div>
 
@@ -846,25 +445,25 @@ if (assessments.length > 0) {
                   flexWrap: "wrap",
                 }}
               >
-                <a href="/login">
+                <Link href="/login">
                   <button className="primaryBtn">Login</button>
-                </a>
+                </Link>
 
-                <a href="/signup">
+                <Link href="/signup">
                   <button className="secondaryBtn">Sign Up</button>
-                </a>
+                </Link>
               </div>
             </div>
           )}
 
           {!loading && !message && allScores.length === 0 && (
-            <p>No saved organ assessments or lab reports found yet.</p>
+            <p>No saved organ assessments, check-ins, or lab reports found yet.</p>
           )}
 
           {!loading && !message && allScores.length > 0 && (
             <>
               <button className="primaryBtn" onClick={generateProfessionalPDF}>
-                Download Professional PDF Report
+                Download Professional PDF Report v2
               </button>
 
               <div className="resultBox">
@@ -872,8 +471,8 @@ if (assessments.length > 0) {
                 <h2>{overallScore}/100</h2>
                 <h3>{getStatus(overallScore)}</h3>
                 <p>
-                  This score is calculated from your saved organ assessment
-                  scores and your latest lab analyzer score.
+                  This score is calculated from your saved organ assessments,
+                  latest lab analyzer score, and latest daily wellness check-in.
                 </p>
               </div>
 
@@ -896,34 +495,18 @@ if (assessments.length > 0) {
                     <p className="sectionLabel">Lab Analyzer</p>
                     <h2>{labReport.score}/100</h2>
                     <h3>{getStatus(labReport.score)}</h3>
-
-                    <p>
-                      <strong>Total Cholesterol:</strong>{" "}
-                      {formatValue(labReport.total_cholesterol)}
-                    </p>
-                    <p>
-                      <strong>LDL:</strong> {formatValue(labReport.ldl)}
-                    </p>
-                    <p>
-                      <strong>HDL:</strong> {formatValue(labReport.hdl)}
-                    </p>
-                    <p>
-                      <strong>Triglycerides:</strong>{" "}
-                      {formatValue(labReport.triglycerides)}
-                    </p>
-                    <p>
-                      <strong>HbA1c:</strong> {formatValue(labReport.hba1c)}
-                    </p>
-                    <p>
-                      <strong>Vitamin D:</strong>{" "}
-                      {formatValue(labReport.vitamin_d)}
-                    </p>
-
                     <p>{labReport.interpretation}</p>
+                  </div>
+                )}
 
+                {dailyCheckIn && (
+                  <div className="resultBox">
+                    <p className="sectionLabel">Daily Wellness</p>
+                    <h2>{dailyCheckIn.wellness_score}/100</h2>
+                    <h3>{dailyCheckIn.mood}</h3>
                     <p>
-                      Last saved:{" "}
-                      {new Date(labReport.created_at).toLocaleString()}
+                      Last check-in:{" "}
+                      {new Date(dailyCheckIn.created_at).toLocaleString()}
                     </p>
                   </div>
                 )}
