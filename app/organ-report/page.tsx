@@ -428,9 +428,41 @@ This report is educational and intended to support health awareness and better c
 
     pdf.save("OrganHeal_Professional_Report_v2.pdf");
   }
-function generateShareCode() {
+async function generateShareCode() {
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+
+  if (userError || !userData.user) {
+    setShareCode(
+      isArabic
+        ? "يرجى تسجيل الدخول لإنشاء كود مشاركة."
+        : "Please login to generate a share code."
+    );
+    return;
+  }
+
   const randomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-  setShareCode(`OH-${randomCode}`);
+  const newShareCode = `OH-${randomCode}`;
+
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 7);
+
+  const { error } = await supabase.from("shared_reports").insert({
+    user_id: userData.user.id,
+    share_code: newShareCode,
+    report_type: "organ_report",
+    expires_at: expiresAt.toISOString(),
+  });
+
+  if (error) {
+    setShareCode(
+      isArabic
+        ? "حدث خطأ أثناء إنشاء كود المشاركة."
+        : "Error generating share code."
+    );
+    return;
+  }
+
+  setShareCode(newShareCode);
 }
   return (
     <main className="assistantPage">
