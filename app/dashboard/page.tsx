@@ -272,7 +272,43 @@ export default function DashboardPage() {
 
   const todayMission = priorityAttention
     ? generateTodayMission(priorityAttention.organ_name, priorityAttention.score)
-    : null;
+    : null;const forecastDirection =
+  overallScore >= 80
+    ? isArabic
+      ? "مستقر"
+      : "Stable"
+    : overallScore >= 60
+    ? isArabic
+      ? "قابل للتحسن"
+      : "Improving Potential"
+    : isArabic
+    ? "يحتاج اهتمام"
+    : "Needs Attention";
+
+const expectedNextScore =
+  overallScore >= 80
+    ? Math.min(100, overallScore + 3)
+    : overallScore >= 60
+    ? Math.min(100, overallScore + 8)
+    : Math.min(100, overallScore + 12);
+
+const forecastConfidence =
+  allScores.length >= 4
+    ? isArabic
+      ? "مرتفع"
+      : "High"
+    : allScores.length >= 2
+    ? isArabic
+      ? "متوسط"
+      : "Moderate"
+    : isArabic
+    ? "منخفض"
+    : "Low";
+
+const forecastMessage = isArabic
+  ? `بناءً على بياناتك الحالية، قد تصل درجتك الصحية المتوقعة خلال 30 يومًا إلى ${expectedNextScore}/100 إذا استمريت في التقييمات اليومية والخطة الصحية.`
+  : `Based on your current data, your expected health score in 30 days may reach ${expectedNextScore}/100 if you continue daily tracking and your health plan.`;
+    
 
   const healthCoachMessage =
     assessments.length > 0
@@ -502,7 +538,50 @@ export default function DashboardPage() {
                   {isArabic
                     ? "الذكاء الصحي العام"
                     : "Overall Health Intelligence"}
-                </p>
+                </p><div className="resultBox">
+  <p className="sectionLabel">
+    {isArabic
+      ? "🔮 توقعات الذكاء الصحي"
+      : "🔮 Forecast Intelligence"}
+  </p>
+
+  <h2 className={getScoreClass(expectedNextScore)}>
+    {expectedNextScore}/100
+  </h2>
+
+  <h3>{forecastDirection}</h3>
+
+  <p>{forecastMessage}</p>
+
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+      gap: "14px",
+      marginTop: "18px",
+    }}
+  >
+    <div>
+      <strong>{isArabic ? "الدرجة الحالية" : "Current Score"}</strong>
+      <p>{overallScore}/100</p>
+    </div>
+
+    <div>
+      <strong>{isArabic ? "الدرجة المتوقعة" : "Expected Score"}</strong>
+      <p>{expectedNextScore}/100</p>
+    </div>
+
+    <div>
+      <strong>{isArabic ? "الثقة" : "Confidence"}</strong>
+      <p>{forecastConfidence}</p>
+    </div>
+
+    <div>
+      <strong>{isArabic ? "المدة" : "Outlook"}</strong>
+      <p>{isArabic ? "30 يومًا" : "30 days"}</p>
+    </div>
+  </div>
+</div>
 
                 <h2 className={getScoreClass(overallScore)}>
                   {overallScore}/100
