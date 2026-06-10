@@ -33,8 +33,42 @@ export default async function BlogPostPage({ params }: Props) {
     notFound();
   }
 
+  const articleSchema = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: post.title,
+    description: post.excerpt,
+    datePublished: post.date,
+    dateModified: post.date,
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `https://organheal.com/blog/${post.slug}`,
+    },
+    author: {
+      "@type": "Organization",
+      name: "OrganHeal AI",
+      url: "https://organheal.com",
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "OrganHeal AI",
+      url: "https://organheal.com",
+      logo: {
+        "@type": "ImageObject",
+        url: "https://organheal.com/icon.svg",
+      },
+    },
+  };
+
   return (
     <main className="assistantPage">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(articleSchema),
+        }}
+      />
+
       <div className="assistantContainer">
         <article className="resultBox">
           <p className="sectionLabel">{post.category}</p>

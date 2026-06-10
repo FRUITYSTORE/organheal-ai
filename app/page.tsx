@@ -1,6 +1,25 @@
 export default function Home() {
+  const schema = {
+  "@context": "https://schema.org",
+  "@type": "MedicalWebPage",
+  name: "OrganHeal AI",
+  description:
+    "AI-powered health intelligence platform for organ health assessment, laboratory interpretation, and personalized health insights.",
+  url: "https://organheal.com",
+  publisher: {
+    "@type": "Organization",
+    name: "OrganHeal AI",
+    url: "https://organheal.com",
+  },
+};
   return (
     <main className="homepage">
+      <script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify(schema),
+  }}
+/>
       <section className="hero">
         <div className="badge">AI-Powered Health Intelligence Platform</div>
 
