@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import DashboardEmptyState from "../components/DashboardEmptyState";
 
@@ -213,6 +214,30 @@ export default function DashboardPage() {
         )
       : "Complete your first organ assessment to receive personalized health guidance.";
 
+  const notifications = [];
+
+  if (assessments.length === 0) {
+    notifications.push(
+      "Complete your first organ assessment to unlock health intelligence."
+    );
+  }
+
+  if (!dailyCheckIn) {
+    notifications.push("Daily Check-In pending. Track today's wellness status.");
+  }
+
+  if (!labReport) {
+    notifications.push(
+      "No lab report found. Upload laboratory results for deeper insights."
+    );
+  }
+
+  if (priorityAttention) {
+    notifications.push(
+      `${priorityAttention.organ_name} currently requires the most attention.`
+    );
+  }
+
   return (
     <main className="assistantPage">
       <div className="assistantContainer">
@@ -262,27 +287,28 @@ export default function DashboardPage() {
                   flexWrap: "wrap",
                 }}
               >
-                <a href="/login">
+                <Link href="/login">
                   <button className="primaryBtn">Login</button>
-                </a>
+                </Link>
 
-                <a href="/signup">
+                <Link href="/signup">
                   <button className="secondaryBtn">Sign Up</button>
-                </a>
+                </Link>
               </div>
             </div>
           )}
-{!loading && !message && allScores.length === 0 && (
-  <DashboardEmptyState
-    title="Your Dashboard Is Ready"
-    description="Start your first organ assessment to unlock your health score, health plan, and professional report."
-    buttonText="Start First Assessment"
-    href="/assessment"
-  />
-)}
+
+          {!loading && !message && allScores.length === 0 && (
+            <DashboardEmptyState
+              title="Your Dashboard Is Ready"
+              description="Start your first organ assessment to unlock your health score, health plan, and professional report."
+              buttonText="Start First Assessment"
+              href="/assessment"
+            />
+          )}
+
           {!loading && !message && allScores.length > 0 && (
             <>
-            
               {priorityAttention && (
                 <div className="priorityAlert">
                   <h3>🚨 Health Priority Alert</h3>
@@ -301,11 +327,13 @@ export default function DashboardPage() {
                   {overallScore}/100
                 </h2>
 
-                <h3>{allScores.length > 0 ? getStatus(overallScore) : "No Data Yet"}</h3>
+                <h3>{getStatus(overallScore)}</h3>
 
                 <p>
                   Completed data sources:{" "}
-                  {assessments.length + (labReport ? 1 : 0) + (dailyCheckIn ? 1 : 0)}
+                  {assessments.length +
+                    (labReport ? 1 : 0) +
+                    (dailyCheckIn ? 1 : 0)}
                 </p>
 
                 {latestDate && (
@@ -370,9 +398,9 @@ export default function DashboardPage() {
 
                   <p>Next Review: {todayMission.nextReview}</p>
 
-                  <a href="/health-plan">
+                  <Link href="/health-plan">
                     <button className="primaryBtn">Start Mission</button>
-                  </a>
+                  </Link>
                 </div>
               )}
 
@@ -399,12 +427,43 @@ export default function DashboardPage() {
                       Complete your daily check-in to track wellness patterns.
                     </p>
 
-                    <a href="/checkin">
+                    <Link href="/checkin">
                       <button className="primaryBtn">
                         Start Daily Check-In
                       </button>
-                    </a>
+                    </Link>
                   </>
+                )}
+              </div>
+
+              <div className="resultBox">
+                <p className="sectionLabel">🔔 Notifications Center</p>
+                <h2>Health Notifications</h2>
+
+                {notifications.length > 0 ? (
+                  <div
+                    style={{
+                      display: "grid",
+                      gap: "12px",
+                      marginTop: "18px",
+                    }}
+                  >
+                    {notifications.map((notification, index) => (
+                      <div
+                        key={index}
+                        style={{
+                          padding: "14px",
+                          borderRadius: "14px",
+                          background: "rgba(255,255,255,0.06)",
+                          border: "1px solid rgba(255,255,255,0.08)",
+                        }}
+                      >
+                        {notification}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p>No active notifications.</p>
                 )}
               </div>
 
@@ -415,21 +474,21 @@ export default function DashboardPage() {
               </div>
 
               <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-                <a href="/health-plan">
+                <Link href="/health-plan">
                   <button className="primaryBtn">Health Plan</button>
-                </a>
+                </Link>
 
-                <a href="/history">
+                <Link href="/history">
                   <button className="secondaryBtn">Health History</button>
-                </a>
+                </Link>
 
-                <a href="/organ-report">
+                <Link href="/organ-report">
                   <button className="secondaryBtn">Full Report</button>
-                </a>
+                </Link>
 
-                <a href="/checkin">
+                <Link href="/checkin">
                   <button className="secondaryBtn">Daily Check-In</button>
-                </a>
+                </Link>
               </div>
             </>
           )}
