@@ -23,15 +23,6 @@ type DailyCheckIn = {
   created_at: string;
 };
 
-const organs = [
-  { name: "Heart", icon: "❤️", path: "/heart" },
-  { name: "Lung", icon: "🫁", path: "/lung" },
-  { name: "Kidney", icon: "🩺", path: "/kidney" },
-  { name: "Liver", icon: "🧬", path: "/liver" },
-  { name: "Brain", icon: "🧠", path: "/brain" },
-  { name: "Metabolic", icon: "⚡", path: "/metabolic" },
-];
-
 export default function DashboardPage() {
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [labReport, setLabReport] = useState<LabReport | null>(null);
@@ -102,10 +93,6 @@ export default function DashboardPage() {
     setLoading(false);
   }
 
-  function getAssessment(organName: string) {
-    return assessments.find((item) => item.organ_name === organName);
-  }
-
   function getStatus(score: number) {
     if (score >= 80) return "Good";
     if (score >= 50) return "Moderate";
@@ -124,90 +111,22 @@ export default function DashboardPage() {
     return "linear-gradient(90deg, #ef4444, #f97316)";
   }
 
-  function getAIRecommendation(moduleName: string | null, score?: number) {
-    if (!moduleName) {
-      return {
-        priority: "No Data",
-        explanation:
-          "Complete your assessments to receive personalized health insights.",
-        action: "Start the organ assessments and lab analyzer.",
-        followUp: "No follow-up recommendations available yet.",
-      };
-    }
-
+  function getAIRecommendation(moduleName: string | null) {
     switch (moduleName) {
       case "Heart":
-        return {
-          priority: score && score < 50 ? "High Priority" : "Monitor",
-          explanation:
-            "Your responses suggest cardiovascular risk factors that may benefit from lifestyle improvement and professional review.",
-          action:
-            "Monitor blood pressure, cholesterol, physical activity, and body weight.",
-          followUp:
-            "Consider blood pressure assessment, lipid profile, and cardiovascular evaluation.",
-        };
-
+        return "Monitor blood pressure, cholesterol, physical activity, and body weight.";
       case "Lung":
-        return {
-          priority: score && score < 50 ? "High Priority" : "Monitor",
-          explanation:
-            "Your responses suggest respiratory health factors that deserve attention.",
-          action:
-            "Avoid smoking exposure and monitor symptoms such as cough, wheezing, or shortness of breath.",
-          followUp: "Consider lung function assessment if symptoms persist.",
-        };
-
+        return "Avoid smoking exposure and monitor cough, wheezing, or shortness of breath.";
       case "Kidney":
-        return {
-          priority: score && score < 50 ? "High Priority" : "Monitor",
-          explanation:
-            "Your assessment indicates kidney-related factors that may require closer monitoring.",
-          action:
-            "Maintain hydration, monitor blood pressure, and avoid unnecessary kidney stressors.",
-          followUp:
-            "Consider kidney function tests, urine analysis, and healthcare review.",
-        };
-
+        return "Maintain hydration, monitor blood pressure, and consider kidney function follow-up.";
       case "Liver":
-        return {
-          priority: score && score < 50 ? "High Priority" : "Monitor",
-          explanation: "Your assessment suggests possible liver-health concerns.",
-          action:
-            "Focus on healthy nutrition, weight control, and limiting liver stressors.",
-          followUp:
-            "Consider liver enzyme testing and medical follow-up when appropriate.",
-        };
-
+        return "Focus on healthy nutrition, weight control, and reducing liver stressors.";
       case "Brain":
-        return {
-          priority: score && score < 50 ? "High Priority" : "Monitor",
-          explanation:
-            "Your responses suggest areas where cognitive wellness and stress management may help.",
-          action:
-            "Improve sleep quality, physical activity, and stress reduction habits.",
-          followUp:
-            "Discuss persistent headaches, memory concerns, or neurological symptoms with a healthcare professional.",
-        };
-
+        return "Improve sleep quality, physical activity, and stress reduction habits.";
       case "Metabolic":
-        return {
-          priority: score && score < 50 ? "High Priority" : "Monitor",
-          explanation:
-            "Your assessment suggests metabolic risk factors that may benefit from lifestyle improvement.",
-          action:
-            "Focus on blood sugar control, healthy weight, physical activity, and nutrition.",
-          followUp: "Consider HbA1c, glucose monitoring, and lipid profile review.",
-        };
-
+        return "Focus on blood sugar control, healthy weight, physical activity, and nutrition.";
       default:
-        return {
-          priority: "Monitor",
-          explanation:
-            "Continue monitoring your health and maintaining healthy lifestyle habits.",
-          action: "Stay active, eat a balanced diet, and attend regular checkups.",
-          followUp:
-            "Discuss any persistent symptoms with a healthcare professional.",
-        };
+        return "Continue regular health monitoring and preventive assessments.";
     }
   }
 
@@ -231,51 +150,27 @@ export default function DashboardPage() {
 
     coachMessage += `Your strongest area is ${strongestOrgan}. `;
     coachMessage += `Your current priority area is ${priorityOrgan}. `;
-
-    switch (priorityOrgan) {
-      case "Heart":
-        coachMessage +=
-          "Focus on blood pressure, cholesterol management, regular activity, and smoking avoidance.";
-        break;
-      case "Lung":
-        coachMessage +=
-          "Focus on respiratory health, physical activity, smoking avoidance, and monitoring breathing symptoms.";
-        break;
-      case "Kidney":
-        coachMessage +=
-          "Focus on hydration, blood pressure control, and kidney function follow-up.";
-        break;
-      case "Liver":
-        coachMessage +=
-          "Focus on weight control, liver-friendly nutrition, and reducing metabolic risk factors.";
-        break;
-      case "Brain":
-        coachMessage +=
-          "Focus on sleep quality, stress management, mental wellness, and regular activity.";
-        break;
-      case "Metabolic":
-        coachMessage +=
-          "Focus on glucose control, cholesterol optimization, weight management, and physical activity.";
-        break;
-      default:
-        coachMessage +=
-          "Continue regular health monitoring and complete your pending assessments.";
-    }
+    coachMessage += getAIRecommendation(priorityOrgan);
 
     return coachMessage;
   }
-function generateTodayMission(priorityOrgan: string, currentScore: number) {
-  const targetScore = currentScore < 50 ? 70 : currentScore < 80 ? 85 : 95;
-  const progress = Math.min(100, Math.round((currentScore / targetScore) * 100));
 
-  return {
-    priorityOrgan,
-    currentScore,
-    targetScore,
-    progress,
-    nextReview: "7 days",
-  };
-}
+  function generateTodayMission(priorityOrgan: string, currentScore: number) {
+    const targetScore = currentScore < 50 ? 70 : currentScore < 80 ? 85 : 95;
+    const progress = Math.min(
+      100,
+      Math.round((currentScore / targetScore) * 100)
+    );
+
+    return {
+      priorityOrgan,
+      currentScore,
+      targetScore,
+      progress,
+      nextReview: "7 days",
+    };
+  }
+
   const allScores = [
     ...assessments.map((item) => item.score),
     ...(labReport ? [labReport.score] : []),
@@ -303,66 +198,19 @@ function generateTodayMission(priorityOrgan: string, currentScore: number) {
     .concat(labReport ? [labReport.created_at] : [])
     .concat(dailyCheckIn ? [dailyCheckIn.created_at] : [])
     .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0];
-function generateHealthOutlook(
-  overallScore: number,
-  wellnessScore?: number
-) {
-  const combinedScore = Math.round(
-    (overallScore + (wellnessScore || overallScore)) / 2
-  );
 
-  if (combinedScore >= 80) {
-    return {
-      status: "Stable",
-      message:
-        "Your current health trajectory appears stable. Continue your current health habits and monitoring.",
-      potential: "+5 to +10 points",
-    };
-  }
+  const todayMission = priorityAttention
+    ? generateTodayMission(priorityAttention.organ_name, priorityAttention.score)
+    : null;
 
-  if (combinedScore >= 60) {
-    return {
-      status: "Improving Potential",
-      message:
-        "Several areas show room for improvement. Following your health plan may significantly improve future scores.",
-      potential: "+10 to +20 points",
-    };
-  }
-
-  return {
-    status: "Needs Attention",
-    message:
-      "Current results suggest important opportunities for improvement. Focus on your priority health area and daily wellness habits.",
-    potential: "+15 to +25 points",
-  };
-}const todayMission = priorityAttention
-  ? generateTodayMission(priorityAttention.organ_name, priorityAttention.score)
-  : null;
-  const dashboardInsights = {
-    overallScore,
-    status: allScores.length > 0 ? getStatus(overallScore) : "No Data Yet",
-    topStrength,
-    priorityAttention,
-    todayMission,
-    latestLab: labReport,
-    latestCheckIn: dailyCheckIn,
-    latestDate,
-    completedModules:
-      assessments.length + (labReport ? 1 : 0) + (dailyCheckIn ? 1 : 0),
-    totalModules: organs.length + 2,
-    aiRecommendation: getAIRecommendation(
-      priorityAttention ? priorityAttention.organ_name : null,
-      priorityAttention ? priorityAttention.score : undefined
-    ),
-    healthCoachMessage: generateCoachMessage(
-      priorityAttention?.organ_name || "General Health",
-      topStrength?.organ_name || "General Health",
-      overallScore
-    ),
-  };const healthOutlook = generateHealthOutlook(
-  overallScore,
-  dailyCheckIn?.wellness_score
-);
+  const healthCoachMessage =
+    assessments.length > 0
+      ? generateCoachMessage(
+          priorityAttention?.organ_name || "General Health",
+          topStrength?.organ_name || "General Health",
+          overallScore
+        )
+      : "Complete your first organ assessment to receive personalized health guidance.";
 
   return (
     <main className="assistantPage">
@@ -371,33 +219,33 @@ function generateHealthOutlook(
           <p className="assistantBadge">ORGANHEAL DASHBOARD</p>
           <h1>Dashboard Intelligence</h1>
           <p>
-            View your overall health intelligence, priority areas, strongest
-            score, latest lab score, daily check-in, and personalized guidance.
+            A focused overview of your health intelligence, daily wellness, and
+            next recommended action.
           </p>
         </div>
 
         <div className="chatWindow">
           {loading && (
-  <div className="resultBox">
-    <p className="sectionLabel">Loading Dashboard</p>
-    <h2>Preparing your health intelligence...</h2>
+            <div className="resultBox">
+              <p className="sectionLabel">Loading Dashboard</p>
+              <h2>Preparing your health intelligence...</h2>
 
-    <div style={{ display: "grid", gap: "16px", marginTop: "20px" }}>
-      {[1, 2, 3, 4].map((item) => (
-        <div
-          key={item}
-          style={{
-            height: "90px",
-            borderRadius: "18px",
-            background:
-              "linear-gradient(90deg, rgba(255,255,255,0.08), rgba(34,211,238,0.18), rgba(255,255,255,0.08))",
-            animation: "pulse 1.5s infinite",
-          }}
-        />
-      ))}
-    </div>
-  </div>
-)}
+              <div style={{ display: "grid", gap: "16px", marginTop: "20px" }}>
+                {[1, 2, 3, 4].map((item) => (
+                  <div
+                    key={item}
+                    style={{
+                      height: "90px",
+                      borderRadius: "18px",
+                      background:
+                        "linear-gradient(90deg, rgba(255,255,255,0.08), rgba(34,211,238,0.18), rgba(255,255,255,0.08))",
+                      animation: "pulse 1.5s infinite",
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
 
           {!loading && message && (
             <div className="resultBox">
@@ -426,87 +274,33 @@ function generateHealthOutlook(
 
           {!loading && !message && (
             <>
-              {dashboardInsights.priorityAttention && (
+              {priorityAttention && (
                 <div className="priorityAlert">
                   <h3>🚨 Health Priority Alert</h3>
                   <p>
-                    <strong>
-                      {dashboardInsights.priorityAttention.organ_name}
-                    </strong>{" "}
-                    currently has the lowest score (
-                    {dashboardInsights.priorityAttention.score}/100).
+                    <strong>{priorityAttention.organ_name}</strong> currently
+                    has the lowest score ({priorityAttention.score}/100).
                   </p>
-                  <p>{dashboardInsights.aiRecommendation.action}</p>
+                  <p>{getAIRecommendation(priorityAttention.organ_name)}</p>
                 </div>
               )}
 
               <div className="resultBox">
                 <p className="sectionLabel">Overall Health Intelligence</p>
 
-                <h2 className={getScoreClass(dashboardInsights.overallScore)}>
-                  {dashboardInsights.overallScore}/100
+                <h2 className={getScoreClass(overallScore)}>
+                  {overallScore}/100
                 </h2>
 
-                <h3>{dashboardInsights.status}</h3>
-{dashboardInsights.todayMission && (
-  <div className="resultBox">
-    <p className="sectionLabel">🎯 Today's Health Mission</p>
+                <h3>{allScores.length > 0 ? getStatus(overallScore) : "No Data Yet"}</h3>
 
-    <h2>{dashboardInsights.todayMission.priorityOrgan}</h2>
-
-    <p>
-      Current Score: {dashboardInsights.todayMission.currentScore}/100
-    </p>
-
-    <p>
-      Target Score: {dashboardInsights.todayMission.targetScore}/100
-    </p>
-
-    <p>
-      Progress: {dashboardInsights.todayMission.progress}%
-    </p>
-
-    <div
-      style={{
-        width: "100%",
-        height: "12px",
-        background: "rgba(255,255,255,0.12)",
-        borderRadius: "999px",
-        overflow: "hidden",
-        marginTop: "12px",
-      }}
-    >
-      <div
-        style={{
-          width: `${dashboardInsights.todayMission.progress}%`,
-          height: "100%",
-          background: "linear-gradient(90deg, #22c55e, #38bdf8)",
-          borderRadius: "999px",
-        }}
-      />
-    </div>
-
-    <p style={{ marginTop: "14px" }}>
-      Recommended Action: {dashboardInsights.aiRecommendation.action}
-    </p>
-
-    <p>Next Review: {dashboardInsights.todayMission.nextReview}</p>
-
-    <a href="/health-plan">
-      <button className="primaryBtn">Start Mission</button>
-    </a>
-  </div>
-)}
                 <p>
-                  Completed modules: {dashboardInsights.completedModules} /{" "}
-                  {dashboardInsights.totalModules}
+                  Completed data sources:{" "}
+                  {assessments.length + (labReport ? 1 : 0) + (dailyCheckIn ? 1 : 0)}
                 </p>
 
-                {dashboardInsights.latestDate && (
-                  <p>
-                    Last updated:{" "}
-                    {new Date(dashboardInsights.latestDate).toLocaleString()}
-                  </p>
+                {latestDate && (
+                  <p>Last updated: {new Date(latestDate).toLocaleString()}</p>
                 )}
 
                 <div
@@ -521,304 +315,111 @@ function generateHealthOutlook(
                 >
                   <div
                     style={{
-                      width: `${dashboardInsights.overallScore}%`,
+                      width: `${overallScore}%`,
                       height: "100%",
-                      background: getProgressColor(
-                        dashboardInsights.overallScore
-                      ),
+                      background: getProgressColor(overallScore),
                       borderRadius: "999px",
                     }}
                   />
                 </div>
               </div>
 
-              <div className="assessmentForm">
+              {todayMission && (
                 <div className="resultBox">
-                  <p className="sectionLabel">🏆 Top Strength</p>
+                  <p className="sectionLabel">🎯 Today's Health Mission</p>
 
-                  {dashboardInsights.topStrength ? (
-                    <>
-                      <h2
-                        className={getScoreClass(
-                          dashboardInsights.topStrength.score
-                        )}
-                      >
-                        {dashboardInsights.topStrength.organ_name}
-                      </h2>
+                  <h2>{todayMission.priorityOrgan}</h2>
 
-                      <h3>{dashboardInsights.topStrength.score}/100</h3>
+                  <p>Current Score: {todayMission.currentScore}/100</p>
+                  <p>Target Score: {todayMission.targetScore}/100</p>
+                  <p>Progress: {todayMission.progress}%</p>
 
-                      <p>{getStatus(dashboardInsights.topStrength.score)}</p>
-                    </>
-                  ) : (
-                    <p>No organ assessment data yet.</p>
-                  )}
-                </div>
+                  <div
+                    style={{
+                      width: "100%",
+                      height: "12px",
+                      background: "rgba(255,255,255,0.12)",
+                      borderRadius: "999px",
+                      overflow: "hidden",
+                      marginTop: "12px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: `${todayMission.progress}%`,
+                        height: "100%",
+                        background: "linear-gradient(90deg, #22c55e, #38bdf8)",
+                        borderRadius: "999px",
+                      }}
+                    />
+                  </div>
 
-                <div className="resultBox">
-                  <p className="sectionLabel">⚠️ Priority Attention</p>
-
-                  {dashboardInsights.priorityAttention ? (
-                    <>
-                      <h2
-                        className={getScoreClass(
-                          dashboardInsights.priorityAttention.score
-                        )}
-                      >
-                        {dashboardInsights.priorityAttention.organ_name}
-                      </h2>
-
-                      <h3>{dashboardInsights.priorityAttention.score}/100</h3>
-
-                      <p>
-                        {getStatus(
-                          dashboardInsights.priorityAttention.score
-                        )}
-                      </p>
-                    </>
-                  ) : (
-                    <p>No organ assessment data yet.</p>
-                  )}
-                </div>
-
-                <div className="resultBox">
-                  <p className="sectionLabel">🧪 Latest Lab Score</p>
-
-                  {dashboardInsights.latestLab ? (
-                    <>
-                      <h2
-                        className={getScoreClass(
-                          dashboardInsights.latestLab.score
-                        )}
-                      >
-                        {dashboardInsights.latestLab.score}/100
-                      </h2>
-
-                      <h3>{getStatus(dashboardInsights.latestLab.score)}</h3>
-
-                      <p>{dashboardInsights.latestLab.interpretation}</p>
-                    </>
-                  ) : (
-                    <>
-                      <h2>No lab score yet</h2>
-                      <p>Complete the Lab Analyzer to include it here.</p>
-
-                      <a href="/lab-analyzer">
-                        <button className="primaryBtn">
-                          Start Lab Analyzer
-                        </button>
-                      </a>
-                    </>
-                  )}
-                </div>
-
-                <div className="resultBox">
-                  <p className="sectionLabel">☀️ Latest Daily Check-In</p>
-
-                  {dashboardInsights.latestCheckIn ? (
-                    <>
-                      <h2
-                        className={getScoreClass(
-                          dashboardInsights.latestCheckIn.wellness_score
-                        )}
-                      >
-                        {dashboardInsights.latestCheckIn.wellness_score}/100
-                      </h2>
-
-                      <h3>{dashboardInsights.latestCheckIn.mood}</h3>
-
-                      <p>
-                        Last check-in:{" "}
-                        {new Date(
-                          dashboardInsights.latestCheckIn.created_at
-                        ).toLocaleString()}
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <h2>No check-in yet</h2>
-                      <p>
-                        Complete your daily check-in to track wellness patterns.
-                      </p>
-
-                      <a href="/checkin">
-                        <button className="primaryBtn">
-                          Start Daily Check-In
-                        </button>
-                      </a>
-                    </>
-                  )}
-                </div>
-
-                <div className="resultBox">
-                  <p className="sectionLabel">🤖 AI Health Insights</p>
-
-                  <p>
-                    <strong>Priority:</strong>{" "}
-                    {dashboardInsights.aiRecommendation.priority}
+                  <p style={{ marginTop: "14px" }}>
+                    Recommended Action:{" "}
+                    {getAIRecommendation(todayMission.priorityOrgan)}
                   </p>
 
-                  <p>
-                    <strong>Explanation:</strong>{" "}
-                    {dashboardInsights.aiRecommendation.explanation}
-                  </p>
+                  <p>Next Review: {todayMission.nextReview}</p>
 
-                  <p>
-                    <strong>Recommended Action:</strong>{" "}
-                    {dashboardInsights.aiRecommendation.action}
-                  </p>
-
-                  <p>
-                    <strong>Suggested Follow-Up:</strong>{" "}
-                    {dashboardInsights.aiRecommendation.followUp}
-                  </p>
+                  <a href="/health-plan">
+                    <button className="primaryBtn">Start Mission</button>
+                  </a>
                 </div>
-
-                <div className="resultBox">
-                  <p className="sectionLabel">🤖 AI Health Coach</p>
-                  <h2>Personalized Guidance</h2>
-                  <p>{dashboardInsights.healthCoachMessage}</p>
-                </div>
-              </div>
-              <div className="resultBox">
-  <p className="sectionLabel">🔮 Health Outlook</p>
-
-  <h2>{healthOutlook.status}</h2>
-
-  <p>{healthOutlook.message}</p>
-
-  <p>
-    <strong>Improvement Potential:</strong>{" "}
-    {healthOutlook.potential}
-  </p>
-</div>
+              )}
 
               <div className="resultBox">
-                <p className="sectionLabel">🎯 AI Health Plan</p>
+                <p className="sectionLabel">☀️ Latest Daily Check-In</p>
 
-                <h2>
-                  {dashboardInsights.priorityAttention?.organ_name ||
-                    "No Priority Area"}
-                </h2>
+                {dailyCheckIn ? (
+                  <>
+                    <h2 className={getScoreClass(dailyCheckIn.wellness_score)}>
+                      {dailyCheckIn.wellness_score}/100
+                    </h2>
 
-                <p>
-                  <strong>Immediate Action:</strong>
-                </p>
-                <p>{dashboardInsights.aiRecommendation.action}</p>
+                    <h3>{dailyCheckIn.mood}</h3>
 
-                <p>
-                  <strong>This Week:</strong>
-                </p>
-                <p>
-                  Complete follow-up activities related to{" "}
-                  {dashboardInsights.priorityAttention?.organ_name ||
-                    "your assessments"}.
-                </p>
+                    <p>
+                      Last check-in:{" "}
+                      {new Date(dailyCheckIn.created_at).toLocaleString()}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <h2>No check-in yet</h2>
+                    <p>
+                      Complete your daily check-in to track wellness patterns.
+                    </p>
 
-                <p>
-                  <strong>Next Follow-Up:</strong>
-                </p>
-                <p>{dashboardInsights.aiRecommendation.followUp}</p>
-
-                <p>
-                  <strong>Improvement Goal:</strong>
-                </p>
-                <p>
-                  Raise{" "}
-                  {dashboardInsights.priorityAttention?.organ_name || "Health"}{" "}
-                  score by at least 20 points during the next assessment cycle.
-                </p>
-
-                <a href="/health-plan">
-                  <button className="primaryBtn">
-                    Start Health Improvement Plan
-                  </button>
-                </a>
+                    <a href="/checkin">
+                      <button className="primaryBtn">
+                        Start Daily Check-In
+                      </button>
+                    </a>
+                  </>
+                )}
               </div>
 
               <div className="resultBox">
-                <p className="sectionLabel">🗺️ Health Roadmap</p>
-
-                <p>✅ Assessment Completed</p>
-                <p>📌 Week 1: Follow recommended actions</p>
-                <p>📌 Week 2: Complete suggested laboratory tests</p>
-                <p>📌 Week 4: Reassess priority organ</p>
-
-                <p>
-                  🎯 Goal: Improve{" "}
-                  {dashboardInsights.priorityAttention?.organ_name || "Health"}{" "}
-                  score and reduce overall risk level.
-                </p>
-              </div>
-
-              <div className="assessmentForm">
-                {organs.map((organ) => {
-                  const assessment = getAssessment(organ.name);
-
-                  return (
-                    <div className="resultBox" key={organ.name}>
-                      <p className="sectionLabel">
-                        {organ.icon} {organ.name}
-                      </p>
-
-                      {assessment ? (
-                        <>
-                          <h2 className={getScoreClass(assessment.score)}>
-                            {assessment.score}/100
-                          </h2>
-
-                          <h3>{getStatus(assessment.score)}</h3>
-
-                          <p>{assessment.notes}</p>
-
-                          <p>
-                            Last saved:{" "}
-                            {new Date(
-                              assessment.created_at
-                            ).toLocaleString()}
-                          </p>
-
-                          <a href={organ.path}>
-                            <button className="secondaryBtn">
-                              Reassess {organ.name}
-                            </button>
-                          </a>
-                        </>
-                      ) : (
-                        <>
-                          <h2>No score yet</h2>
-                          <p>
-                            Complete this assessment to include it in your
-                            dashboard and overall score.
-                          </p>
-
-                          <a href={organ.path}>
-                            <button className="primaryBtn">
-                              Start {organ.name} Assessment
-                            </button>
-                          </a>
-                        </>
-                      )}
-                    </div>
-                  );
-                })}
+                <p className="sectionLabel">🤖 AI Health Coach</p>
+                <h2>Personalized Guidance</h2>
+                <p>{healthCoachMessage}</p>
               </div>
 
               <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-                <a href="/organ-report">
-                  <button className="primaryBtn">View Full Organ Report</button>
-                </a>
-
-                <a href="/lab-analyzer">
-                  <button className="secondaryBtn">Open Lab Analyzer</button>
+                <a href="/health-plan">
+                  <button className="primaryBtn">Health Plan</button>
                 </a>
 
                 <a href="/history">
-                  <button className="secondaryBtn">View Health History</button>
+                  <button className="secondaryBtn">Health History</button>
+                </a>
+
+                <a href="/organ-report">
+                  <button className="secondaryBtn">Full Report</button>
                 </a>
 
                 <a href="/checkin">
-                  <button className="primaryBtn">Daily Check-In</button>
+                  <button className="secondaryBtn">Daily Check-In</button>
                 </a>
               </div>
             </>
