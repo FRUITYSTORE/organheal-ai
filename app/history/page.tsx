@@ -368,7 +368,23 @@ function getHealthGoals() {
   const wellnessTrend = getWellnessTrend();
   const healthForecasts = getHealthForecasts();
   const healthGoals = getHealthGoals();
+const overallHealthScore =
+  history.length > 0
+    ? Math.round(
+        history.reduce((sum, item) => sum + item.score, 0) /
+          history.length
+      )
+    : 0;
 
+const bestOrgan =
+  history.length > 0
+    ? [...history].sort((a, b) => b.score - a.score)[0]
+    : null;
+
+const priorityOrgan =
+  history.length > 0
+    ? [...history].sort((a, b) => a.score - b.score)[0]
+    : null;
   const chartData = filteredHistory
     .slice()
     .sort(
@@ -423,6 +439,46 @@ function getHealthGoals() {
 
           {!loading && !message && history.length > 0 && (
             <>
+            <div className="resultBox">
+  <p className="sectionLabel">
+    🧠 Overall Health Intelligence
+  </p>
+
+  <h2 className={getScoreClass(overallHealthScore)}>
+    {overallHealthScore}/100
+  </h2>
+
+  <p>
+    Based on all completed assessments and historical records.
+  </p>
+
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))",
+      gap: "16px",
+      marginTop: "20px",
+    }}
+  >
+    <div>
+      <strong>🌟 Best Organ</strong>
+      <p>
+        {bestOrgan
+          ? `${bestOrgan.module_name} (${bestOrgan.score}/100)`
+          : "N/A"}
+      </p>
+    </div>
+
+    <div>
+      <strong>⚠️ Priority Organ</strong>
+      <p>
+        {priorityOrgan
+          ? `${priorityOrgan.module_name} (${priorityOrgan.score}/100)`
+          : "N/A"}
+      </p>
+    </div>
+  </div>
+</div>
               <div className="assessmentForm">
                 <div className="resultBox">
                   <p className="sectionLabel">Total Records</p>
