@@ -91,7 +91,11 @@ a {
   linear-gradient(
     rgba(2, 6, 23, 0.78),
     rgba(2, 6, 23, 0.88)
-  );
+  ),
+  url("/hero-clean.webp");
+background-size: cover;
+background-position: center;
+background-repeat: no-repeat;
 }
 
 .hero::before {
