@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
+import LanguageToggle from "./LanguageToggle";
 
 function OrganHealLogo() {
   return (
     <svg
-     width={56}
-height={56}
+      width={56}
+      height={56}
       viewBox="0 0 512 512"
       xmlns="http://www.w3.org/2000/svg"
       aria-label="OrganHeal logo"
@@ -65,34 +66,35 @@ export default function Navbar() {
 
   return (
     <nav className="navbar">
-      <Link href="/" className="logo">
+      <Link href="/" className="logo" aria-label="OrganHeal home">
         <OrganHealLogo />
-        <div
-  style={{
-    display: "flex",
-    flexDirection: "column",
-    lineHeight: "1",
-  }}
->
-  <span
-    style={{
-      fontWeight: 800,
-      fontSize: "1.35rem",
-    }}
-  >
-    OrganHeal
-  </span>
 
-  <span
-    style={{
-      fontSize: "0.7rem",
-      opacity: 0.7,
-      letterSpacing: "1px",
-    }}
-  >
-    AI HEALTH INTELLIGENCE
-  </span>
-</div>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            lineHeight: "1",
+          }}
+        >
+          <span
+            style={{
+              fontWeight: 800,
+              fontSize: "1.35rem",
+            }}
+          >
+            OrganHeal
+          </span>
+
+          <span
+            style={{
+              fontSize: "0.7rem",
+              opacity: 0.7,
+              letterSpacing: "1px",
+            }}
+          >
+            AI HEALTH INTELLIGENCE
+          </span>
+        </div>
       </Link>
 
       <div className="navLinks">
@@ -106,6 +108,8 @@ export default function Navbar() {
         <Link href="/organ-report">Report</Link>
         <Link href="/history">History</Link>
         <Link href="/profile">Profile</Link>
+
+        <LanguageToggle />
 
         <button className="navLogoutBtn" onClick={signOut}>
           Sign Out

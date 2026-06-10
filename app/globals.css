@@ -1039,4 +1039,38 @@ button {
   .suggestedQuestionsGrid {
     grid-template-columns: 1fr;
   }
+}.languageToggleBtn {
+  background: rgba(34, 211, 238, 0.12);
+  color: #e0f2fe;
+  border: 1px solid rgba(34, 211, 238, 0.35);
+  border-radius: 999px;
+  padding: 8px 13px;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.languageToggleBtn:hover {
+  background: rgba(34, 211, 238, 0.22);
+}
+
+html[dir="rtl"] body {
+  direction: rtl;
+}
+
+html[dir="rtl"] .navLinks {
+  direction: rtl;
+}
+
+html[dir="rtl"] .assistantHeader,
+html[dir="rtl"] .resultBox,
+html[dir="rtl"] .featureCard,
+html[dir="rtl"] .reportCard,
+html[dir="rtl"] .aboutCard,
+html[dir="rtl"] .blogCard {
+  text-align: right;
+}
+
+html[dir="rtl"] .buttons,
+html[dir="rtl"] .assistantQuickActions {
+  direction: rtl;
 }
