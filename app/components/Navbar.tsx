@@ -108,6 +108,7 @@ export default function Navbar() {
         <Link href="/organ-report">Report</Link>
         <Link href="/history">History</Link>
         <Link href="/profile">Profile</Link>
+        <Link href="/doctor">Doctor</Link>
 
         <LanguageToggle />
 
