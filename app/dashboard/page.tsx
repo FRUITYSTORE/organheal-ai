@@ -335,7 +335,25 @@ const forecastMessage = isArabic
       completed: assessments.length > 0,
     },
   ];
+const latestLabFinding = labReport
+  ? isArabic
+    ? `آخر نتيجة مختبرية: ${labReport.score}/100`
+    : `Latest lab score: ${labReport.score}/100`
+  : isArabic
+  ? "لا يوجد تقرير مختبر محفوظ بعد."
+  : "No lab report saved yet.";
 
+const healthIntelligenceSummary = isArabic
+  ? `الحالة الصحية الحالية ${getStatus(overallScore)} بدرجة ${overallScore}/100. منطقة الأولوية هي ${
+      priorityAttention?.organ_name || "الصحة العامة"
+    }. ${latestLabFinding} الإجراء الموصى به: ${getAIRecommendation(
+      priorityAttention?.organ_name || null
+    )}`
+  : `Current health status is ${getStatus(overallScore)} with a score of ${overallScore}/100. Priority area is ${
+      priorityAttention?.organ_name || "General Health"
+    }. ${latestLabFinding}. Recommended focus: ${getAIRecommendation(
+      priorityAttention?.organ_name || null
+    )}`;
   const completedSteps = onboardingSteps.filter((step) => step.completed).length;
 
   const onboardingProgress = Math.round(
@@ -532,7 +550,7 @@ const forecastMessage = isArabic
                   <p>{getAIRecommendation(priorityAttention.organ_name)}</p>
                 </div>
               )}
-
+الذكاء الصحي العام
               <div className="resultBox">
                 <p className="sectionLabel">
                   {isArabic
