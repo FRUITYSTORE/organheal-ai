@@ -1,110 +1,187 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
+type Language = "en" | "ar";
+
 export default function AboutPage() {
-  const modules = [
-    "Heart Intelligence",
-    "Lung Intelligence",
-    "Kidney Intelligence",
-    "Liver Intelligence",
-    "Brain Intelligence",
-    "Metabolic Intelligence",
-    "Lab Intelligence",
-    "Health Forecast Engine",
-  ];
+  const [language, setLanguage] = useState<Language>("en");
+
+  useEffect(() => {
+    const savedLanguage =
+      (localStorage.getItem("organheal-language") as Language) || "en";
+
+    setLanguage(savedLanguage);
+
+    const interval = setInterval(() => {
+      const currentLanguage =
+        (localStorage.getItem("organheal-language") as Language) || "en";
+
+      setLanguage(currentLanguage);
+    }, 300);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const isArabic = language === "ar";
+
+  const modules = isArabic
+    ? [
+        "ذكاء القلب",
+        "ذكاء الرئة",
+        "ذكاء الكلى",
+        "ذكاء الكبد",
+        "ذكاء الدماغ",
+        "الذكاء الأيضي",
+        "ذكاء المختبر",
+        "محرك التنبؤ الصحي",
+      ]
+    : [
+        "Heart Intelligence",
+        "Lung Intelligence",
+        "Kidney Intelligence",
+        "Liver Intelligence",
+        "Brain Intelligence",
+        "Metabolic Intelligence",
+        "Lab Intelligence",
+        "Health Forecast Engine",
+      ];
 
   return (
     <main className="assistantPage">
       <div className="assistantContainer">
         <section className="assistantHeader">
-          <p className="assistantBadge">ABOUT ORGANHEAL AI</p>
+          <p className="assistantBadge">
+            {isArabic ? "حول OrganHeal AI" : "ABOUT ORGANHEAL AI"}
+          </p>
 
-          <h1>AI-Powered Health Intelligence</h1>
+          <h1>
+            {isArabic
+              ? "ذكاء صحي مدعوم بالذكاء الاصطناعي"
+              : "AI-Powered Health Intelligence"}
+          </h1>
 
           <p>
-            OrganHeal AI is designed to help users understand organ health,
-            interpret wellness signals, track health trends, and receive
-            structured health education through intelligent digital tools.
+            {isArabic
+              ? "تم تصميم OrganHeal AI لمساعدة المستخدمين على فهم صحة الأعضاء، وتفسير المؤشرات الصحية، وتتبع الاتجاهات الصحية، والحصول على تعليم صحي منظم من خلال أدوات رقمية ذكية."
+              : "OrganHeal AI is designed to help users understand organ health, interpret wellness signals, track health trends, and receive structured health education through intelligent digital tools."}
           </p>
 
           <div className="buttons">
             <Link href="/dashboard">
-              <button className="primaryBtn">Open Dashboard</button>
+              <button className="primaryBtn">
+                {isArabic ? "افتح لوحة التحكم" : "Open Dashboard"}
+              </button>
             </Link>
 
             <Link href="/assessment">
-              <button className="secondaryBtn">Start Assessment</button>
+              <button className="secondaryBtn">
+                {isArabic ? "ابدأ التقييم" : "Start Assessment"}
+              </button>
             </Link>
           </div>
         </section>
 
         <section className="chatWindow">
           <div className="resultBox">
-            <p className="sectionLabel">OUR MISSION</p>
-            <h2>Making health data easier to understand</h2>
+            <p className="sectionLabel">
+              {isArabic ? "مهمتنا" : "OUR MISSION"}
+            </p>
+
+            <h2>
+              {isArabic
+                ? "جعل البيانات الصحية أسهل للفهم"
+                : "Making health data easier to understand"}
+            </h2>
 
             <p>
-              OrganHeal AI transforms personal health inputs into clear,
-              organized, and educational insights. The platform focuses on organ
-              health, daily wellness, lab interpretation, health planning, and
-              long-term tracking.
+              {isArabic
+                ? "يقوم OrganHeal AI بتحويل المدخلات الصحية الشخصية إلى رؤى واضحة ومنظمة وتعليمية. تركز المنصة على صحة الأعضاء، والعافية اليومية، وتفسير المختبر، والتخطيط الصحي، والمتابعة طويلة المدى."
+                : "OrganHeal AI transforms personal health inputs into clear, organized, and educational insights. The platform focuses on organ health, daily wellness, lab interpretation, health planning, and long-term tracking."}
             </p>
           </div>
 
           <div className="resultBox">
-            <p className="sectionLabel">WHY ORGANHEAL</p>
-            <h2>Built for practical health intelligence</h2>
+            <p className="sectionLabel">
+              {isArabic ? "لماذا OrganHeal" : "WHY ORGANHEAL"}
+            </p>
+
+            <h2>
+              {isArabic
+                ? "مبني لذكاء صحي عملي"
+                : "Built for practical health intelligence"}
+            </h2>
 
             <div className="aboutGrid">
               <div className="aboutCard">
-                <h3>Personalized Insights</h3>
+                <h3>
+                  {isArabic ? "رؤى شخصية" : "Personalized Insights"}
+                </h3>
                 <p>
-                  Health scores and recommendations are generated from user
-                  inputs across assessments, check-ins, labs, and health goals.
+                  {isArabic
+                    ? "يتم إنشاء الدرجات والتوصيات الصحية بناءً على التقييمات، والتسجيلات اليومية، والمختبر، والأهداف الصحية."
+                    : "Health scores and recommendations are generated from user inputs across assessments, check-ins, labs, and health goals."}
                 </p>
               </div>
 
               <div className="aboutCard">
-                <h3>Organ Monitoring</h3>
+                <h3>{isArabic ? "متابعة الأعضاء" : "Organ Monitoring"}</h3>
                 <p>
-                  The platform tracks major organ systems including heart, lung,
-                  kidney, liver, brain, and metabolic health.
+                  {isArabic
+                    ? "تتابع المنصة القلب، الرئة، الكلى، الكبد، الدماغ، والصحة الأيضية."
+                    : "The platform tracks major organ systems including heart, lung, kidney, liver, brain, and metabolic health."}
                 </p>
               </div>
 
               <div className="aboutCard">
-                <h3>Health Education</h3>
+                <h3>{isArabic ? "التثقيف الصحي" : "Health Education"}</h3>
                 <p>
-                  OrganHeal presents information in a simple way to help users
-                  understand their health patterns and possible risk areas.
+                  {isArabic
+                    ? "يعرض OrganHeal المعلومات بطريقة مبسطة تساعد المستخدم على فهم الأنماط الصحية ومناطق الخطورة المحتملة."
+                    : "OrganHeal presents information in a simple way to help users understand their health patterns and possible risk areas."}
                 </p>
               </div>
 
               <div className="aboutCard">
-                <h3>Lab Interpretation</h3>
+                <h3>{isArabic ? "تفسير المختبر" : "Lab Interpretation"}</h3>
                 <p>
-                  Lab values and uploaded reports can support a broader health
-                  intelligence profile.
+                  {isArabic
+                    ? "يمكن أن تساهم نتائج المختبر والتقارير المرفوعة في بناء ملف ذكاء صحي أكثر شمولًا."
+                    : "Lab values and uploaded reports can support a broader health intelligence profile."}
                 </p>
               </div>
             </div>
           </div>
 
           <div className="resultBox">
-            <p className="sectionLabel">OUR VISION</p>
-            <h2>From health assessment to health intelligence</h2>
+            <p className="sectionLabel">
+              {isArabic ? "رؤيتنا" : "OUR VISION"}
+            </p>
+
+            <h2>
+              {isArabic
+                ? "من التقييم الصحي إلى الذكاء الصحي"
+                : "From health assessment to health intelligence"}
+            </h2>
 
             <p>
-              OrganHeal AI is being developed as a full health intelligence
-              platform, not only an assessment tool. The goal is to combine
-              organ assessments, daily check-ins, lab analysis, health goals,
-              personalized plans, and professional reports into one connected
-              experience.
+              {isArabic
+                ? "يتم تطوير OrganHeal AI كمنصة ذكاء صحي متكاملة، وليس مجرد أداة تقييم. الهدف هو دمج تقييمات الأعضاء، والتسجيلات اليومية، وتحليل المختبر، والأهداف الصحية، والخطط الشخصية، والتقارير الاحترافية ضمن تجربة واحدة مترابطة."
+                : "OrganHeal AI is being developed as a full health intelligence platform, not only an assessment tool."}
             </p>
           </div>
 
           <div className="resultBox">
-            <p className="sectionLabel">CORE MODULES</p>
-            <h2>What OrganHeal AI includes</h2>
+            <p className="sectionLabel">
+              {isArabic ? "الوحدات الأساسية" : "CORE MODULES"}
+            </p>
+
+            <h2>
+              {isArabic
+                ? "ماذا يتضمن OrganHeal AI"
+                : "What OrganHeal AI includes"}
+            </h2>
 
             <div className="aboutModuleGrid">
               {modules.map((module) => (
@@ -116,62 +193,21 @@ export default function AboutPage() {
           </div>
 
           <div className="resultBox">
-            <p className="sectionLabel">TRUST & PRIVACY</p>
-            <h2>Designed with user protection in mind</h2>
-
-            <div className="aboutGrid">
-              <div className="aboutCard">
-                <h3>Secure Authentication</h3>
-                <p>
-                  User access is protected through authentication before private
-                  dashboard data is displayed.
-                </p>
-              </div>
-
-              <div className="aboutCard">
-                <h3>User Data Ownership</h3>
-                <p>
-                  The platform is structured around the user's own health
-                  profile, assessments, goals, and reports.
-                </p>
-              </div>
-
-              <div className="aboutCard">
-                <h3>Organized Health Records</h3>
-                <p>
-                  Assessments, daily check-ins, lab insights, and reports are
-                  connected into a cleaner digital health timeline.
-                </p>
-              </div>
-
-              <div className="aboutCard">
-                <h3>Educational Purpose</h3>
-                <p>
-                  OrganHeal AI supports health awareness and education. It does
-                  not replace medical diagnosis or professional care.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="resultBox">
-            <p className="sectionLabel">GET STARTED</p>
-            <h2>Start building your health intelligence profile</h2>
-
-            <p>
-              Begin with an organ assessment, complete a daily check-in, or open
-              your dashboard to review your latest health insights.
+            <p className="sectionLabel">
+              {isArabic ? "الثقة والخصوصية" : "TRUST & PRIVACY"}
             </p>
 
-            <div className="buttons">
-              <Link href="/assessment">
-                <button className="primaryBtn">Start Assessment</button>
-              </Link>
+            <h2>
+              {isArabic
+                ? "مصمم لحماية المستخدم"
+                : "Designed with user protection in mind"}
+            </h2>
 
-              <Link href="/dashboard">
-                <button className="secondaryBtn">Open Dashboard</button>
-              </Link>
-            </div>
+            <p>
+              {isArabic
+                ? "يدعم OrganHeal الوعي الصحي والتعليم الصحي ولا يستبدل التشخيص الطبي أو الرعاية الصحية المهنية."
+                : "OrganHeal AI supports health awareness and education. It does not replace medical diagnosis or professional care."}
+            </p>
           </div>
         </section>
       </div>
