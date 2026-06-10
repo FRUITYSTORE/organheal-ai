@@ -12,10 +12,14 @@ export default function LabAnalyzerPage() {
   const [vitaminD, setVitaminD] = useState("");
   const [saveMessage, setSaveMessage] = useState("");
 
-  const [result, setResult] = useState<null | {
-    score: number;
-    interpretation: string;
-  }>(null);
+const [result, setResult] = useState<null | {
+  score: number;
+  interpretation: string;
+  priorityMarker: string;
+  affectedOrgan: string;
+  recommendedAction: string;
+  aiLabSummary: string;
+}>(null);
 
   function getStatus(score: number) {
     if (score >= 80) return "Good";
@@ -172,11 +176,39 @@ export default function LabAnalyzerPage() {
         findings.join(" ") +
         " This educational tool does not diagnose disease. Please discuss abnormal results with a healthcare professional.";
     }
+let priorityMarker = "None";
+let affectedOrgan = "General Wellness";
+let recommendedAction =
+  "Continue healthy lifestyle habits and routine monitoring.";
 
+if (ldlNumber >= 130 || totalCholesterolNumber >= 200) {
+  priorityMarker = "High Cholesterol";
+  affectedOrgan = "Heart";
+  recommendedAction =
+    "Review cardiovascular risk factors, improve nutrition, and increase physical activity.";
+}
+
+if (hba1cNumber >= 5.7) {
+  priorityMarker = "Glucose Control";
+  affectedOrgan = "Metabolic Health";
+  recommendedAction =
+    "Monitor blood sugar trends and discuss abnormal values with a healthcare professional.";
+}
+
+if (vitaminDNumber < 30) {
+  priorityMarker = "Vitamin D Deficiency";
+  affectedOrgan = "Bone & Immune Health";
+  recommendedAction =
+    "Review vitamin D intake, sunlight exposure, and follow-up testing.";
+}const aiLabSummary = `Lab score is ${score}/100. Priority marker is ${priorityMarker}. Main affected area is ${affectedOrgan}. Recommended action: ${recommendedAction}`;
     setResult({
-      score,
-      interpretation,
-    });
+  score,
+  interpretation,
+  priorityMarker,
+  affectedOrgan,
+  recommendedAction,
+  aiLabSummary,
+ });
 
     await saveLabReport(score, interpretation);
   }
@@ -269,6 +301,40 @@ export default function LabAnalyzerPage() {
               <h2>{result.score}/100</h2>
               <h3>{getStatus(result.score)}</h3>
               <p>{result.interpretation}</p>
+              <div
+  style={{
+    marginTop: "20px",
+    display: "grid",
+    gap: "12px",
+    textAlign: "left",
+  }}
+>
+  <p>
+    <strong>Priority Marker:</strong>{" "}
+    {result.priorityMarker}
+  </p>
+
+  <p>
+    <strong>Affected Organ:</strong>{" "}
+    {result.affectedOrgan}
+  </p>
+
+  <p>
+    <strong>Recommended Action:</strong>{" "}
+    {result.recommendedAction}<div
+  style={{
+    marginTop: "20px",
+    padding: "16px",
+    borderRadius: "16px",
+    background: "rgba(34, 211, 238, 0.08)",
+    border: "1px solid rgba(34, 211, 238, 0.22)",
+  }}
+>
+  <p className="sectionLabel">AI Lab Summary</p>
+  <p>{result.aiLabSummary}</p>
+</div>
+  </p>
+</div>
 
               <a href="/history">
                 <button className="secondaryBtn">View Health History</button>
