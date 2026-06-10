@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import jsPDF from "jspdf";
+import { getTranslations } from "../../lib/translations";
 
 type Assessment = {
   organ_name: string;
@@ -40,6 +41,17 @@ export default function OrganReportPage() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [userEmail, setUserEmail] = useState("");
+  const [language, setLanguage] = useState<"en" | "ar">("en");
+
+useEffect(() => {
+  const savedLanguage =
+    (localStorage.getItem("organheal-language") as "en" | "ar") || "en";
+
+  setLanguage(savedLanguage);
+}, []);
+
+const t = getTranslations(language);
+const isArabic = language === "ar";
 
   useEffect(() => {
     fetchReportData();
@@ -420,21 +432,20 @@ This report is educational and intended to support health awareness and better c
     <main className="assistantPage">
       <div className="assistantContainer">
         <div className="assistantHeader">
-          <p className="assistantBadge">ORGAN HEALTH REPORT</p>
-          <h1>Your Organ Health Report</h1>
-          <p>
-            This report summarizes your saved organ assessments, lab analyzer
-            score, and daily wellness data from OrganHeal.
-          </p>
+          <p className="assistantBadge">{t.report.badge}</p>
+
+<h1>{t.report.title}</h1>
+
+<p>{t.report.description}</p>
         </div>
 
         <div className="chatWindow">
-          {loading && <p>Loading your report...</p>}
+         {isArabic ? "جاري تحميل التقرير..." : "Loading your report..."}
 
           {!loading && message && (
             <div className="resultBox">
-              <p className="sectionLabel">Login Required</p>
-              <h2>Access Protected</h2>
+            {isArabic ? "تسجيل الدخول مطلوب" : "Login Required"}
+             {isArabic ? "الوصول محمي" : "Access Protected"}
               <p>{message}</p>
 
               <div
@@ -463,7 +474,7 @@ This report is educational and intended to support health awareness and better c
           {!loading && !message && allScores.length > 0 && (
             <>
               <button className="primaryBtn" onClick={generateProfessionalPDF}>
-                Download Professional PDF Report v2
+              {t.report.download}
               </button>
 
               <div className="resultBox">
