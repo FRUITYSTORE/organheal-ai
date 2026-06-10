@@ -15,6 +15,14 @@ type SharedReport = {
   lab_score: number | null;
   priority_organ: string | null;
   latest_checkin_score: number | null;
+  organ_scores:
+    | {
+        organ: string;
+        score: number;
+      }[]
+    | null;
+  recommendations: string | null;
+  report_summary: string | null;
 };
 
 export default function DoctorPortalPage() {
@@ -38,8 +46,22 @@ export default function DoctorPortalPage() {
     const { data, error } = await supabase
       .from("shared_reports")
       .select(
-  "id, user_id, share_code, report_type, expires_at, created_at, overall_score, lab_score, priority_organ, latest_checkin_score"
-)
+        `
+        id,
+        user_id,
+        share_code,
+        report_type,
+        expires_at,
+        created_at,
+        overall_score,
+        lab_score,
+        priority_organ,
+        latest_checkin_score,
+        organ_scores,
+        recommendations,
+        report_summary
+      `
+      )
       .eq("share_code", cleanCode)
       .single();
 
@@ -56,7 +78,7 @@ export default function DoctorPortalPage() {
       return;
     }
 
-    setVerifiedReport(data);
+    setVerifiedReport(data as SharedReport);
     setMessage("Share code verified successfully.");
   }
 
@@ -135,38 +157,91 @@ export default function DoctorPortalPage() {
               <div className="assessmentForm">
                 <div className="resultBox">
                   <p className="sectionLabel">PATIENT SUMMARY</p>
-<h2>Health Intelligence Preview</h2>
+                  <h2>Health Intelligence Preview</h2>
 
-<p>
-  <strong>Overall Score:</strong>{" "}
-  {verifiedReport.overall_score !== null
-    ? `${verifiedReport.overall_score}/100`
-    : "Not available"}
-</p>
+                  <p>
+                    <strong>Overall Score:</strong>{" "}
+                    {verifiedReport.overall_score !== null
+                      ? `${verifiedReport.overall_score}/100`
+                      : "Not available"}
+                  </p>
 
-<p>
-  <strong>Lab Score:</strong>{" "}
-  {verifiedReport.lab_score !== null
-    ? `${verifiedReport.lab_score}/100`
-    : "Not available"}
-</p>
+                  <p>
+                    <strong>Lab Score:</strong>{" "}
+                    {verifiedReport.lab_score !== null
+                      ? `${verifiedReport.lab_score}/100`
+                      : "Not available"}
+                  </p>
 
-<p>
-  <strong>Priority Organ:</strong>{" "}
-  {verifiedReport.priority_organ || "Not available"}
-</p>
+                  <p>
+                    <strong>Priority Organ:</strong>{" "}
+                    {verifiedReport.priority_organ || "Not available"}
+                  </p>
 
-<p>
-  <strong>Latest Check-In Score:</strong>{" "}
-  {verifiedReport.latest_checkin_score !== null
-    ? `${verifiedReport.latest_checkin_score}/100`
-    : "Not available"}
-</p>
+                  <p>
+                    <strong>Latest Check-In Score:</strong>{" "}
+                    {verifiedReport.latest_checkin_score !== null
+                      ? `${verifiedReport.latest_checkin_score}/100`
+                      : "Not available"}
+                  </p>
+
+                  <hr
+                    style={{
+                      margin: "20px 0",
+                      opacity: 0.2,
+                    }}
+                  />
+
+                  <p>
+                    <strong>Report Summary:</strong>
+                  </p>
+
+                  <p>{verifiedReport.report_summary || "Not available"}</p>
+
+                  <p>
+                    <strong>Recommendations:</strong>
+                  </p>
+
+                  <p>{verifiedReport.recommendations || "Not available"}</p>
+                </div>
+
+                <div className="resultBox">
+                  <p className="sectionLabel">ORGAN SCORES</p>
+                  <h2>Shared Organ Health Scores</h2>
+
+                  {verifiedReport.organ_scores?.length ? (
+                    <div
+                      style={{
+                        display: "grid",
+                        gap: "10px",
+                        marginTop: "16px",
+                      }}
+                    >
+                      {verifiedReport.organ_scores.map((item) => (
+                        <div
+                          key={item.organ}
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            padding: "12px",
+                            borderRadius: "12px",
+                            background: "rgba(255,255,255,0.04)",
+                          }}
+                        >
+                          <span>{item.organ}</span>
+                          <strong>{item.score}/100</strong>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p>No organ scores available.</p>
+                  )}
                 </div>
 
                 <div className="resultBox">
                   <p className="sectionLabel">REPORT STATUS</p>
                   <h2>Temporary Access Active</h2>
+
                   <p>
                     This code is valid until{" "}
                     {new Date(verifiedReport.expires_at).toLocaleDateString()}.
