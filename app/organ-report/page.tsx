@@ -446,13 +446,21 @@ async function generateShareCode() {
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + 7);
 
-  const { error } = await supabase.from("shared_reports").insert({
-    user_id: userData.user.id,
-    share_code: newShareCode,
-    report_type: "organ_report",
-    expires_at: expiresAt.toISOString(),
-  });
+ const priorityOrgan =
+  assessments.length > 0
+    ? [...assessments].sort((a, b) => a.score - b.score)[0]
+    : null;
 
+const { error } = await supabase.from("shared_reports").insert({
+  user_id: userData.user.id,
+  share_code: newShareCode,
+  report_type: "organ_report",
+  expires_at: expiresAt.toISOString(),
+  overall_score: overallScore || null,
+  lab_score: labReport?.score || null,
+  priority_organ: priorityOrgan?.organ_name || null,
+  latest_checkin_score: dailyCheckIn?.wellness_score || null,
+});
   if (error) {
     setShareCode(
       isArabic
