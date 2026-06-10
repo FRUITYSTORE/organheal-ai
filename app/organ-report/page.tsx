@@ -450,7 +450,25 @@ async function generateShareCode() {
   assessments.length > 0
     ? [...assessments].sort((a, b) => a.score - b.score)[0]
     : null;
+const organScores = assessments.map((item) => ({
+  organ: item.organ_name,
+  score: item.score,
+}));
 
+const reportSummary = `Overall Health Score: ${
+  overallScore || 0
+}/100. Priority Organ: ${
+  priorityOrgan?.organ_name || "General Health"
+}.`;
+
+const recommendations =
+  priorityOrgan?.organ_name === "Heart"
+    ? "Focus on cardiovascular health, physical activity, and nutrition."
+    : priorityOrgan?.organ_name === "Kidney"
+    ? "Monitor hydration, blood pressure, and kidney-related laboratory markers."
+    : priorityOrgan?.organ_name === "Lung"
+    ? "Support respiratory health through activity and risk factor reduction."
+    : "Continue health monitoring and complete follow-up assessments.";
 const { error } = await supabase.from("shared_reports").insert({
   user_id: userData.user.id,
   share_code: newShareCode,
@@ -460,6 +478,9 @@ const { error } = await supabase.from("shared_reports").insert({
   lab_score: labReport?.score || null,
   priority_organ: priorityOrgan?.organ_name || null,
   latest_checkin_score: dailyCheckIn?.wellness_score || null,
+  organ_scores: organScores,
+recommendations: recommendations,
+report_summary: reportSummary,
 });
   if (error) {
     setShareCode(
