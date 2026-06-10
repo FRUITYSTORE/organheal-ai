@@ -53,10 +53,10 @@ export const metadata: Metadata = {
     siteName: "OrganHeal AI",
     images: [
       {
-        url: "/icon.svg",
-        width: 512,
-        height: 512,
-        alt: "OrganHeal AI Logo",
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "OrganHeal AI health intelligence platform preview",
       },
     ],
     locale: "en_US",
@@ -64,11 +64,11 @@ export const metadata: Metadata = {
   },
 
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "OrganHeal AI | AI-Powered Health Intelligence",
     description:
       "Understand organ health, track wellness patterns, interpret labs, and generate personalized health reports with OrganHeal AI.",
-    images: ["/icon.svg"],
+    images: ["/og-image.png"],
   },
 
   robots: {
