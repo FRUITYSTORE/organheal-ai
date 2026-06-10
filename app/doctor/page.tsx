@@ -1,6 +1,59 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
+import { supabase } from "../../lib/supabase";
+
+type SharedReport = {
+  id: string;
+  user_id: string;
+  share_code: string;
+  report_type: string;
+  expires_at: string;
+  created_at: string;
+};
 
 export default function DoctorPortalPage() {
+  const [shareCode, setShareCode] = useState("");
+  const [verifiedReport, setVerifiedReport] = useState<SharedReport | null>(
+    null
+  );
+  const [message, setMessage] = useState("");
+
+  async function verifyShareCode() {
+    setMessage("");
+    setVerifiedReport(null);
+
+    if (!shareCode.trim()) {
+      setMessage("Please enter a share code.");
+      return;
+    }
+
+    const cleanCode = shareCode.trim().toUpperCase();
+
+    const { data, error } = await supabase
+      .from("shared_reports")
+      .select("id, user_id, share_code, report_type, expires_at, created_at")
+      .eq("share_code", cleanCode)
+      .single();
+
+    if (error || !data) {
+      setMessage("Invalid or expired share code.");
+      return;
+    }
+
+    const now = new Date();
+    const expiryDate = new Date(data.expires_at);
+
+    if (expiryDate < now) {
+      setMessage("This share code has expired.");
+      return;
+    }
+
+    setVerifiedReport(data);
+    setMessage("Share code verified successfully.");
+  }
+
   return (
     <main className="assistantPage">
       <div className="assistantContainer">
@@ -10,8 +63,8 @@ export default function DoctorPortalPage() {
           <h1>Doctor Intelligence Portal</h1>
 
           <p>
-            A future clinical workspace for reviewing patient health intelligence
-            reports, organ scores, lab summaries, and follow-up notes.
+            Review patient-shared OrganHeal reports, organ scores, lab
+            intelligence, and follow-up summaries.
           </p>
 
           <div className="buttons">
@@ -27,15 +80,74 @@ export default function DoctorPortalPage() {
 
         <section className="chatWindow">
           <div className="resultBox">
-            <p className="sectionLabel">PORTAL STATUS</p>
-            <h2>Doctor Portal Foundation</h2>
+            <p className="sectionLabel">PATIENT REPORT ACCESS</p>
+            <h2>Enter Patient Share Code</h2>
+
             <p>
-              This is the first MVP version of the OrganHeal Doctor Portal. It
-              is currently a protected concept area and will later include doctor
-              authentication, patient report access, clinical notes, and shared
-              health summaries.
+              Enter a patient-generated OrganHeal share code to verify temporary
+              report access.
             </p>
+
+            <div className="chatInput">
+              <input
+                type="text"
+                placeholder="Example: OH-4F82K9"
+                value={shareCode}
+                onChange={(event) => setShareCode(event.target.value)}
+              />
+
+              <button onClick={verifyShareCode}>Verify</button>
+            </div>
+
+            {message && <p>{message}</p>}
           </div>
+
+          {verifiedReport && (
+            <div className="resultBox">
+              <p className="sectionLabel">ACCESS VERIFIED</p>
+
+              <h2>{verifiedReport.share_code}</h2>
+
+              <p>
+                Report Type: <strong>{verifiedReport.report_type}</strong>
+              </p>
+
+              <p>
+                Created:{" "}
+                <strong>
+                  {new Date(verifiedReport.created_at).toLocaleString()}
+                </strong>
+              </p>
+
+              <p>
+                Expires:{" "}
+                <strong>
+                  {new Date(verifiedReport.expires_at).toLocaleString()}
+                </strong>
+              </p>
+
+              <div className="assessmentForm">
+                <div className="resultBox">
+                  <p className="sectionLabel">PATIENT SUMMARY</p>
+                  <h2>Health Intelligence Preview</h2>
+                  <p>
+                    Next version will load the patient&apos;s real overall
+                    score, priority organ, latest lab summary, forecast, and
+                    recommendations.
+                  </p>
+                </div>
+
+                <div className="resultBox">
+                  <p className="sectionLabel">REPORT STATUS</p>
+                  <h2>Temporary Access Active</h2>
+                  <p>
+                    This code is valid until{" "}
+                    {new Date(verifiedReport.expires_at).toLocaleDateString()}.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="assessmentForm">
             <div className="resultBox">
@@ -72,27 +184,6 @@ export default function DoctorPortalPage() {
                 Future versions will allow doctors to add structured follow-up
                 notes and patient recommendations.
               </p>
-            </div>
-          </div>
-
-          <div className="resultBox">
-            <p className="sectionLabel">MVP ROADMAP</p>
-            <h2>Next Doctor Portal Features</h2>
-
-            <div
-              style={{
-                display: "grid",
-                gap: "12px",
-                textAlign: "left",
-                marginTop: "18px",
-              }}
-            >
-              <p>✅ Doctor Portal UI foundation</p>
-              <p>⬜ Doctor authentication</p>
-              <p>⬜ Patient report sharing</p>
-              <p>⬜ Clinical notes</p>
-              <p>⬜ Doctor dashboard analytics</p>
-              <p>⬜ Role-based permissions</p>
             </div>
           </div>
 
