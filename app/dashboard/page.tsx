@@ -215,6 +215,28 @@ export default function DashboardPage() {
       : "Complete your first organ assessment to receive personalized health guidance.";
 
   const notifications = [];
+  const onboardingSteps = [
+  {
+    title: "Complete Assessment",
+    completed: assessments.length > 0,
+  },
+  {
+    title: "Complete Daily Check-In",
+    completed: !!dailyCheckIn,
+  },
+  {
+    title: "Generate First Report",
+    completed: assessments.length > 0,
+  },
+];
+
+const completedSteps = onboardingSteps.filter(
+  (step) => step.completed
+).length;
+
+const onboardingProgress = Math.round(
+  (completedSteps / onboardingSteps.length) * 100
+);
 
   if (assessments.length === 0) {
     notifications.push(
@@ -309,6 +331,54 @@ export default function DashboardPage() {
 
           {!loading && !message && allScores.length > 0 && (
             <>
+            <div className="resultBox">
+  <p className="sectionLabel">🚀 Getting Started</p>
+
+  <h2>Welcome to OrganHeal</h2>
+
+  <p>
+    Complete your health setup to unlock the full OrganHeal experience.
+  </p>
+
+  <div
+    style={{
+      width: "100%",
+      height: "12px",
+      background: "rgba(255,255,255,0.12)",
+      borderRadius: "999px",
+      overflow: "hidden",
+      marginTop: "18px",
+    }}
+  >
+    <div
+      style={{
+        width: `${onboardingProgress}%`,
+        height: "100%",
+        background:
+          "linear-gradient(90deg, #22c55e, #38bdf8)",
+      }}
+    />
+  </div>
+
+  <p style={{ marginTop: "12px" }}>
+    Progress: {onboardingProgress}%
+  </p>
+
+  <div
+    style={{
+      display: "grid",
+      gap: "10px",
+      marginTop: "18px",
+      textAlign: "left",
+    }}
+  >
+    {onboardingSteps.map((step, index) => (
+      <div key={index}>
+        {step.completed ? "✅" : "⬜"} {step.title}
+      </div>
+    ))}
+  </div>
+</div>
               {priorityAttention && (
                 <div className="priorityAlert">
                   <h3>🚨 Health Priority Alert</h3>
