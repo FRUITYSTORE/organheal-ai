@@ -960,7 +960,11 @@ const opportunityPriority =
                   </Link>
                 </div>
               )}
-
+<Link href="/intelligence">
+  <button className="secondaryBtn">
+    {isArabic ? "مركز الذكاء الصحي" : "Intelligence Center"}
+  </button>
+</Link>
               <div className="resultBox">
                 <p className="sectionLabel">
                   {isArabic ? "☀️ آخر تسجيل صحي يومي" : "☀️ Latest Daily Check-In"}
