@@ -19,6 +19,7 @@ export default function IntelligencePage() {
   const [strongestOrgan, setStrongestOrgan] = useState<string | null>(null);
   const [priorityOrgan, setPriorityOrgan] = useState<string | null>(null);
   const [healthEngine, setHealthEngine] = useState<HealthEngine | null>(null);
+  const [copyMessage, setCopyMessage] = useState("");
 
   useEffect(() => {
     loadIntelligence();
@@ -78,6 +79,13 @@ export default function IntelligencePage() {
     setLoading(false);
   }
 
+  async function copyDoctorBrief() {
+    if (!healthEngine) return;
+
+    await navigator.clipboard.writeText(healthEngine.doctorBrief);
+    setCopyMessage("Doctor brief copied.");
+  }
+
   return (
     <main className="assistantPage">
       <div className="assistantContainer">
@@ -87,9 +95,8 @@ export default function IntelligencePage() {
           <h1>Health Intelligence Center</h1>
 
           <p>
-            Advanced health intelligence generated from organ assessments,
-            health patterns, potential scoring, and OrganHeal intelligence
-            engines.
+            Your digital health intelligence profile, generated from OrganHeal
+            assessments and intelligence engines.
           </p>
         </section>
 
@@ -112,13 +119,9 @@ export default function IntelligencePage() {
           {!loading && healthEngine && (
             <>
               <div className="resultBox">
-                <p className="sectionLabel">🧬 DIGITAL HEALTH PROFILE</p>
-                <h2>{healthEngine.healthProfile}</h2>
+                <p className="sectionLabel">🪪 ORGANHEAL HEALTH PASSPORT</p>
 
-                <p>
-                  Your profile is generated from your current organ assessment
-                  pattern and overall health score.
-                </p>
+                <h2>{healthEngine.healthProfile}</h2>
 
                 <div
                   style={{
@@ -135,38 +138,26 @@ export default function IntelligencePage() {
                   </div>
 
                   <div>
-                    <strong>Strongest Area</strong>
-                    <p>{strongestOrgan || "N/A"}</p>
+                    <strong>Health Age</strong>
+                    <p>{healthEngine.healthAgeStatus}</p>
                   </div>
 
                   <div>
                     <strong>Priority Area</strong>
                     <p>{priorityOrgan || "N/A"}</p>
                   </div>
+
+                  <div>
+                    <strong>Potential Score</strong>
+                    <p>{healthEngine.potentialScore}/100</p>
+                  </div>
                 </div>
               </div>
 
               <div className="resultBox">
-                <p className="sectionLabel">🧩 HEALTH RISK PATTERN</p>
-                <h2>{healthEngine.riskPattern}</h2>
+                <p className="sectionLabel">📊 HEALTH INTELLIGENCE SCORECARD</p>
 
-                <p>
-                  OrganHeal identifies the dominant health pattern influencing
-                  your current results.
-                </p>
-              </div>
-
-              <div className="resultBox">
-                <p className="sectionLabel">🎯 HEALTH OPPORTUNITY</p>
-                <h2>{healthEngine.opportunityTitle}</h2>
-
-                <p>{healthEngine.bestNextAction}</p>
-              </div>
-
-              <div className="resultBox">
-                <p className="sectionLabel">📈 HEALTH POTENTIAL SCORE</p>
-                <h2>{healthEngine.potentialScore}/100</h2>
-                <h3>{healthEngine.potentialLevel}</h3>
+                <h2>Your Intelligence Snapshot</h2>
 
                 <div
                   style={{
@@ -178,8 +169,13 @@ export default function IntelligencePage() {
                   }}
                 >
                   <div>
-                    <strong>Current Score</strong>
-                    <p>{overallScore}/100</p>
+                    <strong>Strongest Area</strong>
+                    <p>{strongestOrgan || "N/A"}</p>
+                  </div>
+
+                  <div>
+                    <strong>Risk Pattern</strong>
+                    <p>{healthEngine.riskPattern}</p>
                   </div>
 
                   <div>
@@ -188,26 +184,118 @@ export default function IntelligencePage() {
                   </div>
 
                   <div>
-                    <strong>Potential Score</strong>
-                    <p>{healthEngine.potentialScore}/100</p>
+                    <strong>Trend</strong>
+                    <p>{healthEngine.trendDirection}</p>
                   </div>
                 </div>
               </div>
 
               <div className="resultBox">
+                <p className="sectionLabel">🎯 TOP ACTIONS</p>
+
+                <h2>Next Best Actions</h2>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gap: "12px",
+                    marginTop: "18px",
+                    textAlign: "left",
+                  }}
+                >
+                  <p>1. {healthEngine.bestNextAction}</p>
+                  <p>2. Repeat your priority assessment within 30 days.</p>
+                  <p>3. Review your full report before your next health visit.</p>
+                </div>
+              </div>
+
+              <div className="resultBox">
+                <p className="sectionLabel">🗺️ HEALTH ROADMAP</p>
+
+                <h2>Today → 30 Days → 90 Days</h2>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns:
+                      "repeat(auto-fit, minmax(220px, 1fr))",
+                    gap: "14px",
+                    marginTop: "18px",
+                  }}
+                >
+                  <div>
+                    <strong>Today</strong>
+                    <p>{healthEngine.opportunityTitle}</p>
+                  </div>
+
+                  <div>
+                    <strong>30 Days</strong>
+                    <p>Improve your priority area: {priorityOrgan || "N/A"}.</p>
+                  </div>
+
+                  <div>
+                    <strong>90 Days</strong>
+                    <p>
+                      Aim for a potential score of{" "}
+                      {healthEngine.potentialScore}/100.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="resultBox">
+                <p className="sectionLabel">🧬 DIGITAL HEALTH PROFILE</p>
+
+                <h2>{healthEngine.healthProfile}</h2>
+
+                <p>
+                  This profile is generated from your organ assessment pattern,
+                  current overall score, and priority health area.
+                </p>
+              </div>
+
+              <div className="resultBox">
+                <p className="sectionLabel">🧩 HEALTH RISK PATTERN</p>
+
+                <h2>{healthEngine.riskPattern}</h2>
+
+                <p>
+                  OrganHeal identifies the dominant health pattern influencing
+                  your current results.
+                </p>
+              </div>
+
+              <div className="resultBox">
+                <p className="sectionLabel">📈 HEALTH POTENTIAL SCORE</p>
+
+                <h2>{healthEngine.potentialScore}/100</h2>
+
+                <h3>{healthEngine.potentialLevel}</h3>
+
+                <p>
+                  Possible gain: +{healthEngine.potentialGain} health points.
+                </p>
+              </div>
+
+              <div className="resultBox">
                 <p className="sectionLabel">⏳ HEALTH AGE ENGINE</p>
+
                 <h2>{healthEngine.healthAgeStatus}</h2>
+
                 <p>{healthEngine.healthAgeMessage}</p>
               </div>
 
               <div className="resultBox">
                 <p className="sectionLabel">📊 TREND INTELLIGENCE</p>
+
                 <h2>{healthEngine.trendDirection}</h2>
+
                 <p>{healthEngine.trendMessage}</p>
               </div>
 
               <div className="resultBox">
-                <p className="sectionLabel">🩺 DOCTOR BRIEF</p>
+                <p className="sectionLabel">🩺 DOCTOR READY SUMMARY</p>
+
                 <h2>Patient Intelligence Brief</h2>
 
                 <div
@@ -220,6 +308,16 @@ export default function IntelligencePage() {
                 >
                   {healthEngine.doctorBrief}
                 </div>
+
+                <button
+                  className="primaryBtn"
+                  onClick={copyDoctorBrief}
+                  style={{ marginTop: "18px" }}
+                >
+                  Copy Brief
+                </button>
+
+                {copyMessage && <p>{copyMessage}</p>}
               </div>
             </>
           )}
