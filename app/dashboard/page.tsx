@@ -697,7 +697,39 @@ const opportunityPriority =
   <p className="sectionLabel">
     {isArabic ? "📈 الإمكانات الصحية" : "📈 Health Potential Score"}
   </p>
+<div className="resultBox">
+  <p className="sectionLabel">
+    {isArabic ? "⏳ العمر الصحي" : "⏳ Health Age Engine"}
+  </p>
 
+  <h2>{healthEngine.healthAgeStatus}</h2>
+
+  <p>{healthEngine.healthAgeMessage}</p>
+
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+      gap: "14px",
+      marginTop: "18px",
+    }}
+  >
+    <div>
+      <strong>{isArabic ? "الدرجة الحالية" : "Current Score"}</strong>
+      <p>{overallScore}/100</p>
+    </div>
+
+    <div>
+      <strong>{isArabic ? "الإمكانات الصحية" : "Potential Score"}</strong>
+      <p>{healthEngine.potentialScore}/100</p>
+    </div>
+
+    <div>
+      <strong>{isArabic ? "نمط المخاطر" : "Risk Pattern"}</strong>
+      <p>{healthEngine.riskPattern}</p>
+    </div>
+  </div>
+</div>
   <h2>{healthEngine.potentialScore}/100</h2>
 
   <h3>{healthEngine.potentialLevel}</h3>

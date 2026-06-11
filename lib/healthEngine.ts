@@ -8,6 +8,8 @@ export type HealthEngineInput = {
 };
 
 export type HealthEngineResult = {
+    healthAgeStatus: string;
+healthAgeMessage: string;
   healthProfile: string;
   riskPattern: string;
   opportunityTitle: string;
@@ -149,7 +151,39 @@ export function generateHealthEngineResult(
       : isArabic
       ? "فرصة تحسين محدودة"
       : "Limited Improvement Opportunity";
+const healthAgeStatus =
+  overallScore >= 85
+    ? isArabic
+      ? "أصغر صحيًا من المتوقع"
+      : "Younger Health Profile"
+    : overallScore >= 70
+    ? isArabic
+      ? "عمر صحي متوازن"
+      : "Balanced Health Age"
+    : overallScore >= 50
+    ? isArabic
+      ? "عمر صحي يحتاج تحسين"
+      : "Elevated Health Age"
+    : isArabic
+    ? "عمر صحي مرتفع"
+    : "High Health Age";
 
+const healthAgeMessage =
+  overallScore >= 85
+    ? isArabic
+      ? "مؤشراتك الحالية تعكس ملفًا صحيًا وقائيًا جيدًا."
+      : "Your current indicators suggest a strong preventive health profile."
+    : overallScore >= 70
+    ? isArabic
+      ? "مؤشراتك الحالية مقبولة مع وجود فرص للتحسين."
+      : "Your current indicators are balanced with room for improvement."
+    : overallScore >= 50
+    ? isArabic
+      ? "بعض المؤشرات قد تجعل ملفك الصحي يبدو أكبر من المتوقع."
+      : "Some indicators may make your health profile appear older than expected."
+    : isArabic
+    ? "هناك عدة مؤشرات تحتاج إلى متابعة جدية لتحسين العمر الصحي."
+    : "Several indicators need closer follow-up to improve your health age profile.";
   const doctorBrief = isArabic
     ? `
 الملف الصحي: ${healthProfile}
@@ -200,6 +234,7 @@ ${bestNextAction}
     potentialGain,
     potentialScore,
     potentialLevel,
-    doctorBrief,
+    doctorBrief,healthAgeStatus,
+healthAgeMessage,
   };
 }
