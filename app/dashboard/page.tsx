@@ -372,7 +372,30 @@ const healthOpportunity =
       }. ${latestLabFinding}. Recommended focus: ${getAIRecommendation(
         priorityAttention?.organ_name || null
       )}`;
+const riskPattern =
+  (priorityAttention?.organ_name === "Heart" ||
+    priorityAttention?.organ_name === "Metabolic") &&
+  labReport &&
+  labReport.score < 75
+    ? isArabic
+      ? "نمط مخاطر قلبية وأيضية"
+      : "Cardiometabolic Risk Pattern"
+    : priorityAttention?.organ_name === "Brain" ||
+      (dailyCheckIn && dailyCheckIn.wellness_score < 65)
+    ? isArabic
+      ? "نمط التعافي والتوتر"
+      : "Recovery & Stress Pattern"
+    : overallScore >= 80
+    ? isArabic
+      ? "نمط صحة وقائية مستقر"
+      : "Stable Preventive Health Pattern"
+    : isArabic
+    ? "نمط متابعة صحية عامة"
+    : "General Health Monitoring Pattern";
 
+const riskPatternExplanation = isArabic
+  ? `تم تحديد هذا النمط بناءً على الدرجة العامة، منطقة الأولوية، نتيجة المختبر، وآخر تسجيل صحي يومي.`
+  : `This pattern is identified based on overall score, priority area, lab score, and latest daily check-in data.`;
   const onboardingSteps = [
     {
       title: isArabic ? "إكمال التقييم" : "Complete Assessment",
@@ -573,7 +596,50 @@ const healthOpportunity =
       ? "🧬 الملف الصحي الرقمي"
       : "🧬 Digital Health Profile"}
   </p>
+<div className="resultBox">
+  <p className="sectionLabel">
+    {isArabic
+      ? "🧩 نمط المخاطر الصحية"
+      : "🧩 Health Risk Pattern"}
+  </p>
 
+  <h2>{riskPattern}</h2>
+
+  <p>{riskPatternExplanation}</p>
+
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+      gap: "14px",
+      marginTop: "18px",
+    }}
+  >
+    <div>
+      <strong>{isArabic ? "الدرجة العامة" : "Overall Score"}</strong>
+      <p>{overallScore}/100</p>
+    </div>
+
+    <div>
+      <strong>{isArabic ? "منطقة الأولوية" : "Priority Area"}</strong>
+      <p>{priorityAttention?.organ_name || "N/A"}</p>
+    </div>
+
+    <div>
+      <strong>{isArabic ? "نتيجة المختبر" : "Lab Score"}</strong>
+      <p>{labReport ? `${labReport.score}/100` : "N/A"}</p>
+    </div>
+
+    <div>
+      <strong>{isArabic ? "آخر تسجيل يومي" : "Latest Check-In"}</strong>
+      <p>
+        {dailyCheckIn
+          ? `${dailyCheckIn.wellness_score}/100`
+          : "N/A"}
+      </p>
+    </div>
+  </div>
+</div>
   <h2>{healthProfile}</h2>
 
   <p>
