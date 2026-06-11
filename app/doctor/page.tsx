@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
+import { generateHealthEngineResult } from "../../lib/healthEngine";
 
 type OrganScore = {
   organ: string;
@@ -29,7 +30,18 @@ export default function DoctorPortalPage() {
   const [shareCode, setShareCode] = useState("");
   const [verifiedReport, setVerifiedReport] = useState<SharedReport | null>(null);
   const [message, setMessage] = useState("");
-
+const healthEngine =
+  verifiedReport &&
+  generateHealthEngineResult({
+    overallScore: verifiedReport.overall_score ?? 0,
+    labScore: verifiedReport.lab_score ?? null,
+    priorityOrgan: verifiedReport.priority_organ ?? null,
+    strongestOrgan:
+      verifiedReport.organ_scores?.sort(
+        (a, b) => b.score - a.score
+      )[0]?.organ ?? null,
+    isArabic: false,
+  });
   async function verifyShareCode() {
     setMessage("");
     setVerifiedReport(null);
@@ -144,7 +156,48 @@ export default function DoctorPortalPage() {
                 <div className="resultBox">
                   <p className="sectionLabel">PATIENT SUMMARY</p>
                   <h2>Health Intelligence Summary</h2>
+<div className="resultBox">
+  <p className="sectionLabel">
+    PATIENT INTELLIGENCE SUMMARY
+  </p>
 
+  <h2>
+    {healthEngine?.healthProfile || "Health Profile"}
+  </h2>
+
+  <div
+    style={{
+      display: "grid",
+      gap: "12px",
+      marginTop: "18px",
+    }}
+  >
+    <div>
+      <strong>Risk Pattern:</strong>{" "}
+      {healthEngine?.riskPattern}
+    </div>
+
+    <div>
+      <strong>Health Age:</strong>{" "}
+      {healthEngine?.healthAgeStatus}
+    </div>
+
+    <div>
+      <strong>Potential Score:</strong>{" "}
+      {healthEngine?.potentialScore}/100
+    </div>
+
+    <div>
+      <strong>Best Opportunity:</strong>{" "}
+      {healthEngine?.opportunityTitle}
+    </div>
+
+    <div>
+      <strong>Recommended Action:</strong>{" "}
+      {healthEngine?.bestNextAction}
+    </div>
+  </div>
+</div>
                   <p>
                     <strong>Overall Score:</strong>{" "}
                     {verifiedReport.overall_score !== null
