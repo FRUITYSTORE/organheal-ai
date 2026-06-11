@@ -329,7 +329,34 @@ export default function DashboardPage() {
     : isArabic
     ? "لا يوجد تقرير مختبر محفوظ بعد."
     : "No lab report saved yet.";
+const healthProfile =
+  overallScore >= 85
+    ? isArabic
+      ? "ملف الصحة الوقائية"
+      : "Preventive Health Profile"
+    : overallScore >= 70
+    ? isArabic
+      ? "ملف الصحة المتوازن"
+      : "Balanced Health Profile"
+    : priorityAttention?.organ_name === "Heart" ||
+      priorityAttention?.organ_name === "Metabolic"
+    ? isArabic
+      ? "ملف المخاطر القلبية والأيضية"
+      : "Cardiometabolic Risk Profile"
+    : priorityAttention?.organ_name === "Brain"
+    ? isArabic
+      ? "ملف التعافي الذهني"
+      : "Brain & Recovery Profile"
+    : isArabic
+    ? "ملف المتابعة الصحية"
+    : "Health Improvement Profile";
 
+const healthOpportunity =
+  priorityAttention?.organ_name
+    ? getAIRecommendation(priorityAttention.organ_name)
+    : isArabic
+    ? "استمر في التقييمات الدورية."
+    : "Continue regular assessments.";
   const healthIntelligenceSummary = isArabic
     ? `الحالة الصحية الحالية ${getStatus(
         overallScore
@@ -540,7 +567,50 @@ export default function DashboardPage() {
                   ))}
                 </div>
               </div>
+<div className="resultBox">
+  <p className="sectionLabel">
+    {isArabic
+      ? "🧬 الملف الصحي الرقمي"
+      : "🧬 Digital Health Profile"}
+  </p>
 
+  <h2>{healthProfile}</h2>
+
+  <p>
+    {isArabic
+      ? "هذا الملف يتم إنشاؤه تلقائيًا بناءً على نتائج الأعضاء، المختبرات، والتسجيلات الصحية."
+      : "This profile is automatically generated from organ assessments, laboratory results, and wellness tracking."}
+  </p>
+
+  <div
+    style={{
+      display: "grid",
+      gap: "12px",
+      marginTop: "18px",
+    }}
+  >
+    <div>
+      <strong>
+        {isArabic ? "أقوى منطقة" : "Strongest Area"}:
+      </strong>{" "}
+      {topStrength?.organ_name || "N/A"}
+    </div>
+
+    <div>
+      <strong>
+        {isArabic ? "منطقة الأولوية" : "Priority Area"}:
+      </strong>{" "}
+      {priorityAttention?.organ_name || "N/A"}
+    </div>
+
+    <div>
+      <strong>
+        {isArabic ? "أفضل فرصة للتحسين" : "Best Opportunity"}:
+      </strong>{" "}
+      {healthOpportunity}
+    </div>
+  </div>
+</div>
               <div className="resultBox">
                 <p className="sectionLabel">
                   {isArabic
