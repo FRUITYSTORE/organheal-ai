@@ -1,318 +1,261 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
+import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { generateHealthEngineResult } from "../../lib/healthEngine";
 
-type OrganScore = {
-  organ: string;
+type Assessment = {
+  organ_name: string;
   score: number;
+  risk_level: string;
+  notes: string;
+  created_at: string;
 };
 
-type SharedReport = {
-  id: string;
-  user_id: string;
-  share_code: string;
-  report_type: string;
-  expires_at: string;
+type LabReport = {
+  score: number;
+  interpretation: string;
   created_at: string;
-  overall_score: number | null;
-  lab_score: number | null;
-  priority_organ: string | null;
-  latest_checkin_score: number | null;
-  organ_scores: OrganScore[] | null;
-  recommendations: string | null;
-  report_summary: string | null;
+};
+
+type DailyCheckIn = {
+  mood: string;
+  wellness_score: number;
+  created_at: string;
 };
 
 export default function DoctorPortalPage() {
-  const [shareCode, setShareCode] = useState("");
-  const [verifiedReport, setVerifiedReport] = useState<SharedReport | null>(null);
+  const [assessments, setAssessments] = useState<Assessment[]>([]);
+  const [labReport, setLabReport] = useState<LabReport | null>(null);
+  const [dailyCheckIn, setDailyCheckIn] = useState<DailyCheckIn | null>(null);
+  const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
-const healthEngine =
-  verifiedReport &&
-  generateHealthEngineResult({
-    overallScore: verifiedReport.overall_score ?? 0,
-    labScore: verifiedReport.lab_score ?? null,
-    priorityOrgan: verifiedReport.priority_organ ?? null,
-    strongestOrgan:
-      verifiedReport.organ_scores?.sort(
-        (a, b) => b.score - a.score
-      )[0]?.organ ?? null,
-    isArabic: false,
-  });
-  async function verifyShareCode() {
-    setMessage("");
-    setVerifiedReport(null);
 
-    if (!shareCode.trim()) {
-      setMessage("Please enter a share code.");
+  useEffect(() => {
+    fetchDoctorPortalData();
+  }, []);
+
+  async function fetchDoctorPortalData() {
+    setLoading(true);
+
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+
+    if (userError || !userData.user) {
+      setMessage("Please login to access the doctor portal.");
+      setLoading(false);
       return;
     }
 
-    const cleanCode = shareCode.trim().toUpperCase();
+    const user = userData.user;
 
-    const { data, error } = await supabase
-      .from("shared_reports")
-      .select(
-        "id, user_id, share_code, report_type, expires_at, created_at, overall_score, lab_score, priority_organ, latest_checkin_score, organ_scores, recommendations, report_summary"
-      )
-      .eq("share_code", cleanCode)
+    const { data: organData, error: organError } = await supabase
+      .from("organ_assessments")
+      .select("organ_name, score, risk_level, notes, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (organError) {
+      setMessage("Database error: " + organError.message);
+      setLoading(false);
+      return;
+    }
+
+    const { data: labData, error: labError } = await supabase
+      .from("lab_reports")
+      .select("score, interpretation, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
       .single();
 
-    if (error || !data) {
-      setMessage("Invalid or expired share code.");
+    if (labError && labError.code !== "PGRST116") {
+      setMessage("Database error: " + labError.message);
+      setLoading(false);
       return;
     }
 
-    if (new Date(data.expires_at) < new Date()) {
-      setMessage("This share code has expired.");
+    const { data: checkInData, error: checkInError } = await supabase
+      .from("daily_checkins")
+      .select("mood, wellness_score, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (checkInError && checkInError.code !== "PGRST116") {
+      setMessage("Database error: " + checkInError.message);
+      setLoading(false);
       return;
     }
 
-    setVerifiedReport(data as SharedReport);
-    setMessage("Share code verified successfully.");
+    setAssessments(organData || []);
+    setLabReport(labData || null);
+    setDailyCheckIn(checkInData || null);
+    setLoading(false);
   }
+
+  const allScores = [
+    ...assessments.map((item) => item.score),
+    ...(labReport ? [labReport.score] : []),
+    ...(dailyCheckIn ? [dailyCheckIn.wellness_score] : []),
+  ];
+
+  const overallScore =
+    allScores.length > 0
+      ? Math.round(
+          allScores.reduce((sum, score) => sum + score, 0) / allScores.length
+        )
+      : 0;
+
+  const strongestOrgan =
+    assessments.length > 0
+      ? [...assessments].sort((a, b) => b.score - a.score)[0]
+      : null;
+
+  const priorityOrgan =
+    assessments.length > 0
+      ? [...assessments].sort((a, b) => a.score - b.score)[0]
+      : null;
+
+  const healthEngine = generateHealthEngineResult({
+    overallScore,
+    labScore: labReport?.score ?? null,
+    dailyCheckInScore: dailyCheckIn?.wellness_score ?? null,
+    priorityOrgan: priorityOrgan?.organ_name ?? null,
+    strongestOrgan: strongestOrgan?.organ_name ?? null,
+    isArabic: false,
+  });
 
   return (
     <main className="assistantPage">
       <div className="assistantContainer">
-        <section className="assistantHeader">
-          <p className="assistantBadge">DOCTOR PORTAL</p>
-          <h1>Doctor Intelligence Portal</h1>
+        <div className="assistantHeader">
+          <p className="assistantBadge">Doctor Portal</p>
+          <h1>Pre-Visit Intelligence Brief</h1>
           <p>
-            Secure access to patient-shared OrganHeal health intelligence
-            reports.
+            A professional clinical-style summary generated from patient
+            assessments, lab insights, daily check-ins, and health history.
           </p>
-        </section>
+        </div>
 
-        <section className="chatWindow">
-          <div className="resultBox">
-            <p className="sectionLabel">PATIENT REPORT ACCESS</p>
-            <h2>Enter Share Code</h2>
-            <p>Enter a valid OrganHeal share code provided by the patient.</p>
-
-            <div className="chatInput">
-              <input
-                type="text"
-                placeholder="OH-XXXXXX"
-                value={shareCode}
-                onChange={(event) => setShareCode(event.target.value)}
-              />
-
-              <button onClick={verifyShareCode}>Verify</button>
+        <div className="chatWindow">
+          {loading && (
+            <div className="resultBox">
+              <p className="sectionLabel">Loading</p>
+              <h2>Preparing doctor intelligence brief...</h2>
             </div>
+          )}
 
-            {message && (
-              <p
-                style={{
-                  marginTop: "12px",
-                  color: message.includes("success") ? "#22c55e" : "#f97316",
-                  fontWeight: 600,
-                }}
-              >
-                {message}
+          {!loading && message && (
+            <div className="resultBox">
+              <p className="sectionLabel">Access Status</p>
+              <h2>Doctor Portal Unavailable</h2>
+              <p>{message}</p>
+            </div>
+          )}
+
+          {!loading && !message && allScores.length === 0 && (
+            <div className="resultBox">
+              <p className="sectionLabel">No Patient Data</p>
+              <h2>No health intelligence available yet</h2>
+              <p>
+                The patient needs to complete at least one assessment, lab entry,
+                or daily check-in before a doctor brief can be generated.
               </p>
-            )}
-          </div>
+            </div>
+          )}
 
-          {verifiedReport && (
+          {!loading && !message && allScores.length > 0 && (
             <>
               <div className="resultBox">
-                <p className="sectionLabel">ACCESS VERIFIED</p>
-
-                <h2
-                  style={{
-                    color: "#22c55e",
-                    fontWeight: 800,
-                  }}
-                >
-                  {verifiedReport.share_code}
-                </h2>
-
+                <p className="sectionLabel">Clinical Overview</p>
+                <h2>{overallScore}/100</h2>
                 <p>
-                  <strong>Report Type:</strong> {verifiedReport.report_type}
-                </p>
-
-                <p>
-                  <strong>Created:</strong>{" "}
-                  {new Date(verifiedReport.created_at).toLocaleString()}
-                </p>
-
-                <p>
-                  <strong>Expires:</strong>{" "}
-                  {new Date(verifiedReport.expires_at).toLocaleString()}
+                  This score is generated from available organ assessments,
+                  laboratory report scoring, and daily wellness check-in data.
                 </p>
               </div>
 
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-                  gap: "20px",
-                }}
-              >
-                <div className="resultBox">
-                  <p className="sectionLabel">PATIENT SUMMARY</p>
-                  <h2>Health Intelligence Summary</h2>
-<div className="resultBox">
-  <p className="sectionLabel">
-    PATIENT INTELLIGENCE SUMMARY
-  </p>
+              <div className="resultBox">
+                <p className="sectionLabel">Digital Health Profile</p>
+                <h2>{healthEngine.healthProfile}</h2>
+                <p>
+                  Strongest area:{" "}
+                  <strong>{strongestOrgan?.organ_name || "N/A"}</strong>
+                </p>
+                <p>
+                  Priority area:{" "}
+                  <strong>{priorityOrgan?.organ_name || "N/A"}</strong>
+                </p>
+              </div>
 
-  <h2>
-    {healthEngine?.healthProfile || "Health Profile"}
-  </h2>
+              <div className="resultBox">
+                <p className="sectionLabel">Risk Pattern</p>
+                <h2>{healthEngine.riskPattern}</h2>
+                <p>{healthEngine.trendMessage}</p>
+              </div>
 
-  <div
-    style={{
-      display: "grid",
-      gap: "12px",
-      marginTop: "18px",
-    }}
-  >
-    <div>
-      <strong>Risk Pattern:</strong>{" "}
-      {healthEngine?.riskPattern}
-    </div>
+              <div className="resultBox">
+                <p className="sectionLabel">Health Potential</p>
+                <h2>{healthEngine.potentialScore}/100</h2>
+                <h3>{healthEngine.potentialLevel}</h3>
+                <p>
+                  Estimated potential gain:{" "}
+                  <strong>+{healthEngine.potentialGain}</strong> points.
+                </p>
+              </div>
 
-    <div>
-      <strong>Health Age:</strong>{" "}
-      {healthEngine?.healthAgeStatus}
-    </div>
+              <div className="resultBox">
+                <p className="sectionLabel">Health Age</p>
+                <h2>{healthEngine.healthAgeStatus}</h2>
+                <p>{healthEngine.healthAgeMessage}</p>
+              </div>
 
-    <div>
-      <strong>Potential Score:</strong>{" "}
-      {healthEngine?.potentialScore}/100
-    </div>
+              <div className="resultBox">
+                <p className="sectionLabel">Doctor Brief</p>
+                <h2>Pre-Visit Summary</h2>
+                <p>{healthEngine.doctorBrief}</p>
+              </div>
 
-    <div>
-      <strong>Best Opportunity:</strong>{" "}
-      {healthEngine?.opportunityTitle}
-    </div>
+              <div className="resultBox">
+                <p className="sectionLabel">Recommended Clinical Focus</p>
+                <h2>{healthEngine.opportunityTitle}</h2>
+                <p>{healthEngine.bestNextAction}</p>
+              </div>
 
-    <div>
-      <strong>Recommended Action:</strong>{" "}
-      {healthEngine?.bestNextAction}
-    </div>
-  </div>
-</div>
-                  <p>
-                    <strong>Overall Score:</strong>{" "}
-                    {verifiedReport.overall_score !== null
-                      ? `${verifiedReport.overall_score}/100`
-                      : "Not available"}
-                  </p>
+              <div className="resultBox">
+                <p className="sectionLabel">Available Data Sources</p>
 
-                  <p>
-                    <strong>Lab Score:</strong>{" "}
-                    {verifiedReport.lab_score !== null
-                      ? `${verifiedReport.lab_score}/100`
-                      : "Not available"}
-                  </p>
+                <p>
+                  Organ assessments: <strong>{assessments.length}</strong>
+                </p>
 
-                  <p>
-                    <strong>Priority Organ:</strong>{" "}
-                    {verifiedReport.priority_organ || "Not available"}
-                  </p>
+                <p>
+                  Latest lab score:{" "}
+                  <strong>{labReport ? `${labReport.score}/100` : "N/A"}</strong>
+                </p>
 
-                  <p>
-                    <strong>Latest Check-In:</strong>{" "}
-                    {verifiedReport.latest_checkin_score !== null
-                      ? `${verifiedReport.latest_checkin_score}/100`
-                      : "Not available"}
-                  </p>
+                <p>
+                  Latest daily check-in:{" "}
+                  <strong>
+                    {dailyCheckIn
+                      ? `${dailyCheckIn.wellness_score}/100 - ${dailyCheckIn.mood}`
+                      : "N/A"}
+                  </strong>
+                </p>
+              </div>
 
-                  <hr
-                    style={{
-                      margin: "20px 0",
-                      opacity: 0.2,
-                    }}
-                  />
-
-                  <p>
-                    <strong>Report Summary</strong>
-                  </p>
-
-                  <p>{verifiedReport.report_summary || "Not available"}</p>
-
-                  <p style={{ marginTop: "16px" }}>
-                    <strong>Recommendations</strong>
-                  </p>
-
-                  <p>{verifiedReport.recommendations || "Not available"}</p>
-                </div>
-
-                <div className="resultBox">
-                  <p className="sectionLabel">ORGAN SCORES</p>
-                  <h2>Shared Organ Scores</h2>
-
-                  {verifiedReport.organ_scores &&
-                  verifiedReport.organ_scores.length > 0 ? (
-                    <div
-                      style={{
-                        display: "grid",
-                        gap: "10px",
-                        marginTop: "16px",
-                      }}
-                    >
-                      {verifiedReport.organ_scores.map((item) => (
-                        <div
-                          key={item.organ}
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            padding: "12px",
-                            borderRadius: "12px",
-                            background: "rgba(255,255,255,0.06)",
-                            border: "1px solid rgba(255,255,255,0.08)",
-                          }}
-                        >
-                          <span>{item.organ}</span>
-                          <strong>{item.score}/100</strong>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p>No organ scores available.</p>
-                  )}
-                </div>
-
-                <div className="resultBox">
-                  <p className="sectionLabel">REPORT STATUS</p>
-                  <h2>Temporary Access Active</h2>
-                  <p>Access remains active until:</p>
-                  <p>
-                    <strong>
-                      {new Date(verifiedReport.expires_at).toLocaleDateString()}
-                    </strong>
-                  </p>
-                </div>
+              <div className="resultBox">
+                <p className="sectionLabel">Disclaimer</p>
+                <p>
+                  OrganHeal AI provides health intelligence support and does not
+                  replace clinical diagnosis, medical judgment, or emergency
+                  care.
+                </p>
               </div>
             </>
           )}
-
-          <div className="resultBox">
-            <p className="sectionLabel">IMPORTANT NOTICE</p>
-            <h2>Educational Use Only</h2>
-            <p>
-              OrganHeal Doctor Portal supports health education, communication,
-              and structured health awareness. It does not replace professional
-              diagnosis, treatment, or clinical judgment.
-            </p>
-          </div>
-
-          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-            <Link href="/dashboard">
-              <button className="secondaryBtn">Dashboard</button>
-            </Link>
-
-            <Link href="/organ-report">
-              <button className="secondaryBtn">Organ Report</button>
-            </Link>
-          </div>
-        </section>
+        </div>
       </div>
     </main>
   );
