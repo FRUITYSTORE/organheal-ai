@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
-import { generateHealthEngineResult } from "../../lib/healthEngine";
+import { buildHealthIntelligence } from "../../lib/intelligenceBuilder";
 
 type Assessment = {
   organ_name: string;
@@ -10,7 +10,7 @@ type Assessment = {
   created_at: string;
 };
 
-type HealthEngine = ReturnType<typeof generateHealthEngineResult>;
+type HealthEngine = ReturnType<typeof buildHealthIntelligence>;
 
 export default function IntelligencePage() {
   const [loading, setLoading] = useState(true);
@@ -78,19 +78,19 @@ const latestPriorityScore =
 const previousPriorityScore =
   priorityHistory.length > 1 ? priorityHistory[1].score : null;
 
-    const engine = generateHealthEngineResult({
-  overallScore: calculatedOverallScore,
-  priorityOrgan: weakest.organ_name,
-  strongestOrgan: strongest.organ_name,
-  previousPriorityScore,
-  latestPriorityScore,
+    const intelligence = buildHealthIntelligence({
+  assessments: assessmentData,
+  labReport: null,
+  dailyCheckIn: null,
   isArabic: false,
 });
 
-    setOverallScore(calculatedOverallScore);
-    setStrongestOrgan(strongest.organ_name);
-    setPriorityOrgan(weakest.organ_name);
-    setHealthEngine(engine);
+const engine = intelligence;
+
+    setOverallScore(intelligence.overallScore);
+setStrongestOrgan(intelligence.strongestOrgan);
+setPriorityOrgan(intelligence.priorityOrgan);
+setHealthEngine(engine);
     setLoading(false);
   }
 
