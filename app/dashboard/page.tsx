@@ -5,6 +5,7 @@ import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import DashboardEmptyState from "../components/DashboardEmptyState";
 import { getTranslations } from "../../lib/translations";
+import { generateHealthEngineResult } from "../../lib/healthEngine";
 
 type Assessment = {
   organ_name: string;
@@ -264,7 +265,14 @@ export default function DashboardPage() {
     assessments.length > 0
       ? [...assessments].sort((a, b) => a.score - b.score)[0]
       : null;
-
+const healthEngine = generateHealthEngineResult({
+  overallScore,
+  labScore: labReport?.score ?? null,
+  dailyCheckInScore: dailyCheckIn?.wellness_score ?? null,
+  priorityOrgan: priorityAttention?.organ_name ?? null,
+  strongestOrgan: topStrength?.organ_name ?? null,
+  isArabic,
+});
   const latestDate = [...assessments.map((item) => item.created_at)]
     .concat(labReport ? [labReport.created_at] : [])
     .concat(dailyCheckIn ? [dailyCheckIn.created_at] : [])
@@ -329,34 +337,7 @@ export default function DashboardPage() {
     : isArabic
     ? "لا يوجد تقرير مختبر محفوظ بعد."
     : "No lab report saved yet.";
-const healthProfile =
-  overallScore >= 85
-    ? isArabic
-      ? "ملف الصحة الوقائية"
-      : "Preventive Health Profile"
-    : overallScore >= 70
-    ? isArabic
-      ? "ملف الصحة المتوازن"
-      : "Balanced Health Profile"
-    : priorityAttention?.organ_name === "Heart" ||
-      priorityAttention?.organ_name === "Metabolic"
-    ? isArabic
-      ? "ملف المخاطر القلبية والأيضية"
-      : "Cardiometabolic Risk Profile"
-    : priorityAttention?.organ_name === "Brain"
-    ? isArabic
-      ? "ملف التعافي الذهني"
-      : "Brain & Recovery Profile"
-    : isArabic
-    ? "ملف المتابعة الصحية"
-    : "Health Improvement Profile";
 
-const healthOpportunity =
-  priorityAttention?.organ_name
-    ? getAIRecommendation(priorityAttention.organ_name)
-    : isArabic
-    ? "استمر في التقييمات الدورية."
-    : "Continue regular assessments.";
   const healthIntelligenceSummary = isArabic
     ? `الحالة الصحية الحالية ${getStatus(
         overallScore
@@ -372,79 +353,11 @@ const healthOpportunity =
       }. ${latestLabFinding}. Recommended focus: ${getAIRecommendation(
         priorityAttention?.organ_name || null
       )}`;
-const riskPattern =
-  (priorityAttention?.organ_name === "Heart" ||
-    priorityAttention?.organ_name === "Metabolic") &&
-  labReport &&
-  labReport.score < 75
-    ? isArabic
-      ? "نمط مخاطر قلبية وأيضية"
-      : "Cardiometabolic Risk Pattern"
-    : priorityAttention?.organ_name === "Brain" ||
-      (dailyCheckIn && dailyCheckIn.wellness_score < 65)
-    ? isArabic
-      ? "نمط التعافي والتوتر"
-      : "Recovery & Stress Pattern"
-    : overallScore >= 80
-    ? isArabic
-      ? "نمط صحة وقائية مستقر"
-      : "Stable Preventive Health Pattern"
-    : isArabic
-    ? "نمط متابعة صحية عامة"
-    : "General Health Monitoring Pattern";
 
 const riskPatternExplanation = isArabic
   ? `تم تحديد هذا النمط بناءً على الدرجة العامة، منطقة الأولوية، نتيجة المختبر، وآخر تسجيل صحي يومي.`
   : `This pattern is identified based on overall score, priority area, lab score, and latest daily check-in data.`;
-  const healthOpportunityTitle =
-  priorityAttention?.organ_name === "Heart"
-    ? isArabic
-      ? "تحسين صحة القلب"
-      : "Improve Heart Health"
-    : priorityAttention?.organ_name === "Metabolic"
-    ? isArabic
-      ? "تحسين الصحة الأيضية"
-      : "Improve Metabolic Health"
-    : priorityAttention?.organ_name === "Kidney"
-    ? isArabic
-      ? "دعم صحة الكلى"
-      : "Support Kidney Health"
-    : priorityAttention?.organ_name === "Lung"
-    ? isArabic
-      ? "تحسين صحة الرئة"
-      : "Improve Lung Health"
-    : priorityAttention?.organ_name === "Brain"
-    ? isArabic
-      ? "تحسين النوم والتعافي"
-      : "Improve Sleep & Recovery"
-    : isArabic
-    ? "تعزيز الصحة الوقائية"
-    : "Strengthen Preventive Health";
 
-const bestNextAction =
-  priorityAttention?.organ_name === "Heart"
-    ? isArabic
-      ? "راقب ضغط الدم والكوليسترول وابدأ نشاطًا بدنيًا منتظمًا."
-      : "Monitor blood pressure and cholesterol, and start consistent physical activity."
-    : priorityAttention?.organ_name === "Metabolic"
-    ? isArabic
-      ? "ركز على ضبط السكر، التغذية، النشاط البدني، والوزن."
-      : "Focus on glucose control, nutrition, physical activity, and healthy weight."
-    : priorityAttention?.organ_name === "Kidney"
-    ? isArabic
-      ? "تابع الترطيب، ضغط الدم، ووظائف الكلى عند الحاجة."
-      : "Track hydration, blood pressure, and kidney function when needed."
-    : priorityAttention?.organ_name === "Lung"
-    ? isArabic
-      ? "قلل التعرض للتدخين والملوثات وراقب ضيق التنفس أو السعال."
-      : "Reduce smoke and pollution exposure and monitor cough or shortness of breath."
-    : priorityAttention?.organ_name === "Brain"
-    ? isArabic
-      ? "حسن جودة النوم وقلل التوتر وحافظ على نشاط يومي."
-      : "Improve sleep quality, reduce stress, and maintain daily activity."
-    : isArabic
-    ? "استمر في التقييمات والمتابعة الصحية المنتظمة."
-    : "Continue assessments and regular health tracking.";
 
 const opportunityImpact =
   overallScore < 60
@@ -474,34 +387,7 @@ const opportunityPriority =
     : isArabic
     ? "منخفضة"
     : "Low";
-    const potentialGain =
-  overallScore < 50
-    ? 20
-    : overallScore < 60
-    ? 16
-    : overallScore < 70
-    ? 12
-    : overallScore < 80
-    ? 8
-    : 4;
-
-const potentialScore = Math.min(
-  100,
-  overallScore + potentialGain
-);
-
-const potentialLevel =
-  potentialGain >= 15
-    ? isArabic
-      ? "فرصة تحول كبيرة"
-      : "Major Improvement Opportunity"
-    : potentialGain >= 8
-    ? isArabic
-      ? "فرصة تحسين جيدة"
-      : "Good Improvement Opportunity"
-    : isArabic
-    ? "فرصة تحسين محدودة"
-    : "Limited Improvement Opportunity";
+    
   const onboardingSteps = [
     {
       title: isArabic ? "إكمال التقييم" : "Complete Assessment",
@@ -698,113 +584,41 @@ const potentialLevel =
               </div>
 <div className="resultBox">
   <p className="sectionLabel">
-    {isArabic
-      ? "🧬 الملف الصحي الرقمي"
-      : "🧬 Digital Health Profile"}
+    {isArabic ? "🧬 الملف الصحي الرقمي" : "🧬 Digital Health Profile"}
   </p>
+
+  <h2>{healthEngine.healthProfile}</h2>
+
+  <p>
+    {isArabic
+      ? "هذا الملف يتم إنشاؤه تلقائيًا بناءً على نتائج الأعضاء، المختبرات، والتسجيلات الصحية."
+      : "This profile is automatically generated from organ assessments, laboratory results, and wellness tracking."}
+  </p>
+
+  <div style={{ display: "grid", gap: "12px", marginTop: "18px" }}>
+    <div>
+      <strong>{isArabic ? "أقوى منطقة" : "Strongest Area"}:</strong>{" "}
+      {topStrength?.organ_name || "N/A"}
+    </div>
+
+    <div>
+      <strong>{isArabic ? "منطقة الأولوية" : "Priority Area"}:</strong>{" "}
+      {priorityAttention?.organ_name || "N/A"}
+    </div>
+
+    <div>
+      <strong>{isArabic ? "أفضل فرصة للتحسين" : "Best Opportunity"}:</strong>{" "}
+      {healthEngine.bestNextAction}
+    </div>
+  </div>
+</div>
+
 <div className="resultBox">
   <p className="sectionLabel">
-    {isArabic
-      ? "🧩 نمط المخاطر الصحية"
-      : "🧩 Health Risk Pattern"}
-  </p><div className="resultBox">
-  <p className="sectionLabel">
-    {isArabic
-      ? "🎯 فرصة التحسين الصحية"
-      : "🎯 Health Opportunity Engine"}
-  </p><div className="resultBox">
-  <p className="sectionLabel">
-    {isArabic
-      ? "📈 الإمكانات الصحية"
-      : "📈 Health Potential Score"}
+    {isArabic ? "🧩 نمط المخاطر الصحية" : "🧩 Health Risk Pattern"}
   </p>
 
-  <h2>{potentialScore}/100</h2>
-
-  <h3>{potentialLevel}</h3>
-
-  <div
-    style={{
-      display: "grid",
-      gridTemplateColumns:
-        "repeat(auto-fit, minmax(180px, 1fr))",
-      gap: "14px",
-      marginTop: "18px",
-    }}
-  >
-    <div>
-      <strong>
-        {isArabic
-          ? "الدرجة الحالية"
-          : "Current Score"}
-      </strong>
-
-      <p>{overallScore}/100</p>
-    </div>
-
-    <div>
-      <strong>
-        {isArabic
-          ? "الدرجة الممكنة"
-          : "Potential Score"}
-      </strong>
-
-      <p>{potentialScore}/100</p>
-    </div>
-
-    <div>
-      <strong>
-        {isArabic
-          ? "التحسن المتوقع"
-          : "Possible Gain"}
-      </strong>
-
-      <p>+{potentialGain}</p>
-    </div>
-  </div>
-
-  <p style={{ marginTop: "16px" }}>
-    {isArabic
-      ? "تم احتساب الإمكانية الصحية بناءً على النتائج الحالية ومناطق التحسين المتاحة."
-      : "Potential score is estimated from your current health profile and available improvement opportunities."}
-  </p>
-</div>
-
-  <h2>{healthOpportunityTitle}</h2>
-
-  <p>{bestNextAction}</p>
-
-  <div
-    style={{
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-      gap: "14px",
-      marginTop: "18px",
-    }}
-  >
-    <div>
-      <strong>{isArabic ? "الأثر المتوقع" : "Potential Impact"}</strong>
-      <p>{opportunityImpact} {isArabic ? "نقاط" : "points"}</p>
-    </div>
-
-    <div>
-      <strong>{isArabic ? "الإطار الزمني" : "Timeline"}</strong>
-      <p>{opportunityTimeline}</p>
-    </div>
-
-    <div>
-      <strong>{isArabic ? "الأولوية" : "Priority"}</strong>
-      <p>{opportunityPriority}</p>
-    </div>
-
-    <div>
-      <strong>{isArabic ? "التركيز" : "Focus Area"}</strong>
-      <p>{priorityAttention?.organ_name || "General Health"}</p>
-    </div>
-  </div>
-</div>
-
-  <h2>{riskPattern}</h2>
+  <h2>{healthEngine.riskPattern}</h2>
 
   <p>{riskPatternExplanation}</p>
 
@@ -833,50 +647,90 @@ const potentialLevel =
 
     <div>
       <strong>{isArabic ? "آخر تسجيل يومي" : "Latest Check-In"}</strong>
-      <p>
-        {dailyCheckIn
-          ? `${dailyCheckIn.wellness_score}/100`
-          : "N/A"}
-      </p>
+      <p>{dailyCheckIn ? `${dailyCheckIn.wellness_score}/100` : "N/A"}</p>
     </div>
   </div>
 </div>
-  <h2>{healthProfile}</h2>
 
-  <p>
-    {isArabic
-      ? "هذا الملف يتم إنشاؤه تلقائيًا بناءً على نتائج الأعضاء، المختبرات، والتسجيلات الصحية."
-      : "This profile is automatically generated from organ assessments, laboratory results, and wellness tracking."}
+<div className="resultBox">
+  <p className="sectionLabel">
+    {isArabic ? "🎯 فرصة التحسين الصحية" : "🎯 Health Opportunity Engine"}
   </p>
+
+  <h2>{healthEngine.opportunityTitle}</h2>
+
+  <p>{healthEngine.bestNextAction}</p>
 
   <div
     style={{
       display: "grid",
-      gap: "12px",
+      gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+      gap: "14px",
       marginTop: "18px",
     }}
   >
     <div>
-      <strong>
-        {isArabic ? "أقوى منطقة" : "Strongest Area"}:
-      </strong>{" "}
-      {topStrength?.organ_name || "N/A"}
+      <strong>{isArabic ? "الأثر المتوقع" : "Potential Impact"}</strong>
+      <p>
+        {opportunityImpact} {isArabic ? "نقاط" : "points"}
+      </p>
     </div>
 
     <div>
-      <strong>
-        {isArabic ? "منطقة الأولوية" : "Priority Area"}:
-      </strong>{" "}
-      {priorityAttention?.organ_name || "N/A"}
+      <strong>{isArabic ? "الإطار الزمني" : "Timeline"}</strong>
+      <p>{opportunityTimeline}</p>
     </div>
 
     <div>
-      <strong>
-        {isArabic ? "أفضل فرصة للتحسين" : "Best Opportunity"}:
-      </strong>{" "}
-      {healthOpportunity}
+      <strong>{isArabic ? "الأولوية" : "Priority"}</strong>
+      <p>{opportunityPriority}</p>
+    </div>
+
+    <div>
+      <strong>{isArabic ? "التركيز" : "Focus Area"}</strong>
+      <p>{priorityAttention?.organ_name || "General Health"}</p>
     </div>
   </div>
+</div>
+
+<div className="resultBox">
+  <p className="sectionLabel">
+    {isArabic ? "📈 الإمكانات الصحية" : "📈 Health Potential Score"}
+  </p>
+
+  <h2>{healthEngine.potentialScore}/100</h2>
+
+  <h3>{healthEngine.potentialLevel}</h3>
+
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+      gap: "14px",
+      marginTop: "18px",
+    }}
+  >
+    <div>
+      <strong>{isArabic ? "الدرجة الحالية" : "Current Score"}</strong>
+      <p>{overallScore}/100</p>
+    </div>
+
+    <div>
+      <strong>{isArabic ? "الدرجة الممكنة" : "Potential Score"}</strong>
+      <p>{healthEngine.potentialScore}/100</p>
+    </div>
+
+    <div>
+      <strong>{isArabic ? "التحسن المتوقع" : "Possible Gain"}</strong>
+      <p>+{healthEngine.potentialGain}</p>
+    </div>
+  </div>
+
+  <p style={{ marginTop: "16px" }}>
+    {isArabic
+      ? "تم احتساب الإمكانية الصحية بناءً على النتائج الحالية ومناطق التحسين المتاحة."
+      : "Potential score is estimated from your current health profile and available improvement opportunities."}
+  </p>
 </div>
               <div className="resultBox">
                 <p className="sectionLabel">

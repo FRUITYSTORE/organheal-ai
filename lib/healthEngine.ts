@@ -1,0 +1,205 @@
+export type HealthEngineInput = {
+  overallScore: number;
+  labScore?: number | null;
+  dailyCheckInScore?: number | null;
+  priorityOrgan?: string | null;
+  strongestOrgan?: string | null;
+  isArabic?: boolean;
+};
+
+export type HealthEngineResult = {
+  healthProfile: string;
+  riskPattern: string;
+  opportunityTitle: string;
+  bestNextAction: string;
+  potentialGain: number;
+  potentialScore: number;
+  potentialLevel: string;
+  doctorBrief: string;
+};
+
+export function generateHealthEngineResult(
+  input: HealthEngineInput
+): HealthEngineResult {
+  const {
+    overallScore,
+    labScore,
+    dailyCheckInScore,
+    priorityOrgan,
+    strongestOrgan,
+    isArabic = false,
+  } = input;
+
+  const healthProfile =
+    overallScore >= 85
+      ? isArabic
+        ? "ملف الصحة الوقائية"
+        : "Preventive Health Profile"
+      : overallScore >= 70
+      ? isArabic
+        ? "ملف الصحة المتوازن"
+        : "Balanced Health Profile"
+      : priorityOrgan === "Heart" || priorityOrgan === "Metabolic"
+      ? isArabic
+        ? "ملف المخاطر القلبية والأيضية"
+        : "Cardiometabolic Risk Profile"
+      : priorityOrgan === "Brain"
+      ? isArabic
+        ? "ملف التعافي الذهني"
+        : "Brain & Recovery Profile"
+      : isArabic
+      ? "ملف المتابعة الصحية"
+      : "Health Improvement Profile";
+
+  const riskPattern =
+    (priorityOrgan === "Heart" || priorityOrgan === "Metabolic") &&
+    labScore !== null &&
+    labScore !== undefined &&
+    labScore < 75
+      ? isArabic
+        ? "نمط مخاطر قلبية وأيضية"
+        : "Cardiometabolic Risk Pattern"
+      : priorityOrgan === "Brain" ||
+        (dailyCheckInScore !== null &&
+          dailyCheckInScore !== undefined &&
+          dailyCheckInScore < 65)
+      ? isArabic
+        ? "نمط التعافي والتوتر"
+        : "Recovery & Stress Pattern"
+      : overallScore >= 80
+      ? isArabic
+        ? "نمط صحة وقائية مستقر"
+        : "Stable Preventive Health Pattern"
+      : isArabic
+      ? "نمط متابعة صحية عامة"
+      : "General Health Monitoring Pattern";
+
+  const opportunityTitle =
+    priorityOrgan === "Heart"
+      ? isArabic
+        ? "تحسين صحة القلب"
+        : "Improve Heart Health"
+      : priorityOrgan === "Metabolic"
+      ? isArabic
+        ? "تحسين الصحة الأيضية"
+        : "Improve Metabolic Health"
+      : priorityOrgan === "Kidney"
+      ? isArabic
+        ? "دعم صحة الكلى"
+        : "Support Kidney Health"
+      : priorityOrgan === "Lung"
+      ? isArabic
+        ? "تحسين صحة الرئة"
+        : "Improve Lung Health"
+      : priorityOrgan === "Brain"
+      ? isArabic
+        ? "تحسين النوم والتعافي"
+        : "Improve Sleep & Recovery"
+      : isArabic
+      ? "تعزيز الصحة الوقائية"
+      : "Strengthen Preventive Health";
+
+  const bestNextAction =
+    priorityOrgan === "Heart"
+      ? isArabic
+        ? "راقب ضغط الدم والكوليسترول وابدأ نشاطًا بدنيًا منتظمًا."
+        : "Monitor blood pressure and cholesterol, and start consistent physical activity."
+      : priorityOrgan === "Metabolic"
+      ? isArabic
+        ? "ركز على ضبط السكر، التغذية، النشاط البدني، والوزن."
+        : "Focus on glucose control, nutrition, physical activity, and healthy weight."
+      : priorityOrgan === "Kidney"
+      ? isArabic
+        ? "تابع الترطيب، ضغط الدم، ووظائف الكلى عند الحاجة."
+        : "Track hydration, blood pressure, and kidney function when needed."
+      : priorityOrgan === "Lung"
+      ? isArabic
+        ? "قلل التعرض للتدخين والملوثات وراقب ضيق التنفس أو السعال."
+        : "Reduce smoke and pollution exposure and monitor cough or shortness of breath."
+      : priorityOrgan === "Brain"
+      ? isArabic
+        ? "حسن جودة النوم وقلل التوتر وحافظ على نشاط يومي."
+        : "Improve sleep quality, reduce stress, and maintain daily activity."
+      : isArabic
+      ? "استمر في التقييمات والمتابعة الصحية المنتظمة."
+      : "Continue assessments and regular health tracking.";
+
+  const potentialGain =
+    overallScore < 50
+      ? 20
+      : overallScore < 60
+      ? 16
+      : overallScore < 70
+      ? 12
+      : overallScore < 80
+      ? 8
+      : 4;
+
+  const potentialScore = Math.min(100, overallScore + potentialGain);
+
+  const potentialLevel =
+    potentialGain >= 15
+      ? isArabic
+        ? "فرصة تحول كبيرة"
+        : "Major Improvement Opportunity"
+      : potentialGain >= 8
+      ? isArabic
+        ? "فرصة تحسين جيدة"
+        : "Good Improvement Opportunity"
+      : isArabic
+      ? "فرصة تحسين محدودة"
+      : "Limited Improvement Opportunity";
+
+  const doctorBrief = isArabic
+    ? `
+الملف الصحي: ${healthProfile}
+
+الحالة الحالية: ${overallScore}/100
+
+منطقة الأولوية:
+${priorityOrgan || "الصحة العامة"}
+
+أقوى منطقة:
+${strongestOrgan || "الصحة العامة"}
+
+فرصة التحسين:
+${opportunityTitle}
+
+التحسن المحتمل:
++${potentialGain}
+
+الإجراء الموصى به:
+${bestNextAction}
+`
+    : `
+Profile: ${healthProfile}
+
+Current Status: ${overallScore}/100
+
+Priority Area:
+${priorityOrgan || "General Health"}
+
+Strongest Area:
+${strongestOrgan || "General Health"}
+
+Main Opportunity:
+${opportunityTitle}
+
+Potential Gain:
++${potentialGain}
+
+Recommended Action:
+${bestNextAction}
+`;
+
+  return {
+    healthProfile,
+    riskPattern,
+    opportunityTitle,
+    bestNextAction,
+    potentialGain,
+    potentialScore,
+    potentialLevel,
+    doctorBrief,
+  };
+}
