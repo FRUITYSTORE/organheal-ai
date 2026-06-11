@@ -5,7 +5,7 @@ import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import jsPDF from "jspdf";
 import { getTranslations } from "../../lib/translations";
-import { generateHealthEngineResult } from "../../lib/healthEngine";
+import { buildHealthIntelligence } from "../../lib/intelligenceBuilder";
 
 type Assessment = {
   organ_name: string;
@@ -148,12 +148,26 @@ const weakestAssessment =
     ? [...assessments].sort((a, b) => a.score - b.score)[0]
     : null;
 
-const healthEngine = generateHealthEngineResult({
-  overallScore,
-  labScore: labReport?.score ?? null,
-  dailyCheckInScore: dailyCheckIn?.wellness_score ?? null,
-  priorityOrgan: weakestAssessment?.organ_name ?? null,
-  strongestOrgan: strongestAssessment?.organ_name ?? null,
+const healthEngine = buildHealthIntelligence({
+  assessments: assessments.map((item) => ({
+    organ_name: item.organ_name,
+    score: item.score,
+    created_at: item.created_at,
+  })),
+  labReport: labReport
+    ? {
+        score: labReport.score,
+        interpretation: labReport.interpretation,
+        created_at: labReport.created_at,
+      }
+    : null,
+  dailyCheckIn: dailyCheckIn
+    ? {
+        mood: dailyCheckIn.mood,
+        wellness_score: dailyCheckIn.wellness_score,
+        created_at: dailyCheckIn.created_at,
+      }
+    : null,
   isArabic: false,
 });
   function getStatus(score: number) {
@@ -370,8 +384,23 @@ addWrappedText(`Main Opportunity: ${healthEngine.opportunityTitle}`);
 addWrappedText(`Recommended Action: ${healthEngine.bestNextAction}`);
 addWrappedText(`Trend Direction: ${healthEngine.trendDirection}`);
 addWrappedText(`Trend Insight: ${healthEngine.trendMessage}`);
+addSectionTitle("4. Top Health Opportunities");
 
-addSectionTitle("4. Risk Escalation Intelligence");
+if (!healthEngine.opportunities || healthEngine.opportunities.length === 0) {
+  addWrappedText("No health opportunities available yet.");
+} else {
+  healthEngine.opportunities.forEach((item, index) => {
+    addWrappedText(
+      `${index + 1}. ${item.title}
+Current Score: ${item.currentScore}/100
+Potential Score: ${item.potentialScore}/100
+Potential Gain: +${item.potentialGain}
+Priority: ${item.priority}
+Recommended Action: ${item.action}`
+    );
+  });
+}
+addSectionTitle("5. Risk Escalation Intelligence");
 
 addWrappedText(
   `Risk Escalation Level: ${healthEngine.riskEscalationLevel}`
@@ -384,10 +413,10 @@ addWrappedText(
 addWrappedText(
   `Escalation Reason: ${healthEngine.riskEscalationReason}`
 );
-addSectionTitle("5. Doctor Brief");
+addSectionTitle("6. Doctor Brief");
 
 addWrappedText(healthEngine.doctorBrief);
-    addSectionTitle("6. Organ Assessment Breakdown");
+    addSectionTitle("7. Organ Assessment Breakdown");
 
     if (assessments.length === 0) {
       addWrappedText("No organ assessments available.");
@@ -424,7 +453,7 @@ addWrappedText(healthEngine.doctorBrief);
     }
 
     if (labReport) {
-      addSectionTitle("6. Lab Analyzer Summary");
+      addSectionTitle("8. Lab Analyzer Summary");
 
       addWrappedText(`Latest Lab Intelligence Score: ${labReport.score}/100`);
       addWrappedText(`Status: ${getStatus(labReport.score)}`);
@@ -443,7 +472,7 @@ addWrappedText(healthEngine.doctorBrief);
     }
 
     if (dailyCheckIn) {
-      addSectionTitle("7. Daily Wellness Summary");
+      addSectionTitle("9. Daily Wellness Summary");
 
       addWrappedText(`Latest Wellness Score: ${dailyCheckIn.wellness_score}/100`);
       addWrappedText(`Mood: ${dailyCheckIn.mood}`);
@@ -452,7 +481,7 @@ addWrappedText(healthEngine.doctorBrief);
       );
     }
 
-    addSectionTitle("8. Personalized Recommendations");
+    addSectionTitle("10. Personalized Recommendations");
 
     if (weakest) {
       addWrappedText(getAIRecommendation(weakest.organ_name));
@@ -463,7 +492,7 @@ addWrappedText(healthEngine.doctorBrief);
       addWrappedText("Complete your first organ assessment to unlock recommendations.");
     }
 
-    addSectionTitle("9. Important Educational Disclaimer");
+    addSectionTitle("11. Important Educational Disclaimer");
 
     addWrappedText(
       "This report is for educational and wellness tracking purposes only. It does not provide a medical diagnosis, treatment plan, or emergency medical advice. Please discuss concerning symptoms or abnormal results with a licensed healthcare professional."
