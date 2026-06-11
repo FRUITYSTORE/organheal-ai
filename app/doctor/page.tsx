@@ -1,8 +1,9 @@
 "use client";
-import PageBackActions from "../components/PageBackActions";
+
 import { useEffect, useState } from "react";
+import PageBackActions from "../components/PageBackActions";
 import { supabase } from "../../lib/supabase";
-import { generateHealthEngineResult } from "../../lib/healthEngine";
+import { buildHealthIntelligence } from "../../lib/intelligenceBuilder";
 
 type Assessment = {
   organ_name: string;
@@ -94,48 +95,33 @@ export default function DoctorPortalPage() {
     setLoading(false);
   }
 
-  const allScores = [
-    ...assessments.map((item) => item.score),
-    ...(labReport ? [labReport.score] : []),
-    ...(dailyCheckIn ? [dailyCheckIn.wellness_score] : []),
-  ];
-
-  const overallScore =
-    allScores.length > 0
-      ? Math.round(
-          allScores.reduce((sum, score) => sum + score, 0) / allScores.length
-        )
-      : 0;
-
-  const strongestOrgan =
-    assessments.length > 0
-      ? [...assessments].sort((a, b) => b.score - a.score)[0]
-      : null;
-
-  const priorityOrgan =
-    assessments.length > 0
-      ? [...assessments].sort((a, b) => a.score - b.score)[0]
-      : null;
-
-  const healthEngine = generateHealthEngineResult({
-    overallScore,
-    labScore: labReport?.score ?? null,
-    dailyCheckInScore: dailyCheckIn?.wellness_score ?? null,
-    priorityOrgan: priorityOrgan?.organ_name ?? null,
-    strongestOrgan: strongestOrgan?.organ_name ?? null,
+  const intelligence = buildHealthIntelligence({
+    assessments: assessments.map((item) => ({
+      organ_name: item.organ_name,
+      score: item.score,
+      created_at: item.created_at,
+    })),
+    labReport,
+    dailyCheckIn,
     isArabic: false,
   });
+
+  const hasData =
+    assessments.length > 0 || labReport !== null || dailyCheckIn !== null;
+
+  const latestAssessment = assessments[0] || null;
 
   return (
     <main className="assistantPage">
       <div className="assistantContainer">
         <PageBackActions />
+
         <div className="assistantHeader">
           <p className="assistantBadge">Doctor Portal</p>
-          <h1>Pre-Visit Intelligence Brief</h1>
+          <h1>Doctor Intelligence Brief</h1>
           <p>
-            A professional clinical-style summary generated from patient
-            assessments, lab insights, daily check-ins, and health history.
+            A concise pre-visit summary generated from assessments, lab scores,
+            daily wellness tracking, and OrganHeal intelligence engines.
           </p>
         </div>
 
@@ -155,7 +141,7 @@ export default function DoctorPortalPage() {
             </div>
           )}
 
-          {!loading && !message && allScores.length === 0 && (
+          {!loading && !message && !hasData && (
             <div className="resultBox">
               <p className="sectionLabel">No Patient Data</p>
               <h2>No health intelligence available yet</h2>
@@ -166,91 +152,170 @@ export default function DoctorPortalPage() {
             </div>
           )}
 
-          {!loading && !message && allScores.length > 0 && (
+          {!loading && !message && hasData && (
             <>
               <div className="resultBox">
-                <p className="sectionLabel">Clinical Overview</p>
-                <h2>{overallScore}/100</h2>
+                <p className="sectionLabel">Pre-Visit Overview</p>
+
+                <h2>{intelligence.overallScore}/100</h2>
+
                 <p>
-                  This score is generated from available organ assessments,
-                  laboratory report scoring, and daily wellness check-in data.
+                  <strong>Health Profile:</strong>{" "}
+                  {intelligence.healthProfile}
+                </p>
+
+                <p>
+                  <strong>Priority Area:</strong>{" "}
+                  {intelligence.priorityOrgan || "General Health"}
+                </p>
+
+                <p>
+                  <strong>Strongest Area:</strong>{" "}
+                  {intelligence.strongestOrgan || "General Health"}
                 </p>
               </div>
 
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                  gap: "16px",
+                }}
+              >
+                <div className="resultBox">
+                  <p className="sectionLabel">Risk Pattern</p>
+                  <h2>{intelligence.riskPattern}</h2>
+                  <p>{intelligence.trendMessage}</p>
+                </div>
+
+                <div className="resultBox">
+                  <p className="sectionLabel">Health Age</p>
+                  <h2>{intelligence.healthAgeStatus}</h2>
+                  <p>{intelligence.healthAgeMessage}</p>
+                </div>
+
+                <div className="resultBox">
+                  <p className="sectionLabel">Potential</p>
+                  <h2>{intelligence.potentialScore}/100</h2>
+                  <p>Potential gain: +{intelligence.potentialGain}</p>
+                </div>
+              </div>
+
+              {intelligence.riskEscalationLevel !== "Stable" && (
+                <div className="priorityAlert">
+                  <h3>Risk Escalation</h3>
+                  <p>
+                    <strong>Level:</strong>{" "}
+                    {intelligence.riskEscalationLevel}
+                  </p>
+                  <p>{intelligence.riskEscalationMessage}</p>
+                  <p>
+                    <strong>Reason:</strong>{" "}
+                    {intelligence.riskEscalationReason}
+                  </p>
+                </div>
+              )}
+
               <div className="resultBox">
-                <p className="sectionLabel">Digital Health Profile</p>
-                <h2>{healthEngine.healthProfile}</h2>
-                <p>
-                  Strongest area:{" "}
-                  <strong>{strongestOrgan?.organ_name || "N/A"}</strong>
-                </p>
-                <p>
-                  Priority area:{" "}
-                  <strong>{priorityOrgan?.organ_name || "N/A"}</strong>
-                </p>
+                <p className="sectionLabel">Recommended Clinical Focus</p>
+                <h2>{intelligence.opportunityTitle}</h2>
+                <p>{intelligence.bestNextAction}</p>
               </div>
 
               <div className="resultBox">
-                <p className="sectionLabel">Risk Pattern</p>
-                <h2>{healthEngine.riskPattern}</h2>
-                <p>{healthEngine.trendMessage}</p>
-              </div>
+                <p className="sectionLabel">Top Health Opportunities</p>
 
-              <div className="resultBox">
-                <p className="sectionLabel">Health Potential</p>
-                <h2>{healthEngine.potentialScore}/100</h2>
-                <h3>{healthEngine.potentialLevel}</h3>
-                <p>
-                  Estimated potential gain:{" "}
-                  <strong>+{healthEngine.potentialGain}</strong> points.
-                </p>
-              </div>
-
-              <div className="resultBox">
-                <p className="sectionLabel">Health Age</p>
-                <h2>{healthEngine.healthAgeStatus}</h2>
-                <p>{healthEngine.healthAgeMessage}</p>
+                {intelligence.opportunities.length === 0 ? (
+                  <p>No opportunities available yet.</p>
+                ) : (
+                  <div style={{ display: "grid", gap: "12px" }}>
+                    {intelligence.opportunities.map((item) => (
+                      <div
+                        key={item.organ}
+                        style={{
+                          padding: "14px",
+                          borderRadius: "14px",
+                          border: "1px solid rgba(255,255,255,0.16)",
+                        }}
+                      >
+                        <h3>{item.title}</h3>
+                        <p>
+                          Current: {item.currentScore}/100 → Potential:{" "}
+                          {item.potentialScore}/100
+                        </p>
+                        <p>
+                          Gain: +{item.potentialGain} | Priority:{" "}
+                          {item.priority}
+                        </p>
+                        <p>{item.action}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="resultBox">
                 <p className="sectionLabel">Doctor Brief</p>
-                <h2>Pre-Visit Summary</h2>
-                <p>{healthEngine.doctorBrief}</p>
-              </div>
+                <h2>Patient Intelligence Summary</h2>
 
-              <div className="resultBox">
-                <p className="sectionLabel">Recommended Clinical Focus</p>
-                <h2>{healthEngine.opportunityTitle}</h2>
-                <p>{healthEngine.bestNextAction}</p>
+                <div
+                  style={{
+                    whiteSpace: "pre-line",
+                    lineHeight: "1.8",
+                    textAlign: "left",
+                  }}
+                >
+                  {intelligence.doctorBrief}
+                </div>
               </div>
 
               <div className="resultBox">
                 <p className="sectionLabel">Available Data Sources</p>
 
-                <p>
-                  Organ assessments: <strong>{assessments.length}</strong>
-                </p>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                    gap: "16px",
+                    textAlign: "left",
+                  }}
+                >
+                  <div>
+                    <strong>Organ assessments</strong>
+                    <p>{assessments.length}</p>
+                  </div>
 
-                <p>
-                  Latest lab score:{" "}
-                  <strong>{labReport ? `${labReport.score}/100` : "N/A"}</strong>
-                </p>
+                  <div>
+                    <strong>Latest assessment</strong>
+                    <p>
+                      {latestAssessment
+                        ? `${latestAssessment.organ_name} - ${latestAssessment.score}/100`
+                        : "N/A"}
+                    </p>
+                  </div>
 
-                <p>
-                  Latest daily check-in:{" "}
-                  <strong>
-                    {dailyCheckIn
-                      ? `${dailyCheckIn.wellness_score}/100 - ${dailyCheckIn.mood}`
-                      : "N/A"}
-                  </strong>
-                </p>
+                  <div>
+                    <strong>Latest lab score</strong>
+                    <p>{labReport ? `${labReport.score}/100` : "N/A"}</p>
+                  </div>
+
+                  <div>
+                    <strong>Latest daily check-in</strong>
+                    <p>
+                      {dailyCheckIn
+                        ? `${dailyCheckIn.wellness_score}/100 - ${dailyCheckIn.mood}`
+                        : "N/A"}
+                    </p>
+                  </div>
+                </div>
               </div>
 
               <div className="resultBox">
                 <p className="sectionLabel">Disclaimer</p>
                 <p>
-                  OrganHeal AI provides health intelligence support and does not
-                  replace clinical diagnosis, medical judgment, or emergency
+                  OrganHeal AI provides educational health intelligence support.
+                  It does not replace clinical diagnosis, medical judgment,
+                  treatment decisions, emergency evaluation, or licensed medical
                   care.
                 </p>
               </div>
