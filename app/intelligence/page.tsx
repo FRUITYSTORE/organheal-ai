@@ -64,13 +64,28 @@ export default function IntelligencePage() {
 
     const strongest = [...assessmentData].sort((a, b) => b.score - a.score)[0];
     const weakest = [...assessmentData].sort((a, b) => a.score - b.score)[0];
+    const priorityHistory = assessmentData
+  .filter((item) => item.organ_name === weakest.organ_name)
+  .sort(
+    (a, b) =>
+      new Date(b.created_at).getTime() -
+      new Date(a.created_at).getTime()
+  );
+
+const latestPriorityScore =
+  priorityHistory.length > 0 ? priorityHistory[0].score : null;
+
+const previousPriorityScore =
+  priorityHistory.length > 1 ? priorityHistory[1].score : null;
 
     const engine = generateHealthEngineResult({
-      overallScore: calculatedOverallScore,
-      priorityOrgan: weakest.organ_name,
-      strongestOrgan: strongest.organ_name,
-      isArabic: false,
-    });
+  overallScore: calculatedOverallScore,
+  priorityOrgan: weakest.organ_name,
+  strongestOrgan: strongest.organ_name,
+  previousPriorityScore,
+  latestPriorityScore,
+  isArabic: false,
+});
 
     setOverallScore(calculatedOverallScore);
     setStrongestOrgan(strongest.organ_name);
@@ -284,7 +299,23 @@ export default function IntelligencePage() {
 
                 <p>{healthEngine.healthAgeMessage}</p>
               </div>
+{healthEngine.riskEscalationLevel !== "Stable" && (
+  <div className="priorityAlert">
+    <h3>🚨 Risk Escalation Intelligence</h3>
 
+    <p>
+      <strong>Level:</strong>{" "}
+      {healthEngine.riskEscalationLevel}
+    </p>
+
+    <p>{healthEngine.riskEscalationMessage}</p>
+
+    <p>
+      <strong>Reason:</strong>{" "}
+      {healthEngine.riskEscalationReason}
+    </p>
+  </div>
+)}
               <div className="resultBox">
                 <p className="sectionLabel">📊 TREND INTELLIGENCE</p>
 
