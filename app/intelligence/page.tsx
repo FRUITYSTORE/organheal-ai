@@ -105,6 +105,7 @@ setHealthEngine(engine);
     <main className="assistantPage">
       <div className="assistantContainer">
         <PageBackActions />
+        <PageBackActions />
         <section className="assistantHeader">
           <p className="assistantBadge">ORGANHEAL INTELLIGENCE CENTER</p>
 

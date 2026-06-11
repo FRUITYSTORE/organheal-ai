@@ -1,5 +1,5 @@
 "use client";
-
+import PageBackActions from "../components/PageBackActions";
 import { useState } from "react";
 import { supabase } from "../../lib/supabase";
 
@@ -107,6 +107,7 @@ export default function BrainPage() {
   return (
     <main className="assistantPage">
       <div className="assistantContainer">
+        <PageBackActions />
         <div className="assistantHeader">
           <p className="assistantBadge">BRAIN HEALTH ASSESSMENT</p>
           <h1>Brain Health Assessment</h1>

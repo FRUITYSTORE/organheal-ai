@@ -1,5 +1,5 @@
 "use client";
-
+import PageBackActions from "../components/PageBackActions";
 import { useState } from "react";
 import { supabase } from "../../lib/supabase";
 
@@ -136,6 +136,7 @@ export default function HeartPage() {
   return (
     <main className="assistantPage">
       <div className="assistantContainer">
+        <PageBackActions />
         <div className="assistantHeader">
           <div>
             <p className="assistantBadge">HEART HEALTH ASSESSMENT</p>

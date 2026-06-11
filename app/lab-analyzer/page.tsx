@@ -1,5 +1,5 @@
 "use client";
-
+import PageBackActions from "../components/PageBackActions";
 import { useState } from "react";
 import { supabase } from "../../lib/supabase";
 
@@ -216,6 +216,7 @@ if (vitaminDNumber < 30) {
   return (
     <main className="assistantPage">
       <div className="assistantContainer">
+        <PageBackActions />
         <div className="assistantHeader">
           <p className="assistantBadge">LAB ANALYZER</p>
           <h1>Lab Analyzer</h1>

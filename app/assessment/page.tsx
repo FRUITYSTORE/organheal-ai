@@ -1,9 +1,10 @@
 import Link from "next/link";
-
+import PageBackActions from "../components/PageBackActions";
 export default function AssessmentPage() {
   return (
     <main className="assistantPage">
       <div className="assistantContainer">
+        <PageBackActions />
         <div className="assistantHeader">
           <p className="assistantBadge">ORGAN HEALTH ASSESSMENT</p>
 

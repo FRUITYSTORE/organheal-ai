@@ -1,5 +1,5 @@
 "use client";
-
+import PageBackActions from "../components/PageBackActions";
 import { useState } from "react";
 import { supabase } from "../../lib/supabase";
 
@@ -121,6 +121,7 @@ export default function KidneyPage() {
   return (
     <main className="assistantPage">
       <div className="assistantContainer">
+        <PageBackActions />
         <div className="assistantHeader">
           <p className="assistantBadge">KIDNEY HEALTH ASSESSMENT</p>
           <h1>Kidney Health Assessment</h1>

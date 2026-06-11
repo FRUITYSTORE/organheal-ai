@@ -1,5 +1,5 @@
 "use client";
-
+import PageBackActions from "../components/PageBackActions";
 import { useState } from "react";
 import { supabase } from "../../lib/supabase";
 
@@ -56,6 +56,7 @@ export default function CheckInPage() {
   return (
     <main className="assistantPage">
       <div className="assistantContainer">
+        <PageBackActions />
         <div className="assistantHeader">
           <p className="assistantBadge">DAILY HEALTH CHECK-IN</p>
           <h1>How Are You Feeling Today?</h1>
