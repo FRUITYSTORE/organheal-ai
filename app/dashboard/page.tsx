@@ -5,7 +5,7 @@ import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import DashboardEmptyState from "../components/DashboardEmptyState";
 import { getTranslations } from "../../lib/translations";
-import { generateHealthEngineResult } from "../../lib/healthEngine";
+import { buildHealthIntelligence } from "../../lib/intelligenceBuilder";
 
 type Assessment = {
   organ_name: string;
@@ -31,10 +31,6 @@ type Language = "en" | "ar";
 
 export default function DashboardPage() {
   const [assessments, setAssessments] = useState<Assessment[]>([]);
-  const [escalationAlert, setEscalationAlert] = useState<{
-  organ: string;
-  message: string;
-} | null>(null);
   const [labReport, setLabReport] = useState<LabReport | null>(null);
   const [dailyCheckIn, setDailyCheckIn] = useState<DailyCheckIn | null>(null);
   const [loading, setLoading] = useState(true);
@@ -52,7 +48,6 @@ export default function DashboardPage() {
     const interval = setInterval(() => {
       const currentLanguage =
         (localStorage.getItem("organheal-language") as Language) || "en";
-
       setLanguage(currentLanguage);
     }, 300);
 
@@ -118,28 +113,7 @@ export default function DashboardPage() {
       setLoading(false);
       return;
     }
-const grouped = new Map<string, number[]>();
 
-(organData || []).forEach((item) => {
-  const current = grouped.get(item.organ_name) || [];
-  current.push(item.score);
-  grouped.set(item.organ_name, current);
-});
-
-for (const [organ, scores] of grouped.entries()) {
-  if (scores.length < 2) continue;
-
-  const latest = scores[0];
-  const previous = scores[1];
-
-  if (previous - latest >= 15) {
-    setEscalationAlert({
-      organ,
-      message: `Rapid decline detected in ${organ}.`,
-    });
-    break;
-  }
-}
     setAssessments(organData || []);
     setLabReport(labData || null);
     setDailyCheckIn(checkInData || null);
@@ -164,109 +138,16 @@ for (const [organ, scores] of grouped.entries()) {
     return "riskScore";
   }
 
-  function getProgressColor(score: number) {
-    if (score >= 80) return "linear-gradient(90deg, #22c55e, #38bdf8)";
-    if (score >= 50) return "linear-gradient(90deg, #f59e0b, #facc15)";
-    return "linear-gradient(90deg, #ef4444, #f97316)";
-  }
-
-  function getAIRecommendation(moduleName: string | null) {
-    if (isArabic) {
-      switch (moduleName) {
-        case "Heart":
-          return "راقب ضغط الدم، الكوليسترول، النشاط البدني، والوزن.";
-        case "Lung":
-          return "تجنب التدخين والتعرض للدخان، وراقب السعال أو ضيق التنفس.";
-        case "Kidney":
-          return "حافظ على الترطيب، راقب ضغط الدم، وناقش وظائف الكلى مع مختص صحي عند الحاجة.";
-        case "Liver":
-          return "ركز على التغذية الصحية، التحكم بالوزن، وتقليل العوامل التي تجهد الكبد.";
-        case "Brain":
-          return "حسن جودة النوم، النشاط البدني، وتقليل التوتر.";
-        case "Metabolic":
-          return "ركز على ضبط السكر، الوزن الصحي، النشاط البدني، والتغذية.";
-        default:
-          return "استمر في المتابعة الصحية الوقائية وإكمال التقييمات.";
-      }
-    }
-
-    switch (moduleName) {
-      case "Heart":
-        return "Monitor blood pressure, cholesterol, physical activity, and body weight.";
-      case "Lung":
-        return "Avoid smoking exposure and monitor cough, wheezing, or shortness of breath.";
-      case "Kidney":
-        return "Maintain hydration, monitor blood pressure, and consider kidney function follow-up.";
-      case "Liver":
-        return "Focus on healthy nutrition, weight control, and reducing liver stressors.";
-      case "Brain":
-        return "Improve sleep quality, physical activity, and stress reduction habits.";
-      case "Metabolic":
-        return "Focus on blood sugar control, healthy weight, physical activity, and nutrition.";
-      default:
-        return "Continue regular health monitoring and preventive assessments.";
-    }
-  }
-
-  function generateCoachMessage(
-    priorityOrgan: string,
-    strongestOrgan: string,
-    currentOverallScore: number
-  ) {
-    if (isArabic) {
-      let coachMessage = "";
-
-      if (currentOverallScore >= 80) {
-        coachMessage += "تقدم ممتاز. ملفك الصحي العام يبدو قويًا حاليًا. ";
-      } else if (currentOverallScore >= 60) {
-        coachMessage +=
-          "ملفك الصحي يظهر أداءً متوسطًا مع وجود فرص للتحسين. ";
-      } else {
-        coachMessage += "هناك عدة مناطق صحية تحتاج إلى متابعة واهتمام أكبر. ";
-      }
-
-      coachMessage += `أقوى منطقة لديك هي ${strongestOrgan}. `;
-      coachMessage += `منطقة الأولوية الحالية هي ${priorityOrgan}. `;
-      coachMessage += getAIRecommendation(priorityOrgan);
-
-      return coachMessage;
-    }
-
-    let coachMessage = "";
-
-    if (currentOverallScore >= 80) {
-      coachMessage +=
-        "Excellent progress. Your overall health profile is currently strong. ";
-    } else if (currentOverallScore >= 60) {
-      coachMessage +=
-        "Your health profile shows moderate performance with opportunities for improvement. ";
-    } else {
-      coachMessage +=
-        "Several health areas require closer attention and follow-up. ";
-    }
-
-    coachMessage += `Your strongest area is ${strongestOrgan}. `;
-    coachMessage += `Your current priority area is ${priorityOrgan}. `;
-    coachMessage += getAIRecommendation(priorityOrgan);
-
-    return coachMessage;
-  }
-
-  function generateTodayMission(priorityOrgan: string, currentScore: number) {
-    const targetScore = currentScore < 50 ? 70 : currentScore < 80 ? 85 : 95;
-    const progress = Math.min(
-      100,
-      Math.round((currentScore / targetScore) * 100)
-    );
-
-    return {
-      priorityOrgan,
-      currentScore,
-      targetScore,
-      progress,
-      nextReview: isArabic ? "7 أيام" : "7 days",
-    };
-  }
+  const intelligence = buildHealthIntelligence({
+    assessments: assessments.map((item) => ({
+      organ_name: item.organ_name,
+      score: item.score,
+      created_at: item.created_at,
+    })),
+    labReport,
+    dailyCheckIn,
+    isArabic,
+  });
 
   const allScores = [
     ...assessments.map((item) => item.score),
@@ -274,207 +155,19 @@ for (const [organ, scores] of grouped.entries()) {
     ...(dailyCheckIn ? [dailyCheckIn.wellness_score] : []),
   ];
 
-  const overallScore =
-    allScores.length > 0
-      ? Math.round(
-          allScores.reduce((sum, score) => sum + score, 0) / allScores.length
-        )
-      : 0;
-
-  const topStrength =
-    assessments.length > 0
-      ? [...assessments].sort((a, b) => b.score - a.score)[0]
-      : null;
-
-  const priorityAttention =
-    assessments.length > 0
-      ? [...assessments].sort((a, b) => a.score - b.score)[0]
-      : null;
-const healthEngine = generateHealthEngineResult({
-  overallScore,
-  labScore: labReport?.score ?? null,
-  dailyCheckInScore: dailyCheckIn?.wellness_score ?? null,
-  priorityOrgan: priorityAttention?.organ_name ?? null,
-  strongestOrgan: topStrength?.organ_name ?? null,
-  isArabic,
-});
-  const latestDate = [...assessments.map((item) => item.created_at)]
-    .concat(labReport ? [labReport.created_at] : [])
-    .concat(dailyCheckIn ? [dailyCheckIn.created_at] : [])
-    .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0];
-
-  const todayMission = priorityAttention
-    ? generateTodayMission(priorityAttention.organ_name, priorityAttention.score)
-    : null;
-
-  const forecastDirection =
-    overallScore >= 80
-      ? isArabic
-        ? "مستقر"
-        : "Stable"
-      : overallScore >= 60
-      ? isArabic
-        ? "قابل للتحسن"
-        : "Improving Potential"
-      : isArabic
-      ? "يحتاج اهتمام"
-      : "Needs Attention";
-
-  const expectedNextScore =
-    overallScore >= 80
-      ? Math.min(100, overallScore + 3)
-      : overallScore >= 60
-      ? Math.min(100, overallScore + 8)
-      : Math.min(100, overallScore + 12);
-
-  const forecastConfidence =
-    allScores.length >= 4
-      ? isArabic
-        ? "مرتفع"
-        : "High"
-      : allScores.length >= 2
-      ? isArabic
-        ? "متوسط"
-        : "Moderate"
-      : isArabic
-      ? "منخفض"
-      : "Low";
-
-  const forecastMessage = isArabic
-    ? `بناءً على بياناتك الحالية، قد تصل درجتك الصحية المتوقعة خلال 30 يومًا إلى ${expectedNextScore}/100 إذا استمريت في التقييمات اليومية والخطة الصحية.`
-    : `Based on your current data, your expected health score in 30 days may reach ${expectedNextScore}/100 if you continue daily tracking and your health plan.`;
-
-  const healthCoachMessage =
-    assessments.length > 0
-      ? generateCoachMessage(
-          priorityAttention?.organ_name || "General Health",
-          topStrength?.organ_name || "General Health",
-          overallScore
-        )
-      : isArabic
-      ? "أكمل أول تقييم صحي للحصول على إرشادات صحية شخصية."
-      : "Complete your first organ assessment to receive personalized health guidance.";
-
-  const latestLabFinding = labReport
-    ? isArabic
-      ? `آخر نتيجة مختبرية: ${labReport.score}/100`
-      : `Latest lab score: ${labReport.score}/100`
-    : isArabic
-    ? "لا يوجد تقرير مختبر محفوظ بعد."
-    : "No lab report saved yet.";
-
-  const healthIntelligenceSummary = isArabic
-    ? `الحالة الصحية الحالية ${getStatus(
-        overallScore
-      )} بدرجة ${overallScore}/100. منطقة الأولوية هي ${
-        priorityAttention?.organ_name || "الصحة العامة"
-      }. ${latestLabFinding} الإجراء الموصى به: ${getAIRecommendation(
-        priorityAttention?.organ_name || null
-      )}`
-    : `Current health status is ${getStatus(
-        overallScore
-      )} with a score of ${overallScore}/100. Priority area is ${
-        priorityAttention?.organ_name || "General Health"
-      }. ${latestLabFinding}. Recommended focus: ${getAIRecommendation(
-        priorityAttention?.organ_name || null
-      )}`;
-
-const riskPatternExplanation = isArabic
-  ? `تم تحديد هذا النمط بناءً على الدرجة العامة، منطقة الأولوية، نتيجة المختبر، وآخر تسجيل صحي يومي.`
-  : `This pattern is identified based on overall score, priority area, lab score, and latest daily check-in data.`;
-
-
-const opportunityImpact =
-  overallScore < 60
-    ? "+12"
-    : overallScore < 80
-    ? "+8"
-    : "+4";
-
-const opportunityTimeline =
-  overallScore < 60
-    ? isArabic
-      ? "30 إلى 90 يومًا"
-      : "30 to 90 days"
-    : isArabic
-    ? "30 يومًا"
-    : "30 days";
-
-const opportunityPriority =
-  overallScore < 60
-    ? isArabic
-      ? "مرتفعة"
-      : "High"
-    : overallScore < 80
-    ? isArabic
-      ? "متوسطة"
-      : "Moderate"
-    : isArabic
-    ? "منخفضة"
-    : "Low";
-    
-  const onboardingSteps = [
-    {
-      title: isArabic ? "إكمال التقييم" : "Complete Assessment",
-      completed: assessments.length > 0,
-    },
-    {
-      title: isArabic ? "إكمال التسجيل الصحي اليومي" : "Complete Daily Check-In",
-      completed: !!dailyCheckIn,
-    },
-    {
-      title: isArabic ? "إنشاء أول تقرير" : "Generate First Report",
-      completed: assessments.length > 0,
-    },
-  ];
-
-  const completedSteps = onboardingSteps.filter((step) => step.completed).length;
-
-  const onboardingProgress = Math.round(
-    (completedSteps / onboardingSteps.length) * 100
-  );
-
-  const notifications: string[] = [];
-
-  if (assessments.length === 0) {
-    notifications.push(
-      isArabic
-        ? "أكمل أول تقييم للأعضاء لفتح الذكاء الصحي."
-        : "Complete your first organ assessment to unlock health intelligence."
-    );
-  }
-
-  if (!dailyCheckIn) {
-    notifications.push(
-      isArabic
-        ? "التسجيل الصحي اليومي لم يكتمل بعد. تابع حالتك الصحية اليوم."
-        : "Daily Check-In pending. Track today's wellness status."
-    );
-  }
-
-  if (!labReport) {
-    notifications.push(
-      isArabic
-        ? "لا يوجد تقرير مختبر محفوظ. أضف نتائج المختبر للحصول على فهم أعمق."
-        : "No lab report found. Upload laboratory results for deeper insights."
-    );
-  }
-
-  if (priorityAttention) {
-    notifications.push(
-      isArabic
-        ? `${priorityAttention.organ_name} هي منطقة تحتاج إلى اهتمام أكبر حاليًا.`
-        : `${priorityAttention.organ_name} currently requires the most attention.`
-    );
-  }
+  const latestAssessment = assessments[0] || null;
 
   return (
     <main className="assistantPage">
       <div className="assistantContainer">
         <div className="assistantHeader">
           <p className="assistantBadge">{t.dashboard.badge}</p>
-          <h1>{t.dashboard.title}</h1>
-          <p>{t.dashboard.description}</p>
+          <h1>{isArabic ? "لوحة التحكم" : "Dashboard"}</h1>
+          <p>
+            {isArabic
+              ? "ملخص مختصر يساعدك على معرفة حالتك الحالية والخطوة التالية."
+              : "A focused overview of your current health status and next best action."}
+          </p>
         </div>
 
         <div className="chatWindow">
@@ -485,24 +178,9 @@ const opportunityPriority =
               </p>
               <h2>
                 {isArabic
-                  ? "جاري تجهيز الذكاء الصحي الخاص بك..."
-                  : "Preparing your health intelligence..."}
+                  ? "جاري تجهيز ملخصك الصحي..."
+                  : "Preparing your health overview..."}
               </h2>
-
-              <div style={{ display: "grid", gap: "16px", marginTop: "20px" }}>
-                {[1, 2, 3, 4].map((item) => (
-                  <div
-                    key={item}
-                    style={{
-                      height: "90px",
-                      borderRadius: "18px",
-                      background:
-                        "linear-gradient(90deg, rgba(255,255,255,0.08), rgba(34,211,238,0.18), rgba(255,255,255,0.08))",
-                      animation: "pulse 1.5s infinite",
-                    }}
-                  />
-                ))}
-              </div>
             </div>
           )}
 
@@ -514,14 +192,7 @@ const opportunityPriority =
               <h2>{isArabic ? "الوصول محمي" : "Access Protected"}</h2>
               <p>{message}</p>
 
-              <div
-                style={{
-                  display: "flex",
-                  gap: "12px",
-                  justifyContent: "center",
-                  flexWrap: "wrap",
-                }}
-              >
+              <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
                 <Link href="/login">
                   <button className="primaryBtn">
                     {isArabic ? "تسجيل الدخول" : "Login"}
@@ -539,17 +210,13 @@ const opportunityPriority =
 
           {!loading && !message && allScores.length === 0 && (
             <DashboardEmptyState
-              title={
-                isArabic ? "لوحة التحكم جاهزة" : "Your Dashboard Is Ready"
-              }
+              title={isArabic ? "لوحة التحكم جاهزة" : "Your Dashboard Is Ready"}
               description={
                 isArabic
-                  ? "ابدأ أول تقييم للأعضاء لفتح الدرجة الصحية، الخطة الصحية، والتقرير الاحترافي."
-                  : "Start your first organ assessment to unlock your health score, health plan, and professional report."
+                  ? "ابدأ أول تقييم صحي لفتح الذكاء الصحي والتقرير الاحترافي."
+                  : "Start your first health assessment to unlock health intelligence and professional reporting."
               }
-              buttonText={
-                isArabic ? "ابدأ أول تقييم" : "Start First Assessment"
-              }
+              buttonText={isArabic ? "ابدأ أول تقييم" : "Start First Assessment"}
               href="/assessment"
             />
           )}
@@ -558,516 +225,161 @@ const opportunityPriority =
             <>
               <div className="resultBox">
                 <p className="sectionLabel">
-                  {isArabic ? "🚀 البداية" : "🚀 Getting Started"}
+                  {isArabic ? "الملخص التنفيذي" : "Executive Health Overview"}
                 </p>
 
-                <h2>{t.dashboard.onboarding}</h2>
+                <h2 className={getScoreClass(intelligence.overallScore)}>
+                  {intelligence.overallScore}/100
+                </h2>
+
+                <h3>{getStatus(intelligence.overallScore)}</h3>
 
                 <p>
                   {isArabic
-                    ? "أكمل إعداد ملفك الصحي لفتح تجربة OrganHeal الكاملة."
-                    : "Complete your health setup to unlock the full OrganHeal experience."}
+                    ? `منطقة الأولوية الحالية: ${
+                        intelligence.priorityOrgan || "الصحة العامة"
+                      }.`
+                    : `Current priority area: ${
+                        intelligence.priorityOrgan || "General Health"
+                      }.`}
                 </p>
-
-                <div
-                  style={{
-                    width: "100%",
-                    height: "12px",
-                    background: "rgba(255,255,255,0.12)",
-                    borderRadius: "999px",
-                    overflow: "hidden",
-                    marginTop: "18px",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: `${onboardingProgress}%`,
-                      height: "100%",
-                      background: "linear-gradient(90deg, #22c55e, #38bdf8)",
-                    }}
-                  />
-                </div>
-
-                <p style={{ marginTop: "12px" }}>
-                  {isArabic ? "التقدم" : "Progress"}: {onboardingProgress}%
-                </p>
-
-                <div
-                  style={{
-                    display: "grid",
-                    gap: "10px",
-                    marginTop: "18px",
-                    textAlign: isArabic ? "right" : "left",
-                  }}
-                >
-                  {onboardingSteps.map((step, index) => (
-                    <div key={index}>
-                      {step.completed ? "✅" : "⬜"} {step.title}
-                    </div>
-                  ))}
-                </div>
-              </div>
-<div className="resultBox">
-  <p className="sectionLabel">
-    {isArabic ? "🧬 الملف الصحي الرقمي" : "🧬 Digital Health Profile"}
-  </p>
-
-  <h2>{healthEngine.healthProfile}</h2>
-
-  <p>
-    {isArabic
-      ? "هذا الملف يتم إنشاؤه تلقائيًا بناءً على نتائج الأعضاء، المختبرات، والتسجيلات الصحية."
-      : "This profile is automatically generated from organ assessments, laboratory results, and wellness tracking."}
-  </p>
-
-  <div style={{ display: "grid", gap: "12px", marginTop: "18px" }}>
-    <div>
-      <strong>{isArabic ? "أقوى منطقة" : "Strongest Area"}:</strong>{" "}
-      {topStrength?.organ_name || "N/A"}
-    </div>
-
-    <div>
-      <strong>{isArabic ? "منطقة الأولوية" : "Priority Area"}:</strong>{" "}
-      {priorityAttention?.organ_name || "N/A"}
-    </div>
-
-    <div>
-      <strong>{isArabic ? "أفضل فرصة للتحسين" : "Best Opportunity"}:</strong>{" "}
-      {healthEngine.bestNextAction}
-    </div>
-  </div>
-</div>
-
-<div className="resultBox">
-  <p className="sectionLabel">
-    {isArabic ? "🧩 نمط المخاطر الصحية" : "🧩 Health Risk Pattern"}
-  </p>
-
-  <h2>{healthEngine.riskPattern}</h2>
-
-  <p>{riskPatternExplanation}</p>
-
-  <div
-    style={{
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-      gap: "14px",
-      marginTop: "18px",
-    }}
-  >
-    <div>
-      <strong>{isArabic ? "الدرجة العامة" : "Overall Score"}</strong>
-      <p>{overallScore}/100</p>
-    </div>
-
-    <div>
-      <strong>{isArabic ? "منطقة الأولوية" : "Priority Area"}</strong>
-      <p>{priorityAttention?.organ_name || "N/A"}</p>
-    </div>
-
-    <div>
-      <strong>{isArabic ? "نتيجة المختبر" : "Lab Score"}</strong>
-      <p>{labReport ? `${labReport.score}/100` : "N/A"}</p>
-    </div>
-
-    <div>
-      <strong>{isArabic ? "آخر تسجيل يومي" : "Latest Check-In"}</strong>
-      <p>{dailyCheckIn ? `${dailyCheckIn.wellness_score}/100` : "N/A"}</p>
-    </div>
-  </div>
-</div>
-
-<div className="resultBox">
-  <p className="sectionLabel">
-    {isArabic ? "🎯 فرصة التحسين الصحية" : "🎯 Health Opportunity Engine"}
-  </p>
-
-  <h2>{healthEngine.opportunityTitle}</h2>
-
-  <p>{healthEngine.bestNextAction}</p>
-
-  <div
-    style={{
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-      gap: "14px",
-      marginTop: "18px",
-    }}
-  >
-    <div>
-      <strong>{isArabic ? "الأثر المتوقع" : "Potential Impact"}</strong>
-      <p>
-        {opportunityImpact} {isArabic ? "نقاط" : "points"}
-      </p>
-    </div>
-
-    <div>
-      <strong>{isArabic ? "الإطار الزمني" : "Timeline"}</strong>
-      <p>{opportunityTimeline}</p>
-    </div>
-
-    <div>
-      <strong>{isArabic ? "الأولوية" : "Priority"}</strong>
-      <p>{opportunityPriority}</p>
-    </div>
-
-    <div>
-      <strong>{isArabic ? "التركيز" : "Focus Area"}</strong>
-      <p>{priorityAttention?.organ_name || "General Health"}</p>
-    </div>
-  </div>
-</div>
-
-<div className="resultBox">
-  <p className="sectionLabel">
-    {isArabic ? "📈 الإمكانات الصحية" : "📈 Health Potential Score"}
-  </p>
-<div className="resultBox">
-  <p className="sectionLabel">
-    {isArabic ? "⏳ العمر الصحي" : "⏳ Health Age Engine"}
-  </p>
-
-  <h2>{healthEngine.healthAgeStatus}</h2>
-
-  <p>{healthEngine.healthAgeMessage}</p>
-
-  <div
-    style={{
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-      gap: "14px",
-      marginTop: "18px",
-    }}
-  >
-    <div>
-      <strong>{isArabic ? "الدرجة الحالية" : "Current Score"}</strong>
-      <p>{overallScore}/100</p>
-    </div>
-
-    <div>
-      <strong>{isArabic ? "الإمكانات الصحية" : "Potential Score"}</strong>
-      <p>{healthEngine.potentialScore}/100</p>
-    </div>
-
-    <div>
-      <strong>{isArabic ? "نمط المخاطر" : "Risk Pattern"}</strong>
-      <p>{healthEngine.riskPattern}</p>
-    </div>
-  </div>
-</div>
-  <h2>{healthEngine.potentialScore}/100</h2>
-
-  <h3>{healthEngine.potentialLevel}</h3>
-
-  <div
-    style={{
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-      gap: "14px",
-      marginTop: "18px",
-    }}
-  >
-    <div>
-      <strong>{isArabic ? "الدرجة الحالية" : "Current Score"}</strong>
-      <p>{overallScore}/100</p>
-    </div>
-
-    <div>
-      <strong>{isArabic ? "الدرجة الممكنة" : "Potential Score"}</strong>
-      <p>{healthEngine.potentialScore}/100</p>
-    </div>
-
-    <div>
-      <strong>{isArabic ? "التحسن المتوقع" : "Possible Gain"}</strong>
-      <p>+{healthEngine.potentialGain}</p>
-    </div>
-  </div>
-
-  <p style={{ marginTop: "16px" }}>
-    {isArabic
-      ? "تم احتساب الإمكانية الصحية بناءً على النتائج الحالية ومناطق التحسين المتاحة."
-      : "Potential score is estimated from your current health profile and available improvement opportunities."}
-  </p>
-</div>
-              <div className="resultBox">
-                <p className="sectionLabel">
-                  {isArabic
-                    ? "🧠 ملخص الذكاء الصحي"
-                    : "🧠 Health Intelligence Summary"}
-                </p>
-
-                <h2>
-                  {isArabic ? "ملخصك الصحي الذكي" : "Your Smart Health Summary"}
-                </h2>
-
-                <p>{healthIntelligenceSummary}</p>
-              </div>
-
-              <div className="resultBox">
-                <p className="sectionLabel">
-                  {isArabic
-                    ? "الذكاء الصحي العام"
-                    : "Overall Health Intelligence"}
-                </p>
-
-                <h2 className={getScoreClass(overallScore)}>
-                  {overallScore}/100
-                </h2>
-
-                <h3>{getStatus(overallScore)}</h3>
 
                 <p>
-                  {isArabic ? "مصادر البيانات المكتملة" : "Completed data sources"}:{" "}
-                  {assessments.length +
-                    (labReport ? 1 : 0) +
-                    (dailyCheckIn ? 1 : 0)}
+                  <strong>{isArabic ? "الخطوة التالية:" : "Next best action:"}</strong>{" "}
+                  {intelligence.bestNextAction}
                 </p>
 
-                {latestDate && (
-                  <p>
-                    {isArabic ? "آخر تحديث" : "Last updated"}:{" "}
-                    {new Date(latestDate).toLocaleString()}
-                  </p>
-                )}
-
-                <div
-                  style={{
-                    width: "100%",
-                    height: "14px",
-                    background: "rgba(255,255,255,0.12)",
-                    borderRadius: "999px",
-                    overflow: "hidden",
-                    marginTop: "16px",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: `${overallScore}%`,
-                      height: "100%",
-                      background: getProgressColor(overallScore),
-                      borderRadius: "999px",
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div className="resultBox">
-                <p className="sectionLabel">
-                  {isArabic
-                    ? "🔮 توقعات الذكاء الصحي"
-                    : "🔮 Forecast Intelligence"}
-                </p>
-
-                <h2 className={getScoreClass(expectedNextScore)}>
-                  {expectedNextScore}/100
-                </h2>
-
-                <h3>{forecastDirection}</h3>
-
-                <p>{forecastMessage}</p>
-
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                    gap: "14px",
-                    marginTop: "18px",
-                  }}
-                >
-                  <div>
-                    <strong>{isArabic ? "الدرجة الحالية" : "Current Score"}</strong>
-                    <p>{overallScore}/100</p>
-                  </div>
-
-                  <div>
-                    <strong>{isArabic ? "الدرجة المتوقعة" : "Expected Score"}</strong>
-                    <p>{expectedNextScore}/100</p>
-                  </div>
-
-                  <div>
-                    <strong>{isArabic ? "الثقة" : "Confidence"}</strong>
-                    <p>{forecastConfidence}</p>
-                  </div>
-
-                  <div>
-                    <strong>{isArabic ? "المدة" : "Outlook"}</strong>
-                    <p>{isArabic ? "30 يومًا" : "30 days"}</p>
-                  </div>
-                </div>
-              </div>
-{escalationAlert && (
-  <div className="priorityAlert">
-    <h3>🚨 Risk Escalation Alert</h3>
-
-    <p>
-      <strong>{escalationAlert.organ}</strong>
-    </p>
-
-    <p>{escalationAlert.message}</p>
-  </div>
-)}
-              {priorityAttention && (
-                <div className="priorityAlert">
-                  <h3>
-                    {isArabic
-                      ? "🚨 تنبيه أولوية صحية"
-                      : "🚨 Health Priority Alert"}
-                  </h3>
-                  <p>
-                    <strong>{priorityAttention.organ_name}</strong>{" "}
-                    {isArabic
-                      ? `لديها حاليًا أقل درجة (${priorityAttention.score}/100).`
-                      : `currently has the lowest score (${priorityAttention.score}/100).`}
-                  </p>
-                  <p>{getAIRecommendation(priorityAttention.organ_name)}</p>
-                </div>
-              )}
-
-              {todayMission && (
-                <div className="resultBox">
-                  <p className="sectionLabel">
-                    {isArabic ? "🎯 مهمة الصحة اليوم" : "🎯 Today's Health Mission"}
-                  </p>
-
-                  <h2>{todayMission.priorityOrgan}</h2>
-
-                  <p>
-                    {isArabic ? "الدرجة الحالية" : "Current Score"}:{" "}
-                    {todayMission.currentScore}/100
-                  </p>
-                  <p>
-                    {isArabic ? "الهدف" : "Target Score"}:{" "}
-                    {todayMission.targetScore}/100
-                  </p>
-                  <p>
-                    {isArabic ? "التقدم" : "Progress"}: {todayMission.progress}%
-                  </p>
-
-                  <p style={{ marginTop: "14px" }}>
-                    {isArabic ? "الإجراء الموصى به" : "Recommended Action"}:{" "}
-                    {getAIRecommendation(todayMission.priorityOrgan)}
-                  </p>
-
-                  <p>
-                    {isArabic ? "المراجعة القادمة" : "Next Review"}:{" "}
-                    {todayMission.nextReview}
-                  </p>
-
-                  <Link href="/health-plan">
+                <div style={{ marginTop: "20px" }}>
+                  <Link href="/intelligence">
                     <button className="primaryBtn">
-                      {isArabic ? "ابدأ المهمة" : "Start Mission"}
+                      {isArabic ? "افتح مركز الذكاء الصحي" : "Open Intelligence Center"}
                     </button>
                   </Link>
                 </div>
-              )}
-<Link href="/intelligence">
-  <button className="secondaryBtn">
-    {isArabic ? "مركز الذكاء الصحي" : "Intelligence Center"}
-  </button>
-</Link>
-              <div className="resultBox">
-                <p className="sectionLabel">
-                  {isArabic ? "☀️ آخر تسجيل صحي يومي" : "☀️ Latest Daily Check-In"}
-                </p>
+              </div>
 
-                {dailyCheckIn ? (
-                  <>
-                    <h2 className={getScoreClass(dailyCheckIn.wellness_score)}>
-                      {dailyCheckIn.wellness_score}/100
-                    </h2>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                  gap: "16px",
+                }}
+              >
+                <div className="resultBox">
+                  <p className="sectionLabel">{isArabic ? "الدرجة" : "Health Score"}</p>
+                  <h2 className={getScoreClass(intelligence.overallScore)}>
+                    {intelligence.overallScore}/100
+                  </h2>
+                  <p>{getStatus(intelligence.overallScore)}</p>
+                </div>
 
-                    <h3>{dailyCheckIn.mood}</h3>
+                <div className="resultBox">
+                  <p className="sectionLabel">{isArabic ? "الأولوية" : "Priority Area"}</p>
+                  <h2>{intelligence.priorityOrgan || "N/A"}</h2>
+                  <p>
+                    {isArabic
+                      ? "أكثر منطقة تحتاج إلى متابعة."
+                      : "The area that needs the most attention."}
+                  </p>
+                </div>
 
-                    <p>
-                      {isArabic ? "آخر تسجيل" : "Last check-in"}:{" "}
-                      {new Date(dailyCheckIn.created_at).toLocaleString()}
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <h2>{isArabic ? "لا يوجد تسجيل بعد" : "No check-in yet"}</h2>
-                    <p>
-                      {isArabic
-                        ? "أكمل التسجيل الصحي اليومي لتتبع أنماط العافية."
-                        : "Complete your daily check-in to track wellness patterns."}
-                    </p>
-
-                    <Link href="/checkin">
-                      <button className="primaryBtn">
-                        {isArabic
-                          ? "ابدأ التسجيل اليومي"
-                          : "Start Daily Check-In"}
-                      </button>
-                    </Link>
-                  </>
-                )}
+                <div className="resultBox">
+                  <p className="sectionLabel">{isArabic ? "الإمكانات" : "Potential"}</p>
+                  <h2>{intelligence.potentialScore}/100</h2>
+                  <p>
+                    {isArabic
+                      ? `فرصة تحسن: +${intelligence.potentialGain}`
+                      : `Possible gain: +${intelligence.potentialGain}`}
+                  </p>
+                </div>
               </div>
 
               <div className="resultBox">
                 <p className="sectionLabel">
-                  {isArabic ? "🔔 مركز الإشعارات" : "🔔 Notifications Center"}
+                  {isArabic ? "الوصول السريع" : "Quick Actions"}
                 </p>
-                <h2>{t.dashboard.notifications}</h2>
 
-                {notifications.length > 0 ? (
-                  <div
-                    style={{
-                      display: "grid",
-                      gap: "12px",
-                      marginTop: "18px",
-                    }}
-                  >
-                    {notifications.map((notification, index) => (
-                      <div
-                        key={index}
-                        style={{
-                          padding: "14px",
-                          borderRadius: "14px",
-                          background: "rgba(255,255,255,0.06)",
-                          border: "1px solid rgba(255,255,255,0.08)",
-                        }}
-                      >
-                        {notification}
-                      </div>
-                    ))}
+                <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", justifyContent: "center" }}>
+                  <Link href="/intelligence">
+                    <button className="primaryBtn">
+                      {isArabic ? "مركز الذكاء" : "Intelligence"}
+                    </button>
+                  </Link>
+
+                  <Link href="/assessment">
+                    <button className="secondaryBtn">
+                      {isArabic ? "التقييمات" : "Assessments"}
+                    </button>
+                  </Link>
+
+                  <Link href="/lab-analyzer">
+                    <button className="secondaryBtn">
+                      {isArabic ? "تحليل المختبر" : "Lab Analyzer"}
+                    </button>
+                  </Link>
+
+                  <Link href="/checkin">
+                    <button className="secondaryBtn">
+                      {isArabic ? "التسجيل اليومي" : "Daily Check-In"}
+                    </button>
+                  </Link>
+
+                  <Link href="/history">
+                    <button className="secondaryBtn">
+                      {isArabic ? "السجل" : "History"}
+                    </button>
+                  </Link>
+
+                  <Link href="/organ-report">
+                    <button className="secondaryBtn">
+                      {isArabic ? "التقرير" : "Report"}
+                    </button>
+                  </Link>
+
+                  <Link href="/assistant">
+                    <button className="secondaryBtn">
+                      {isArabic ? "المساعد" : "Assistant"}
+                    </button>
+                  </Link>
+                </div>
+              </div>
+
+              <div className="resultBox">
+                <p className="sectionLabel">
+                  {isArabic ? "آخر النشاطات" : "Latest Activity"}
+                </p>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                    gap: "16px",
+                    textAlign: "left",
+                  }}
+                >
+                  <div>
+                    <strong>{isArabic ? "آخر تقييم" : "Latest Assessment"}</strong>
+                    <p>
+                      {latestAssessment
+                        ? `${latestAssessment.organ_name} - ${latestAssessment.score}/100`
+                        : "N/A"}
+                    </p>
                   </div>
-                ) : (
-                  <p>{isArabic ? "لا توجد إشعارات نشطة." : "No active notifications."}</p>
-                )}
-              </div>
 
-              <div className="resultBox">
-                <p className="sectionLabel">
-                  {isArabic ? "🤖 المدرب الصحي الذكي" : "🤖 AI Health Coach"}
-                </p>
-                <h2>{isArabic ? "توجيهات شخصية" : "Personalized Guidance"}</h2>
-                <p>{healthCoachMessage}</p>
-              </div>
+                  <div>
+                    <strong>{isArabic ? "آخر تسجيل يومي" : "Latest Check-In"}</strong>
+                    <p>
+                      {dailyCheckIn
+                        ? `${dailyCheckIn.wellness_score}/100 - ${dailyCheckIn.mood}`
+                        : "N/A"}
+                    </p>
+                  </div>
 
-              <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-                <Link href="/health-plan">
-                  <button className="primaryBtn">
-                    {isArabic ? "الخطة الصحية" : "Health Plan"}
-                  </button>
-                </Link>
-
-                <Link href="/history">
-                  <button className="secondaryBtn">
-                    {isArabic ? "السجل الصحي" : "Health History"}
-                  </button>
-                </Link>
-
-                <Link href="/organ-report">
-                  <button className="secondaryBtn">
-                    {isArabic ? "التقرير الكامل" : "Full Report"}
-                  </button>
-                </Link>
-
-                <Link href="/checkin">
-                  <button className="secondaryBtn">
-                    {isArabic ? "التسجيل اليومي" : "Daily Check-In"}
-                  </button>
-                </Link>
+                  <div>
+                    <strong>{isArabic ? "آخر مختبر" : "Latest Lab"}</strong>
+                    <p>{labReport ? `${labReport.score}/100` : "N/A"}</p>
+                  </div>
+                </div>
               </div>
             </>
           )}
