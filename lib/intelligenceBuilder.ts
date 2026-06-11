@@ -1,4 +1,5 @@
 import { generateHealthEngineResult } from "./healthEngine";
+import { generateHealthOpportunities } from "./opportunityEngine";
 
 export type IntelligenceAssessment = {
   organ_name: string;
@@ -78,7 +79,12 @@ export function buildHealthIntelligence({
     latestPriorityScore,
     isArabic,
   });
-
+const opportunities = generateHealthOpportunities(
+  assessments.map((item) => ({
+    organ: item.organ_name,
+    score: item.score,
+  }))
+);
   return {
     overallScore,
     strongestOrgan: strongestAssessment?.organ_name ?? null,
@@ -88,8 +94,9 @@ export function buildHealthIntelligence({
     labScore: labReport?.score ?? null,
     dailyCheckInScore: dailyCheckIn?.wellness_score ?? null,
     dailyMood: dailyCheckIn?.mood ?? null,
-    previousPriorityScore,
-    latestPriorityScore,
-    ...healthEngine,
+previousPriorityScore,
+latestPriorityScore,
+opportunities,
+...healthEngine,
   };
 }
