@@ -251,6 +251,70 @@ export default function HistoryPage() {
   if (absChange >= 5) return "Moderate";
 
   return "Low";
+}function getForecastV2() {
+  if (history.length < 2) {
+    return null;
+  }
+
+  const sortedRecords = [...history].sort(
+    (a, b) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
+
+  const latest = sortedRecords[0];
+  const previous = sortedRecords[1];
+
+  const change = latest.score - previous.score;
+
+  const thirtyDayForecast = Math.max(
+    0,
+    Math.min(100, latest.score + Math.round(change * 0.5))
+  );
+
+  const ninetyDayForecast = Math.max(
+    0,
+    Math.min(100, latest.score + Math.round(change * 1.5))
+  );
+
+  const potentialForecast =
+    latest.score < 50
+      ? Math.min(100, latest.score + 20)
+      : latest.score < 60
+      ? Math.min(100, latest.score + 16)
+      : latest.score < 70
+      ? Math.min(100, latest.score + 12)
+      : latest.score < 80
+      ? Math.min(100, latest.score + 8)
+      : Math.min(100, latest.score + 4);
+
+  const confidence =
+    Math.abs(change) >= 15
+      ? "High"
+      : Math.abs(change) >= 5
+      ? "Moderate"
+      : "Low";
+
+  const forecastRisk =
+    ninetyDayForecast < 50
+      ? "High"
+      : ninetyDayForecast < 70
+      ? "Moderate"
+      : "Low";
+
+  const direction =
+    change > 0 ? "Improving" : change < 0 ? "Declining" : "Stable";
+
+  return {
+    latestScore: latest.score,
+    previousScore: previous.score,
+    change,
+    direction,
+    thirtyDayForecast,
+    ninetyDayForecast,
+    potentialForecast,
+    confidence,
+    forecastRisk,
+  };
 }
 function getHealthForecasts() {
   const modules = filters.filter((item) => item !== "All");
@@ -381,6 +445,7 @@ function getHealthGoals() {
   const achievements = getAchievements();
   const wellnessTrend = getWellnessTrend();
   const healthForecasts = getHealthForecasts();
+  const forecastV2 = getForecastV2();
   const healthGoals = getHealthGoals();
 const overallHealthScore =
   history.length > 0
