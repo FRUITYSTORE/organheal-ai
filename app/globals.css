@@ -1339,4 +1339,22 @@ html[dir="rtl"] .assistantQuickActions {
     width: 100%;
     justify-content: flex-start;
   }
+}.assistantPage {
+  padding-top: 24px;
+}
+
+.assistantContainer {
+  padding-top: 24px;
+}
+
+.navbar {
+  top: 12px;
+}
+
+.chatWindow {
+  padding-top: 12px;
+}
+
+.resultBox {
+  scroll-margin-top: 140px;
 }
