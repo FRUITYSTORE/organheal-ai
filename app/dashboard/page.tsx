@@ -396,6 +396,84 @@ const riskPattern =
 const riskPatternExplanation = isArabic
   ? `تم تحديد هذا النمط بناءً على الدرجة العامة، منطقة الأولوية، نتيجة المختبر، وآخر تسجيل صحي يومي.`
   : `This pattern is identified based on overall score, priority area, lab score, and latest daily check-in data.`;
+  const healthOpportunityTitle =
+  priorityAttention?.organ_name === "Heart"
+    ? isArabic
+      ? "تحسين صحة القلب"
+      : "Improve Heart Health"
+    : priorityAttention?.organ_name === "Metabolic"
+    ? isArabic
+      ? "تحسين الصحة الأيضية"
+      : "Improve Metabolic Health"
+    : priorityAttention?.organ_name === "Kidney"
+    ? isArabic
+      ? "دعم صحة الكلى"
+      : "Support Kidney Health"
+    : priorityAttention?.organ_name === "Lung"
+    ? isArabic
+      ? "تحسين صحة الرئة"
+      : "Improve Lung Health"
+    : priorityAttention?.organ_name === "Brain"
+    ? isArabic
+      ? "تحسين النوم والتعافي"
+      : "Improve Sleep & Recovery"
+    : isArabic
+    ? "تعزيز الصحة الوقائية"
+    : "Strengthen Preventive Health";
+
+const bestNextAction =
+  priorityAttention?.organ_name === "Heart"
+    ? isArabic
+      ? "راقب ضغط الدم والكوليسترول وابدأ نشاطًا بدنيًا منتظمًا."
+      : "Monitor blood pressure and cholesterol, and start consistent physical activity."
+    : priorityAttention?.organ_name === "Metabolic"
+    ? isArabic
+      ? "ركز على ضبط السكر، التغذية، النشاط البدني، والوزن."
+      : "Focus on glucose control, nutrition, physical activity, and healthy weight."
+    : priorityAttention?.organ_name === "Kidney"
+    ? isArabic
+      ? "تابع الترطيب، ضغط الدم، ووظائف الكلى عند الحاجة."
+      : "Track hydration, blood pressure, and kidney function when needed."
+    : priorityAttention?.organ_name === "Lung"
+    ? isArabic
+      ? "قلل التعرض للتدخين والملوثات وراقب ضيق التنفس أو السعال."
+      : "Reduce smoke and pollution exposure and monitor cough or shortness of breath."
+    : priorityAttention?.organ_name === "Brain"
+    ? isArabic
+      ? "حسن جودة النوم وقلل التوتر وحافظ على نشاط يومي."
+      : "Improve sleep quality, reduce stress, and maintain daily activity."
+    : isArabic
+    ? "استمر في التقييمات والمتابعة الصحية المنتظمة."
+    : "Continue assessments and regular health tracking.";
+
+const opportunityImpact =
+  overallScore < 60
+    ? "+12"
+    : overallScore < 80
+    ? "+8"
+    : "+4";
+
+const opportunityTimeline =
+  overallScore < 60
+    ? isArabic
+      ? "30 إلى 90 يومًا"
+      : "30 to 90 days"
+    : isArabic
+    ? "30 يومًا"
+    : "30 days";
+
+const opportunityPriority =
+  overallScore < 60
+    ? isArabic
+      ? "مرتفعة"
+      : "High"
+    : overallScore < 80
+    ? isArabic
+      ? "متوسطة"
+      : "Moderate"
+    : isArabic
+    ? "منخفضة"
+    : "Low";
   const onboardingSteps = [
     {
       title: isArabic ? "إكمال التقييم" : "Complete Assessment",
@@ -601,7 +679,46 @@ const riskPatternExplanation = isArabic
     {isArabic
       ? "🧩 نمط المخاطر الصحية"
       : "🧩 Health Risk Pattern"}
+  </p><div className="resultBox">
+  <p className="sectionLabel">
+    {isArabic
+      ? "🎯 فرصة التحسين الصحية"
+      : "🎯 Health Opportunity Engine"}
   </p>
+
+  <h2>{healthOpportunityTitle}</h2>
+
+  <p>{bestNextAction}</p>
+
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+      gap: "14px",
+      marginTop: "18px",
+    }}
+  >
+    <div>
+      <strong>{isArabic ? "الأثر المتوقع" : "Potential Impact"}</strong>
+      <p>{opportunityImpact} {isArabic ? "نقاط" : "points"}</p>
+    </div>
+
+    <div>
+      <strong>{isArabic ? "الإطار الزمني" : "Timeline"}</strong>
+      <p>{opportunityTimeline}</p>
+    </div>
+
+    <div>
+      <strong>{isArabic ? "الأولوية" : "Priority"}</strong>
+      <p>{opportunityPriority}</p>
+    </div>
+
+    <div>
+      <strong>{isArabic ? "التركيز" : "Focus Area"}</strong>
+      <p>{priorityAttention?.organ_name || "General Health"}</p>
+    </div>
+  </div>
+</div>
 
   <h2>{riskPattern}</h2>
 
