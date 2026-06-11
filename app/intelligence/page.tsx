@@ -204,7 +204,47 @@ setHealthEngine(engine);
                   </div>
                 </div>
               </div>
+<div className="resultBox">
+  <p className="sectionLabel">🏆 TOP HEALTH OPPORTUNITIES</p>
 
+  <h2>Where You Can Improve the Most</h2>
+
+  {!healthEngine.opportunities || healthEngine.opportunities.length === 0 ? (
+    <p>Complete assessments to generate health opportunities.</p>
+  ) : (
+    <div style={{ display: "grid", gap: "14px", marginTop: "18px" }}>
+      {healthEngine.opportunities.map((item) => (
+        <div
+          key={item.organ}
+          style={{
+            padding: "16px",
+            borderRadius: "16px",
+            background: "rgba(15, 23, 42, 0.75)",
+            border: "1px solid rgba(34, 211, 238, 0.18)",
+            textAlign: "left",
+          }}
+        >
+          <h3>{item.title}</h3>
+
+          <p>
+            Current Score: {item.currentScore}/100 → Potential Score:{" "}
+            {item.potentialScore}/100
+          </p>
+
+          <p>
+            Potential Gain: <strong>+{item.potentialGain}</strong> points
+          </p>
+
+          <p>
+            Priority: <strong>{item.priority}</strong>
+          </p>
+
+          <p>{item.action}</p>
+        </div>
+      ))}
+    </div>
+  )}
+</div>
               <div className="resultBox">
                 <p className="sectionLabel">🎯 TOP ACTIONS</p>
 
