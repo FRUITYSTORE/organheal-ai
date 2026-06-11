@@ -371,11 +371,23 @@ addWrappedText(`Recommended Action: ${healthEngine.bestNextAction}`);
 addWrappedText(`Trend Direction: ${healthEngine.trendDirection}`);
 addWrappedText(`Trend Insight: ${healthEngine.trendMessage}`);
 
+addSectionTitle("4. Risk Escalation Intelligence");
 
-addSectionTitle("4. Doctor Brief");
+addWrappedText(
+  `Risk Escalation Level: ${healthEngine.riskEscalationLevel}`
+);
+
+addWrappedText(
+  `Escalation Message: ${healthEngine.riskEscalationMessage}`
+);
+
+addWrappedText(
+  `Escalation Reason: ${healthEngine.riskEscalationReason}`
+);
+addSectionTitle("5. Doctor Brief");
 
 addWrappedText(healthEngine.doctorBrief);
-    addSectionTitle("5. Organ Assessment Breakdown");
+    addSectionTitle("6. Organ Assessment Breakdown");
 
     if (assessments.length === 0) {
       addWrappedText("No organ assessments available.");
