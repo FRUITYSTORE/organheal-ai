@@ -7,8 +7,8 @@ import LanguageToggle from "./LanguageToggle";
 function OrganHealLogo() {
   return (
     <svg
-      width={56}
-      height={56}
+      width={46}
+      height={46}
       viewBox="0 0 512 512"
       xmlns="http://www.w3.org/2000/svg"
       aria-label="OrganHeal logo"
@@ -69,48 +69,24 @@ export default function Navbar() {
       <Link href="/" className="logo" aria-label="OrganHeal home">
         <OrganHealLogo />
 
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            lineHeight: "1",
-          }}
-        >
-          <span
-            style={{
-              fontWeight: 800,
-              fontSize: "1.35rem",
-            }}
-          >
-            OrganHeal
-          </span>
-
-          <span
-            style={{
-              fontSize: "0.7rem",
-              opacity: 0.7,
-              letterSpacing: "1px",
-            }}
-          >
-            AI HEALTH INTELLIGENCE
-          </span>
+        <div className="logoText">
+          <span>OrganHeal</span>
+          <small>AI HEALTH INTELLIGENCE</small>
         </div>
       </Link>
 
       <div className="navLinks">
         <Link href="/">Home</Link>
-        <Link href="/about">About</Link>
         <Link href="/dashboard">Dashboard</Link>
-        <Link href="/assessment">Assessment</Link>
-        <Link href="/checkin">Daily Check-In</Link>
-        <Link href="/lab-analyzer">Labs</Link>
-        <Link href="/lab-upload">PDF Analyzer</Link>
+        <Link href="/intelligence">Intelligence</Link>
         <Link href="/organ-report">Report</Link>
-        <Link href="/history">History</Link>
-        <Link href="/profile">Profile</Link>
-        <Link href="/doctor">Doctor</Link>
+        <Link href="/assistant">Assistant</Link>
 
         <LanguageToggle />
+
+        <Link href="/login" className="navSigninBtn">
+          Sign In
+        </Link>
 
         <button className="navLogoutBtn" onClick={signOut}>
           Sign Out
