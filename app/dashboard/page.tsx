@@ -474,6 +474,34 @@ const opportunityPriority =
     : isArabic
     ? "منخفضة"
     : "Low";
+    const potentialGain =
+  overallScore < 50
+    ? 20
+    : overallScore < 60
+    ? 16
+    : overallScore < 70
+    ? 12
+    : overallScore < 80
+    ? 8
+    : 4;
+
+const potentialScore = Math.min(
+  100,
+  overallScore + potentialGain
+);
+
+const potentialLevel =
+  potentialGain >= 15
+    ? isArabic
+      ? "فرصة تحول كبيرة"
+      : "Major Improvement Opportunity"
+    : potentialGain >= 8
+    ? isArabic
+      ? "فرصة تحسين جيدة"
+      : "Good Improvement Opportunity"
+    : isArabic
+    ? "فرصة تحسين محدودة"
+    : "Limited Improvement Opportunity";
   const onboardingSteps = [
     {
       title: isArabic ? "إكمال التقييم" : "Complete Assessment",
@@ -684,7 +712,63 @@ const opportunityPriority =
     {isArabic
       ? "🎯 فرصة التحسين الصحية"
       : "🎯 Health Opportunity Engine"}
+  </p><div className="resultBox">
+  <p className="sectionLabel">
+    {isArabic
+      ? "📈 الإمكانات الصحية"
+      : "📈 Health Potential Score"}
   </p>
+
+  <h2>{potentialScore}/100</h2>
+
+  <h3>{potentialLevel}</h3>
+
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns:
+        "repeat(auto-fit, minmax(180px, 1fr))",
+      gap: "14px",
+      marginTop: "18px",
+    }}
+  >
+    <div>
+      <strong>
+        {isArabic
+          ? "الدرجة الحالية"
+          : "Current Score"}
+      </strong>
+
+      <p>{overallScore}/100</p>
+    </div>
+
+    <div>
+      <strong>
+        {isArabic
+          ? "الدرجة الممكنة"
+          : "Potential Score"}
+      </strong>
+
+      <p>{potentialScore}/100</p>
+    </div>
+
+    <div>
+      <strong>
+        {isArabic
+          ? "التحسن المتوقع"
+          : "Possible Gain"}
+      </strong>
+
+      <p>+{potentialGain}</p>
+    </div>
+  </div>
+
+  <p style={{ marginTop: "16px" }}>
+    {isArabic
+      ? "تم احتساب الإمكانية الصحية بناءً على النتائج الحالية ومناطق التحسين المتاحة."
+      : "Potential score is estimated from your current health profile and available improvement opportunities."}
+  </p>
+</div>
 
   <h2>{healthOpportunityTitle}</h2>
 
