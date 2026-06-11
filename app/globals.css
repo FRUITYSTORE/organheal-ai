@@ -1073,4 +1073,178 @@ html[dir="rtl"] .blogCard {
 html[dir="rtl"] .buttons,
 html[dir="rtl"] .assistantQuickActions {
   direction: rtl;
+}.homeHeroModern {
+  max-width: 1180px;
+  margin: 64px auto 48px;
+  padding: 56px;
+  border: 1px solid rgba(103, 232, 249, 0.35);
+  border-radius: 36px;
+  background:
+    radial-gradient(circle at top left, rgba(34, 211, 238, 0.18), transparent 34%),
+    linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(2, 6, 23, 0.96));
+  display: grid;
+  grid-template-columns: 1.4fr 0.8fr;
+  gap: 36px;
+  align-items: center;
+}
+
+.homeBadge {
+  display: inline-block;
+  padding: 10px 16px;
+  border: 1px solid rgba(103, 232, 249, 0.45);
+  border-radius: 999px;
+  color: #67e8f9;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 13px;
+}
+
+.homeHeroContent h1 {
+  margin: 22px 0;
+  font-size: clamp(42px, 7vw, 86px);
+  line-height: 0.95;
+  color: white;
+  letter-spacing: -0.06em;
+}
+
+.homeHeroText {
+  max-width: 760px;
+  color: #cbd5e1;
+  font-size: 20px;
+  line-height: 1.7;
+}
+
+.homeHeroActions {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 28px;
+}
+
+.homeHeroPanel {
+  padding: 28px;
+  border-radius: 28px;
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid rgba(103, 232, 249, 0.35);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+}
+
+.homeHeroPanel p {
+  color: #94a3b8;
+  margin: 0;
+}
+
+.homeHeroPanel h2 {
+  color: #67e8f9;
+  font-size: 64px;
+  margin: 14px 0 4px;
+}
+
+.homeHeroPanel span {
+  color: #cbd5e1;
+}
+
+.homeMiniStats {
+  display: grid;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.homeMiniStats div {
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.homeMiniStats strong {
+  color: white;
+}
+
+.homeMiniStats p {
+  color: #67e8f9;
+  margin-top: 4px;
+}
+
+.homeSection {
+  max-width: 1180px;
+  margin: 0 auto 48px;
+  padding: 24px;
+  text-align: center;
+}
+
+.homeSection h2 {
+  color: white;
+  font-size: clamp(32px, 5vw, 58px);
+  margin: 12px 0 32px;
+}
+
+.homeModernGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+}
+
+.homeModernCard {
+  text-align: left;
+  padding: 30px;
+  border-radius: 28px;
+  border: 1px solid rgba(103, 232, 249, 0.28);
+  background: rgba(15, 23, 42, 0.72);
+}
+
+.homeCardIcon {
+  font-size: 34px;
+  margin-bottom: 18px;
+}
+
+.homeModernCard h3 {
+  color: white;
+  font-size: 24px;
+  margin-bottom: 12px;
+}
+
+.homeModernCard p {
+  color: #cbd5e1;
+  line-height: 1.7;
+}
+
+.homeActionStrip {
+  max-width: 1180px;
+  margin: 0 auto 48px;
+  padding: 36px;
+  border-radius: 30px;
+  border: 1px solid rgba(103, 232, 249, 0.28);
+  background: rgba(15, 23, 42, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.homeActionStrip h2 {
+  color: white;
+  font-size: 34px;
+  margin: 8px 0;
+}
+
+.homeActionStrip p {
+  color: #cbd5e1;
+}
+
+@media (max-width: 900px) {
+  .homeHeroModern,
+  .homeModernGrid,
+  .homeActionStrip {
+    grid-template-columns: 1fr;
+  }
+
+  .homeHeroModern {
+    padding: 32px;
+  }
+
+  .homeActionStrip {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
