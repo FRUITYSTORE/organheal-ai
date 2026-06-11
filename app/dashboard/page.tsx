@@ -31,6 +31,10 @@ type Language = "en" | "ar";
 
 export default function DashboardPage() {
   const [assessments, setAssessments] = useState<Assessment[]>([]);
+  const [escalationAlert, setEscalationAlert] = useState<{
+  organ: string;
+  message: string;
+} | null>(null);
   const [labReport, setLabReport] = useState<LabReport | null>(null);
   const [dailyCheckIn, setDailyCheckIn] = useState<DailyCheckIn | null>(null);
   const [loading, setLoading] = useState(true);
@@ -114,7 +118,28 @@ export default function DashboardPage() {
       setLoading(false);
       return;
     }
+const grouped = new Map<string, number[]>();
 
+(organData || []).forEach((item) => {
+  const current = grouped.get(item.organ_name) || [];
+  current.push(item.score);
+  grouped.set(item.organ_name, current);
+});
+
+for (const [organ, scores] of grouped.entries()) {
+  if (scores.length < 2) continue;
+
+  const latest = scores[0];
+  const previous = scores[1];
+
+  if (previous - latest >= 15) {
+    setEscalationAlert({
+      organ,
+      message: `Rapid decline detected in ${organ}.`,
+    });
+    break;
+  }
+}
     setAssessments(organData || []);
     setLabReport(labData || null);
     setDailyCheckIn(checkInData || null);
@@ -870,7 +895,17 @@ const opportunityPriority =
                   </div>
                 </div>
               </div>
+{escalationAlert && (
+  <div className="priorityAlert">
+    <h3>🚨 Risk Escalation Alert</h3>
 
+    <p>
+      <strong>{escalationAlert.organ}</strong>
+    </p>
+
+    <p>{escalationAlert.message}</p>
+  </div>
+)}
               {priorityAttention && (
                 <div className="priorityAlert">
                   <h3>
