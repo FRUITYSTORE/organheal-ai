@@ -1,5 +1,5 @@
 "use client";
-
+import PageBackActions from "../components/PageBackActions";
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { buildHealthIntelligence } from "../../lib/intelligenceBuilder";
@@ -104,6 +104,7 @@ setHealthEngine(engine);
   return (
     <main className="assistantPage">
       <div className="assistantContainer">
+        <PageBackActions />
         <section className="assistantHeader">
           <p className="assistantBadge">ORGANHEAL INTELLIGENCE CENTER</p>
 

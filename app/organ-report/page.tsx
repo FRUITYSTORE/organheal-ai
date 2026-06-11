@@ -1,5 +1,5 @@
 "use client";
-
+import PageBackActions from "../components/PageBackActions";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
@@ -492,7 +492,7 @@ addWrappedText(healthEngine.doctorBrief);
       addWrappedText("Complete your first organ assessment to unlock recommendations.");
     }
 
-    addSectionTitle("11. Important Educational Disclaimer");
+    addSectionTitle("1. Important Educational Disclaimer");
 
     addWrappedText(
       "This report is for educational and wellness tracking purposes only. It does not provide a medical diagnosis, treatment plan, or emergency medical advice. Please discuss concerning symptoms or abnormal results with a licensed healthcare professional."
@@ -570,6 +570,7 @@ report_summary: reportSummary,
   return (
     <main className="assistantPage">
       <div className="assistantContainer">
+        <PageBackActions />
         <div className="assistantHeader">
           <p className="assistantBadge">{t.report.badge}</p>
 

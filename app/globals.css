@@ -1357,4 +1357,9 @@ html[dir="rtl"] .assistantQuickActions {
 
 .resultBox {
   scroll-margin-top: 140px;
+}.pageBackActions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
 }

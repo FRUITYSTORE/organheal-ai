@@ -1,5 +1,5 @@
 "use client";
-
+import PageBackActions from "../components/PageBackActions";
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { generateHealthEngineResult } from "../../lib/healthEngine";
@@ -129,6 +129,7 @@ export default function DoctorPortalPage() {
   return (
     <main className="assistantPage">
       <div className="assistantContainer">
+        <PageBackActions />
         <div className="assistantHeader">
           <p className="assistantBadge">Doctor Portal</p>
           <h1>Pre-Visit Intelligence Brief</h1>

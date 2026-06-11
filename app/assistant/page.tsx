@@ -1,5 +1,5 @@
 "use client";
-
+import PageBackActions from "../components/PageBackActions";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
@@ -227,6 +227,7 @@ export default function AssistantPage() {
   return (
     <main className="assistantPage">
       <div className="assistantContainer">
+        <PageBackActions />
         <div className="assistantHeader">
           <p className="assistantBadge">{t.assistant.badge}</p>
           <h1>{t.assistant.title}</h1>

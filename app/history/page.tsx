@@ -1,5 +1,5 @@
 "use client";
-
+import PageBackActions from "../components/PageBackActions";
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import {
@@ -478,6 +478,7 @@ const priorityOrgan =
   return (
     <main className="assistantPage">
       <div className="assistantContainer">
+        <PageBackActions />
         <div className="assistantHeader">
           <p className="assistantBadge">HEALTH HISTORY</p>
           <h1>Health History Timeline</h1>
@@ -765,7 +766,63 @@ const priorityOrgan =
     </div>
   )}
 </div>
+<div className="resultBox">
+  <p className="sectionLabel">🔮 Predictive Health Forecast v2</p>
 
+  {!forecastV2 ? (
+    <p>
+      Complete at least two health records to generate predictive health
+      forecasts.
+    </p>
+  ) : (
+    <>
+      <h2 className={getScoreClass(forecastV2.ninetyDayForecast)}>
+        {forecastV2.ninetyDayForecast}/100
+      </h2>
+
+      <h3>{forecastV2.direction}</h3>
+
+      <p>
+        Forecast based on your latest score movement from{" "}
+        {forecastV2.previousScore}/100 to {forecastV2.latestScore}/100.
+      </p>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+          gap: "14px",
+          marginTop: "18px",
+        }}
+      >
+        <div>
+          <strong>30-Day Forecast</strong>
+          <p>{forecastV2.thirtyDayForecast}/100</p>
+        </div>
+
+        <div>
+          <strong>90-Day Forecast</strong>
+          <p>{forecastV2.ninetyDayForecast}/100</p>
+        </div>
+
+        <div>
+          <strong>Potential Forecast</strong>
+          <p>{forecastV2.potentialForecast}/100</p>
+        </div>
+
+        <div>
+          <strong>Confidence</strong>
+          <p>{forecastV2.confidence}</p>
+        </div>
+
+        <div>
+          <strong>Forecast Risk</strong>
+          <p>{forecastV2.forecastRisk}</p>
+        </div>
+      </div>
+    </>
+  )}
+</div>
 <div className="resultBox">
   <p className="sectionLabel">🔮 Health Forecast Engine</p>
 
