@@ -4,6 +4,8 @@ export type HealthEngineInput = {
   dailyCheckInScore?: number | null;
   priorityOrgan?: string | null;
   strongestOrgan?: string | null;
+  previousPriorityScore?: number | null;
+  latestPriorityScore?: number | null;
   isArabic?: boolean;
 };
 
@@ -19,6 +21,9 @@ export type HealthEngineResult = {
   healthAgeMessage: string;
   trendDirection: string;
   trendMessage: string;
+  riskEscalationLevel: string;
+  riskEscalationMessage: string;
+  riskEscalationReason: string;
   doctorBrief: string;
 };
 
@@ -31,6 +36,8 @@ export function generateHealthEngineResult(
     dailyCheckInScore,
     priorityOrgan,
     strongestOrgan,
+    previousPriorityScore,
+    latestPriorityScore,
     isArabic = false,
   } = input;
 
@@ -214,6 +221,51 @@ export function generateHealthEngineResult(
       ? "النتائج الحالية تشير إلى الحاجة لمتابعة أقرب وتحسين الأولويات الصحية."
       : "Current results suggest the need for closer follow-up and improvement of priority health areas.";
 
+  const hasPriorityTrend =
+    previousPriorityScore !== null &&
+    previousPriorityScore !== undefined &&
+    latestPriorityScore !== null &&
+    latestPriorityScore !== undefined;
+
+  const scoreDrop = hasPriorityTrend
+    ? previousPriorityScore - latestPriorityScore
+    : 0;
+
+  const riskEscalationLevel =
+    hasPriorityTrend && scoreDrop >= 20 && latestPriorityScore < 50
+      ? "Critical"
+      : hasPriorityTrend && scoreDrop >= 15
+      ? "Escalating"
+      : hasPriorityTrend && scoreDrop >= 10
+      ? "Watch"
+      : "Stable";
+
+  const riskEscalationMessage =
+    riskEscalationLevel === "Critical"
+      ? isArabic
+        ? "تم اكتشاف تدهور صحي حاد يحتاج إلى متابعة قريبة."
+        : "Critical health deterioration detected and requires close follow-up."
+      : riskEscalationLevel === "Escalating"
+      ? isArabic
+        ? "تم اكتشاف تدهور سريع في أحد المؤشرات الصحية."
+        : "Rapid deterioration detected in a health indicator."
+      : riskEscalationLevel === "Watch"
+      ? isArabic
+        ? "يوجد انخفاض ملحوظ يحتاج إلى مراقبة."
+        : "A noticeable decline was detected and should be monitored."
+      : isArabic
+      ? "لا يوجد تصعيد واضح في المخاطر حاليًا."
+      : "No clear risk escalation detected at this time.";
+
+  const riskEscalationReason =
+    hasPriorityTrend && priorityOrgan
+      ? isArabic
+        ? `انخفضت درجة ${priorityOrgan} من ${previousPriorityScore} إلى ${latestPriorityScore}.`
+        : `${priorityOrgan} score declined from ${previousPriorityScore} to ${latestPriorityScore}.`
+      : isArabic
+      ? "لا توجد بيانات تاريخية كافية لاكتشاف التصعيد."
+      : "Not enough historical data to detect escalation.";
+
   const doctorBrief = isArabic
     ? `
 الملف الصحي: ${healthProfile}
@@ -228,6 +280,12 @@ ${strongestOrgan || "الصحة العامة"}
 
 نمط المخاطر:
 ${riskPattern}
+
+تصعيد المخاطر:
+${riskEscalationLevel}
+
+سبب التصعيد:
+${riskEscalationReason}
 
 العمر الصحي:
 ${healthAgeStatus}
@@ -255,6 +313,12 @@ ${strongestOrgan || "General Health"}
 Risk Pattern:
 ${riskPattern}
 
+Risk Escalation:
+${riskEscalationLevel}
+
+Escalation Reason:
+${riskEscalationReason}
+
 Health Age:
 ${healthAgeStatus}
 
@@ -280,6 +344,9 @@ ${bestNextAction}
     healthAgeMessage,
     trendDirection,
     trendMessage,
+    riskEscalationLevel,
+    riskEscalationMessage,
+    riskEscalationReason,
     doctorBrief,
   };
 }
