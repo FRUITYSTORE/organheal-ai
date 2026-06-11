@@ -5,6 +5,7 @@ import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import jsPDF from "jspdf";
 import { getTranslations } from "../../lib/translations";
+import { generateHealthEngineResult } from "../../lib/healthEngine";
 
 type Assessment = {
   organ_name: string;
@@ -137,7 +138,24 @@ const isArabic = language === "ar";
           allScores.reduce((sum, score) => sum + score, 0) / allScores.length
         )
       : 0;
+const strongestAssessment =
+  assessments.length > 0
+    ? [...assessments].sort((a, b) => b.score - a.score)[0]
+    : null;
 
+const weakestAssessment =
+  assessments.length > 0
+    ? [...assessments].sort((a, b) => a.score - b.score)[0]
+    : null;
+
+const healthEngine = generateHealthEngineResult({
+  overallScore,
+  labScore: labReport?.score ?? null,
+  dailyCheckInScore: dailyCheckIn?.wellness_score ?? null,
+  priorityOrgan: weakestAssessment?.organ_name ?? null,
+  strongestOrgan: strongestAssessment?.organ_name ?? null,
+  isArabic: false,
+});
   function getStatus(score: number) {
     if (score >= 80) return "Good";
     if (score >= 50) return "Moderate";
@@ -341,8 +359,20 @@ This report is educational and intended to support health awareness and better c
 
       addWrappedText(`Recommended Focus: ${getAIRecommendation(weakest.organ_name)}`);
     }
+addSectionTitle("3. Digital Health Intelligence Profile");
 
-    addSectionTitle("3. Organ Assessment Breakdown");
+addWrappedText(`Health Profile: ${healthEngine.healthProfile}`);
+addWrappedText(`Risk Pattern: ${healthEngine.riskPattern}`);
+addWrappedText(`Health Age Status: ${healthEngine.healthAgeStatus}`);
+addWrappedText(`Potential Score: ${healthEngine.potentialScore}/100`);
+addWrappedText(`Potential Gain: +${healthEngine.potentialGain}`);
+addWrappedText(`Main Opportunity: ${healthEngine.opportunityTitle}`);
+addWrappedText(`Recommended Action: ${healthEngine.bestNextAction}`);
+
+addSectionTitle("4. Doctor Brief");
+
+addWrappedText(healthEngine.doctorBrief);
+    addSectionTitle("5. Organ Assessment Breakdown");
 
     if (assessments.length === 0) {
       addWrappedText("No organ assessments available.");
@@ -379,7 +409,7 @@ This report is educational and intended to support health awareness and better c
     }
 
     if (labReport) {
-      addSectionTitle("4. Lab Analyzer Summary");
+      addSectionTitle("6. Lab Analyzer Summary");
 
       addWrappedText(`Latest Lab Intelligence Score: ${labReport.score}/100`);
       addWrappedText(`Status: ${getStatus(labReport.score)}`);
@@ -398,7 +428,7 @@ This report is educational and intended to support health awareness and better c
     }
 
     if (dailyCheckIn) {
-      addSectionTitle("5. Daily Wellness Summary");
+      addSectionTitle("7. Daily Wellness Summary");
 
       addWrappedText(`Latest Wellness Score: ${dailyCheckIn.wellness_score}/100`);
       addWrappedText(`Mood: ${dailyCheckIn.mood}`);
@@ -407,7 +437,7 @@ This report is educational and intended to support health awareness and better c
       );
     }
 
-    addSectionTitle("6. Personalized Recommendations");
+    addSectionTitle("8. Personalized Recommendations");
 
     if (weakest) {
       addWrappedText(getAIRecommendation(weakest.organ_name));
@@ -418,7 +448,7 @@ This report is educational and intended to support health awareness and better c
       addWrappedText("Complete your first organ assessment to unlock recommendations.");
     }
 
-    addSectionTitle("7. Important Educational Disclaimer");
+    addSectionTitle("9. Important Educational Disclaimer");
 
     addWrappedText(
       "This report is for educational and wellness tracking purposes only. It does not provide a medical diagnosis, treatment plan, or emergency medical advice. Please discuss concerning symptoms or abnormal results with a licensed healthcare professional."
@@ -426,7 +456,7 @@ This report is educational and intended to support health awareness and better c
 
     footer();
 
-    pdf.save("OrganHeal_Professional_Report_v2.pdf");
+    pdf.save("OrganHeal_Professional_Intelligence_Report_v3.pdf");
   }
 async function generateShareCode() {
   const { data: userData, error: userError } = await supabase.auth.getUser();
