@@ -8,8 +8,6 @@ export type HealthEngineInput = {
 };
 
 export type HealthEngineResult = {
-    healthAgeStatus: string;
-healthAgeMessage: string;
   healthProfile: string;
   riskPattern: string;
   opportunityTitle: string;
@@ -17,6 +15,10 @@ healthAgeMessage: string;
   potentialGain: number;
   potentialScore: number;
   potentialLevel: string;
+  healthAgeStatus: string;
+  healthAgeMessage: string;
+  trendDirection: string;
+  trendMessage: string;
   doctorBrief: string;
 };
 
@@ -151,39 +153,67 @@ export function generateHealthEngineResult(
       : isArabic
       ? "فرصة تحسين محدودة"
       : "Limited Improvement Opportunity";
-const healthAgeStatus =
-  overallScore >= 85
-    ? isArabic
-      ? "أصغر صحيًا من المتوقع"
-      : "Younger Health Profile"
-    : overallScore >= 70
-    ? isArabic
-      ? "عمر صحي متوازن"
-      : "Balanced Health Age"
-    : overallScore >= 50
-    ? isArabic
-      ? "عمر صحي يحتاج تحسين"
-      : "Elevated Health Age"
-    : isArabic
-    ? "عمر صحي مرتفع"
-    : "High Health Age";
 
-const healthAgeMessage =
-  overallScore >= 85
-    ? isArabic
-      ? "مؤشراتك الحالية تعكس ملفًا صحيًا وقائيًا جيدًا."
-      : "Your current indicators suggest a strong preventive health profile."
-    : overallScore >= 70
-    ? isArabic
-      ? "مؤشراتك الحالية مقبولة مع وجود فرص للتحسين."
-      : "Your current indicators are balanced with room for improvement."
-    : overallScore >= 50
-    ? isArabic
-      ? "بعض المؤشرات قد تجعل ملفك الصحي يبدو أكبر من المتوقع."
-      : "Some indicators may make your health profile appear older than expected."
-    : isArabic
-    ? "هناك عدة مؤشرات تحتاج إلى متابعة جدية لتحسين العمر الصحي."
-    : "Several indicators need closer follow-up to improve your health age profile.";
+  const healthAgeStatus =
+    overallScore >= 85
+      ? isArabic
+        ? "أصغر صحيًا من المتوقع"
+        : "Younger Health Profile"
+      : overallScore >= 70
+      ? isArabic
+        ? "عمر صحي متوازن"
+        : "Balanced Health Age"
+      : overallScore >= 50
+      ? isArabic
+        ? "عمر صحي يحتاج تحسين"
+        : "Elevated Health Age"
+      : isArabic
+      ? "عمر صحي مرتفع"
+      : "High Health Age";
+
+  const healthAgeMessage =
+    overallScore >= 85
+      ? isArabic
+        ? "مؤشراتك الحالية تعكس ملفًا صحيًا وقائيًا جيدًا."
+        : "Your current indicators suggest a strong preventive health profile."
+      : overallScore >= 70
+      ? isArabic
+        ? "مؤشراتك الحالية مقبولة مع وجود فرص للتحسين."
+        : "Your current indicators are balanced with room for improvement."
+      : overallScore >= 50
+      ? isArabic
+        ? "بعض المؤشرات قد تجعل ملفك الصحي يبدو أكبر من المتوقع."
+        : "Some indicators may make your health profile appear older than expected."
+      : isArabic
+      ? "هناك عدة مؤشرات تحتاج إلى متابعة جدية لتحسين العمر الصحي."
+      : "Several indicators need closer follow-up to improve your health age profile.";
+
+  const trendDirection =
+    overallScore >= 80
+      ? isArabic
+        ? "اتجاه صحي مستقر"
+        : "Stable health direction"
+      : overallScore >= 60
+      ? isArabic
+        ? "قابل للتحسن"
+        : "Improvement potential"
+      : isArabic
+      ? "يحتاج متابعة"
+      : "Needs close follow-up";
+
+  const trendMessage =
+    overallScore >= 80
+      ? isArabic
+        ? "المؤشرات الحالية تبدو مستقرة نسبيًا مع أهمية الاستمرار في الوقاية."
+        : "Current indicators appear relatively stable with continued preventive focus."
+      : overallScore >= 60
+      ? isArabic
+        ? "توجد فرصة واضحة لتحسين الاتجاه الصحي خلال الأسابيع القادمة."
+        : "There is a clear opportunity to improve the health direction over the coming weeks."
+      : isArabic
+      ? "النتائج الحالية تشير إلى الحاجة لمتابعة أقرب وتحسين الأولويات الصحية."
+      : "Current results suggest the need for closer follow-up and improvement of priority health areas.";
+
   const doctorBrief = isArabic
     ? `
 الملف الصحي: ${healthProfile}
@@ -195,6 +225,12 @@ ${priorityOrgan || "الصحة العامة"}
 
 أقوى منطقة:
 ${strongestOrgan || "الصحة العامة"}
+
+نمط المخاطر:
+${riskPattern}
+
+العمر الصحي:
+${healthAgeStatus}
 
 فرصة التحسين:
 ${opportunityTitle}
@@ -216,6 +252,12 @@ ${priorityOrgan || "General Health"}
 Strongest Area:
 ${strongestOrgan || "General Health"}
 
+Risk Pattern:
+${riskPattern}
+
+Health Age:
+${healthAgeStatus}
+
 Main Opportunity:
 ${opportunityTitle}
 
@@ -234,7 +276,10 @@ ${bestNextAction}
     potentialGain,
     potentialScore,
     potentialLevel,
-    doctorBrief,healthAgeStatus,
-healthAgeMessage,
+    healthAgeStatus,
+    healthAgeMessage,
+    trendDirection,
+    trendMessage,
+    doctorBrief,
   };
 }

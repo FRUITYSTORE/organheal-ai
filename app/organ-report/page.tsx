@@ -368,6 +368,9 @@ addWrappedText(`Potential Score: ${healthEngine.potentialScore}/100`);
 addWrappedText(`Potential Gain: +${healthEngine.potentialGain}`);
 addWrappedText(`Main Opportunity: ${healthEngine.opportunityTitle}`);
 addWrappedText(`Recommended Action: ${healthEngine.bestNextAction}`);
+addWrappedText(`Trend Direction: ${healthEngine.trendDirection}`);
+addWrappedText(`Trend Insight: ${healthEngine.trendMessage}`);
+
 
 addSectionTitle("4. Doctor Brief");
 
