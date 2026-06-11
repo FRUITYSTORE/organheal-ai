@@ -1,4 +1,5 @@
 "use client";
+
 import PageBackActions from "../components/PageBackActions";
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
@@ -15,9 +16,6 @@ type HealthEngine = ReturnType<typeof buildHealthIntelligence>;
 export default function IntelligencePage() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
-  const [overallScore, setOverallScore] = useState(0);
-  const [strongestOrgan, setStrongestOrgan] = useState<string | null>(null);
-  const [priorityOrgan, setPriorityOrgan] = useState<string | null>(null);
   const [healthEngine, setHealthEngine] = useState<HealthEngine | null>(null);
   const [copyMessage, setCopyMessage] = useState("");
 
@@ -56,41 +54,14 @@ export default function IntelligencePage() {
       return;
     }
 
-    const scores = assessmentData.map((item) => item.score);
-
-    const calculatedOverallScore = Math.round(
-      scores.reduce((sum, score) => sum + score, 0) / scores.length
-    );
-
-    const strongest = [...assessmentData].sort((a, b) => b.score - a.score)[0];
-    const weakest = [...assessmentData].sort((a, b) => a.score - b.score)[0];
-    const priorityHistory = assessmentData
-  .filter((item) => item.organ_name === weakest.organ_name)
-  .sort(
-    (a, b) =>
-      new Date(b.created_at).getTime() -
-      new Date(a.created_at).getTime()
-  );
-
-const latestPriorityScore =
-  priorityHistory.length > 0 ? priorityHistory[0].score : null;
-
-const previousPriorityScore =
-  priorityHistory.length > 1 ? priorityHistory[1].score : null;
-
     const intelligence = buildHealthIntelligence({
-  assessments: assessmentData,
-  labReport: null,
-  dailyCheckIn: null,
-  isArabic: false,
-});
+      assessments: assessmentData,
+      labReport: null,
+      dailyCheckIn: null,
+      isArabic: false,
+    });
 
-const engine = intelligence;
-
-    setOverallScore(intelligence.overallScore);
-setStrongestOrgan(intelligence.strongestOrgan);
-setPriorityOrgan(intelligence.priorityOrgan);
-setHealthEngine(engine);
+    setHealthEngine(intelligence);
     setLoading(false);
   }
 
@@ -105,15 +76,13 @@ setHealthEngine(engine);
     <main className="assistantPage">
       <div className="assistantContainer">
         <PageBackActions />
-        <PageBackActions />
+
         <section className="assistantHeader">
           <p className="assistantBadge">ORGANHEAL INTELLIGENCE CENTER</p>
-
           <h1>Health Intelligence Center</h1>
-
           <p>
-            Your digital health intelligence profile, generated from OrganHeal
-            assessments and intelligence engines.
+            A focused intelligence view for your health profile, opportunities,
+            roadmap, risk signals, and doctor-ready summary.
           </p>
         </section>
 
@@ -136,22 +105,20 @@ setHealthEngine(engine);
           {!loading && healthEngine && (
             <>
               <div className="resultBox">
-                <p className="sectionLabel">🪪 ORGANHEAL HEALTH PASSPORT</p>
-
+                <p className="sectionLabel">🪪 HEALTH PASSPORT</p>
                 <h2>{healthEngine.healthProfile}</h2>
 
                 <div
                   style={{
                     display: "grid",
-                    gridTemplateColumns:
-                      "repeat(auto-fit, minmax(180px, 1fr))",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
                     gap: "14px",
                     marginTop: "18px",
                   }}
                 >
                   <div>
                     <strong>Overall Score</strong>
-                    <p>{overallScore}/100</p>
+                    <p>{healthEngine.overallScore}/100</p>
                   </div>
 
                   <div>
@@ -161,7 +128,7 @@ setHealthEngine(engine);
 
                   <div>
                     <strong>Priority Area</strong>
-                    <p>{priorityOrgan || "N/A"}</p>
+                    <p>{healthEngine.priorityOrgan || "N/A"}</p>
                   </div>
 
                   <div>
@@ -172,22 +139,20 @@ setHealthEngine(engine);
               </div>
 
               <div className="resultBox">
-                <p className="sectionLabel">📊 HEALTH INTELLIGENCE SCORECARD</p>
-
-                <h2>Your Intelligence Snapshot</h2>
+                <p className="sectionLabel">📊 INTELLIGENCE SNAPSHOT</p>
+                <h2>Your Current Pattern</h2>
 
                 <div
                   style={{
                     display: "grid",
-                    gridTemplateColumns:
-                      "repeat(auto-fit, minmax(180px, 1fr))",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
                     gap: "14px",
                     marginTop: "18px",
                   }}
                 >
                   <div>
                     <strong>Strongest Area</strong>
-                    <p>{strongestOrgan || "N/A"}</p>
+                    <p>{healthEngine.strongestOrgan || "N/A"}</p>
                   </div>
 
                   <div>
@@ -206,51 +171,47 @@ setHealthEngine(engine);
                   </div>
                 </div>
               </div>
-<div className="resultBox">
-  <p className="sectionLabel">🏆 TOP HEALTH OPPORTUNITIES</p>
 
-  <h2>Where You Can Improve the Most</h2>
-
-  {!healthEngine.opportunities || healthEngine.opportunities.length === 0 ? (
-    <p>Complete assessments to generate health opportunities.</p>
-  ) : (
-    <div style={{ display: "grid", gap: "14px", marginTop: "18px" }}>
-      {healthEngine.opportunities.map((item) => (
-        <div
-          key={item.organ}
-          style={{
-            padding: "16px",
-            borderRadius: "16px",
-            background: "rgba(15, 23, 42, 0.75)",
-            border: "1px solid rgba(34, 211, 238, 0.18)",
-            textAlign: "left",
-          }}
-        >
-          <h3>{item.title}</h3>
-
-          <p>
-            Current Score: {item.currentScore}/100 → Potential Score:{" "}
-            {item.potentialScore}/100
-          </p>
-
-          <p>
-            Potential Gain: <strong>+{item.potentialGain}</strong> points
-          </p>
-
-          <p>
-            Priority: <strong>{item.priority}</strong>
-          </p>
-
-          <p>{item.action}</p>
-        </div>
-      ))}
-    </div>
-  )}
-</div>
               <div className="resultBox">
-                <p className="sectionLabel">🎯 TOP ACTIONS</p>
+                <p className="sectionLabel">🏆 TOP HEALTH OPPORTUNITIES</p>
+                <h2>Where You Can Improve the Most</h2>
 
-                <h2>Next Best Actions</h2>
+                {healthEngine.opportunities.length === 0 ? (
+                  <p>Complete more assessments to generate opportunities.</p>
+                ) : (
+                  <div style={{ display: "grid", gap: "14px", marginTop: "18px" }}>
+                    {healthEngine.opportunities.map((item) => (
+                      <div
+                        key={item.organ}
+                        style={{
+                          padding: "16px",
+                          borderRadius: "16px",
+                          background: "rgba(15, 23, 42, 0.75)",
+                          border: "1px solid rgba(34, 211, 238, 0.18)",
+                          textAlign: "left",
+                        }}
+                      >
+                        <h3>{item.title}</h3>
+                        <p>
+                          Current: {item.currentScore}/100 → Potential:{" "}
+                          {item.potentialScore}/100
+                        </p>
+                        <p>
+                          Potential Gain: <strong>+{item.potentialGain}</strong>
+                        </p>
+                        <p>
+                          Priority: <strong>{item.priority}</strong>
+                        </p>
+                        <p>{item.action}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="resultBox">
+                <p className="sectionLabel">🎯 NEXT BEST ACTIONS</p>
+                <h2>Recommended Focus</h2>
 
                 <div
                   style={{
@@ -268,14 +229,12 @@ setHealthEngine(engine);
 
               <div className="resultBox">
                 <p className="sectionLabel">🗺️ HEALTH ROADMAP</p>
-
                 <h2>Today → 30 Days → 90 Days</h2>
 
                 <div
                   style={{
                     display: "grid",
-                    gridTemplateColumns:
-                      "repeat(auto-fit, minmax(220px, 1fr))",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
                     gap: "14px",
                     marginTop: "18px",
                   }}
@@ -287,88 +246,34 @@ setHealthEngine(engine);
 
                   <div>
                     <strong>30 Days</strong>
-                    <p>Improve your priority area: {priorityOrgan || "N/A"}.</p>
+                    <p>
+                      Improve your priority area:{" "}
+                      {healthEngine.priorityOrgan || "General Health"}.
+                    </p>
                   </div>
 
                   <div>
                     <strong>90 Days</strong>
-                    <p>
-                      Aim for a potential score of{" "}
-                      {healthEngine.potentialScore}/100.
-                    </p>
+                    <p>Aim for {healthEngine.potentialScore}/100.</p>
                   </div>
                 </div>
               </div>
 
-              <div className="resultBox">
-                <p className="sectionLabel">🧬 DIGITAL HEALTH PROFILE</p>
-
-                <h2>{healthEngine.healthProfile}</h2>
-
-                <p>
-                  This profile is generated from your organ assessment pattern,
-                  current overall score, and priority health area.
-                </p>
-              </div>
-
-              <div className="resultBox">
-                <p className="sectionLabel">🧩 HEALTH RISK PATTERN</p>
-
-                <h2>{healthEngine.riskPattern}</h2>
-
-                <p>
-                  OrganHeal identifies the dominant health pattern influencing
-                  your current results.
-                </p>
-              </div>
-
-              <div className="resultBox">
-                <p className="sectionLabel">📈 HEALTH POTENTIAL SCORE</p>
-
-                <h2>{healthEngine.potentialScore}/100</h2>
-
-                <h3>{healthEngine.potentialLevel}</h3>
-
-                <p>
-                  Possible gain: +{healthEngine.potentialGain} health points.
-                </p>
-              </div>
-
-              <div className="resultBox">
-                <p className="sectionLabel">⏳ HEALTH AGE ENGINE</p>
-
-                <h2>{healthEngine.healthAgeStatus}</h2>
-
-                <p>{healthEngine.healthAgeMessage}</p>
-              </div>
-{healthEngine.riskEscalationLevel !== "Stable" && (
-  <div className="priorityAlert">
-    <h3>🚨 Risk Escalation Intelligence</h3>
-
-    <p>
-      <strong>Level:</strong>{" "}
-      {healthEngine.riskEscalationLevel}
-    </p>
-
-    <p>{healthEngine.riskEscalationMessage}</p>
-
-    <p>
-      <strong>Reason:</strong>{" "}
-      {healthEngine.riskEscalationReason}
-    </p>
-  </div>
-)}
-              <div className="resultBox">
-                <p className="sectionLabel">📊 TREND INTELLIGENCE</p>
-
-                <h2>{healthEngine.trendDirection}</h2>
-
-                <p>{healthEngine.trendMessage}</p>
-              </div>
+              {healthEngine.riskEscalationLevel !== "Stable" && (
+                <div className="priorityAlert">
+                  <h3>🚨 Risk Escalation Intelligence</h3>
+                  <p>
+                    <strong>Level:</strong> {healthEngine.riskEscalationLevel}
+                  </p>
+                  <p>{healthEngine.riskEscalationMessage}</p>
+                  <p>
+                    <strong>Reason:</strong> {healthEngine.riskEscalationReason}
+                  </p>
+                </div>
+              )}
 
               <div className="resultBox">
                 <p className="sectionLabel">🩺 DOCTOR READY SUMMARY</p>
-
                 <h2>Patient Intelligence Brief</h2>
 
                 <div
