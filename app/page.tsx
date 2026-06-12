@@ -63,69 +63,67 @@ export default function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
       />
-      <section className="homeHeroPro">
-  <div className="homeHeroProContent">
-    <p className="homeBadge">
-      {isArabic
-        ? "نظام ذكاء صحي شخصي"
-        : "Personal Health Intelligence System"}
-    </p>
+      <section className="homeHeroClean">
+  <div className="homeHeroCleanInner">
+    <div className="homeHeroCleanContent">
+      <p className="homeBadge">
+        {isArabic
+          ? "نظام ذكاء صحي شخصي"
+          : "Personal Health Intelligence System"}
+      </p>
 
-    <h1>
-      {isArabic
-        ? "افهم صحتك قبل أن تصبح مشكلة."
-        : "Understand your health before it becomes a problem."}
-    </h1>
+      <h1>
+        {isArabic
+          ? "افهم صحتك بوضوح. اعرف خطوتك التالية."
+          : "Understand your health clearly. Know your next step."}
+      </h1>
 
-    <p className="homeHeroProText">
-      {isArabic
-        ? "حوّل التقييمات الصحية، نتائج المختبر، التسجيل اليومي، والتاريخ الصحي إلى ملف ذكي يوضح المخاطر، الفرص، والخطوة الصحية التالية."
-        : "Turn health assessments, lab results, daily wellness tracking, and health history into clear intelligence about risks, opportunities, and your next best health action."}
-    </p>
+      <p className="homeHeroCleanText">
+        {isArabic
+          ? "حوّل التقييمات الصحية، نتائج المختبر، التسجيل اليومي، والتاريخ الصحي إلى ذكاء صحي واضح يساعدك على فهم المخاطر والفرص والخطوة التالية."
+          : "Turn health assessments, lab results, daily wellness tracking, and health history into clear intelligence about risks, opportunities, and your next best action."}
+      </p>
 
-    <div className="homeHeroProSearch">
-  <input
-    type="text"
-    placeholder={
-      isArabic
-        ? "اسأل عن الكوليسترول، النوم، الكبد، القلب..."
-        : "Ask about cholesterol, sleep, liver, heart health..."
-    }
-    disabled
-  />
+      <div className="homeHeroSearchBox">
+        <input
+          type="text"
+          placeholder={
+            isArabic
+              ? "اسأل عن الكوليسترول، النوم، الكبد، القلب..."
+              : "Ask about cholesterol, sleep, liver, heart health..."
+          }
+          disabled
+        />
 
-  <Link href="/lab-upload" className="homeFileUploadBtn">
-  {isArabic ? "رفع ملف" : "Upload File"}
-</Link>
+        <Link href="/assistant" className="primaryBtn">
+          {isArabic ? "اسأل الذكاء الصحي" : "Ask AI"}
+        </Link>
 
-  <Link href="/assistant" className="primaryBtn">
-    {isArabic ? "اسأل الذكاء الصحي" : "Ask AI"}
-  </Link>
+        <Link href="/lab-upload" className="secondaryBtn">
+          {isArabic ? "رفع ملف" : "Upload File"}
+        </Link>
+      </div>
 
-  <Link href="/lab-upload" className="secondaryBtn">
-    {isArabic ? "تحليل ملف مختبر" : "Analyze Lab PDF"}
-  </Link>
-</div>
+      <div className="homeHeroCleanActions">
+        <Link href="/assessment" className="primaryBtn">
+          {isArabic ? "ابدأ التقييم المجاني" : "Start Free Assessment"}
+        </Link>
 
-    <div className="homeHeroProActions">
-      <Link href="/assessment" className="primaryBtn">
-        {isArabic ? "ابدأ التقييم المجاني" : "Start Free Assessment"}
-      </Link>
+        <Link href="/intelligence" className="secondaryBtn">
+          {isArabic ? "شاهد مركز الذكاء" : "View Intelligence Center"}
+        </Link>
 
-      <Link href="/intelligence" className="secondaryBtn">
-        {isArabic ? "شاهد مركز الذكاء" : "View Intelligence Center"}
-      </Link>
+        <Link href="/login" className="secondaryBtn">
+          {isArabic ? "تسجيل الدخول" : "Sign In"}
+        </Link>
+      </div>
 
-      <Link href="/login" className="secondaryBtn">
-        {isArabic ? "تسجيل الدخول" : "Sign In"}
-      </Link>
+      <p className="homeHeroDisclaimer">
+        {isArabic
+          ? "OrganHeal يقدم ذكاء صحي تعليمي ولا يستبدل الطبيب أو التشخيص الطبي."
+          : "OrganHeal provides educational health intelligence and does not replace medical diagnosis or licensed care."}
+      </p>
     </div>
-
-    <p className="homeHeroDisclaimer">
-      {isArabic
-        ? "OrganHeal يقدم ذكاء صحي تعليمي ولا يستبدل الطبيب أو التشخيص الطبي."
-        : "OrganHeal provides educational health intelligence and does not replace medical diagnosis or licensed care."}
-    </p>
   </div>
 </section>
 
