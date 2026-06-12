@@ -33,7 +33,7 @@ a {
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  position: sticky;
+  position: relative;
   top: 12px;
   z-index: 50;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
@@ -1511,4 +1511,10 @@ html[dir="rtl"] .homeHeroActions {
 .navPrimaryBtn:hover {
   background: rgba(103, 232, 249, 0.2);
   color: white !important;
+}.homeHowItWorks {
+  padding-top: 24px;
+}
+
+.howStepsGrid {
+  margin-top: 28px;
 }
