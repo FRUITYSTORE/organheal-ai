@@ -1,32 +1,13 @@
 "use client";
+import { getHealthContext } from "../../lib/getHealthContext";
 import PageBackActions from "../components/PageBackActions";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { supabase } from "../../lib/supabase";
 import { getTranslations } from "../../lib/translations";
-import { generateHealthEngineResult } from "../../lib/healthEngine";
 
 type Message = {
   sender: "user" | "ai";
   text: string;
-};
-
-type Assessment = {
-  organ_name: string;
-  score: number;
-  created_at: string;
-};
-
-type LabReport = {
-  score: number;
-  interpretation: string;
-  created_at: string;
-};
-
-type DailyCheckIn = {
-  mood: string;
-  wellness_score: number;
-  created_at: string;
 };
 
 type Language = "en" | "ar";
@@ -69,96 +50,10 @@ export default function AssistantPage() {
     ]);
   }, [isArabic]);
 
-  async function loadHealthContext() {
-    const { data: userData } = await supabase.auth.getUser();
-
-    if (!userData.user) return;
-
-    const { data: assessments } = await supabase
-      .from("organ_assessments")
-      .select("organ_name, score, created_at")
-      .eq("user_id", userData.user.id)
-      .order("created_at", { ascending: false });
-
-    const { data: labReport } = await supabase
-      .from("lab_reports")
-      .select("score, interpretation, created_at")
-      .eq("user_id", userData.user.id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .single();
-
-    const { data: dailyCheckIn } = await supabase
-      .from("daily_checkins")
-      .select("mood, wellness_score, created_at")
-      .eq("user_id", userData.user.id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .single();
-
-    const assessmentData = (assessments || []) as Assessment[];
-    const labData = labReport as LabReport | null;
-    const checkInData = dailyCheckIn as DailyCheckIn | null;
-
-    const scores = [
-      ...assessmentData.map((item) => item.score),
-      ...(labData ? [labData.score] : []),
-      ...(checkInData ? [checkInData.wellness_score] : []),
-    ];
-
-    const overallScore =
-      scores.length > 0
-        ? Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length)
-        : 0;
-
-    const strongest =
-      assessmentData.length > 0
-        ? [...assessmentData].sort((a, b) => b.score - a.score)[0]
-        : null;
-
-    const weakest =
-      assessmentData.length > 0
-        ? [...assessmentData].sort((a, b) => a.score - b.score)[0]
-        : null;
-
-    const priorityHistory = weakest
-      ? assessmentData
-          .filter((item) => item.organ_name === weakest.organ_name)
-          .sort(
-            (a, b) =>
-              new Date(b.created_at).getTime() -
-              new Date(a.created_at).getTime()
-          )
-      : [];
-
-    const latestPriorityScore =
-      priorityHistory.length > 0 ? priorityHistory[0].score : null;
-
-    const previousPriorityScore =
-      priorityHistory.length > 1 ? priorityHistory[1].score : null;
-
-    const engine = generateHealthEngineResult({
-      overallScore,
-      labScore: labData?.score ?? null,
-      dailyCheckInScore: checkInData?.wellness_score ?? null,
-      priorityOrgan: weakest?.organ_name ?? null,
-      strongestOrgan: strongest?.organ_name ?? null,
-      previousPriorityScore,
-      latestPriorityScore,
-      isArabic,
-    });
-
-    setHealthContext({
-      overallScore,
-      strongestOrgan: strongest?.organ_name ?? null,
-      priorityOrgan: weakest?.organ_name ?? null,
-      labScore: labData?.score ?? null,
-      dailyCheckInScore: checkInData?.wellness_score ?? null,
-      dailyMood: checkInData?.mood ?? null,
-      healthEngine: engine,
-    });
-  }
-
+async function loadHealthContext() {
+  const context = await getHealthContext(isArabic);
+  setHealthContext(context);
+}
   async function sendMessage(customQuestion?: string) {
     const userMessage = customQuestion || input;
 
