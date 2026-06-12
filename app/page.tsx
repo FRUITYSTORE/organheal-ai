@@ -84,20 +84,29 @@ export default function Home() {
     </p>
 
     <div className="homeHeroProSearch">
-      <input
-        type="text"
-        placeholder={
-          isArabic
-            ? "اسأل عن الكوليسترول، النوم، الكبد، القلب..."
-            : "Ask about cholesterol, sleep, liver, heart health..."
-        }
-        disabled
-      />
+  <input
+    type="text"
+    placeholder={
+      isArabic
+        ? "اسأل عن الكوليسترول، النوم، الكبد، القلب..."
+        : "Ask about cholesterol, sleep, liver, heart health..."
+    }
+    disabled
+  />
 
-      <Link href="/assistant" className="primaryBtn">
-        {isArabic ? "جرّب البحث الصحي الذكي" : "Try AI Health Search"}
-      </Link>
-    </div>
+  <label className="homeFileUploadBtn">
+    {isArabic ? "رفع ملف" : "Upload File"}
+    <input type="file" disabled />
+  </label>
+
+  <Link href="/assistant" className="primaryBtn">
+    {isArabic ? "اسأل الذكاء الصحي" : "Ask AI"}
+  </Link>
+
+  <Link href="/lab-upload" className="secondaryBtn">
+    {isArabic ? "تحليل ملف مختبر" : "Analyze Lab PDF"}
+  </Link>
+</div>
 
     <div className="homeHeroProActions">
       <Link href="/assessment" className="primaryBtn">
