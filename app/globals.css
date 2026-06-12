@@ -1828,4 +1828,13 @@ html[dir="rtl"] .homeHeroActions {
   color: #cbd5e1;
   line-height: 1.7;
   margin: 0 0 16px;
+}.homeHeroAIActions {
+  display: flex;
+  gap: 12px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+
+.homeHeroAIActions a {
+  text-decoration: none;
 }

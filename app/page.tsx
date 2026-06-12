@@ -133,15 +133,25 @@ export default function Home() {
               </Link>
             </div>
 
-            {heroAnswer && (
-              <div className="homeHeroAIAnswer">
-                <p>{heroAnswer}</p>
+           {heroAnswer && (
+  <div className="homeHeroAIAnswer">
+    <p className="sectionLabel">
+      {isArabic ? "رؤية الذكاء الصحي" : "Quick AI Insight"}
+    </p>
 
-                <Link href="/assistant" className="secondaryBtn">
-                  {isArabic ? "متابعة في المساعد" : "Continue in Assistant"}
-                </Link>
-              </div>
-            )}
+    <p>{heroAnswer}</p>
+
+    <div className="homeHeroAIActions">
+      <Link href="/assistant" className="primaryBtn">
+        {isArabic ? "متابعة في المساعد" : "Continue in Assistant"}
+      </Link>
+
+      <Link href="/intelligence" className="secondaryBtn">
+        {isArabic ? "مركز الذكاء" : "Open Intelligence Center"}
+      </Link>
+    </div>
+  </div>
+)}
 
             <div className="homeHeroCleanActions">
               <Link href="/assessment" className="primaryBtn">
