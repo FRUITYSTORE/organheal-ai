@@ -420,26 +420,61 @@ export default function Home() {
     </div>
   </div>
 </section>
+<section className="socialProofSection">
+  <p className="sectionLabel">
+    {isArabic ? "منصة الذكاء الصحي" : "HEALTH INTELLIGENCE PLATFORM"}
+  </p>
 
-      <section className="trustSection">
-        <div className="trustBox">
-          <p className="sectionLabel">
-            {isArabic ? "تنبيه طبي مهم" : "Important Medical Disclaimer"}
-          </p>
+  <h2>
+    {isArabic
+      ? "كل ما تحتاجه لفهم صحتك في مكان واحد"
+      : "Everything you need to understand your health"}
+  </h2>
 
-          <h2>
-            {isArabic
-              ? "ذكاء صحي تعليمي وليس تشخيصًا طبيًا"
-              : "Educational health intelligence, not diagnosis"}
-          </h2>
+  <div className="socialProofGrid">
+    <div className="socialProofCard">
+      <h3>Health Profile</h3>
+      <p>
+        {isArabic
+          ? "ملف صحي ذكي مبني على بياناتك"
+          : "Personalized health profile built around your data"}
+      </p>
+    </div>
 
-          <p>
-            {isArabic
-              ? "OrganHeal مصمم للتعليم، تتبع العافية، وزيادة الوعي الصحي. لا يشخص الأمراض ولا يستبدل الطبيب المرخص."
-              : "OrganHeal is designed for education, wellness tracking, and health awareness. It does not diagnose disease or replace a licensed healthcare professional."}
-          </p>
-        </div>
-      </section>
+    <div className="socialProofCard">
+      <h3>Risk Signals</h3>
+      <p>
+        {isArabic
+          ? "اكتشاف أنماط المخاطر مبكراً"
+          : "Detect health risk patterns early"}
+      </p>
+    </div>
+
+    <div className="socialProofCard">
+      <h3>90-Day Forecast</h3>
+      <p>
+        {isArabic
+          ? "توقع الاتجاه الصحي القادم"
+          : "Forecast future health trends"}
+      </p>
+    </div>
+
+    <div className="socialProofCard">
+      <h3>Doctor Brief</h3>
+      <p>
+        {isArabic
+          ? "ملخص جاهز للطبيب"
+          : "Professional doctor-ready summary"}
+      </p>
+    </div>
+  </div>
+
+  <p className="homeFooterDisclaimer">
+    {isArabic
+      ? "OrganHeal يقدم ذكاء صحي تعليمي ولا يستبدل الطبيب أو التشخيص الطبي."
+      : "OrganHeal provides educational health intelligence and does not replace medical diagnosis or licensed care."}
+  </p>
+</section>
     </main>
   );
 }

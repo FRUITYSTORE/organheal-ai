@@ -1744,10 +1744,49 @@ html[dir="rtl"] .homeHeroActions {
   flex-wrap: wrap;
   justify-content: center;
   margin-top: 28px;
+}.homeFinalCTAActions .primaryBtn,
+.homeFinalCTAActions .secondaryBtn {
+  min-width: 240px;
+  height: 64px;
+  font-size: 18px;
 }
 
 @media (max-width: 640px) {
   .homeFinalCTA {
     padding: 36px 24px;
   }
+}.socialProofSection {
+  max-width: 1400px;
+  margin: 120px auto;
+  text-align: center;
+}
+
+.socialProofSection h2 {
+  font-size: 52px;
+  font-weight: 800;
+  margin-top: 20px;
+  margin-bottom: 60px;
+}
+
+.socialProofGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+
+.socialProofCard {
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 28px;
+  padding: 32px;
+  background: rgba(255,255,255,.02);
+}
+
+.socialProofCard h3 {
+  font-size: 24px;
+  margin-bottom: 14px;
+}
+
+.socialProofCard p {
+  color: rgba(255,255,255,.75);
+  line-height: 1.7;
 }
