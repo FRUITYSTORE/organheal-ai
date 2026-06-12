@@ -274,15 +274,14 @@ button {
 
 .homeHeroSearchBox input {
   flex: 1;
-  min-width: 200px;
+  min-width: 260px;
   border: none;
   outline: none;
   background: transparent;
   color: white;
-  padding: 10px 0;
-  font-size: 16px;
-  font-family: var(--font-geist-sans), Arial, sans-serif;
-}
+  padding: 12px 16px;
+  font-size: 15px;
+}s
 
 .homeHeroSearchBox input::placeholder {
   color: #475569;
@@ -1408,5 +1407,95 @@ html[dir="rtl"] .homeHeroActions {
 @media (max-width: 800px) {
   .suggestedQuestionsGrid {
     grid-template-columns: 1fr;
+  }
+}.homeHowItWorks {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto 64px;
+}
+
+.homeSectionHeader {
+  max-width: 860px;
+  margin: 0 auto 34px;
+  text-align: center;
+}
+
+.homeSectionHeader h2 {
+  color: white;
+  font-size: clamp(34px, 5vw, 58px);
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  margin: 12px 0 16px;
+}
+
+.homeSectionHeader p {
+  color: #cbd5e1;
+  font-size: 18px;
+  line-height: 1.7;
+}
+
+.howStepsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+
+.howStepCard {
+  position: relative;
+  display: block;
+  text-decoration: none;
+  color: white;
+  padding: 28px;
+  min-height: 260px;
+  border-radius: 26px;
+  border: 1px solid rgba(103, 232, 249, 0.26);
+  background:
+    linear-gradient(135deg, rgba(15, 23, 42, 0.88), rgba(2, 6, 23, 0.9));
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.howStepCard:hover {
+  transform: translateY(-4px);
+  border-color: rgba(103, 232, 249, 0.65);
+  background:
+    radial-gradient(circle at top left, rgba(34, 211, 238, 0.14), transparent 34%),
+    linear-gradient(135deg, rgba(15, 23, 42, 0.94), rgba(2, 6, 23, 0.96));
+}
+
+.howStepCard span {
+  color: #67e8f9;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.howIcon {
+  font-size: 34px;
+  margin: 28px 0 18px;
+}
+
+.howStepCard h3 {
+  font-size: 22px;
+  margin: 0 0 12px;
+}
+
+.howStepCard p {
+  color: #cbd5e1;
+  line-height: 1.65;
+  margin: 0;
+}
+
+@media (max-width: 1000px) {
+  .howStepsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .howStepsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .howStepCard {
+    min-height: auto;
   }
 }

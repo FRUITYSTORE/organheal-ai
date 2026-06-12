@@ -127,28 +127,71 @@ export default function Home() {
   </div>
 </section>
 
-      <section className="homeSection">
-        <p className="sectionLabel">
-          {isArabic ? "ماذا يقدم OrganHeal؟" : "What OrganHeal Does"}
-        </p>
+      <section className="homeHowItWorks">
+  <div className="homeSectionHeader">
+    <p className="sectionLabel">
+      {isArabic ? "كيف يعمل OrganHeal؟" : "How OrganHeal Works"}
+    </p>
 
-        <h2>
-          {isArabic
-            ? "منصة واحدة للقياس، الفهم، والتصرف"
-            : "One platform to measure, understand, and act"}
-        </h2>
+    <h2>
+      {isArabic
+        ? "من بيانات بسيطة إلى ذكاء صحي واضح"
+        : "From simple data to clear health intelligence"}
+    </h2>
 
-        <div className="homeModernGrid">
-          {intelligenceCards.map((card) => (
-            <div className="homeModernCard" key={card.title}>
-              <div className="homeCardIcon">{card.icon}</div>
-              <h3>{card.title}</h3>
-              <p>{card.text}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+    <p>
+      {isArabic
+        ? "ابدأ بتقييم صحي، أضف نتائج المختبر أو التسجيل اليومي، ثم يحصل المستخدم على ملف صحي ذكي وخطوة تالية واضحة."
+        : "Start with a health assessment, add labs or daily check-ins, and OrganHeal turns your data into a health profile, risk insights, and next best actions."}
+    </p>
+  </div>
 
+  <div className="howStepsGrid">
+    <Link href="/assessment" className="howStepCard">
+      <span>01</span>
+      <div className="howIcon">🫀</div>
+      <h3>{isArabic ? "أكمل التقييم الصحي" : "Complete Assessment"}</h3>
+      <p>
+        {isArabic
+          ? "أجب عن أسئلة موجهة حول صحة الأعضاء ونمط الحياة."
+          : "Answer guided questions about organ health and lifestyle patterns."}
+      </p>
+    </Link>
+
+    <Link href="/lab-upload" className="howStepCard">
+      <span>02</span>
+      <div className="howIcon">🧪</div>
+      <h3>{isArabic ? "أضف نتائج المختبر" : "Add Lab Results"}</h3>
+      <p>
+        {isArabic
+          ? "أدخل أو ارفع نتائج المختبر للحصول على فهم أعمق."
+          : "Enter or upload lab information for deeper educational insights."}
+      </p>
+    </Link>
+
+    <Link href="/checkin" className="howStepCard">
+      <span>03</span>
+      <div className="howIcon">☀️</div>
+      <h3>{isArabic ? "تابع صحتك اليومية" : "Track Daily Wellness"}</h3>
+      <p>
+        {isArabic
+          ? "سجل النوم، التوتر، المزاج، الترطيب، والنشاط."
+          : "Log sleep, stress, mood, hydration, and physical activity."}
+      </p>
+    </Link>
+
+    <Link href="/intelligence" className="howStepCard">
+      <span>04</span>
+      <div className="howIcon">🧠</div>
+      <h3>{isArabic ? "احصل على الذكاء الصحي" : "Receive Intelligence"}</h3>
+      <p>
+        {isArabic
+          ? "افتح الملف الصحي، نمط المخاطر، الفرص، التوقعات، وملخص الطبيب."
+          : "Get your health profile, risk pattern, opportunities, forecast, and doctor brief."}
+      </p>
+    </Link>
+  </div>
+</section>
       <section className="homeActionStrip">
         <div>
           <p className="sectionLabel">
