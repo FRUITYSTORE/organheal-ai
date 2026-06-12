@@ -391,32 +391,35 @@ export default function Home() {
     </div>
   </div>
 </section>
-      <section className="homeActionStrip">
-        <div>
-          <p className="sectionLabel">
-            {isArabic ? "ابدأ الآن" : "Start Now"}
-          </p>
+<section className="homeFinalCTA">
+  <div className="homeFinalCTAContent">
+    <p className="sectionLabel">
+      {isArabic ? "ابدأ رحلتك الصحية الذكية" : "Start Your Health Intelligence Journey"}
+    </p>
 
-          <h2>
-            {isArabic
-              ? "ابدأ ببناء ملفك الصحي الذكي"
-              : "Start building your health intelligence profile"}
-          </h2>
+    <h2>
+      {isArabic
+        ? "حوّل بياناتك الصحية إلى خطوة واضحة اليوم."
+        : "Turn your health data into a clear next step today."}
+    </h2>
 
-          <p>
-            {isArabic
-              ? "ابدأ بتقييم واحد فقط، ثم افتح لوحة التحكم لمتابعة الذكاء الصحي."
-              : "Start with one assessment, then open your dashboard to follow your health intelligence."}
-          </p>
-        </div>
+    <p>
+      {isArabic
+        ? "ابدأ بتقييم مجاني، ثم افتح ملفك الصحي الذكي، فرص التحسين، والتقرير الاحترافي."
+        : "Start with a free assessment, then unlock your health profile, improvement opportunities, and professional report."}
+    </p>
 
-        <div className="homeHeroActions">
-          <Link href="/assessment" className="primaryBtn">
-            {isArabic ? "ابدأ التقييم" : "Start Assessment"}
-          </Link>
+    <div className="homeFinalCTAActions">
+      <Link href="/assessment" className="primaryBtn">
+        {isArabic ? "ابدأ التقييم المجاني" : "Start Free Assessment"}
+      </Link>
 
-        </div>
-      </section>
+      <Link href="/assistant" className="secondaryBtn">
+        {isArabic ? "اسأل الذكاء الصحي" : "Ask AI Health Assistant"}
+      </Link>
+    </div>
+  </div>
+</section>
 
       <section className="trustSection">
         <div className="trustBox">

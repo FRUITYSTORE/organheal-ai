@@ -1706,4 +1706,48 @@ html[dir="rtl"] .homeHeroActions {
   .outcomesGrid {
     grid-template-columns: 1fr;
   }
+}.homeFinalCTA {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto 72px;
+  border-radius: 34px;
+  border: 1px solid rgba(103, 232, 249, 0.34);
+  background:
+    radial-gradient(circle at 15% 20%, rgba(34, 211, 238, 0.18), transparent 34%),
+    radial-gradient(circle at 85% 10%, rgba(59, 130, 246, 0.14), transparent 30%),
+    linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(2, 6, 23, 0.98));
+  padding: 54px;
+  text-align: center;
+}
+
+.homeFinalCTAContent {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.homeFinalCTA h2 {
+  color: white;
+  font-size: clamp(36px, 5vw, 64px);
+  line-height: 1.05;
+  letter-spacing: -0.045em;
+  margin: 16px 0;
+}
+
+.homeFinalCTA p {
+  color: #cbd5e1;
+  font-size: 18px;
+  line-height: 1.7;
+}
+
+.homeFinalCTAActions {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 28px;
+}
+
+@media (max-width: 640px) {
+  .homeFinalCTA {
+    padding: 36px 24px;
+  }
 }
