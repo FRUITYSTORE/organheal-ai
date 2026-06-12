@@ -63,65 +63,63 @@ export default function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
       />
+      <section className="homeHeroPro">
+  <div className="homeHeroProContent">
+    <p className="homeBadge">
+      {isArabic
+        ? "نظام ذكاء صحي شخصي"
+        : "Personal Health Intelligence System"}
+    </p>
 
-      <section className="homeHeroModern">
-        <div className="homeHeroContent">
-          <p className="homeBadge">
-            {isArabic
-              ? "منصة ذكاء صحي شخصية"
-              : "Personal Health Intelligence OS"}
-          </p>
+    <h1>
+      {isArabic
+        ? "افهم صحتك قبل أن تصبح مشكلة."
+        : "Understand your health before it becomes a problem."}
+    </h1>
 
-          <h1>
-            {isArabic
-              ? "افهم صحتك. اعرف خطوتك التالية."
-              : "Understand your health. Know your next step."}
-          </h1>
+    <p className="homeHeroProText">
+      {isArabic
+        ? "حوّل التقييمات الصحية، نتائج المختبر، التسجيل اليومي، والتاريخ الصحي إلى ملف ذكي يوضح المخاطر، الفرص، والخطوة الصحية التالية."
+        : "Turn health assessments, lab results, daily wellness tracking, and health history into clear intelligence about risks, opportunities, and your next best health action."}
+    </p>
 
-          <p className="homeHeroText">
-            {isArabic
-              ? "OrganHeal يحول بيانات التقييمات، المختبر، التسجيل اليومي، والتاريخ الصحي إلى ملف صحي ذكي، فرص تحسين، تنبيهات مخاطر، وتقرير احترافي للطبيب."
-              : "OrganHeal turns assessments, labs, daily check-ins, and health history into a smart health profile, improvement opportunities, risk alerts, and doctor-ready reports."}
-          </p>
+    <div className="homeHeroProSearch">
+      <input
+        type="text"
+        placeholder={
+          isArabic
+            ? "اسأل عن الكوليسترول، النوم، الكبد، القلب..."
+            : "Ask about cholesterol, sleep, liver, heart health..."
+        }
+        disabled
+      />
 
-          <div className="homeHeroActions">
-            <Link href="/assessment" className="primaryBtn">
-              {isArabic ? "ابدأ التقييم" : "Start Assessment"}
-            </Link>
+      <Link href="/assistant" className="primaryBtn">
+        {isArabic ? "جرّب البحث الصحي الذكي" : "Try AI Health Search"}
+      </Link>
+    </div>
 
-            <Link href="/login" className="secondaryBtn">
-              {isArabic ? "تسجيل الدخول" : "Sign In"}
-            </Link>
+    <div className="homeHeroProActions">
+      <Link href="/assessment" className="primaryBtn">
+        {isArabic ? "ابدأ التقييم المجاني" : "Start Free Assessment"}
+      </Link>
 
-            <Link href="/dashboard" className="secondaryBtn">
-              {isArabic ? "لوحة التحكم" : "Dashboard"}
-            </Link>
-          </div>
-        </div>
+      <Link href="/intelligence" className="secondaryBtn">
+        {isArabic ? "شاهد مركز الذكاء" : "View Intelligence Center"}
+      </Link>
 
-        <div className="homeHeroPanel">
-          <p>{isArabic ? "Health Intelligence" : "Health Intelligence"}</p>
-          <h2>82/100</h2>
-          <span>{isArabic ? "مثال توضيحي" : "Example preview"}</span>
+      <Link href="/login" className="secondaryBtn">
+        {isArabic ? "تسجيل الدخول" : "Sign In"}
+      </Link>
+    </div>
 
-          <div className="homeMiniStats">
-            <div>
-              <strong>{isArabic ? "الأولوية" : "Priority"}</strong>
-              <p>Heart</p>
-            </div>
-
-            <div>
-              <strong>{isArabic ? "الاتجاه" : "Trend"}</strong>
-              <p>Improving</p>
-            </div>
-
-            <div>
-              <strong>{isArabic ? "الفرصة" : "Opportunity"}</strong>
-              <p>+8 pts</p>
-            </div>
-          </div>
-        </div>
-      </section>
+    <p className="homeHeroDisclaimer">
+      {isArabic
+        ? "OrganHeal يقدم ذكاء صحي تعليمي ولا يستبدل الطبيب أو التشخيص الطبي."
+        : "OrganHeal provides educational health intelligence and does not replace medical diagnosis or licensed care."}
+    </p>
+  </div>
+</section>
 
       <section className="homeSection">
         <p className="sectionLabel">
