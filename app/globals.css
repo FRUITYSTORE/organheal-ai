@@ -1789,4 +1789,17 @@ html[dir="rtl"] .homeHeroActions {
 .socialProofCard p {
   color: rgba(255,255,255,.75);
   line-height: 1.7;
+}.homeHeroSearchInput {
+  flex: 1;
+  min-width: 260px;
+  color: #94a3b8;
+  padding: 12px 16px;
+  text-decoration: none;
+}
+
+.outcomeCard,
+.socialProofCard {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
 }
