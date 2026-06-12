@@ -216,9 +216,6 @@ export default function Home() {
             {isArabic ? "ابدأ التقييم" : "Start Assessment"}
           </Link>
 
-          <Link href="/signup" className="secondaryBtn">
-            {isArabic ? "إنشاء حساب" : "Create Account"}
-          </Link>
         </div>
       </section>
 

@@ -1498,4 +1498,17 @@ html[dir="rtl"] .homeHeroActions {
   .howStepCard {
     min-height: auto;
   }
+}.navPrimaryBtn {
+  border: 1px solid rgba(103, 232, 249, 0.65);
+  background: rgba(103, 232, 249, 0.12);
+  color: #67e8f9 !important;
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.navPrimaryBtn:hover {
+  background: rgba(103, 232, 249, 0.2);
+  color: white !important;
 }
