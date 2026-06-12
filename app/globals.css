@@ -1362,4 +1362,18 @@ html[dir="rtl"] .assistantQuickActions {
   gap: 12px;
   flex-wrap: wrap;
   margin-bottom: 24px;
+}.pageBackInlineBtn {
+  border: none;
+  background: transparent;
+  color: #67e8f9;
+  font-size: 14px;
+  font-weight: 800;
+  padding: 0;
+  margin: 0 0 10px;
+  cursor: pointer;
+}
+
+.pageBackInlineBtn:hover {
+  color: white;
+  text-decoration: underline;
 }
