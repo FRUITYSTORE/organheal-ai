@@ -322,6 +322,75 @@ export default function Home() {
     </Link>
   </div>
 </section>
+<section className="homeOutcomes">
+  <div className="homeSectionHeader">
+    <p className="sectionLabel">
+      {isArabic ? "النتائج التي ستحصل عليها" : "Health Outcomes"}
+    </p>
+
+    <h2>
+      {isArabic
+        ? "ليس مجرد بيانات صحية، بل قرارات أفضل"
+        : "Not just health data. Better decisions."}
+    </h2>
+
+    <p>
+      {isArabic
+        ? "OrganHeal يحول التقييمات والمختبرات والتتبع اليومي إلى مخرجات صحية مفهومة وقابلة للتنفيذ."
+        : "OrganHeal transforms assessments, labs, and daily tracking into actionable health outcomes."}
+    </p>
+  </div>
+
+  <div className="outcomesGrid">
+    <div className="outcomeCard">
+      <div className="outcomeIcon">🧬</div>
+      <h3>
+        {isArabic ? "الملف الصحي الذكي" : "Health Profile"}
+      </h3>
+      <p>
+        {isArabic
+          ? "اعرف نقاط القوة والفرص الصحية لديك."
+          : "Understand your strongest and weakest health areas."}
+      </p>
+    </div>
+
+    <div className="outcomeCard">
+      <div className="outcomeIcon">⚠️</div>
+      <h3>
+        {isArabic ? "إشارات المخاطر" : "Risk Signals"}
+      </h3>
+      <p>
+        {isArabic
+          ? "اكتشف الأنماط الصحية التي تستحق المتابعة."
+          : "Detect important health patterns before they become bigger issues."}
+      </p>
+    </div>
+
+    <div className="outcomeCard">
+      <div className="outcomeIcon">📈</div>
+      <h3>
+        {isArabic ? "توقع صحي" : "90-Day Forecast"}
+      </h3>
+      <p>
+        {isArabic
+          ? "شاهد اتجاه صحتك خلال الفترة القادمة."
+          : "See where your health trend may be heading."}
+      </p>
+    </div>
+
+    <div className="outcomeCard">
+      <div className="outcomeIcon">🩺</div>
+      <h3>
+        {isArabic ? "ملخص الطبيب" : "Doctor-Ready Summary"}
+      </h3>
+      <p>
+        {isArabic
+          ? "ادخل الموعد الطبي وأنت مستعد."
+          : "Arrive prepared for healthcare conversations."}
+      </p>
+    </div>
+  </div>
+</section>
       <section className="homeActionStrip">
         <div>
           <p className="sectionLabel">
