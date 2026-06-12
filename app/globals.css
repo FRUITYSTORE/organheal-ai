@@ -1802,4 +1802,17 @@ html[dir="rtl"] .homeHeroActions {
   text-decoration: none;
   color: inherit;
   cursor: pointer;
+}.homeHeroAIAnswer {
+  max-width: 820px;
+  margin-top: 18px;
+  padding: 18px 20px;
+  border-radius: 20px;
+  border: 1px solid rgba(103, 232, 249, 0.28);
+  background: rgba(15, 23, 42, 0.82);
+}
+
+.homeHeroAIAnswer p {
+  margin: 0;
+  color: #cbd5e1;
+  line-height: 1.7;
 }

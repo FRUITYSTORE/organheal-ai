@@ -5,6 +5,9 @@ import Link from "next/link";
 
 export default function Home() {
   const [language, setLanguage] = useState("en");
+  const [heroQuestion, setHeroQuestion] = useState("");
+const [heroAnswer, setHeroAnswer] = useState("");
+const [heroLoading, setHeroLoading] = useState(false);
 
   useEffect(() => {
     const savedLanguage = localStorage.getItem("organheal-language") || "en";
@@ -32,7 +35,42 @@ export default function Home() {
       url: "https://organheal.com",
     },
   };
+async function askHeroAI() {
+  if (!heroQuestion.trim() || heroLoading) return;
 
+  setHeroLoading(true);
+  setHeroAnswer("");
+
+  try {
+    const result = await fetch("/api/assistant", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        message: heroQuestion,
+        language,
+      }),
+    });
+
+    const data = await result.json();
+
+    setHeroAnswer(
+      data.response ||
+        (isArabic
+          ? "لم أستطع إنشاء إجابة الآن."
+          : "I could not generate an answer right now.")
+    );
+  } catch {
+    setHeroAnswer(
+      isArabic
+        ? "حدث خطأ مؤقت أثناء الاتصال بالمساعد."
+        : "A temporary error occurred while connecting to the assistant."
+    );
+  } finally {
+    setHeroLoading(false);
+  }
+}
   return (
     <main className="homepage">
       <script
@@ -62,20 +100,36 @@ export default function Home() {
             </p>
 
             <div className="homeHeroSearchBox">
-              <Link href="/assistant" className="homeHeroSearchInput">
-                {isArabic
-                  ? "اسأل عن الكوليسترول، النوم، الكبد، القلب..."
-                  : "Ask about cholesterol, sleep, liver, heart health..."}
-              </Link>
+  <input
+    type="text"
+    value={heroQuestion}
+    onChange={(event) => setHeroQuestion(event.target.value)}
+    onKeyDown={(event) => {
+      if (event.key === "Enter") {
+        askHeroAI();
+      }
+    }}
+    placeholder={
+      isArabic
+        ? "اسأل عن الكوليسترول، النوم، الكبد، القلب..."
+        : "Ask about cholesterol, sleep, liver, heart health..."
+    }
+  />
 
-              <Link href="/assistant" className="primaryBtn">
-                {isArabic ? "اسأل الذكاء الصحي" : "Ask AI"}
-              </Link>
+  <button className="primaryBtn" onClick={askHeroAI} disabled={heroLoading}>
+    {heroLoading ? "..." : isArabic ? "اسأل الذكاء الصحي" : "Ask AI"}
+  </button>
 
-              <Link href="/lab-upload" className="secondaryBtn">
-                {isArabic ? "رفع ملف" : "Upload File"}
-              </Link>
-            </div>
+  <Link href="/lab-upload" className="secondaryBtn">
+    {isArabic ? "رفع ملف" : "Upload File"}
+  </Link>
+</div>
+
+{heroAnswer && (
+  <div className="homeHeroAIAnswer">
+    <p>{heroAnswer}</p>
+  </div>
+)}
 
             <div className="homeHeroCleanActions">
               <Link href="/assessment" className="primaryBtn">
