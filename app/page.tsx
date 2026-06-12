@@ -261,6 +261,67 @@ export default function Home() {
     </div>
   </div>
 </section>
+<section className="homeAIFeatures">
+  <div className="homeSectionHeader">
+    <p className="sectionLabel">
+      {isArabic ? "ميزات الذكاء الاصطناعي" : "AI Health Features"}
+    </p>
+
+    <h2>
+      {isArabic
+        ? "ذكاء صحي يساعدك على الفهم وليس التخمين"
+        : "Health AI that helps you understand, not guess"}
+    </h2>
+
+    <p>
+      {isArabic
+        ? "اسأل، حلل، تتبع، وشارك ملخصًا صحيًا احترافيًا مبنيًا على بياناتك."
+        : "Ask, analyze, track, and share professional health summaries built around your data."}
+    </p>
+  </div>
+
+  <div className="aiFeaturesGrid">
+    <Link href="/assistant" className="aiFeatureCard">
+      <div>🤖</div>
+      <h3>{isArabic ? "البحث الصحي الذكي" : "AI Health Search"}</h3>
+      <p>
+        {isArabic
+          ? "اسأل عن المؤشرات، الأعضاء، المختبر، والخطوة التالية."
+          : "Ask about markers, organs, labs, and your next best action."}
+      </p>
+    </Link>
+
+    <Link href="/lab-upload" className="aiFeatureCard">
+      <div>🧪</div>
+      <h3>{isArabic ? "تحليل ملفات المختبر" : "AI Lab Interpretation"}</h3>
+      <p>
+        {isArabic
+          ? "ارفع ملفًا أو أدخل نتائج المختبر للحصول على فهم تعليمي."
+          : "Upload or enter lab results for educational interpretation."}
+      </p>
+    </Link>
+
+    <Link href="/intelligence" className="aiFeatureCard">
+      <div>🎯</div>
+      <h3>{isArabic ? "مدرب صحي ذكي" : "AI Health Coach"}</h3>
+      <p>
+        {isArabic
+          ? "احصل على فرص التحسين والخطوة الصحية التالية."
+          : "Get improvement opportunities and your next best health action."}
+      </p>
+    </Link>
+
+    <Link href="/doctor-portal" className="aiFeatureCard">
+      <div>🩺</div>
+      <h3>{isArabic ? "ملخص الطبيب" : "Doctor Brief Generator"}</h3>
+      <p>
+        {isArabic
+          ? "حوّل بياناتك إلى ملخص جاهز للمراجعة الطبية."
+          : "Turn your data into a doctor-ready pre-visit brief."}
+      </p>
+    </Link>
+  </div>
+</section>
       <section className="homeActionStrip">
         <div>
           <p className="sectionLabel">
