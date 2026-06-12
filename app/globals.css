@@ -236,15 +236,13 @@ button {
 
 /* H1 inside hero */
 .homeHeroClean h1 {
-  margin: 20px 0 0;
+  margin: 22px 0;
   color: white;
-  font-size: clamp(44px, 6vw, 80px);
-  line-height: 1.0;
-  letter-spacing: -0.055em;
-  font-weight: 900;
-  max-width: 860px;
+  font-size: clamp(38px, 5vw, 64px);
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  max-width: 920px;
 }
-
 /* Subtext */
 .homeHeroCleanText {
   margin-top: 20px;
@@ -256,17 +254,16 @@ button {
 
 /* Search box */
 .homeHeroSearchBox {
-  margin-top: 32px;
+  margin-top: 28px;
   max-width: 760px;
-  padding: 8px 8px 8px 22px;
+  padding: 8px;
   border-radius: 999px;
-  border: 1px solid rgba(103, 232, 249, 0.30);
-  background: rgba(15, 23, 42, 0.80);
+  border: 1px solid rgba(103, 232, 249, 0.34);
+  background: rgba(2, 6, 23, 0.72);
   display: flex;
-  gap: 8px;
+  gap: 10px;
+  flex-wrap: wrap;
   align-items: center;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.30);
 }
 
 .homeHeroSearchBox:focus-within {
