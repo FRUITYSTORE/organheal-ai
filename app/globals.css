@@ -1815,4 +1815,17 @@ html[dir="rtl"] .homeHeroActions {
   margin: 0;
   color: #cbd5e1;
   line-height: 1.7;
+}.homeHeroAIAnswer {
+  max-width: 820px;
+  margin-top: 18px;
+  padding: 20px;
+  border-radius: 22px;
+  border: 1px solid rgba(103, 232, 249, 0.28);
+  background: rgba(15, 23, 42, 0.84);
+}
+
+.homeHeroAIAnswer p {
+  color: #cbd5e1;
+  line-height: 1.7;
+  margin: 0 0 16px;
 }

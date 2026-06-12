@@ -1,10 +1,13 @@
 "use client";
-
+import { getHealthContext } from "../lib/getHealthContext";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
 export default function Home() {
   const [language, setLanguage] = useState("en");
+  const [heroQuestion, setHeroQuestion] = useState("");
+const [heroAnswer, setHeroAnswer] = useState("");
+const [heroLoading, setHeroLoading] = useState(false);
   const [heroQuestion, setHeroQuestion] = useState("");
 const [heroAnswer, setHeroAnswer] = useState("");
 const [heroLoading, setHeroLoading] = useState(false);
@@ -71,6 +74,45 @@ async function askHeroAI() {
     setHeroLoading(false);
   }
 }
+async function askHeroAI() {
+  if (!heroQuestion.trim() || heroLoading) return;
+
+  setHeroLoading(true);
+  setHeroAnswer("");
+
+  try {
+    const context = await getHealthContext(isArabic);
+
+    const result = await fetch("/api/assistant", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        message: heroQuestion,
+        language,
+        healthContext: context,
+      }),
+    });
+
+    const data = await result.json();
+
+    setHeroAnswer(
+      data.response ||
+        (isArabic
+          ? "لم أستطع إنشاء إجابة الآن."
+          : "I could not generate an answer right now.")
+    );
+  } catch {
+    setHeroAnswer(
+      isArabic
+        ? "حدث خطأ مؤقت أثناء الاتصال بالمساعد."
+        : "A temporary error occurred while connecting to the assistant."
+    );
+  } finally {
+    setHeroLoading(false);
+  }
+}
   return (
     <main className="homepage">
       <script
@@ -105,9 +147,7 @@ async function askHeroAI() {
     value={heroQuestion}
     onChange={(event) => setHeroQuestion(event.target.value)}
     onKeyDown={(event) => {
-      if (event.key === "Enter") {
-        askHeroAI();
-      }
+      if (event.key === "Enter") askHeroAI();
     }}
     placeholder={
       isArabic
@@ -128,6 +168,10 @@ async function askHeroAI() {
 {heroAnswer && (
   <div className="homeHeroAIAnswer">
     <p>{heroAnswer}</p>
+
+    <Link href="/assistant" className="secondaryBtn">
+      {isArabic ? "متابعة في المساعد" : "Continue in Assistant"}
+    </Link>
   </div>
 )}
 
