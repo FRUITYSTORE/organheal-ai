@@ -94,10 +94,9 @@ export default function Home() {
     disabled
   />
 
-  <label className="homeFileUploadBtn">
-    {isArabic ? "رفع ملف" : "Upload File"}
-    <input type="file" disabled />
-  </label>
+  <Link href="/lab-upload" className="homeFileUploadBtn">
+  {isArabic ? "رفع ملف" : "Upload File"}
+</Link>
 
   <Link href="/assistant" className="primaryBtn">
     {isArabic ? "اسأل الذكاء الصحي" : "Ask AI"}

@@ -1472,7 +1472,8 @@ html[dir="rtl"] .assistantQuickActions {
   border-radius: 999px;
   padding: 12px 18px;
   font-weight: 800;
-  cursor: not-allowed;
+  cursor: pointer;
+text-decoration: none;
 }
 
 .homeFileUploadBtn input {
