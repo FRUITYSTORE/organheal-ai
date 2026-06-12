@@ -192,6 +192,75 @@ export default function Home() {
     </Link>
   </div>
 </section>
+<section className="homeIntelligencePreview">
+  <div className="homeSectionHeader">
+    <p className="sectionLabel">
+      {isArabic ? "معاينة الذكاء الصحي" : "Live Intelligence Preview"}
+    </p>
+
+    <h2>
+      {isArabic
+        ? "ليس مجرد رقم. بل فهم صحي قابل للتنفيذ."
+        : "Not just a score. Actionable health intelligence."}
+    </h2>
+
+    <p>
+      {isArabic
+        ? "OrganHeal يحول البيانات الصحية إلى ملف ذكي يوضح الحالة، المخاطر، الفرص، والخطوة التالية."
+        : "OrganHeal transforms health data into a smart profile showing status, risks, opportunities, and the next best action."}
+    </p>
+  </div>
+
+  <div className="intelligencePreviewCard">
+    <div className="previewMain">
+      <p className="sectionLabel">
+        {isArabic ? "الملف الصحي الذكي" : "Health Intelligence Profile"}
+      </p>
+
+      <h3>{isArabic ? "ملف صحي متوازن" : "Balanced Health Profile"}</h3>
+
+      <p>
+        {isArabic
+          ? "يعرض هذا المثال كيف يحلل OrganHeal التقييمات، المختبر، والتسجيل اليومي لتكوين صورة صحية واضحة."
+          : "This example shows how OrganHeal interprets assessments, labs, and daily tracking into a clear health picture."}
+      </p>
+    </div>
+
+    <div className="previewMetricsGrid">
+      <div>
+        <span>{isArabic ? "الدرجة العامة" : "Overall Score"}</span>
+        <strong>82/100</strong>
+      </div>
+
+      <div>
+        <span>{isArabic ? "نمط المخاطر" : "Risk Pattern"}</span>
+        <strong>{isArabic ? "متابعة وقائية" : "Preventive Monitoring"}</strong>
+      </div>
+
+      <div>
+        <span>{isArabic ? "فرصة التحسن" : "Potential Gain"}</span>
+        <strong>+8</strong>
+      </div>
+
+      <div>
+        <span>{isArabic ? "الخطوة التالية" : "Next Best Action"}</span>
+        <strong>{isArabic ? "تحسين النشاط" : "Improve activity"}</strong>
+      </div>
+    </div>
+
+    <div className="previewDoctorBrief">
+      <p className="sectionLabel">
+        {isArabic ? "ملخص الطبيب" : "Doctor-Ready Brief"}
+      </p>
+
+      <p>
+        {isArabic
+          ? "المستخدم لديه مؤشرات صحية مستقرة مع فرصة واضحة لتحسين النشاط اليومي والمتابعة الوقائية."
+          : "The user shows stable health indicators with a clear opportunity to improve daily activity and preventive tracking."}
+      </p>
+    </div>
+  </div>
+</section>
       <section className="homeActionStrip">
         <div>
           <p className="sectionLabel">
