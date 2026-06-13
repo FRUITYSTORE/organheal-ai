@@ -2031,4 +2031,37 @@ html[dir="rtl"] .homeHeroActions {
 
 .homeLabBatchLink:hover {
   text-decoration: underline;
+}.selectedFileList {
+  width: 100%;
+  max-width: 720px;
+  margin-top: 18px;
+  display: grid;
+  gap: 10px;
+}
+
+.selectedFileItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.selectedFileItem span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.selectedFileItem button {
+  border: 1px solid rgba(248, 113, 113, 0.6);
+  background: rgba(248, 113, 113, 0.08);
+  color: #fecaca;
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-weight: 800;
+  cursor: pointer;
 }

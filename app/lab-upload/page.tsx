@@ -125,7 +125,17 @@ if (wasUploadedFromHomepage && data && data.length > 0) {
   );
 }
 }
+function removeSelectedFile(index: number) {
+  const updatedFiles = selectedFiles.filter((_, fileIndex) => fileIndex !== index);
 
+  setSelectedFiles(updatedFiles);
+  setFileNames(updatedFiles.map((file) => file.name));
+
+  if (updatedFiles.length === 0) {
+    setMessage("");
+    setAnalysisStep("idle");
+  }
+}
 async function uploadFile() {
   if (selectedFiles.length === 0) {
     setMessage("Please upload at least one PDF or image first.");
@@ -332,6 +342,25 @@ async function uploadFile() {
     ? "Ready for AI extraction"
     : "PDF, JPG, JPEG, PNG supported"}
 </span>
+{fileNames.length > 0 && (
+  <div className="selectedFileList">
+    {fileNames.map((name, index) => (
+      <div key={name + index} className="selectedFileItem">
+        <span>{name}</span>
+
+        <button
+          type="button"
+          onClick={(event) => {
+            event.preventDefault();
+            removeSelectedFile(index);
+          }}
+        >
+          Remove
+        </button>
+      </div>
+    ))}
+  </div>
+)}
             </label>
 
             <div className="labAnalysisSteps">
