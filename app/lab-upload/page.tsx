@@ -195,23 +195,43 @@ async function uploadFile() {
 
     const analysis = generateLabSummary(file.name);
 
-    const { error: databaseError } = await supabase
-      .from("uploaded_lab_files")
-      .insert({
-        user_id: user.id,
-        file_name: file.name,
-        file_path: filePath,
-        file_url: signedUrlData.signedUrl,
-        analysis_status: analysis.status,
-        ai_summary: analysis.summary,
-      });
+   const { data: insertedFile, error: databaseError } = await supabase
+  .from("uploaded_lab_files")
+  .insert({
+    user_id: user.id,
+    file_name: file.name,
+    file_path: filePath,
+    file_url: signedUrlData.signedUrl,
+    report_type: reportType,
+    analysis_status: analysis.status,
+    ai_summary: analysis.summary,
+  })
+  .select("id")
+  .single();
 
     if (databaseError) {
       setMessage("Database error: " + databaseError.message);
       setUploading(false);
       setAnalysisStep("idle");
       return;
-    }
+    }if (insertedFile) {
+  await supabase.from("health_insights").insert({
+    user_id: user.id,
+    report_id: insertedFile.id,
+    report_type: reportType,
+    insight_title: "Medical report uploaded",
+    insight_summary:
+      "This report was uploaded successfully. AI extraction and structured health intelligence will be connected in the next phase.",
+    risk_level: "pending",
+    recommended_action:
+      "Review this report with a licensed healthcare professional if you have symptoms, abnormal results, or urgent concerns.",
+    doctor_brief:
+      "A medical report was uploaded and is ready for future AI-assisted summarization.",
+    health_score: null,
+    potential_gain: null,
+    next_best_action: "Prepare this report for structured review.",
+  });
+}
 
     uploadedCount++;
   }
