@@ -106,7 +106,10 @@ function handleHeroDrop(event: React.DragEvent<HTMLDivElement>) {
 function handleHeroDragOver(event: React.DragEvent<HTMLDivElement>) {
   event.preventDefault();
 }
-
+function removeHeroLabFile() {
+  setSelectedLabFile(null);
+  setSelectedLabPreview("");
+}
 async function analyzeHeroLabFile() {
  
 
@@ -248,6 +251,17 @@ async function analyzeHeroLabFile() {
 
  {selectedLabFile ? (
   <>
+    <button
+      type="button"
+      className="heroFileRemoveBtn"
+      onClick={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        removeHeroLabFile();
+      }}
+    >
+      ×
+    </button>
     {selectedLabPreview && (
       <img
         src={selectedLabPreview}

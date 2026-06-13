@@ -2064,4 +2064,22 @@ html[dir="rtl"] .homeHeroActions {
   padding: 7px 12px;
   font-weight: 800;
   cursor: pointer;
+}.labPdfHeroBtn {
+  position: relative;
+}
+
+.heroFileRemoveBtn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  border: 1px solid rgba(248, 113, 113, 0.8);
+  background: rgba(127, 29, 29, 0.95);
+  color: white;
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1;
+  cursor: pointer;
 }
