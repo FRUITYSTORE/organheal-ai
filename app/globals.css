@@ -281,7 +281,7 @@ button {
   color: white;
   padding: 12px 16px;
   font-size: 15px;
-}s
+}
 
 .homeHeroSearchBox input::placeholder {
   color: #475569;
@@ -1903,18 +1903,11 @@ html[dir="rtl"] .homeHeroActions {
   border: 1px solid rgba(103, 232, 249, 0.55);
   background: rgba(103, 232, 249, 0.08);
   color: white;
-  transition: all 0.2s ease;
-}
-
-.labPdfHeroBtn:hover {
-  background: rgba(103, 232, 249, 0.15);
-  border-color: rgba(103, 232, 249, 0.9);
 }
 
 .labPdfHeroBtn span {
   font-size: 14px;
   font-weight: 800;
-  line-height: 1.1;
 }
 
 .labPdfHeroBtn small {

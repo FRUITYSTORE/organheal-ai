@@ -128,12 +128,13 @@ export default function Home() {
                 {heroLoading ? "..." : isArabic ? "اسأل الذكاء الصحي" : "Ask AI"}
               </button>
 
-              <Link href="/lab-upload" className="secondaryBtn">
-                {isArabic ? "رفع ملف" : "Upload File"}
-              </Link>
-            </div>
+              <Link href="/lab-upload" className="labPdfHeroBtn">
+  <span>{isArabic ? "تحليل ملف مختبر" : "Analyze Lab PDF"}</span>
+  <small>{isArabic ? "PDF أو صورة" : "PDF or image"}</small>
+</Link>
+</div>
 
-           {heroAnswer && (
+{heroAnswer && (
   <div className="homeHeroAIAnswer">
     <p className="sectionLabel">
       {isArabic ? "رؤية الذكاء الصحي" : "Quick AI Insight"}
