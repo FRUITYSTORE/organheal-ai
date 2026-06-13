@@ -215,6 +215,35 @@ async function uploadFile() {
   setUploading(false);
 
   await fetchUploadedFiles();
+}async function deleteFile(file: UploadedFile) {
+  const confirmDelete = window.confirm(
+    `Delete "${file.file_name}"?`
+  );
+
+  if (!confirmDelete) return;
+
+  const { error: storageError } = await supabase.storage
+    .from("lab-reports")
+    .remove([file.file_path]);
+
+  if (storageError) {
+    setMessage("Storage delete error: " + storageError.message);
+    return;
+  }
+
+  const { error: databaseError } = await supabase
+    .from("uploaded_lab_files")
+    .delete()
+    .eq("id", file.id);
+
+  if (databaseError) {
+    setMessage("Database delete error: " + databaseError.message);
+    return;
+  }
+
+  setMessage(`"${file.file_name}" deleted successfully.`);
+
+  await fetchUploadedFiles();
 }
   async function openFile(filePath: string) {
     const { data, error } = await supabase.storage
@@ -370,12 +399,27 @@ async function uploadFile() {
     <p>{file.ai_summary}</p>
   </div>
 )}
-                  <button
-                    className="secondaryBtn"
-                    onClick={() => openFile(file.file_path)}
-                  >
-                    Open File
-                  </button>
+                  <div
+  style={{
+    display: "flex",
+    gap: "10px",
+    marginTop: "12px",
+  }}
+>
+  <button
+    className="secondaryBtn"
+    onClick={() => openFile(file.file_path)}
+  >
+    Open File
+  </button>
+
+  <button
+    className="secondaryBtn"
+    onClick={() => deleteFile(file)}
+  >
+    Delete File
+  </button>
+</div>
                 </div>
               ))
             )}
