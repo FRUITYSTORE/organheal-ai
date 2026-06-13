@@ -59,11 +59,22 @@ function loadPendingHeroFile() {
   sessionStorage.removeItem("organheal-pending-lab-file-name");
 }
  function handleFiles(files: FileList | File[]) {
-  const fileArray = Array.from(files).slice(0, 10);
+  const newFiles = Array.from(files);
 
-  setSelectedFiles(fileArray);
-  setFileNames(fileArray.map((file) => file.name));
-  setMessage("");
+  setSelectedFiles((previousFiles) => {
+    const combinedFiles = [...previousFiles, ...newFiles].slice(0, 10);
+
+    setFileNames(combinedFiles.map((file) => file.name));
+
+    if (combinedFiles.length >= 10) {
+      setMessage("Maximum 10 files selected.");
+    } else {
+      setMessage("");
+    }
+
+    return combinedFiles;
+  });
+
   setAnalysisStep("idle");
 }
 
