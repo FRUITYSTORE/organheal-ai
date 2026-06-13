@@ -20,7 +20,8 @@ type AnalysisStep = "idle" | "uploading" | "extracting" | "analyzing" | "ready";
 export default function LabUploadPage() {
  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 const [fileNames, setFileNames] = useState<string[]>([]);
-  const [message, setMessage] = useState("");
+const [reportType, setReportType] = useState("medical");
+const [message, setMessage] = useState("");
   const [uploading, setUploading] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [latestUploadedFileName, setLatestUploadedFileName] = useState("");
@@ -297,21 +298,37 @@ async function uploadFile() {
         <PageBackActions />
 
         <div className="assistantHeader">
-          <p className="assistantBadge">PDF / PHOTO LAB ANALYZER</p>
-          <h1>Upload Lab Report</h1>
+          <p className="assistantBadge">
+  MEDICAL REPORT INTELLIGENCE
+</p>
+          <h1>Upload Medical Report</h1>
           <p>
-            Upload a laboratory report as PDF, JPG, JPEG, or PNG. OrganHeal AI
-            will use this flow to extract lab values and generate structured
-            health intelligence.
-          </p>
+  Upload laboratory reports, radiology reports, discharge summaries,
+  prescriptions, or medical documents. OrganHeal will organize,
+  explain, and prepare these reports for future health intelligence.
+</p>
         </div>
 
         <div className="chatWindow">
           <div className="labUploadBox">
-            <p className="sectionLabel">Lab Report Upload</p>
-            <h2>Drop your lab report here</h2>
-            <p>Supported formats: PDF, JPG, JPEG, PNG</p>
-
+            <p className="sectionLabel">Medical Report Upload</p>
+            <h2>Drop your medical report here</h2>
+            <p>
+  Laboratory Reports • Radiology Reports • Medical Reports •
+  Discharge Summaries • PDF • JPG • PNG
+</p>
+<div style={{ marginBottom: "16px" }}>
+  <select
+    value={reportType}
+    onChange={(event) => setReportType(event.target.value)}
+    className="reportTypeSelect"
+  >
+    <option value="lab">Laboratory Report</option>
+    <option value="radiology">Radiology Report</option>
+    <option value="medical">Medical Report</option>
+    <option value="discharge">Discharge Summary</option>
+  </select>
+</div>
             <label
               className="labDropZone"
               onDrop={handleDrop}
