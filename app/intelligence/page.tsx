@@ -17,6 +17,7 @@ export default function IntelligencePage() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [healthEngine, setHealthEngine] = useState<HealthEngine | null>(null);
+  const [healthInsights, setHealthInsights] = useState<any[]>([]);
   const [copyMessage, setCopyMessage] = useState("");
 
   useEffect(() => {
@@ -60,7 +61,13 @@ export default function IntelligencePage() {
       dailyCheckIn: null,
       isArabic: false,
     });
+const { data: insights } = await supabase
+  .from("health_insights")
+  .select("*")
+  .eq("user_id", userData.user.id)
+  .order("created_at", { ascending: false });
 
+setHealthInsights(insights || []);
     setHealthEngine(intelligence);
     setLoading(false);
   }
@@ -297,6 +304,63 @@ export default function IntelligencePage() {
 
                 {copyMessage && <p>{copyMessage}</p>}
               </div>
+              MEDICAL REPORT INTELLIGENCE
+              <div className="resultBox">
+  <p className="sectionLabel">
+    📄 MEDICAL REPORT INTELLIGENCE
+  </p>
+
+  <h2>Uploaded Medical Reports</h2>
+
+  {healthInsights.length === 0 ? (
+    <p>No medical report intelligence available yet.</p>
+  ) : (
+    <div
+      style={{
+        display: "grid",
+        gap: "14px",
+        marginTop: "18px",
+      }}
+    >
+      {healthInsights.map((item) => (
+        <div
+          key={item.id}
+          style={{
+            padding: "16px",
+            borderRadius: "16px",
+            background: "rgba(15,23,42,0.75)",
+            border: "1px solid rgba(34,211,238,0.18)",
+            textAlign: "left",
+          }}
+        >
+          <h3>
+            {item.insight_title || "Medical Report Uploaded"}
+          </h3>
+
+          <p>
+            <strong>Report Type:</strong>{" "}
+            {item.report_type || "Medical"}
+          </p>
+
+          <p>
+            <strong>AI Status:</strong>{" "}
+            {item.ai_status || "Pending"}
+          </p>
+
+          <p>
+            <strong>Risk Level:</strong>{" "}
+            {item.risk_level || "Pending"}
+          </p>
+
+          <p>
+            {item.insight_summary ||
+              "Report uploaded and waiting for AI interpretation."}
+          </p>
+        </div>
+      ))}
+    </div>
+  )}
+</div>
             </>
           )}
         </section>
