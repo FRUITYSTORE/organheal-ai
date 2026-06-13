@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getHealthContext } from "../lib/getHealthContext";
+import { supabase } from "../lib/supabase";
 
 export default function Home() {
   const [language, setLanguage] = useState("en");

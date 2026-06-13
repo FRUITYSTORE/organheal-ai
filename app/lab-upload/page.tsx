@@ -27,6 +27,19 @@ export default function LabUploadPage() {
   loadPendingHeroFile();
 }, []);
 function loadPendingHeroFile() {
+  const uploadedFileName = sessionStorage.getItem(
+    "organheal-latest-uploaded-lab-file"
+  );
+
+  if (uploadedFileName) {
+    setMessage(
+      `Your file "${uploadedFileName}" was uploaded successfully from the homepage. AI extraction will be connected in the next phase.`
+    );
+
+    sessionStorage.removeItem("organheal-latest-uploaded-lab-file");
+    return;
+  }
+
   const savedFileName = sessionStorage.getItem(
     "organheal-pending-lab-file-name"
   );
