@@ -1867,4 +1867,58 @@ html[dir="rtl"] .homeHeroActions {
 .labPdfHeroBtn:hover {
   border-color: rgba(103, 232, 249, 0.7);
   background: rgba(103, 232, 249, 0.12);
+}.homeHeroSearchBox .labPdfHeroBtn {
+  display: inline-flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  min-height: 54px !important;
+  padding: 10px 18px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(103, 232, 249, 0.65) !important;
+  background: rgba(103, 232, 249, 0.1) !important;
+  color: white !important;
+  text-decoration: none !important;
+  font-weight: 900 !important;
+  line-height: 1.1 !important;
+}
+
+.homeHeroSearchBox .labPdfHeroBtn span {
+  font-size: 14px !important;
+}
+
+.homeHeroSearchBox .labPdfHeroBtn small {
+  margin-top: 4px !important;
+  color: #94a3b8 !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+}.labPdfHeroBtn {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-decoration: none;
+  min-height: 54px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(103, 232, 249, 0.55);
+  background: rgba(103, 232, 249, 0.08);
+  color: white;
+  transition: all 0.2s ease;
+}
+
+.labPdfHeroBtn:hover {
+  background: rgba(103, 232, 249, 0.15);
+  border-color: rgba(103, 232, 249, 0.9);
+}
+
+.labPdfHeroBtn span {
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.labPdfHeroBtn small {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #94a3b8;
 }
