@@ -9,6 +9,7 @@ export default function Home() {
   const [heroQuestion, setHeroQuestion] = useState("");
   const [heroAnswer, setHeroAnswer] = useState("");
   const [heroLoading, setHeroLoading] = useState(false);
+  const [selectedLabFile, setSelectedLabFile] = useState<File | null>(null);
 
   useEffect(() => {
     const savedLanguage = localStorage.getItem("organheal-language") || "en";
@@ -128,10 +129,40 @@ export default function Home() {
                 {heroLoading ? "..." : isArabic ? "اسأل الذكاء الصحي" : "Ask AI"}
               </button>
 
-              <Link href="/lab-upload" className="labPdfHeroBtn">
-  <span>{isArabic ? "تحليل ملف مختبر" : "Analyze Lab PDF"}</span>
-  <small>{isArabic ? "PDF أو صورة" : "PDF or image"}</small>
-</Link>
+<label className="labPdfHeroBtn">
+  <input
+    type="file"
+    accept=".pdf,image/*"
+    hidden
+    onChange={(e) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        setSelectedLabFile(file);
+      }
+    }}
+  />
+
+  {selectedLabFile ? (
+    <>
+      <span>{selectedLabFile.name}</span>
+      <small>
+        {isArabic ? "جاهز للتحليل" : "Ready for analysis"}
+      </small>
+    </>
+  ) : (
+    <>
+      <span>
+        {isArabic
+          ? "اسحب ملف المختبر أو اضغط للرفع"
+          : "Drop Lab PDF or click to upload"}
+      </span>
+
+      <small>
+        {isArabic ? "PDF أو صورة" : "PDF or image"}
+      </small>
+    </>
+  )}
+</label>
 </div>
 
 {heroAnswer && (

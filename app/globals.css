@@ -1914,4 +1914,11 @@ html[dir="rtl"] .homeHeroActions {
   margin-top: 4px;
   font-size: 11px;
   color: #94a3b8;
+}.homeHeroSearchBox .labPdfHeroBtn {
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.homeHeroSearchBox .labPdfHeroBtn:hover {
+  transform: translateY(-2px);
 }
