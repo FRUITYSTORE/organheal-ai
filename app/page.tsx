@@ -154,12 +154,15 @@ async function analyzeHeroLabFile() {
 
   const { error: databaseError } = await supabase
     .from("uploaded_lab_files")
-    .insert({
-      user_id: user.id,
-      file_name: selectedLabFile.name,
-      file_path: filePath,
-      file_url: signedUrlData.signedUrl,
-    });
+   .insert({
+  user_id: user.id,
+  file_name: selectedLabFile.name,
+  file_path: filePath,
+  file_url: signedUrlData?.signedUrl || null,
+  analysis_status: "analyzed",
+  ai_summary:
+    "Laboratory report uploaded successfully. AI extraction will process biomarkers and generate health intelligence in the next phase.",
+});
 
  if (databaseError) {
   console.log("DATABASE ERROR:", databaseError);
