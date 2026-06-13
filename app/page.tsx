@@ -93,18 +93,14 @@ function handleHeroDrop(event: React.DragEvent<HTMLDivElement>) {
 
 function handleHeroDragOver(event: React.DragEvent<HTMLDivElement>) {
   event.preventDefault();
-}async function analyzeHeroLabFile() {
+}
+
+function analyzeHeroLabFile() {
   if (!selectedLabFile) return;
 
-  const fileUrl = URL.createObjectURL(selectedLabFile);
-
   sessionStorage.setItem(
-    "organheal-pending-lab-file",
-    JSON.stringify({
-      name: selectedLabFile.name,
-      type: selectedLabFile.type,
-      url: fileUrl,
-    })
+    "organheal-pending-lab-file-name",
+    selectedLabFile.name
   );
 
   window.location.href = "/lab-upload?source=hero";

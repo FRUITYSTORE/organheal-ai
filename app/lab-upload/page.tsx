@@ -26,27 +26,18 @@ export default function LabUploadPage() {
   fetchUploadedFiles();
   loadPendingHeroFile();
 }, []);
-async function loadPendingHeroFile() {
-  const savedFile = sessionStorage.getItem("organheal-pending-lab-file");
+function loadPendingHeroFile() {
+  const savedFileName = sessionStorage.getItem(
+    "organheal-pending-lab-file-name"
+  );
 
-  if (!savedFile) return;
+  if (!savedFileName) return;
 
-  try {
-    const parsed = JSON.parse(savedFile);
+  setMessage(
+    `You selected "${savedFileName}" from the homepage. Please upload it here to continue analysis.`
+  );
 
-    const response = await fetch(parsed.url);
-    const blob = await response.blob();
-
-    const file = new File([blob], parsed.name, {
-      type: parsed.type || blob.type,
-    });
-
-    handleFile(file);
-
-    sessionStorage.removeItem("organheal-pending-lab-file");
-  } catch {
-    setMessage("Could not load the selected file. Please upload it again.");
-  }
+  sessionStorage.removeItem("organheal-pending-lab-file-name");
 }
   function handleFile(file: File) {
     setSelectedFile(file);
