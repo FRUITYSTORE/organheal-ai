@@ -67,7 +67,7 @@ function loadPendingHeroFile() {
     if (file) handleFile(file);
   }
 
-  function handleDrop(event: React.DragEvent<HTMLLabelElement>) {
+ function handleDrop(event: React.DragEvent<HTMLLabelElement>) {
     event.preventDefault();
 
     const file = event.dataTransfer.files?.[0];

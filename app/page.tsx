@@ -11,6 +11,7 @@ export default function Home() {
   const [heroAnswer, setHeroAnswer] = useState("");
   const [heroLoading, setHeroLoading] = useState(false);
   const [selectedLabFile, setSelectedLabFile] = useState<File | null>(null);
+  const [selectedLabPreview, setSelectedLabPreview] = useState("");
 
   useEffect(() => {
     const savedLanguage = localStorage.getItem("organheal-language") || "en";
@@ -80,15 +81,25 @@ export default function Home() {
   }
 function handleHeroFile(file: File) {
   setSelectedLabFile(file);
+
+  if (file.type.startsWith("image/")) {
+    setSelectedLabPreview(URL.createObjectURL(file));
+  } else {
+    setSelectedLabPreview("");
+  }
 }
 
 function handleHeroDrop(event: React.DragEvent<HTMLDivElement>) {
   event.preventDefault();
 
+  console.log("DROP FILES:", event.dataTransfer.files);
+
   const file = event.dataTransfer.files?.[0];
 
   if (file) {
     handleHeroFile(file);
+  } else {
+    setHeroAnswer("No file detected. Please drag the file from your Downloads folder, not from the browser download bar.");
   }
 }
 
@@ -232,14 +243,22 @@ async function analyzeHeroLabFile() {
 }}
   />
 
-  {selectedLabFile ? (
-    <>
-      <span>{selectedLabFile.name}</span>
-      <small>
-        {isArabic ? "جاهز للتحليل" : "Ready for analysis"}
-      </small>
-    </>
-  ) : (
+ {selectedLabFile ? (
+  <>
+    {selectedLabPreview && (
+      <img
+        src={selectedLabPreview}
+        alt="Selected lab preview"
+        className="heroLabPreviewImage"
+      />
+    )}
+
+    <span>{selectedLabFile.name}</span>
+    <small>
+      {isArabic ? "جاهز للتحليل" : "Ready for analysis"}
+    </small>
+  </>
+) : (
     <>
       <span>
         {isArabic
