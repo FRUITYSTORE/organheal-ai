@@ -108,7 +108,7 @@ function handleHeroDragOver(event: React.DragEvent<HTMLDivElement>) {
 }
 
 async function analyzeHeroLabFile() {
-  alert("New upload function is running");
+ 
 
   if (!selectedLabFile) return;
 

@@ -1989,4 +1989,36 @@ html[dir="rtl"] .homeHeroActions {
   .labAnalysisSteps {
     grid-template-columns: 1fr;
   }
+}.heroLabPreviewImage {
+  width: 54px;
+  height: 54px;
+  object-fit: cover;
+  border-radius: 14px;
+  border: 1px solid rgba(103, 232, 249, 0.35);
+  margin-bottom: 6px;
+}.homeHeroSearchBox .labPdfHeroBtn {
+  max-width: 190px;
+  min-width: 150px;
+  min-height: 64px;
+  padding: 10px 14px;
+  overflow: hidden;
+}
+
+.homeHeroSearchBox .heroLabPreviewImage {
+  width: 42px !important;
+  height: 42px !important;
+  object-fit: cover !important;
+  border-radius: 10px !important;
+  margin-bottom: 4px !important;
+}
+
+.homeHeroSearchBox .labPdfHeroBtn span {
+  max-width: 150px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.homeHeroSearchBox .labPdfHeroBtn small {
+  font-size: 11px;
 }
