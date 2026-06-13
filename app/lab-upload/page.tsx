@@ -23,6 +23,7 @@ export default function LabUploadPage() {
   const [message, setMessage] = useState("");
   const [uploading, setUploading] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [latestUploadedFileName, setLatestUploadedFileName] = useState("");
   const [analysisStep, setAnalysisStep] = useState<AnalysisStep>("idle");
 
   useEffect(() => {
@@ -35,13 +36,15 @@ function loadPendingHeroFile() {
   );
 
   if (uploadedFileName) {
-    setMessage(
-      `Your file "${uploadedFileName}" was uploaded successfully from the homepage. AI extraction will be connected in the next phase.`
-    );
+  setLatestUploadedFileName(uploadedFileName);
 
-    sessionStorage.removeItem("organheal-latest-uploaded-lab-file");
-    return;
-  }
+  setMessage(
+    `Your file "${uploadedFileName}" was uploaded successfully from the homepage. AI extraction will be connected in the next phase.`
+  );
+
+  sessionStorage.removeItem("organheal-latest-uploaded-lab-file");
+  return;
+}
 
   const savedFileName = sessionStorage.getItem(
     "organheal-pending-lab-file-name"
