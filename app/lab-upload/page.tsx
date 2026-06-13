@@ -99,10 +99,21 @@ function loadPendingHeroFile() {
       return;
     }
 
-    setUploadedFiles(data || []);
-  }
+setUploadedFiles(data || []);
 
-  async function uploadFile() {
+const params = new URLSearchParams(window.location.search);
+const wasUploadedFromHomepage = params.get("uploaded") === "1";
+
+if (wasUploadedFromHomepage && data && data.length > 0) {
+  setLatestUploadedFileName(data[0].file_name);
+
+  setMessage(
+    `Your file "${data[0].file_name}" was uploaded successfully and is ready for AI extraction.`
+  );
+}
+}
+
+async function uploadFile() {
     if (!selectedFile) {
       setMessage("Please upload a PDF or image first.");
       return;
@@ -261,14 +272,16 @@ await supabase
               <div className="labDropIcon">📄</div>
 
               <strong>
-                {fileName ? fileName : "Drop PDF or image, or click to upload"}
-              </strong>
+  {fileName || latestUploadedFileName
+    ? fileName || latestUploadedFileName
+    : "Drop PDF or image, or click to upload"}
+</strong>
 
-              <span>
-                {fileName
-                  ? "Ready for analysis"
-                  : "Laboratory reports, blood tests, or health documents"}
-              </span>
+<span>
+  {fileName || latestUploadedFileName
+    ? "Ready for AI extraction"
+    : "Laboratory reports, blood tests, or health documents"}
+</span>
             </label>
 
             <div className="labAnalysisSteps">
@@ -296,11 +309,18 @@ await supabase
             </div>
 
             {message && (
-              <div className="resultBox">
-                <p>{message}</p>
-              </div>
-            )}
-          </div>
+  <div className="resultBox">
+    <p>{message}</p>
+  </div>
+)}
+{latestUploadedFileName && (
+  <div className="resultBox">
+    <p className="sectionLabel">Latest Uploaded File</p>
+    <h3>{latestUploadedFileName}</h3>
+    <p>Status: uploaded and ready for AI extraction</p>
+  </div>
+)}
+</div>
 
           <div className="resultBox">
             <p className="sectionLabel">Uploaded Lab Reports</p>
@@ -340,9 +360,11 @@ await supabase
             )}
           </div>
 
-          <div className="trustBox">
+                    <div className="trustBox">
             <p className="sectionLabel">Important Notice</p>
+
             <h2>Educational Use Only</h2>
+
             <p>
               OrganHeal AI is designed for educational health awareness and
               wellness tracking. It does not provide diagnosis, treatment, or
