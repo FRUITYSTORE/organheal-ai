@@ -93,6 +93,21 @@ function handleHeroDrop(event: React.DragEvent<HTMLDivElement>) {
 
 function handleHeroDragOver(event: React.DragEvent<HTMLDivElement>) {
   event.preventDefault();
+}async function analyzeHeroLabFile() {
+  if (!selectedLabFile) return;
+
+  const fileUrl = URL.createObjectURL(selectedLabFile);
+
+  sessionStorage.setItem(
+    "organheal-pending-lab-file",
+    JSON.stringify({
+      name: selectedLabFile.name,
+      type: selectedLabFile.type,
+      url: fileUrl,
+    })
+  );
+
+  window.location.href = "/lab-upload?source=hero";
 }
   return (
     <main className="homepage">
@@ -184,9 +199,9 @@ function handleHeroDragOver(event: React.DragEvent<HTMLDivElement>) {
   )}
 </label>
 {selectedLabFile && (
-  <Link href="/lab-upload" className="primaryBtn">
-    {isArabic ? "تحليل التقرير" : "Analyze Report"}
-  </Link>
+  <button type="button" className="primaryBtn" onClick={analyzeHeroLabFile}>
+  {isArabic ? "تحليل التقرير" : "Analyze Report"}
+</button>
 )}
 </div>
 

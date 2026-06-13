@@ -23,9 +23,31 @@ export default function LabUploadPage() {
   const [analysisStep, setAnalysisStep] = useState<AnalysisStep>("idle");
 
   useEffect(() => {
-    fetchUploadedFiles();
-  }, []);
+  fetchUploadedFiles();
+  loadPendingHeroFile();
+}, []);
+async function loadPendingHeroFile() {
+  const savedFile = sessionStorage.getItem("organheal-pending-lab-file");
 
+  if (!savedFile) return;
+
+  try {
+    const parsed = JSON.parse(savedFile);
+
+    const response = await fetch(parsed.url);
+    const blob = await response.blob();
+
+    const file = new File([blob], parsed.name, {
+      type: parsed.type || blob.type,
+    });
+
+    handleFile(file);
+
+    sessionStorage.removeItem("organheal-pending-lab-file");
+  } catch {
+    setMessage("Could not load the selected file. Please upload it again.");
+  }
+}
   function handleFile(file: File) {
     setSelectedFile(file);
     setFileName(file.name);
