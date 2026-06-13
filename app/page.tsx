@@ -81,7 +81,7 @@ function handleHeroFile(file: File) {
   setSelectedLabFile(file);
 }
 
-function handleHeroDrop(event: React.DragEvent<HTMLLabelElement>) {
+function handleHeroDrop(event: React.DragEvent<HTMLDivElement>) {
   event.preventDefault();
 
   const file = event.dataTransfer.files?.[0];
@@ -91,7 +91,7 @@ function handleHeroDrop(event: React.DragEvent<HTMLLabelElement>) {
   }
 }
 
-function handleHeroDragOver(event: React.DragEvent<HTMLLabelElement>) {
+function handleHeroDragOver(event: React.DragEvent<HTMLDivElement>) {
   event.preventDefault();
 }
   return (
@@ -122,7 +122,11 @@ function handleHeroDragOver(event: React.DragEvent<HTMLLabelElement>) {
                 : "Turn health assessments, lab results, daily wellness tracking, and health history into clear intelligence about risks, opportunities, and your next best action."}
             </p>
 
-            <div className="homeHeroSearchBox">
+            <div
+  className="homeHeroSearchBox"
+  onDrop={handleHeroDrop}
+  onDragOver={handleHeroDragOver}
+>
               <input
                 type="text"
                 value={heroQuestion}
