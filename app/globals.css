@@ -2068,18 +2068,28 @@ html[dir="rtl"] .homeHeroActions {
   position: relative;
 }
 
-.heroFileRemoveBtn {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  width: 26px;
-  height: 26px;
-  border-radius: 999px;
-  border: 1px solid rgba(248, 113, 113, 0.8);
-  background: rgba(127, 29, 29, 0.95);
-  color: white;
-  font-size: 18px;
-  font-weight: 900;
-  line-height: 1;
-  cursor: pointer;
+.homeHeroSearchBox .labPdfHeroBtn {
+  position: relative;
+  overflow: visible !important;
+}
+
+.homeHeroSearchBox .heroFileRemoveBtn {
+  position: absolute !important;
+  top: -12px !important;
+  right: -12px !important;
+  z-index: 50 !important;
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 999px !important;
+  border: 2px solid white !important;
+  background: #ef4444 !important;
+  color: white !important;
+  font-size: 20px !important;
+  font-weight: 900 !important;
+  line-height: 22px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  cursor: pointer !important;
 }
