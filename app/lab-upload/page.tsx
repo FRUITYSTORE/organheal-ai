@@ -1,5 +1,5 @@
 "use client";
-
+import { generateLabSummary } from "../../lib/labAnalyzer";
 import PageBackActions from "../components/PageBackActions";
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
@@ -165,7 +165,15 @@ function loadPendingHeroFile() {
       setAnalysisStep("idle");
       return;
     }
+const analysis = generateLabSummary(selectedFile.name);
 
+await supabase
+  .from("uploaded_lab_files")
+  .update({
+    analysis_status: analysis.status,
+    ai_summary: analysis.summary,
+  })
+  .eq("file_path", filePath);
     setAnalysisStep("ready");
     setMessage(
       "File uploaded successfully. AI extraction and structured lab interpretation will be connected in the next phase."
@@ -313,6 +321,11 @@ function loadPendingHeroFile() {
 <p>
   Status: <strong>{file.analysis_status || "uploaded"}</strong>
 </p>
+{file.ai_summary && (
+  <div className="resultBox">
+    <p>{file.ai_summary}</p>
+  </div>
+)}
                   <button
                     className="secondaryBtn"
                     onClick={() => openFile(file.file_path)}
