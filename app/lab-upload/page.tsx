@@ -18,8 +18,8 @@ type UploadedFile = {
 type AnalysisStep = "idle" | "uploading" | "extracting" | "analyzing" | "ready";
 
 export default function LabUploadPage() {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [fileName, setFileName] = useState("");
+ const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+const [fileNames, setFileNames] = useState<string[]>([]);
   const [message, setMessage] = useState("");
   const [uploading, setUploading] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
@@ -58,24 +58,26 @@ function loadPendingHeroFile() {
 
   sessionStorage.removeItem("organheal-pending-lab-file-name");
 }
-  function handleFile(file: File) {
-    setSelectedFile(file);
-    setFileName(file.name);
-    setMessage("");
-    setAnalysisStep("idle");
-  }
+ function handleFiles(files: FileList | File[]) {
+  const fileArray = Array.from(files).slice(0, 10);
 
-  function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    if (file) handleFile(file);
-  }
+  setSelectedFiles(fileArray);
+  setFileNames(fileArray.map((file) => file.name));
+  setMessage("");
+  setAnalysisStep("idle");
+}
+
+function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+  const files = event.target.files;
+  if (files && files.length > 0) handleFiles(files);
+}
 
  function handleDrop(event: React.DragEvent<HTMLLabelElement>) {
-    event.preventDefault();
+  event.preventDefault();
 
-    const file = event.dataTransfer.files?.[0];
-    if (file) handleFile(file);
-  }
+  const files = event.dataTransfer.files;
+  if (files && files.length > 0) handleFiles(files);
+}
 
   function handleDragOver(event: React.DragEvent<HTMLLabelElement>) {
     event.preventDefault();
@@ -114,32 +116,39 @@ if (wasUploadedFromHomepage && data && data.length > 0) {
 }
 
 async function uploadFile() {
-    if (!selectedFile) {
-      setMessage("Please upload a PDF or image first.");
-      return;
-    }
+  if (selectedFiles.length === 0) {
+    setMessage("Please upload at least one PDF or image first.");
+    return;
+  }
 
-    setUploading(true);
-    setMessage("");
-    setAnalysisStep("uploading");
+  if (selectedFiles.length > 10) {
+    setMessage("You can upload up to 10 files at a time.");
+    return;
+  }
 
-    const { data: userData, error: userError } = await supabase.auth.getUser();
+  setUploading(true);
+  setMessage("");
+  setAnalysisStep("uploading");
 
-    if (userError || !userData.user) {
-      setMessage("Please login or sign up to upload lab reports.");
-      setUploading(false);
-      setAnalysisStep("idle");
-      return;
-    }
+  const { data: userData, error: userError } = await supabase.auth.getUser();
 
-    const user = userData.user;
+  if (userError || !userData.user) {
+    setMessage("Please login or sign up to upload lab reports.");
+    setUploading(false);
+    setAnalysisStep("idle");
+    return;
+  }
 
-    const safeFileName = selectedFile.name.replace(/[^a-zA-Z0-9.-]/g, "_");
+  const user = userData.user;
+  let uploadedCount = 0;
+
+  for (const file of selectedFiles) {
+    const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
     const filePath = `${user.id}/${Date.now()}-${safeFileName}`;
 
     const { error: uploadError } = await supabase.storage
       .from("lab-reports")
-      .upload(filePath, selectedFile);
+      .upload(filePath, file);
 
     if (uploadError) {
       setMessage("Upload error: " + uploadError.message);
@@ -147,8 +156,6 @@ async function uploadFile() {
       setAnalysisStep("idle");
       return;
     }
-
-    setAnalysisStep("extracting");
 
     const { data: signedUrlData, error: signedUrlError } =
       await supabase.storage
@@ -164,13 +171,17 @@ async function uploadFile() {
 
     setAnalysisStep("analyzing");
 
+    const analysis = generateLabSummary(file.name);
+
     const { error: databaseError } = await supabase
       .from("uploaded_lab_files")
       .insert({
         user_id: user.id,
-        file_name: selectedFile.name,
+        file_name: file.name,
         file_path: filePath,
         file_url: signedUrlData.signedUrl,
+        analysis_status: analysis.status,
+        ai_summary: analysis.summary,
       });
 
     if (databaseError) {
@@ -179,27 +190,21 @@ async function uploadFile() {
       setAnalysisStep("idle");
       return;
     }
-const analysis = generateLabSummary(selectedFile.name);
 
-await supabase
-  .from("uploaded_lab_files")
-  .update({
-    analysis_status: analysis.status,
-    ai_summary: analysis.summary,
-  })
-  .eq("file_path", filePath);
-    setAnalysisStep("ready");
-    setMessage(
-      "File uploaded successfully. AI extraction and structured lab interpretation will be connected in the next phase."
-    );
-
-    setSelectedFile(null);
-    setFileName("");
-    setUploading(false);
-
-    await fetchUploadedFiles();
+    uploadedCount++;
   }
 
+  setAnalysisStep("ready");
+  setMessage(
+    `${uploadedCount} file${uploadedCount > 1 ? "s" : ""} uploaded successfully. AI extraction will process these reports in the next phase.`
+  );
+
+  setSelectedFiles([]);
+  setFileNames([]);
+  setUploading(false);
+
+  await fetchUploadedFiles();
+}
   async function openFile(filePath: string) {
     const { data, error } = await supabase.storage
       .from("lab-reports")
@@ -262,25 +267,30 @@ await supabase
               onDrop={handleDrop}
               onDragOver={handleDragOver}
             >
-              <input
-                type="file"
-                accept=".pdf,.jpg,.jpeg,.png"
-                onChange={handleFileChange}
-                hidden
-              />
+             <input
+  type="file"
+  accept=".pdf,.jpg,.jpeg,.png"
+  onChange={handleFileChange}
+  multiple
+  hidden
+/>
 
               <div className="labDropIcon">📄</div>
 
               <strong>
-  {fileName || latestUploadedFileName
-    ? fileName || latestUploadedFileName
-    : "Drop PDF or image, or click to upload"}
+  {fileNames.length > 0
+    ? `${fileNames.length} file${fileNames.length > 1 ? "s" : ""} selected`
+    : latestUploadedFileName
+    ? latestUploadedFileName
+    : "Drop up to 10 PDF or image files, or click to upload"}
 </strong>
 
 <span>
-  {fileName || latestUploadedFileName
+  {fileNames.length > 0
+    ? fileNames.join(", ")
+    : latestUploadedFileName
     ? "Ready for AI extraction"
-    : "Laboratory reports, blood tests, or health documents"}
+    : "PDF, JPG, JPEG, PNG supported"}
 </span>
             </label>
 
