@@ -96,15 +96,73 @@ function handleHeroDragOver(event: React.DragEvent<HTMLDivElement>) {
   event.preventDefault();
 }
 
-function analyzeHeroLabFile() {
+async function analyzeHeroLabFile() {
+  alert("New upload function is running");
+
   if (!selectedLabFile) return;
 
+  setHeroLoading(true);
+
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+
+  if (userError || !userData.user) {
+    sessionStorage.setItem(
+      "organheal-pending-lab-file-name",
+      selectedLabFile.name
+    );
+
+    window.location.href = "/login";
+    return;
+  }
+
+  const user = userData.user;
+  const safeFileName = selectedLabFile.name.replace(/[^a-zA-Z0-9.-]/g, "_");
+  const filePath = `${user.id}/${Date.now()}-${safeFileName}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("lab-reports")
+    .upload(filePath, selectedLabFile);
+
+ if (uploadError) {
+  console.log("STORAGE ERROR:", uploadError);
+  setHeroAnswer("Upload failed: " + uploadError.message);
+  setHeroLoading(false);
+  return;
+}
+
+  const { data: signedUrlData, error: signedUrlError } =
+    await supabase.storage
+      .from("lab-reports")
+      .createSignedUrl(filePath, 60 * 60);
+
+  if (signedUrlError) {
+    setHeroAnswer("File uploaded, but preview link failed.");
+    setHeroLoading(false);
+    return;
+  }
+
+  const { error: databaseError } = await supabase
+    .from("uploaded_lab_files")
+    .insert({
+      user_id: user.id,
+      file_name: selectedLabFile.name,
+      file_path: filePath,
+      file_url: signedUrlData.signedUrl,
+    });
+
+ if (databaseError) {
+  console.log("DATABASE ERROR:", databaseError);
+  setHeroAnswer("Database error: " + databaseError.message);
+  setHeroLoading(false);
+  return;
+}
+
   sessionStorage.setItem(
-    "organheal-pending-lab-file-name",
+    "organheal-latest-uploaded-lab-file",
     selectedLabFile.name
   );
 
-  window.location.href = "/lab-upload?source=hero";
+  window.location.href = "/lab-upload?uploaded=1";
 }
   return (
     <main className="homepage">

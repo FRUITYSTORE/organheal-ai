@@ -10,6 +10,9 @@ type UploadedFile = {
   file_path: string;
   file_url: string | null;
   created_at: string;
+  analysis_status: string | null;
+  extracted_text: string | null;
+  ai_summary: string | null;
 };
 
 type AnalysisStep = "idle" | "uploading" | "extracting" | "analyzing" | "ready";
@@ -84,7 +87,7 @@ function loadPendingHeroFile() {
 
     const { data, error } = await supabase
       .from("uploaded_lab_files")
-      .select("id, file_name, file_path, file_url, created_at")
+      .select("id, file_name, file_path, file_url, created_at, analysis_status, extracted_text, ai_summary")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
@@ -307,7 +310,9 @@ function loadPendingHeroFile() {
                   <p>
                     Uploaded on: {new Date(file.created_at).toLocaleString()}
                   </p>
-
+<p>
+  Status: <strong>{file.analysis_status || "uploaded"}</strong>
+</p>
                   <button
                     className="secondaryBtn"
                     onClick={() => openFile(file.file_path)}
