@@ -77,7 +77,23 @@ export default function Home() {
       setHeroLoading(false);
     }
   }
+function handleHeroFile(file: File) {
+  setSelectedLabFile(file);
+}
 
+function handleHeroDrop(event: React.DragEvent<HTMLLabelElement>) {
+  event.preventDefault();
+
+  const file = event.dataTransfer.files?.[0];
+
+  if (file) {
+    handleHeroFile(file);
+  }
+}
+
+function handleHeroDragOver(event: React.DragEvent<HTMLLabelElement>) {
+  event.preventDefault();
+}
   return (
     <main className="homepage">
       <script
@@ -134,12 +150,12 @@ export default function Home() {
     type="file"
     accept=".pdf,image/*"
     hidden
-    onChange={(e) => {
-      const file = e.target.files?.[0];
-      if (file) {
-        setSelectedLabFile(file);
-      }
-    }}
+  onChange={(e) => {
+  const file = e.target.files?.[0];
+  if (file) {
+    handleHeroFile(file);
+  }
+}}
   />
 
   {selectedLabFile ? (
@@ -163,6 +179,11 @@ export default function Home() {
     </>
   )}
 </label>
+{selectedLabFile && (
+  <Link href="/lab-upload" className="primaryBtn">
+    {isArabic ? "تحليل التقرير" : "Analyze Report"}
+  </Link>
+)}
 </div>
 
 {heroAnswer && (
