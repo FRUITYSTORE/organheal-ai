@@ -1,4 +1,5 @@
 "use client";
+
 import PageBackActions from "../components/PageBackActions";
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
@@ -11,33 +12,47 @@ type UploadedFile = {
   created_at: string;
 };
 
+type AnalysisStep = "idle" | "uploading" | "extracting" | "analyzing" | "ready";
+
 export default function LabUploadPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState("");
   const [message, setMessage] = useState("");
   const [uploading, setUploading] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [analysisStep, setAnalysisStep] = useState<AnalysisStep>("idle");
 
   useEffect(() => {
     fetchUploadedFiles();
   }, []);
 
-  function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-
-    if (!file) return;
-
+  function handleFile(file: File) {
     setSelectedFile(file);
     setFileName(file.name);
     setMessage("");
+    setAnalysisStep("idle");
+  }
+
+  function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (file) handleFile(file);
+  }
+
+  function handleDrop(event: React.DragEvent<HTMLLabelElement>) {
+    event.preventDefault();
+
+    const file = event.dataTransfer.files?.[0];
+    if (file) handleFile(file);
+  }
+
+  function handleDragOver(event: React.DragEvent<HTMLLabelElement>) {
+    event.preventDefault();
   }
 
   async function fetchUploadedFiles() {
     const { data: userData, error: userError } = await supabase.auth.getUser();
 
-    if (userError || !userData.user) {
-      return;
-    }
+    if (userError || !userData.user) return;
 
     const user = userData.user;
 
@@ -62,13 +77,15 @@ export default function LabUploadPage() {
     }
 
     setUploading(true);
-    setMessage("Uploading file...");
+    setMessage("");
+    setAnalysisStep("uploading");
 
     const { data: userData, error: userError } = await supabase.auth.getUser();
 
     if (userError || !userData.user) {
       setMessage("Please login or sign up to upload lab reports.");
       setUploading(false);
+      setAnalysisStep("idle");
       return;
     }
 
@@ -84,8 +101,11 @@ export default function LabUploadPage() {
     if (uploadError) {
       setMessage("Upload error: " + uploadError.message);
       setUploading(false);
+      setAnalysisStep("idle");
       return;
     }
+
+    setAnalysisStep("extracting");
 
     const { data: signedUrlData, error: signedUrlError } =
       await supabase.storage
@@ -95,8 +115,11 @@ export default function LabUploadPage() {
     if (signedUrlError) {
       setMessage("Signed URL error: " + signedUrlError.message);
       setUploading(false);
+      setAnalysisStep("idle");
       return;
     }
+
+    setAnalysisStep("analyzing");
 
     const { error: databaseError } = await supabase
       .from("uploaded_lab_files")
@@ -110,11 +133,13 @@ export default function LabUploadPage() {
     if (databaseError) {
       setMessage("Database error: " + databaseError.message);
       setUploading(false);
+      setAnalysisStep("idle");
       return;
     }
 
+    setAnalysisStep("ready");
     setMessage(
-      "File uploaded successfully. AI analysis will be connected in the next phase."
+      "File uploaded successfully. AI extraction and structured lab interpretation will be connected in the next phase."
     );
 
     setSelectedFile(null);
@@ -137,43 +162,88 @@ export default function LabUploadPage() {
     window.open(data.signedUrl, "_blank");
   }
 
+  const steps = [
+    {
+      key: "uploading",
+      title: "Uploading",
+      description: "Securely saving the lab report.",
+    },
+    {
+      key: "extracting",
+      title: "Extracting",
+      description: "Preparing lab values for AI extraction.",
+    },
+    {
+      key: "analyzing",
+      title: "Analyzing",
+      description: "Generating educational health insights.",
+    },
+    {
+      key: "ready",
+      title: "Ready",
+      description: "Report is saved and ready for the next AI phase.",
+    },
+  ];
+
   return (
     <main className="assistantPage">
       <div className="assistantContainer">
         <PageBackActions />
+
         <div className="assistantHeader">
           <p className="assistantBadge">PDF / PHOTO LAB ANALYZER</p>
-
           <h1>Upload Lab Report</h1>
-
           <p>
             Upload a laboratory report as PDF, JPG, JPEG, or PNG. OrganHeal AI
-            will later extract lab values and generate a health interpretation.
+            will use this flow to extract lab values and generate structured
+            health intelligence.
           </p>
         </div>
 
         <div className="chatWindow">
           <div className="labUploadBox">
-            <h2>📄 Upload Laboratory Report</h2>
-
+            <p className="sectionLabel">Lab Report Upload</p>
+            <h2>Drop your lab report here</h2>
             <p>Supported formats: PDF, JPG, JPEG, PNG</p>
 
-            <input
-              type="file"
-              accept=".pdf,.jpg,.jpeg,.png"
-              onChange={handleFileChange}
-            />
+            <label
+              className="labDropZone"
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+            >
+              <input
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png"
+                onChange={handleFileChange}
+                hidden
+              />
 
-            {fileName && (
-              <p
-                style={{
-                  marginTop: "18px",
-                  fontWeight: "700",
-                }}
-              >
-                Selected File: {fileName}
-              </p>
-            )}
+              <div className="labDropIcon">📄</div>
+
+              <strong>
+                {fileName ? fileName : "Drop PDF or image, or click to upload"}
+              </strong>
+
+              <span>
+                {fileName
+                  ? "Ready for analysis"
+                  : "Laboratory reports, blood tests, or health documents"}
+              </span>
+            </label>
+
+            <div className="labAnalysisSteps">
+              {steps.map((step) => (
+                <div
+                  key={step.key}
+                  className={`labAnalysisStep ${
+                    analysisStep === step.key ? "active" : ""
+                  }`}
+                >
+                  <strong>{step.title}</strong>
+                  <span>{step.description}</span>
+                </div>
+              ))}
+            </div>
 
             <div style={{ marginTop: "24px" }}>
               <button
@@ -181,7 +251,7 @@ export default function LabUploadPage() {
                 onClick={uploadFile}
                 disabled={uploading}
               >
-                {uploading ? "Uploading..." : "Upload File"}
+                {uploading ? "Processing..." : "Analyze Report"}
               </button>
             </div>
 
@@ -209,8 +279,7 @@ export default function LabUploadPage() {
                   <h3>{file.file_name}</h3>
 
                   <p>
-                    Uploaded on:{" "}
-                    {new Date(file.created_at).toLocaleString()}
+                    Uploaded on: {new Date(file.created_at).toLocaleString()}
                   </p>
 
                   <button
@@ -226,9 +295,7 @@ export default function LabUploadPage() {
 
           <div className="trustBox">
             <p className="sectionLabel">Important Notice</p>
-
             <h2>Educational Use Only</h2>
-
             <p>
               OrganHeal AI is designed for educational health awareness and
               wellness tracking. It does not provide diagnosis, treatment, or
