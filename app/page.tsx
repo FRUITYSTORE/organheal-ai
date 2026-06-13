@@ -270,18 +270,24 @@ async function analyzeHeroLabFile() {
       </span>
 
       <small>
-        {isArabic ? "PDF أو صورة" : "PDF or image"}
-      </small>
+  {isArabic
+    ? "ملف سريع هنا، أو حتى 10 ملفات في صفحة التحليل"
+    : "Quick file here, or up to 10 files in Lab Upload"}
+</small>
     </>
   )}
 </label>
 {selectedLabFile && (
   <button type="button" className="primaryBtn" onClick={analyzeHeroLabFile}>
-  {isArabic ? "تحليل التقرير" : "Analyze Report"}
+  {isArabic ? "تحليل سريع" : "Quick Analyze"}
 </button>
 )}
 </div>
-
+<Link href="/lab-upload" className="homeLabBatchLink">
+  {isArabic
+    ? "لديك عدة ملفات؟ ارفع حتى 10 ملفات من صفحة تحليل المختبر"
+    : "Have multiple reports? Upload up to 10 files in Lab Upload"}
+</Link>
 {heroAnswer && (
   <div className="homeHeroAIAnswer">
     <p className="sectionLabel">
