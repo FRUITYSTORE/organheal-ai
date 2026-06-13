@@ -31,7 +31,7 @@ export default function Home() {
     "@type": "MedicalWebPage",
     name: "OrganHeal AI",
     description:
-      "AI-powered personal health intelligence platform for organ assessments, lab interpretation, wellness tracking, and professional health reports.",
+      "AI-powered personal health intelligence platform for assessments, medical report intelligence, health insights, and doctor-ready summaries.",
     url: "https://organheal.com",
     publisher: {
       "@type": "Organization",
@@ -79,108 +79,110 @@ export default function Home() {
       setHeroLoading(false);
     }
   }
-function handleHeroFile(file: File) {
-  setSelectedLabFile(file);
 
-  if (file.type.startsWith("image/")) {
-    setSelectedLabPreview(URL.createObjectURL(file));
-  } else {
+  function handleHeroFile(file: File) {
+    setSelectedLabFile(file);
+
+    if (file.type.startsWith("image/")) {
+      setSelectedLabPreview(URL.createObjectURL(file));
+    } else {
+      setSelectedLabPreview("");
+    }
+  }
+
+  function handleHeroDrop(event: React.DragEvent<HTMLDivElement>) {
+    event.preventDefault();
+
+    const file = event.dataTransfer.files?.[0];
+
+    if (file) {
+      handleHeroFile(file);
+    } else {
+      setHeroAnswer(
+        isArabic
+          ? "لم يتم اكتشاف ملف. اسحب الملف من مجلد التحميلات وليس من شريط تحميل المتصفح."
+          : "No file detected. Please drag the file from your Downloads folder, not from the browser download bar."
+      );
+    }
+  }
+
+  function handleHeroDragOver(event: React.DragEvent<HTMLDivElement>) {
+    event.preventDefault();
+  }
+
+  function removeHeroLabFile() {
+    setSelectedLabFile(null);
     setSelectedLabPreview("");
   }
-}
 
-function handleHeroDrop(event: React.DragEvent<HTMLDivElement>) {
-  event.preventDefault();
+  async function analyzeHeroLabFile() {
+    if (!selectedLabFile) return;
 
-  console.log("DROP FILES:", event.dataTransfer.files);
+    setHeroLoading(true);
 
-  const file = event.dataTransfer.files?.[0];
+    const { data: userData, error: userError } = await supabase.auth.getUser();
 
-  if (file) {
-    handleHeroFile(file);
-  } else {
-    setHeroAnswer("No file detected. Please drag the file from your Downloads folder, not from the browser download bar.");
-  }
-}
+    if (userError || !userData.user) {
+      sessionStorage.setItem(
+        "organheal-pending-lab-file-name",
+        selectedLabFile.name
+      );
 
-function handleHeroDragOver(event: React.DragEvent<HTMLDivElement>) {
-  event.preventDefault();
-}
-function removeHeroLabFile() {
-  setSelectedLabFile(null);
-  setSelectedLabPreview("");
-}
-async function analyzeHeroLabFile() {
- 
+      window.location.href = "/login";
+      return;
+    }
 
-  if (!selectedLabFile) return;
+    const user = userData.user;
+    const safeFileName = selectedLabFile.name.replace(/[^a-zA-Z0-9.-]/g, "_");
+    const filePath = `${user.id}/${Date.now()}-${safeFileName}`;
 
-  setHeroLoading(true);
+    const { error: uploadError } = await supabase.storage
+      .from("lab-reports")
+      .upload(filePath, selectedLabFile);
 
-  const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (uploadError) {
+      setHeroAnswer("Upload failed: " + uploadError.message);
+      setHeroLoading(false);
+      return;
+    }
 
-  if (userError || !userData.user) {
+    const { data: signedUrlData, error: signedUrlError } =
+      await supabase.storage
+        .from("lab-reports")
+        .createSignedUrl(filePath, 60 * 60);
+
+    if (signedUrlError) {
+      setHeroAnswer("File uploaded, but preview link failed.");
+      setHeroLoading(false);
+      return;
+    }
+
+    const { error: databaseError } = await supabase
+      .from("uploaded_lab_files")
+      .insert({
+        user_id: user.id,
+        file_name: selectedLabFile.name,
+        file_path: filePath,
+        file_url: signedUrlData?.signedUrl || null,
+        analysis_status: "analyzed",
+        ai_summary:
+          "Medical report uploaded successfully. AI extraction will process this report and generate health intelligence in the next phase.",
+      });
+
+    if (databaseError) {
+      setHeroAnswer("Database error: " + databaseError.message);
+      setHeroLoading(false);
+      return;
+    }
+
     sessionStorage.setItem(
-      "organheal-pending-lab-file-name",
+      "organheal-latest-uploaded-lab-file",
       selectedLabFile.name
     );
 
-    window.location.href = "/login";
-    return;
+    window.location.href = "/lab-upload?uploaded=1";
   }
 
-  const user = userData.user;
-  const safeFileName = selectedLabFile.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-  const filePath = `${user.id}/${Date.now()}-${safeFileName}`;
-
-  const { error: uploadError } = await supabase.storage
-    .from("lab-reports")
-    .upload(filePath, selectedLabFile);
-
- if (uploadError) {
-  console.log("STORAGE ERROR:", uploadError);
-  setHeroAnswer("Upload failed: " + uploadError.message);
-  setHeroLoading(false);
-  return;
-}
-
-  const { data: signedUrlData, error: signedUrlError } =
-    await supabase.storage
-      .from("lab-reports")
-      .createSignedUrl(filePath, 60 * 60);
-
-  if (signedUrlError) {
-    setHeroAnswer("File uploaded, but preview link failed.");
-    setHeroLoading(false);
-    return;
-  }
-
-  const { error: databaseError } = await supabase
-    .from("uploaded_lab_files")
-   .insert({
-  user_id: user.id,
-  file_name: selectedLabFile.name,
-  file_path: filePath,
-  file_url: signedUrlData?.signedUrl || null,
-  analysis_status: "analyzed",
-  ai_summary:
-    "Laboratory report uploaded successfully. AI extraction will process biomarkers and generate health intelligence in the next phase.",
-});
-
- if (databaseError) {
-  console.log("DATABASE ERROR:", databaseError);
-  setHeroAnswer("Database error: " + databaseError.message);
-  setHeroLoading(false);
-  return;
-}
-
-  sessionStorage.setItem(
-    "organheal-latest-uploaded-lab-file",
-    selectedLabFile.name
-  );
-
-  window.location.href = "/lab-upload?uploaded=1";
-}
   return (
     <main className="homepage">
       <script
@@ -205,15 +207,15 @@ async function analyzeHeroLabFile() {
 
             <p className="homeHeroCleanText">
               {isArabic
-                ? "حوّل التقييمات الصحية، نتائج المختبر، التسجيل اليومي، والتاريخ الصحي إلى ذكاء صحي واضح يساعدك على فهم المخاطر والفرص والخطوة التالية."
-                : "Turn health assessments, lab results, daily wellness tracking, and health history into clear intelligence about risks, opportunities, and your next best action."}
+                ? "حوّل التقييمات الصحية والتقارير الطبية ونتائج المختبر إلى ذكاء صحي واضح يساعدك على فهم المخاطر والفرص والخطوة التالية."
+                : "Turn health assessments, medical reports, and lab results into clear intelligence about risks, opportunities, and your next best action."}
             </p>
 
             <div
-  className="homeHeroSearchBox"
-  onDrop={handleHeroDrop}
-  onDragOver={handleHeroDragOver}
->
+              className="homeHeroSearchBox"
+              onDrop={handleHeroDrop}
+              onDragOver={handleHeroDragOver}
+            >
               <input
                 type="text"
                 value={heroQuestion}
@@ -236,91 +238,95 @@ async function analyzeHeroLabFile() {
                 {heroLoading ? "..." : isArabic ? "اسأل الذكاء الصحي" : "Ask AI"}
               </button>
 
-<label className="labPdfHeroBtn">
-  <input
-    type="file"
-    accept=".pdf,image/*"
-    hidden
-  onChange={(e) => {
-  const file = e.target.files?.[0];
-  if (file) {
-    handleHeroFile(file);
-  }
-}}
-  />
+              <label className="labPdfHeroBtn">
+                <input
+                  type="file"
+                  accept=".pdf,image/*"
+                  hidden
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    if (file) handleHeroFile(file);
+                  }}
+                />
 
- {selectedLabFile ? (
-  <>
-    <button
-      type="button"
-      className="heroFileRemoveBtn"
-      onClick={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        removeHeroLabFile();
-      }}
-    >
-      ×
-    </button>
-    {selectedLabPreview && (
-      <img
-        src={selectedLabPreview}
-        alt="Selected lab preview"
-        className="heroLabPreviewImage"
-      />
-    )}
+                {selectedLabFile ? (
+                  <>
+                    <button
+                      type="button"
+                      className="heroFileRemoveBtn"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        removeHeroLabFile();
+                      }}
+                    >
+                      ×
+                    </button>
 
-    <span>{selectedLabFile.name}</span>
-    <small>
-      {isArabic ? "جاهز للتحليل" : "Ready for analysis"}
-    </small>
-  </>
-) : (
-    <>
-      <span>
-        {isArabic
-          ? "اسحب ملف المختبر أو اضغط للرفع"
-          : "Drop Lab PDF or click to upload"}
-      </span>
+                    {selectedLabPreview && (
+                      <img
+                        src={selectedLabPreview}
+                        alt="Selected medical report preview"
+                        className="heroLabPreviewImage"
+                      />
+                    )}
 
-      <small>
-  {isArabic
-    ? "ملف سريع هنا، أو حتى 10 ملفات في صفحة التحليل"
-    : "Quick file here, or up to 10 files in Lab Upload"}
-</small>
-    </>
-  )}
-</label>
-{selectedLabFile && (
-  <button type="button" className="primaryBtn" onClick={analyzeHeroLabFile}>
-  {isArabic ? "تحليل سريع" : "Quick Analyze"}
-</button>
-)}
-</div>
-<Link href="/lab-upload" className="homeLabBatchLink">
-  {isArabic
-    ? "لديك عدة ملفات؟ ارفع حتى 10 ملفات من صفحة تحليل المختبر"
-    : "Have multiple reports? Upload up to 10 files in Lab Upload"}
-</Link>
-{heroAnswer && (
-  <div className="homeHeroAIAnswer">
-    <p className="sectionLabel">
-      {isArabic ? "رؤية الذكاء الصحي" : "Quick AI Insight"}
-    </p>
+                    <span>{selectedLabFile.name}</span>
+                    <small>{isArabic ? "جاهز للتحليل" : "Ready for analysis"}</small>
+                  </>
+                ) : (
+                  <>
+                    <span>
+                      {isArabic
+                        ? "اسحب تقريرًا طبيًا أو اضغط للرفع"
+                        : "Drop a medical report or click to upload"}
+                    </span>
 
-    <p>{heroAnswer}</p>
+                    <small>
+                      {isArabic
+                        ? "ملف سريع هنا، أو حتى 10 ملفات في صفحة التحليل"
+                        : "Quick file here, or up to 10 files in Medical Report Upload"}
+                    </small>
+                  </>
+                )}
+              </label>
 
-    <div className="homeHeroAIActions">
-      <Link href="/assistant" className="primaryBtn">
-        {isArabic ? "متابعة في المساعد" : "Continue in Assistant"}
-      </Link>
+              {selectedLabFile && (
+                <button
+                  type="button"
+                  className="primaryBtn"
+                  onClick={analyzeHeroLabFile}
+                >
+                  {isArabic ? "تحليل سريع" : "Quick Analyze"}
+                </button>
+              )}
+            </div>
 
-      <Link href="/intelligence" className="secondaryBtn">
-        {isArabic ? "مركز الذكاء" : "Open Intelligence Center"}
-      </Link>
-    </div>
-  </div>
-)}
+            <Link href="/lab-upload" className="homeLabBatchLink">
+              {isArabic
+                ? "لديك عدة ملفات؟ ارفع حتى 10 ملفات من صفحة التقارير الطبية"
+                : "Have multiple reports? Upload up to 10 files in Medical Report Upload"}
+            </Link>
+
+            {heroAnswer && (
+              <div className="homeHeroAIAnswer">
+                <p className="sectionLabel">
+                  {isArabic ? "رؤية الذكاء الصحي" : "Quick AI Insight"}
+                </p>
+
+                <p>{heroAnswer}</p>
+
+                <div className="homeHeroAIActions">
+                  <Link href="/assistant" className="primaryBtn">
+                    {isArabic ? "متابعة في المساعد" : "Continue in Assistant"}
+                  </Link>
+
+                  <Link href="/intelligence" className="secondaryBtn">
+                    {isArabic ? "مركز الذكاء" : "Open Intelligence Center"}
+                  </Link>
+                </div>
+              </div>
+            )}
 
             <div className="homeHeroCleanActions">
               <Link href="/assessment" className="primaryBtn">
@@ -353,14 +359,14 @@ async function analyzeHeroLabFile() {
 
           <h2>
             {isArabic
-              ? "من بيانات بسيطة إلى ذكاء صحي واضح"
-              : "From simple data to clear health intelligence"}
+              ? "ثلاث خطوات لفهم صحتك بوضوح"
+              : "Three steps to clearer health intelligence"}
           </h2>
 
           <p>
             {isArabic
-              ? "ابدأ بتقييم صحي، أضف نتائج المختبر أو التسجيل اليومي، ثم يحصل المستخدم على ملف صحي ذكي وخطوة تالية واضحة."
-              : "Start with a health assessment, add labs or daily check-ins, and OrganHeal turns your data into a health profile, risk insights, and next best actions."}
+              ? "ابدأ بتقييم صحي، ارفع تقاريرك الطبية، ثم احصل على ذكاء صحي منظم وواضح."
+              : "Start with an assessment, upload your medical reports, and receive clear organized health intelligence."}
           </p>
         </div>
 
@@ -378,166 +384,87 @@ async function analyzeHeroLabFile() {
 
           <Link href="/lab-upload" className="howStepCard">
             <span>02</span>
-            <div className="howIcon">🧪</div>
-            <h3>{isArabic ? "أضف نتائج المختبر" : "Add Lab Results"}</h3>
+            <div className="howIcon">📄</div>
+            <h3>
+              {isArabic ? "ارفع التقارير الطبية" : "Upload Medical Reports"}
+            </h3>
             <p>
               {isArabic
-                ? "أدخل أو ارفع نتائج المختبر للحصول على فهم أعمق."
-                : "Enter or upload lab information for deeper educational insights."}
-            </p>
-          </Link>
-
-          <Link href="/checkin" className="howStepCard">
-            <span>03</span>
-            <div className="howIcon">☀️</div>
-            <h3>{isArabic ? "تابع صحتك اليومية" : "Track Daily Wellness"}</h3>
-            <p>
-              {isArabic
-                ? "سجل النوم، التوتر، المزاج، الترطيب، والنشاط."
-                : "Log sleep, stress, mood, hydration, and physical activity."}
+                ? "ارفع المختبرات، تقارير الأشعة، أو التقارير الطبية المكتوبة."
+                : "Upload lab results, radiology reports, or written medical documents."}
             </p>
           </Link>
 
           <Link href="/intelligence" className="howStepCard">
-            <span>04</span>
+            <span>03</span>
             <div className="howIcon">🧠</div>
             <h3>{isArabic ? "احصل على الذكاء الصحي" : "Receive Intelligence"}</h3>
             <p>
               {isArabic
-                ? "افتح الملف الصحي، نمط المخاطر، الفرص، التوقعات، وملخص الطبيب."
-                : "Get your health profile, risk pattern, opportunities, forecast, and doctor brief."}
+                ? "افهم الملف الصحي، إشارات المخاطر، الفرص، وملخص الطبيب."
+                : "Understand your health profile, risk signals, opportunities, and doctor brief."}
             </p>
           </Link>
-        </div>
-      </section>
-
-      <section className="homeIntelligencePreview">
-        <div className="homeSectionHeader">
-          <p className="sectionLabel">
-            {isArabic ? "معاينة الذكاء الصحي" : "Live Intelligence Preview"}
-          </p>
-
-          <h2>
-            {isArabic
-              ? "ليس مجرد رقم. بل فهم صحي قابل للتنفيذ."
-              : "Not just a score. Actionable health intelligence."}
-          </h2>
-
-          <p>
-            {isArabic
-              ? "OrganHeal يحول البيانات الصحية إلى ملف ذكي يوضح الحالة، المخاطر، الفرص، والخطوة التالية."
-              : "OrganHeal transforms health data into a smart profile showing status, risks, opportunities, and the next best action."}
-          </p>
-        </div>
-
-        <div className="intelligencePreviewCard">
-          <div className="previewMain">
-            <p className="sectionLabel">
-              {isArabic ? "الملف الصحي الذكي" : "Health Intelligence Profile"}
-            </p>
-
-            <h3>{isArabic ? "ملف صحي متوازن" : "Balanced Health Profile"}</h3>
-
-            <p>
-              {isArabic
-                ? "يعرض هذا المثال كيف يحلل OrganHeal التقييمات، المختبر، والتسجيل اليومي لتكوين صورة صحية واضحة."
-                : "This example shows how OrganHeal interprets assessments, labs, and daily tracking into a clear health picture."}
-            </p>
-          </div>
-
-          <div className="previewMetricsGrid">
-            <div>
-              <span>{isArabic ? "الدرجة العامة" : "Overall Score"}</span>
-              <strong>82/100</strong>
-            </div>
-
-            <div>
-              <span>{isArabic ? "نمط المخاطر" : "Risk Pattern"}</span>
-              <strong>{isArabic ? "متابعة وقائية" : "Preventive Monitoring"}</strong>
-            </div>
-
-            <div>
-              <span>{isArabic ? "فرصة التحسن" : "Potential Gain"}</span>
-              <strong>+8</strong>
-            </div>
-
-            <div>
-              <span>{isArabic ? "الخطوة التالية" : "Next Best Action"}</span>
-              <strong>{isArabic ? "تحسين النشاط" : "Improve activity"}</strong>
-            </div>
-          </div>
-
-          <div className="previewDoctorBrief">
-            <p className="sectionLabel">
-              {isArabic ? "ملخص الطبيب" : "Doctor-Ready Brief"}
-            </p>
-
-            <p>
-              {isArabic
-                ? "المستخدم لديه مؤشرات صحية مستقرة مع فرصة واضحة لتحسين النشاط اليومي والمتابعة الوقائية."
-                : "The user shows stable health indicators with a clear opportunity to improve daily activity and preventive tracking."}
-            </p>
-          </div>
         </div>
       </section>
 
       <section className="homeAIFeatures">
         <div className="homeSectionHeader">
           <p className="sectionLabel">
-            {isArabic ? "ميزات الذكاء الاصطناعي" : "AI Health Features"}
+            {isArabic ? "ذكاء التقارير الطبية" : "Medical Report Intelligence"}
           </p>
 
           <h2>
             {isArabic
-              ? "ذكاء صحي يساعدك على الفهم وليس التخمين"
-              : "Health AI that helps you understand, not guess"}
+              ? "من التقارير الطبية إلى فهم صحي واضح"
+              : "From medical reports to clear health understanding"}
           </h2>
 
           <p>
             {isArabic
-              ? "اسأل، حلل، تتبع، وشارك ملخصًا صحيًا احترافيًا مبنيًا على بياناتك."
-              : "Ask, analyze, track, and share professional health summaries built around your data."}
+              ? "OrganHeal يساعدك على تنظيم وفهم التقارير المكتوبة، دون استبدال الطبيب أو تقديم تشخيص طبي."
+              : "OrganHeal helps organize and explain written reports without replacing doctors or providing medical diagnosis."}
           </p>
         </div>
 
         <div className="aiFeaturesGrid">
-          <Link href="/assistant" className="aiFeatureCard">
-            <div>🤖</div>
-            <h3>{isArabic ? "البحث الصحي الذكي" : "AI Health Search"}</h3>
+          <Link href="/lab-upload" className="aiFeatureCard">
+            <div>🧪</div>
+            <h3>{isArabic ? "تقارير المختبر" : "Laboratory Reports"}</h3>
             <p>
               {isArabic
-                ? "اسأل عن المؤشرات، الأعضاء، المختبر، والخطوة التالية."
-                : "Ask about markers, organs, labs, and your next best action."}
+                ? "تحاليل الدم، CBC، الكبد، الكلى، الدهون، السكر، والفيتامينات."
+                : "Blood tests, CBC, liver, kidney, lipid, glucose, and vitamin reports."}
             </p>
           </Link>
 
           <Link href="/lab-upload" className="aiFeatureCard">
-            <div>🧪</div>
-            <h3>{isArabic ? "تحليل ملفات المختبر" : "AI Lab Interpretation"}</h3>
+            <div>🩻</div>
+            <h3>{isArabic ? "تقارير الأشعة" : "Radiology Reports"}</h3>
             <p>
               {isArabic
-                ? "ارفع ملفًا أو أدخل نتائج المختبر للحصول على فهم تعليمي."
-                : "Upload or enter lab results for educational interpretation."}
+                ? "شرح تقارير CT و MRI والأشعة والسونار المكتوبة، وليس تشخيص الصور الخام."
+                : "Explain written CT, MRI, X-ray, and ultrasound reports, not raw image diagnosis."}
+            </p>
+          </Link>
+
+          <Link href="/lab-upload" className="aiFeatureCard">
+            <div>📋</div>
+            <h3>{isArabic ? "التقارير الطبية" : "Medical Documents"}</h3>
+            <p>
+              {isArabic
+                ? "تقارير خروج، ملاحظات الطبيب، الوصفات، وخطط المتابعة."
+                : "Discharge summaries, doctor notes, prescriptions, and follow-up plans."}
             </p>
           </Link>
 
           <Link href="/intelligence" className="aiFeatureCard">
-            <div>🎯</div>
-            <h3>{isArabic ? "مدرب صحي ذكي" : "AI Health Coach"}</h3>
+            <div>🧠</div>
+            <h3>{isArabic ? "مخرجات الذكاء الصحي" : "Health Insights"}</h3>
             <p>
               {isArabic
-                ? "احصل على فرص التحسين والخطوة الصحية التالية."
-                : "Get improvement opportunities and your next best health action."}
-            </p>
-          </Link>
-
-          <Link href="/doctor-portal" className="aiFeatureCard">
-            <div>🩺</div>
-            <h3>{isArabic ? "ملخص الطبيب" : "Doctor Brief Generator"}</h3>
-            <p>
-              {isArabic
-                ? "حوّل بياناتك إلى ملخص جاهز للمراجعة الطبية."
-                : "Turn your data into a doctor-ready pre-visit brief."}
+                ? "إشارات المخاطر، الفرص الصحية، والخطوة التالية بشكل واضح."
+                : "Risk signals, health opportunities, and clear next steps."}
             </p>
           </Link>
         </div>
@@ -546,19 +473,19 @@ async function analyzeHeroLabFile() {
       <section className="homeOutcomes">
         <div className="homeSectionHeader">
           <p className="sectionLabel">
-            {isArabic ? "النتائج التي ستحصل عليها" : "Health Outcomes"}
+            {isArabic ? "المخرجات الصحية" : "Health Outcomes"}
           </p>
 
           <h2>
             {isArabic
-              ? "ليس مجرد بيانات صحية، بل قرارات أفضل"
-              : "Not just health data. Better decisions."}
+              ? "ليس مجرد ملفات. بل فهم صحي قابل للاستخدام."
+              : "Not just files. Usable health intelligence."}
           </h2>
 
           <p>
             {isArabic
-              ? "OrganHeal يحول التقييمات والمختبرات والتتبع اليومي إلى مخرجات صحية مفهومة وقابلة للتنفيذ."
-              : "OrganHeal transforms assessments, labs, and daily tracking into actionable health outcomes."}
+              ? "OrganHeal يحول التقييمات والتقارير الطبية إلى مخرجات صحية مفهومة وقابلة للمشاركة."
+              : "OrganHeal transforms assessments and medical reports into understandable, shareable health outputs."}
           </p>
         </div>
 
@@ -568,8 +495,8 @@ async function analyzeHeroLabFile() {
             <h3>{isArabic ? "الملف الصحي الذكي" : "Health Profile"}</h3>
             <p>
               {isArabic
-                ? "اعرف نقاط القوة والفرص الصحية لديك."
-                : "Understand your strongest and weakest health areas."}
+                ? "صورة منظمة عن حالتك الصحية بناءً على بياناتك."
+                : "An organized view of your health based on your data."}
             </p>
           </Link>
 
@@ -578,28 +505,28 @@ async function analyzeHeroLabFile() {
             <h3>{isArabic ? "إشارات المخاطر" : "Risk Signals"}</h3>
             <p>
               {isArabic
-                ? "اكتشف الأنماط الصحية التي تستحق المتابعة."
-                : "Detect important health patterns before they become bigger issues."}
+                ? "اكتشاف الأنماط الصحية التي تستحق المتابعة."
+                : "Detect health patterns that may need follow-up."}
             </p>
           </Link>
 
           <Link href="/history" className="outcomeCard">
             <div className="outcomeIcon">📈</div>
-            <h3>{isArabic ? "توقع صحي" : "90-Day Forecast"}</h3>
+            <h3>{isArabic ? "توقع 90 يوم" : "90-Day Forecast"}</h3>
             <p>
               {isArabic
-                ? "شاهد اتجاه صحتك خلال الفترة القادمة."
-                : "See where your health trend may be heading."}
+                ? "فهم الاتجاه الصحي المحتمل خلال الفترة القادمة."
+                : "Understand where your health trend may be heading."}
             </p>
           </Link>
 
           <Link href="/doctor-portal" className="outcomeCard">
             <div className="outcomeIcon">🩺</div>
-            <h3>{isArabic ? "ملخص الطبيب" : "Doctor-Ready Summary"}</h3>
+            <h3>{isArabic ? "ملخص للطبيب" : "Doctor-Ready Summary"}</h3>
             <p>
               {isArabic
-                ? "ادخل الموعد الطبي وأنت مستعد."
-                : "Arrive prepared for healthcare conversations."}
+                ? "ملخص واضح يساعدك على التحضير للزيارة الطبية."
+                : "A clear summary to help you prepare for healthcare visits."}
             </p>
           </Link>
         </div>
@@ -615,14 +542,14 @@ async function analyzeHeroLabFile() {
 
           <h2>
             {isArabic
-              ? "حوّل بياناتك الصحية إلى خطوة واضحة اليوم."
-              : "Turn your health data into a clear next step today."}
+              ? "حوّل تقاريرك وبياناتك الصحية إلى فهم واضح اليوم."
+              : "Turn your reports and health data into clear understanding today."}
           </h2>
 
           <p>
             {isArabic
-              ? "ابدأ بتقييم مجاني، ثم افتح ملفك الصحي الذكي، فرص التحسين، والتقرير الاحترافي."
-              : "Start with a free assessment, then unlock your health profile, improvement opportunities, and professional report."}
+              ? "ابدأ بتقييم صحي، ارفع تقاريرك الطبية، ثم افتح مركز الذكاء الصحي."
+              : "Start with an assessment, upload your medical reports, then open your Health Intelligence Center."}
           </p>
 
           <div className="homeFinalCTAActions">
@@ -630,67 +557,17 @@ async function analyzeHeroLabFile() {
               {isArabic ? "ابدأ التقييم المجاني" : "Start Free Assessment"}
             </Link>
 
-            <Link href="/assistant" className="secondaryBtn">
-              {isArabic ? "اسأل الذكاء الصحي" : "Ask AI Health Assistant"}
+            <Link href="/lab-upload" className="secondaryBtn">
+              {isArabic ? "ارفع التقارير الطبية" : "Upload Medical Reports"}
             </Link>
           </div>
+
+          <p className="homeFooterDisclaimer">
+            {isArabic
+              ? "OrganHeal يشرح التقارير الطبية للتثقيف والتحضير فقط، ولا يقدم تشخيصًا أو علاجًا أو نصيحة طبية طارئة."
+              : "OrganHeal explains medical reports for education and preparation only. It does not provide diagnosis, treatment, or emergency medical advice."}
+          </p>
         </div>
-      </section>
-
-      <section className="socialProofSection">
-        <p className="sectionLabel">
-          {isArabic ? "منصة الذكاء الصحي" : "HEALTH INTELLIGENCE PLATFORM"}
-        </p>
-
-        <h2>
-          {isArabic
-            ? "كل ما تحتاجه لفهم صحتك في مكان واحد"
-            : "Everything you need to understand your health"}
-        </h2>
-
-        <div className="socialProofGrid">
-          <Link href="/intelligence" className="socialProofCard">
-            <h3>Health Profile</h3>
-            <p>
-              {isArabic
-                ? "ملف صحي ذكي مبني على بياناتك"
-                : "Personalized health profile built around your data"}
-            </p>
-          </Link>
-
-          <Link href="/intelligence" className="socialProofCard">
-            <h3>Risk Signals</h3>
-            <p>
-              {isArabic
-                ? "اكتشاف أنماط المخاطر مبكراً"
-                : "Detect health risk patterns early"}
-            </p>
-          </Link>
-
-          <Link href="/history" className="socialProofCard">
-            <h3>90-Day Forecast</h3>
-            <p>
-              {isArabic
-                ? "توقع الاتجاه الصحي القادم"
-                : "Forecast future health trends"}
-            </p>
-          </Link>
-
-          <Link href="/doctor-portal" className="socialProofCard">
-            <h3>Doctor Brief</h3>
-            <p>
-              {isArabic
-                ? "ملخص جاهز للطبيب"
-                : "Professional doctor-ready summary"}
-            </p>
-          </Link>
-        </div>
-
-        <p className="homeFooterDisclaimer">
-          {isArabic
-            ? "OrganHeal يقدم ذكاء صحي تعليمي ولا يستبدل الطبيب أو التشخيص الطبي."
-            : "OrganHeal provides educational health intelligence and does not replace medical diagnosis or licensed care."}
-        </p>
       </section>
     </main>
   );
