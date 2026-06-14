@@ -1,9 +1,10 @@
 "use client";
-import { generateMedicalIntelligence } from "../../lib/medicalIntelligenceEngine";
+
 import PageBackActions from "../components/PageBackActions";
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { buildHealthIntelligence } from "../../lib/intelligenceBuilder";
+import { generateMedicalIntelligence } from "../../lib/medicalIntelligenceEngine";
 
 type Assessment = {
   organ_name: string;
@@ -154,33 +155,33 @@ export default function IntelligencePage() {
   }
 
   async function generateReportIntelligence(insightId: number) {
-  const selectedInsight = healthInsights.find((item) => item.id === insightId);
+    const selectedInsight = healthInsights.find((item) => item.id === insightId);
 
-  if (!selectedInsight) return;
+    if (!selectedInsight) return;
 
-  const intelligence = generateMedicalIntelligence(selectedInsight.report_type);
+    const intelligence = generateMedicalIntelligence(selectedInsight.report_type);
 
-  const { error } = await supabase
-    .from("health_insights")
-    .update(intelligence)
-    .eq("id", insightId);
+    const { error } = await supabase
+      .from("health_insights")
+      .update(intelligence)
+      .eq("id", insightId);
 
-  if (error) {
-    alert("Could not generate intelligence: " + error.message);
-    return;
+    if (error) {
+      alert("Could not generate intelligence: " + error.message);
+      return;
+    }
+
+    setHealthInsights((currentInsights) =>
+      currentInsights.map((item) =>
+        item.id === insightId
+          ? {
+              ...item,
+              ...intelligence,
+            }
+          : item
+      )
+    );
   }
-
-  setHealthInsights((currentInsights) =>
-    currentInsights.map((item) =>
-      item.id === insightId
-        ? {
-            ...item,
-            ...intelligence,
-          }
-        : item
-    )
-  );
-}
 
   function getReportTypeLabel(type: string | null) {
     if (type === "lab") return "Laboratory Report";
@@ -198,8 +199,8 @@ export default function IntelligencePage() {
           <p className="assistantBadge">ORGANHEAL INTELLIGENCE CENTER</p>
           <h1>Health Intelligence Center</h1>
           <p>
-            A focused view for your health profile, top opportunities, and
-            medical report intelligence.
+            A focused view for your health profile, medical reports, top
+            opportunities, and doctor-ready intelligence.
           </p>
         </section>
 
@@ -220,90 +221,44 @@ export default function IntelligencePage() {
           )}
 
           {!loading && healthEngine && (
-            <>
-              <div className="resultBox">
-                <p className="sectionLabel">🪪 HEALTH PASSPORT</p>
-                <h2>{healthEngine.healthProfile}</h2>
+            <div className="resultBox">
+              <p className="sectionLabel">🪪 HEALTH PASSPORT</p>
+              <h2>{healthEngine.healthProfile}</h2>
 
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                    gap: "14px",
-                    marginTop: "18px",
-                  }}
-                >
-                  <div>
-                    <strong>Overall Score</strong>
-                    <p>{healthEngine.overallScore}/100</p>
-                  </div>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                  gap: "14px",
+                  marginTop: "18px",
+                }}
+              >
+                <div>
+                  <strong>Overall Score</strong>
+                  <p>{healthEngine.overallScore}/100</p>
+                </div>
 
-                  <div>
-                    <strong>Health Age</strong>
-                    <p>{healthEngine.healthAgeStatus}</p>
-                  </div>
+                <div>
+                  <strong>Health Age</strong>
+                  <p>{healthEngine.healthAgeStatus}</p>
+                </div>
 
-                  <div>
-                    <strong>Priority Area</strong>
-                    <p>{healthEngine.priorityOrgan || "N/A"}</p>
-                  </div>
+                <div>
+                  <strong>Priority Area</strong>
+                  <p>{healthEngine.priorityOrgan || "N/A"}</p>
+                </div>
 
-                  <div>
-                    <strong>Potential Score</strong>
-                    <p>{healthEngine.potentialScore}/100</p>
-                  </div>
+                <div>
+                  <strong>Potential Score</strong>
+                  <p>{healthEngine.potentialScore}/100</p>
                 </div>
               </div>
-
-              <div className="resultBox">
-                <p className="sectionLabel">🏆 TOP HEALTH OPPORTUNITIES</p>
-                <h2>Where You Can Improve the Most</h2>
-
-                {healthEngine.opportunities.length === 0 ? (
-                  <p>Complete more assessments to generate opportunities.</p>
-                ) : (
-                  <div
-                    style={{
-                      display: "grid",
-                      gap: "14px",
-                      marginTop: "18px",
-                    }}
-                  >
-                    {healthEngine.opportunities.map((item) => (
-                      <div
-                        key={item.organ}
-                        style={{
-                          padding: "16px",
-                          borderRadius: "16px",
-                          background: "rgba(15, 23, 42, 0.75)",
-                          border: "1px solid rgba(34, 211, 238, 0.18)",
-                          textAlign: "left",
-                        }}
-                      >
-                        <h3>{item.title}</h3>
-                        <p>
-                          Current: {item.currentScore}/100 → Potential:{" "}
-                          {item.potentialScore}/100
-                        </p>
-                        <p>
-                          Potential Gain: <strong>+{item.potentialGain}</strong>
-                        </p>
-                        <p>
-                          Priority: <strong>{item.priority}</strong>
-                        </p>
-                        <p>{item.action}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </>
+            </div>
           )}
 
           {!loading && (
             <div className="resultBox">
               <p className="sectionLabel">📄 MEDICAL REPORT INTELLIGENCE</p>
-
               <h2>Reports Ready for Medical Intelligence</h2>
 
               {healthInsights.length === 0 ? (
@@ -316,93 +271,218 @@ export default function IntelligencePage() {
                     marginTop: "18px",
                   }}
                 >
-                 {healthInsights.map((item) => (
-  <div
-    key={item.id}
-    style={{
-    padding: "14px 16px",
-    borderRadius: "16px",
-    background: "rgba(15,23,42,0.75)",
-    border: "1px solid rgba(34,211,238,0.18)",
-    textAlign: "left",
-  }}
->
-  <div
-    style={{
-      display: "grid",
-      gridTemplateColumns: "1fr auto",
-      gap: "12px",
-      alignItems: "center",
-    }}
-  >
-    <div>
-      <h3 style={{ marginBottom: "6px" }}>📄 {item.file_name}</h3>
+                  {healthInsights.map((item) => (
+                    <div
+                      key={item.id}
+                      style={{
+                        padding: "14px 16px",
+                        borderRadius: "16px",
+                        background: "rgba(15,23,42,0.75)",
+                        border: "1px solid rgba(34,211,238,0.18)",
+                        textAlign: "left",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "1fr auto",
+                          gap: "12px",
+                          alignItems: "center",
+                        }}
+                      >
+                        <div>
+                          <h3 style={{ marginBottom: "6px" }}>
+                            📄 {item.file_name}
+                          </h3>
 
-      <p style={{ margin: 0 }}>
-        {getReportTypeLabel(item.report_type)} •{" "}
-        {new Date(item.uploaded_at || item.created_at).toLocaleString()}
-      </p>
+                          <p style={{ margin: 0 }}>
+                            {getReportTypeLabel(item.report_type)} •{" "}
+                            {new Date(
+                              item.uploaded_at || item.created_at
+                            ).toLocaleString()}
+                          </p>
 
-      <p style={{ marginTop: "8px", fontWeight: 800 }}>
-        {item.ai_status === "Generated"
-          ? "Intelligence Generated"
-          : "Ready for Interpretation"}
-      </p>
-    </div>
+                          <p style={{ marginTop: "8px", fontWeight: 800 }}>
+                            {item.ai_status === "Generated"
+                              ? "Intelligence Generated"
+                              : "Ready for Interpretation"}
+                          </p>
+                        </div>
 
-    <div
-      style={{
-        display: "flex",
-        gap: "10px",
-        flexWrap: "wrap",
-        justifyContent: "flex-end",
-      }}
-    >
-      {item.file_path && (
-        <button
-          className="secondaryBtn"
-          onClick={() => openMedicalReport(item.file_path)}
-        >
-          Open
-        </button>
-      )}
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "10px",
+                            flexWrap: "wrap",
+                            justifyContent: "flex-end",
+                          }}
+                        >
+                          {item.file_path && (
+                            <button
+                              className="secondaryBtn"
+                              onClick={() => openMedicalReport(item.file_path)}
+                            >
+                              Open
+                            </button>
+                          )}
 
-      <button
-        className="primaryBtn"
-        onClick={() => generateReportIntelligence(item.id)}
-        disabled={item.ai_status === "Generated"}
-      >
-        {item.ai_status === "Generated" ? "Generated" : "Generate"}
-      </button>
-    </div>
-  </div>
+                          <button
+                            className="primaryBtn"
+                            onClick={() => generateReportIntelligence(item.id)}
+                            disabled={item.ai_status === "Generated"}
+                          >
+                            {item.ai_status === "Generated"
+                              ? "Generated"
+                              : "Generate"}
+                          </button>
+                        </div>
+                      </div>
 
-  {item.ai_status === "Generated" && (
-    <div style={{ marginTop: "16px" }}>
-      <p>
-        <strong>Medical Category:</strong> {item.medical_category}
-      </p>
-      <p>
-        <strong>Summary:</strong> {item.summary}
-      </p>
-      <p>
-        <strong>Key Findings:</strong> {item.key_findings}
-      </p>
-      <p>
-        <strong>Risk Signals:</strong> {item.risk_signals}
-      </p>
-      <p>
-        <strong>Recommendations:</strong> {item.recommendations}
-      </p>
-      <p>
-        <strong>Doctor Brief:</strong> {item.doctor_brief}
-      </p>
-    </div>
-  )}
-</div>
-       ))}
+                      {item.ai_status === "Generated" && (
+                        <div style={{ marginTop: "16px" }}>
+                          <p>
+                            <strong>Medical Category:</strong>{" "}
+                            {item.medical_category}
+                          </p>
+
+                          <p>
+                            <strong>Summary:</strong> {item.summary}
+                          </p>
+
+                          <p>
+                            <strong>Key Findings:</strong> {item.key_findings}
+                          </p>
+
+                          <p>
+                            <strong>Risk Signals:</strong> {item.risk_signals}
+                          </p>
+
+                          <p>
+                            <strong>Recommendations:</strong>{" "}
+                            {item.recommendations}
+                          </p>
+
+                          <p>
+                            <strong>Doctor Brief:</strong> {item.doctor_brief}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {!loading && healthEngine && (
+            <div className="resultBox">
+              <p className="sectionLabel">🏆 HEALTH INTELLIGENCE SNAPSHOT</p>
+              <h2>Top Opportunities</h2>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                  gap: "14px",
+                  marginTop: "18px",
+                }}
+              >
+                <div>
+                  <strong>Strongest Area</strong>
+                  <p>{healthEngine.strongestOrgan || "N/A"}</p>
+                </div>
+
+                <div>
+                  <strong>Risk Pattern</strong>
+                  <p>{healthEngine.riskPattern}</p>
+                </div>
+
+                <div>
+                  <strong>Potential Gain</strong>
+                  <p>+{healthEngine.potentialGain}</p>
+                </div>
+              </div>
+
+              {healthEngine.opportunities.length === 0 ? (
+                <p style={{ marginTop: "18px" }}>
+                  Complete more assessments to generate opportunities.
+                </p>
+              ) : (
+                <div
+                  style={{
+                    display: "grid",
+                    gap: "14px",
+                    marginTop: "18px",
+                  }}
+                >
+                  {healthEngine.opportunities.slice(0, 3).map((item) => (
+                    <div
+                      key={item.organ}
+                      style={{
+                        padding: "16px",
+                        borderRadius: "16px",
+                        background: "rgba(15,23,42,0.75)",
+                        border: "1px solid rgba(34,211,238,0.18)",
+                        textAlign: "left",
+                      }}
+                    >
+                      <h3>{item.title}</h3>
+                      <p>
+                        Current: {item.currentScore}/100 → Potential:{" "}
+                        {item.potentialScore}/100
+                      </p>
+                      <p>
+                        Potential Gain: <strong>+{item.potentialGain}</strong>
+                      </p>
+                      <p>
+                        Priority: <strong>{item.priority}</strong>
+                      </p>
+                      <p>{item.action}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {!loading && healthEngine && (
+            <div className="resultBox">
+              <p className="sectionLabel">🩺 DOCTOR READY SUMMARY</p>
+              <h2>Doctor Brief</h2>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                  gap: "14px",
+                  marginTop: "18px",
+                  textAlign: "left",
+                }}
+              >
+                <div>
+                  <strong>Overall Score</strong>
+                  <p>{healthEngine.overallScore}/100</p>
+                </div>
+
+                <div>
+                  <strong>Priority Area</strong>
+                  <p>{healthEngine.priorityOrgan || "N/A"}</p>
+                </div>
+
+                <div>
+                  <strong>Risk Pattern</strong>
+                  <p>{healthEngine.riskPattern}</p>
+                </div>
+
+                <div>
+                  <strong>Main Opportunity</strong>
+                  <p>{healthEngine.opportunityTitle}</p>
+                </div>
+              </div>
+
+              <p style={{ marginTop: "18px", textAlign: "left" }}>
+                {healthEngine.bestNextAction}
+              </p>
             </div>
           )}
         </section>
