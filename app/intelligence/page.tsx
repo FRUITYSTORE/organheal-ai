@@ -13,12 +13,25 @@ type Assessment = {
 
 type HealthEngine = ReturnType<typeof buildHealthIntelligence>;
 
+type HealthInsight = {
+  id: number;
+  report_id: number | null;
+  report_type: string | null;
+  insight_title: string | null;
+  ai_status: string | null;
+  risk_level: string | null;
+  next_best_action: string | null;
+  created_at: string;
+  file_name?: string;
+  file_path?: string | null;
+  uploaded_at?: string;
+};
+
 export default function IntelligencePage() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [healthEngine, setHealthEngine] = useState<HealthEngine | null>(null);
-  const [healthInsights, setHealthInsights] = useState<any[]>([]);
-  const [copyMessage, setCopyMessage] = useState("");
+  const [healthInsights, setHealthInsights] = useState<HealthInsight[]>([]);
 
   useEffect(() => {
     loadIntelligence();
@@ -26,6 +39,7 @@ export default function IntelligencePage() {
 
   async function loadIntelligence() {
     setLoading(true);
+    setMessage("");
 
     const { data: userData, error: userError } = await supabase.auth.getUser();
 
@@ -35,96 +49,137 @@ export default function IntelligencePage() {
       return;
     }
 
-    const { data: assessments, error } = await supabase
+    const userId = userData.user.id;
+
+    const { data: assessments, error: assessmentError } = await supabase
       .from("organ_assessments")
       .select("organ_name, score, created_at")
-      .eq("user_id", userData.user.id)
+      .eq("user_id", userId)
       .order("created_at", { ascending: false });
 
-    if (error) {
-      setMessage("Database error: " + error.message);
+    if (assessmentError) {
+      setMessage("Database error: " + assessmentError.message);
       setLoading(false);
       return;
     }
 
     const assessmentData = (assessments || []) as Assessment[];
 
-    if (assessmentData.length === 0) {
-      setMessage("Complete your first organ assessment to unlock intelligence.");
+    if (assessmentData.length > 0) {
+      const intelligence = buildHealthIntelligence({
+        assessments: assessmentData,
+        labReport: null,
+        dailyCheckIn: null,
+        isArabic: false,
+      });
+
+      setHealthEngine(intelligence);
+    }
+
+    const { data: insights, error: insightsError } = await supabase
+      .from("health_insights")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (insightsError) {
+      setMessage("Could not load medical report intelligence.");
       setLoading(false);
       return;
     }
 
-    const intelligence = buildHealthIntelligence({
-      assessments: assessmentData,
-      labReport: null,
-      dailyCheckIn: null,
-      isArabic: false,
+    const reportIds = (insights || [])
+      .map((item) => item.report_id)
+      .filter(Boolean);
+
+    let reports: {
+      id: number;
+      file_name: string;
+      file_path: string;
+      created_at: string;
+    }[] = [];
+
+    if (reportIds.length > 0) {
+      const { data: reportData } = await supabase
+        .from("uploaded_lab_files")
+        .select("id, file_name, file_path, created_at")
+        .in("id", reportIds);
+
+      reports = reportData || [];
+    }
+
+    const mergedInsights = (insights || []).map((item) => {
+      const report = reports.find((reportItem) => reportItem.id === item.report_id);
+
+      return {
+        ...item,
+        file_name: report?.file_name || "Medical report",
+        file_path: report?.file_path || null,
+        uploaded_at: report?.created_at || item.created_at,
+      };
     });
-const { data: insights } = await supabase
-  .from("health_insights")
-  .select("*")
-  .eq("user_id", userData.user.id)
-  .order("created_at", { ascending: false });
 
-const reportIds = (insights || [])
-  .map((item) => item.report_id)
-  .filter(Boolean);
+    setHealthInsights(mergedInsights);
 
-const { data: reports } = await supabase
-  .from("uploaded_lab_files")
-  .select("id, file_name, file_path, created_at")
-  .in("id", reportIds);
+    if (assessmentData.length === 0 && mergedInsights.length === 0) {
+      setMessage(
+        "Complete your first organ assessment or upload a medical report to unlock intelligence."
+      );
+    }
 
-const mergedInsights = (insights || []).map((item) => {
-  const report = (reports || []).find((r) => r.id === item.report_id);
-
-  return {
-    ...item,
-    file_name: report?.file_name || "Medical report",
-    file_path: report?.file_path || null,
-    uploaded_at: report?.created_at || item.created_at,
-  };
-});
-
-setHealthInsights(mergedInsights);
-    setHealthEngine(intelligence);
     setLoading(false);
   }
 
-  async function copyDoctorBrief() {
-    if (!healthEngine) return;
+  async function openMedicalReport(filePath: string | null | undefined) {
+    if (!filePath) return;
 
-    await navigator.clipboard.writeText(healthEngine.doctorBrief);
-    setCopyMessage("Doctor brief copied.");
-  }async function generateReportIntelligence(insightId: number) {
-  const { error } = await supabase
-    .from("health_insights")
-    .update({
-      ai_status: "Processing",
-      risk_level: "processing",
-      next_best_action: "Medical intelligence generation is in progress.",
-    })
-    .eq("id", insightId);
+    const { data, error } = await supabase.storage
+      .from("lab-reports")
+      .createSignedUrl(filePath, 60 * 60);
 
-  if (error) {
-    alert("Could not start intelligence generation: " + error.message);
-    return;
+    if (error) {
+      alert("Could not open report: " + error.message);
+      return;
+    }
+
+    window.open(data.signedUrl, "_blank");
   }
 
-  setHealthInsights((currentInsights) =>
-    currentInsights.map((item) =>
-      item.id === insightId
-        ? {
-            ...item,
-            ai_status: "Processing",
-            risk_level: "processing",
-            next_best_action: "Medical intelligence generation is in progress.",
-          }
-        : item
-    )
-  );
-}
+  async function generateReportIntelligence(insightId: number) {
+    const { error } = await supabase
+      .from("health_insights")
+      .update({
+        ai_status: "Processing",
+        risk_level: "processing",
+        next_best_action: "Medical intelligence generation is in progress.",
+      })
+      .eq("id", insightId);
+
+    if (error) {
+      alert("Could not start intelligence generation: " + error.message);
+      return;
+    }
+
+    setHealthInsights((currentInsights) =>
+      currentInsights.map((item) =>
+        item.id === insightId
+          ? {
+              ...item,
+              ai_status: "Processing",
+              risk_level: "processing",
+              next_best_action: "Medical intelligence generation is in progress.",
+            }
+          : item
+      )
+    );
+  }
+
+  function getReportTypeLabel(type: string | null) {
+    if (type === "lab") return "Laboratory Report";
+    if (type === "radiology") return "Radiology Report";
+    if (type === "discharge") return "Discharge Summary";
+    return "Medical Report";
+  }
 
   return (
     <main className="assistantPage">
@@ -135,8 +190,8 @@ setHealthInsights(mergedInsights);
           <p className="assistantBadge">ORGANHEAL INTELLIGENCE CENTER</p>
           <h1>Health Intelligence Center</h1>
           <p>
-            A focused intelligence view for your health profile, opportunities,
-            roadmap, risk signals, and doctor-ready summary.
+            A focused view for your health profile, top opportunities, and
+            medical report intelligence.
           </p>
         </section>
 
@@ -148,7 +203,7 @@ setHealthInsights(mergedInsights);
             </div>
           )}
 
-          {!loading && message && (
+          {!loading && message && !healthEngine && healthInsights.length === 0 && (
             <div className="resultBox">
               <p className="sectionLabel">INTELLIGENCE STATUS</p>
               <h2>Not enough data yet</h2>
@@ -193,47 +248,19 @@ setHealthInsights(mergedInsights);
               </div>
 
               <div className="resultBox">
-                <p className="sectionLabel">📊 INTELLIGENCE SNAPSHOT</p>
-                <h2>Your Current Pattern</h2>
-
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                    gap: "14px",
-                    marginTop: "18px",
-                  }}
-                >
-                  <div>
-                    <strong>Strongest Area</strong>
-                    <p>{healthEngine.strongestOrgan || "N/A"}</p>
-                  </div>
-
-                  <div>
-                    <strong>Risk Pattern</strong>
-                    <p>{healthEngine.riskPattern}</p>
-                  </div>
-
-                  <div>
-                    <strong>Potential Gain</strong>
-                    <p>+{healthEngine.potentialGain}</p>
-                  </div>
-
-                  <div>
-                    <strong>Trend</strong>
-                    <p>{healthEngine.trendDirection}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="resultBox">
                 <p className="sectionLabel">🏆 TOP HEALTH OPPORTUNITIES</p>
                 <h2>Where You Can Improve the Most</h2>
 
                 {healthEngine.opportunities.length === 0 ? (
                   <p>Complete more assessments to generate opportunities.</p>
                 ) : (
-                  <div style={{ display: "grid", gap: "14px", marginTop: "18px" }}>
+                  <div
+                    style={{
+                      display: "grid",
+                      gap: "14px",
+                      marginTop: "18px",
+                    }}
+                  >
                     {healthEngine.opportunities.map((item) => (
                       <div
                         key={item.organ}
@@ -262,164 +289,94 @@ setHealthInsights(mergedInsights);
                   </div>
                 )}
               </div>
+            </>
+          )}
 
-              <div className="resultBox">
-                <p className="sectionLabel">🎯 NEXT BEST ACTIONS</p>
-                <h2>Recommended Focus</h2>
+          {!loading && (
+            <div className="resultBox">
+              <p className="sectionLabel">📄 MEDICAL REPORT INTELLIGENCE</p>
 
+              <h2>Reports Ready for Medical Intelligence</h2>
+
+              {healthInsights.length === 0 ? (
+                <p>No uploaded reports are ready for intelligence yet.</p>
+              ) : (
                 <div
                   style={{
                     display: "grid",
                     gap: "12px",
                     marginTop: "18px",
-                    textAlign: "left",
                   }}
                 >
-                  <p>1. {healthEngine.bestNextAction}</p>
-                  <p>2. Repeat your priority assessment within 30 days.</p>
-                  <p>3. Review your full report before your next health visit.</p>
-                </div>
-              </div>
+                  {healthInsights.map((item) => (
+                    <div
+                      key={item.id}
+                      style={{
+                        padding: "14px 16px",
+                        borderRadius: "16px",
+                        background: "rgba(15,23,42,0.75)",
+                        border: "1px solid rgba(34,211,238,0.18)",
+                        textAlign: "left",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "1fr auto",
+                          gap: "12px",
+                          alignItems: "center",
+                        }}
+                      >
+                        <div>
+                          <h3 style={{ marginBottom: "6px" }}>
+                            📄 {item.file_name}
+                          </h3>
 
-              <div className="resultBox">
-                <p className="sectionLabel">🗺️ HEALTH ROADMAP</p>
-                <h2>Today → 30 Days → 90 Days</h2>
+                          <p style={{ margin: 0 }}>
+                            {getReportTypeLabel(item.report_type)} •{" "}
+                            {new Date(item.uploaded_at || item.created_at).toLocaleString()}
+                          </p>
 
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                    gap: "14px",
-                    marginTop: "18px",
-                  }}
-                >
-                  <div>
-                    <strong>Today</strong>
-                    <p>{healthEngine.opportunityTitle}</p>
-                  </div>
+                          <p style={{ marginTop: "8px", fontWeight: 800 }}>
+                            {item.ai_status === "Processing"
+                              ? "Generating Intelligence..."
+                              : "Ready for Interpretation"}
+                          </p>
+                        </div>
 
-                  <div>
-                    <strong>30 Days</strong>
-                    <p>
-                      Improve your priority area:{" "}
-                      {healthEngine.priorityOrgan || "General Health"}.
-                    </p>
-                  </div>
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "10px",
+                            flexWrap: "wrap",
+                            justifyContent: "flex-end",
+                          }}
+                        >
+                          {item.file_path && (
+                            <button
+                              className="secondaryBtn"
+                              onClick={() => openMedicalReport(item.file_path)}
+                            >
+                              Open
+                            </button>
+                          )}
 
-                  <div>
-                    <strong>90 Days</strong>
-                    <p>Aim for {healthEngine.potentialScore}/100.</p>
-                  </div>
-                </div>
-              </div>
-
-              {healthEngine.riskEscalationLevel !== "Stable" && (
-                <div className="priorityAlert">
-                  <h3>🚨 Risk Escalation Intelligence</h3>
-                  <p>
-                    <strong>Level:</strong> {healthEngine.riskEscalationLevel}
-                  </p>
-                  <p>{healthEngine.riskEscalationMessage}</p>
-                  <p>
-                    <strong>Reason:</strong> {healthEngine.riskEscalationReason}
-                  </p>
+                          <button
+                            className="primaryBtn"
+                            onClick={() => generateReportIntelligence(item.id)}
+                            disabled={item.ai_status === "Processing"}
+                          >
+                            {item.ai_status === "Processing"
+                              ? "Generating..."
+                              : "Generate"}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
-
-              <div className="resultBox">
-                <p className="sectionLabel">🩺 DOCTOR READY SUMMARY</p>
-                <h2>Patient Intelligence Brief</h2>
-
-                <div
-                  style={{
-                    whiteSpace: "pre-line",
-                    lineHeight: "1.8",
-                    marginTop: "16px",
-                    textAlign: "left",
-                  }}
-                >
-                  {healthEngine.doctorBrief}
-                </div>
-
-                <button
-                  className="primaryBtn"
-                  onClick={copyDoctorBrief}
-                  style={{ marginTop: "18px" }}
-                >
-                  Copy Brief
-                </button>
-
-                {copyMessage && <p>{copyMessage}</p>}
-              </div>
-    <div className="resultBox">
-  <p className="sectionLabel">📄 MEDICAL REPORT INTELLIGENCE</p>
-
-  <h2>Reports Ready for Medical Intelligence</h2>
-
-  {healthInsights.length === 0 ? (
-    <p>No uploaded reports are ready for intelligence yet.</p>
-  ) : (
-    <div style={{ display: "grid", gap: "12px", marginTop: "18px" }}>
-      {healthInsights.map((item) => (
-        <div
-          key={item.id}
-          style={{
-            padding: "14px 16px",
-            borderRadius: "16px",
-            background: "rgba(15,23,42,0.75)",
-            border: "1px solid rgba(34,211,238,0.18)",
-            textAlign: "left",
-          }}
-        >
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr auto",
-              gap: "12px",
-              alignItems: "center",
-            }}
-          >
-            <div>
-              <h3 style={{ marginBottom: "6px" }}>📄 {item.file_name}</h3>
-
-              <p style={{ margin: 0 }}>
-                {item.report_type === "lab"
-                  ? "Laboratory Report"
-                  : item.report_type === "radiology"
-                  ? "Radiology Report"
-                  : item.report_type === "discharge"
-                  ? "Discharge Summary"
-                  : "Medical Report"}{" "}
-                • {new Date(item.uploaded_at).toLocaleString()}
-              </p>
-
-              <p style={{ marginTop: "8px", fontWeight: 800 }}>
-                {item.ai_status === "Processing"
-                  ? "Generating Intelligence..."
-                  : "Ready for Interpretation"}
-              </p>
             </div>
-
-            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-              {item.file_path && (
-                <button className="secondaryBtn">Open</button>
-              )}
-
-              <button
-                className="primaryBtn"
-                onClick={() => generateReportIntelligence(item.id)}
-                disabled={item.ai_status === "Processing"}
-              >
-                {item.ai_status === "Processing" ? "Generating..." : "Generate"}
-              </button>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  )}
-</div>
-            </>
           )}
         </section>
       </div>
