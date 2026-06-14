@@ -30,7 +30,9 @@ type HealthInsight = {
   risk_signals?: string | null;
   recommendations?: string | null;
   doctor_brief?: string | null;
-
+extraction_status?: string | null;
+extracted_text?: string | null;
+extracted_at?: string | null;
   file_name?: string;
   file_path?: string | null;
   uploaded_at?: string;
@@ -111,7 +113,7 @@ export default function IntelligencePage() {
     if (reportIds.length > 0) {
       const { data: reportData } = await supabase
         .from("uploaded_lab_files")
-        .select("id, file_name, file_path, created_at")
+        .select("id, file_name, file_path, created_at, extraction_status, extracted_text, extracted_at")
         .in("id", reportIds);
 
       reports = reportData || [];
@@ -158,7 +160,14 @@ export default function IntelligencePage() {
     const selectedInsight = healthInsights.find((item) => item.id === insightId);
 
     if (!selectedInsight) return;
-
+if (selectedInsight.report_id) {
+  await supabase
+    .from("uploaded_lab_files")
+    .update({
+      extraction_status: "Processing",
+    })
+    .eq("id", selectedInsight.report_id);
+}
     const intelligence = generateMedicalIntelligence(selectedInsight.report_type);
 
     const { error } = await supabase
@@ -170,7 +179,17 @@ export default function IntelligencePage() {
       alert("Could not generate intelligence: " + error.message);
       return;
     }
-
+if (selectedInsight.report_id) {
+  await supabase
+    .from("uploaded_lab_files")
+    .update({
+      extraction_status: "Completed",
+      extracted_text:
+        "Text extraction placeholder. Real OCR/PDF extraction will be connected in the next phase.",
+      extracted_at: new Date().toISOString(),
+    })
+    .eq("id", selectedInsight.report_id);
+}
     setHealthInsights((currentInsights) =>
       currentInsights.map((item) =>
         item.id === insightId
@@ -296,11 +315,13 @@ export default function IntelligencePage() {
                           </h3>
 
                           <p style={{ margin: 0 }}>
-                            {getReportTypeLabel(item.report_type)} •{" "}
-                            {new Date(
-                              item.uploaded_at || item.created_at
-                            ).toLocaleString()}
-                          </p>
+  {getReportTypeLabel(item.report_type)} •{" "}
+  {new Date(item.uploaded_at || item.created_at).toLocaleString()}
+</p>
+
+<p style={{ marginTop: "6px" }}>
+  Extraction: {item.extraction_status || "Pending"}
+</p>
 
                           <p style={{ marginTop: "8px", fontWeight: 800 }}>
                             {item.ai_status === "Generated"

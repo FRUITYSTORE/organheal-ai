@@ -207,6 +207,9 @@ async function uploadFile() {
     report_type: reportType,
     analysis_status: analysis.status,
     ai_summary: analysis.summary,
+    extraction_status: "Pending",
+extracted_text: null,
+extracted_at: null,
   })
   .select("id")
   .single();
