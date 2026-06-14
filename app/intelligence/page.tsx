@@ -351,109 +351,69 @@ setHealthInsights(mergedInsights);
 
                 {copyMessage && <p>{copyMessage}</p>}
               </div>
-              <div className="resultBox">
-  <p className="sectionLabel">
-    📄 MEDICAL REPORT INTELLIGENCE
-  </p>
+    <div className="resultBox">
+  <p className="sectionLabel">📄 MEDICAL REPORT INTELLIGENCE</p>
 
   <h2>Reports Ready for Medical Intelligence</h2>
 
   {healthInsights.length === 0 ? (
     <p>No uploaded reports are ready for intelligence yet.</p>
   ) : (
-    <div
-      style={{
-        display: "grid",
-        gap: "14px",
-        marginTop: "18px",
-      }}
-    >
+    <div style={{ display: "grid", gap: "12px", marginTop: "18px" }}>
       {healthInsights.map((item) => (
         <div
           key={item.id}
           style={{
-            padding: "16px",
+            padding: "14px 16px",
             borderRadius: "16px",
             background: "rgba(15,23,42,0.75)",
             border: "1px solid rgba(34,211,238,0.18)",
             textAlign: "left",
           }}
         >
-    <h3>📄 {item.file_name}</h3>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr auto",
+              gap: "12px",
+              alignItems: "center",
+            }}
+          >
+            <div>
+              <h3 style={{ marginBottom: "6px" }}>📄 {item.file_name}</h3>
 
-<p>
-  <strong>Uploaded:</strong>{" "}
-  {new Date(item.uploaded_at).toLocaleString()}
-</p>
+              <p style={{ margin: 0 }}>
+                {item.report_type === "lab"
+                  ? "Laboratory Report"
+                  : item.report_type === "radiology"
+                  ? "Radiology Report"
+                  : item.report_type === "discharge"
+                  ? "Discharge Summary"
+                  : "Medical Report"}{" "}
+                • {new Date(item.uploaded_at).toLocaleString()}
+              </p>
 
-<p>
-  <strong>Report Type:</strong> {item.report_type || "medical"}
-</p>
+              <p style={{ marginTop: "8px", fontWeight: 800 }}>
+                {item.ai_status === "Processing"
+                  ? "Generating Intelligence..."
+                  : "Ready for Interpretation"}
+              </p>
+            </div>
 
-<p>
-  <strong>AI Status:</strong> {item.ai_status || "Pending"}
-</p>
+            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+              {item.file_path && (
+                <button className="secondaryBtn">Open</button>
+              )}
 
-<p>
-  <strong>Risk Level:</strong> {item.risk_level || "Pending"}
-</p>
-
-<hr style={{ margin: "18px 0" }} />
-
-<hr style={{ margin: "18px 0" }} />
-
-<p>
-  <strong>Status:</strong>{" "}
-{item.ai_status === "Processing"
-  ? "Generating Intelligence..."
-  : "Ready for Interpretation"}
-</p>
-
-<p>
-  <strong>Medical Category:</strong>{" "}
-  {item.report_type === "lab"
-    ? "Laboratory"
-    : item.report_type === "radiology"
-    ? "Radiology"
-    : item.report_type === "discharge"
-    ? "Discharge Summary"
-    : "Medical Document"}
-</p>
-
-<p>
-  <strong>Next Action:</strong> Generate Medical Intelligence
-</p>
-
-<div
-  style={{
-    display: "flex",
-    gap: "10px",
-    flexWrap: "wrap",
-    marginTop: "14px",
-  }}
->
-  {item.file_path && (
-    <button className="secondaryBtn">
-      Open Report
-    </button>
-  )}
-
-  <button
-  className="primaryBtn"
-  onClick={() => generateReportIntelligence(item.id)}
->
-  {item.ai_status === "Processing"
-    ? "Generating..."
-    : "Generate Intelligence"}
-</button>
-</div>
-
-{item.next_best_action && (
-  <>
-    <h4>Next Best Action</h4>
-    <p>{item.next_best_action}</p>
-  </>
-)}
+              <button
+                className="primaryBtn"
+                onClick={() => generateReportIntelligence(item.id)}
+                disabled={item.ai_status === "Processing"}
+              >
+                {item.ai_status === "Processing" ? "Generating..." : "Generate"}
+              </button>
+            </div>
+          </div>
         </div>
       ))}
     </div>
