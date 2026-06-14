@@ -13,6 +13,8 @@ type UploadedFile = {
   analysis_status: string | null;
   extracted_text: string | null;
   ai_summary: string | null;
+  extraction_status?: string | null;
+  extracted_at?: string | null;
 };
 
 type AnalysisStep = "idle" | "uploading" | "extracting" | "analyzing" | "ready";
@@ -104,7 +106,7 @@ function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
 
     const { data, error } = await supabase
       .from("uploaded_lab_files")
-      .select("id, file_name, file_path, file_url, created_at, analysis_status, extracted_text, ai_summary")
+      .select("id, file_name, file_path, file_url, created_at, analysis_status, extracted_text, ai_summary, extraction_status, extracted_at")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
