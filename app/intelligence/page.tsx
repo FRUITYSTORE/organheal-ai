@@ -365,6 +365,32 @@ setHealthInsights(mergedInsights);
 
           <p>
             <strong>AI Status:</strong>{" "}
+            <hr style={{ margin: "18px 0" }} />
+
+<p>
+  <strong>Summary</strong>
+</p>
+<p>{item.summary}</p>
+
+<p>
+  <strong>Key Findings</strong>
+</p>
+<p>{item.key_findings}</p>
+
+<p>
+  <strong>Risk Signals</strong>
+</p>
+<p>{item.risk_signals}</p>
+
+<p>
+  <strong>Recommendations</strong>
+</p>
+<p>{item.recommendations}</p>
+
+<p>
+  <strong>Doctor Brief</strong>
+</p>
+<p>{item.doctor_brief}</p>
             {item.ai_status || "Pending"}
           </p>
 

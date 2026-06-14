@@ -209,31 +209,34 @@ async function uploadFile() {
   .select("id")
   .single();
 
-    if (databaseError) {
-      setMessage("Database error: " + databaseError.message);
-      setUploading(false);
-      setAnalysisStep("idle");
-      return;
-    }if (insertedFile) {
-  await supabase.from("health_insights").insert({
-    user_id: user.id,
-    report_id: insertedFile.id,
-    report_type: reportType,
-    insight_title: "Medical report uploaded",
-    insight_summary:
-      "This report was uploaded successfully. AI extraction and structured health intelligence will be connected in the next phase.",
-    risk_level: "pending",
-    recommended_action:
-      "Review this report with a licensed healthcare professional if you have symptoms, abnormal results, or urgent concerns.",
-    doctor_brief:
-      "A medical report was uploaded and is ready for future AI-assisted summarization.",
-    health_score: null,
-    potential_gain: null,
-    next_best_action: "Prepare this report for structured review.",
-  });
+  if (databaseError) {
+  setMessage("Database error: " + databaseError.message);
+  setUploading(false);
+  setAnalysisStep("idle");
+  return;
 }
 
-    uploadedCount++;
+if (insertedFile) {
+  await supabase.from("health_insights").insert([
+    {
+      user_id: user.id,
+      report_id: insertedFile.id,
+      report_type: reportType,
+
+      insight_title: "Medical report uploaded",
+      ai_status: "Pending",
+      risk_level: "pending",
+
+      summary: "Report uploaded successfully and awaiting AI extraction.",
+      key_findings: "Pending analysis.",
+      risk_signals: "Pending analysis.",
+      recommendations: "Pending analysis.",
+      doctor_brief: "Pending AI interpretation.",
+    },
+  ]);
+}
+
+uploadedCount++;
   }
 
   setAnalysisStep("ready");
