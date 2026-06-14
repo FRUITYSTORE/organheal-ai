@@ -1,5 +1,5 @@
 "use client";
-
+import { generateMedicalIntelligence } from "../../lib/medicalIntelligenceEngine";
 import PageBackActions from "../components/PageBackActions";
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
@@ -22,6 +22,14 @@ type HealthInsight = {
   risk_level: string | null;
   next_best_action: string | null;
   created_at: string;
+
+  medical_category?: string | null;
+  summary?: string | null;
+  key_findings?: string | null;
+  risk_signals?: string | null;
+  recommendations?: string | null;
+  doctor_brief?: string | null;
+
   file_name?: string;
   file_path?: string | null;
   uploaded_at?: string;
@@ -146,33 +154,33 @@ export default function IntelligencePage() {
   }
 
   async function generateReportIntelligence(insightId: number) {
-    const { error } = await supabase
-      .from("health_insights")
-      .update({
-        ai_status: "Processing",
-        risk_level: "processing",
-        next_best_action: "Medical intelligence generation is in progress.",
-      })
-      .eq("id", insightId);
+  const selectedInsight = healthInsights.find((item) => item.id === insightId);
 
-    if (error) {
-      alert("Could not start intelligence generation: " + error.message);
-      return;
-    }
+  if (!selectedInsight) return;
 
-    setHealthInsights((currentInsights) =>
-      currentInsights.map((item) =>
-        item.id === insightId
-          ? {
-              ...item,
-              ai_status: "Processing",
-              risk_level: "processing",
-              next_best_action: "Medical intelligence generation is in progress.",
-            }
-          : item
-      )
-    );
+  const intelligence = generateMedicalIntelligence(selectedInsight.report_type);
+
+  const { error } = await supabase
+    .from("health_insights")
+    .update(intelligence)
+    .eq("id", insightId);
+
+  if (error) {
+    alert("Could not generate intelligence: " + error.message);
+    return;
   }
+
+  setHealthInsights((currentInsights) =>
+    currentInsights.map((item) =>
+      item.id === insightId
+        ? {
+            ...item,
+            ...intelligence,
+          }
+        : item
+    )
+  );
+}
 
   function getReportTypeLabel(type: string | null) {
     if (type === "lab") return "Laboratory Report";
@@ -308,72 +316,91 @@ export default function IntelligencePage() {
                     marginTop: "18px",
                   }}
                 >
-                  {healthInsights.map((item) => (
-                    <div
-                      key={item.id}
-                      style={{
-                        padding: "14px 16px",
-                        borderRadius: "16px",
-                        background: "rgba(15,23,42,0.75)",
-                        border: "1px solid rgba(34,211,238,0.18)",
-                        textAlign: "left",
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "grid",
-                          gridTemplateColumns: "1fr auto",
-                          gap: "12px",
-                          alignItems: "center",
-                        }}
-                      >
-                        <div>
-                          <h3 style={{ marginBottom: "6px" }}>
-                            📄 {item.file_name}
-                          </h3>
+                 {healthInsights.map((item) => (
+  <div
+    key={item.id}
+    style={{
+    padding: "14px 16px",
+    borderRadius: "16px",
+    background: "rgba(15,23,42,0.75)",
+    border: "1px solid rgba(34,211,238,0.18)",
+    textAlign: "left",
+  }}
+>
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "1fr auto",
+      gap: "12px",
+      alignItems: "center",
+    }}
+  >
+    <div>
+      <h3 style={{ marginBottom: "6px" }}>📄 {item.file_name}</h3>
 
-                          <p style={{ margin: 0 }}>
-                            {getReportTypeLabel(item.report_type)} •{" "}
-                            {new Date(item.uploaded_at || item.created_at).toLocaleString()}
-                          </p>
+      <p style={{ margin: 0 }}>
+        {getReportTypeLabel(item.report_type)} •{" "}
+        {new Date(item.uploaded_at || item.created_at).toLocaleString()}
+      </p>
 
-                          <p style={{ marginTop: "8px", fontWeight: 800 }}>
-                            {item.ai_status === "Processing"
-                              ? "Generating Intelligence..."
-                              : "Ready for Interpretation"}
-                          </p>
-                        </div>
+      <p style={{ marginTop: "8px", fontWeight: 800 }}>
+        {item.ai_status === "Generated"
+          ? "Intelligence Generated"
+          : "Ready for Interpretation"}
+      </p>
+    </div>
 
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: "10px",
-                            flexWrap: "wrap",
-                            justifyContent: "flex-end",
-                          }}
-                        >
-                          {item.file_path && (
-                            <button
-                              className="secondaryBtn"
-                              onClick={() => openMedicalReport(item.file_path)}
-                            >
-                              Open
-                            </button>
-                          )}
+    <div
+      style={{
+        display: "flex",
+        gap: "10px",
+        flexWrap: "wrap",
+        justifyContent: "flex-end",
+      }}
+    >
+      {item.file_path && (
+        <button
+          className="secondaryBtn"
+          onClick={() => openMedicalReport(item.file_path)}
+        >
+          Open
+        </button>
+      )}
 
-                          <button
-                            className="primaryBtn"
-                            onClick={() => generateReportIntelligence(item.id)}
-                            disabled={item.ai_status === "Processing"}
-                          >
-                            {item.ai_status === "Processing"
-                              ? "Generating..."
-                              : "Generate"}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+      <button
+        className="primaryBtn"
+        onClick={() => generateReportIntelligence(item.id)}
+        disabled={item.ai_status === "Generated"}
+      >
+        {item.ai_status === "Generated" ? "Generated" : "Generate"}
+      </button>
+    </div>
+  </div>
+
+  {item.ai_status === "Generated" && (
+    <div style={{ marginTop: "16px" }}>
+      <p>
+        <strong>Medical Category:</strong> {item.medical_category}
+      </p>
+      <p>
+        <strong>Summary:</strong> {item.summary}
+      </p>
+      <p>
+        <strong>Key Findings:</strong> {item.key_findings}
+      </p>
+      <p>
+        <strong>Risk Signals:</strong> {item.risk_signals}
+      </p>
+      <p>
+        <strong>Recommendations:</strong> {item.recommendations}
+      </p>
+      <p>
+        <strong>Doctor Brief:</strong> {item.doctor_brief}
+      </p>
+    </div>
+  )}
+</div>
+       ))}
                 </div>
               )}
             </div>
