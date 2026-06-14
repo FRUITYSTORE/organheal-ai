@@ -97,7 +97,34 @@ setHealthInsights(mergedInsights);
 
     await navigator.clipboard.writeText(healthEngine.doctorBrief);
     setCopyMessage("Doctor brief copied.");
+  }async function generateReportIntelligence(insightId: number) {
+  const { error } = await supabase
+    .from("health_insights")
+    .update({
+      ai_status: "Processing",
+      risk_level: "processing",
+      next_best_action: "Medical intelligence generation is in progress.",
+    })
+    .eq("id", insightId);
+
+  if (error) {
+    alert("Could not start intelligence generation: " + error.message);
+    return;
   }
+
+  setHealthInsights((currentInsights) =>
+    currentInsights.map((item) =>
+      item.id === insightId
+        ? {
+            ...item,
+            ai_status: "Processing",
+            risk_level: "processing",
+            next_best_action: "Medical intelligence generation is in progress.",
+          }
+        : item
+    )
+  );
+}
 
   return (
     <main className="assistantPage">
@@ -329,10 +356,10 @@ setHealthInsights(mergedInsights);
     📄 MEDICAL REPORT INTELLIGENCE
   </p>
 
-  <h2>Uploaded Medical Reports</h2>
+  <h2>Reports Ready for Medical Intelligence</h2>
 
   {healthInsights.length === 0 ? (
-    <p>No medical report intelligence available yet.</p>
+    <p>No uploaded reports are ready for intelligence yet.</p>
   ) : (
     <div
       style={{
@@ -376,7 +403,10 @@ setHealthInsights(mergedInsights);
 <hr style={{ margin: "18px 0" }} />
 
 <p>
-  <strong>Status:</strong> Ready for Interpretation
+  <strong>Status:</strong>{" "}
+{item.ai_status === "Processing"
+  ? "Generating Intelligence..."
+  : "Ready for Interpretation"}
 </p>
 
 <p>
@@ -408,9 +438,14 @@ setHealthInsights(mergedInsights);
     </button>
   )}
 
-  <button className="primaryBtn">
-    Generate Intelligence
-  </button>
+  <button
+  className="primaryBtn"
+  onClick={() => generateReportIntelligence(item.id)}
+>
+  {item.ai_status === "Processing"
+    ? "Generating..."
+    : "Generate Intelligence"}
+</button>
 </div>
 
 {item.next_best_action && (
