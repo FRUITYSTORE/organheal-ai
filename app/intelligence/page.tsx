@@ -352,57 +352,48 @@ setHealthInsights(mergedInsights);
             textAlign: "left",
           }}
         >
-          <h3>📄 {item.file_name}</h3>
-          <p>
+    <h3>📄 {item.file_name}</h3>
+
+<p>
   <strong>Uploaded:</strong>{" "}
   {new Date(item.uploaded_at).toLocaleString()}
 </p>
 
-          <p>
-            <strong>Report Type:</strong>{" "}
-{item.report_type || "medical"}
-          </p>
-
-          <p>
-            <strong>AI Status:</strong>{" "}
-            <hr style={{ margin: "18px 0" }} />
+<p>
+  <strong>Report Type:</strong> {item.report_type || "medical"}
+</p>
 
 <p>
-  <strong>Summary</strong>
+  <strong>AI Status:</strong> {item.ai_status || "Pending"}
 </p>
-<p>{item.summary}</p>
 
 <p>
-  <strong>Key Findings</strong>
+  <strong>Risk Level:</strong> {item.risk_level || "Pending"}
 </p>
-<p>{item.key_findings}</p>
 
-<p>
-  <strong>Risk Signals</strong>
-</p>
-<p>{item.risk_signals}</p>
+<hr style={{ margin: "18px 0" }} />
 
-<p>
-  <strong>Recommendations</strong>
-</p>
-<p>{item.recommendations}</p>
+<h4>Summary</h4>
+<p>{item.summary || "Pending analysis."}</p>
 
-<p>
-  <strong>Doctor Brief</strong>
-</p>
-<p>{item.doctor_brief}</p>
-            {item.ai_status || "Pending"}
-          </p>
+<h4>Key Findings</h4>
+<p>{item.key_findings || "Pending analysis."}</p>
 
-          <p>
-            <strong>Risk Level:</strong>{" "}
-            {item.risk_level || "Pending"}
-          </p>
+<h4>Risk Signals</h4>
+<p>{item.risk_signals || "Pending analysis."}</p>
 
-          <p>
-            {item.insight_summary ||
-              "Report uploaded and waiting for AI interpretation."}
-          </p>
+<h4>Recommendations</h4>
+<p>{item.recommendations || "Pending analysis."}</p>
+
+<h4>Doctor Brief</h4>
+<p>{item.doctor_brief || "Pending AI interpretation."}</p>
+
+{item.next_best_action && (
+  <>
+    <h4>Next Best Action</h4>
+    <p>{item.next_best_action}</p>
+  </>
+)}
         </div>
       ))}
     </div>
