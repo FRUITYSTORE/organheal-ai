@@ -439,6 +439,13 @@ uploadedCount++;
     <p>Status: uploaded and ready for AI extraction</p>
   </div>
 )}
+{latestUploadedFileName && (
+  <div className="resultBox">
+    <p className="sectionLabel">Latest Uploaded File</p>
+    <h3>{latestUploadedFileName}</h3>
+    <p>Status: uploaded and ready for AI extraction</p>
+  </div>
+)}
 </div>
 
           <div className="resultBox">
