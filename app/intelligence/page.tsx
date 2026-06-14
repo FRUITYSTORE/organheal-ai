@@ -373,20 +373,45 @@ setHealthInsights(mergedInsights);
 
 <hr style={{ margin: "18px 0" }} />
 
-<h4>Summary</h4>
-<p>{item.summary || "Pending analysis."}</p>
+<hr style={{ margin: "18px 0" }} />
 
-<h4>Key Findings</h4>
-<p>{item.key_findings || "Pending analysis."}</p>
+<p>
+  <strong>Status:</strong> Ready for Interpretation
+</p>
 
-<h4>Risk Signals</h4>
-<p>{item.risk_signals || "Pending analysis."}</p>
+<p>
+  <strong>Medical Category:</strong>{" "}
+  {item.report_type === "lab"
+    ? "Laboratory"
+    : item.report_type === "radiology"
+    ? "Radiology"
+    : item.report_type === "discharge"
+    ? "Discharge Summary"
+    : "Medical Document"}
+</p>
 
-<h4>Recommendations</h4>
-<p>{item.recommendations || "Pending analysis."}</p>
+<p>
+  <strong>Next Action:</strong> Generate Medical Intelligence
+</p>
 
-<h4>Doctor Brief</h4>
-<p>{item.doctor_brief || "Pending AI interpretation."}</p>
+<div
+  style={{
+    display: "flex",
+    gap: "10px",
+    flexWrap: "wrap",
+    marginTop: "14px",
+  }}
+>
+  {item.file_path && (
+    <button className="secondaryBtn">
+      Open Report
+    </button>
+  )}
+
+  <button className="primaryBtn">
+    Generate Intelligence
+  </button>
+</div>
 
 {item.next_best_action && (
   <>
