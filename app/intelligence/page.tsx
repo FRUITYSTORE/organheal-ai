@@ -67,7 +67,27 @@ const { data: insights } = await supabase
   .eq("user_id", userData.user.id)
   .order("created_at", { ascending: false });
 
-setHealthInsights(insights || []);
+const reportIds = (insights || [])
+  .map((item) => item.report_id)
+  .filter(Boolean);
+
+const { data: reports } = await supabase
+  .from("uploaded_lab_files")
+  .select("id, file_name, file_path, created_at")
+  .in("id", reportIds);
+
+const mergedInsights = (insights || []).map((item) => {
+  const report = (reports || []).find((r) => r.id === item.report_id);
+
+  return {
+    ...item,
+    file_name: report?.file_name || "Medical report",
+    file_path: report?.file_path || null,
+    uploaded_at: report?.created_at || item.created_at,
+  };
+});
+
+setHealthInsights(mergedInsights);
     setHealthEngine(intelligence);
     setLoading(false);
   }
@@ -304,7 +324,6 @@ setHealthInsights(insights || []);
 
                 {copyMessage && <p>{copyMessage}</p>}
               </div>
-              MEDICAL REPORT INTELLIGENCE
               <div className="resultBox">
   <p className="sectionLabel">
     📄 MEDICAL REPORT INTELLIGENCE
@@ -333,13 +352,15 @@ setHealthInsights(insights || []);
             textAlign: "left",
           }}
         >
-          <h3>
-            {item.insight_title || "Medical Report Uploaded"}
-          </h3>
+          <h3>📄 {item.file_name}</h3>
+          <p>
+  <strong>Uploaded:</strong>{" "}
+  {new Date(item.uploaded_at).toLocaleString()}
+</p>
 
           <p>
             <strong>Report Type:</strong>{" "}
-            {item.report_type || "Medical"}
+{item.report_type || "medical"}
           </p>
 
           <p>
