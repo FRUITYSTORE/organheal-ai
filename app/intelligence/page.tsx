@@ -160,6 +160,23 @@ export default function IntelligencePage() {
     const selectedInsight = healthInsights.find((item) => item.id === insightId);
 
     if (!selectedInsight) return;
+    if (selectedInsight.report_id && selectedInsight.file_path) {
+  try {
+    await fetch("/api/extract-pdf", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        reportId: selectedInsight.report_id,
+        filePath: selectedInsight.file_path,
+        fileName: selectedInsight.file_name,
+      }),
+    });
+  } catch (error) {
+    console.error("Extraction failed", error);
+  }
+}
 if (selectedInsight.report_id) {
   await supabase
     .from("uploaded_lab_files")
