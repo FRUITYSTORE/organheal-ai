@@ -2092,4 +2092,22 @@ html[dir="rtl"] .homeHeroActions {
   justify-content: center !important;
   padding: 0 !important;
   cursor: pointer !important;
+}.inputError {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.5);
+}
+
+.formGroup small {
+  display: block;
+  margin-top: 8px;
+  color: #fca5a5;
+  font-weight: 700;
+}
+
+.trustBox {
+  padding: 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(34, 211, 238, 0.25);
+  background: rgba(15, 23, 42, 0.65);
+  margin: 18px 0;
 }
