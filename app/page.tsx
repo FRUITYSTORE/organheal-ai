@@ -10,12 +10,13 @@ export default function Home() {
   const [heroQuestion, setHeroQuestion] = useState("");
   const [heroAnswer, setHeroAnswer] = useState("");
   const [heroLoading, setHeroLoading] = useState(false);
-  const [selectedLabFile, setSelectedLabFile] = useState<File | null>(null);
-  const [selectedLabPreview, setSelectedLabPreview] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     const savedLanguage = localStorage.getItem("organheal-language") || "en";
     setLanguage(savedLanguage);
+
+    checkUser();
 
     const interval = setInterval(() => {
       setLanguage(localStorage.getItem("organheal-language") || "en");
@@ -26,19 +27,16 @@ export default function Home() {
 
   const isArabic = language === "ar";
 
-  const schema = {
-    "@context": "https://schema.org",
-    "@type": "MedicalWebPage",
-    name: "OrganHeal AI",
-    description:
-      "AI-powered personal health intelligence platform for assessments, medical report intelligence, health insights, and doctor-ready summaries.",
-    url: "https://organheal.com",
-    publisher: {
-      "@type": "Organization",
-      name: "OrganHeal AI",
-      url: "https://organheal.com",
-    },
-  };
+  async function checkUser() {
+    const { data } = await supabase.auth.getUser();
+    setIsLoggedIn(!!data.user);
+  }
+
+  async function signOut() {
+    await supabase.auth.signOut();
+    setIsLoggedIn(false);
+    window.location.href = "/";
+  }
 
   async function askHeroAI() {
     if (!heroQuestion.trim() || heroLoading) return;
@@ -80,116 +78,8 @@ export default function Home() {
     }
   }
 
-  function handleHeroFile(file: File) {
-    setSelectedLabFile(file);
-
-    if (file.type.startsWith("image/")) {
-      setSelectedLabPreview(URL.createObjectURL(file));
-    } else {
-      setSelectedLabPreview("");
-    }
-  }
-
-  function handleHeroDrop(event: React.DragEvent<HTMLDivElement>) {
-    event.preventDefault();
-
-    const file = event.dataTransfer.files?.[0];
-
-    if (file) {
-      handleHeroFile(file);
-    } else {
-      setHeroAnswer(
-        isArabic
-          ? "لم يتم اكتشاف ملف. اسحب الملف من مجلد التحميلات وليس من شريط تحميل المتصفح."
-          : "No file detected. Please drag the file from your Downloads folder, not from the browser download bar."
-      );
-    }
-  }
-
-  function handleHeroDragOver(event: React.DragEvent<HTMLDivElement>) {
-    event.preventDefault();
-  }
-
-  function removeHeroLabFile() {
-    setSelectedLabFile(null);
-    setSelectedLabPreview("");
-  }
-
-  async function analyzeHeroLabFile() {
-    if (!selectedLabFile) return;
-
-    setHeroLoading(true);
-
-    const { data: userData, error: userError } = await supabase.auth.getUser();
-
-    if (userError || !userData.user) {
-      sessionStorage.setItem(
-        "organheal-pending-lab-file-name",
-        selectedLabFile.name
-      );
-
-      window.location.href = "/login";
-      return;
-    }
-
-    const user = userData.user;
-    const safeFileName = selectedLabFile.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-    const filePath = `${user.id}/${Date.now()}-${safeFileName}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from("lab-reports")
-      .upload(filePath, selectedLabFile);
-
-    if (uploadError) {
-      setHeroAnswer("Upload failed: " + uploadError.message);
-      setHeroLoading(false);
-      return;
-    }
-
-    const { data: signedUrlData, error: signedUrlError } =
-      await supabase.storage
-        .from("lab-reports")
-        .createSignedUrl(filePath, 60 * 60);
-
-    if (signedUrlError) {
-      setHeroAnswer("File uploaded, but preview link failed.");
-      setHeroLoading(false);
-      return;
-    }
-
-    const { error: databaseError } = await supabase
-      .from("uploaded_lab_files")
-      .insert({
-        user_id: user.id,
-        file_name: selectedLabFile.name,
-        file_path: filePath,
-        file_url: signedUrlData?.signedUrl || null,
-        analysis_status: "analyzed",
-        ai_summary:
-          "Medical report uploaded successfully. AI extraction will process this report and generate health intelligence in the next phase.",
-      });
-
-    if (databaseError) {
-      setHeroAnswer("Database error: " + databaseError.message);
-      setHeroLoading(false);
-      return;
-    }
-
-    sessionStorage.setItem(
-      "organheal-latest-uploaded-lab-file",
-      selectedLabFile.name
-    );
-
-    window.location.href = "/lab-upload?uploaded=1";
-  }
-
   return (
     <main className="homepage">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-      />
-
       <section className="homeHeroClean">
         <div className="homeHeroCleanInner">
           <div className="homeHeroCleanContent">
@@ -211,11 +101,7 @@ export default function Home() {
                 : "Turn health assessments, medical reports, and lab results into clear intelligence about risks, opportunities, and your next best action."}
             </p>
 
-            <div
-              className="homeHeroSearchBox"
-              onDrop={handleHeroDrop}
-              onDragOver={handleHeroDragOver}
-            >
+            <div className="homeHeroSearchBox">
               <input
                 type="text"
                 value={heroQuestion}
@@ -237,76 +123,7 @@ export default function Home() {
               >
                 {heroLoading ? "..." : isArabic ? "اسأل الذكاء الصحي" : "Ask AI"}
               </button>
-
-              <label className="labPdfHeroBtn">
-                <input
-                  type="file"
-                  accept=".pdf,image/*"
-                  hidden
-                  onChange={(event) => {
-                    const file = event.target.files?.[0];
-                    if (file) handleHeroFile(file);
-                  }}
-                />
-
-                {selectedLabFile ? (
-                  <>
-                    <button
-                      type="button"
-                      className="heroFileRemoveBtn"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        removeHeroLabFile();
-                      }}
-                    >
-                      ×
-                    </button>
-
-                    {selectedLabPreview && (
-                      <img
-                        src={selectedLabPreview}
-                        alt="Selected medical report preview"
-                        className="heroLabPreviewImage"
-                      />
-                    )}
-
-                    <span>{selectedLabFile.name}</span>
-                    <small>{isArabic ? "جاهز للتحليل" : "Ready for analysis"}</small>
-                  </>
-                ) : (
-                  <>
-                    <span>
-                      {isArabic
-                        ? "اسحب تقريرًا طبيًا أو اضغط للرفع"
-                        : "Drop a medical report or click to upload"}
-                    </span>
-
-                    <small>
-                      {isArabic
-                        ? "ملف سريع هنا، أو حتى 10 ملفات في صفحة التحليل"
-                        : "Quick file here, or up to 10 files in Medical Report Upload"}
-                    </small>
-                  </>
-                )}
-              </label>
-
-              {selectedLabFile && (
-                <button
-                  type="button"
-                  className="primaryBtn"
-                  onClick={analyzeHeroLabFile}
-                >
-                  {isArabic ? "تحليل سريع" : "Quick Analyze"}
-                </button>
-              )}
             </div>
-
-            <Link href="/lab-upload" className="homeLabBatchLink">
-              {isArabic
-                ? "لديك عدة ملفات؟ ارفع حتى 10 ملفات من صفحة التقارير الطبية"
-                : "Have multiple reports? Upload up to 10 files in Medical Report Upload"}
-            </Link>
 
             {heroAnswer && (
               <div className="homeHeroAIAnswer">
@@ -333,13 +150,29 @@ export default function Home() {
                 {isArabic ? "ابدأ التقييم المجاني" : "Start Free Assessment"}
               </Link>
 
-              <Link href="/intelligence" className="secondaryBtn">
-                {isArabic ? "شاهد مركز الذكاء" : "View Intelligence Center"}
+              <Link href="/lab-upload" className="secondaryBtn">
+                {isArabic ? "ارفع التقارير الطبية" : "Upload Medical Reports"}
               </Link>
 
-              <Link href="/login" className="secondaryBtn">
-                {isArabic ? "تسجيل الدخول" : "Sign In"}
+              <Link href="/intelligence" className="secondaryBtn">
+                {isArabic ? "مركز الذكاء الصحي" : "Intelligence Center"}
               </Link>
+
+              {isLoggedIn ? (
+                <>
+                  <Link href="/dashboard" className="secondaryBtn">
+                    {isArabic ? "لوحة التحكم" : "Dashboard"}
+                  </Link>
+
+                  <button className="secondaryBtn" onClick={signOut}>
+                    {isArabic ? "تسجيل الخروج" : "Sign Out"}
+                  </button>
+                </>
+              ) : (
+                <Link href="/login" className="secondaryBtn">
+                  {isArabic ? "تسجيل الدخول" : "Sign In"}
+                </Link>
+              )}
             </div>
 
             <p className="homeHeroDisclaimer">
@@ -465,68 +298,6 @@ export default function Home() {
               {isArabic
                 ? "إشارات المخاطر، الفرص الصحية، والخطوة التالية بشكل واضح."
                 : "Risk signals, health opportunities, and clear next steps."}
-            </p>
-          </Link>
-        </div>
-      </section>
-
-      <section className="homeOutcomes">
-        <div className="homeSectionHeader">
-          <p className="sectionLabel">
-            {isArabic ? "المخرجات الصحية" : "Health Outcomes"}
-          </p>
-
-          <h2>
-            {isArabic
-              ? "ليس مجرد ملفات. بل فهم صحي قابل للاستخدام."
-              : "Not just files. Usable health intelligence."}
-          </h2>
-
-          <p>
-            {isArabic
-              ? "OrganHeal يحول التقييمات والتقارير الطبية إلى مخرجات صحية مفهومة وقابلة للمشاركة."
-              : "OrganHeal transforms assessments and medical reports into understandable, shareable health outputs."}
-          </p>
-        </div>
-
-        <div className="outcomesGrid">
-          <Link href="/intelligence" className="outcomeCard">
-            <div className="outcomeIcon">🧬</div>
-            <h3>{isArabic ? "الملف الصحي الذكي" : "Health Profile"}</h3>
-            <p>
-              {isArabic
-                ? "صورة منظمة عن حالتك الصحية بناءً على بياناتك."
-                : "An organized view of your health based on your data."}
-            </p>
-          </Link>
-
-          <Link href="/intelligence" className="outcomeCard">
-            <div className="outcomeIcon">⚠️</div>
-            <h3>{isArabic ? "إشارات المخاطر" : "Risk Signals"}</h3>
-            <p>
-              {isArabic
-                ? "اكتشاف الأنماط الصحية التي تستحق المتابعة."
-                : "Detect health patterns that may need follow-up."}
-            </p>
-          </Link>
-
-          <Link href="/history" className="outcomeCard">
-            <div className="outcomeIcon">📈</div>
-            <h3>{isArabic ? "توقع 90 يوم" : "90-Day Forecast"}</h3>
-            <p>
-              {isArabic
-                ? "فهم الاتجاه الصحي المحتمل خلال الفترة القادمة."
-                : "Understand where your health trend may be heading."}
-            </p>
-          </Link>
-
-          <Link href="/doctor-portal" className="outcomeCard">
-            <div className="outcomeIcon">🩺</div>
-            <h3>{isArabic ? "ملخص للطبيب" : "Doctor-Ready Summary"}</h3>
-            <p>
-              {isArabic
-                ? "ملخص واضح يساعدك على التحضير للزيارة الطبية."
-                : "A clear summary to help you prepare for healthcare visits."}
             </p>
           </Link>
         </div>
