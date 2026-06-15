@@ -1,0 +1,154 @@
+.loginPage {
+  min-height: 100vh;
+  background: #1f1f1f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  overflow-y: auto;
+}
+
+.loginCard {
+  width: 100%;
+  max-width: 520px;
+  background: #ffffff;
+  border-radius: 34px;
+  padding: 48px 42px;
+  position: relative;
+  text-align: center;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  margin: 40px 0;
+}
+
+.loginCard::before {
+  content: "";
+  position: absolute;
+  left: -90px;
+  bottom: -90px;
+  width: 220px;
+  height: 220px;
+  background: #20d6e8;
+  transform: rotate(45deg);
+}
+
+.closeBtn {
+  position: absolute;
+  top: 18px;
+  right: 26px;
+  font-size: 42px;
+  color: #555;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.loginLabel {
+  font-size: 13px;
+  letter-spacing: 3px;
+  font-weight: 800;
+  color: #20d6e8;
+  margin-bottom: 18px;
+}
+
+.loginCard h1 {
+  font-size: 58px;
+  line-height: 1;
+  color: #5b5b5b;
+  margin: 0;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+
+.subtitle {
+  color: #20d6e8;
+  font-size: 20px;
+  margin: 12px 0 10px;
+}
+
+.trustLine {
+  color: #555;
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 32px;
+  letter-spacing: 1px;
+}
+
+.loginForm {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: relative;
+  z-index: 2;
+}
+
+.loginForm input {
+  width: 100%;
+  height: 62px;
+  border-radius: 32px;
+  border: 3px solid #20d6e8;
+  background: #333333;
+  color: white;
+  padding: 0 28px;
+  font-size: 19px;
+  outline: none;
+}
+
+.loginForm input::placeholder {
+  color: #9a9a9a;
+}
+
+.loginMessage {
+  color: #444;
+  background: #f1fbfd;
+  border: 1px solid #20d6e8;
+  padding: 12px 16px;
+  border-radius: 18px;
+  font-size: 15px;
+}
+
+.loginForm button[type="submit"] {
+  width: 230px;
+  height: 58px;
+  border: none;
+  border-radius: 30px;
+  background: #20d6e8;
+  color: white;
+  font-size: 22px;
+  font-weight: 800;
+  margin: 0 auto;
+  cursor: pointer;
+}
+
+.loginForm button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.textButton {
+  background: transparent;
+  border: none;
+  color: #20d6e8;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.signupLink {
+  color: #20d6e8;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+@media (max-width: 600px) {
+  .loginCard {
+    padding: 42px 24px;
+  }
+
+  .loginCard h1 {
+    font-size: 44px;
+  }
+
+  .subtitle {
+    font-size: 17px;
+  }
+}

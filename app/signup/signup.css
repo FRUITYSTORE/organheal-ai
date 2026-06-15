@@ -1,0 +1,235 @@
+.signupPage {
+  min-height: 100vh;
+  background: #1f1f1f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.signupCard {
+  width: 100%;
+  max-width: 520px;
+  background: #ffffff;
+  border-radius: 34px;
+  padding: 48px 42px;
+  position: relative;
+  text-align: center;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.signupCard::before {
+  content: "";
+  position: absolute;
+  left: -90px;
+  bottom: -90px;
+  width: 220px;
+  height: 220px;
+  background: #20d6e8;
+  transform: rotate(45deg);
+}
+
+.closeBtn {
+  position: absolute;
+  top: 18px;
+  right: 26px;
+  font-size: 42px;
+  color: #555;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.signupLabel {
+  font-size: 13px;
+  letter-spacing: 3px;
+  font-weight: 800;
+  color: #20d6e8;
+  margin-bottom: 18px;
+}
+
+.signupCard h1 {
+  font-size: 58px;
+  line-height: 1;
+  color: #5b5b5b;
+  margin: 0;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+
+.subtitle {
+  color: #20d6e8;
+  font-size: 20px;
+  margin: 12px 0 36px;
+}
+
+.signupForm {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: relative;
+  z-index: 2;
+}
+
+.signupForm input[type="email"],
+.signupForm input[type="text"],
+.signupForm input[type="password"] {
+  width: 100%;
+  height: 62px;
+  border-radius: 32px;
+  border: 3px solid #20d6e8;
+  background: #333333;
+  color: white;
+  padding: 0 28px;
+  font-size: 19px;
+  outline: none;
+}
+
+.signupForm input::placeholder {
+  color: #9a9a9a;
+}
+
+.terms {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #666;
+  font-size: 18px;
+}
+
+.terms input {
+  width: 22px;
+  height: 22px;
+  accent-color: #20d6e8;
+}
+
+.signupMessage {
+  color: #444;
+  background: #f1fbfd;
+  border: 1px solid #20d6e8;
+  padding: 12px 16px;
+  border-radius: 18px;
+  font-size: 15px;
+}
+
+.signupForm button {
+  width: 230px;
+  height: 58px;
+  border: none;
+  border-radius: 30px;
+  background: #20d6e8;
+  color: white;
+  font-size: 22px;
+  font-weight: 800;
+  margin: 0 auto;
+  cursor: pointer;
+}
+
+.signupForm button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.signinLink {
+  color: #20d6e8;
+  font-weight: 800;
+  text-decoration: none;
+  margin-top: 4px;
+}
+
+@media (max-width: 600px) {
+  .signupCard {
+    padding: 42px 24px;
+  }
+
+  .signupCard h1 {
+    font-size: 44px;
+  }
+
+  .subtitle {
+    font-size: 17px;
+  }
+}.signupPage {
+  min-height: 100vh;
+  overflow-y: auto;
+}.signupCard {
+  margin: 40px 0;
+}.trustLine {
+  color: #20d6e8;
+  font-size: 15px;
+  font-weight: 700;
+  margin-top: -20px;
+  margin-bottom: 28px;
+  letter-spacing: 1px;
+}
+
+.strengthBar {
+  width: 100%;
+  height: 8px;
+  border-radius: 20px;
+  background: #444;
+  margin-top: -10px;
+  overflow: hidden;
+}
+
+.strengthFill {
+  height: 100%;
+  border-radius: 20px;
+  transition: width 0.3s ease;
+}
+
+.strengthFill.weak {
+  width: 35%;
+  background: #ff4d4d;
+}
+
+.strengthFill.strong {
+  width: 100%;
+  background: #20d6e8;
+}
+
+.strengthText {
+  margin-top: -12px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.weakText {
+  color: #ff7777;
+}
+
+.strongText {
+  color: #20d6e8;
+}.passwordStrength {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: -8px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: white;
+}
+
+.strengthBoxes {
+  display: flex;
+  gap: 5px;
+}
+
+.strengthBox {
+  width: 28px;
+  height: 6px;
+  border-radius: 10px;
+  background: #555;
+}
+
+.strengthBox.active {
+  background: #7cff00;
+}
+
+.strengthLabel {
+  min-width: 45px;
+  font-weight: 800;
+  color: #7cff00;
+}

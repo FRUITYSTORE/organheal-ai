@@ -168,7 +168,56 @@ export default function Home() {
             </p>
           </div>
         </div>
-      </section>
+           </section>
+
+      {!isLoggedIn && (
+        <section className="onboardingBanner">
+          <div className="onboardingContent">
+            <p className="bannerLabel">
+              {isArabic ? "ذكاء صحي شخصي" : "PERSONAL HEALTH INTELLIGENCE"}
+            </p>
+
+            <h2>
+              {isArabic
+                ? "ابنِ ملفك الصحي الكامل"
+                : "Build Your Complete Health Profile"}
+            </h2>
+
+            <p>
+              {isArabic
+                ? "أنشئ حسابًا مجانيًا لحفظ تقاريرك، متابعة تقييماتك الصحية، والوصول إلى مركز الذكاء الصحي الخاص بك."
+                : "Create a free account to save your reports, track assessments, and access your personal Health Intelligence Center."}
+            </p>
+
+            <div className="bannerFeatures">
+              <span>
+                {isArabic ? "✓ تحليل التقارير الطبية" : "✓ Medical Report Analysis"}
+              </span>
+              <span>
+                {isArabic ? "✓ تقييم صحة الأعضاء" : "✓ Organ Health Assessments"}
+              </span>
+              <span>
+                {isArabic ? "✓ رؤى صحية بالذكاء الاصطناعي" : "✓ AI Health Insights"}
+              </span>
+              <span>
+                {isArabic ? "✓ لوحة صحية آمنة" : "✓ Secure Health Dashboard"}
+              </span>
+            </div>
+
+            <div className="bannerButtons">
+              <Link href="/signup">
+                <button type="button">Create Free Account</button>
+              </Link>
+
+              <Link href="/login">
+                <button type="button" className="secondary">
+                  Sign In
+                </button>
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="homeHowItWorks">
         <div className="homeSectionHeader">
