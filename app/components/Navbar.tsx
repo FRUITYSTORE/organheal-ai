@@ -98,10 +98,11 @@ export default function Navbar() {
 
       <div className="navLinks">
         <Link href="/">Home</Link>
-        <Link href="/dashboard">Dashboard</Link>
+        <Link href="/lab-upload">Upload Reports</Link>
         <Link href="/intelligence">Intelligence</Link>
-        <Link href="/organ-report">Report</Link>
-        <Link href="/assistant">Assistant</Link>
+        <Link href="/assistant">Ask AI</Link>
+
+        {isLoggedIn && <Link href="/dashboard">Dashboard</Link>}
 
         <LanguageToggle />
 

@@ -146,33 +146,19 @@ export default function Home() {
             )}
 
             <div className="homeHeroCleanActions">
-              <Link href="/assessment" className="primaryBtn">
-                {isArabic ? "ابدأ التقييم المجاني" : "Start Free Assessment"}
-              </Link>
+            <div className="homeHeroCleanActions">
+  <Link href="/assessment" className="primaryBtn">
+    {isArabic ? "ابدأ التقييم المجاني" : "Start Free Assessment"}
+  </Link>
 
-              <Link href="/lab-upload" className="secondaryBtn">
-                {isArabic ? "ارفع التقارير الطبية" : "Upload Medical Reports"}
-              </Link>
+  <Link href="/lab-upload" className="secondaryBtn">
+    {isArabic ? "ارفع التقارير الطبية" : "Upload Medical Reports"}
+  </Link>
 
-              <Link href="/intelligence" className="secondaryBtn">
-                {isArabic ? "مركز الذكاء الصحي" : "Intelligence Center"}
-              </Link>
-
-              {isLoggedIn ? (
-                <>
-                  <Link href="/dashboard" className="secondaryBtn">
-                    {isArabic ? "لوحة التحكم" : "Dashboard"}
-                  </Link>
-
-                  <button className="secondaryBtn" onClick={signOut}>
-                    {isArabic ? "تسجيل الخروج" : "Sign Out"}
-                  </button>
-                </>
-              ) : (
-                <Link href="/login" className="secondaryBtn">
-                  {isArabic ? "تسجيل الدخول" : "Sign In"}
-                </Link>
-              )}
+  <Link href="/intelligence" className="secondaryBtn">
+    {isArabic ? "مركز الذكاء الصحي" : "Intelligence Center"}
+  </Link>
+</div>
             </div>
 
             <p className="homeHeroDisclaimer">
