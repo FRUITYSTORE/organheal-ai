@@ -160,13 +160,6 @@ export default function LoginPage() {
 >
   Forgot Password?
 </button>
-            <button
-              type="button"
-              className="secondaryBtn"
-              onClick={handleForgotPassword}
-            >
-              Forgot Password?
-            </button>
 
             <button
               type="button"
