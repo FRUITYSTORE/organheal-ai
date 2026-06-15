@@ -4,35 +4,8 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 
-const countries = [
-  "United Arab Emirates",
-  "Jordan",
-  "Saudi Arabia",
-  "Qatar",
-  "Kuwait",
-  "Bahrain",
-  "Oman",
-  "Egypt",
-  "Lebanon",
-  "Syria",
-  "Iraq",
-  "Palestine",
-  "United States",
-  "United Kingdom",
-  "Canada",
-  "Australia",
-  "Germany",
-  "France",
-  "Turkey",
-  "India",
-  "Pakistan",
-  "Philippines",
-  "Other",
-];
-
 function getPasswordStrength(password: string) {
   let score = 0;
-
   if (password.length >= 8) score++;
   if (/[A-Z]/.test(password)) score++;
   if (/[a-z]/.test(password)) score++;
@@ -48,18 +21,11 @@ function getPasswordStrength(password: string) {
 export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [confirmEmail, setConfirmEmail] = useState("");
-
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const [firstName, setFirstName] = useState("");
-  const [middleName, setMiddleName] = useState("");
-  const [lastName, setLastName] = useState("");
-
-  const [country, setCountry] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [ageRange, setAgeRange] = useState("");
-
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [message, setMessage] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -72,54 +38,31 @@ export default function SignupPage() {
   function validateForm() {
     const errors: Record<string, string> = {};
 
-    if (!email.trim()) {
-      errors.email = "Email is required.";
-    }
+    if (!email.trim()) errors.email = "Email is required.";
+    else if (!email.includes("@")) errors.email = "Enter a valid email.";
 
-    if (email && !email.includes("@")) {
-      errors.email = "Enter a valid email address.";
-    }
+    if (!confirmEmail.trim()) errors.confirmEmail = "Confirm your email.";
+    else if (email !== confirmEmail)
+      errors.confirmEmail = "Emails do not match.";
 
-    if (!confirmEmail.trim()) {
-      errors.confirmEmail = "Please confirm your email.";
-    }
+    if (!username.trim()) errors.username = "Username is required.";
+    else if (!/^[a-zA-Z0-9_]{4,20}$/.test(username))
+      errors.username =
+        "Username must be 4-20 characters, letters, numbers, or underscore only.";
 
-    if (email.trim() && confirmEmail.trim() && email !== confirmEmail) {
-      errors.confirmEmail = "Email addresses do not match.";
-    }
-
-    if (!password) {
-      errors.password = "Password is required.";
-    }
-
-    if (password && password.length < 8) {
+    if (!password) errors.password = "Password is required.";
+    else if (password.length < 8)
       errors.password = "Password must be at least 8 characters.";
-    }
-
-    if (password && passwordStrength.level < 2) {
+    else if (passwordStrength.level < 2)
       errors.password =
-        "Use a stronger password with uppercase, lowercase, numbers, and a symbol.";
-    }
+        "Use uppercase, lowercase, numbers, and a symbol.";
 
-    if (!confirmPassword) {
-      errors.confirmPassword = "Please confirm your password.";
-    }
-
-    if (password && confirmPassword && password !== confirmPassword) {
+    if (!confirmPassword) errors.confirmPassword = "Confirm your password.";
+    else if (password !== confirmPassword)
       errors.confirmPassword = "Passwords do not match.";
-    }
 
-    if (!firstName.trim()) {
-      errors.firstName = "First name is required.";
-    }
-
-    if (!lastName.trim()) {
-      errors.lastName = "Last name is required.";
-    }
-
-    if (!country) {
-      errors.country = "Please select your country.";
-    }
+    if (!acceptedTerms)
+      errors.terms = "You must accept the terms and privacy policy.";
 
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
@@ -129,30 +72,36 @@ export default function SignupPage() {
     setMessage("");
 
     if (!validateForm()) {
-      setMessage("Please fix the highlighted fields before creating your account.");
+      setMessage("Please fix the highlighted fields.");
       return;
     }
 
     setLoading(true);
-    setMessage("Creating your OrganHeal account...");
+    setMessage("Creating your secure OrganHeal account...");
 
-    const fullName = [firstName, middleName, lastName]
-      .filter(Boolean)
-      .join(" ");
+    const cleanUsername = username.trim().toLowerCase();
+
+    const { data: existingUsername } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("username", cleanUsername)
+      .maybeSingle();
+
+    if (existingUsername) {
+      setFieldErrors({ username: "This username is already taken." });
+      setMessage("Please choose another username.");
+      setLoading(false);
+      return;
+    }
 
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
-          full_name: fullName,
-          first_name: firstName,
-          middle_name: middleName || null,
-          last_name: lastName,
-          country,
-          phone_number: phoneNumber || null,
-          age_range: ageRange || null,
+          username: cleanUsername,
         },
+        emailRedirectTo: `${window.location.origin}/login`,
       },
     });
 
@@ -168,27 +117,18 @@ export default function SignupPage() {
       const { error: profileError } = await supabase.from("profiles").upsert({
         id: userId,
         email,
-        full_name: fullName,
-        first_name: firstName,
-        middle_name: middleName || null,
-        last_name: lastName,
-        country,
-        phone_number: phoneNumber || null,
-        age_range: ageRange || null,
+        username: cleanUsername,
       });
 
       if (profileError) {
-        setMessage(
-          "Account created, but profile details could not be saved: " +
-            profileError.message
-        );
+        setMessage("Account created, but profile could not be saved.");
         setLoading(false);
         return;
       }
     }
 
     setMessage(
-      "Account created. Please check your email to confirm your OrganHeal account."
+      "Account created. Please check your email and confirm your OrganHeal account before signing in."
     );
 
     setLoading(false);
@@ -202,26 +142,26 @@ export default function SignupPage() {
     <main className="assistantPage">
       <div className="assistantContainer">
         <div className="assistantHeader">
-          <p className="assistantBadge">CREATE ACCOUNT</p>
-          <h1>Create Your OrganHeal Account</h1>
+          <p className="assistantBadge">JOIN ORGANHEAL</p>
+          <h1>Create your health intelligence account</h1>
           <p>
-            Build your personal health profile, save medical reports, and
-            access your Health Intelligence Center securely.
+            Register once, confirm your email, and start building your secure
+            OrganHeal health profile.
           </p>
         </div>
 
         <div className="chatWindow">
           <div className="assessmentForm">
-            <p className="sectionLabel">Account Access</p>
+            <p className="sectionLabel">Account Details</p>
 
             <div className="formGroup">
-              <label>Email</label>
+              <label>Email Address</label>
               <input
                 className={inputClass("email")}
                 type="email"
                 placeholder="you@example.com"
                 value={email}
-                onChange={(event) => setEmail(event.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
               />
               {fieldErrors.email && <small>{fieldErrors.email}</small>}
             </div>
@@ -233,7 +173,7 @@ export default function SignupPage() {
                 type="email"
                 placeholder="Re-enter your email"
                 value={confirmEmail}
-                onChange={(event) => setConfirmEmail(event.target.value)}
+                onChange={(e) => setConfirmEmail(e.target.value)}
               />
               {fieldErrors.confirmEmail && (
                 <small>{fieldErrors.confirmEmail}</small>
@@ -241,13 +181,25 @@ export default function SignupPage() {
             </div>
 
             <div className="formGroup">
+              <label>Username</label>
+              <input
+                className={inputClass("username")}
+                type="text"
+                placeholder="Choose a username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+              />
+              {fieldErrors.username && <small>{fieldErrors.username}</small>}
+            </div>
+
+            <div className="formGroup">
               <label>Password</label>
               <input
                 className={inputClass("password")}
                 type="password"
-                placeholder="Use letters, numbers, and a symbol"
+                placeholder="Minimum 8 characters"
                 value={password}
-                onChange={(event) => setPassword(event.target.value)}
+                onChange={(e) => setPassword(e.target.value)}
               />
 
               {passwordStrength.label && (
@@ -266,114 +218,36 @@ export default function SignupPage() {
                 type="password"
                 placeholder="Re-enter your password"
                 value={confirmPassword}
-                onChange={(event) => setConfirmPassword(event.target.value)}
+                onChange={(e) => setConfirmPassword(e.target.value)}
               />
               {fieldErrors.confirmPassword && (
                 <small>{fieldErrors.confirmPassword}</small>
               )}
             </div>
 
-            <p className="sectionLabel">Personal Profile</p>
-
-            <div className="formGroup">
-              <label>First Name</label>
+            <label style={{ display: "flex", gap: "10px", marginTop: "18px" }}>
               <input
-                className={inputClass("firstName")}
-                type="text"
-                placeholder="First name"
-                value={firstName}
-                onChange={(event) => setFirstName(event.target.value)}
+                type="checkbox"
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
               />
-              {fieldErrors.firstName && <small>{fieldErrors.firstName}</small>}
-            </div>
+              <span>
+                I agree to the Terms and Privacy Policy.
+              </span>
+            </label>
 
-            <div className="formGroup">
-              <label>Middle Name</label>
-              <input
-                type="text"
-                placeholder="Middle name optional"
-                value={middleName}
-                onChange={(event) => setMiddleName(event.target.value)}
-              />
-            </div>
-
-            <div className="formGroup">
-              <label>Last Name</label>
-              <input
-                className={inputClass("lastName")}
-                type="text"
-                placeholder="Last name"
-                value={lastName}
-                onChange={(event) => setLastName(event.target.value)}
-              />
-              {fieldErrors.lastName && <small>{fieldErrors.lastName}</small>}
-            </div>
-
-            <div className="formGroup">
-              <label>Country</label>
-              <select
-                className={inputClass("country")}
-                value={country}
-                onChange={(event) => setCountry(event.target.value)}
-              >
-                <option value="">Select your country</option>
-                {countries.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
-              </select>
-              {fieldErrors.country && <small>{fieldErrors.country}</small>}
-            </div>
-
-            <p className="sectionLabel">Optional Details</p>
-
-            <div className="formGroup">
-              <label>Phone Number</label>
-              <input
-                type="tel"
-                placeholder="Optional phone number"
-                value={phoneNumber}
-                onChange={(event) => setPhoneNumber(event.target.value)}
-              />
-            </div>
-
-            <div className="formGroup">
-              <label>Age Range</label>
-              <select
-                value={ageRange}
-                onChange={(event) => setAgeRange(event.target.value)}
-              >
-                <option value="">Prefer not to say</option>
-                <option value="under_18">Under 18</option>
-                <option value="18_24">18 - 24</option>
-                <option value="25_34">25 - 34</option>
-                <option value="35_44">35 - 44</option>
-                <option value="45_54">45 - 54</option>
-                <option value="55_64">55 - 64</option>
-                <option value="65_plus">65+</option>
-              </select>
-            </div>
-
-            <div className="trustBox">
-              <p className="sectionLabel">Privacy Notice</p>
-              <p>
-                Optional details help OrganHeal personalize future health
-                intelligence. OrganHeal is educational and does not replace
-                licensed medical diagnosis or care.
-              </p>
-            </div>
+            {fieldErrors.terms && <small>{fieldErrors.terms}</small>}
 
             <button
               className="primaryBtn"
               onClick={handleSignup}
               disabled={loading}
             >
-              {loading ? "Creating Account..." : "Create Account"}
+              {loading ? "Creating Account..." : "Register"}
             </button>
 
             <Link href="/login" className="secondaryBtn">
-              Already Have an Account?
+              Already have an account? Sign in
             </Link>
 
             {message && (
