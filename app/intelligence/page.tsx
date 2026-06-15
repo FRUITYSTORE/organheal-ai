@@ -1,5 +1,5 @@
 "use client";
-
+import { generateIntelligenceFromText } from "../../lib/extractedTextIntelligence";
 import PageBackActions from "../components/PageBackActions";
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
@@ -185,7 +185,16 @@ if (selectedInsight.report_id) {
     })
     .eq("id", selectedInsight.report_id);
 }
-    const intelligence = generateMedicalIntelligence(selectedInsight.report_type);
+    const { data: reportData } = await supabase
+  .from("uploaded_lab_files")
+  .select("extracted_text")
+  .eq("id", selectedInsight.report_id)
+  .single();
+
+const intelligence = generateIntelligenceFromText(
+  reportData?.extracted_text || null,
+  selectedInsight.report_type
+);
 
     const { error } = await supabase
       .from("health_insights")
