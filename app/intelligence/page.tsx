@@ -1,10 +1,10 @@
 "use client";
+
 import { generateIntelligenceFromText } from "../../lib/extractedTextIntelligence";
 import PageBackActions from "../components/PageBackActions";
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { buildHealthIntelligence } from "../../lib/intelligenceBuilder";
-import { generateMedicalIntelligence } from "../../lib/medicalIntelligenceEngine";
 
 type Assessment = {
   organ_name: string;
@@ -30,9 +30,11 @@ type HealthInsight = {
   risk_signals?: string | null;
   recommendations?: string | null;
   doctor_brief?: string | null;
-extraction_status?: string | null;
-extracted_text?: string | null;
-extracted_at?: string | null;
+
+  extraction_status?: string | null;
+  extracted_text?: string | null;
+  extracted_at?: string | null;
+
   file_name?: string;
   file_path?: string | null;
   uploaded_at?: string;
@@ -108,25 +110,35 @@ export default function IntelligencePage() {
       file_name: string;
       file_path: string;
       created_at: string;
+      extraction_status: string | null;
+      extracted_text: string | null;
+      extracted_at: string | null;
     }[] = [];
 
     if (reportIds.length > 0) {
       const { data: reportData } = await supabase
         .from("uploaded_lab_files")
-        .select("id, file_name, file_path, created_at, extraction_status, extracted_text, extracted_at")
+        .select(
+          "id, file_name, file_path, created_at, extraction_status, extracted_text, extracted_at"
+        )
         .in("id", reportIds);
 
       reports = reportData || [];
     }
 
     const mergedInsights = (insights || []).map((item) => {
-      const report = reports.find((reportItem) => reportItem.id === item.report_id);
+      const report = reports.find(
+        (reportItem) => reportItem.id === item.report_id
+      );
 
       return {
         ...item,
         file_name: report?.file_name || "Medical report",
         file_path: report?.file_path || null,
         uploaded_at: report?.created_at || item.created_at,
+        extraction_status: report?.extraction_status || "Pending",
+        extracted_text: report?.extracted_text || null,
+        extracted_at: report?.extracted_at || null,
       };
     });
 
@@ -160,41 +172,57 @@ export default function IntelligencePage() {
     const selectedInsight = healthInsights.find((item) => item.id === insightId);
 
     if (!selectedInsight) return;
-    if (selectedInsight.report_id && selectedInsight.file_path) {
-  try {
-    await fetch("/api/extract-pdf", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        reportId: selectedInsight.report_id,
-        filePath: selectedInsight.file_path,
-        fileName: selectedInsight.file_name,
-      }),
-    });
-  } catch (error) {
-    console.error("Extraction failed", error);
-  }
-}
-if (selectedInsight.report_id) {
-  await supabase
-    .from("uploaded_lab_files")
-    .update({
-      extraction_status: "Processing",
-    })
-    .eq("id", selectedInsight.report_id);
-}
-    const { data: reportData } = await supabase
-  .from("uploaded_lab_files")
-  .select("extracted_text")
-  .eq("id", selectedInsight.report_id)
-  .single();
 
-const intelligence = generateIntelligenceFromText(
-  reportData?.extracted_text || null,
-  selectedInsight.report_type
-);
+    let extractedText: string | null = null;
+
+    if (selectedInsight.report_id && selectedInsight.file_path) {
+      try {
+        const extractionResponse = await fetch("/api/extract-pdf", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            reportId: selectedInsight.report_id,
+            filePath: selectedInsight.file_path,
+            fileName: selectedInsight.file_name,
+          }),
+        });
+
+        const extractionResult = await extractionResponse.json();
+
+        if (!extractionResponse.ok || !extractionResult.success) {
+          alert(extractionResult.error || "PDF extraction failed.");
+          return;
+        }
+
+        extractedText = extractionResult.text || null;
+      } catch (error) {
+        console.error("Extraction failed", error);
+        alert("Extraction failed.");
+        return;
+      }
+    }
+
+    if (!extractedText && selectedInsight.report_id) {
+      const { data: reportData } = await supabase
+        .from("uploaded_lab_files")
+        .select("extracted_text")
+        .eq("id", selectedInsight.report_id)
+        .single();
+
+      extractedText = reportData?.extracted_text || null;
+    }
+
+    if (!extractedText || extractedText.length < 30) {
+      alert("No readable PDF text was extracted yet.");
+      return;
+    }
+
+    const intelligence = generateIntelligenceFromText(
+      extractedText,
+      selectedInsight.report_type
+    );
 
     const { error } = await supabase
       .from("health_insights")
@@ -205,23 +233,16 @@ const intelligence = generateIntelligenceFromText(
       alert("Could not generate intelligence: " + error.message);
       return;
     }
-if (selectedInsight.report_id) {
-  await supabase
-    .from("uploaded_lab_files")
-    .update({
-      extraction_status: "Completed",
-      extracted_text:
-        "Text extraction placeholder. Real OCR/PDF extraction will be connected in the next phase.",
-      extracted_at: new Date().toISOString(),
-    })
-    .eq("id", selectedInsight.report_id);
-}
+
     setHealthInsights((currentInsights) =>
       currentInsights.map((item) =>
         item.id === insightId
           ? {
               ...item,
               ...intelligence,
+              extraction_status: "Completed",
+              extracted_text: extractedText,
+              extracted_at: new Date().toISOString(),
             }
           : item
       )
@@ -316,106 +337,112 @@ if (selectedInsight.report_id) {
                     marginTop: "18px",
                   }}
                 >
-                  {healthInsights.map((item) => (
-                    <div
-                      key={item.id}
-                      style={{
-                        padding: "14px 16px",
-                        borderRadius: "16px",
-                        background: "rgba(15,23,42,0.75)",
-                        border: "1px solid rgba(34,211,238,0.18)",
-                        textAlign: "left",
-                      }}
-                    >
+                  {healthInsights.map((item) => {
+                    const isGenerated =
+                      item.ai_status === "Generated" &&
+                      item.extraction_status === "Completed";
+
+                    return (
                       <div
+                        key={item.id}
                         style={{
-                          display: "grid",
-                          gridTemplateColumns: "1fr auto",
-                          gap: "12px",
-                          alignItems: "center",
+                          padding: "14px 16px",
+                          borderRadius: "16px",
+                          background: "rgba(15,23,42,0.75)",
+                          border: "1px solid rgba(34,211,238,0.18)",
+                          textAlign: "left",
                         }}
                       >
-                        <div>
-                          <h3 style={{ marginBottom: "6px" }}>
-                            📄 {item.file_name}
-                          </h3>
-
-                          <p style={{ margin: 0 }}>
-  {getReportTypeLabel(item.report_type)} •{" "}
-  {new Date(item.uploaded_at || item.created_at).toLocaleString()}
-</p>
-
-<p style={{ marginTop: "6px" }}>
-  Extraction: {item.extraction_status || "Pending"}
-</p>
-
-                          <p style={{ marginTop: "8px", fontWeight: 800 }}>
-                            {item.ai_status === "Generated"
-                              ? "Intelligence Generated"
-                              : "Ready for Interpretation"}
-                          </p>
-                        </div>
-
                         <div
                           style={{
-                            display: "flex",
-                            gap: "10px",
-                            flexWrap: "wrap",
-                            justifyContent: "flex-end",
+                            display: "grid",
+                            gridTemplateColumns: "1fr auto",
+                            gap: "12px",
+                            alignItems: "center",
                           }}
                         >
-                          {item.file_path && (
-                            <button
-                              className="secondaryBtn"
-                              onClick={() => openMedicalReport(item.file_path)}
-                            >
-                              Open
-                            </button>
-                          )}
+                          <div>
+                            <h3 style={{ marginBottom: "6px" }}>
+                              📄 {item.file_name}
+                            </h3>
 
-                          <button
-                            className="primaryBtn"
-                            onClick={() => generateReportIntelligence(item.id)}
-                            disabled={item.ai_status === "Generated"}
+                            <p style={{ margin: 0 }}>
+                              {getReportTypeLabel(item.report_type)} •{" "}
+                              {new Date(
+                                item.uploaded_at || item.created_at
+                              ).toLocaleString()}
+                            </p>
+
+                            <p style={{ marginTop: "6px" }}>
+                              Extraction: {item.extraction_status || "Pending"}
+                            </p>
+
+                            <p style={{ marginTop: "8px", fontWeight: 800 }}>
+                              {isGenerated
+                                ? "Intelligence Generated"
+                                : "Ready for Interpretation"}
+                            </p>
+                          </div>
+
+                          <div
+                            style={{
+                              display: "flex",
+                              gap: "10px",
+                              flexWrap: "wrap",
+                              justifyContent: "flex-end",
+                            }}
                           >
-                            {item.ai_status === "Generated"
-                              ? "Generated"
-                              : "Generate"}
-                          </button>
+                            {item.file_path && (
+                              <button
+                                className="secondaryBtn"
+                                onClick={() => openMedicalReport(item.file_path)}
+                              >
+                                Open
+                              </button>
+                            )}
+
+                            <button
+                              className="primaryBtn"
+                              onClick={() => generateReportIntelligence(item.id)}
+                              disabled={isGenerated}
+                            >
+                              {isGenerated ? "Generated" : "Generate"}
+                            </button>
+                          </div>
                         </div>
+
+                        {isGenerated && (
+                          <div style={{ marginTop: "16px" }}>
+                            <p>
+                              <strong>Medical Category:</strong>{" "}
+                              {item.medical_category}
+                            </p>
+
+                            <p>
+                              <strong>Summary:</strong> {item.summary}
+                            </p>
+
+                            <p>
+                              <strong>Key Findings:</strong> {item.key_findings}
+                            </p>
+
+                            <p>
+                              <strong>Risk Signals:</strong> {item.risk_signals}
+                            </p>
+
+                            <p>
+                              <strong>Recommendations:</strong>{" "}
+                              {item.recommendations}
+                            </p>
+
+                            <p>
+                              <strong>Doctor Brief:</strong> {item.doctor_brief}
+                            </p>
+                          </div>
+                        )}
                       </div>
-
-                      {item.ai_status === "Generated" && (
-                        <div style={{ marginTop: "16px" }}>
-                          <p>
-                            <strong>Medical Category:</strong>{" "}
-                            {item.medical_category}
-                          </p>
-
-                          <p>
-                            <strong>Summary:</strong> {item.summary}
-                          </p>
-
-                          <p>
-                            <strong>Key Findings:</strong> {item.key_findings}
-                          </p>
-
-                          <p>
-                            <strong>Risk Signals:</strong> {item.risk_signals}
-                          </p>
-
-                          <p>
-                            <strong>Recommendations:</strong>{" "}
-                            {item.recommendations}
-                          </p>
-
-                          <p>
-                            <strong>Doctor Brief:</strong> {item.doctor_brief}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
