@@ -1,13 +1,46 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 
 export default function ResetPasswordPage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState("Checking reset link...");
   const [loading, setLoading] = useState(false);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    async function prepareResetSession() {
+      const hash = window.location.hash;
+      const params = new URLSearchParams(window.location.search);
+
+      const code = params.get("code");
+
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+
+        if (error) {
+          setMessage(error.message);
+          return;
+        }
+
+        setReady(true);
+        setMessage("");
+        return;
+      }
+
+      if (hash.includes("access_token")) {
+        setReady(true);
+        setMessage("");
+        return;
+      }
+
+      setMessage("Invalid or expired reset link. Please request a new password reset email.");
+    }
+
+    prepareResetSession();
+  }, []);
 
   const passwordStrong =
     newPassword.length >= 8 &&
@@ -17,6 +50,11 @@ export default function ResetPasswordPage() {
 
   async function handleUpdatePassword() {
     setMessage("");
+
+    if (!ready) {
+      setMessage("Reset session is not ready. Please open the reset link again.");
+      return;
+    }
 
     if (newPassword !== confirmPassword) {
       setMessage("Passwords do not match.");
@@ -67,6 +105,7 @@ export default function ResetPasswordPage() {
                 placeholder="Enter new password"
                 value={newPassword}
                 onChange={(event) => setNewPassword(event.target.value)}
+                disabled={!ready}
               />
             </div>
 
@@ -77,13 +116,14 @@ export default function ResetPasswordPage() {
                 placeholder="Confirm new password"
                 value={confirmPassword}
                 onChange={(event) => setConfirmPassword(event.target.value)}
+                disabled={!ready}
               />
             </div>
 
             <button
               className="primaryBtn"
               onClick={handleUpdatePassword}
-              disabled={loading}
+              disabled={loading || !ready}
             >
               {loading ? "Updating..." : "Update Password"}
             </button>
