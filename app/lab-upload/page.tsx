@@ -28,6 +28,8 @@ const [message, setMessage] = useState("");
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [latestUploadedFileName, setLatestUploadedFileName] = useState("");
   const [analysisStep, setAnalysisStep] = useState<AnalysisStep>("idle");
+  const [searchTerm, setSearchTerm] = useState("");
+const [reportFilter, setReportFilter] = useState("all");
 
 useEffect(() => {
   checkAuth();
@@ -258,8 +260,12 @@ uploadedCount++;
 
   setAnalysisStep("ready");
   setMessage(
-    `${uploadedCount} file${uploadedCount > 1 ? "s" : ""} uploaded successfully. AI extraction will process these reports in the next phase.`
-  );
+  `${uploadedCount} report(s) uploaded successfully.
+
+Your health intelligence is ready.
+
+Click below to open Intelligence Center.`
+);
 
   setSelectedFiles([]);
   setFileNames([]);
@@ -331,9 +337,19 @@ uploadedCount++;
       description: "Report is saved and ready for the next AI phase.",
     },
   ];
+const filteredFiles = uploadedFiles.filter((file) => {
+  const matchesSearch = file.file_name
+    .toLowerCase()
+    .includes(searchTerm.toLowerCase());
 
-  return (
-    <main className="assistantPage">
+  const matchesFilter =
+    reportFilter === "all" || file.analysis_status === reportFilter;
+
+  return matchesSearch && matchesFilter;
+});
+
+return (
+  <main className="assistantPage">
       <div className="assistantContainer">
         <PageBackActions />
 
@@ -369,57 +385,77 @@ uploadedCount++;
     <option value="discharge">Discharge Summary</option>
   </select>
 </div>
-            <label
-              className="labDropZone"
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
-            >
-             <input
-  type="file"
-  accept=".pdf,.jpg,.jpeg,.png"
-  onChange={handleFileChange}
-  multiple
-  hidden
-/>
+  <label
+  className="labDropZone"
+  onDrop={handleDrop}
+  onDragOver={handleDragOver}
+>
+  <input
+    type="file"
+    accept=".pdf,.jpg,.jpeg,.png"
+    onChange={handleFileChange}
+    multiple
+    hidden
+  />
 
-              <div className="labDropIcon">📄</div>
+  <div className="labDropIcon">📄</div>
 
-              <strong>
-  {fileNames.length > 0
-    ? `${fileNames.length} file${fileNames.length > 1 ? "s" : ""} selected`
-    : latestUploadedFileName
-    ? latestUploadedFileName
-    : "Drop up to 10 PDF or image files, or click to upload"}
-</strong>
+  <strong>
+    {fileNames.length > 0
+      ? `${fileNames.length} file${fileNames.length > 1 ? "s" : ""} selected`
+      : latestUploadedFileName
+      ? latestUploadedFileName
+      : "Drop up to 10 PDF or image files, or click to upload"}
+  </strong>
 
-<span>
-  {fileNames.length > 0
-    ? fileNames.join(", ")
-    : latestUploadedFileName
-    ? "Ready for AI extraction"
-    : "PDF, JPG, JPEG, PNG supported"}
-</span>
-{fileNames.length > 0 && (
-  <div className="selectedFileList">
-    {fileNames.map((name, index) => (
-      <div key={name + index} className="selectedFileItem">
-        <span>{name}</span>
+  <span>
+    {fileNames.length > 0
+      ? fileNames.join(", ")
+      : latestUploadedFileName
+      ? "Ready for AI extraction"
+      : "PDF, JPG, JPEG, PNG supported"}
+  </span>
 
-        <button
-          type="button"
-          onClick={(event) => {
-            event.preventDefault();
-            removeSelectedFile(index);
-          }}
-        >
-          Remove
-        </button>
-      </div>
-    ))}
-  </div>
-)}
-            </label>
+  {fileNames.length > 0 && (
+    <div className="selectedFileList">
+      {fileNames.map((name, index) => (
+        <div key={name + index} className="selectedFileItem">
+          <span>{name}</span>
 
+          <button
+            type="button"
+            onClick={(event) => {
+              event.preventDefault();
+              removeSelectedFile(index);
+            }}
+          >
+            Remove
+          </button>
+        </div>
+      ))}
+    </div>
+  )}
+
+<div
+  style={{
+    marginTop: "20px",
+    display: "flex",
+    justifyContent: "center",
+  }}
+>
+  <button
+    type="button"
+    className="primaryBtn"
+    onClick={(event) => {
+      event.preventDefault();
+      uploadFile();
+    }}
+    disabled={uploading}
+  >
+    {uploading ? "Processing..." : "Analyze Report"}
+  </button>
+</div>
+</label>
             <div className="labAnalysisSteps">
               {steps.map((step) => (
                 <div
@@ -433,16 +469,7 @@ uploadedCount++;
                 </div>
               ))}
             </div>
-
-            <div style={{ marginTop: "24px" }}>
-              <button
-                className="primaryBtn"
-                onClick={uploadFile}
-                disabled={uploading}
-              >
-                {uploading ? "Processing..." : "Analyze Report"}
-              </button>
-            </div>
+              
 
             {message && (
   <div className="resultBox">
@@ -457,73 +484,104 @@ uploadedCount++;
   </div>
 )}
 </div>
+<div className="resultBox">
+  <p className="sectionLabel">Uploaded Lab Reports</p>
 
-          <div className="resultBox">
-            <p className="sectionLabel">Uploaded Lab Reports</p>
+  <div style={{ display: "flex", gap: "12px", marginBottom: "20px" }}>
+    <input
+      type="text"
+      placeholder="Search reports..."
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+      className="searchInput"
+    />
 
-            {uploadedFiles.length === 0 ? (
-              <p>No uploaded lab reports yet.</p>
-            ) : (
-              uploadedFiles.map((file) => (
-                <div
-                  key={file.id}
-                  style={{
-                    padding: "14px 0",
-                    borderBottom: "1px solid rgba(255,255,255,0.12)",
-                  }}
-                >
-                  <h3>{file.file_name}</h3>
-
-                  <p>
-                    Uploaded on: {new Date(file.created_at).toLocaleString()}
-                  </p>
-<p>
-  Status: <strong>{file.analysis_status || "uploaded"}</strong>
-</p>
-{file.ai_summary && (
-  <div className="resultBox">
-    <p>{file.ai_summary}</p>
+    <select
+      value={reportFilter}
+      onChange={(e) => setReportFilter(e.target.value)}
+      className="reportTypeSelect"
+    >
+      <option value="all">All</option>
+      <option value="uploaded">Uploaded</option>
+      <option value="analyzed">Analyzed</option>
+      <option value="pending">Pending</option>
+    </select>
   </div>
-)}
-                  <div
-  style={{
-    display: "flex",
-    gap: "10px",
-    marginTop: "12px",
-  }}
->
-  <button
-    className="secondaryBtn"
-    onClick={() => openFile(file.file_path)}
-  >
-    Open File
-  </button>
 
-  <button
-    className="secondaryBtn"
-    onClick={() => deleteFile(file)}
-  >
-    Delete File
-  </button>
-</div>
-                </div>
-              ))
-            )}
+  {uploadedFiles.length === 0 ? (
+    <p>No uploaded lab reports yet.</p>
+  ) : (
+    filteredFiles.map((file) => (
+      <div
+        key={file.id}
+        style={{
+          padding: "14px 0",
+          borderBottom: "1px solid rgba(255,255,255,0.12)",
+        }}
+      >
+        <h3>{file.file_name}</h3>
+
+        <p>Uploaded on: {new Date(file.created_at).toLocaleString()}</p>
+
+        <p>
+          Status: <strong>{file.analysis_status || "uploaded"}</strong>
+        </p>
+
+        {file.ai_summary && (
+          <div className="resultBox">
+            <p>{file.ai_summary}</p>
           </div>
+        )}
 
-                    <div className="trustBox">
-            <p className="sectionLabel">Important Notice</p>
+        <div
+          style={{
+            display: "flex",
+            gap: "10px",
+            marginTop: "12px",
+            flexWrap: "wrap",
+          }}
+        >
+          <button
+            className="secondaryBtn"
+            onClick={() => openFile(file.file_path)}
+          >
+            Open File
+          </button>
 
-            <h2>Educational Use Only</h2>
+          <button
+            className="primaryBtn"
+            onClick={() => {
+              window.location.href = "/intelligence";
+            }}
+          >
+            View Intelligence
+          </button>
 
-            <p>
-              OrganHeal AI is designed for educational health awareness and
-              wellness tracking. It does not provide diagnosis, treatment, or
-              emergency medical advice.
-            </p>
-          </div>
+          <button
+            className="secondaryBtn"
+            onClick={() => deleteFile(file)}
+          >
+            Delete File
+          </button>
         </div>
       </div>
-    </main>
-  );
+    ))
+  )}
+</div>
+
+<div className="trustBox">
+  <p className="sectionLabel">Important Notice</p>
+
+  <h2>Educational Use Only</h2>
+
+  <p>
+    OrganHeal AI is designed for educational health awareness and wellness
+    tracking. It does not provide diagnosis, treatment, or emergency medical
+    advice.
+  </p>
+</div>
+</div>
+</div>
+</main>
+);
 }
