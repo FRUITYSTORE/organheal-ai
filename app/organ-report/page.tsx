@@ -65,10 +65,9 @@ const isArabic = language === "ar";
     const { data: userData, error: userError } = await supabase.auth.getUser();
 
     if (userError || !userData.user) {
-      setMessage("Please login or sign up to access your health report.");
-      setLoading(false);
-      return;
-    }
+  window.location.href = "/login";
+  return;
+}
 
     const user = userData.user;
     setUserEmail(user.email || "");
@@ -582,31 +581,6 @@ report_summary: reportSummary,
         <div className="chatWindow">
          {isArabic ? "جاري تحميل التقرير..." : "Loading your report..."}
 
-          {!loading && message && (
-            <div className="resultBox">
-            {isArabic ? "تسجيل الدخول مطلوب" : "Login Required"}
-             {isArabic ? "الوصول محمي" : "Access Protected"}
-              <p>{message}</p>
-
-              <div
-                style={{
-                  display: "flex",
-                  gap: "12px",
-                  justifyContent: "center",
-                  flexWrap: "wrap",
-                }}
-              >
-                <Link href="/login">
-                  <button className="primaryBtn">Login</button>
-                </Link>
-
-                <Link href="/signup">
-                  <button className="secondaryBtn">Sign Up</button>
-                </Link>
-              </div>
-            </div>
-          )}
-
           {!loading && !message && allScores.length === 0 && (
             <p>No saved organ assessments, check-ins, or lab reports found yet.</p>
           )}
@@ -657,6 +631,86 @@ report_summary: reportSummary,
                   latest lab analyzer score, and latest daily wellness check-in.
                 </p>
               </div>
+              <div className="resultBox">
+  <p className="sectionLabel">Digital Health Intelligence Profile</p>
+
+  <h2>{healthEngine.healthProfile}</h2>
+
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+      gap: "14px",
+      marginTop: "18px",
+      textAlign: "left",
+    }}
+  >
+    <div>
+      <strong>Risk Pattern</strong>
+      <p>{healthEngine.riskPattern}</p>
+    </div>
+
+    <div>
+      <strong>Health Age Status</strong>
+      <p>{healthEngine.healthAgeStatus}</p>
+    </div>
+<div className="resultBox">
+  <p className="sectionLabel">90-Day Health Action Plan</p>
+
+  <h2>Personalized Next Steps</h2>
+
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+      gap: "14px",
+      marginTop: "18px",
+      textAlign: "left",
+    }}
+  >
+    <div>
+      <strong>This Week</strong>
+      <p>{healthEngine.bestNextAction}</p>
+    </div>
+
+    <div>
+      <strong>This Month</strong>
+      <p>{healthEngine.opportunityTitle}</p>
+    </div>
+
+    <div>
+      <strong>Priority Organ</strong>
+      <p>{weakestAssessment?.organ_name || "General Health"}</p>
+    </div>
+
+    <div>
+      <strong>Expected Outcome</strong>
+      <p>+{healthEngine.potentialGain} points</p>
+    </div>
+  </div>
+</div>
+    <div>
+      <strong>Potential Score</strong>
+      <p>{healthEngine.potentialScore}/100</p>
+    </div>
+
+    <div>
+      <strong>Potential Gain</strong>
+      <p>+{healthEngine.potentialGain}</p>
+    </div>
+  </div>
+
+  <div style={{ marginTop: "20px", textAlign: "left" }}>
+    <strong>Main Opportunity</strong>
+    <p>{healthEngine.opportunityTitle}</p>
+
+    <strong>Best Next Action</strong>
+    <p>{healthEngine.bestNextAction}</p>
+
+    <strong>Trend Direction</strong>
+    <p>{healthEngine.trendDirection}</p>
+  </div>
+</div>
 
               <div className="assessmentForm">
                 {assessments.map((item) => (

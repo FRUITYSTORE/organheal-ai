@@ -29,6 +29,8 @@ export default function ProfilePage() {
 const [memberSince, setMemberSince] = useState("");
 const [uploadedReportsCount, setUploadedReportsCount] = useState(0);
 const [latestReportDate, setLatestReportDate] = useState("");
+const [pendingReports, setPendingReports] = useState(0);
+const [processedReports, setProcessedReports] = useState(0);
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [labReport, setLabReport] = useState<LabReport | null>(null);
   const [loading, setLoading] = useState(true);
@@ -92,12 +94,22 @@ setMemberSince(
     }
 const { data: uploadedReports } = await supabase
   .from("uploaded_lab_files")
-  .select("id, created_at")
+  .select("id, created_at, extraction_status")
   .eq("user_id", user.id)
   .order("created_at", { ascending: false });
 
 setUploadedReportsCount((uploadedReports || []).length);
+setProcessedReports(
+  (uploadedReports || []).filter(
+    (item) => item.extraction_status === "Completed"
+  ).length
+);
 
+setPendingReports(
+  (uploadedReports || []).filter(
+    (item) => item.extraction_status !== "Completed"
+  ).length
+);
 setLatestReportDate(
   uploadedReports && uploadedReports.length > 0
     ? new Date(uploadedReports[0].created_at).toLocaleDateString()
@@ -154,6 +166,14 @@ const firstAssessment =
 
 const latestAssessment =
   assessments.length > 0 ? assessments[0] : null;
+  const nextRecommendedAction =
+  assessments.length === 0
+    ? "Complete your first organ assessment"
+    : uploadedReportsCount === 0
+    ? "Upload your first medical report"
+    : healthProfileStatus !== "Active"
+    ? "Complete more assessments to activate full intelligence"
+    : "Review your Intelligence Center insights";
   return (
     <main className="assistantPage">
       <div className="assistantContainer">
@@ -284,6 +304,45 @@ const latestAssessment =
           : "Complete more data to activate full intelligence"}
       </span>
     </div>
+  </div>
+</div>
+<div className="resultBox">
+  <p className="sectionLabel">Health Intelligence Status</p>
+
+  <h2>{completion}% Complete</h2>
+
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))",
+      gap: "14px",
+      marginTop: "18px",
+    }}
+  >
+    <div>
+      <strong>Status</strong>
+      <p>{healthProfileStatus}</p>
+    </div>
+
+    <div>
+      <strong>Reports Processed</strong>
+      <p>{processedReports}</p>
+    </div>
+
+    <div>
+      <strong>Reports Pending</strong>
+      <p>{pendingReports}</p>
+    </div>
+
+    <div>
+      <strong>Priority Organ</strong>
+      <p>{priorityAssessment?.organ_name || "N/A"}</p>
+    </div>
+  </div>
+
+  <div style={{ marginTop: "20px" }}>
+    <strong>Next Recommended Action</strong>
+    <p>{nextRecommendedAction}</p>
   </div>
 </div>
                 <div className="resultBox">

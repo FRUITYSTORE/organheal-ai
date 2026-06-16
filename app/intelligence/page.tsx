@@ -1,10 +1,15 @@
 "use client";
-
 import { generateIntelligenceFromText } from "../../lib/extractedTextIntelligence";
 import PageBackActions from "../components/PageBackActions";
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { buildHealthIntelligence } from "../../lib/intelligenceBuilder";
+import {
+  detectLabMarkers,
+  buildLabMarkerSummary,
+} from "../../lib/labMarkerDetector";
+import { buildHealthStrategy } from "../../lib/healthStrategyEngine";
+
 
 type Assessment = {
   organ_name: string;
@@ -84,6 +89,7 @@ if (userError || !userData.user) {
         dailyCheckIn: null,
         isArabic: false,
       });
+      
 
       setHealthEngine(intelligence);
     }
@@ -174,7 +180,7 @@ if (userError || !userData.user) {
 
     let extractedText: string | null = null;
 
-    if (selectedInsight.report_id && selectedInsight.file_path) {
+   if (selectedInsight.report_id && selectedInsight.file_path) {
       try {
         const extractionResponse = await fetch("/api/extract-pdf", {
           method: "POST",
@@ -202,7 +208,6 @@ if (userError || !userData.user) {
         return;
       }
     }
-
     if (!extractedText && selectedInsight.report_id) {
       const { data: reportData } = await supabase
         .from("uploaded_lab_files")
@@ -218,10 +223,33 @@ if (userError || !userData.user) {
       return;
     }
 
-    const intelligence = generateIntelligenceFromText(
-      extractedText,
-      selectedInsight.report_type
-    );
+    const detectedMarkers = detectLabMarkers(extractedText);
+const markerSummary = buildLabMarkerSummary(detectedMarkers);
+const healthStrategy = buildHealthStrategy(detectedMarkers);
+
+const intelligence = {
+  ...generateIntelligenceFromText(extractedText, selectedInsight.report_type),
+  summary: markerSummary.summary,
+  key_findings: markerSummary.keyFindings,
+  risk_signals: markerSummary.riskSignals,
+ recommendations: `${markerSummary.recommendations}
+
+Personal Health Strategy
+
+Health Risks:
+${healthStrategy.healthRisks}
+
+90-Day Action Plan:
+${healthStrategy.actionPlan90Days}
+
+Nutrition Strategy:
+${healthStrategy.nutritionStrategy}
+
+Follow-Up Plan:
+${healthStrategy.followUpPlan}`,
+  doctor_brief: `Detected lab markers:\n${markerSummary.keyFindings}\n\nClinical note: This is an educational interpretation and should be reviewed by a licensed healthcare professional.`,
+};
+
 
     const { error } = await supabase
       .from("health_insights")

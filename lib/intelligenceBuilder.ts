@@ -1,6 +1,7 @@
 import { generateHealthEngineResult } from "./healthEngine";
 import { generateHealthOpportunities } from "./opportunityEngine";
 
+
 export type IntelligenceAssessment = {
   organ_name: string;
   score: number;
