@@ -50,6 +50,7 @@ export default function IntelligencePage() {
   const [message, setMessage] = useState("");
   const [healthEngine, setHealthEngine] = useState<HealthEngine | null>(null);
   const [healthInsights, setHealthInsights] = useState<HealthInsight[]>([]);
+  const [generatedStrategy, setGeneratedStrategy] = useState<any>(null);
 
   useEffect(() => {
     loadIntelligence();
@@ -249,7 +250,7 @@ Follow-Up Plan:
 ${healthStrategy.followUpPlan}`,
   doctor_brief: `Detected lab markers:\n${markerSummary.keyFindings}\n\nClinical note: This is an educational interpretation and should be reviewed by a licensed healthcare professional.`,
 };
-
+setGeneratedStrategy(healthStrategy);
 
     const { error } = await supabase
       .from("health_insights")
@@ -465,6 +466,23 @@ ${healthStrategy.followUpPlan}`,
                             <p>
                               <strong>Doctor Brief:</strong> {item.doctor_brief}
                             </p>
+                            {generatedStrategy && (
+  <div className="resultBox">
+    <p className="sectionLabel">Personal Health Strategy</p>
+
+    <h3>Health Risks</h3>
+    <p>{generatedStrategy.healthRisks}</p>
+
+    <h3>90-Day Action Plan</h3>
+    <p>{generatedStrategy.actionPlan90Days}</p>
+
+    <h3>Nutrition Strategy</h3>
+    <p>{generatedStrategy.nutritionStrategy}</p>
+
+    <h3>Follow-Up Plan</h3>
+    <p>{generatedStrategy.followUpPlan}</p>
+  </div>
+)}
                           </div>
                         )}
                       </div>
