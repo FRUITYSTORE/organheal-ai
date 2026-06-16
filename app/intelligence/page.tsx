@@ -1,4 +1,8 @@
 "use client";
+import {
+  detectRadiologyFindings,
+  buildRadiologySummary,
+} from "../../lib/radiologyEngine";
 import { generateIntelligenceFromText } from "../../lib/extractedTextIntelligence";
 import PageBackActions from "../components/PageBackActions";
 import { useEffect, useState } from "react";
@@ -13,6 +17,8 @@ import { buildUnifiedHealthIntelligence } from "../../lib/unifiedHealthEngine";
 import { detectClinicalPatterns } from "../../lib/clinicalPatternEngine";
 import { buildCrossSourceIntelligence } from "../../lib/crossSourceIntelligence";
 import { buildForecast } from "../../lib/forecastEngine";
+import { buildPatientDigitalTwin } from "../../lib/patientDigitalTwin";
+
 
 
 type Assessment = {
@@ -67,7 +73,7 @@ const [dailyCheckIn, setDailyCheckIn] = useState<DailyCheckIn | null>(null);
   const [generatedUnifiedHealth, setGeneratedUnifiedHealth] = useState<any>(null);
   const [generatedCrossSource, setGeneratedCrossSource] = useState<any>(null);
   const [generatedForecast, setGeneratedForecast] = useState<any>(null);
- 
+ const [generatedDigitalTwin, setGeneratedDigitalTwin] = useState<any>(null);
 
   useEffect(() => {
     loadIntelligence();
@@ -254,6 +260,15 @@ setDailyCheckIn(checkInData || null);
 
 const detectedMarkers = detectLabMarkers(extractedText);
 const markerSummary = buildLabMarkerSummary(detectedMarkers);
+const radiologyFindings = detectRadiologyFindings(extractedText);
+const digitalTwin = buildPatientDigitalTwin({
+  markers: detectedMarkers,
+  radiologyFindings,
+});
+
+setGeneratedDigitalTwin(digitalTwin);
+const radiologySummary = buildRadiologySummary(radiologyFindings);
+const isRadiologyReport = selectedInsight.report_type === "radiology";
 const clinicalPatterns = detectClinicalPatterns(detectedMarkers);
 const healthStrategy = buildHealthStrategy(detectedMarkers);
 
@@ -275,8 +290,10 @@ setGeneratedForecast(forecast);
 setGeneratedUnifiedHealth(unifiedHealth);
 const intelligence = {
   ...generateIntelligenceFromText(extractedText, selectedInsight.report_type),
-  summary: markerSummary.summary,
-  key_findings: markerSummary.keyFindings,
+summary: isRadiologyReport ? radiologySummary.summary : markerSummary.summary,
+key_findings: isRadiologyReport
+  ? radiologySummary.riskSignals
+  : markerSummary.keyFindings,
   risk_signals:
   clinicalPatterns.length > 0
     ? clinicalPatterns
@@ -286,15 +303,16 @@ const intelligence = {
         )
         .join("\n")
     : markerSummary.riskSignals,
-recommendations:
-  clinicalPatterns.length > 0
-    ? clinicalPatterns
-        .map(
-          (pattern) =>
-            `${pattern.title}: ${pattern.suggestedFocus}`
-        )
-        .join("\n")
-    : markerSummary.recommendations,
+recommendations: isRadiologyReport
+  ? radiologySummary.recommendations
+  : clinicalPatterns.length > 0
+  ? clinicalPatterns
+      .map(
+        (pattern) =>
+          `${pattern.title}: ${pattern.suggestedFocus}`
+      )
+      .join("\n")
+  : markerSummary.recommendations,
   doctor_brief: `Detected lab markers:
 ${markerSummary.keyFindings}
 
@@ -589,6 +607,32 @@ setGeneratedStrategy(healthStrategy);
 {generatedCrossSource && (
   <div className="resultBox">
     <p className="sectionLabel">Cross-Source Intelligence</p>
+    {generatedDigitalTwin && (
+  <div className="resultBox">
+    <p className="sectionLabel">Digital Health Twin</p>
+
+    <h3>Primary Health System</h3>
+    <p>{generatedDigitalTwin.primarySystem}</p>
+
+    <h3>Liver Risk</h3>
+    <p>{generatedDigitalTwin.liverRisk}/100</p>
+
+    <h3>Cardiovascular Risk</h3>
+    <p>{generatedDigitalTwin.cardiovascularRisk}/100</p>
+
+    <h3>Kidney Risk</h3>
+    <p>{generatedDigitalTwin.kidneyRisk}/100</p>
+
+    <h3>Metabolic Risk</h3>
+    <p>{generatedDigitalTwin.metabolicRisk}/100</p>
+
+    <h3>Recovery Potential</h3>
+    <p>{generatedDigitalTwin.recoveryPotential}/100</p>
+
+    <h3>Profile Summary</h3>
+    <p>{generatedDigitalTwin.profileSummary}</p>
+  </div>
+)}
     {generatedForecast && (
   <div className="resultBox">
     <p className="sectionLabel">90-Day Health Forecast</p>

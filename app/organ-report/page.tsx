@@ -631,7 +631,7 @@ report_summary: reportSummary,
                   latest lab analyzer score, and latest daily wellness check-in.
                 </p>
               </div>
-              <div className="resultBox">
+    <div className="resultBox">
   <p className="sectionLabel">Digital Health Intelligence Profile</p>
 
   <h2>{healthEngine.healthProfile}</h2>
@@ -639,9 +639,9 @@ report_summary: reportSummary,
   <div
     style={{
       display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-      gap: "14px",
-      marginTop: "18px",
+      gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+      gap: "18px",
+      marginTop: "22px",
       textAlign: "left",
     }}
   >
@@ -654,6 +654,30 @@ report_summary: reportSummary,
       <strong>Health Age Status</strong>
       <p>{healthEngine.healthAgeStatus}</p>
     </div>
+
+    <div>
+      <strong>Potential Score</strong>
+      <p>{healthEngine.potentialScore}/100</p>
+    </div>
+
+    <div>
+      <strong>Potential Gain</strong>
+      <p>+{healthEngine.potentialGain}</p>
+    </div>
+  </div>
+
+  <div style={{ marginTop: "22px", textAlign: "left" }}>
+    <strong>Main Opportunity</strong>
+    <p>{healthEngine.opportunityTitle}</p>
+
+    <strong>Best Next Action</strong>
+    <p>{healthEngine.bestNextAction}</p>
+
+    <strong>Trend Direction</strong>
+    <p>{healthEngine.trendDirection}</p>
+  </div>
+</div>
+
 <div className="resultBox">
   <p className="sectionLabel">90-Day Health Action Plan</p>
 
@@ -662,9 +686,9 @@ report_summary: reportSummary,
   <div
     style={{
       display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-      gap: "14px",
-      marginTop: "18px",
+      gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+      gap: "18px",
+      marginTop: "22px",
       textAlign: "left",
     }}
   >
@@ -687,28 +711,6 @@ report_summary: reportSummary,
       <strong>Expected Outcome</strong>
       <p>+{healthEngine.potentialGain} points</p>
     </div>
-  </div>
-</div>
-    <div>
-      <strong>Potential Score</strong>
-      <p>{healthEngine.potentialScore}/100</p>
-    </div>
-
-    <div>
-      <strong>Potential Gain</strong>
-      <p>+{healthEngine.potentialGain}</p>
-    </div>
-  </div>
-
-  <div style={{ marginTop: "20px", textAlign: "left" }}>
-    <strong>Main Opportunity</strong>
-    <p>{healthEngine.opportunityTitle}</p>
-
-    <strong>Best Next Action</strong>
-    <p>{healthEngine.bestNextAction}</p>
-
-    <strong>Trend Direction</strong>
-    <p>{healthEngine.trendDirection}</p>
   </div>
 </div>
 

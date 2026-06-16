@@ -49,7 +49,7 @@ export const translations = {
       title: "Your Organ Health Report",
       description:
         "This report summarizes your saved organ assessments, lab analyzer score, and daily wellness data from OrganHeal.",
-      download: "Download Professional PDF Report v2",
+      download: "Download Professional PDF Report v4",
     },
   },
 
