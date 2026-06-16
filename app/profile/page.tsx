@@ -1,4 +1,5 @@
 "use client";
+
 import PageBackActions from "../components/PageBackActions";
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
@@ -31,8 +32,7 @@ export default function ProfilePage() {
     const { data: userData, error: userError } = await supabase.auth.getUser();
 
     if (userError || !userData.user) {
-      setMessage("Please login or sign up to access your profile.");
-      setLoading(false);
+      window.location.href = "/login";
       return;
     }
 
@@ -70,11 +70,6 @@ export default function ProfilePage() {
     setLoading(false);
   }
 
-  async function logout() {
-    await supabase.auth.signOut();
-    window.location.href = "/login";
-  }
-
   const allScores = [
     ...assessments.map((item) => item.score),
     ...(labReport ? [labReport.score] : []),
@@ -103,6 +98,7 @@ export default function ProfilePage() {
     <main className="assistantPage">
       <div className="assistantContainer">
         <PageBackActions />
+
         <div className="assistantHeader">
           <p className="assistantBadge">USER PROFILE</p>
           <h1>Your OrganHeal Profile</h1>
@@ -117,26 +113,7 @@ export default function ProfilePage() {
 
           {!loading && message && (
             <div className="resultBox">
-              <p className="sectionLabel">Login Required</p>
-              <h2>Access Protected</h2>
               <p>{message}</p>
-
-              <div
-                style={{
-                  display: "flex",
-                  gap: "12px",
-                  justifyContent: "center",
-                  flexWrap: "wrap",
-                }}
-              >
-                <a href="/login">
-                  <button className="primaryBtn">Login</button>
-                </a>
-
-                <a href="/signup">
-                  <button className="secondaryBtn">Sign Up</button>
-                </a>
-              </div>
             </div>
           )}
 
@@ -154,7 +131,9 @@ export default function ProfilePage() {
                   <h2 className={getScoreClass(overallScore)}>
                     {overallScore}/100
                   </h2>
-                  <h3>{allScores.length > 0 ? getStatus(overallScore) : "No Data Yet"}</h3>
+                  <h3>
+                    {allScores.length > 0 ? getStatus(overallScore) : "No Data Yet"}
+                  </h3>
                 </div>
 
                 <div className="resultBox">
@@ -199,10 +178,6 @@ export default function ProfilePage() {
                     <a href="/history">
                       <button className="secondaryBtn">History</button>
                     </a>
-
-                    <button className="secondaryBtn" onClick={logout}>
-                      Logout
-                    </button>
                   </div>
                 </div>
               </div>

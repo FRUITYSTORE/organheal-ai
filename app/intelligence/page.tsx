@@ -54,13 +54,12 @@ export default function IntelligencePage() {
     setLoading(true);
     setMessage("");
 
-    const { data: userData, error: userError } = await supabase.auth.getUser();
+const { data: userData, error: userError } = await supabase.auth.getUser();
 
-    if (userError || !userData.user) {
-      setMessage("Please login to access your Intelligence Center.");
-      setLoading(false);
-      return;
-    }
+if (userError || !userData.user) {
+  window.location.href = "/login";
+  return;
+}
 
     const userId = userData.user.id;
 

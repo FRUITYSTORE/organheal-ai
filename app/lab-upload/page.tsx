@@ -29,10 +29,22 @@ const [message, setMessage] = useState("");
   const [latestUploadedFileName, setLatestUploadedFileName] = useState("");
   const [analysisStep, setAnalysisStep] = useState<AnalysisStep>("idle");
 
-  useEffect(() => {
+useEffect(() => {
+  checkAuth();
+}, []);
+
+async function checkAuth() {
+  const { data: userData, error: userError } =
+    await supabase.auth.getUser();
+
+  if (userError || !userData.user) {
+    window.location.href = "/login";
+    return;
+  }
+
   fetchUploadedFiles();
   loadPendingHeroFile();
-}, []);
+}
 function loadPendingHeroFile() {
   const uploadedFileName = sessionStorage.getItem(
     "organheal-latest-uploaded-lab-file"
