@@ -14,9 +14,20 @@ type LabReport = {
   score: number;
   created_at: string;
 };
+type Profile = {
+  username: string | null;
+  email: string | null;
+  created_at: string | null;
+};
 
+type UploadedReport = {
+  id: number;
+};
 export default function ProfilePage() {
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
+const [memberSince, setMemberSince] = useState("");
+const [uploadedReportsCount, setUploadedReportsCount] = useState(0);
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [labReport, setLabReport] = useState<LabReport | null>(null);
   const [loading, setLoading] = useState(true);
@@ -37,7 +48,21 @@ export default function ProfilePage() {
     }
 
     const user = userData.user;
-    setEmail(user.email || "");
+    const { data: profileData } = await supabase
+  .from("profiles")
+  .select("username, email, created_at")
+  .eq("id", user.id)
+  .single();
+
+const profile = profileData as Profile | null;
+
+setEmail(profile?.email || user.email || "");
+setUsername(profile?.username || "User");
+setMemberSince(
+  profile?.created_at
+    ? new Date(profile.created_at).toLocaleDateString()
+    : "Recently"
+);
 
     const { data: organData, error: organError } = await supabase
       .from("organ_assessments")
@@ -64,7 +89,12 @@ export default function ProfilePage() {
       setLoading(false);
       return;
     }
+const { data: uploadedReports } = await supabase
+  .from("uploaded_lab_files")
+  .select("id")
+  .eq("user_id", user.id);
 
+setUploadedReportsCount((uploadedReports || []).length);
     setAssessments(organData || []);
     setLabReport(labData || null);
     setLoading(false);
@@ -93,7 +123,17 @@ export default function ProfilePage() {
     if (score >= 50) return "moderateScore";
     return "riskScore";
   }
+const priorityAssessment =
+  assessments.length > 0
+    ? [...assessments].sort((a, b) => a.score - b.score)[0]
+    : null;
 
+const healthProfileStatus =
+  allScores.length === 0
+    ? "Not Started"
+    : allScores.length < 3
+    ? "Building"
+    : "Active";
   return (
     <main className="assistantPage">
       <div className="assistantContainer">
@@ -120,10 +160,12 @@ export default function ProfilePage() {
           {!loading && !message && (
             <>
               <div className="resultBox">
-                <p className="sectionLabel">Account</p>
-                <h2>{email}</h2>
-                <p>Your active OrganHeal AI account.</p>
-              </div>
+  <p className="sectionLabel">Health Identity</p>
+  <h2>{username}</h2>
+  <p>{email}</p>
+  <p>Member since: {memberSince}</p>
+  <p>Status: {healthProfileStatus}</p>
+</div>
 
               <div className="assessmentForm">
                 <div className="resultBox">
@@ -141,7 +183,21 @@ export default function ProfilePage() {
                   <h2>{assessments.length}</h2>
                   <p>Total saved organ modules.</p>
                 </div>
+<div className="resultBox">
+  <p className="sectionLabel">Uploaded Reports</p>
+  <h2>{uploadedReportsCount}</h2>
+  <p>Total medical reports uploaded.</p>
+</div>
 
+<div className="resultBox">
+  <p className="sectionLabel">Priority Organ</p>
+  <h2>{priorityAssessment?.organ_name || "N/A"}</h2>
+  <p>
+    {priorityAssessment
+      ? `Lowest current score: ${priorityAssessment.score}/100`
+      : "Complete assessments to identify your priority organ."}
+  </p>
+</div>
                 <div className="resultBox">
                   <p className="sectionLabel">Latest Lab Score</p>
                   {labReport ? (
