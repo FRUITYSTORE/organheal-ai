@@ -2208,4 +2208,87 @@ html[dir="rtl"] .homeHeroActions {
   max-width: 340px;
   justify-content: center;
   text-align: center;
+}.dashboardWelcomeCard {
+  margin: 30px 0;
+  padding: 28px;
+  border: 1px solid #444;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.03);
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: center;
+}
+
+.dashboardWelcomeCard h2 {
+  margin: 8px 0;
+  font-size: 34px;
+}
+
+.dashboardWelcomeCard p {
+  color: #d5d5d5;
+  max-width: 680px;
+}
+
+.dashboardWelcomeActions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 800px) {
+  .dashboardWelcomeCard {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}.healthIdentityHero {
+  padding: 32px;
+  border-radius: 28px;
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.14), rgba(15, 23, 42, 0.92));
+  border: 1px solid rgba(34, 211, 238, 0.25);
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.healthIdentityHero h2 {
+  font-size: 42px;
+  margin: 8px 0;
+}
+
+.healthIdentityHero p {
+  color: #d5d5d5;
+}
+
+.healthIdentityStatus {
+  min-width: 170px;
+  padding: 22px;
+  border-radius: 22px;
+  background: rgba(0, 0, 0, 0.28);
+  text-align: center;
+}
+
+.healthIdentityStatus span {
+  display: block;
+  color: #20d6e8;
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.healthIdentityStatus p {
+  margin-top: 6px;
+  font-size: 13px;
+}
+
+@media (max-width: 800px) {
+  .healthIdentityHero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .healthIdentityStatus {
+    width: 100%;
+  }
 }

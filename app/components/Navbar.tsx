@@ -26,7 +26,7 @@ function OrganHealLogo() {
         d="M126 338 L126 190 L205 116 L282 91 L393 154"
         fill="none"
         stroke="url(#ohGradient)"
-        strokeWidth="28"
+        strokeWidth={28}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -35,7 +35,7 @@ function OrganHealLogo() {
         d="M394 354 L302 406 L217 399 L126 338"
         fill="none"
         stroke="url(#ohGradient)"
-        strokeWidth="28"
+        strokeWidth={28}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -68,15 +68,17 @@ export default function Navbar() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsLoggedIn(!!session?.user);
+      setIsLoggedIn(Boolean(session?.user));
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   async function checkUser() {
     const { data } = await supabase.auth.getUser();
-    setIsLoggedIn(!!data.user);
+    setIsLoggedIn(Boolean(data.user));
   }
 
   async function signOut() {
@@ -102,12 +104,22 @@ export default function Navbar() {
         <Link href="/intelligence">Intelligence</Link>
         <Link href="/assistant">Ask AI</Link>
 
-        {isLoggedIn && <Link href="/dashboard">Dashboard</Link>}
-
-        <LanguageToggle />
-
-        {!isLoggedIn ? (
+        {isLoggedIn ? (
           <>
+            <Link href="/dashboard">Dashboard</Link>
+            <Link href="/organ-report">Report</Link>
+            <Link href="/profile">Profile</Link>
+
+            <LanguageToggle />
+
+            <button className="navLogoutBtn" onClick={signOut}>
+              Sign Out
+            </button>
+          </>
+        ) : (
+          <>
+            <LanguageToggle />
+
             <Link href="/signup" className="navPrimaryBtn">
               Create Account
             </Link>
@@ -116,10 +128,6 @@ export default function Navbar() {
               Sign In
             </Link>
           </>
-        ) : (
-          <button className="navLogoutBtn" onClick={signOut}>
-            Sign Out
-          </button>
         )}
       </div>
     </nav>

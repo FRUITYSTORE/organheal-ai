@@ -134,6 +134,11 @@ const healthProfileStatus =
     : allScores.length < 3
     ? "Building"
     : "Active";
+    let completion = 0;
+
+if (assessments.length > 0) completion += 40;
+if (uploadedReportsCount > 0) completion += 30;
+if (allScores.length >= 3) completion += 30;
   return (
     <main className="assistantPage">
       <div className="assistantContainer">
@@ -159,12 +164,19 @@ const healthProfileStatus =
 
           {!loading && !message && (
             <>
-              <div className="resultBox">
-  <p className="sectionLabel">Health Identity</p>
-  <h2>{username}</h2>
-  <p>{email}</p>
-  <p>Member since: {memberSince}</p>
-  <p>Status: {healthProfileStatus}</p>
+              <div className="healthIdentityHero">
+  <div>
+    <p className="sectionLabel">Health Identity</p>
+    <h2>{username}</h2>
+    <p>{email}</p>
+    <p>Member since: {memberSince}</p>
+    <p>Health Profile Completion: {completion}%</p>
+  </div>
+
+  <div className="healthIdentityStatus">
+    <span>{completion}%</span>
+    <p>{healthProfileStatus}</p>
+  </div>
 </div>
 
               <div className="assessmentForm">
