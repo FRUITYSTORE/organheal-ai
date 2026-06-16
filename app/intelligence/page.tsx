@@ -9,6 +9,10 @@ import {
   buildLabMarkerSummary,
 } from "../../lib/labMarkerDetector";
 import { buildHealthStrategy } from "../../lib/healthStrategyEngine";
+import { buildUnifiedHealthIntelligence } from "../../lib/unifiedHealthEngine";
+import { detectClinicalPatterns } from "../../lib/clinicalPatternEngine";
+import { buildCrossSourceIntelligence } from "../../lib/crossSourceIntelligence";
+import { buildForecast } from "../../lib/forecastEngine";
 
 
 type Assessment = {
@@ -16,6 +20,13 @@ type Assessment = {
   score: number;
   created_at: string;
 };
+
+type DailyCheckIn = {
+  mood: string | null;
+  wellness_score: number | null;
+  created_at: string;
+};
+
 
 type HealthEngine = ReturnType<typeof buildHealthIntelligence>;
 
@@ -50,7 +61,13 @@ export default function IntelligencePage() {
   const [message, setMessage] = useState("");
   const [healthEngine, setHealthEngine] = useState<HealthEngine | null>(null);
   const [healthInsights, setHealthInsights] = useState<HealthInsight[]>([]);
+  const [assessmentData, setAssessmentData] = useState<Assessment[]>([]);
+const [dailyCheckIn, setDailyCheckIn] = useState<DailyCheckIn | null>(null);
   const [generatedStrategy, setGeneratedStrategy] = useState<any>(null);
+  const [generatedUnifiedHealth, setGeneratedUnifiedHealth] = useState<any>(null);
+  const [generatedCrossSource, setGeneratedCrossSource] = useState<any>(null);
+  const [generatedForecast, setGeneratedForecast] = useState<any>(null);
+ 
 
   useEffect(() => {
     loadIntelligence();
@@ -69,6 +86,16 @@ if (userError || !userData.user) {
 
     const userId = userData.user.id;
 
+const { data: checkInData } = await supabase
+  .from("daily_checkins")
+  .select("mood, wellness_score, created_at")
+  .eq("user_id", userId)
+  .order("created_at", { ascending: false })
+  .limit(1)
+  .maybeSingle();
+
+setDailyCheckIn(checkInData || null);
+
     const { data: assessments, error: assessmentError } = await supabase
       .from("organ_assessments")
       .select("organ_name, score, created_at")
@@ -82,6 +109,7 @@ if (userError || !userData.user) {
     }
 
     const assessmentData = (assessments || []) as Assessment[];
+    setAssessmentData(assessmentData);
 
     if (assessmentData.length > 0) {
       const intelligence = buildHealthIntelligence({
@@ -224,31 +252,62 @@ if (userError || !userData.user) {
       return;
     }
 
-    const detectedMarkers = detectLabMarkers(extractedText);
+const detectedMarkers = detectLabMarkers(extractedText);
 const markerSummary = buildLabMarkerSummary(detectedMarkers);
+const clinicalPatterns = detectClinicalPatterns(detectedMarkers);
 const healthStrategy = buildHealthStrategy(detectedMarkers);
 
+const unifiedHealth = buildUnifiedHealthIntelligence({
+  detectedMarkers,
+  healthStrategy,
+});
+const crossSource = buildCrossSourceIntelligence({
+  detectedMarkers,
+});
+
+setGeneratedCrossSource(crossSource);
+const forecast = buildForecast(
+  detectedMarkers,
+  crossSource.confidenceScore
+);
+
+setGeneratedForecast(forecast);
+setGeneratedUnifiedHealth(unifiedHealth);
 const intelligence = {
   ...generateIntelligenceFromText(extractedText, selectedInsight.report_type),
   summary: markerSummary.summary,
   key_findings: markerSummary.keyFindings,
-  risk_signals: markerSummary.riskSignals,
- recommendations: `${markerSummary.recommendations}
+  risk_signals:
+  clinicalPatterns.length > 0
+    ? clinicalPatterns
+        .map(
+          (pattern) =>
+            `${pattern.title} (${pattern.severity}): ${pattern.summary}`
+        )
+        .join("\n")
+    : markerSummary.riskSignals,
+recommendations:
+  clinicalPatterns.length > 0
+    ? clinicalPatterns
+        .map(
+          (pattern) =>
+            `${pattern.title}: ${pattern.suggestedFocus}`
+        )
+        .join("\n")
+    : markerSummary.recommendations,
+  doctor_brief: `Detected lab markers:
+${markerSummary.keyFindings}
 
-Personal Health Strategy
+Unified Health Intelligence:
+${unifiedHealth.healthForecast}
 
-Health Risks:
-${healthStrategy.healthRisks}
+Priority Goal:
+${unifiedHealth.priorityGoal}
 
-90-Day Action Plan:
-${healthStrategy.actionPlan90Days}
+Next Best Action:
+${unifiedHealth.nextBestAction}
 
-Nutrition Strategy:
-${healthStrategy.nutritionStrategy}
-
-Follow-Up Plan:
-${healthStrategy.followUpPlan}`,
-  doctor_brief: `Detected lab markers:\n${markerSummary.keyFindings}\n\nClinical note: This is an educational interpretation and should be reviewed by a licensed healthcare professional.`,
+Clinical note: This is an educational interpretation and should be reviewed by a licensed healthcare professional.`,
 };
 setGeneratedStrategy(healthStrategy);
 
@@ -471,16 +530,129 @@ setGeneratedStrategy(healthStrategy);
     <p className="sectionLabel">Personal Health Strategy</p>
 
     <h3>Health Risks</h3>
-    <p>{generatedStrategy.healthRisks}</p>
+    <p style={{ whiteSpace: "pre-line" }}>{generatedStrategy.healthRisks}</p>
 
     <h3>90-Day Action Plan</h3>
-    <p>{generatedStrategy.actionPlan90Days}</p>
+    <p style={{ whiteSpace: "pre-line" }}>
+      {generatedStrategy.actionPlan90Days}
+    </p>
 
     <h3>Nutrition Strategy</h3>
-    <p>{generatedStrategy.nutritionStrategy}</p>
+    <p style={{ whiteSpace: "pre-line" }}>
+      {generatedStrategy.nutritionStrategy}
+    </p>
 
     <h3>Follow-Up Plan</h3>
-    <p>{generatedStrategy.followUpPlan}</p>
+    <p style={{ whiteSpace: "pre-line" }}>{generatedStrategy.followUpPlan}</p>
+  </div>
+)}
+
+{generatedUnifiedHealth && (
+  <div className="resultBox">
+    <p className="sectionLabel">Health Intelligence Summary</p>
+
+    <h3>Current Profile</h3>
+    <p>{generatedUnifiedHealth.currentProfile}</p>
+
+    {generatedUnifiedHealth.topPriorities?.length > 0 && (
+      <>
+        <h3>Top Health Priorities</h3>
+
+        {generatedUnifiedHealth.topPriorities
+          .slice(0, 3)
+          .map((priority: any, index: number) => (
+            <div key={index} style={{ marginBottom: "16px" }}>
+              <strong>
+                #{index + 1} {priority.area}
+              </strong>
+              <p>Severity: {priority.severity}</p>
+              <p>Priority Score: {priority.score}</p>
+            </div>
+          ))}
+      </>
+    )}
+
+    <h3>Priority Goal</h3>
+    <p>{generatedUnifiedHealth.priorityGoal}</p>
+
+    <h3>Health Forecast</h3>
+    <p>{generatedUnifiedHealth.healthForecast}</p>
+
+    <h3>Expected Improvement</h3>
+    <p>{generatedUnifiedHealth.expectedImprovement}</p>
+
+    <h3>Next Best Action</h3>
+    <p>{generatedUnifiedHealth.nextBestAction}</p>
+  </div>
+)}
+
+{generatedCrossSource && (
+  <div className="resultBox">
+    <p className="sectionLabel">Cross-Source Intelligence</p>
+    {generatedForecast && (
+  <div className="resultBox">
+    <p className="sectionLabel">90-Day Health Forecast</p>
+    <h3>Current Health Score</h3>
+<p>{generatedForecast.currentScore}/100</p>
+
+<h3>Projected Scores</h3>
+
+<p>
+  Best Case: {generatedForecast.bestCaseScore}/100
+</p>
+
+<p>
+  Expected: {generatedForecast.expectedScore}/100
+</p>
+
+<p>
+  Risk Case: {generatedForecast.riskScore}/100
+</p>
+
+<h3>Current Trajectory</h3>
+<p>{generatedForecast.currentTrajectory}</p>
+
+<h3>Improvement Potential</h3>
+<p>{generatedForecast.improvementPotential}</p>
+
+    <h3>Forecast Score</h3>
+    <p>{generatedForecast.forecastScore}/100</p>
+
+    <h3>Best Case Scenario</h3>
+    <p>{generatedForecast.bestCase}</p>
+
+    <h3>Expected Scenario</h3>
+    <p>{generatedForecast.expectedCase}</p>
+
+    <h3>Risk Escalation Scenario</h3>
+    <p>{generatedForecast.riskCase}</p>
+  </div>
+)}
+
+    <h3>Confidence Level</h3>
+    <p>{generatedCrossSource.confidenceLevel}</p>
+
+    <h3>Confidence Score</h3>
+    <p>{generatedCrossSource.confidenceScore}/100</p>
+
+    <h3>Primary System</h3>
+    <p>{generatedCrossSource.primarySystem}</p>
+
+    <h3>Supporting Sources</h3>
+    {generatedCrossSource.supportingSources.length > 0 ? (
+      <ul>
+        {generatedCrossSource.supportingSources.map(
+          (source: string, index: number) => (
+            <li key={index}>{source}</li>
+          )
+        )}
+      </ul>
+    ) : (
+      <p>No additional supporting sources detected yet.</p>
+    )}
+
+    <h3>Intelligence Summary</h3>
+    <p>{generatedCrossSource.intelligenceSummary}</p>
   </div>
 )}
                           </div>

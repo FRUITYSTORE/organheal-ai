@@ -106,10 +106,10 @@ export function buildHealthStrategy(
     };
   }
 
-  return {
-    healthRisks: risks.join("\n"),
-    actionPlan90Days: actions.join("\n"),
-    nutritionStrategy: nutrition.join("\n"),
-    followUpPlan: followUp.join("\n"),
-  };
+ return {
+  healthRisks: risks.map((item) => `• ${item}`).join("\n"),
+  actionPlan90Days: actions.map((item) => `• ${item}`).join("\n"),
+  nutritionStrategy: nutrition.map((item) => `• ${item}`).join("\n"),
+  followUpPlan: followUp.map((item) => `• ${item}`).join("\n"),
+};
 }
