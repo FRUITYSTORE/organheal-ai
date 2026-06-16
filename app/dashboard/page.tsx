@@ -62,15 +62,10 @@ export default function DashboardPage() {
 
     const { data: userData, error: userError } = await supabase.auth.getUser();
 
-    if (userError || !userData.user) {
-      setMessage(
-        isArabic
-          ? "يرجى تسجيل الدخول أو إنشاء حساب للوصول إلى لوحة التحكم."
-          : "Please login or sign up to access your dashboard."
-      );
-      setLoading(false);
-      return;
-    }
+   if (userError || !userData.user) {
+  window.location.href = "/login";
+  return;
+}
 
     const user = userData.user;
 

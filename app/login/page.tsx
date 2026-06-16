@@ -146,32 +146,37 @@ export default function LoginPage() {
               />
             </div>
 
-            <button
-              className="primaryBtn"
-              onClick={handleLogin}
-              disabled={loading}
-            >
-              {loading ? "Signing in..." : "Login"}
-            </button>
-<button
-  type="button"
-  className="secondaryBtn"
-  onClick={handleForgotPassword}
->
-  Forgot Password?
-</button>
+           <div className="loginActions">
+  <button
+    className="primaryBtn loginMainBtn"
+    onClick={handleLogin}
+    disabled={loading}
+  >
+    {loading ? "Signing in..." : "Login"}
+  </button>
 
-            <button
-              type="button"
-              className="secondaryBtn"
-              onClick={handleResendVerification}
-            >
-              Resend Verification Email
-            </button>
+  <div className="loginTextLinks">
+    <button
+      type="button"
+      className="textLink"
+      onClick={handleForgotPassword}
+    >
+      Forgot Password?
+    </button>
 
-            <Link href="/signup" className="secondaryBtn">
-              Create New Account
-            </Link>
+    <button
+      type="button"
+      className="textLink"
+      onClick={handleResendVerification}
+    >
+      Resend Verification Email
+    </button>
+  </div>
+
+  <Link href="/signup" className="secondaryBtn createAccountBtn">
+    Create New Account
+  </Link>
+</div>
 
             {message && <p>{message}</p>}
           </div>

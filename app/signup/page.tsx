@@ -68,6 +68,15 @@ export default function SignupPage() {
       return;
     }
 
+    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+
+    if (!usernameRegex.test(cleanUsername)) {
+      setMessage(
+        "Username must be 3-20 characters and can only include letters, numbers, and underscores."
+      );
+      return;
+    }
+
     setLoading(true);
 
     const { data: existingEmail, error: emailCheckError } = await supabase
@@ -106,7 +115,7 @@ export default function SignupPage() {
       return;
     }
 
-    const { data, error } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signUp({
       email: cleanEmail,
       password,
       options: {
@@ -116,16 +125,16 @@ export default function SignupPage() {
       },
     });
 
-if (error) {
-  setMessage(error.message);
-  setLoading(false);
-  return;
-}
+    if (error) {
+      setMessage(error.message);
+      setLoading(false);
+      return;
+    }
 
-setMessage(
-  "Account created. If email confirmation is enabled, a verification email has been sent. Please check your inbox or spam folder."
-);
-setLoading(false);
+    setMessage(
+      "Account created. Please check your email to confirm your account before signing in."
+    );
+    setLoading(false);
   }
 
   return (
