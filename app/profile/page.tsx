@@ -28,6 +28,7 @@ export default function ProfilePage() {
   const [username, setUsername] = useState("");
 const [memberSince, setMemberSince] = useState("");
 const [uploadedReportsCount, setUploadedReportsCount] = useState(0);
+const [latestReportDate, setLatestReportDate] = useState("");
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [labReport, setLabReport] = useState<LabReport | null>(null);
   const [loading, setLoading] = useState(true);
@@ -91,10 +92,17 @@ setMemberSince(
     }
 const { data: uploadedReports } = await supabase
   .from("uploaded_lab_files")
-  .select("id")
-  .eq("user_id", user.id);
+  .select("id, created_at")
+  .eq("user_id", user.id)
+  .order("created_at", { ascending: false });
 
 setUploadedReportsCount((uploadedReports || []).length);
+
+setLatestReportDate(
+  uploadedReports && uploadedReports.length > 0
+    ? new Date(uploadedReports[0].created_at).toLocaleDateString()
+    : ""
+);
     setAssessments(organData || []);
     setLabReport(labData || null);
     setLoading(false);
@@ -139,6 +147,13 @@ const healthProfileStatus =
 if (assessments.length > 0) completion += 40;
 if (uploadedReportsCount > 0) completion += 30;
 if (allScores.length >= 3) completion += 30;
+const firstAssessment =
+  assessments.length > 0
+    ? assessments[assessments.length - 1]
+    : null;
+
+const latestAssessment =
+  assessments.length > 0 ? assessments[0] : null;
   return (
     <main className="assistantPage">
       <div className="assistantContainer">
@@ -223,7 +238,54 @@ if (allScores.length >= 3) completion += 30;
                     <p>No lab report saved yet.</p>
                   )}
                 </div>
+<div className="resultBox">
+  <p className="sectionLabel">Health Journey Timeline</p>
 
+  <div className="healthTimeline">
+    <div className="timelineItem active">
+      <strong>Account Created</strong>
+      <span>{memberSince}</span>
+    </div>
+
+    <div className={firstAssessment ? "timelineItem active" : "timelineItem"}>
+      <strong>First Assessment</strong>
+      <span>
+        {firstAssessment
+          ? `${firstAssessment.organ_name} • ${new Date(
+              firstAssessment.created_at
+            ).toLocaleDateString()}`
+          : "Not started yet"}
+      </span>
+    </div>
+
+    <div className={latestAssessment ? "timelineItem active" : "timelineItem"}>
+      <strong>Latest Assessment</strong>
+      <span>
+        {latestAssessment
+          ? `${latestAssessment.organ_name} • ${latestAssessment.score}/100`
+          : "No latest assessment"}
+      </span>
+    </div>
+
+    <div className={uploadedReportsCount > 0 ? "timelineItem active" : "timelineItem"}>
+      <strong>Medical Reports Uploaded</strong>
+      <span>
+        {uploadedReportsCount > 0
+          ? `${uploadedReportsCount} report(s) • Latest: ${latestReportDate}`
+          : "No reports uploaded yet"}
+      </span>
+    </div>
+
+    <div className={healthProfileStatus === "Active" ? "timelineItem active" : "timelineItem"}>
+      <strong>Health Intelligence Activated</strong>
+      <span>
+        {healthProfileStatus === "Active"
+          ? "Your health profile is active"
+          : "Complete more data to activate full intelligence"}
+      </span>
+    </div>
+  </div>
+</div>
                 <div className="resultBox">
                   <p className="sectionLabel">Quick Actions</p>
 

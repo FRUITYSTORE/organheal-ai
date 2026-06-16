@@ -2291,4 +2291,31 @@ html[dir="rtl"] .homeHeroActions {
   .healthIdentityStatus {
     width: 100%;
   }
+}.healthTimeline {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.timelineItem {
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  text-align: left;
+}
+
+.timelineItem strong {
+  display: block;
+  color: white;
+  margin-bottom: 6px;
+}
+
+.timelineItem span {
+  color: #cbd5e1;
+}
+
+.timelineItem.active {
+  border-color: rgba(34, 211, 238, 0.45);
+  background: rgba(34, 211, 238, 0.08);
 }
