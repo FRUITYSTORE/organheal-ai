@@ -34,8 +34,9 @@ export default function DashboardPage() {
   const [labReport, setLabReport] = useState<LabReport | null>(null);
   const [dailyCheckIn, setDailyCheckIn] = useState<DailyCheckIn | null>(null);
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState("");
-  const [language, setLanguage] = useState<Language>("en");
+const [message, setMessage] = useState("");
+const [language, setLanguage] = useState<Language>("en");
+const [username, setUsername] = useState("");
 
   useEffect(() => {
     fetchDashboardData();
@@ -68,6 +69,13 @@ export default function DashboardPage() {
 }
 
     const user = userData.user;
+    const { data: profileData } = await supabase
+  .from("profiles")
+  .select("username")
+  .eq("id", user.id)
+  .single();
+
+setUsername(profileData?.username || user.email || "User");
 
     const { data: organData, error: organError } = await supabase
       .from("organ_assessments")
@@ -164,8 +172,38 @@ export default function DashboardPage() {
               : "A focused overview of your current health status and next best action."}
           </p>
         </div>
+<div className="dashboardWelcomeCard">
+  <div>
+    <p className="sectionLabel">
+      {isArabic ? "مرحباً بعودتك" : "Welcome Back"}
+    </p>
 
-        <div className="chatWindow">
+    <h2>
+      {username ? username : isArabic ? "المستخدم" : "User"}
+    </h2>
+
+    <p>
+      {isArabic
+        ? "هذه لوحة التحكم الصحية الخاصة بك. ابدأ بتقييم أو ارفع تقريراً طبياً لبناء ملفك الصحي."
+        : "This is your personal health dashboard. Start an assessment or upload a report to build your health profile."}
+    </p>
+  </div>
+
+  <div className="dashboardWelcomeActions">
+    <Link href="/assessment">
+      <button className="primaryBtn">
+        {isArabic ? "ابدأ تقييم" : "Start Assessment"}
+      </button>
+    </Link>
+     <Link href="/lab-upload">
+      <button className="secondaryBtn">
+        {isArabic ? "ارفع تقرير" : "Upload Report"}
+      </button>
+    </Link>
+  </div>
+</div>
+
+ <div className="chatWindow">
           {loading && (
             <div className="resultBox">
               <p className="sectionLabel">
@@ -176,30 +214,6 @@ export default function DashboardPage() {
                   ? "جاري تجهيز ملخصك الصحي..."
                   : "Preparing your health overview..."}
               </h2>
-            </div>
-          )}
-
-          {!loading && message && (
-            <div className="resultBox">
-              <p className="sectionLabel">
-                {isArabic ? "تسجيل الدخول مطلوب" : "Login Required"}
-              </p>
-              <h2>{isArabic ? "الوصول محمي" : "Access Protected"}</h2>
-              <p>{message}</p>
-
-              <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
-                <Link href="/login">
-                  <button className="primaryBtn">
-                    {isArabic ? "تسجيل الدخول" : "Login"}
-                  </button>
-                </Link>
-
-                <Link href="/signup">
-                  <button className="secondaryBtn">
-                    {isArabic ? "إنشاء حساب" : "Sign Up"}
-                  </button>
-                </Link>
-              </div>
             </div>
           )}
 
