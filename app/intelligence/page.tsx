@@ -1,4 +1,5 @@
 "use client";
+import { buildHealthTimeline } from "../../lib/healthTimelineEngine";
 import { buildPatientDigitalTwin } from "../../lib/patientDigitalTwin";
 import { buildCrossSourceIntelligence } from "../../lib/crossSourceIntelligence";
 import {
@@ -67,20 +68,15 @@ export default function IntelligencePage() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [healthEngine, setHealthEngine] = useState<HealthEngine | null>(null);
-  const digitalTwin = buildPatientDigitalTwin({
-  markers: [],
-  radiologyFindings: [],
-});
 
-const crossSource = buildCrossSourceIntelligence({
-  detectedMarkers: [],
-});
+
   const [healthInsights, setHealthInsights] = useState<HealthInsight[]>([]);
   const [assessmentData, setAssessmentData] = useState<Assessment[]>([]);
 const [dailyCheckIn, setDailyCheckIn] = useState<DailyCheckIn | null>(null);
   const [generatedStrategy, setGeneratedStrategy] = useState<any>(null);
   const [generatedUnifiedHealth, setGeneratedUnifiedHealth] = useState<any>(null);
   const [generatedCrossSource, setGeneratedCrossSource] = useState<any>(null);
+  const [generatedTimeline, setGeneratedTimeline] = useState<any>(null);
   const [generatedForecast, setGeneratedForecast] = useState<any>(null);
  const [generatedDigitalTwin, setGeneratedDigitalTwin] = useState<any>(null);
 
@@ -227,17 +223,34 @@ setDailyCheckIn(checkInData || null);
    if (selectedInsight.report_id && selectedInsight.file_path) {
       try {
         const extractionResponse = await fetch("/api/extract-pdf", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+
           body: JSON.stringify({
             reportId: selectedInsight.report_id,
             filePath: selectedInsight.file_path,
             fileName: selectedInsight.file_name,
           }),
         });
+const timeline = buildHealthTimeline([
+  ...assessmentData.map((item) => ({
+    source: "assessment" as const,
+    label: item.organ_name,
+    score: item.score,
+    date: item.created_at,
+  })),
 
+  ...(dailyCheckIn
+    ? [
+        {
+          source: "checkin" as const,
+          label: "Daily Check-In",
+          score: dailyCheckIn.wellness_score || 0,
+          date: dailyCheckIn.created_at,
+        },
+      ]
+    : []),
+]);
+
+setGeneratedTimeline(timeline);
         const extractionResult = await extractionResponse.json();
 
         if (!extractionResponse.ok || !extractionResult.success) {
@@ -285,13 +298,36 @@ const unifiedHealth = buildUnifiedHealthIntelligence({
   detectedMarkers,
   healthStrategy,
 });
+const crossSource = buildCrossSourceIntelligence({
+  detectedMarkers,
+  assessments: assessmentData,
+  dailyCheckIn,
+});
+
+const timeline = buildHealthTimeline([
+  ...assessmentData.map((item) => ({
+    source: "assessment" as const,
+    label: item.organ_name,
+    score: item.score,
+    date: item.created_at,
+  })),
+
+  ...(dailyCheckIn
+    ? [
+        {
+          source: "checkin" as const,
+          label: "Daily Check-In",
+          score: dailyCheckIn.wellness_score || 0,
+          date: dailyCheckIn.created_at,
+        },
+      ]
+    : []),
+]);
+
+const forecast = buildForecast(detectedMarkers, crossSource.confidenceScore);
 
 setGeneratedCrossSource(crossSource);
-const forecast = buildForecast(
-  detectedMarkers,
-  crossSource.confidenceScore
-);
-
+setGeneratedTimeline(timeline);
 setGeneratedForecast(forecast);
 setGeneratedUnifiedHealth(unifiedHealth);
 const intelligence = {
@@ -613,6 +649,26 @@ setGeneratedStrategy(healthStrategy);
 {generatedCrossSource && (
   <div className="resultBox">
     <p className="sectionLabel">Cross-Source Intelligence</p>
+    {generatedTimeline && (
+  <div className="resultBox">
+    <p className="sectionLabel">Health Timeline Intelligence</p>
+
+    <h3>Trend Direction</h3>
+    <p>{generatedTimeline.trendDirection}</p>
+
+    <h3>Health Momentum</h3>
+    <p>{generatedTimeline.healthMomentum}</p>
+
+    <h3>Change Amount</h3>
+    <p>{generatedTimeline.changeAmount} points</p>
+
+    <h3>Consistency Score</h3>
+    <p>{generatedTimeline.consistencyScore}/100</p>
+
+    <h3>Timeline Summary</h3>
+    <p>{generatedTimeline.summary}</p>
+  </div>
+)}
     {generatedDigitalTwin && (
   <div className="resultBox">
     <p className="sectionLabel">Digital Health Twin</p>
