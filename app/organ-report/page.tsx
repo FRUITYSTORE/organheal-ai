@@ -1,11 +1,13 @@
 "use client";
+
 import PageBackActions from "../components/PageBackActions";
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import jsPDF from "jspdf";
 import { getTranslations } from "../../lib/translations";
 import { buildHealthIntelligence } from "../../lib/intelligenceBuilder";
+import { buildPatientDigitalTwin } from "../../lib/patientDigitalTwin";
+import { buildCrossSourceIntelligence } from "../../lib/crossSourceIntelligence";
 
 type Assessment = {
   organ_name: string;
@@ -45,29 +47,30 @@ export default function OrganReportPage() {
   const [shareCode, setShareCode] = useState("");
   const [language, setLanguage] = useState<"en" | "ar">("en");
 
-useEffect(() => {
-  const savedLanguage =
-    (localStorage.getItem("organheal-language") as "en" | "ar") || "en";
+  useEffect(() => {
+    const savedLanguage =
+      (localStorage.getItem("organheal-language") as "en" | "ar") || "en";
 
-  setLanguage(savedLanguage);
-}, []);
-
-const t = getTranslations(language);
-const isArabic = language === "ar";
+    setLanguage(savedLanguage);
+  }, []);
 
   useEffect(() => {
     fetchReportData();
   }, []);
 
+  const t = getTranslations(language);
+  const isArabic = language === "ar";
+
   async function fetchReportData() {
     setLoading(true);
+    setMessage("");
 
     const { data: userData, error: userError } = await supabase.auth.getUser();
 
     if (userError || !userData.user) {
-  window.location.href = "/login";
-  return;
-}
+      window.location.href = "/login";
+      return;
+    }
 
     const user = userData.user;
     setUserEmail(user.email || "");
@@ -84,7 +87,7 @@ const isArabic = language === "ar";
       return;
     }
 
-    const sortedOrganData = (organData || []).sort(
+    const sortedOrganData = ((organData || []) as Assessment[]).sort(
       (a, b) =>
         organOrder.indexOf(a.organ_name) - organOrder.indexOf(b.organ_name)
     );
@@ -120,8 +123,8 @@ const isArabic = language === "ar";
     }
 
     setAssessments(sortedOrganData);
-    setLabReport(labData || null);
-    setDailyCheckIn(checkInData || null);
+    setLabReport((labData as LabReport) || null);
+    setDailyCheckIn((checkInData as DailyCheckIn) || null);
     setLoading(false);
   }
 
@@ -137,52 +140,53 @@ const isArabic = language === "ar";
           allScores.reduce((sum, score) => sum + score, 0) / allScores.length
         )
       : 0;
-const strongestAssessment =
-  assessments.length > 0
-    ? [...assessments].sort((a, b) => b.score - a.score)[0]
-    : null;
 
-const weakestAssessment =
-  assessments.length > 0
-    ? [...assessments].sort((a, b) => a.score - b.score)[0]
-    : null;
+  const strongestAssessment =
+    assessments.length > 0
+      ? [...assessments].sort((a, b) => b.score - a.score)[0]
+      : null;
 
-const healthEngine = buildHealthIntelligence({
-  assessments: assessments.map((item) => ({
-    organ_name: item.organ_name,
-    score: item.score,
-    created_at: item.created_at,
-  })),
-  labReport: labReport
-    ? {
-        score: labReport.score,
-        interpretation: labReport.interpretation,
-        created_at: labReport.created_at,
-      }
-    : null,
-  dailyCheckIn: dailyCheckIn
-    ? {
-        mood: dailyCheckIn.mood,
-        wellness_score: dailyCheckIn.wellness_score,
-        created_at: dailyCheckIn.created_at,
-      }
-    : null,
-  isArabic: false,
-});
+  const weakestAssessment =
+    assessments.length > 0
+      ? [...assessments].sort((a, b) => a.score - b.score)[0]
+      : null;
+
+  const healthEngine = buildHealthIntelligence({
+    assessments: assessments.map((item) => ({
+      organ_name: item.organ_name,
+      score: item.score,
+      created_at: item.created_at,
+    })),
+    labReport: labReport
+      ? {
+          score: labReport.score,
+          interpretation: labReport.interpretation,
+          created_at: labReport.created_at,
+        }
+      : null,
+    dailyCheckIn: dailyCheckIn
+      ? {
+          mood: dailyCheckIn.mood,
+          wellness_score: dailyCheckIn.wellness_score,
+          created_at: dailyCheckIn.created_at,
+        }
+      : null,
+    isArabic: false,
+  });
+
+  const digitalTwin = buildPatientDigitalTwin({
+    markers: [],
+    radiologyFindings: [],
+  });
+
+  const crossSource = buildCrossSourceIntelligence({
+    detectedMarkers: [],
+  });
+
   function getStatus(score: number) {
     if (score >= 80) return "Good";
     if (score >= 50) return "Moderate";
     return "High Risk";
-  }
-
-  function getStrongestAssessment() {
-    if (assessments.length === 0) return null;
-    return [...assessments].sort((a, b) => b.score - a.score)[0];
-  }
-
-  function getWeakestAssessment() {
-    if (assessments.length === 0) return null;
-    return [...assessments].sort((a, b) => a.score - b.score)[0];
   }
 
   function formatValue(value: number | null) {
@@ -212,18 +216,15 @@ const healthEngine = buildHealthIntelligence({
   }
 
   function generateExecutiveSummary() {
-    const strongest = getStrongestAssessment();
-    const weakest = getWeakestAssessment();
-
-    if (!strongest || !weakest) {
+    if (!strongestAssessment || !weakestAssessment) {
       return "No assessment data available yet.";
     }
 
     return `Overall Health Intelligence Score: ${overallScore}/100.
 
-Strongest Area: ${strongest.organ_name} (${strongest.score}/100).
+Strongest Area: ${strongestAssessment.organ_name} (${strongestAssessment.score}/100).
 
-Priority Area: ${weakest.organ_name} (${weakest.score}/100).
+Priority Area: ${weakestAssessment.organ_name} (${weakestAssessment.score}/100).
 
 ${
   labReport
@@ -237,7 +238,7 @@ ${
     : "No daily check-in found."
 }
 
-Recommended Focus: ${getAIRecommendation(weakest.organ_name)}
+Recommended Focus: ${getAIRecommendation(weakestAssessment.organ_name)}
 
 This report is educational and intended to support health awareness and better conversations with licensed healthcare professionals.`;
   }
@@ -248,9 +249,6 @@ This report is educational and intended to support health awareness and better c
     const pageHeight = pdf.internal.pageSize.getHeight();
     const margin = 18;
     let y = 24;
-
-    const strongest = getStrongestAssessment();
-    const weakest = getWeakestAssessment();
 
     function footer() {
       const totalPages = pdf.getNumberOfPages();
@@ -284,6 +282,11 @@ This report is educational and intended to support health awareness and better c
     }
 
     function addWrappedText(text: string, fontSize = 10) {
+      if (y > pageHeight - 30) {
+        pdf.addPage();
+        y = 24;
+      }
+
       pdf.setFont("helvetica", "normal");
       pdf.setFontSize(fontSize);
       pdf.setTextColor(40, 40, 40);
@@ -318,7 +321,7 @@ This report is educational and intended to support health awareness and better c
     pdf.text("OrganHeal AI", pageWidth / 2, 48, { align: "center" });
 
     pdf.setFontSize(18);
-    pdf.text("Professional Health Intelligence Report", pageWidth / 2, 65, {
+    pdf.text("Professional Health Intelligence Report v4", pageWidth / 2, 65, {
       align: "center",
     });
 
@@ -355,67 +358,72 @@ This report is educational and intended to support health awareness and better c
     addSectionTitle("1. Executive Summary");
     addWrappedText(generateExecutiveSummary(), 10);
 
-    if (strongest && weakest) {
+    if (strongestAssessment && weakestAssessment) {
       addSectionTitle("2. Health Intelligence Highlights");
-
-      pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(11);
-      pdf.setTextColor(15, 23, 42);
-      pdf.text(`Top Strength: ${strongest.organ_name}`, margin, y);
-      y += 7;
-
-      pdf.text(`Priority Area: ${weakest.organ_name}`, margin, y);
-      y += 7;
-
-      pdf.text(`Overall Status: ${getStatus(overallScore)}`, margin, y);
-      y += 10;
-
-      addWrappedText(`Recommended Focus: ${getAIRecommendation(weakest.organ_name)}`);
+      addWrappedText(`Top Strength: ${strongestAssessment.organ_name}`);
+      addWrappedText(`Priority Area: ${weakestAssessment.organ_name}`);
+      addWrappedText(`Overall Status: ${getStatus(overallScore)}`);
+      addWrappedText(
+        `Recommended Focus: ${getAIRecommendation(
+          weakestAssessment.organ_name
+        )}`
+      );
     }
-addSectionTitle("3. Digital Health Intelligence Profile");
 
-addWrappedText(`Health Profile: ${healthEngine.healthProfile}`);
-addWrappedText(`Risk Pattern: ${healthEngine.riskPattern}`);
-addWrappedText(`Health Age Status: ${healthEngine.healthAgeStatus}`);
-addWrappedText(`Potential Score: ${healthEngine.potentialScore}/100`);
-addWrappedText(`Potential Gain: +${healthEngine.potentialGain}`);
-addWrappedText(`Main Opportunity: ${healthEngine.opportunityTitle}`);
-addWrappedText(`Recommended Action: ${healthEngine.bestNextAction}`);
-addWrappedText(`Trend Direction: ${healthEngine.trendDirection}`);
-addWrappedText(`Trend Insight: ${healthEngine.trendMessage}`);
-addSectionTitle("4. Top Health Opportunities");
+    addSectionTitle("3. Digital Health Intelligence Profile");
+    addWrappedText(`Health Profile: ${healthEngine.healthProfile}`);
+    addWrappedText(`Risk Pattern: ${healthEngine.riskPattern}`);
+    addWrappedText(`Health Age Status: ${healthEngine.healthAgeStatus}`);
+    addWrappedText(`Potential Score: ${healthEngine.potentialScore}/100`);
+    addWrappedText(`Potential Gain: +${healthEngine.potentialGain}`);
+    addWrappedText(`Main Opportunity: ${healthEngine.opportunityTitle}`);
+    addWrappedText(`Recommended Action: ${healthEngine.bestNextAction}`);
+    addWrappedText(`Trend Direction: ${healthEngine.trendDirection}`);
+    addWrappedText(`Trend Insight: ${healthEngine.trendMessage}`);
 
-if (!healthEngine.opportunities || healthEngine.opportunities.length === 0) {
-  addWrappedText("No health opportunities available yet.");
-} else {
-  healthEngine.opportunities.forEach((item, index) => {
-    addWrappedText(
-      `${index + 1}. ${item.title}
+    addSectionTitle("4. Top Health Opportunities");
+
+    if (!healthEngine.opportunities || healthEngine.opportunities.length === 0) {
+      addWrappedText("No health opportunities available yet.");
+    } else {
+      healthEngine.opportunities.forEach((item, index) => {
+        addWrappedText(
+          `${index + 1}. ${item.title}
 Current Score: ${item.currentScore}/100
 Potential Score: ${item.potentialScore}/100
 Potential Gain: +${item.potentialGain}
 Priority: ${item.priority}
 Recommended Action: ${item.action}`
+        );
+      });
+    }
+
+    addSectionTitle("5. Risk Escalation Intelligence");
+    addWrappedText(`Risk Escalation Level: ${healthEngine.riskEscalationLevel}`);
+    addWrappedText(`Escalation Message: ${healthEngine.riskEscalationMessage}`);
+    addWrappedText(`Escalation Reason: ${healthEngine.riskEscalationReason}`);
+
+    addSectionTitle("6. Doctor Brief");
+    addWrappedText(healthEngine.doctorBrief);
+
+    addSectionTitle("7. Digital Health Twin");
+    addWrappedText(`Primary Health System: ${digitalTwin.primarySystem}`);
+    addWrappedText(`Liver Risk Score: ${digitalTwin.liverRisk}/100`);
+    addWrappedText(
+      `Cardiovascular Risk Score: ${digitalTwin.cardiovascularRisk}/100`
     );
-  });
-}
-addSectionTitle("5. Risk Escalation Intelligence");
+    addWrappedText(`Kidney Risk Score: ${digitalTwin.kidneyRisk}/100`);
+    addWrappedText(`Metabolic Risk Score: ${digitalTwin.metabolicRisk}/100`);
+    addWrappedText(`Recovery Potential: ${digitalTwin.recoveryPotential}/100`);
+    addWrappedText(digitalTwin.profileSummary);
 
-addWrappedText(
-  `Risk Escalation Level: ${healthEngine.riskEscalationLevel}`
-);
+    addSectionTitle("8. Cross-Source Intelligence");
+    addWrappedText(`Confidence Level: ${crossSource.confidenceLevel}`);
+    addWrappedText(`Confidence Score: ${crossSource.confidenceScore}/100`);
+    addWrappedText(`Primary System: ${crossSource.primarySystem}`);
+    addWrappedText(crossSource.intelligenceSummary);
 
-addWrappedText(
-  `Escalation Message: ${healthEngine.riskEscalationMessage}`
-);
-
-addWrappedText(
-  `Escalation Reason: ${healthEngine.riskEscalationReason}`
-);
-addSectionTitle("6. Doctor Brief");
-
-addWrappedText(healthEngine.doctorBrief);
-    addSectionTitle("7. Organ Assessment Breakdown");
+    addSectionTitle("9. Organ Assessment Breakdown");
 
     if (assessments.length === 0) {
       addWrappedText("No organ assessments available.");
@@ -444,7 +452,6 @@ addWrappedText(healthEngine.doctorBrief);
         else pdf.setFillColor(239, 68, 68);
 
         pdf.rect(margin, y, (item.score / 100) * 120, 5, "F");
-
         y += 10;
 
         addWrappedText(item.notes || "No notes available.", 9);
@@ -452,8 +459,7 @@ addWrappedText(healthEngine.doctorBrief);
     }
 
     if (labReport) {
-      addSectionTitle("8. Lab Analyzer Summary");
-
+      addSectionTitle("10. Lab Analyzer Summary");
       addWrappedText(`Latest Lab Intelligence Score: ${labReport.score}/100`);
       addWrappedText(`Status: ${getStatus(labReport.score)}`);
 
@@ -471,8 +477,7 @@ addWrappedText(healthEngine.doctorBrief);
     }
 
     if (dailyCheckIn) {
-      addSectionTitle("9. Daily Wellness Summary");
-
+      addSectionTitle("11. Daily Wellness Summary");
       addWrappedText(`Latest Wellness Score: ${dailyCheckIn.wellness_score}/100`);
       addWrappedText(`Mood: ${dailyCheckIn.mood}`);
       addWrappedText(
@@ -480,147 +485,161 @@ addWrappedText(healthEngine.doctorBrief);
       );
     }
 
-    addSectionTitle("10. Personalized Recommendations");
+    addSectionTitle("12. Personalized Recommendations");
 
-    if (weakest) {
-      addWrappedText(getAIRecommendation(weakest.organ_name));
+    if (weakestAssessment) {
+      addWrappedText(getAIRecommendation(weakestAssessment.organ_name));
       addWrappedText(
-        `Suggested next step: Focus on improving ${weakest.organ_name} and repeat the assessment after following your health plan.`
+        `Suggested next step: Focus on improving ${weakestAssessment.organ_name} and repeat the assessment after following your health plan.`
       );
     } else {
-      addWrappedText("Complete your first organ assessment to unlock recommendations.");
+      addWrappedText(
+        "Complete your first organ assessment to unlock recommendations."
+      );
     }
 
-    addSectionTitle("1. Important Educational Disclaimer");
-
+    addSectionTitle("13. Important Educational Disclaimer");
     addWrappedText(
       "This report is for educational and wellness tracking purposes only. It does not provide a medical diagnosis, treatment plan, or emergency medical advice. Please discuss concerning symptoms or abnormal results with a licensed healthcare professional."
     );
 
     footer();
 
-    pdf.save("OrganHeal_Professional_Intelligence_Report_v3.pdf");
-  }
-async function generateShareCode() {
-  const { data: userData, error: userError } = await supabase.auth.getUser();
-
-  if (userError || !userData.user) {
-    setShareCode(
-      isArabic
-        ? "يرجى تسجيل الدخول لإنشاء كود مشاركة."
-        : "Please login to generate a share code."
-    );
-    return;
+    pdf.save("OrganHeal_Professional_Intelligence_Report_v4.pdf");
   }
 
-  const randomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-  const newShareCode = `OH-${randomCode}`;
+  async function generateShareCode() {
+    const { data: userData, error: userError } = await supabase.auth.getUser();
 
-  const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + 7);
+    if (userError || !userData.user) {
+      setShareCode(
+        isArabic
+          ? "يرجى تسجيل الدخول لإنشاء كود مشاركة."
+          : "Please login to generate a share code."
+      );
+      return;
+    }
 
- const priorityOrgan =
-  assessments.length > 0
-    ? [...assessments].sort((a, b) => a.score - b.score)[0]
-    : null;
-const organScores = assessments.map((item) => ({
-  organ: item.organ_name,
-  score: item.score,
-}));
+    const randomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const newShareCode = `OH-${randomCode}`;
 
-const reportSummary = `Overall Health Score: ${
-  overallScore || 0
-}/100. Priority Organ: ${
-  priorityOrgan?.organ_name || "General Health"
-}.`;
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
 
-const recommendations =
-  priorityOrgan?.organ_name === "Heart"
-    ? "Focus on cardiovascular health, physical activity, and nutrition."
-    : priorityOrgan?.organ_name === "Kidney"
-    ? "Monitor hydration, blood pressure, and kidney-related laboratory markers."
-    : priorityOrgan?.organ_name === "Lung"
-    ? "Support respiratory health through activity and risk factor reduction."
-    : "Continue health monitoring and complete follow-up assessments.";
-const { error } = await supabase.from("shared_reports").insert({
-  user_id: userData.user.id,
-  share_code: newShareCode,
-  report_type: "organ_report",
-  expires_at: expiresAt.toISOString(),
-  overall_score: overallScore || null,
-  lab_score: labReport?.score || null,
-  priority_organ: priorityOrgan?.organ_name || null,
-  latest_checkin_score: dailyCheckIn?.wellness_score || null,
-  organ_scores: organScores,
-recommendations: recommendations,
-report_summary: reportSummary,
-});
-  if (error) {
-    setShareCode(
-      isArabic
-        ? "حدث خطأ أثناء إنشاء كود المشاركة."
-        : "Error generating share code."
-    );
-    return;
+    const priorityOrgan =
+      assessments.length > 0
+        ? [...assessments].sort((a, b) => a.score - b.score)[0]
+        : null;
+
+    const organScores = assessments.map((item) => ({
+      organ: item.organ_name,
+      score: item.score,
+    }));
+
+    const reportSummary = `Overall Health Score: ${
+      overallScore || 0
+    }/100. Priority Organ: ${priorityOrgan?.organ_name || "General Health"}.`;
+
+    const recommendations =
+      priorityOrgan?.organ_name === "Heart"
+        ? "Focus on cardiovascular health, physical activity, and nutrition."
+        : priorityOrgan?.organ_name === "Kidney"
+        ? "Monitor hydration, blood pressure, and kidney-related laboratory markers."
+        : priorityOrgan?.organ_name === "Lung"
+        ? "Support respiratory health through activity and risk factor reduction."
+        : "Continue health monitoring and complete follow-up assessments.";
+
+    const { error } = await supabase.from("shared_reports").insert({
+      user_id: userData.user.id,
+      share_code: newShareCode,
+      report_type: "organ_report",
+      expires_at: expiresAt.toISOString(),
+      overall_score: overallScore || null,
+      lab_score: labReport?.score || null,
+      priority_organ: priorityOrgan?.organ_name || null,
+      latest_checkin_score: dailyCheckIn?.wellness_score || null,
+      organ_scores: organScores,
+      recommendations,
+      report_summary: reportSummary,
+    });
+
+    if (error) {
+      setShareCode(
+        isArabic
+          ? "حدث خطأ أثناء إنشاء كود المشاركة."
+          : "Error generating share code."
+      );
+      return;
+    }
+
+    setShareCode(newShareCode);
   }
 
-  setShareCode(newShareCode);
-}
   return (
     <main className="assistantPage">
       <div className="assistantContainer">
         <PageBackActions />
+
         <div className="assistantHeader">
           <p className="assistantBadge">{t.report.badge}</p>
-
-<h1>{t.report.title}</h1>
-
-<p>{t.report.description}</p>
+          <h1>{t.report.title}</h1>
+          <p>{t.report.description}</p>
         </div>
 
         <div className="chatWindow">
-         {isArabic ? "جاري تحميل التقرير..." : "Loading your report..."}
+          {loading && (
+            <div className="resultBox">
+              <p>{isArabic ? "جاري تحميل التقرير..." : "Loading your report..."}</p>
+            </div>
+          )}
+
+          {!loading && message && (
+            <div className="resultBox">
+              <p>{message}</p>
+            </div>
+          )}
 
           {!loading && !message && allScores.length === 0 && (
-            <p>No saved organ assessments, check-ins, or lab reports found yet.</p>
+            <div className="resultBox">
+              <p>No saved organ assessments, check-ins, or lab reports found yet.</p>
+            </div>
           )}
 
           {!loading && !message && allScores.length > 0 && (
             <>
               <div
-  style={{
-    display: "flex",
-    gap: "12px",
-    justifyContent: "center",
-    flexWrap: "wrap",
-  }}
->
-  <button className="primaryBtn" onClick={generateProfessionalPDF}>
-    {t.report.download}
-  </button>
+                style={{
+                  display: "flex",
+                  gap: "12px",
+                  justifyContent: "center",
+                  flexWrap: "wrap",
+                }}
+              >
+                <button className="primaryBtn" onClick={generateProfessionalPDF}>
+                  {t.report.download}
+                </button>
 
-  <button className="secondaryBtn" onClick={generateShareCode}>
-    {isArabic ? "إنشاء كود مشاركة للطبيب" : "Generate Doctor Share Code"}
-  </button>
-</div>
+                <button className="secondaryBtn" onClick={generateShareCode}>
+                  {isArabic
+                    ? "إنشاء كود مشاركة للطبيب"
+                    : "Generate Doctor Share Code"}
+                </button>
+              </div>
 
-{shareCode && (
-  <div className="resultBox">
-    <p className="sectionLabel">
-      {isArabic ? "كود مشاركة الطبيب" : "Doctor Share Code"}
-    </p>
-
-    <h2>{shareCode}</h2>
-
-    <p>
-      {isArabic
-        ? "شارك هذا الكود مع الطبيب للسماح بمراجعة مؤقتة للتقرير."
-        : "Share this code with a doctor to allow temporary report review."}
-    </p>
-
-    <p>{isArabic ? "صلاحية تجريبية: 7 أيام" : "Demo validity: 7 days"}</p>
-  </div>
-)}
+              {shareCode && (
+                <div className="resultBox">
+                  <p className="sectionLabel">
+                    {isArabic ? "كود مشاركة الطبيب" : "Doctor Share Code"}
+                  </p>
+                  <h2>{shareCode}</h2>
+                  <p>
+                    {isArabic
+                      ? "شارك هذا الكود مع الطبيب للسماح بمراجعة مؤقتة للتقرير."
+                      : "Share this code with a doctor to allow temporary report review."}
+                  </p>
+                  <p>{isArabic ? "صلاحية تجريبية: 7 أيام" : "Demo validity: 7 days"}</p>
+                </div>
+              )}
 
               <div className="resultBox">
                 <p className="sectionLabel">Overall Health Intelligence Score</p>
@@ -631,88 +650,128 @@ report_summary: reportSummary,
                   latest lab analyzer score, and latest daily wellness check-in.
                 </p>
               </div>
-    <div className="resultBox">
-  <p className="sectionLabel">Digital Health Intelligence Profile</p>
 
-  <h2>{healthEngine.healthProfile}</h2>
+              <div className="resultBox">
+                <p className="sectionLabel">Digital Health Intelligence Profile</p>
+                <h2>{healthEngine.healthProfile}</h2>
 
-  <div
-    style={{
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-      gap: "18px",
-      marginTop: "22px",
-      textAlign: "left",
-    }}
-  >
-    <div>
-      <strong>Risk Pattern</strong>
-      <p>{healthEngine.riskPattern}</p>
-    </div>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                    gap: "18px",
+                    marginTop: "22px",
+                    textAlign: "left",
+                  }}
+                >
+                  <div>
+                    <strong>Risk Pattern</strong>
+                    <p>{healthEngine.riskPattern}</p>
+                  </div>
 
-    <div>
-      <strong>Health Age Status</strong>
-      <p>{healthEngine.healthAgeStatus}</p>
-    </div>
+                  <div>
+                    <strong>Health Age Status</strong>
+                    <p>{healthEngine.healthAgeStatus}</p>
+                  </div>
 
-    <div>
-      <strong>Potential Score</strong>
-      <p>{healthEngine.potentialScore}/100</p>
-    </div>
+                  <div>
+                    <strong>Potential Score</strong>
+                    <p>{healthEngine.potentialScore}/100</p>
+                  </div>
 
-    <div>
-      <strong>Potential Gain</strong>
-      <p>+{healthEngine.potentialGain}</p>
-    </div>
-  </div>
+                  <div>
+                    <strong>Potential Gain</strong>
+                    <p>+{healthEngine.potentialGain}</p>
+                  </div>
+                </div>
 
-  <div style={{ marginTop: "22px", textAlign: "left" }}>
-    <strong>Main Opportunity</strong>
-    <p>{healthEngine.opportunityTitle}</p>
+                <div style={{ marginTop: "22px", textAlign: "left" }}>
+                  <strong>Main Opportunity</strong>
+                  <p>{healthEngine.opportunityTitle}</p>
 
-    <strong>Best Next Action</strong>
-    <p>{healthEngine.bestNextAction}</p>
+                  <strong>Best Next Action</strong>
+                  <p>{healthEngine.bestNextAction}</p>
 
-    <strong>Trend Direction</strong>
-    <p>{healthEngine.trendDirection}</p>
-  </div>
-</div>
+                  <strong>Trend Direction</strong>
+                  <p>{healthEngine.trendDirection}</p>
+                </div>
+              </div>
 
-<div className="resultBox">
-  <p className="sectionLabel">90-Day Health Action Plan</p>
+              <div className="resultBox">
+                <p className="sectionLabel">90-Day Health Action Plan</p>
+                <h2>Personalized Next Steps</h2>
 
-  <h2>Personalized Next Steps</h2>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                    gap: "18px",
+                    marginTop: "22px",
+                    textAlign: "left",
+                  }}
+                >
+                  <div>
+                    <strong>This Week</strong>
+                    <p>{healthEngine.bestNextAction}</p>
+                  </div>
 
-  <div
-    style={{
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-      gap: "18px",
-      marginTop: "22px",
-      textAlign: "left",
-    }}
-  >
-    <div>
-      <strong>This Week</strong>
-      <p>{healthEngine.bestNextAction}</p>
-    </div>
+                  <div>
+                    <strong>This Month</strong>
+                    <p>{healthEngine.opportunityTitle}</p>
+                  </div>
 
-    <div>
-      <strong>This Month</strong>
-      <p>{healthEngine.opportunityTitle}</p>
-    </div>
+                  <div>
+                    <strong>Priority Organ</strong>
+                    <p>{weakestAssessment?.organ_name || "General Health"}</p>
+                  </div>
 
-    <div>
-      <strong>Priority Organ</strong>
-      <p>{weakestAssessment?.organ_name || "General Health"}</p>
-    </div>
+                  <div>
+                    <strong>Expected Outcome</strong>
+                    <p>+{healthEngine.potentialGain} points</p>
+                  </div>
+                </div>
+              </div>
 
-    <div>
-      <strong>Expected Outcome</strong>
-      <p>+{healthEngine.potentialGain} points</p>
-    </div>
-  </div>
-</div>
+              <div className="resultBox">
+                <p className="sectionLabel">Digital Health Twin</p>
+
+                <h3>Primary Health System</h3>
+                <p>{digitalTwin.primarySystem}</p>
+
+                <h3>Liver Risk</h3>
+                <p>{digitalTwin.liverRisk}/100</p>
+
+                <h3>Cardiovascular Risk</h3>
+                <p>{digitalTwin.cardiovascularRisk}/100</p>
+
+                <h3>Kidney Risk</h3>
+                <p>{digitalTwin.kidneyRisk}/100</p>
+
+                <h3>Metabolic Risk</h3>
+                <p>{digitalTwin.metabolicRisk}/100</p>
+
+                <h3>Recovery Potential</h3>
+                <p>{digitalTwin.recoveryPotential}/100</p>
+
+                <h3>Profile Summary</h3>
+                <p>{digitalTwin.profileSummary}</p>
+              </div>
+
+              <div className="resultBox">
+                <p className="sectionLabel">Cross-Source Intelligence</p>
+
+                <h3>Confidence Level</h3>
+                <p>{crossSource.confidenceLevel}</p>
+
+                <h3>Confidence Score</h3>
+                <p>{crossSource.confidenceScore}/100</p>
+
+                <h3>Primary System</h3>
+                <p>{crossSource.primarySystem}</p>
+
+                <h3>Intelligence Summary</h3>
+                <p>{crossSource.intelligenceSummary}</p>
+              </div>
 
               <div className="assessmentForm">
                 {assessments.map((item) => (
@@ -721,10 +780,7 @@ report_summary: reportSummary,
                     <h2>{item.score}/100</h2>
                     <h3>{getStatus(item.score)}</h3>
                     <p>{item.notes}</p>
-                    <p>
-                      Last saved:{" "}
-                      {new Date(item.created_at).toLocaleString()}
-                    </p>
+                    <p>Last saved: {new Date(item.created_at).toLocaleString()}</p>
                   </div>
                 ))}
 

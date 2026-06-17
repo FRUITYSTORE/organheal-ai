@@ -1,4 +1,6 @@
 "use client";
+import { buildPatientDigitalTwin } from "../../lib/patientDigitalTwin";
+import { buildCrossSourceIntelligence } from "../../lib/crossSourceIntelligence";
 import {
   detectRadiologyFindings,
   buildRadiologySummary,
@@ -15,9 +17,8 @@ import {
 import { buildHealthStrategy } from "../../lib/healthStrategyEngine";
 import { buildUnifiedHealthIntelligence } from "../../lib/unifiedHealthEngine";
 import { detectClinicalPatterns } from "../../lib/clinicalPatternEngine";
-import { buildCrossSourceIntelligence } from "../../lib/crossSourceIntelligence";
 import { buildForecast } from "../../lib/forecastEngine";
-import { buildPatientDigitalTwin } from "../../lib/patientDigitalTwin";
+
 
 
 
@@ -66,6 +67,14 @@ export default function IntelligencePage() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [healthEngine, setHealthEngine] = useState<HealthEngine | null>(null);
+  const digitalTwin = buildPatientDigitalTwin({
+  markers: [],
+  radiologyFindings: [],
+});
+
+const crossSource = buildCrossSourceIntelligence({
+  detectedMarkers: [],
+});
   const [healthInsights, setHealthInsights] = useState<HealthInsight[]>([]);
   const [assessmentData, setAssessmentData] = useState<Assessment[]>([]);
 const [dailyCheckIn, setDailyCheckIn] = useState<DailyCheckIn | null>(null);
@@ -275,9 +284,6 @@ const healthStrategy = buildHealthStrategy(detectedMarkers);
 const unifiedHealth = buildUnifiedHealthIntelligence({
   detectedMarkers,
   healthStrategy,
-});
-const crossSource = buildCrossSourceIntelligence({
-  detectedMarkers,
 });
 
 setGeneratedCrossSource(crossSource);
