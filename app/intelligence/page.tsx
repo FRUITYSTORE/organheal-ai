@@ -760,40 +760,30 @@ Clinical note: This is an educational interpretation and should be reviewed by a
   </div>
 )}
 
-{generatedCrossSource && (
-  <div className="resultBox">
-    <p className="sectionLabel">Cross-Source Intelligence</p>
-    {generatedTimeline && (
+{generatedTimeline && (
   <div className="resultBox">
     <p className="sectionLabel">Health Timeline Intelligence</p>
-    {generatedLongitudinalRisk && (
-  <div className="resultBox">
-    <p className="sectionLabel">Longitudinal Risk Intelligence</p>
-    {generatedLabTrends.length > 0 && (
-  <div className="resultBox">
-    <p className="sectionLabel">Historical Lab Trends</p>
 
-    {generatedLabTrends.map((trend, index) => (
-      <div key={index} style={{ marginBottom: "16px" }}>
-        <h3>{trend.marker}</h3>
+    <h3>Trend Direction</h3>
+    <p>{generatedTimeline.trendDirection}</p>
 
-        <p>
-          {trend.earliestValue} → {trend.latestValue}
-        </p>
+    <h3>Health Momentum</h3>
+    <p>{generatedTimeline.healthMomentum}</p>
 
-        <p>
-          Change: {trend.changeAmount}
-        </p>
+    <h3>Change Amount</h3>
+    <p>{generatedTimeline.changeAmount} points</p>
 
-        <p>
-          Trend: {trend.trendDirection}
-        </p>
+    <h3>Consistency Score</h3>
+    <p>{generatedTimeline.consistencyScore}/100</p>
 
-        <p>{trend.trendSummary}</p>
-      </div>
-    ))}
+    <h3>Timeline Summary</h3>
+    <p>{generatedTimeline.summary}</p>
   </div>
 )}
+
+{generatedLongitudinalRisk && (
+  <div className="resultBox">
+    <p className="sectionLabel">Longitudinal Risk Intelligence</p>
 
     <h3>Risk Direction</h3>
     <p>{generatedLongitudinalRisk.riskDirection}</p>
@@ -812,87 +802,25 @@ Clinical note: This is an educational interpretation and should be reviewed by a
   </div>
 )}
 
-    <h3>Trend Direction</h3>
-    <p>{generatedTimeline.trendDirection}</p>
-
-    <h3>Health Momentum</h3>
-    <p>{generatedTimeline.healthMomentum}</p>
-
-    <h3>Change Amount</h3>
-    <p>{generatedTimeline.changeAmount} points</p>
-
-    <h3>Consistency Score</h3>
-    <p>{generatedTimeline.consistencyScore}/100</p>
-
-    <h3>Timeline Summary</h3>
-    <p>{generatedTimeline.summary}</p>
-  </div>
-)}
-    {generatedDigitalTwin && (
+{generatedLabTrends.length > 0 && (
   <div className="resultBox">
-    <p className="sectionLabel">Digital Health Twin</p>
+    <p className="sectionLabel">Historical Lab Trends</p>
 
-    <h3>Primary Health System</h3>
-    <p>{generatedDigitalTwin.primarySystem}</p>
-
-    <h3>Liver Risk</h3>
-    <p>{generatedDigitalTwin.liverRisk}/100</p>
-
-    <h3>Cardiovascular Risk</h3>
-    <p>{generatedDigitalTwin.cardiovascularRisk}/100</p>
-
-    <h3>Kidney Risk</h3>
-    <p>{generatedDigitalTwin.kidneyRisk}/100</p>
-
-    <h3>Metabolic Risk</h3>
-    <p>{generatedDigitalTwin.metabolicRisk}/100</p>
-
-    <h3>Recovery Potential</h3>
-    <p>{generatedDigitalTwin.recoveryPotential}/100</p>
-
-    <h3>Profile Summary</h3>
-    <p>{generatedDigitalTwin.profileSummary}</p>
+    {generatedLabTrends.map((trend, index) => (
+      <div key={index} style={{ marginBottom: "16px" }}>
+        <h3>{trend.marker}</h3>
+        <p>{trend.earliestValue} → {trend.latestValue}</p>
+        <p>Change: {trend.changeAmount}</p>
+        <p>Trend: {trend.trendDirection}</p>
+        <p>{trend.trendSummary}</p>
+      </div>
+    ))}
   </div>
 )}
-    {generatedForecast && (
+
+{generatedCrossSource && (
   <div className="resultBox">
-    <p className="sectionLabel">90-Day Health Forecast</p>
-    <h3>Current Health Score</h3>
-<p>{generatedForecast.currentScore}/100</p>
-
-<h3>Projected Scores</h3>
-
-<p>
-  Best Case: {generatedForecast.bestCaseScore}/100
-</p>
-
-<p>
-  Expected: {generatedForecast.expectedScore}/100
-</p>
-
-<p>
-  Risk Case: {generatedForecast.riskScore}/100
-</p>
-
-<h3>Current Trajectory</h3>
-<p>{generatedForecast.currentTrajectory}</p>
-
-<h3>Improvement Potential</h3>
-<p>{generatedForecast.improvementPotential}</p>
-
-    <h3>Forecast Score</h3>
-    <p>{generatedForecast.forecastScore}/100</p>
-
-    <h3>Best Case Scenario</h3>
-    <p>{generatedForecast.bestCase}</p>
-
-    <h3>Expected Scenario</h3>
-    <p>{generatedForecast.expectedCase}</p>
-
-    <h3>Risk Escalation Scenario</h3>
-    <p>{generatedForecast.riskCase}</p>
-  </div>
-)}
+    <p className="sectionLabel">Cross-Source Intelligence</p>
 
     <h3>Confidence Level</h3>
     <p>{generatedCrossSource.confidenceLevel}</p>
@@ -918,6 +846,62 @@ Clinical note: This is an educational interpretation and should be reviewed by a
 
     <h3>Intelligence Summary</h3>
     <p>{generatedCrossSource.intelligenceSummary}</p>
+  </div>
+)}
+
+{generatedDigitalTwin && (
+  <div className="resultBox">
+    <p className="sectionLabel">Digital Health Twin</p>
+
+    <h3>Primary Health System</h3>
+    <p>{generatedDigitalTwin.primarySystem}</p>
+
+    <h3>Liver Risk</h3>
+    <p>{generatedDigitalTwin.liverRisk}/100</p>
+
+    <h3>Cardiovascular Risk</h3>
+    <p>{generatedDigitalTwin.cardiovascularRisk}/100</p>
+
+    <h3>Kidney Risk</h3>
+    <p>{generatedDigitalTwin.kidneyRisk}/100</p>
+
+    <h3>Metabolic Risk</h3>
+    <p>{generatedDigitalTwin.metabolicRisk}/100</p>
+
+    <h3>Recovery Potential</h3>
+    <p>{generatedDigitalTwin.recoveryPotential}/100</p>
+
+    <h3>Profile Summary</h3>
+    <p>{generatedDigitalTwin.profileSummary}</p>
+  </div>
+)}
+
+{generatedForecast && (
+  <div className="resultBox">
+    <p className="sectionLabel">90-Day Health Forecast</p>
+
+    <h3>Current Health Score</h3>
+    <p>{generatedForecast.currentScore}/100</p>
+
+    <h3>Projected Scores</h3>
+    <p>Best Case: {generatedForecast.bestCaseScore}/100</p>
+    <p>Expected: {generatedForecast.expectedScore}/100</p>
+    <p>Risk Case: {generatedForecast.riskScore}/100</p>
+
+    <h3>Current Trajectory</h3>
+    <p>{generatedForecast.currentTrajectory}</p>
+
+    <h3>Improvement Potential</h3>
+    <p>{generatedForecast.improvementPotential}</p>
+
+    <h3>Best Case Scenario</h3>
+    <p>{generatedForecast.bestCase}</p>
+
+    <h3>Expected Scenario</h3>
+    <p>{generatedForecast.expectedCase}</p>
+
+    <h3>Risk Escalation Scenario</h3>
+    <p>{generatedForecast.riskCase}</p>
   </div>
 )}
                           </div>

@@ -30,6 +30,7 @@ const [message, setMessage] = useState("");
   const [analysisStep, setAnalysisStep] = useState<AnalysisStep>("idle");
   const [searchTerm, setSearchTerm] = useState("");
 const [reportFilter, setReportFilter] = useState("all");
+const [showIntelligenceLink, setShowIntelligenceLink] = useState(false);
 
 useEffect(() => {
   checkAuth();
@@ -77,7 +78,7 @@ function loadPendingHeroFile() {
 }
  function handleFiles(files: FileList | File[]) {
   const newFiles = Array.from(files);
-
+setShowIntelligenceLink(false);
   setSelectedFiles((previousFiles) => {
     const combinedFiles = [...previousFiles, ...newFiles].slice(0, 10);
 
@@ -259,12 +260,13 @@ uploadedCount++;
   }
 
   setAnalysisStep("ready");
-  setMessage(
+  setShowIntelligenceLink(true);
+setMessage(
   `${uploadedCount} report(s) uploaded successfully.
 
-Your health intelligence is ready.
+Your report is now ready for intelligence review.
 
-Click below to open Intelligence Center.`
+Open Intelligence Center to view your Health Story, Forecast, Digital Twin, Risk Analysis, and Action Plan.`
 );
 
   setSelectedFiles([]);
@@ -347,7 +349,7 @@ const filteredFiles = uploadedFiles.filter((file) => {
 
   return matchesSearch && matchesFilter;
 });
-
+const latestFiles = filteredFiles.slice(0, 10);
 return (
   <main className="assistantPage">
       <div className="assistantContainer">
@@ -471,9 +473,21 @@ return (
             </div>
               
 
-            {message && (
+  {message && (
   <div className="resultBox">
-    <p>{message}</p>
+    <p style={{ whiteSpace: "pre-line" }}>{message}</p>
+
+    {showIntelligenceLink && (
+      <button
+        className="primaryBtn"
+        style={{ marginTop: "16px" }}
+        onClick={() => {
+          window.location.href = "/intelligence";
+        }}
+      >
+        Open Intelligence Center
+      </button>
+    )}
   </div>
 )}
 {latestUploadedFileName && (
@@ -485,7 +499,8 @@ return (
 )}
 </div>
 <div className="resultBox">
-  <p className="sectionLabel">Uploaded Lab Reports</p>
+  <p className="sectionLabel">Latest Uploaded Reports</p>
+<h2>Recently Uploaded Medical Reports</h2>
 
   <div style={{ display: "flex", gap: "12px", marginBottom: "20px" }}>
     <input
@@ -511,7 +526,7 @@ return (
   {uploadedFiles.length === 0 ? (
     <p>No uploaded lab reports yet.</p>
   ) : (
-    filteredFiles.map((file) => (
+    latestFiles.map((file) => (
       <div
         key={file.id}
         style={{
