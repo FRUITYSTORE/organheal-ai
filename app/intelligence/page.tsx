@@ -1,4 +1,6 @@
 "use client";
+import { buildHealthStory } from "../../lib/healthStoryEngine";
+import { buildHistoricalLabTrends } from "../../lib/historicalLabTrendEngine";
 import { buildLongitudinalRisk } from "../../lib/longitudinalRiskEngine";
 import { buildHealthTimeline } from "../../lib/healthTimelineEngine";
 import { buildPatientDigitalTwin } from "../../lib/patientDigitalTwin";
@@ -79,6 +81,8 @@ const [dailyCheckIn, setDailyCheckIn] = useState<DailyCheckIn | null>(null);
   const [generatedCrossSource, setGeneratedCrossSource] = useState<any>(null);
   const [generatedTimeline, setGeneratedTimeline] = useState<any>(null);
   const [generatedLongitudinalRisk, setGeneratedLongitudinalRisk] = useState<any>(null);
+  const [generatedHealthStory, setGeneratedHealthStory] = useState("");
+  const [generatedLabTrends, setGeneratedLabTrends] = useState<any[]>([]);
   const [generatedForecast, setGeneratedForecast] = useState<any>(null);
  const [generatedDigitalTwin, setGeneratedDigitalTwin] = useState<any>(null);
 
@@ -215,152 +219,158 @@ setDailyCheckIn(checkInData || null);
     window.open(data.signedUrl, "_blank");
   }
 
-  async function generateReportIntelligence(insightId: number) {
-    const selectedInsight = healthInsights.find((item) => item.id === insightId);
+ async function generateReportIntelligence(insightId: number) {
+  const selectedInsight = healthInsights.find((item) => item.id === insightId);
 
-    if (!selectedInsight) return;
+  if (!selectedInsight) return;
 
-    let extractedText: string | null = null;
+  let extractedText: string | null = null;
 
-   if (selectedInsight.report_id && selectedInsight.file_path) {
-      try {
-        const extractionResponse = await fetch("/api/extract-pdf", {
-
-          body: JSON.stringify({
-            reportId: selectedInsight.report_id,
-            filePath: selectedInsight.file_path,
-            fileName: selectedInsight.file_name,
-          }),
-        });
-const timeline = buildHealthTimeline([
-  ...assessmentData.map((item) => ({
-    source: "assessment" as const,
-    label: item.organ_name,
-    score: item.score,
-    date: item.created_at,
-  })),
-
-  ...(dailyCheckIn
-    ? [
-        {
-          source: "checkin" as const,
-          label: "Daily Check-In",
-          score: dailyCheckIn.wellness_score || 0,
-          date: dailyCheckIn.created_at,
+  if (selectedInsight.report_id && selectedInsight.file_path) {
+    try {
+      const extractionResponse = await fetch("/api/extract-pdf", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      ]
-    : []),
-]);
+        body: JSON.stringify({
+          reportId: selectedInsight.report_id,
+          filePath: selectedInsight.file_path,
+          fileName: selectedInsight.file_name,
+        }),
+      });
 
-const longitudinalRisk = buildLongitudinalRisk(timeline);
+      const extractionResult = await extractionResponse.json();
 
-setGeneratedTimeline(timeline);
-setGeneratedLongitudinalRisk(longitudinalRisk);
-        const extractionResult = await extractionResponse.json();
-
-        if (!extractionResponse.ok || !extractionResult.success) {
-          alert(extractionResult.error || "PDF extraction failed.");
-          return;
-        }
-
-        extractedText = extractionResult.text || null;
-      } catch (error) {
-        console.error("Extraction failed", error);
-        alert("Extraction failed.");
+      if (!extractionResponse.ok || !extractionResult.success) {
+        alert(extractionResult.error || "PDF extraction failed.");
         return;
       }
-    }
-    if (!extractedText && selectedInsight.report_id) {
-      const { data: reportData } = await supabase
-        .from("uploaded_lab_files")
-        .select("extracted_text")
-        .eq("id", selectedInsight.report_id)
-        .single();
 
-      extractedText = reportData?.extracted_text || null;
-    }
-
-    if (!extractedText || extractedText.length < 30) {
-      alert("No readable PDF text was extracted yet.");
+      extractedText = extractionResult.text || null;
+    } catch (error) {
+      console.error("Extraction failed", error);
+      alert("Extraction failed.");
       return;
     }
+  }
 
-const detectedMarkers = detectLabMarkers(extractedText);
-const markerSummary = buildLabMarkerSummary(detectedMarkers);
-const radiologyFindings = detectRadiologyFindings(extractedText);
-const digitalTwin = buildPatientDigitalTwin({
-  markers: detectedMarkers,
-  radiologyFindings,
-});
+  if (!extractedText && selectedInsight.report_id) {
+    const { data: reportData } = await supabase
+      .from("uploaded_lab_files")
+      .select("extracted_text")
+      .eq("id", selectedInsight.report_id)
+      .single();
 
-setGeneratedDigitalTwin(digitalTwin);
-const radiologySummary = buildRadiologySummary(radiologyFindings);
-const isRadiologyReport = selectedInsight.report_type === "radiology";
-const clinicalPatterns = detectClinicalPatterns(detectedMarkers);
-const healthStrategy = buildHealthStrategy(detectedMarkers);
+    extractedText = reportData?.extracted_text || null;
+  }
 
-const unifiedHealth = buildUnifiedHealthIntelligence({
-  detectedMarkers,
-  healthStrategy,
-});
-const crossSource = buildCrossSourceIntelligence({
-  detectedMarkers,
-  assessments: assessmentData,
-  dailyCheckIn,
-});
+  if (!extractedText || extractedText.length < 30) {
+    alert("No readable report text was extracted yet.");
+    return;
+  }
 
-const timeline = buildHealthTimeline([
-  ...assessmentData.map((item) => ({
-    source: "assessment" as const,
-    label: item.organ_name,
-    score: item.score,
-    date: item.created_at,
-  })),
+  const detectedMarkers = detectLabMarkers(extractedText);
+  const markerSummary = buildLabMarkerSummary(detectedMarkers);
 
-  ...(dailyCheckIn
-    ? [
-        {
-          source: "checkin" as const,
-          label: "Daily Check-In",
-          score: dailyCheckIn.wellness_score || 0,
-          date: dailyCheckIn.created_at,
-        },
-      ]
-    : []),
-]);
+  const labTrends = buildHistoricalLabTrends(
+    detectedMarkers
+      .filter((marker) => marker.value !== null)
+      .map((marker) => ({
+        marker: marker.marker,
+        value: marker.value as number,
+        date: new Date().toISOString(),
+      }))
+  );
 
-const forecast = buildForecast(detectedMarkers, crossSource.confidenceScore);
+  const radiologyFindings = detectRadiologyFindings(extractedText);
+  const radiologySummary = buildRadiologySummary(radiologyFindings);
+  const isRadiologyReport = selectedInsight.report_type === "radiology";
 
-setGeneratedCrossSource(crossSource);
-setGeneratedTimeline(timeline);
-setGeneratedForecast(forecast);
-setGeneratedUnifiedHealth(unifiedHealth);
-const intelligence = {
-  ...generateIntelligenceFromText(extractedText, selectedInsight.report_type),
-summary: isRadiologyReport ? radiologySummary.summary : markerSummary.summary,
-key_findings: isRadiologyReport
-  ? radiologySummary.riskSignals
-  : markerSummary.keyFindings,
-  risk_signals:
-  clinicalPatterns.length > 0
-    ? clinicalPatterns
-        .map(
-          (pattern) =>
-            `${pattern.title} (${pattern.severity}): ${pattern.summary}`
-        )
-        .join("\n")
-    : markerSummary.riskSignals,
-recommendations: isRadiologyReport
-  ? radiologySummary.recommendations
-  : clinicalPatterns.length > 0
-  ? clinicalPatterns
-      .map(
-        (pattern) =>
-          `${pattern.title}: ${pattern.suggestedFocus}`
-      )
-      .join("\n")
-  : markerSummary.recommendations,
-  doctor_brief: `Detected lab markers:
+  const clinicalPatterns = detectClinicalPatterns(detectedMarkers);
+  const healthStrategy = buildHealthStrategy(detectedMarkers);
+
+  const unifiedHealth = buildUnifiedHealthIntelligence({
+    detectedMarkers,
+    healthStrategy,
+  });
+
+  const digitalTwin = buildPatientDigitalTwin({
+    markers: detectedMarkers,
+    radiologyFindings,
+  });
+
+  const crossSource = buildCrossSourceIntelligence({
+    detectedMarkers,
+    assessments: assessmentData,
+    dailyCheckIn,
+  });
+
+  const timeline = buildHealthTimeline([
+    ...assessmentData.map((item) => ({
+      source: "assessment" as const,
+      label: item.organ_name,
+      score: item.score,
+      date: item.created_at,
+    })),
+
+    ...(dailyCheckIn
+      ? [
+          {
+            source: "checkin" as const,
+            label: "Daily Check-In",
+            score: dailyCheckIn.wellness_score || 0,
+            date: dailyCheckIn.created_at,
+          },
+        ]
+      : []),
+  ]);
+
+  const longitudinalRisk = buildLongitudinalRisk(timeline);
+  const forecast = buildForecast(detectedMarkers, crossSource.confidenceScore);
+
+  const healthStory = buildHealthStory({
+    timeline,
+    longitudinalRisk,
+    forecast,
+    crossSource,
+    digitalTwin,
+  });
+
+  setGeneratedStrategy(healthStrategy);
+  setGeneratedUnifiedHealth(unifiedHealth);
+  setGeneratedDigitalTwin(digitalTwin);
+  setGeneratedCrossSource(crossSource);
+  setGeneratedTimeline(timeline);
+  setGeneratedLongitudinalRisk(longitudinalRisk);
+  setGeneratedForecast(forecast);
+  setGeneratedHealthStory(healthStory);
+  setGeneratedLabTrends(labTrends);
+
+  const intelligence = {
+    ...generateIntelligenceFromText(extractedText, selectedInsight.report_type),
+    ai_status: "Generated",
+    summary: isRadiologyReport ? radiologySummary.summary : markerSummary.summary,
+    key_findings: isRadiologyReport
+      ? radiologySummary.riskSignals
+      : markerSummary.keyFindings,
+    risk_signals:
+      clinicalPatterns.length > 0
+        ? clinicalPatterns
+            .map(
+              (pattern) =>
+                `${pattern.title} (${pattern.severity}): ${pattern.summary}`
+            )
+            .join("\n")
+        : markerSummary.riskSignals,
+    recommendations: isRadiologyReport
+      ? radiologySummary.recommendations
+      : clinicalPatterns.length > 0
+      ? clinicalPatterns
+          .map((pattern) => `${pattern.title}: ${pattern.suggestedFocus}`)
+          .join("\n")
+      : markerSummary.recommendations,
+    doctor_brief: `Detected lab markers:
 ${markerSummary.keyFindings}
 
 Unified Health Intelligence:
@@ -373,34 +383,32 @@ Next Best Action:
 ${unifiedHealth.nextBestAction}
 
 Clinical note: This is an educational interpretation and should be reviewed by a licensed healthcare professional.`,
-};
-setGeneratedStrategy(healthStrategy);
+  };
 
-    const { error } = await supabase
-      .from("health_insights")
-      .update(intelligence)
-      .eq("id", insightId);
+  const { error } = await supabase
+    .from("health_insights")
+    .update(intelligence)
+    .eq("id", insightId);
 
-    if (error) {
-      alert("Could not generate intelligence: " + error.message);
-      return;
-    }
-
-    setHealthInsights((currentInsights) =>
-      currentInsights.map((item) =>
-        item.id === insightId
-          ? {
-              ...item,
-              ...intelligence,
-              extraction_status: "Completed",
-              extracted_text: extractedText,
-              extracted_at: new Date().toISOString(),
-            }
-          : item
-      )
-    );
+  if (error) {
+    alert("Could not generate intelligence: " + error.message);
+    return;
   }
 
+  setHealthInsights((currentInsights) =>
+    currentInsights.map((item) =>
+      item.id === insightId
+        ? {
+            ...item,
+            ...intelligence,
+            extraction_status: "Completed",
+            extracted_text: extractedText,
+            extracted_at: new Date().toISOString(),
+          }
+        : item
+    )
+  );
+}
   function getReportTypeLabel(type: string | null) {
     if (type === "lab") return "Laboratory Report";
     if (type === "radiology") return "Radiology Report";
@@ -615,6 +623,12 @@ setGeneratedStrategy(healthStrategy);
 {generatedUnifiedHealth && (
   <div className="resultBox">
     <p className="sectionLabel">Health Intelligence Summary</p>
+    {generatedHealthStory && (
+  <div className="resultBox">
+    <p className="sectionLabel">Your Health Story</p>
+    <p style={{ whiteSpace: "pre-line" }}>{generatedHealthStory}</p>
+  </div>
+)}
 
     <h3>Current Profile</h3>
     <p>{generatedUnifiedHealth.currentProfile}</p>
@@ -660,6 +674,31 @@ setGeneratedStrategy(healthStrategy);
     {generatedLongitudinalRisk && (
   <div className="resultBox">
     <p className="sectionLabel">Longitudinal Risk Intelligence</p>
+    {generatedLabTrends.length > 0 && (
+  <div className="resultBox">
+    <p className="sectionLabel">Historical Lab Trends</p>
+
+    {generatedLabTrends.map((trend, index) => (
+      <div key={index} style={{ marginBottom: "16px" }}>
+        <h3>{trend.marker}</h3>
+
+        <p>
+          {trend.earliestValue} → {trend.latestValue}
+        </p>
+
+        <p>
+          Change: {trend.changeAmount}
+        </p>
+
+        <p>
+          Trend: {trend.trendDirection}
+        </p>
+
+        <p>{trend.trendSummary}</p>
+      </div>
+    ))}
+  </div>
+)}
 
     <h3>Risk Direction</h3>
     <p>{generatedLongitudinalRisk.riskDirection}</p>
