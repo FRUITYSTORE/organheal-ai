@@ -1,4 +1,5 @@
 "use client";
+import { buildLongitudinalRisk } from "../../lib/longitudinalRiskEngine";
 import { buildHealthTimeline } from "../../lib/healthTimelineEngine";
 import { buildPatientDigitalTwin } from "../../lib/patientDigitalTwin";
 import { buildCrossSourceIntelligence } from "../../lib/crossSourceIntelligence";
@@ -77,6 +78,7 @@ const [dailyCheckIn, setDailyCheckIn] = useState<DailyCheckIn | null>(null);
   const [generatedUnifiedHealth, setGeneratedUnifiedHealth] = useState<any>(null);
   const [generatedCrossSource, setGeneratedCrossSource] = useState<any>(null);
   const [generatedTimeline, setGeneratedTimeline] = useState<any>(null);
+  const [generatedLongitudinalRisk, setGeneratedLongitudinalRisk] = useState<any>(null);
   const [generatedForecast, setGeneratedForecast] = useState<any>(null);
  const [generatedDigitalTwin, setGeneratedDigitalTwin] = useState<any>(null);
 
@@ -250,7 +252,10 @@ const timeline = buildHealthTimeline([
     : []),
 ]);
 
+const longitudinalRisk = buildLongitudinalRisk(timeline);
+
 setGeneratedTimeline(timeline);
+setGeneratedLongitudinalRisk(longitudinalRisk);
         const extractionResult = await extractionResponse.json();
 
         if (!extractionResponse.ok || !extractionResult.success) {
@@ -652,6 +657,26 @@ setGeneratedStrategy(healthStrategy);
     {generatedTimeline && (
   <div className="resultBox">
     <p className="sectionLabel">Health Timeline Intelligence</p>
+    {generatedLongitudinalRisk && (
+  <div className="resultBox">
+    <p className="sectionLabel">Longitudinal Risk Intelligence</p>
+
+    <h3>Risk Direction</h3>
+    <p>{generatedLongitudinalRisk.riskDirection}</p>
+
+    <h3>Escalation Level</h3>
+    <p>{generatedLongitudinalRisk.escalationLevel}</p>
+
+    <h3>Prediction Confidence</h3>
+    <p>{generatedLongitudinalRisk.predictionConfidence}/100</p>
+
+    <h3>Risk Summary</h3>
+    <p>{generatedLongitudinalRisk.riskSummary}</p>
+
+    <h3>Recommended Monitoring</h3>
+    <p>{generatedLongitudinalRisk.recommendedMonitoring}</p>
+  </div>
+)}
 
     <h3>Trend Direction</h3>
     <p>{generatedTimeline.trendDirection}</p>
