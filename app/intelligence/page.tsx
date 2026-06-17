@@ -1,4 +1,5 @@
 "use client";
+import { buildActionPlan } from "../../lib/actionPlanEngine";
 import { buildHealthStory } from "../../lib/healthStoryEngine";
 import { buildHistoricalLabTrends } from "../../lib/historicalLabTrendEngine";
 import { buildLongitudinalRisk } from "../../lib/longitudinalRiskEngine";
@@ -82,6 +83,8 @@ const [dailyCheckIn, setDailyCheckIn] = useState<DailyCheckIn | null>(null);
   const [generatedTimeline, setGeneratedTimeline] = useState<any>(null);
   const [generatedLongitudinalRisk, setGeneratedLongitudinalRisk] = useState<any>(null);
   const [generatedHealthStory, setGeneratedHealthStory] = useState("");
+  const [generatedActionPlan, setGeneratedActionPlan] = useState<any>(null);
+  const [generatedExecutiveSummary, setGeneratedExecutiveSummary] = useState<any>(null);
   const [generatedLabTrends, setGeneratedLabTrends] = useState<any[]>([]);
   const [generatedForecast, setGeneratedForecast] = useState<any>(null);
  const [generatedDigitalTwin, setGeneratedDigitalTwin] = useState<any>(null);
@@ -336,6 +339,21 @@ setDailyCheckIn(checkInData || null);
     crossSource,
     digitalTwin,
   });
+const actionPlan = buildActionPlan({
+  digitalTwin,
+  forecast,
+  longitudinalRisk,
+  crossSource,
+});
+const executiveSummary = {
+  currentScore: forecast.currentScore,
+  trend: timeline.trendDirection,
+  forecastScore: forecast.forecastScore,
+  confidenceLevel: crossSource.confidenceLevel,
+  confidenceScore: crossSource.confidenceScore,
+  prioritySystem: digitalTwin.primarySystem,
+  nextBestAction: unifiedHealth.nextBestAction,
+};
 
   setGeneratedStrategy(healthStrategy);
   setGeneratedUnifiedHealth(unifiedHealth);
@@ -345,6 +363,8 @@ setDailyCheckIn(checkInData || null);
   setGeneratedLongitudinalRisk(longitudinalRisk);
   setGeneratedForecast(forecast);
   setGeneratedHealthStory(healthStory);
+  setGeneratedActionPlan(actionPlan);
+  setGeneratedExecutiveSummary(executiveSummary);
   setGeneratedLabTrends(labTrends);
 
   const intelligence = {
@@ -600,6 +620,49 @@ Clinical note: This is an educational interpretation and should be reviewed by a
                             </p>
                             {generatedStrategy && (
   <div className="resultBox">
+    {generatedExecutiveSummary && (
+  <div className="resultBox">
+    <p className="sectionLabel">Executive Health Intelligence Summary</p>
+
+    <h2>{generatedExecutiveSummary.currentScore}/100</h2>
+
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+        gap: "14px",
+        marginTop: "18px",
+        textAlign: "left",
+      }}
+    >
+      <div>
+        <strong>Health Trend</strong>
+        <p>{generatedExecutiveSummary.trend}</p>
+      </div>
+
+      <div>
+        <strong>90-Day Forecast</strong>
+        <p>{generatedExecutiveSummary.forecastScore}/100</p>
+      </div>
+
+      <div>
+        <strong>Confidence</strong>
+        <p>
+          {generatedExecutiveSummary.confidenceLevel} (
+          {generatedExecutiveSummary.confidenceScore}/100)
+        </p>
+      </div>
+
+      <div>
+        <strong>Priority System</strong>
+        <p>{generatedExecutiveSummary.prioritySystem}</p>
+      </div>
+    </div>
+
+    <h3>Best Next Action</h3>
+    <p>{generatedExecutiveSummary.nextBestAction}</p>
+  </div>
+)}
     <p className="sectionLabel">Personal Health Strategy</p>
 
     <h3>Health Risks</h3>
@@ -626,6 +689,38 @@ Clinical note: This is an educational interpretation and should be reviewed by a
     {generatedHealthStory && (
   <div className="resultBox">
     <p className="sectionLabel">Your Health Story</p>
+    {generatedActionPlan && (
+  <div className="resultBox">
+    <p className="sectionLabel">Personal Action Plan</p>
+
+    <h3>This Week</h3>
+    <ul>
+      {generatedActionPlan.thisWeek.map(
+        (item: string, index: number) => (
+          <li key={index}>{item}</li>
+        )
+      )}
+    </ul>
+
+    <h3>This Month</h3>
+    <ul>
+      {generatedActionPlan.thisMonth.map(
+        (item: string, index: number) => (
+          <li key={index}>{item}</li>
+        )
+      )}
+    </ul>
+
+    <h3>Next 90 Days</h3>
+    <ul>
+      {generatedActionPlan.next90Days.map(
+        (item: string, index: number) => (
+          <li key={index}>{item}</li>
+        )
+      )}
+    </ul>
+  </div>
+)}
     <p style={{ whiteSpace: "pre-line" }}>{generatedHealthStory}</p>
   </div>
 )}
