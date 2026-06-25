@@ -30,6 +30,7 @@ import TimelineCard from "./components/TimelineCard";
 import LongitudinalRiskCard from "./components/LongitudinalRiskCard";
 import LabTrendsCard from "./components/LabTrendsCard";
 import CrossSourceCard from "./components/CrossSourceCard";
+import DigitalTwinCard from "./components/DigitalTwinCard";
 
 
 
@@ -720,32 +721,7 @@ Clinical note: This is an educational interpretation and should be reviewed by a
 <LabTrendsCard labTrends={generatedLabTrends} />
 <CrossSourceCard crossSource={generatedCrossSource} />
 
-{generatedDigitalTwin && (
-  <div className="resultBox">
-    <p className="sectionLabel">Digital Health Twin</p>
-
-    <h3>Primary Health System</h3>
-    <p>{generatedDigitalTwin.primarySystem}</p>
-
-    <h3>Liver Risk</h3>
-    <p>{generatedDigitalTwin.liverRisk}/100</p>
-
-    <h3>Cardiovascular Risk</h3>
-    <p>{generatedDigitalTwin.cardiovascularRisk}/100</p>
-
-    <h3>Kidney Risk</h3>
-    <p>{generatedDigitalTwin.kidneyRisk}/100</p>
-
-    <h3>Metabolic Risk</h3>
-    <p>{generatedDigitalTwin.metabolicRisk}/100</p>
-
-    <h3>Recovery Potential</h3>
-    <p>{generatedDigitalTwin.recoveryPotential}/100</p>
-
-    <h3>Profile Summary</h3>
-    <p>{generatedDigitalTwin.profileSummary}</p>
-  </div>
-)}
+<DigitalTwinCard digitalTwin={generatedDigitalTwin} />
 
 {generatedForecast && (
   <div className="resultBox">
