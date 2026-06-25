@@ -29,6 +29,7 @@ import ActionPlanCard from "./components/ActionPlanCard";
 import TimelineCard from "./components/TimelineCard";
 import LongitudinalRiskCard from "./components/LongitudinalRiskCard";
 import LabTrendsCard from "./components/LabTrendsCard";
+import CrossSourceCard from "./components/CrossSourceCard";
 
 
 
@@ -717,36 +718,7 @@ Clinical note: This is an educational interpretation and should be reviewed by a
 <LongitudinalRiskCard longitudinalRisk={generatedLongitudinalRisk} />
 
 <LabTrendsCard labTrends={generatedLabTrends} />
-{generatedCrossSource && (
-  <div className="resultBox">
-    <p className="sectionLabel">Cross-Source Intelligence</p>
-
-    <h3>Confidence Level</h3>
-    <p>{generatedCrossSource.confidenceLevel}</p>
-
-    <h3>Confidence Score</h3>
-    <p>{generatedCrossSource.confidenceScore}/100</p>
-
-    <h3>Primary System</h3>
-    <p>{generatedCrossSource.primarySystem}</p>
-
-    <h3>Supporting Sources</h3>
-    {generatedCrossSource.supportingSources.length > 0 ? (
-      <ul>
-        {generatedCrossSource.supportingSources.map(
-          (source: string, index: number) => (
-            <li key={index}>{source}</li>
-          )
-        )}
-      </ul>
-    ) : (
-      <p>No additional supporting sources detected yet.</p>
-    )}
-
-    <h3>Intelligence Summary</h3>
-    <p>{generatedCrossSource.intelligenceSummary}</p>
-  </div>
-)}
+<CrossSourceCard crossSource={generatedCrossSource} />
 
 {generatedDigitalTwin && (
   <div className="resultBox">
