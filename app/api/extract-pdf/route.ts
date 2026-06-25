@@ -88,12 +88,35 @@ export async function POST(req: Request) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    if (!reportId || !filePath || !supabaseUrl || !serviceRoleKey) {
-      return NextResponse.json(
-        { success: false, error: "Missing required extraction data" },
-        { status: 400 }
-      );
-    }
+  if (!reportId || !filePath) {
+  return NextResponse.json(
+    {
+      success: false,
+      error: "Missing reportId or filePath from the selected report.",
+    },
+    { status: 400 }
+  );
+}
+
+if (!supabaseUrl) {
+  return NextResponse.json(
+    {
+      success: false,
+      error: "NEXT_PUBLIC_SUPABASE_URL is missing on the server.",
+    },
+    { status: 500 }
+  );
+}
+
+if (!serviceRoleKey) {
+  return NextResponse.json(
+    {
+      success: false,
+      error: "SUPABASE_SERVICE_ROLE_KEY is missing on the server.",
+    },
+    { status: 500 }
+  );
+}
 
     const fileType = getFileType(fileName);
 
