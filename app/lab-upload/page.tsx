@@ -185,9 +185,12 @@ async function uploadFile() {
     const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
     const filePath = `${user.id}/${Date.now()}-${safeFileName}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from("lab-reports")
-      .upload(filePath, file);
+    const { data: uploadData, error: uploadError } = await supabase.storage
+  .from("lab-reports")
+  .upload(filePath, file, {
+    upsert: false,
+  });
+
 
     if (uploadError) {
       setMessage("Upload error: " + uploadError.message);
@@ -195,11 +198,18 @@ async function uploadFile() {
       setAnalysisStep("idle");
       return;
     }
+      if (!uploadData?.path) {
+  setMessage("Upload error: Supabase did not return a saved file path.");
+  setUploading(false);
+  setAnalysisStep("idle");
+  return;
+}
+const savedFilePath = uploadData.path;
 
     const { data: signedUrlData, error: signedUrlError } =
       await supabase.storage
         .from("lab-reports")
-        .createSignedUrl(filePath, 60 * 60);
+        .createSignedUrl(savedFilePath, 60 * 60);
 
     if (signedUrlError) {
       setMessage("Signed URL error: " + signedUrlError.message);
@@ -217,7 +227,7 @@ async function uploadFile() {
   .insert({
     user_id: user.id,
     file_name: file.name,
-    file_path: filePath,
+    file_path: savedFilePath,
     file_url: signedUrlData.signedUrl,
     report_type: reportType,
     analysis_status: analysis.status,
