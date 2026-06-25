@@ -23,6 +23,12 @@ import { buildHealthStrategy } from "../../lib/healthStrategyEngine";
 import { buildUnifiedHealthIntelligence } from "../../lib/unifiedHealthEngine";
 import { detectClinicalPatterns } from "../../lib/clinicalPatternEngine";
 import { buildForecast } from "../../lib/forecastEngine";
+import ExecutiveSummaryCard from "./components/ExecutiveSummaryCard";
+import HealthStoryCard from "./components/HealthStoryCard";
+import ActionPlanCard from "./components/ActionPlanCard";
+import TimelineCard from "./components/TimelineCard";
+import LongitudinalRiskCard from "./components/LongitudinalRiskCard";
+import LabTrendsCard from "./components/LabTrendsCard";
 
 
 
@@ -84,7 +90,9 @@ const [dailyCheckIn, setDailyCheckIn] = useState<DailyCheckIn | null>(null);
   const [generatedLongitudinalRisk, setGeneratedLongitudinalRisk] = useState<any>(null);
   const [generatedHealthStory, setGeneratedHealthStory] = useState("");
   const [generatedActionPlan, setGeneratedActionPlan] = useState<any>(null);
-  const [generatedExecutiveSummary, setGeneratedExecutiveSummary] = useState<any>(null);
+  const [generatedExecutiveSummary, setGeneratedExecutiveSummary] =
+  useState<any>(null);
+
   const [generatedLabTrends, setGeneratedLabTrends] = useState<any[]>([]);
   const [generatedForecast, setGeneratedForecast] = useState<any>(null);
  const [generatedDigitalTwin, setGeneratedDigitalTwin] = useState<any>(null);
@@ -274,17 +282,48 @@ setDailyCheckIn(checkInData || null);
   }
 
   const detectedMarkers = detectLabMarkers(extractedText);
+  const { data: userData } = await supabase.auth.getUser();
+
+if (userData.user && selectedInsight.report_id) {
+  const markerRows = detectedMarkers
+    .filter((marker) => marker.value !== null)
+    .map((marker) => ({
+      user_id: userData.user.id,
+      report_id: selectedInsight.report_id,
+      marker_name: marker.marker,
+      marker_value: marker.value,
+      marker_unit: marker.unit,
+    }));
+
+  if (markerRows.length > 0) {
+    await supabase.from("medical_report_markers").insert(markerRows);
+  }
+}
   const markerSummary = buildLabMarkerSummary(detectedMarkers);
 
-  const labTrends = buildHistoricalLabTrends(
-    detectedMarkers
-      .filter((marker) => marker.value !== null)
-      .map((marker) => ({
-        marker: marker.marker,
-        value: marker.value as number,
-        date: new Date().toISOString(),
-      }))
-  );
+  let historicalMarkerRows: any[] = [];
+
+const { data: userDataForHistory } = await supabase.auth.getUser();
+
+if (userDataForHistory.user) {
+  const { data } = await supabase
+    .from("medical_report_markers")
+    .select("marker_name, marker_value, created_at")
+    .eq("user_id", userDataForHistory.user.id)
+    .order("created_at", { ascending: true });
+
+  historicalMarkerRows = data || [];
+}
+
+const labTrends = buildHistoricalLabTrends(
+  historicalMarkerRows
+    .filter((row) => row.marker_value !== null)
+    .map((row) => ({
+      marker: row.marker_name,
+      value: Number(row.marker_value),
+      date: row.created_at,
+    }))
+);
 
   const radiologyFindings = detectRadiologyFindings(extractedText);
   const radiologySummary = buildRadiologySummary(radiologyFindings);
@@ -618,51 +657,12 @@ Clinical note: This is an educational interpretation and should be reviewed by a
                             <p>
                               <strong>Doctor Brief:</strong> {item.doctor_brief}
                             </p>
+                            {generatedExecutiveSummary && (
+  <ExecutiveSummaryCard summary={generatedExecutiveSummary} />
+)}
                             {generatedStrategy && (
   <div className="resultBox">
-    {generatedExecutiveSummary && (
-  <div className="resultBox">
-    <p className="sectionLabel">Executive Health Intelligence Summary</p>
-
-    <h2>{generatedExecutiveSummary.currentScore}/100</h2>
-
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-        gap: "14px",
-        marginTop: "18px",
-        textAlign: "left",
-      }}
-    >
-      <div>
-        <strong>Health Trend</strong>
-        <p>{generatedExecutiveSummary.trend}</p>
-      </div>
-
-      <div>
-        <strong>90-Day Forecast</strong>
-        <p>{generatedExecutiveSummary.forecastScore}/100</p>
-      </div>
-
-      <div>
-        <strong>Confidence</strong>
-        <p>
-          {generatedExecutiveSummary.confidenceLevel} (
-          {generatedExecutiveSummary.confidenceScore}/100)
-        </p>
-      </div>
-
-      <div>
-        <strong>Priority System</strong>
-        <p>{generatedExecutiveSummary.prioritySystem}</p>
-      </div>
-    </div>
-
-    <h3>Best Next Action</h3>
-    <p>{generatedExecutiveSummary.nextBestAction}</p>
-  </div>
-)}
+  
     <p className="sectionLabel">Personal Health Strategy</p>
 
     <h3>Health Risks</h3>
@@ -683,68 +683,20 @@ Clinical note: This is an educational interpretation and should be reviewed by a
   </div>
 )}
 
+{generatedHealthStory && (
+  <HealthStoryCard story={generatedHealthStory} />
+)}
+
+{generatedActionPlan && (
+  <ActionPlanCard actionPlan={generatedActionPlan} />
+)}
+
 {generatedUnifiedHealth && (
   <div className="resultBox">
     <p className="sectionLabel">Health Intelligence Summary</p>
-    {generatedHealthStory && (
-  <div className="resultBox">
-    <p className="sectionLabel">Your Health Story</p>
-    {generatedActionPlan && (
-  <div className="resultBox">
-    <p className="sectionLabel">Personal Action Plan</p>
-
-    <h3>This Week</h3>
-    <ul>
-      {generatedActionPlan.thisWeek.map(
-        (item: string, index: number) => (
-          <li key={index}>{item}</li>
-        )
-      )}
-    </ul>
-
-    <h3>This Month</h3>
-    <ul>
-      {generatedActionPlan.thisMonth.map(
-        (item: string, index: number) => (
-          <li key={index}>{item}</li>
-        )
-      )}
-    </ul>
-
-    <h3>Next 90 Days</h3>
-    <ul>
-      {generatedActionPlan.next90Days.map(
-        (item: string, index: number) => (
-          <li key={index}>{item}</li>
-        )
-      )}
-    </ul>
-  </div>
-)}
-    <p style={{ whiteSpace: "pre-line" }}>{generatedHealthStory}</p>
-  </div>
-)}
 
     <h3>Current Profile</h3>
     <p>{generatedUnifiedHealth.currentProfile}</p>
-
-    {generatedUnifiedHealth.topPriorities?.length > 0 && (
-      <>
-        <h3>Top Health Priorities</h3>
-
-        {generatedUnifiedHealth.topPriorities
-          .slice(0, 3)
-          .map((priority: any, index: number) => (
-            <div key={index} style={{ marginBottom: "16px" }}>
-              <strong>
-                #{index + 1} {priority.area}
-              </strong>
-              <p>Severity: {priority.severity}</p>
-              <p>Priority Score: {priority.score}</p>
-            </div>
-          ))}
-      </>
-    )}
 
     <h3>Priority Goal</h3>
     <p>{generatedUnifiedHealth.priorityGoal}</p>
@@ -760,64 +712,11 @@ Clinical note: This is an educational interpretation and should be reviewed by a
   </div>
 )}
 
-{generatedTimeline && (
-  <div className="resultBox">
-    <p className="sectionLabel">Health Timeline Intelligence</p>
+<TimelineCard timeline={generatedTimeline} />
 
-    <h3>Trend Direction</h3>
-    <p>{generatedTimeline.trendDirection}</p>
+<LongitudinalRiskCard longitudinalRisk={generatedLongitudinalRisk} />
 
-    <h3>Health Momentum</h3>
-    <p>{generatedTimeline.healthMomentum}</p>
-
-    <h3>Change Amount</h3>
-    <p>{generatedTimeline.changeAmount} points</p>
-
-    <h3>Consistency Score</h3>
-    <p>{generatedTimeline.consistencyScore}/100</p>
-
-    <h3>Timeline Summary</h3>
-    <p>{generatedTimeline.summary}</p>
-  </div>
-)}
-
-{generatedLongitudinalRisk && (
-  <div className="resultBox">
-    <p className="sectionLabel">Longitudinal Risk Intelligence</p>
-
-    <h3>Risk Direction</h3>
-    <p>{generatedLongitudinalRisk.riskDirection}</p>
-
-    <h3>Escalation Level</h3>
-    <p>{generatedLongitudinalRisk.escalationLevel}</p>
-
-    <h3>Prediction Confidence</h3>
-    <p>{generatedLongitudinalRisk.predictionConfidence}/100</p>
-
-    <h3>Risk Summary</h3>
-    <p>{generatedLongitudinalRisk.riskSummary}</p>
-
-    <h3>Recommended Monitoring</h3>
-    <p>{generatedLongitudinalRisk.recommendedMonitoring}</p>
-  </div>
-)}
-
-{generatedLabTrends.length > 0 && (
-  <div className="resultBox">
-    <p className="sectionLabel">Historical Lab Trends</p>
-
-    {generatedLabTrends.map((trend, index) => (
-      <div key={index} style={{ marginBottom: "16px" }}>
-        <h3>{trend.marker}</h3>
-        <p>{trend.earliestValue} → {trend.latestValue}</p>
-        <p>Change: {trend.changeAmount}</p>
-        <p>Trend: {trend.trendDirection}</p>
-        <p>{trend.trendSummary}</p>
-      </div>
-    ))}
-  </div>
-)}
-
+<LabTrendsCard labTrends={generatedLabTrends} />
 {generatedCrossSource && (
   <div className="resultBox">
     <p className="sectionLabel">Cross-Source Intelligence</p>
