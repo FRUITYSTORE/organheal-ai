@@ -79,8 +79,7 @@ function getFileType(fileName: string | null | undefined) {
   if (name.endsWith(".jpeg")) return "image";
 
   return "unknown";
-}
-function normalizeStoragePath(path: string) {
+}function normalizeStoragePath(path: string) {
   return path
     .trim()
     .replace(/^\/+/, "")
@@ -88,41 +87,63 @@ function normalizeStoragePath(path: string) {
 }
 export async function POST(req: Request) {
   try {
-    const { reportId, filePath, fileName } = await req.json();
+    const { reportId } = await req.json();
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  if (!reportId || !filePath) {
-  return NextResponse.json(
-    {
-      success: false,
-      error: "Missing reportId or filePath from the selected report.",
-    },
-    { status: 400 }
-  );
-}
+    if (!reportId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Missing reportId from the selected report.",
+        },
+        { status: 400 }
+      );
+    }
 
-if (!supabaseUrl) {
-  return NextResponse.json(
-    {
-      success: false,
-      error: "NEXT_PUBLIC_SUPABASE_URL is missing on the server.",
-    },
-    { status: 500 }
-  );
-}
+    if (!supabaseUrl) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "NEXT_PUBLIC_SUPABASE_URL is missing on the server.",
+        },
+        { status: 500 }
+      );
+    }
 
-if (!serviceRoleKey) {
-  return NextResponse.json(
-    {
-      success: false,
-      error: "SUPABASE_SERVICE_ROLE_KEY is missing on the server.",
-    },
-    { status: 500 }
-  );
-}
+    if (!serviceRoleKey) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "SUPABASE_SERVICE_ROLE_KEY is missing on the server.",
+        },
+        { status: 500 }
+      );
+    }
 
+    const adminSupabase = createClient(supabaseUrl, serviceRoleKey);
+
+    const { data: reportRow, error: reportError } = await adminSupabase
+      .from("uploaded_lab_files")
+      .select("id, file_name, file_path")
+      .eq("id", reportId)
+      .single();
+
+    if (reportError || !reportRow?.file_path) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            reportError?.message ||
+            "Report record was found, but file_path is missing.",
+        },
+        { status: 404 }
+      );
+    }
+
+    const filePath = reportRow.file_path;
+    const fileName = reportRow.file_name;
     const fileType = getFileType(fileName);
 
     if (fileType === "unknown") {
@@ -135,40 +156,36 @@ if (!serviceRoleKey) {
       );
     }
 
-    const adminSupabase = createClient(supabaseUrl, serviceRoleKey);
-
     await adminSupabase
       .from("uploaded_lab_files")
       .update({ extraction_status: "Processing" })
       .eq("id", reportId);
 
-const storagePath = normalizeStoragePath(filePath);
+    const storagePath = normalizeStoragePath(filePath);
 
-const { data: fileBlob, error: downloadError } = await adminSupabase.storage
-  .from("lab-reports")
-  .download(storagePath);
+    const { data: fileBlob, error: downloadError } = await adminSupabase.storage
+      .from("lab-reports")
+      .download(storagePath);
 
-if (downloadError || !fileBlob) {
-  await adminSupabase
-    .from("uploaded_lab_files")
-    .update({ extraction_status: "Failed" })
-    .eq("id", reportId);
+    if (downloadError || !fileBlob) {
+      await adminSupabase
+        .from("uploaded_lab_files")
+        .update({ extraction_status: "Failed" })
+        .eq("id", reportId);
 
-  return NextResponse.json(
-    {
-      success: false,
-      error:
-        downloadError?.message ||
-        "File download failed: no file returned from storage.",
-      filePath,
-      storagePath,
-    },
-    { status: 500 }
-  );
-}
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Storage download failed. filePath=${filePath}, storagePath=${storagePath}, message=${
+            downloadError?.message || "No file returned from storage"
+          }`,
+        },
+        { status: 500 }
+      );
+    }
 
-const arrayBuffer = await fileBlob.arrayBuffer();
-const buffer = Buffer.from(arrayBuffer);
+    const arrayBuffer = await fileBlob.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
 
     let cleanText = "";
 
