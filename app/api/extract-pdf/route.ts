@@ -210,17 +210,22 @@ let { data: fileBlob, error: downloadError } = await adminSupabase.storage
   .download(storagePath);
 
 if (downloadError || !fileBlob) {
-  const fileBaseName = getFileNameFromPath(storagePath);
+const fileBaseName = getFileNameFromPath(storagePath);
 
-  const { data: matchingObjects, error: objectSearchError } =
-    await adminSupabase
-      .schema("storage")
-      .from("objects")
-      .select("name")
-      .eq("bucket_id", "lab-reports")
-      .ilike("name", `%${fileBaseName}`)
-      .order("created_at", { ascending: false })
-      .limit(1);
+const originalFileName =
+  fileName && fileName.trim().length > 0
+    ? fileName.trim()
+    : fileBaseName.replace(/^\d+-/, "");
+
+const { data: matchingObjects, error: objectSearchError } =
+  await adminSupabase
+    .schema("storage")
+    .from("objects")
+    .select("name")
+    .eq("bucket_id", "lab-reports")
+    .ilike("name", `%${originalFileName}`)
+    .order("created_at", { ascending: false })
+    .limit(1);
 
   const matchedStoragePath = matchingObjects?.[0]?.name;
 
@@ -235,9 +240,11 @@ if (downloadError || !fileBlob) {
     return NextResponse.json(
       {
         success: false,
-        error: `Storage object not found. filePath=${filePath}, storagePath=${storagePath}, fileBaseName=${fileBaseName}, message=${
-          downloadError?.message || objectSearchError?.message || "No matching storage object found"
-        }`,
+      error: `Storage object not found. filePath=${filePath}, storagePath=${storagePath}, fileBaseName=${fileBaseName}, originalFileName=${originalFileName}, message=${
+  downloadError?.message ||
+  objectSearchError?.message ||
+  "No matching storage object found"
+}`,
       },
       { status: 500 }
     );
