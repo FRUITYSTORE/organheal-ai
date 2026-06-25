@@ -87,16 +87,20 @@ function getFileType(fileName: string | null | undefined) {
 }
 export async function POST(req: Request) {
   try {
-    const { reportId } = await req.json();
+    const {
+      reportId,
+      filePath: payloadFilePath,
+      fileName: payloadFileName,
+    } = await req.json();
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    if (!reportId) {
+    if (!reportId && !payloadFilePath) {
       return NextResponse.json(
         {
           success: false,
-          error: "Missing reportId from the selected report.",
+          error: "Missing reportId or filePath from the selected report.",
         },
         { status: 400 }
       );
@@ -124,26 +128,58 @@ export async function POST(req: Request) {
 
     const adminSupabase = createClient(supabaseUrl, serviceRoleKey);
 
-    const { data: reportRow, error: reportError } = await adminSupabase
-      .from("uploaded_lab_files")
-      .select("id, file_name, file_path")
-      .eq("id", reportId)
-      .single();
+    let reportRow: {
+      id: number;
+      file_name: string | null;
+      file_path: string | null;
+      created_at?: string;
+    } | null = null;
 
-    if (reportError || !reportRow?.file_path) {
+    if (reportId) {
+      const { data } = await adminSupabase
+        .from("uploaded_lab_files")
+        .select("id, file_name, file_path, created_at")
+        .eq("id", reportId)
+        .limit(1)
+        .maybeSingle();
+
+      reportRow = data || null;
+    }
+
+    if (!reportRow && payloadFilePath) {
+      const normalizedPayloadPath = normalizeStoragePath(payloadFilePath);
+
+      const { data } = await adminSupabase
+        .from("uploaded_lab_files")
+        .select("id, file_name, file_path, created_at")
+        .eq("file_path", normalizedPayloadPath)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      reportRow = data || null;
+    }
+
+    const filePath =
+      reportRow?.file_path ||
+      (typeof payloadFilePath === "string" ? payloadFilePath : "");
+
+    if (!filePath) {
       return NextResponse.json(
         {
           success: false,
-          error:
-            reportError?.message ||
-            "Report record was found, but file_path is missing.",
+          error: "Report file path could not be resolved.",
         },
         { status: 404 }
       );
     }
 
-    const filePath = reportRow.file_path;
-    const fileName = reportRow.file_name;
+    const fileName =
+      reportRow?.file_name ||
+      (typeof payloadFileName === "string" ? payloadFileName : "") ||
+      filePath.split("/").pop() ||
+      "";
+
     const fileType = getFileType(fileName);
 
     if (fileType === "unknown") {
@@ -156,10 +192,14 @@ export async function POST(req: Request) {
       );
     }
 
-    await adminSupabase
-      .from("uploaded_lab_files")
-      .update({ extraction_status: "Processing" })
-      .eq("id", reportId);
+    const reportDbId = reportRow?.id || reportId;
+
+    if (reportDbId) {
+      await adminSupabase
+        .from("uploaded_lab_files")
+        .update({ extraction_status: "Processing" })
+        .eq("id", reportDbId);
+    }
 
     const storagePath = normalizeStoragePath(filePath);
 
@@ -168,10 +208,12 @@ export async function POST(req: Request) {
       .download(storagePath);
 
     if (downloadError || !fileBlob) {
-      await adminSupabase
-        .from("uploaded_lab_files")
-        .update({ extraction_status: "Failed" })
-        .eq("id", reportId);
+      if (reportDbId) {
+        await adminSupabase
+          .from("uploaded_lab_files")
+          .update({ extraction_status: "Failed" })
+          .eq("id", reportDbId);
+      }
 
       return NextResponse.json(
         {
@@ -202,14 +244,16 @@ export async function POST(req: Request) {
         ? cleanText
         : "No readable text extracted from this report.";
 
-    await adminSupabase
-      .from("uploaded_lab_files")
-      .update({
-        extracted_text: finalText,
-        extraction_status: "Completed",
-        extracted_at: new Date().toISOString(),
-      })
-      .eq("id", reportId);
+    if (reportDbId) {
+      await adminSupabase
+        .from("uploaded_lab_files")
+        .update({
+          extracted_text: finalText,
+          extraction_status: "Completed",
+          extracted_at: new Date().toISOString(),
+        })
+        .eq("id", reportDbId);
+    }
 
     return NextResponse.json({
       success: true,
