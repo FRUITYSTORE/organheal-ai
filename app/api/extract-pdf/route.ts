@@ -137,36 +137,29 @@ if (!serviceRoleKey) {
       .update({ extraction_status: "Processing" })
       .eq("id", reportId);
 
-    const encodedPath = filePath
-      .split("/")
-      .map((part: string) => encodeURIComponent(part))
-      .join("/");
+const { data: fileBlob, error: downloadError } = await adminSupabase.storage
+  .from("lab-reports")
+  .download(filePath);
 
-    const downloadUrl = `${supabaseUrl}/storage/v1/object/authenticated/lab-reports/${encodedPath}`;
+if (downloadError || !fileBlob) {
+  await adminSupabase
+    .from("uploaded_lab_files")
+    .update({ extraction_status: "Failed" })
+    .eq("id", reportId);
 
-    const fileResponse = await fetch(downloadUrl, {
-      headers: {
-        Authorization: `Bearer ${serviceRoleKey}`,
-      },
-    });
+  return NextResponse.json(
+    {
+      success: false,
+      error:
+        downloadError?.message ||
+        "File download failed: no file returned from storage.",
+    },
+    { status: 500 }
+  );
+}
 
-    if (!fileResponse.ok) {
-      await adminSupabase
-        .from("uploaded_lab_files")
-        .update({ extraction_status: "Failed" })
-        .eq("id", reportId);
-
-      return NextResponse.json(
-        {
-          success: false,
-          error: `File download failed with status ${fileResponse.status}`,
-        },
-        { status: 500 }
-      );
-    }
-
-    const arrayBuffer = await fileResponse.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+const arrayBuffer = await fileBlob.arrayBuffer();
+const buffer = Buffer.from(arrayBuffer);
 
     let cleanText = "";
 
