@@ -84,6 +84,8 @@ function getFileType(fileName: string | null | undefined) {
     .trim()
     .replace(/^\/+/, "")
     .replace(/^lab-reports\//, "");
+}function getFileNameFromPath(path: string) {
+  return path.split("/").pop() || path;
 }
 export async function POST(req: Request) {
   try {
@@ -201,30 +203,74 @@ export async function POST(req: Request) {
         .eq("id", reportDbId);
     }
 
-    const storagePath = normalizeStoragePath(filePath);
+    let storagePath = normalizeStoragePath(filePath);
 
-    const { data: fileBlob, error: downloadError } = await adminSupabase.storage
-      .from("lab-reports")
-      .download(storagePath);
+let { data: fileBlob, error: downloadError } = await adminSupabase.storage
+  .from("lab-reports")
+  .download(storagePath);
 
-    if (downloadError || !fileBlob) {
-      if (reportDbId) {
-        await adminSupabase
-          .from("uploaded_lab_files")
-          .update({ extraction_status: "Failed" })
-          .eq("id", reportDbId);
-      }
+if (downloadError || !fileBlob) {
+  const fileBaseName = getFileNameFromPath(storagePath);
 
-      return NextResponse.json(
-        {
-          success: false,
-          error: `Storage download failed. filePath=${filePath}, storagePath=${storagePath}, message=${
-            downloadError?.message || "No file returned from storage"
-          }`,
-        },
-        { status: 500 }
-      );
+  const { data: matchingObjects, error: objectSearchError } =
+    await adminSupabase
+      .schema("storage")
+      .from("objects")
+      .select("name")
+      .eq("bucket_id", "lab-reports")
+      .ilike("name", `%${fileBaseName}`)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+  const matchedStoragePath = matchingObjects?.[0]?.name;
+
+  if (objectSearchError || !matchedStoragePath) {
+    if (reportDbId) {
+      await adminSupabase
+        .from("uploaded_lab_files")
+        .update({ extraction_status: "Failed" })
+        .eq("id", reportDbId);
     }
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: `Storage object not found. filePath=${filePath}, storagePath=${storagePath}, fileBaseName=${fileBaseName}, message=${
+          downloadError?.message || objectSearchError?.message || "No matching storage object found"
+        }`,
+      },
+      { status: 500 }
+    );
+  }
+
+  storagePath = matchedStoragePath;
+
+  const retryDownload = await adminSupabase.storage
+    .from("lab-reports")
+    .download(storagePath);
+
+  fileBlob = retryDownload.data;
+  downloadError = retryDownload.error;
+}
+
+if (downloadError || !fileBlob) {
+  if (reportDbId) {
+    await adminSupabase
+      .from("uploaded_lab_files")
+      .update({ extraction_status: "Failed" })
+      .eq("id", reportDbId);
+  }
+
+  return NextResponse.json(
+    {
+      success: false,
+      error: `Storage retry failed. finalStoragePath=${storagePath}, message=${
+        downloadError?.message || "No file returned from storage"
+      }`,
+    },
+    { status: 500 }
+  );
+}
 
     const arrayBuffer = await fileBlob.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
