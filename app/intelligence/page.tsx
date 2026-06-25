@@ -31,6 +31,7 @@ import LongitudinalRiskCard from "./components/LongitudinalRiskCard";
 import LabTrendsCard from "./components/LabTrendsCard";
 import CrossSourceCard from "./components/CrossSourceCard";
 import DigitalTwinCard from "./components/DigitalTwinCard";
+import ForecastCard from "./components/ForecastCard";
 
 
 
@@ -723,34 +724,7 @@ Clinical note: This is an educational interpretation and should be reviewed by a
 
 <DigitalTwinCard digitalTwin={generatedDigitalTwin} />
 
-{generatedForecast && (
-  <div className="resultBox">
-    <p className="sectionLabel">90-Day Health Forecast</p>
-
-    <h3>Current Health Score</h3>
-    <p>{generatedForecast.currentScore}/100</p>
-
-    <h3>Projected Scores</h3>
-    <p>Best Case: {generatedForecast.bestCaseScore}/100</p>
-    <p>Expected: {generatedForecast.expectedScore}/100</p>
-    <p>Risk Case: {generatedForecast.riskScore}/100</p>
-
-    <h3>Current Trajectory</h3>
-    <p>{generatedForecast.currentTrajectory}</p>
-
-    <h3>Improvement Potential</h3>
-    <p>{generatedForecast.improvementPotential}</p>
-
-    <h3>Best Case Scenario</h3>
-    <p>{generatedForecast.bestCase}</p>
-
-    <h3>Expected Scenario</h3>
-    <p>{generatedForecast.expectedCase}</p>
-
-    <h3>Risk Escalation Scenario</h3>
-    <p>{generatedForecast.riskCase}</p>
-  </div>
-)}
+<ForecastCard forecast={generatedForecast} />
                           </div>
                         )}
                       </div>
