@@ -2,13 +2,6 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import PDFParser from "pdf2json";
 
-function safeDecode(text: string) {
-  try {
-    return decodeURIComponent(text);
-  } catch {
-    return text;
-  }
-}
 
 function extractTextFromPdfBuffer(buffer: Buffer): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -69,7 +62,37 @@ async function extractTextFromImageBuffer(buffer: Buffer): Promise<string> {
 
   return data.ParsedResults?.[0]?.ParsedText?.trim() || "";
 }
-
+function safeDecode(text: string) {
+  try {
+    return decodeURIComponent(text);
+  } catch {
+    return text;
+  }
+}
+function normalizeStoragePath(path: string) {
+  return path
+    .trim()
+    .replace(/^\/+/, "")
+    .replace(/^lab-reports\//, "");
+}
+function getFileNameFromPath(path: string) {
+  return path.split("/").pop() || path;
+}
+function getFolderFromPath(path: string) {
+  const parts = path.split("/");
+  parts.pop();
+  return parts.join("/");
+}
+function removeUploadPrefix(name: string) {
+  return name.replace(/^\d+[-_]/, "");
+}
+function normalizeFileNameForMatch(name: string) {
+  return decodeURIComponent(name)
+    .toLowerCase()
+    .replace(/\s+/g, "_")
+    .replace(/[^a-z0-9._-]/g, "_")
+    .replace(/_+/g, "_");
+}
 function getFileType(fileName: string | null | undefined) {
   const name = (fileName || "").toLowerCase();
 
@@ -79,14 +102,8 @@ function getFileType(fileName: string | null | undefined) {
   if (name.endsWith(".jpeg")) return "image";
 
   return "unknown";
-}function normalizeStoragePath(path: string) {
-  return path
-    .trim()
-    .replace(/^\/+/, "")
-    .replace(/^lab-reports\//, "");
-}function getFileNameFromPath(path: string) {
-  return path.split("/").pop() || path;
 }
+
 export async function POST(req: Request) {
   try {
     const {
@@ -203,33 +220,46 @@ export async function POST(req: Request) {
         .eq("id", reportDbId);
     }
 
-    let storagePath = normalizeStoragePath(filePath);
+   let storagePath = normalizeStoragePath(filePath);
 
 let { data: fileBlob, error: downloadError } = await adminSupabase.storage
   .from("lab-reports")
   .download(storagePath);
 
 if (downloadError || !fileBlob) {
-const fileBaseName = getFileNameFromPath(storagePath);
+  const folderPath = getFolderFromPath(storagePath);
+  const fileBaseName = getFileNameFromPath(storagePath);
 
-const originalFileName =
-  fileName && fileName.trim().length > 0
-    ? fileName.trim()
-    : fileBaseName.replace(/^\d+-/, "");
+  const originalFileName =
+    fileName && fileName.trim().length > 0
+      ? fileName.trim()
+      : removeUploadPrefix(fileBaseName);
 
-const { data: matchingObjects, error: objectSearchError } =
-  await adminSupabase
-    .schema("storage")
-    .from("objects")
-    .select("name")
-    .eq("bucket_id", "lab-reports")
-    .ilike("name", `%${originalFileName}`)
-    .order("created_at", { ascending: false })
-    .limit(1);
+  const normalizedOriginal = normalizeFileNameForMatch(originalFileName);
+  const normalizedBase = normalizeFileNameForMatch(removeUploadPrefix(fileBaseName));
 
-  const matchedStoragePath = matchingObjects?.[0]?.name;
+  const { data: folderObjects, error: listError } = await adminSupabase.storage
+    .from("lab-reports")
+    .list(folderPath, {
+      limit: 100,
+      sortBy: { column: "created_at", order: "desc" },
+    });
 
-  if (objectSearchError || !matchedStoragePath) {
+  const matchedObject = folderObjects?.find((object) => {
+    const normalizedObjectName = normalizeFileNameForMatch(object.name);
+    const normalizedObjectWithoutPrefix = normalizeFileNameForMatch(
+      removeUploadPrefix(object.name)
+    );
+
+    return (
+      normalizedObjectName === normalizedOriginal ||
+      normalizedObjectName.endsWith(normalizedOriginal) ||
+      normalizedObjectWithoutPrefix === normalizedOriginal ||
+      normalizedObjectWithoutPrefix === normalizedBase
+    );
+  });
+
+  if (listError || !matchedObject) {
     if (reportDbId) {
       await adminSupabase
         .from("uploaded_lab_files")
@@ -240,17 +270,21 @@ const { data: matchingObjects, error: objectSearchError } =
     return NextResponse.json(
       {
         success: false,
-      error: `Storage object not found. filePath=${filePath}, storagePath=${storagePath}, fileBaseName=${fileBaseName}, originalFileName=${originalFileName}, message=${
-  downloadError?.message ||
-  objectSearchError?.message ||
-  "No matching storage object found"
-}`,
+        error: `Storage object not found after listing folder. folderPath=${folderPath}, filePath=${filePath}, storagePath=${storagePath}, fileBaseName=${fileBaseName}, originalFileName=${originalFileName}, listedFiles=${
+          folderObjects?.map((item) => item.name).join(" | ") || "none"
+        }, message=${
+          listError?.message ||
+          downloadError?.message ||
+          "No matching storage object found"
+        }`,
       },
       { status: 500 }
     );
   }
 
-  storagePath = matchedStoragePath;
+  storagePath = folderPath
+    ? `${folderPath}/${matchedObject.name}`
+    : matchedObject.name;
 
   const retryDownload = await adminSupabase.storage
     .from("lab-reports")
@@ -258,6 +292,13 @@ const { data: matchingObjects, error: objectSearchError } =
 
   fileBlob = retryDownload.data;
   downloadError = retryDownload.error;
+
+  if (!downloadError && fileBlob && reportDbId) {
+    await adminSupabase
+      .from("uploaded_lab_files")
+      .update({ file_path: storagePath })
+      .eq("id", reportDbId);
+  }
 }
 
 if (downloadError || !fileBlob) {
