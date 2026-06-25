@@ -696,24 +696,7 @@ Clinical note: This is an educational interpretation and should be reviewed by a
 )}
 
 {generatedUnifiedHealth && (
-  <div className="resultBox">
-    <p className="sectionLabel">Health Intelligence Summary</p>
-
-    <h3>Current Profile</h3>
-    <p>{generatedUnifiedHealth.currentProfile}</p>
-
-    <h3>Priority Goal</h3>
-    <p>{generatedUnifiedHealth.priorityGoal}</p>
-
-    <h3>Health Forecast</h3>
-    <p>{generatedUnifiedHealth.healthForecast}</p>
-
-    <h3>Expected Improvement</h3>
-    <p>{generatedUnifiedHealth.expectedImprovement}</p>
-
-    <h3>Next Best Action</h3>
-    <p>{generatedUnifiedHealth.nextBestAction}</p>
-  </div>
+  <UnifiedHealthCard unifiedHealth={generatedUnifiedHealth} />
 )}
 
 <TimelineCard timeline={generatedTimeline} />
