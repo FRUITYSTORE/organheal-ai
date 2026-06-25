@@ -80,7 +80,12 @@ function getFileType(fileName: string | null | undefined) {
 
   return "unknown";
 }
-
+function normalizeStoragePath(path: string) {
+  return path
+    .trim()
+    .replace(/^\/+/, "")
+    .replace(/^lab-reports\//, "");
+}
 export async function POST(req: Request) {
   try {
     const { reportId, filePath, fileName } = await req.json();
@@ -137,9 +142,11 @@ if (!serviceRoleKey) {
       .update({ extraction_status: "Processing" })
       .eq("id", reportId);
 
+const storagePath = normalizeStoragePath(filePath);
+
 const { data: fileBlob, error: downloadError } = await adminSupabase.storage
   .from("lab-reports")
-  .download(filePath);
+  .download(storagePath);
 
 if (downloadError || !fileBlob) {
   await adminSupabase
@@ -153,6 +160,8 @@ if (downloadError || !fileBlob) {
       error:
         downloadError?.message ||
         "File download failed: no file returned from storage.",
+      filePath,
+      storagePath,
     },
     { status: 500 }
   );
