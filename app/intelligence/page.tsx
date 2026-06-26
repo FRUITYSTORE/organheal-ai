@@ -33,6 +33,7 @@ import CrossSourceCard from "./components/CrossSourceCard";
 import DigitalTwinCard from "./components/DigitalTwinCard";
 import ForecastCard from "./components/ForecastCard";
 import UnifiedHealthCard from "./components/UnifiedHealthCard";
+import MedicalReportCard from "./components/MedicalReportCard";
 
 
 
@@ -561,159 +562,104 @@ Clinical note: This is an educational interpretation and should be reviewed by a
                   }}
                 >
                   {healthInsights.map((item) => {
-                    const isGenerated =
-                      item.ai_status === "Generated" &&
-                      item.extraction_status === "Completed";
+  const isGenerated =
+    item.ai_status === "Generated" &&
+    item.extraction_status === "Completed";
 
-                    return (
-                      <div
-                        key={item.id}
-                        style={{
-                          padding: "14px 16px",
-                          borderRadius: "16px",
-                          background: "rgba(15,23,42,0.75)",
-                          border: "1px solid rgba(34,211,238,0.18)",
-                          textAlign: "left",
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "grid",
-                            gridTemplateColumns: "1fr auto",
-                            gap: "12px",
-                            alignItems: "center",
-                          }}
-                        >
-                          <div>
-                            <h3 style={{ marginBottom: "6px" }}>
-                              📄 {item.file_name}
-                            </h3>
+  return (
+    <MedicalReportCard
+      key={item.id}
+      fileName={item.file_name || "Medical report"}
+      reportTypeLabel={getReportTypeLabel(item.report_type)}
+      uploadedAtText={new Date(
+        item.uploaded_at || item.created_at
+      ).toLocaleString()}
+      extractionStatus={item.extraction_status || "Pending"}
+      isGenerated={isGenerated}
+      canOpen={Boolean(item.file_path)}
+      onOpen={() => openMedicalReport(item.file_path)}
+      onGenerate={() => generateReportIntelligence(item.id)}
+    >
+      <p>
+        <strong>Medical Category:</strong> {item.medical_category}
+      </p>
 
-                            <p style={{ margin: 0 }}>
-                              {getReportTypeLabel(item.report_type)} •{" "}
-                              {new Date(
-                                item.uploaded_at || item.created_at
-                              ).toLocaleString()}
-                            </p>
+      <p>
+        <strong>Summary:</strong> {item.summary}
+      </p>
 
-                            <p style={{ marginTop: "6px" }}>
-                              Extraction: {item.extraction_status || "Pending"}
-                            </p>
+      <p>
+        <strong>Key Findings:</strong> {item.key_findings}
+      </p>
 
-                            <p style={{ marginTop: "8px", fontWeight: 800 }}>
-                              {isGenerated
-                                ? "Intelligence Generated"
-                                : "Ready for Interpretation"}
-                            </p>
-                          </div>
+      <p>
+        <strong>Risk Signals:</strong> {item.risk_signals}
+      </p>
 
-                          <div
-                            style={{
-                              display: "flex",
-                              gap: "10px",
-                              flexWrap: "wrap",
-                              justifyContent: "flex-end",
-                            }}
-                          >
-                            {item.file_path && (
-                              <button
-                                className="secondaryBtn"
-                                onClick={() => openMedicalReport(item.file_path)}
-                              >
-                                Open
-                              </button>
-                            )}
+      <p>
+        <strong>Recommendations:</strong> {item.recommendations}
+      </p>
 
-                            <button
-                              className="primaryBtn"
-                              onClick={() => generateReportIntelligence(item.id)}
-                              disabled={isGenerated}
-                            >
-                              {isGenerated ? "Generated" : "Generate"}
-                            </button>
-                          </div>
-                        </div>
+      <p>
+        <strong>Doctor Brief:</strong> {item.doctor_brief}
+      </p>
 
-                        {isGenerated && (
-                          <div style={{ marginTop: "16px" }}>
-                            <p>
-                              <strong>Medical Category:</strong>{" "}
-                              {item.medical_category}
-                            </p>
+      {generatedExecutiveSummary && (
+        <ExecutiveSummaryCard summary={generatedExecutiveSummary} />
+      )}
 
-                            <p>
-                              <strong>Summary:</strong> {item.summary}
-                            </p>
+      {generatedStrategy && (
+        <div className="resultBox">
+          <p className="sectionLabel">Personal Health Strategy</p>
 
-                            <p>
-                              <strong>Key Findings:</strong> {item.key_findings}
-                            </p>
+          <h3>Health Risks</h3>
+          <p style={{ whiteSpace: "pre-line" }}>
+            {generatedStrategy.healthRisks}
+          </p>
 
-                            <p>
-                              <strong>Risk Signals:</strong> {item.risk_signals}
-                            </p>
+          <h3>90-Day Action Plan</h3>
+          <p style={{ whiteSpace: "pre-line" }}>
+            {generatedStrategy.actionPlan90Days}
+          </p>
 
-                            <p>
-                              <strong>Recommendations:</strong>{" "}
-                              {item.recommendations}
-                            </p>
+          <h3>Nutrition Strategy</h3>
+          <p style={{ whiteSpace: "pre-line" }}>
+            {generatedStrategy.nutritionStrategy}
+          </p>
 
-                            <p>
-                              <strong>Doctor Brief:</strong> {item.doctor_brief}
-                            </p>
-                            {generatedExecutiveSummary && (
-  <ExecutiveSummaryCard summary={generatedExecutiveSummary} />
-)}
-                            {generatedStrategy && (
-  <div className="resultBox">
-  
-    <p className="sectionLabel">Personal Health Strategy</p>
+          <h3>Follow-Up Plan</h3>
+          <p style={{ whiteSpace: "pre-line" }}>
+            {generatedStrategy.followUpPlan}
+          </p>
+        </div>
+      )}
 
-    <h3>Health Risks</h3>
-    <p style={{ whiteSpace: "pre-line" }}>{generatedStrategy.healthRisks}</p>
+      {generatedHealthStory && (
+        <HealthStoryCard story={generatedHealthStory} />
+      )}
 
-    <h3>90-Day Action Plan</h3>
-    <p style={{ whiteSpace: "pre-line" }}>
-      {generatedStrategy.actionPlan90Days}
-    </p>
+      {generatedActionPlan && (
+        <ActionPlanCard actionPlan={generatedActionPlan} />
+      )}
 
-    <h3>Nutrition Strategy</h3>
-    <p style={{ whiteSpace: "pre-line" }}>
-      {generatedStrategy.nutritionStrategy}
-    </p>
+      {generatedUnifiedHealth && (
+        <UnifiedHealthCard unifiedHealth={generatedUnifiedHealth} />
+      )}
 
-    <h3>Follow-Up Plan</h3>
-    <p style={{ whiteSpace: "pre-line" }}>{generatedStrategy.followUpPlan}</p>
-  </div>
-)}
+      <TimelineCard timeline={generatedTimeline} />
 
-{generatedHealthStory && (
-  <HealthStoryCard story={generatedHealthStory} />
-)}
+      <LongitudinalRiskCard longitudinalRisk={generatedLongitudinalRisk} />
 
-{generatedActionPlan && (
-  <ActionPlanCard actionPlan={generatedActionPlan} />
-)}
+      <LabTrendsCard labTrends={generatedLabTrends} />
 
-{generatedUnifiedHealth && (
-  <UnifiedHealthCard unifiedHealth={generatedUnifiedHealth} />
-)}
+      <CrossSourceCard crossSource={generatedCrossSource} />
 
-<TimelineCard timeline={generatedTimeline} />
+      <DigitalTwinCard digitalTwin={generatedDigitalTwin} />
 
-<LongitudinalRiskCard longitudinalRisk={generatedLongitudinalRisk} />
-
-<LabTrendsCard labTrends={generatedLabTrends} />
-<CrossSourceCard crossSource={generatedCrossSource} />
-
-<DigitalTwinCard digitalTwin={generatedDigitalTwin} />
-
-<ForecastCard forecast={generatedForecast} />
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+      <ForecastCard forecast={generatedForecast} />
+    </MedicalReportCard>
+  );
+})}
                 </div>
               )}
             </div>
