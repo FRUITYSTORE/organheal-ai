@@ -166,14 +166,38 @@ const firstAssessment =
 
 const latestAssessment =
   assessments.length > 0 ? assessments[0] : null;
-  const nextRecommendedAction =
-  assessments.length === 0
-    ? "Complete your first organ assessment"
-    : uploadedReportsCount === 0
-    ? "Upload your first medical report"
-    : healthProfileStatus !== "Active"
-    ? "Complete more assessments to activate full intelligence"
-    : "Review your Intelligence Center insights";
+    const recommendedAction =
+    assessments.length === 0
+      ? {
+          label: "Complete your first organ assessment",
+          description:
+            "Start by completing one organ assessment so OrganHeal can begin building your health profile.",
+          href: "/assessment",
+          buttonText: "Start Assessment",
+        }
+      : uploadedReportsCount === 0
+      ? {
+          label: "Upload your first medical report",
+          description:
+            "Add a lab report, radiology report, or medical document to strengthen your health profile.",
+          href: "/lab-upload",
+          buttonText: "Upload Report",
+        }
+      : healthProfileStatus !== "Active"
+      ? {
+          label: "Continue building your health profile",
+          description:
+            "Complete more assessments to improve your profile completion and activate stronger health intelligence.",
+          href: "/assessment",
+          buttonText: "Continue Assessment",
+        }
+      : {
+          label: "Review your Health Intelligence Center",
+          description:
+            "Your profile is active. Review your intelligence insights, reports, and next health opportunities.",
+          href: "/intelligence",
+          buttonText: "Open Intelligence",
+        };
   return (
     <main className="assistantPage">
       <div className="assistantContainer">
@@ -212,6 +236,32 @@ const latestAssessment =
     <span>{completion}%</span>
     <p>{healthProfileStatus}</p>
   </div>
+</div>
+<div
+  className="resultBox"
+  style={{
+    marginTop: "18px",
+    marginBottom: "20px",
+    border: "1px solid rgba(34,211,238,0.22)",
+  }}
+>
+  <p className="sectionLabel">Recommended Next Step</p>
+
+  <h2>{recommendedAction.label}</h2>
+
+  <p
+    style={{
+      opacity: 0.82,
+      lineHeight: 1.7,
+      marginBottom: "18px",
+    }}
+  >
+    {recommendedAction.description}
+  </p>
+
+  <a href={recommendedAction.href}>
+    <button className="primaryBtn">{recommendedAction.buttonText}</button>
+  </a>
 </div>
 
               <div className="assessmentForm">
@@ -341,9 +391,9 @@ const latestAssessment =
   </div>
 
   <div style={{ marginTop: "20px" }}>
-    <strong>Next Recommended Action</strong>
-    <p>{nextRecommendedAction}</p>
-  </div>
+  <strong>Next Recommended Action</strong>
+  <p>{recommendedAction.label}</p>
+</div>
 </div>
                 <div className="resultBox">
                   <p className="sectionLabel">Quick Actions</p>
@@ -356,17 +406,16 @@ const latestAssessment =
                       flexWrap: "wrap",
                     }}
                   >
-                    <a href="/dashboard">
-                      <button className="primaryBtn">Dashboard</button>
-                    </a>
-
-                    <a href="/organ-report">
-                      <button className="secondaryBtn">Report</button>
-                    </a>
-
-                    <a href="/history">
-                      <button className="secondaryBtn">History</button>
-                    </a>
+                   <p
+  style={{
+    margin: 0,
+    opacity: 0.72,
+    lineHeight: 1.7,
+    textAlign: "center",
+  }}
+>
+  Use the recommended step above to continue building your OrganHeal profile.
+</p>
                   </div>
                 </div>
               </div>
