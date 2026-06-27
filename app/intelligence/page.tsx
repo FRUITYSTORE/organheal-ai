@@ -105,6 +105,8 @@ const [dailyCheckIn, setDailyCheckIn] = useState<DailyCheckIn | null>(null);
   const [generatedLabTrends, setGeneratedLabTrends] = useState<any[]>([]);
   const [generatedForecast, setGeneratedForecast] = useState<any>(null);
  const [generatedDigitalTwin, setGeneratedDigitalTwin] = useState<any>(null);
+const [activeGeneratedInsightId, setActiveGeneratedInsightId] =
+  useState<number | null>(null);
 
   useEffect(() => {
     loadIntelligence();
@@ -242,9 +244,11 @@ setDailyCheckIn(checkInData || null);
  async function generateReportIntelligence(insightId: number) {
   const selectedInsight = healthInsights.find((item) => item.id === insightId);
 
-  if (!selectedInsight) return;
+if (!selectedInsight) return;
 
-  let extractedText: string | null = null;
+setActiveGeneratedInsightId(null);
+
+let extractedText: string | null = null;
 
   if (selectedInsight.report_id && selectedInsight.file_path) {
     try {
@@ -404,16 +408,17 @@ const executiveSummary = {
 };
 
   setGeneratedStrategy(healthStrategy);
-  setGeneratedUnifiedHealth(unifiedHealth);
-  setGeneratedDigitalTwin(digitalTwin);
-  setGeneratedCrossSource(crossSource);
-  setGeneratedTimeline(timeline);
-  setGeneratedLongitudinalRisk(longitudinalRisk);
-  setGeneratedForecast(forecast);
-  setGeneratedHealthStory(healthStory);
-  setGeneratedActionPlan(actionPlan);
-  setGeneratedExecutiveSummary(executiveSummary);
-  setGeneratedLabTrends(labTrends);
+setGeneratedUnifiedHealth(unifiedHealth);
+setGeneratedDigitalTwin(digitalTwin);
+setGeneratedCrossSource(crossSource);
+setGeneratedTimeline(timeline);
+setGeneratedLongitudinalRisk(longitudinalRisk);
+setGeneratedForecast(forecast);
+setGeneratedHealthStory(healthStory);
+setGeneratedActionPlan(actionPlan);
+setGeneratedExecutiveSummary(executiveSummary);
+setGeneratedLabTrends(labTrends);
+setActiveGeneratedInsightId(insightId);
 
   const intelligence = {
     ...generateIntelligenceFromText(extractedText, selectedInsight.report_type),
