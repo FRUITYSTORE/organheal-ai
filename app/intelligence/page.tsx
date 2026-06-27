@@ -38,6 +38,7 @@ import MedicalReportList from "./components/MedicalReportList";
 import HealthPassportCard from "./components/HealthPassportCard";
 import TopOpportunitiesCard from "./components/TopOpportunitiesCard";
 import DoctorReadySummaryCard from "./components/DoctorReadySummaryCard";
+import GeneratedReportDetailsCard from "./components/GeneratedReportDetailsCard";
 
 
 
