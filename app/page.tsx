@@ -96,10 +96,10 @@ export default function Home() {
             </h1>
 
             <p className="homeHeroCleanText">
-              {isArabic
-                ? "حوّل التقييمات الصحية والتقارير الطبية ونتائج المختبر إلى ذكاء صحي واضح يساعدك على فهم المخاطر والفرص والخطوة التالية."
-                : "Turn health assessments, medical reports, and lab results into clear intelligence about risks, opportunities, and your next best action."}
-            </p>
+  {isArabic
+    ? "حوّل التقييمات الصحية والتقارير الطبية ونتائج المختبر إلى ملخصات مفهومة للمريض، تقارير جاهزة للطبيب، وذكاء صحي واضح يساعدك على معرفة الخطوة التالية."
+    : "Turn health assessments, medical reports, and lab results into patient-friendly summaries, doctor-ready briefs, and clear health intelligence for your next step."}
+</p>
 
             <div className="homeHeroSearchBox">
               <input
@@ -146,7 +146,6 @@ export default function Home() {
             )}
 
             <div className="homeHeroCleanActions">
-            <div className="homeHeroCleanActions">
   <Link href="/assessment" className="primaryBtn">
     {isArabic ? "ابدأ التقييم المجاني" : "Start Free Assessment"}
   </Link>
@@ -159,7 +158,6 @@ export default function Home() {
     {isArabic ? "مركز الذكاء الصحي" : "Intelligence Center"}
   </Link>
 </div>
-            </div>
 
             <p className="homeHeroDisclaimer">
               {isArabic
