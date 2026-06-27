@@ -640,6 +640,25 @@ if (saveGeneratedResultError) {
   />
 )}
 
+{!loading && healthEngine && (
+  <TopOpportunitiesCard
+    strongestOrgan={healthEngine.strongestOrgan}
+    riskPattern={healthEngine.riskPattern}
+    potentialGain={healthEngine.potentialGain}
+    opportunities={healthEngine.opportunities.slice(0, 3)}
+  />
+)}
+
+{!loading && healthEngine && (
+  <DoctorReadySummaryCard
+    overallScore={healthEngine.overallScore}
+    priorityOrgan={healthEngine.priorityOrgan}
+    riskPattern={healthEngine.riskPattern}
+    opportunityTitle={healthEngine.opportunityTitle}
+    bestNextAction={healthEngine.bestNextAction}
+  />
+)}
+
           {!loading && (
   <MedicalReportList hasReports={healthInsights.length > 0}>
     {visibleHealthInsights.map((item) => {
@@ -791,23 +810,6 @@ onHideGenerated={() => {
       </button>
     )}
   </div>
-)}
-          {!loading && healthEngine && (
-  <TopOpportunitiesCard
-    strongestOrgan={healthEngine.strongestOrgan}
-    riskPattern={healthEngine.riskPattern}
-    potentialGain={healthEngine.potentialGain}
-    opportunities={healthEngine.opportunities.slice(0, 3)}
-  />
-)}
-          {!loading && healthEngine && (
-  <DoctorReadySummaryCard
-    overallScore={healthEngine.overallScore}
-    priorityOrgan={healthEngine.priorityOrgan}
-    riskPattern={healthEngine.riskPattern}
-    opportunityTitle={healthEngine.opportunityTitle}
-    bestNextAction={healthEngine.bestNextAction}
-  />
 )}
         </section>
       </div>
