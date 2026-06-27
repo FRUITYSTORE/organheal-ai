@@ -56,6 +56,19 @@ type DailyCheckIn = {
 
 
 type HealthEngine = ReturnType<typeof buildHealthIntelligence>;
+type GeneratedIntelligenceResult = {
+  strategy: any;
+  unifiedHealth: any;
+  digitalTwin: any;
+  crossSource: any;
+  timeline: any;
+  longitudinalRisk: any;
+  forecast: any;
+  healthStory: string;
+  actionPlan: any;
+  executiveSummary: any;
+  labTrends: any[];
+};
 
 type HealthInsight = {
   id: number;
@@ -105,6 +118,8 @@ const [dailyCheckIn, setDailyCheckIn] = useState<DailyCheckIn | null>(null);
   const [generatedLabTrends, setGeneratedLabTrends] = useState<any[]>([]);
   const [generatedForecast, setGeneratedForecast] = useState<any>(null);
  const [generatedDigitalTwin, setGeneratedDigitalTwin] = useState<any>(null);
+const [generatedResult, setGeneratedResult] =
+  useState<GeneratedIntelligenceResult | null>(null);
 const [activeGeneratedInsightId, setActiveGeneratedInsightId] =
   useState<number | null>(null);
 
@@ -247,6 +262,7 @@ setDailyCheckIn(checkInData || null);
 if (!selectedInsight) return;
 
 setActiveGeneratedInsightId(null);
+setGeneratedResult(null);
 
 let extractedText: string | null = null;
 
@@ -407,7 +423,23 @@ const executiveSummary = {
   nextBestAction: unifiedHealth.nextBestAction,
 };
 
-  setGeneratedStrategy(healthStrategy);
+ const generatedResultPayload: GeneratedIntelligenceResult = {
+  strategy: healthStrategy,
+  unifiedHealth,
+  digitalTwin,
+  crossSource,
+  timeline,
+  longitudinalRisk,
+  forecast,
+  healthStory,
+  actionPlan,
+  executiveSummary,
+  labTrends,
+};
+
+setGeneratedResult(generatedResultPayload);
+
+setGeneratedStrategy(healthStrategy);
 setGeneratedUnifiedHealth(unifiedHealth);
 setGeneratedDigitalTwin(digitalTwin);
 setGeneratedCrossSource(crossSource);
