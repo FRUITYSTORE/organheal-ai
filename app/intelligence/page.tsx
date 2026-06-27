@@ -267,7 +267,43 @@ if (assessmentData.length === 0 && mergedInsights.length === 0) {
 
     window.open(data.signedUrl, "_blank");
   }
+async function openSavedGeneratedResult(insightId: number) {
+  const { data: userData } = await supabase.auth.getUser();
 
+  if (!userData.user) {
+    alert("User session expired. Please log in again.");
+    return;
+  }
+
+  const { data: savedGeneratedResult, error } = await supabase
+    .from("generated_intelligence_results")
+    .select("result")
+    .eq("user_id", userData.user.id)
+    .eq("insight_id", insightId)
+    .maybeSingle();
+
+  if (error) {
+    alert("Could not load saved intelligence result: " + error.message);
+    return;
+  }
+
+  if (!savedGeneratedResult?.result) {
+    const shouldRegenerate = window.confirm(
+      "No saved intelligence result was found for this report. Generate it now?"
+    );
+
+    if (shouldRegenerate) {
+      await generateReportIntelligence(insightId);
+    }
+
+    return;
+  }
+
+  setGeneratedResult(
+    savedGeneratedResult.result as GeneratedIntelligenceResult
+  );
+  setActiveGeneratedInsightId(insightId);
+}
  async function generateReportIntelligence(insightId: number) {
   const selectedInsight = healthInsights.find((item) => item.id === insightId);
 
@@ -611,6 +647,7 @@ return (
           canOpen={Boolean(item.file_path)}
           onOpen={() => openMedicalReport(item.file_path)}
           onGenerate={() => generateReportIntelligence(item.id)}
+          onViewGenerated={() => openSavedGeneratedResult(item.id)}
         >
           <GeneratedReportDetailsCard
   medicalCategory={item.medical_category}
