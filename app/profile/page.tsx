@@ -357,16 +357,26 @@ const latestAssessment =
   </div>
 </div>
 <div className="resultBox">
-  <p className="sectionLabel">Health Intelligence Status</p>
+  <p className="sectionLabel">Profile Snapshot</p>
 
   <h2>{completion}% Complete</h2>
+
+  <p
+    style={{
+      opacity: 0.82,
+      lineHeight: 1.7,
+      marginBottom: "16px",
+    }}
+  >
+    A short summary of your current OrganHeal profile status without repeating
+    the full dashboard.
+  </p>
 
   <div
     style={{
       display: "grid",
-      gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))",
+      gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
       gap: "14px",
-      marginTop: "18px",
     }}
   >
     <div>
@@ -375,20 +385,23 @@ const latestAssessment =
     </div>
 
     <div>
-      <strong>Reports Processed</strong>
-      <p>{processedReports}</p>
+      <strong>Saved Assessments</strong>
+      <p>{assessments.length}</p>
     </div>
 
     <div>
-      <strong>Reports Pending</strong>
-      <p>{pendingReports}</p>
+      <strong>Reports</strong>
+      <p>
+        {uploadedReportsCount} total • {processedReports} processed
+      </p>
     </div>
 
     <div>
-      <strong>Priority Organ</strong>
-      <p>{priorityAssessment?.organ_name || "N/A"}</p>
+      <strong>Priority Focus</strong>
+      <p>{priorityAssessment?.organ_name || "Not identified yet"}</p>
     </div>
   </div>
+</div>
 
   <div style={{ marginTop: "20px" }}>
   <strong>Next Recommended Action</strong>
@@ -418,7 +431,6 @@ const latestAssessment =
 </p>
                   </div>
                 </div>
-              </div>
             </>
           )}
         </div>
