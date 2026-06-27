@@ -107,10 +107,11 @@ export default function IntelligencePage() {
    const [healthInsights, setHealthInsights] = useState<HealthInsight[]>([]);
   const [assessmentData, setAssessmentData] = useState<Assessment[]>([]);
   const [dailyCheckIn, setDailyCheckIn] = useState<DailyCheckIn | null>(null);
-  const [generatedResult, setGeneratedResult] =
+    const [generatedResult, setGeneratedResult] =
     useState<GeneratedIntelligenceResult | null>(null);
   const [activeGeneratedInsightId, setActiveGeneratedInsightId] =
     useState<number | null>(null);
+  const [expandedReportId, setExpandedReportId] = useState<number | null>(null);
 
   useEffect(() => {
     loadIntelligence();
@@ -223,6 +224,7 @@ setDailyCheckIn(checkInData || null);
 
 setGeneratedResult(null);
 setActiveGeneratedInsightId(null);
+setExpandedReportId(null);
 
 const generatedInsightIds = mergedInsights.map((item) => item.id);
 
@@ -299,10 +301,11 @@ async function openSavedGeneratedResult(insightId: number) {
     return;
   }
 
-  setGeneratedResult(
+   setGeneratedResult(
     savedGeneratedResult.result as GeneratedIntelligenceResult
   );
   setActiveGeneratedInsightId(insightId);
+  setExpandedReportId(insightId);
 }
  async function generateReportIntelligence(insightId: number) {
   const selectedInsight = healthInsights.find((item) => item.id === insightId);
@@ -492,6 +495,7 @@ const executiveSummary = {
 
 setGeneratedResult(generatedResultPayload);
 setActiveGeneratedInsightId(insightId);
+setExpandedReportId(insightId);
 
   const intelligence = {
     ...generateIntelligenceFromText(extractedText, selectedInsight.report_type),
@@ -633,6 +637,7 @@ if (saveGeneratedResultError) {
   item.extraction_status === "Completed";
 
 const isActiveGeneratedReport = activeGeneratedInsightId === item.id;
+const isExpandedReport = expandedReportId === item.id;
 
 return (
   <MedicalReportCard
@@ -649,50 +654,54 @@ return (
           onGenerate={() => generateReportIntelligence(item.id)}
           onViewGenerated={() => openSavedGeneratedResult(item.id)}
         >
-          <GeneratedReportDetailsCard
-  medicalCategory={item.medical_category}
-  summary={item.summary}
-  keyFindings={item.key_findings}
-  riskSignals={item.risk_signals}
-  recommendations={item.recommendations}
-  doctorBrief={item.doctor_brief}
-/>
-
-          {isActiveGeneratedReport && generatedResult && (
+          {isExpandedReport && (
   <>
-    {generatedResult.executiveSummary && (
-      <ExecutiveSummaryCard summary={generatedResult.executiveSummary} />
-    )}
-
-   {generatedResult.strategy && (
-  <PersonalHealthStrategyCard strategy={generatedResult.strategy} />
-)}
-
-    {generatedResult.healthStory && (
-      <HealthStoryCard story={generatedResult.healthStory} />
-    )}
-
-    {generatedResult.actionPlan && (
-      <ActionPlanCard actionPlan={generatedResult.actionPlan} />
-    )}
-
-    {generatedResult.unifiedHealth && (
-      <UnifiedHealthCard unifiedHealth={generatedResult.unifiedHealth} />
-    )}
-
-    <TimelineCard timeline={generatedResult.timeline} />
-
-    <LongitudinalRiskCard
-      longitudinalRisk={generatedResult.longitudinalRisk}
+    <GeneratedReportDetailsCard
+      medicalCategory={item.medical_category}
+      summary={item.summary}
+      keyFindings={item.key_findings}
+      riskSignals={item.risk_signals}
+      recommendations={item.recommendations}
+      doctorBrief={item.doctor_brief}
     />
 
-    <LabTrendsCard labTrends={generatedResult.labTrends} />
+    {isActiveGeneratedReport && generatedResult && (
+      <>
+        {generatedResult.executiveSummary && (
+          <ExecutiveSummaryCard summary={generatedResult.executiveSummary} />
+        )}
 
-    <CrossSourceCard crossSource={generatedResult.crossSource} />
+        {generatedResult.strategy && (
+          <PersonalHealthStrategyCard strategy={generatedResult.strategy} />
+        )}
 
-    <DigitalTwinCard digitalTwin={generatedResult.digitalTwin} />
+        {generatedResult.healthStory && (
+          <HealthStoryCard story={generatedResult.healthStory} />
+        )}
 
-    <ForecastCard forecast={generatedResult.forecast} />
+        {generatedResult.actionPlan && (
+          <ActionPlanCard actionPlan={generatedResult.actionPlan} />
+        )}
+
+        {generatedResult.unifiedHealth && (
+          <UnifiedHealthCard unifiedHealth={generatedResult.unifiedHealth} />
+        )}
+
+        <TimelineCard timeline={generatedResult.timeline} />
+
+        <LongitudinalRiskCard
+          longitudinalRisk={generatedResult.longitudinalRisk}
+        />
+
+        <LabTrendsCard labTrends={generatedResult.labTrends} />
+
+        <CrossSourceCard crossSource={generatedResult.crossSource} />
+
+        <DigitalTwinCard digitalTwin={generatedResult.digitalTwin} />
+
+        <ForecastCard forecast={generatedResult.forecast} />
+      </>
+    )}
   </>
 )}
         </MedicalReportCard>
