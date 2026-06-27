@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { blogPosts } from "../../../lib/blogData";
 
 type Language = "en" | "ar";
@@ -61,7 +62,21 @@ export default function BlogPostClient({ post }: { post: BlogPost }) {
           __html: JSON.stringify(articleSchema),
         }}
       />
-
+<Link
+  href="/blog"
+  style={{
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "8px",
+    marginBottom: "22px",
+    textDecoration: "none",
+    color: "inherit",
+    opacity: 0.82,
+    fontWeight: 600,
+  }}
+>
+  {isArabic ? "العودة إلى المدونة" : "← Back to Blog"}
+</Link>
       <div className="assistantContainer">
         <article className="resultBox">
           <p className="sectionLabel">
