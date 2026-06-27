@@ -300,16 +300,16 @@ export default function Home() {
           </p>
 
           <h2>
-            {isArabic
-              ? "ثلاث خطوات لفهم صحتك بوضوح"
-              : "Three steps to clearer health intelligence"}
-          </h2>
+  {isArabic
+    ? "أربع خطوات لفهم صحتك بوضوح"
+    : "Four steps to clearer health intelligence"}
+</h2>
 
-          <p>
-            {isArabic
-              ? "ابدأ بتقييم صحي، ارفع تقاريرك الطبية، ثم احصل على ذكاء صحي منظم وواضح."
-              : "Start with an assessment, upload your medical reports, and receive clear organized health intelligence."}
-          </p>
+<p>
+  {isArabic
+    ? "ابدأ بتقييم صحي، ارفع تقاريرك الطبية، احصل على ذكاء صحي منظم، ثم حمّل ملخصًا مبسطًا للمريض أو تقريرًا جاهزًا للطبيب."
+    : "Start with an assessment, upload your medical reports, receive organized health intelligence, then download a patient-friendly or doctor-ready PDF."}
+</p>
         </div>
 
         <div className="howStepsGrid">
@@ -347,6 +347,20 @@ export default function Home() {
                 : "Understand your health profile, risk signals, opportunities, and doctor brief."}
             </p>
           </Link>
+          <Link href="/intelligence" className="howStepCard">
+  <span>04</span>
+  <div className="howIcon">📥</div>
+  <h3>
+    {isArabic
+      ? "حمّل ملخصات PDF"
+      : "Download PDF Summaries"}
+  </h3>
+  <p>
+    {isArabic
+      ? "احصل على نسخة مبسطة للمريض وملخص جاهز للطبيب لمراجعة النتائج بشكل أوضح."
+      : "Download a patient-friendly report and a doctor-ready brief to review your results more clearly."}
+  </p>
+</Link>
         </div>
       </section>
 
