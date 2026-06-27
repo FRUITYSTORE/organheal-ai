@@ -2318,4 +2318,54 @@ html[dir="rtl"] .homeHeroActions {
 .timelineItem.active {
   border-color: rgba(34, 211, 238, 0.45);
   background: rgba(34, 211, 238, 0.08);
+}@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .doctorBriefPrintArea,
+  .doctorBriefPrintArea * {
+    visibility: visible;
+  }
+
+  .doctorBriefPrintArea {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: white !important;
+    color: #111827 !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 24px !important;
+  }
+
+  .doctorBriefPrintArea * {
+    color: #111827 !important;
+  }
+
+  .doctorBriefPrintButton {
+    display: none !important;
+  }
+
+  .doctorBriefPrintArea .sectionLabel {
+    color: #111827 !important;
+    opacity: 0.85 !important;
+  }
+
+  .doctorBriefPrintArea p {
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .doctorBriefPrintArea h2 {
+    font-size: 22px;
+    margin-bottom: 12px;
+  }
+
+  .doctorBriefPrintArea h3 {
+    font-size: 15px;
+    margin-top: 18px;
+    margin-bottom: 6px;
+  }
 }

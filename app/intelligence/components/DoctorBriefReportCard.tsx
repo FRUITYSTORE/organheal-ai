@@ -33,7 +33,7 @@ export default function DoctorBriefReportCard({
   executiveSummary,
 }: DoctorBriefReportCardProps) {
   return (
-    <div className="resultBox">
+    <div className="resultBox doctorBriefPrintArea">
             <div
         style={{
           display: "flex",
@@ -49,11 +49,11 @@ export default function DoctorBriefReportCard({
         </div>
 
         <button
-          className="secondaryBtn"
-          onClick={() => window.print()}
-        >
-          Print Doctor Brief
-        </button>
+  className="secondaryBtn doctorBriefPrintButton"
+  onClick={() => window.print()}
+>
+  Print Doctor Brief
+</button>
       </div>
 
       <div
