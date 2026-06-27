@@ -425,7 +425,87 @@ export default function Home() {
           </Link>
         </div>
       </section>
+      <section className="homeAIFeatures">
+        <div className="homeSectionHeader">
+          <p className="sectionLabel">
+            {isArabic ? "لماذا OrganHeal AI؟" : "Why OrganHeal AI"}
+          </p>
 
+          <h2>
+            {isArabic
+              ? "ليس مجرد قارئ تقارير طبية"
+              : "Not just a medical report reader"}
+          </h2>
+
+          <p>
+            {isArabic
+              ? "OrganHeal يربط التقييمات الصحية، التقارير الطبية، نتائج المختبر، ملخصات المريض، وملخص الطبيب داخل نظام ذكاء صحي شخصي واحد."
+              : "OrganHeal connects health assessments, medical reports, lab results, patient-friendly summaries, and doctor-ready briefs into one personal health intelligence system."}
+          </p>
+        </div>
+
+        <div className="aiFeaturesGrid">
+          <Link href="/intelligence" className="aiFeatureCard">
+            <div>🪪</div>
+            <h3>{isArabic ? "ملف صحي ذكي" : "Health Passport"}</h3>
+            <p>
+              {isArabic
+                ? "صورة منظمة عن حالتك الصحية، الأولويات، والاتجاه العام لصحتك."
+                : "A structured view of your health profile, priorities, and overall health direction."}
+            </p>
+          </Link>
+
+          <Link href="/intelligence" className="aiFeatureCard">
+            <div>📈</div>
+            <h3>{isArabic ? "اتجاهات ومخاطر" : "Trends & Risk Signals"}</h3>
+            <p>
+              {isArabic
+                ? "يساعدك على ملاحظة الإشارات المتكررة والفرص الصحية المهمة."
+                : "Helps surface repeated patterns, important signals, and health opportunities."}
+            </p>
+          </Link>
+
+          <Link href="/intelligence" className="aiFeatureCard">
+            <div>👤</div>
+            <h3>{isArabic ? "ملخص للمريض" : "Patient-Friendly PDF"}</h3>
+            <p>
+              {isArabic
+                ? "تقرير مبسط بلغة واضحة يساعدك على فهم النتائج دون تعقيد."
+                : "A simple report written in clear language to help you understand your results."}
+            </p>
+          </Link>
+
+          <Link href="/intelligence" className="aiFeatureCard">
+            <div>🩺</div>
+            <h3>{isArabic ? "ملخص جاهز للطبيب" : "Doctor-Ready Brief"}</h3>
+            <p>
+              {isArabic
+                ? "ملخص منظم يساعدك على تحضير النقاش مع الطبيب بشكل أفضل."
+                : "A structured brief designed to support better conversations with your doctor."}
+            </p>
+          </Link>
+
+          <Link href="/assessment" className="aiFeatureCard">
+            <div>🎯</div>
+            <h3>{isArabic ? "فرص صحية واضحة" : "Clear Health Opportunities"}</h3>
+            <p>
+              {isArabic
+                ? "يعرض أهم المجالات التي يمكن تحسينها بدل الاكتفاء بعرض النتائج فقط."
+                : "Highlights areas that may be improved instead of only showing raw results."}
+            </p>
+          </Link>
+
+          <Link href="/lab-upload" className="aiFeatureCard">
+            <div>🔗</div>
+            <h3>{isArabic ? "ربط البيانات الصحية" : "Connected Health Data"}</h3>
+            <p>
+              {isArabic
+                ? "يجمع التقارير والتقييمات داخل رحلة صحية واحدة قابلة للمتابعة."
+                : "Brings reports and assessments together into one trackable health journey."}
+            </p>
+          </Link>
+        </div>
+      </section>
       <section className="homeFinalCTA">
         <div className="homeFinalCTAContent">
           <p className="sectionLabel">
