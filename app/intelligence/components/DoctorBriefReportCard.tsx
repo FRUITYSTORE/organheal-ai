@@ -276,23 +276,41 @@ const generatedAtText = new Date().toLocaleString();
         </div>
       </div>
 
-      <div style={{ marginTop: "18px", textAlign: "left" }}>
-        <h3>Clinical Summary</h3>
+            <div style={{ marginTop: "18px", textAlign: "left" }}>
+        <h3>1. Clinical Summary</h3>
         <p style={{ whiteSpace: "pre-line" }}>{summary || "N/A"}</p>
 
-        <h3>Key Findings</h3>
+        <h3>2. Key Clinical Findings</h3>
         <p style={{ whiteSpace: "pre-line" }}>{keyFindings || "N/A"}</p>
 
-        <h3>Risk Signals</h3>
+        <h3>3. Important Risk Signals</h3>
         <p style={{ whiteSpace: "pre-line" }}>{riskSignals || "N/A"}</p>
 
-        <h3>Recommended Follow-Up</h3>
+        <h3>4. Recommended Follow-Up</h3>
         <p style={{ whiteSpace: "pre-line" }}>{recommendations || "N/A"}</p>
 
-        <h3>Doctor Note</h3>
+        <h3>5. Clinical Review Note</h3>
         <p style={{ whiteSpace: "pre-line" }}>{doctorBrief || "N/A"}</p>
 
-        <h3>AI Intelligence Snapshot</h3>
+        <h3>6. AI Intelligence Snapshot</h3>
+                <div
+          style={{
+            padding: "12px 14px",
+            borderRadius: "14px",
+            background: "rgba(15,23,42,0.45)",
+            border: "1px solid rgba(148,163,184,0.18)",
+            marginBottom: "14px",
+          }}
+        >
+          <p>
+            <strong>Clinical Review Focus:</strong>{" "}
+            {executiveSummary?.prioritySystem || "N/A"}
+          </p>
+          <p>
+            <strong>Suggested Next Action:</strong>{" "}
+            {executiveSummary?.nextBestAction || "N/A"}
+          </p>
+        </div>
         <p>
           Current Score:{" "}
           <strong>{executiveSummary?.currentScore ?? "N/A"}</strong>
