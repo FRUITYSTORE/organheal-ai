@@ -207,9 +207,9 @@ const latestAssessment =
           <p className="assistantBadge">USER PROFILE</p>
           <h1>Your OrganHeal Profile</h1>
           <p>
-            View your account summary, saved assessments, latest lab score, and
-            overall health intelligence.
-          </p>
+  View your account summary, health profile progress, saved assessments,
+  and uploaded medical reports.
+</p>
         </div>
 
         <div className="chatWindow">
@@ -295,19 +295,7 @@ const latestAssessment =
       : "Complete assessments to identify your priority organ."}
   </p>
 </div>
-                <div className="resultBox">
-                  <p className="sectionLabel">Latest Lab Score</p>
-                  {labReport ? (
-                    <>
-                      <h2 className={getScoreClass(labReport.score)}>
-                        {labReport.score}/100
-                      </h2>
-                      <h3>{getStatus(labReport.score)}</h3>
-                    </>
-                  ) : (
-                    <p>No lab report saved yet.</p>
-                  )}
-                </div>
+                
 <div className="resultBox">
   <p className="sectionLabel">Health Journey Timeline</p>
 
