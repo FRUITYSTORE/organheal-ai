@@ -89,6 +89,31 @@ export default function BlogPostClient({ post }: { post: BlogPost }) {
           >
             {isArabic ? post.contentAr : post.content}
           </div>
+          <div
+  className="resultBox"
+  style={{
+    marginTop: "28px",
+    border: "1px solid rgba(148,163,184,0.24)",
+  }}
+>
+  <p className="sectionLabel">
+    {isArabic ? "السلامة الطبية" : "MEDICAL SAFETY"}
+  </p>
+
+  <h2>{isArabic ? "معلومة مهمة" : "Important note"}</h2>
+
+  <p
+    style={{
+      opacity: 0.82,
+      lineHeight: 1.8,
+      margin: 0,
+    }}
+  >
+    {isArabic
+      ? "مقالات OrganHeal تعليمية فقط. لا تقدم تشخيصًا أو علاجًا ولا تستبدل الطبيب أو الرعاية الطبية المرخصة. في حال وجود أعراض شديدة أو طارئة، اطلب الرعاية الطبية فورًا."
+      : "OrganHeal articles are for education only. They do not diagnose, treat, or replace licensed medical care. For severe or urgent symptoms, seek medical care immediately."}
+  </p>
+</div>
         </article>
       </div>
     </main>
