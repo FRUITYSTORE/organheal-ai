@@ -506,6 +506,85 @@ export default function Home() {
           </Link>
         </div>
       </section>
+            <section className="homeAIFeatures">
+        <div className="homeSectionHeader">
+          <p className="sectionLabel">
+            {isArabic
+              ? "تقارير PDF ذكية"
+              : "Reports & PDF Summaries"}
+          </p>
+
+          <h2>
+            {isArabic
+              ? "حوّل التقرير الطبي إلى ملخصات واضحة قابلة للتحميل"
+              : "Turn medical reports into clear downloadable summaries"}
+          </h2>
+
+          <p>
+            {isArabic
+              ? "بعد رفع التقرير الطبي، يساعدك OrganHeal على توليد ملخص مبسط للمريض، وملخص منظم للطبيب، مع حفظ نتائج الذكاء الصحي داخل حسابك."
+              : "After uploading a medical report, OrganHeal helps generate a patient-friendly summary, a doctor-ready brief, and saved intelligence results inside your account."}
+          </p>
+        </div>
+
+        <div className="aiFeaturesGrid">
+          <Link href="/intelligence" className="aiFeatureCard">
+            <div>👤</div>
+            <h3>
+              {isArabic
+                ? "تقرير مبسط للمريض"
+                : "Patient-Friendly Report"}
+            </h3>
+            <p>
+              {isArabic
+                ? "شرح واضح بلغة بسيطة يساعدك على فهم أهم النقاط دون مصطلحات معقدة."
+                : "A clear explanation in simple language to help you understand the key points without confusing medical terms."}
+            </p>
+          </Link>
+
+          <Link href="/intelligence" className="aiFeatureCard">
+            <div>🩺</div>
+            <h3>
+              {isArabic
+                ? "ملخص جاهز للطبيب"
+                : "Doctor-Ready Brief"}
+            </h3>
+            <p>
+              {isArabic
+                ? "ملخص منظم يجهزك لمناقشة التقرير مع الطبيب بطريقة أوضح وأكثر ترتيبًا."
+                : "A structured summary that helps you discuss your report with your doctor more clearly."}
+            </p>
+          </Link>
+
+          <Link href="/intelligence" className="aiFeatureCard">
+            <div>💾</div>
+            <h3>
+              {isArabic
+                ? "نتائج محفوظة"
+                : "Saved Intelligence Results"}
+            </h3>
+            <p>
+              {isArabic
+                ? "احتفظ بنتائج الذكاء الصحي وارجع إليها لاحقًا من مكتبة التقارير."
+                : "Keep generated intelligence results and return to them later from your report library."}
+            </p>
+          </Link>
+
+          <Link href="/lab-upload" className="aiFeatureCard">
+            <div>✅</div>
+            <h3>
+              {isArabic
+                ? "خطوات تالية أوضح"
+                : "Clearer Next Steps"}
+            </h3>
+            <p>
+              {isArabic
+                ? "افهم ما الذي يحتاج انتباهًا، وما الأسئلة التي يمكن أن تناقشها مع الطبيب."
+                : "Understand what may need attention and what questions you may want to discuss with your doctor."}
+            </p>
+          </Link>
+        </div>
+      </section>
       <section className="homeFinalCTA">
         <div className="homeFinalCTAContent">
           <p className="sectionLabel">
