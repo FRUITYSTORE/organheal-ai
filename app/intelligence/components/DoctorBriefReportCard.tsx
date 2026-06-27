@@ -73,9 +73,11 @@ const generatedAtText = new Date().toLocaleString();
               box-sizing: border-box;
             }
 
-            .doctorBriefPrintButton {
-              display: none !important;
-            }.doctorBriefPrintHeader {
+            .doctorBriefPrintButton,
+.doctorBriefPrintTip,
+.doctorBriefPrintActions {
+  display: none !important;
+}.doctorBriefPrintHeader {
   border-bottom: 1px solid #d1d5db;
   padding-bottom: 14px;
   margin-bottom: 20px;
@@ -220,12 +222,36 @@ const generatedAtText = new Date().toLocaleString();
       </p>
     </div>
 
-        <button
-      className="secondaryBtn doctorBriefPrintButton"
-      onClick={printDoctorBriefOnly}
-    >
-      Print Doctor Brief
-    </button>
+       <div
+  className="doctorBriefPrintActions"
+  style={{
+    display: "flex",
+    flexDirection: "column",
+    gap: "6px",
+    alignItems: "flex-end",
+  }}
+>
+  <button
+    className="secondaryBtn doctorBriefPrintButton"
+    onClick={printDoctorBriefOnly}
+  >
+    Print Doctor Brief
+  </button>
+
+  <p
+    className="doctorBriefPrintTip"
+    style={{
+      margin: 0,
+      fontSize: "0.78rem",
+      opacity: 0.72,
+      maxWidth: "230px",
+      textAlign: "right",
+      lineHeight: 1.4,
+    }}
+  >
+    Tip: choose “Save as PDF” in the print dialog to download this Doctor Brief.
+  </p>
+</div>
   </div>
 
   <div
