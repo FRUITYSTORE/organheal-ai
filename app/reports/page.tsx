@@ -142,6 +142,30 @@ export default function ReportsPage() {
     }
 
     return status;
+  }  async function openMedicalReport(filePath: string | null | undefined) {
+    if (!filePath) {
+      alert(
+        isArabic
+          ? "لا يوجد ملف مرتبط بهذا التقرير."
+          : "No file is linked to this report."
+      );
+      return;
+    }
+
+    const { data, error } = await supabase.storage
+      .from("lab-reports")
+      .createSignedUrl(filePath, 60 * 60);
+
+    if (error || !data?.signedUrl) {
+      alert(
+        isArabic
+          ? "تعذر فتح التقرير الآن."
+          : "Unable to open the report right now."
+      );
+      return;
+    }
+
+    window.open(data.signedUrl, "_blank");
   }
 
   return (
@@ -372,7 +396,7 @@ export default function ReportsPage() {
                     </div>
                   </div>
 
-                  {(report.summary || report.next_best_action) && (
+                                    {(report.summary || report.next_best_action) && (
                     <div
                       style={{
                         marginTop: "14px",
@@ -408,6 +432,32 @@ export default function ReportsPage() {
                       )}
                     </div>
                   )}
+
+                  <div
+                    style={{
+                      marginTop: "16px",
+                      paddingTop: "14px",
+                      borderTop: "1px solid rgba(148,163,184,0.14)",
+                      display: "flex",
+                      gap: "10px",
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <button
+                      type="button"
+                      className="secondaryBtn"
+                      onClick={() => openMedicalReport(report.file_path)}
+                      disabled={!report.file_path}
+                    >
+                      {isArabic ? "فتح التقرير" : "Open Report"}
+                    </button>
+
+                    <Link href="/intelligence" className="primaryBtn">
+                      {isArabic
+                        ? "المتابعة في مركز الذكاء"
+                        : "Continue in Intelligence"}
+                    </Link>
+                  </div>
                 </div>
               ))}
             </div>
