@@ -35,6 +35,7 @@ import ForecastCard from "./components/ForecastCard";
 import UnifiedHealthCard from "./components/UnifiedHealthCard";
 import MedicalReportCard from "./components/MedicalReportCard";
 import MedicalReportList from "./components/MedicalReportList";
+import HealthPassportCard from "./components/HealthPassportCard";
 
 
 
@@ -512,40 +513,14 @@ Clinical note: This is an educational interpretation and should be reviewed by a
           )}
 
           {!loading && healthEngine && (
-            <div className="resultBox">
-              <p className="sectionLabel">🪪 HEALTH PASSPORT</p>
-              <h2>{healthEngine.healthProfile}</h2>
-
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                  gap: "14px",
-                  marginTop: "18px",
-                }}
-              >
-                <div>
-                  <strong>Overall Score</strong>
-                  <p>{healthEngine.overallScore}/100</p>
-                </div>
-
-                <div>
-                  <strong>Health Age</strong>
-                  <p>{healthEngine.healthAgeStatus}</p>
-                </div>
-
-                <div>
-                  <strong>Priority Area</strong>
-                  <p>{healthEngine.priorityOrgan || "N/A"}</p>
-                </div>
-
-                <div>
-                  <strong>Potential Score</strong>
-                  <p>{healthEngine.potentialScore}/100</p>
-                </div>
-              </div>
-            </div>
-          )}
+  <HealthPassportCard
+    healthProfile={healthEngine.healthProfile}
+    overallScore={healthEngine.overallScore}
+    healthAgeStatus={healthEngine.healthAgeStatus}
+    priorityOrgan={healthEngine.priorityOrgan}
+    potentialScore={healthEngine.potentialScore}
+  />
+)}
 
           {!loading && (
   <MedicalReportList hasReports={healthInsights.length > 0}>
