@@ -773,6 +773,136 @@ export default function Home() {
           </div>
         </div>
       </section>
+            <section className="homeAIFeatures">
+        <div className="homeSectionHeader">
+          <p className="sectionLabel">
+            {isArabic
+              ? "قيمة الاشتراك"
+              : "Subscription Value"}
+          </p>
+
+          <h2>
+            {isArabic
+              ? "ابدأ مجانًا، ثم انتقل إلى ذكاء صحي أعمق"
+              : "Start free, then unlock deeper health intelligence"}
+          </h2>
+
+          <p>
+            {isArabic
+              ? "OrganHeal Free يساعدك على تجربة التقييمات والشرح الصحي الأساسي. OrganHeal Plus مصمم للمتابعة المستمرة، حفظ النتائج، تقارير PDF، والذكاء الصحي المتقدم."
+              : "OrganHeal Free helps you try basic assessments and health explanations. OrganHeal Plus is designed for ongoing follow-up, saved results, PDF reports, and advanced health intelligence."}
+          </p>
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+            gap: "18px",
+            maxWidth: "980px",
+            margin: "0 auto",
+          }}
+        >
+          <div
+            className="aiFeatureCard"
+            style={{
+              textAlign: isArabic ? "right" : "left",
+            }}
+          >
+            <div>🌱</div>
+
+            <h3>{isArabic ? "OrganHeal Free" : "OrganHeal Free"}</h3>
+
+            <p>
+              {isArabic
+                ? "تجربة أساسية تساعدك على بدء فهم صحتك بطريقة آمنة وبسيطة."
+                : "A basic entry experience to help you start understanding your health safely and simply."}
+            </p>
+
+            <ul
+              style={{
+                marginTop: "16px",
+                paddingLeft: isArabic ? "0" : "18px",
+                paddingRight: isArabic ? "18px" : "0",
+                lineHeight: 1.8,
+                opacity: 0.85,
+              }}
+            >
+              <li>{isArabic ? "تقييم صحي أساسي" : "Basic health assessment"}</li>
+              <li>{isArabic ? "مساعد صحي محدود" : "Limited health assistant"}</li>
+              <li>{isArabic ? "رفع محدود للتقارير" : "Limited report uploads"}</li>
+              <li>{isArabic ? "شرح صحي مبسط" : "Basic health explanation"}</li>
+              <li>{isArabic ? "محتوى تثقيفي أساسي" : "Basic education content"}</li>
+            </ul>
+
+            <Link
+              href="/assessment"
+              className="secondaryBtn"
+              style={{ marginTop: "18px", display: "inline-flex" }}
+            >
+              {isArabic ? "ابدأ مجانًا" : "Start Free"}
+            </Link>
+          </div>
+
+          <div
+            className="aiFeatureCard"
+            style={{
+              textAlign: isArabic ? "right" : "left",
+              border: "1px solid rgba(34,211,238,0.38)",
+              boxShadow: "0 18px 45px rgba(34,211,238,0.08)",
+            }}
+          >
+            <div>⭐</div>
+
+            <h3>{isArabic ? "OrganHeal Plus" : "OrganHeal Plus"}</h3>
+
+            <p>
+              {isArabic
+                ? "تجربة متقدمة للمتابعة الصحية المستمرة، التقارير القابلة للتحميل، وحفظ الذكاء الصحي داخل حسابك."
+                : "An advanced experience for ongoing health follow-up, downloadable reports, and saved intelligence inside your account."}
+            </p>
+
+            <ul
+              style={{
+                marginTop: "16px",
+                paddingLeft: isArabic ? "0" : "18px",
+                paddingRight: isArabic ? "18px" : "0",
+                lineHeight: 1.8,
+                opacity: 0.9,
+              }}
+            >
+              <li>{isArabic ? "ذكاء صحي متقدم" : "Advanced health intelligence"}</li>
+              <li>{isArabic ? "تقرير PDF مبسط للمريض" : "Patient-friendly PDF"}</li>
+              <li>{isArabic ? "ملخص PDF جاهز للطبيب" : "Doctor-ready brief PDF"}</li>
+              <li>{isArabic ? "حفظ نتائج الذكاء الصحي" : "Saved intelligence history"}</li>
+              <li>{isArabic ? "اتجاهات وإشارات مخاطر" : "Trends and risk signals"}</li>
+              <li>{isArabic ? "متابعة وتذكيرات شهرية" : "Monthly follow-up and reminders"}</li>
+            </ul>
+
+            <Link
+              href="/intelligence"
+              className="primaryBtn"
+              style={{ marginTop: "18px", display: "inline-flex" }}
+            >
+              {isArabic ? "استكشف OrganHeal Plus" : "Explore OrganHeal Plus"}
+            </Link>
+          </div>
+        </div>
+
+        <p
+          style={{
+            maxWidth: "760px",
+            margin: "22px auto 0",
+            textAlign: "center",
+            opacity: 0.72,
+            lineHeight: 1.7,
+          }}
+        >
+          {isArabic
+            ? "ملاحظة: هذه المرحلة تعرض قيمة الاشتراك فقط. الدفع والقفل الفعلي للميزات سيتم بناؤه لاحقًا بعد اعتماد صفحة الخطط."
+            : "Note: this stage only presents subscription value. Payments and real feature gating will be added later after the plans page is approved."}
+        </p>
+      </section>
       <section className="homeFinalCTA">
         <div className="homeFinalCTAContent">
           <p className="sectionLabel">
