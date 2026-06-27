@@ -300,9 +300,14 @@ let extractedText: string | null = null;
   }
 
   const detectedMarkers = detectLabMarkers(extractedText);
-  const { data: userData } = await supabase.auth.getUser();
+const { data: userData } = await supabase.auth.getUser();
 
-if (userData.user && selectedInsight.report_id) {
+if (!userData.user) {
+  alert("User session expired. Please log in again.");
+  return;
+}
+
+if (selectedInsight.report_id) {
   const markerRows = detectedMarkers
     .filter((marker) => marker.value !== null)
     .map((marker) => ({
@@ -468,14 +473,37 @@ Clinical note: This is an educational interpretation and should be reviewed by a
   };
 
   const { error } = await supabase
-    .from("health_insights")
-    .update(intelligence)
-    .eq("id", insightId);
+  .from("health_insights")
+  .update(intelligence)
+  .eq("id", insightId);
 
-  if (error) {
-    alert("Could not generate intelligence: " + error.message);
-    return;
-  }
+if (error) {
+  alert("Could not generate intelligence: " + error.message);
+  return;
+}
+
+const { error: saveGeneratedResultError } = await supabase
+  .from("generated_intelligence_results")
+  .upsert(
+    {
+      user_id: userData.user.id,
+      insight_id: insightId,
+      report_id: selectedInsight.report_id,
+      result: generatedResultPayload,
+      updated_at: new Date().toISOString(),
+    },
+    {
+      onConflict: "user_id,insight_id",
+    }
+  );
+
+if (saveGeneratedResultError) {
+  alert(
+    "Generated intelligence was created, but could not be saved: " +
+      saveGeneratedResultError.message
+  );
+  return;
+}
 
   setHealthInsights((currentInsights) =>
     currentInsights.map((item) =>
