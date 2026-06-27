@@ -6,10 +6,12 @@ type MedicalReportCardProps = {
   uploadedAtText: string;
   extractionStatus: string;
   isGenerated: boolean;
+  isExpanded: boolean;
   canOpen: boolean;
-    onOpen: () => void;
+  onOpen: () => void;
   onGenerate: () => void;
   onViewGenerated: () => void;
+  onHideGenerated: () => void;
   children?: ReactNode;
 };
 
@@ -18,11 +20,13 @@ export default function MedicalReportCard({
   reportTypeLabel,
   uploadedAtText,
   extractionStatus,
-  isGenerated,
+    isGenerated,
+  isExpanded,
   canOpen,
-    onOpen,
+  onOpen,
   onGenerate,
   onViewGenerated,
+  onHideGenerated,
   children,
 }: MedicalReportCardProps) {
   return (
@@ -73,11 +77,21 @@ export default function MedicalReportCard({
             </button>
           )}
 
-                    <button
+                              <button
             className="primaryBtn"
-            onClick={isGenerated ? onViewGenerated : onGenerate}
+            onClick={
+              isGenerated
+                ? isExpanded
+                  ? onHideGenerated
+                  : onViewGenerated
+                : onGenerate
+            }
           >
-            {isGenerated ? "View Result" : "Generate"}
+            {isGenerated
+              ? isExpanded
+                ? "Hide Result"
+                : "View Result"
+              : "Generate"}
           </button>
         </div>
       </div>

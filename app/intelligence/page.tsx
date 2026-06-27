@@ -649,10 +649,19 @@ return (
           ).toLocaleString()}
           extractionStatus={item.extraction_status || "Pending"}
           isGenerated={isGenerated}
-          canOpen={Boolean(item.file_path)}
-          onOpen={() => openMedicalReport(item.file_path)}
-          onGenerate={() => generateReportIntelligence(item.id)}
-          onViewGenerated={() => openSavedGeneratedResult(item.id)}
+isExpanded={isExpandedReport}
+canOpen={Boolean(item.file_path)}
+onOpen={() => openMedicalReport(item.file_path)}
+onGenerate={() => generateReportIntelligence(item.id)}
+onViewGenerated={() => openSavedGeneratedResult(item.id)}
+onHideGenerated={() => {
+  setExpandedReportId(null);
+
+  if (activeGeneratedInsightId === item.id) {
+    setGeneratedResult(null);
+    setActiveGeneratedInsightId(null);
+  }
+}}
         >
           {isExpandedReport && (
   <>
