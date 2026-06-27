@@ -2,9 +2,28 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { supabase } from "../../lib/supabase";
+
+type ReportLibraryItem = {
+  id: number;
+  report_id: number | null;
+  report_type: string | null;
+  ai_status: string | null;
+  risk_level: string | null;
+  summary: string | null;
+  next_best_action: string | null;
+  created_at: string;
+  file_name?: string;
+  file_path?: string | null;
+  uploaded_at?: string;
+  extraction_status?: string | null;
+};
 
 export default function ReportsPage() {
   const [language, setLanguage] = useState("en");
+  const [reports, setReports] = useState<ReportLibraryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     const savedLanguage = localStorage.getItem("organheal-language") || "en";
@@ -14,10 +33,116 @@ export default function ReportsPage() {
       setLanguage(localStorage.getItem("organheal-language") || "en");
     }, 300);
 
+    loadReports();
+
     return () => clearInterval(interval);
   }, []);
 
   const isArabic = language === "ar";
+
+  async function loadReports() {
+    setLoading(true);
+    setMessage("");
+
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+
+    if (userError || !userData.user) {
+      setReports([]);
+      setMessage(
+        "Please sign in to view your medical reports library."
+      );
+      setLoading(false);
+      return;
+    }
+
+    const userId = userData.user.id;
+
+    const { data: insights, error: insightsError } = await supabase
+      .from("health_insights")
+      .select(
+        "id, report_id, report_type, ai_status, risk_level, summary, next_best_action, created_at"
+      )
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (insightsError) {
+      setReports([]);
+      setMessage("Unable to load reports right now.");
+      setLoading(false);
+      return;
+    }
+
+    const reportIds = (insights || [])
+      .map((item) => item.report_id)
+      .filter((id): id is number => Boolean(id));
+
+    let uploadedReports: {
+      id: number;
+      file_name: string;
+      file_path: string | null;
+      created_at: string;
+      extraction_status: string | null;
+    }[] = [];
+
+    if (reportIds.length > 0) {
+      const { data: reportData } = await supabase
+        .from("uploaded_lab_files")
+        .select("id, file_name, file_path, created_at, extraction_status")
+        .in("id", reportIds);
+
+      uploadedReports = reportData || [];
+    }
+
+    const mergedReports: ReportLibraryItem[] = (insights || []).map((item) => {
+      const uploadedReport = uploadedReports.find(
+        (report) => report.id === item.report_id
+      );
+
+      return {
+        ...item,
+        file_name: uploadedReport?.file_name || "Medical report",
+        file_path: uploadedReport?.file_path || null,
+        uploaded_at: uploadedReport?.created_at || item.created_at,
+        extraction_status: uploadedReport?.extraction_status || "Pending",
+      };
+    });
+
+    setReports(mergedReports);
+
+    if (mergedReports.length === 0) {
+      setMessage("No uploaded medical reports were found yet.");
+    }
+
+    setLoading(false);
+  }
+
+  function getReportTypeLabel(reportType: string | null) {
+    if (!reportType) return isArabic ? "تقرير طبي" : "Medical report";
+
+    const labels: Record<string, { en: string; ar: string }> = {
+      lab: { en: "Laboratory Report", ar: "تقرير مختبر" },
+      radiology: { en: "Radiology Report", ar: "تقرير أشعة" },
+      medical: { en: "Medical Document", ar: "تقرير طبي" },
+    };
+
+    return isArabic
+      ? labels[reportType]?.ar || "تقرير طبي"
+      : labels[reportType]?.en || "Medical report";
+  }
+
+  function getStatusLabel(status: string | null | undefined) {
+    if (!status) return isArabic ? "قيد الانتظار" : "Pending";
+
+    if (status === "Completed") {
+      return isArabic ? "مكتمل" : "Completed";
+    }
+
+    if (status === "Failed") {
+      return isArabic ? "غير مكتمل" : "Failed";
+    }
+
+    return status;
+  }
 
   return (
     <main
@@ -66,64 +191,9 @@ export default function ReportsPage() {
             }}
           >
             {isArabic
-              ? "هذه الصفحة ستكون مركزًا مستقلًا لعرض التقارير الطبية المرفوعة، نتائج الذكاء الصحي المحفوظة، وملخصات PDF للمريض والطبيب."
-              : "This page will become a dedicated place to view uploaded medical reports, saved intelligence results, and patient or doctor PDF summaries."}
+              ? "اعرض التقارير الطبية المرتبطة بحسابك، وتابع حالة الاستخراج ونتائج الذكاء الصحي المرتبطة بكل تقرير."
+              : "View medical reports connected to your account, track extraction status, and see the intelligence status for each report."}
           </p>
-        </div>
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-            gap: "18px",
-            marginBottom: "28px",
-          }}
-        >
-          <div className="aiFeatureCard">
-            <div>📄</div>
-            <h3>{isArabic ? "التقارير المرفوعة" : "Uploaded Reports"}</h3>
-            <p>
-              {isArabic
-                ? "عرض التقارير الطبية التي تم رفعها سابقًا داخل حسابك."
-                : "View medical reports that were previously uploaded to your account."}
-            </p>
-          </div>
-
-          <div className="aiFeatureCard">
-            <div>🧠</div>
-            <h3>
-              {isArabic
-                ? "نتائج الذكاء الصحي"
-                : "Saved Intelligence Results"}
-            </h3>
-            <p>
-              {isArabic
-                ? "الوصول إلى نتائج التحليل الصحي المحفوظة لكل تقرير."
-                : "Access saved health intelligence results generated for each report."}
-            </p>
-          </div>
-
-          <div className="aiFeatureCard">
-            <div>👤</div>
-            <h3>
-              {isArabic ? "تقرير مبسط للمريض" : "Patient-Friendly PDF"}
-            </h3>
-            <p>
-              {isArabic
-                ? "تحميل ملخص مبسط يساعدك على فهم التقرير بلغة واضحة."
-                : "Download a simple summary that helps you understand your report clearly."}
-            </p>
-          </div>
-
-          <div className="aiFeatureCard">
-            <div>🩺</div>
-            <h3>{isArabic ? "ملخص جاهز للطبيب" : "Doctor-Ready Brief"}</h3>
-            <p>
-              {isArabic
-                ? "تحضير ملخص منظم يساعدك على مناقشة التقرير مع الطبيب."
-                : "Prepare a structured brief to support better discussion with your doctor."}
-            </p>
-          </div>
         </div>
 
         <section
@@ -135,43 +205,213 @@ export default function ReportsPage() {
             marginBottom: "24px",
           }}
         >
-          <p className="sectionLabel">
-            {isArabic ? "حالة الصفحة" : "Page Status"}
-          </p>
-
-          <h2>
-            {isArabic
-              ? "تم تجهيز الصفحة الأساسية"
-              : "The reports page shell is ready"}
-          </h2>
-
-          <p
-            style={{
-              opacity: 0.82,
-              lineHeight: 1.8,
-              marginBottom: "18px",
-            }}
-          >
-            {isArabic
-              ? "في الخطوات القادمة سنربط هذه الصفحة بالتقارير الفعلية المحفوظة، ثم نضيف أزرار العرض، فتح التقرير، والانتقال إلى مركز الذكاء الصحي."
-              : "In the next steps, this page will be connected to saved reports, then report actions such as view result, open report, and continue in Intelligence Center will be added."}
-          </p>
-
           <div
             style={{
               display: "flex",
-              gap: "12px",
+              justifyContent: "space-between",
+              gap: "14px",
+              alignItems: "center",
               flexWrap: "wrap",
+              marginBottom: "18px",
             }}
           >
-            <Link href="/lab-upload" className="primaryBtn">
-              {isArabic ? "ارفع تقريرًا طبيًا" : "Upload Medical Report"}
-            </Link>
+            <div>
+              <p className="sectionLabel">
+                {isArabic ? "التقارير المحفوظة" : "Saved Reports"}
+              </p>
 
-            <Link href="/intelligence" className="secondaryBtn">
-              {isArabic ? "افتح مركز الذكاء" : "Open Intelligence Center"}
-            </Link>
+              <h2 style={{ marginBottom: "6px" }}>
+                {isArabic ? "مكتبة تقاريرك" : "Your Reports Library"}
+              </h2>
+
+              <p style={{ margin: 0, opacity: 0.78, lineHeight: 1.7 }}>
+                {isArabic
+                  ? "هذه القائمة تعرض التقارير التي تم إنشاؤها داخل مركز الذكاء الصحي."
+                  : "This list shows reports created inside the Health Intelligence Center."}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              className="secondaryBtn"
+              onClick={loadReports}
+              disabled={loading}
+            >
+              {loading
+                ? isArabic
+                  ? "جارِ التحديث..."
+                  : "Refreshing..."
+                : isArabic
+                ? "تحديث"
+                : "Refresh"}
+            </button>
           </div>
+
+          {loading && (
+            <p style={{ opacity: 0.8 }}>
+              {isArabic ? "جارِ تحميل التقارير..." : "Loading reports..."}
+            </p>
+          )}
+
+          {!loading && message && reports.length === 0 && (
+            <div
+              style={{
+                padding: "20px",
+                borderRadius: "18px",
+                background: "rgba(8,13,24,0.68)",
+                border: "1px solid rgba(34,211,238,0.14)",
+              }}
+            >
+              <p style={{ marginTop: 0, opacity: 0.82 }}>
+                {isArabic
+                  ? "لا توجد تقارير محفوظة بعد. ابدأ برفع تقرير طبي أو افتح مركز الذكاء الصحي."
+                  : message}
+              </p>
+
+              <div
+                style={{
+                  display: "flex",
+                  gap: "12px",
+                  flexWrap: "wrap",
+                }}
+              >
+                <Link href="/lab-upload" className="primaryBtn">
+                  {isArabic ? "ارفع تقريرًا طبيًا" : "Upload Medical Report"}
+                </Link>
+
+                <Link href="/intelligence" className="secondaryBtn">
+                  {isArabic ? "افتح مركز الذكاء" : "Open Intelligence Center"}
+                </Link>
+              </div>
+            </div>
+          )}
+
+          {!loading && reports.length > 0 && (
+            <div
+              style={{
+                display: "grid",
+                gap: "14px",
+              }}
+            >
+              {reports.map((report) => (
+                <div
+                  key={report.id}
+                  style={{
+                    padding: "18px",
+                    borderRadius: "20px",
+                    background: "rgba(8,13,24,0.68)",
+                    border: "1px solid rgba(34,211,238,0.14)",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      gap: "14px",
+                      flexWrap: "wrap",
+                      alignItems: "flex-start",
+                    }}
+                  >
+                    <div>
+                      <p className="sectionLabel">
+                        {getReportTypeLabel(report.report_type)}
+                      </p>
+
+                      <h3 style={{ marginBottom: "8px" }}>
+                        {report.file_name || "Medical report"}
+                      </h3>
+
+                      <p
+                        style={{
+                          margin: 0,
+                          opacity: 0.76,
+                          lineHeight: 1.7,
+                        }}
+                      >
+                        {isArabic ? "تاريخ الرفع: " : "Uploaded: "}
+                        {new Date(
+                          report.uploaded_at || report.created_at
+                        ).toLocaleString()}
+                      </p>
+                    </div>
+
+                    <div
+                      style={{
+                        display: "grid",
+                        gap: "8px",
+                        minWidth: "180px",
+                      }}
+                    >
+                      <span
+                        style={{
+                          padding: "7px 10px",
+                          borderRadius: "999px",
+                          background: "rgba(34,211,238,0.1)",
+                          border: "1px solid rgba(34,211,238,0.18)",
+                          fontSize: "0.85rem",
+                          textAlign: "center",
+                        }}
+                      >
+                        {isArabic ? "الاستخراج: " : "Extraction: "}
+                        {getStatusLabel(report.extraction_status)}
+                      </span>
+
+                      <span
+                        style={{
+                          padding: "7px 10px",
+                          borderRadius: "999px",
+                          background: "rgba(148,163,184,0.1)",
+                          border: "1px solid rgba(148,163,184,0.18)",
+                          fontSize: "0.85rem",
+                          textAlign: "center",
+                        }}
+                      >
+                        {isArabic ? "الذكاء: " : "AI: "}
+                        {report.ai_status || "Pending"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {(report.summary || report.next_best_action) && (
+                    <div
+                      style={{
+                        marginTop: "14px",
+                        paddingTop: "14px",
+                        borderTop: "1px solid rgba(148,163,184,0.14)",
+                      }}
+                    >
+                      {report.summary && (
+                        <p
+                          style={{
+                            margin: "0 0 8px",
+                            opacity: 0.84,
+                            lineHeight: 1.7,
+                          }}
+                        >
+                          {report.summary}
+                        </p>
+                      )}
+
+                      {report.next_best_action && (
+                        <p
+                          style={{
+                            margin: 0,
+                            opacity: 0.78,
+                            lineHeight: 1.7,
+                          }}
+                        >
+                          <strong>
+                            {isArabic ? "الخطوة التالية: " : "Next step: "}
+                          </strong>
+                          {report.next_best_action}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </section>
 
         <section
@@ -212,8 +452,12 @@ export default function ReportsPage() {
             {isArabic ? "العودة للرئيسية" : "Back to Home"}
           </Link>
 
-          <Link href="/pricing" className="secondaryBtn">
-            {isArabic ? "عرض الخطط" : "View Plans"}
+          <Link href="/lab-upload" className="primaryBtn">
+            {isArabic ? "ارفع تقريرًا طبيًا" : "Upload Medical Report"}
+          </Link>
+
+          <Link href="/intelligence" className="secondaryBtn">
+            {isArabic ? "مركز الذكاء" : "Intelligence Center"}
           </Link>
         </div>
       </section>
