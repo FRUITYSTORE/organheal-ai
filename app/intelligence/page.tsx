@@ -104,13 +104,13 @@ export default function IntelligencePage() {
   const [healthEngine, setHealthEngine] = useState<HealthEngine | null>(null);
 
 
-  const [healthInsights, setHealthInsights] = useState<HealthInsight[]>([]);
+   const [healthInsights, setHealthInsights] = useState<HealthInsight[]>([]);
   const [assessmentData, setAssessmentData] = useState<Assessment[]>([]);
-const [dailyCheckIn, setDailyCheckIn] = useState<DailyCheckIn | null>(null);
+  const [dailyCheckIn, setDailyCheckIn] = useState<DailyCheckIn | null>(null);
   const [generatedResult, setGeneratedResult] =
-  useState<GeneratedIntelligenceResult | null>(null);
-const [activeGeneratedInsightId, setActiveGeneratedInsightId] =
-  useState<number | null>(null);
+    useState<GeneratedIntelligenceResult | null>(null);
+  const [activeGeneratedInsightId, setActiveGeneratedInsightId] =
+    useState<number | null>(null);
 
   useEffect(() => {
     loadIntelligence();
