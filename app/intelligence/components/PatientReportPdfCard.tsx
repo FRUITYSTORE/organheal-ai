@@ -105,8 +105,9 @@ export default function PatientReportPdfCard({
           <p className="sectionLabel">👤 PATIENT REPORT</p>
           <h2>Patient-Friendly Health Summary</h2>
           <p style={{ marginTop: "6px", opacity: 0.82 }}>
-            A simple explanation of your report in clear language.
-          </p>
+  A calm, simple explanation to help you understand your report and what to
+  discuss with your doctor.
+</p>
         </div>
 
         <div
@@ -132,8 +133,8 @@ export default function PatientReportPdfCard({
               lineHeight: 1.4,
             }}
           >
-            This version is written for the patient, not for clinical decision
-            making.
+            This version is written to help you understand your health report in simple
+language.
           </p>
         </div>
       </div>
@@ -169,38 +170,38 @@ export default function PatientReportPdfCard({
       </div>
 
       <div style={{ textAlign: "left" }}>
-        <h3>1. Simple Summary</h3>
+        <h3>1. What This Report Means</h3>
         <p style={{ whiteSpace: "pre-line" }}>
           {summary ||
             "Your report was reviewed by OrganHeal AI and summarized in a simple way."}
         </p>
 
-        <h3>2. What Was Noticed</h3>
+        <h3>2. Main Things Noticed</h3>
         <p style={{ whiteSpace: "pre-line" }}>
           {keyFindings ||
             "No major findings were clearly identified from the available data."}
         </p>
 
-        <h3>3. What Needs Attention</h3>
+        <h3>3. What May Need Attention</h3>
         <p style={{ whiteSpace: "pre-line" }}>
           {riskSignals ||
             "No urgent warning signals were clearly detected. Please review your original report with a healthcare professional."}
         </p>
 
-        <h3>4. What You Can Do Next</h3>
+        <h3>4. Helpful Next Steps</h3>
         <p style={{ whiteSpace: "pre-line" }}>
           {recommendations ||
             executiveSummary?.nextBestAction ||
             "Follow up with your healthcare provider if you have symptoms or concerns."}
         </p>
 
-        <h3>5. Your Health Story</h3>
+        <h3>5. Your Health Story in Simple Words</h3>
         <p style={{ whiteSpace: "pre-line" }}>
           {healthStory ||
             "As more assessments, check-ins, and reports are added, OrganHeal will build a clearer picture of your health journey."}
         </p>
 
-        <h3>6. Health Direction</h3>
+        <h3>6. Your Health Direction</h3>
 
         <div
           style={{
@@ -212,12 +213,12 @@ export default function PatientReportPdfCard({
           }}
         >
           <p>
-            <strong>Current Health Score:</strong>{" "}
+            <strong>Your Current Health Score:</strong>{" "}
             {executiveSummary?.currentScore ?? "N/A"}
           </p>
 
           <p>
-            <strong>Expected Direction:</strong>{" "}
+            <strong>Expected Health Direction:</strong>{" "}
             {executiveSummary?.forecastScore ?? "N/A"}
           </p>
 
@@ -227,14 +228,20 @@ export default function PatientReportPdfCard({
           </p>
 
           <p>
-            <strong>Best Next Step:</strong>{" "}
+            <strong>Most Helpful Next Step:</strong>{" "}
             {executiveSummary?.nextBestAction || "N/A"}
           </p>
         </div>
 
-        <h3>Important Note</h3>
-        <p style={{ fontSize: "0.9rem", opacity: 0.78 }}>
-          This patient report is for education and personal understanding only.
+        <h3>A Gentle Reminder</h3>
+<p style={{ fontSize: "0.95rem", opacity: 0.86 }}>
+  This report is not meant to scare you. It is designed to help you understand
+  your health information and prepare better questions for your doctor.
+</p>
+
+<h3>Important Note</h3>
+<p style={{ fontSize: "0.9rem", opacity: 0.78 }}>
+  This patient report is for education and personal understanding only.
           It does not replace medical advice, diagnosis, or treatment. Always
           review your results with a licensed healthcare professional.
         </p>
