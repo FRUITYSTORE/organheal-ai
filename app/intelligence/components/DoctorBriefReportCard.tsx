@@ -220,7 +220,7 @@ const generatedAtText = new Date().toLocaleString();
       </p>
     </div>
 
-    <button
+        <button
       className="secondaryBtn doctorBriefPrintButton"
       onClick={printDoctorBriefOnly}
     >
@@ -228,9 +228,27 @@ const generatedAtText = new Date().toLocaleString();
     </button>
   </div>
 
-      <div
-        style={{
-          display: "grid",
+  <div
+    style={{
+      marginTop: "14px",
+      marginBottom: "18px",
+      padding: "12px 14px",
+      borderRadius: "14px",
+      background: "rgba(34,211,238,0.08)",
+      border: "1px solid rgba(34,211,238,0.18)",
+      textAlign: "left",
+    }}
+  >
+    <strong>Doctor Brief Ready</strong>
+    <p style={{ marginTop: "6px", marginBottom: 0 }}>
+      This Doctor Brief is prepared for clinical review. You can print it or
+      save it as PDF using the Print Doctor Brief button.
+    </p>
+  </div>
+
+  <div
+    style={{
+      display: "grid",
           gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
           gap: "14px",
           marginTop: "18px",
