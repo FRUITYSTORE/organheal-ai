@@ -1,3 +1,4 @@
+"use client";
 type ExecutiveSummary = {
   currentScore?: number;
   trend?: string;
@@ -33,8 +34,27 @@ export default function DoctorBriefReportCard({
 }: DoctorBriefReportCardProps) {
   return (
     <div className="resultBox">
-      <p className="sectionLabel">🩺 DOCTOR BRIEF</p>
-      <h2>Doctor-Ready Report Summary</h2>
+            <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          gap: "12px",
+          alignItems: "center",
+          flexWrap: "wrap",
+        }}
+      >
+        <div>
+          <p className="sectionLabel">🩺 DOCTOR BRIEF</p>
+          <h2>Doctor-Ready Report Summary</h2>
+        </div>
+
+        <button
+          className="secondaryBtn"
+          onClick={() => window.print()}
+        >
+          Print Doctor Brief
+        </button>
+      </div>
 
       <div
         style={{
