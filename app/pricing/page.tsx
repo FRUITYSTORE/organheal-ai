@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import PremiumBadge from "../components/PremiumBadge";
 
 export default function PricingPage() {
   const [language, setLanguage] = useState("en");
@@ -211,7 +212,20 @@ export default function PricingPage() {
               {isArabic ? "الأفضل للمتابعة" : "Best for ongoing follow-up"}
             </div>
 
-            <h2 style={{ marginBottom: "8px" }}>OrganHeal Plus</h2>
+            <div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: isArabic ? "flex-end" : "flex-start",
+    gap: "10px",
+    flexWrap: "wrap",
+    marginBottom: "8px",
+  }}
+>
+  <h2 style={{ margin: 0 }}>OrganHeal Plus</h2>
+
+  <PremiumBadge label={isArabic ? "Plus" : "Plus"} />
+</div>
 
             <p
               style={{

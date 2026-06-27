@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import PremiumBadge from "./components/PremiumBadge";
 import { getHealthContext } from "../lib/getHealthContext";
 import { supabase } from "../lib/supabase";
 
@@ -854,7 +855,22 @@ export default function Home() {
           >
             <div>⭐</div>
 
-            <h3>{isArabic ? "OrganHeal Plus" : "OrganHeal Plus"}</h3>
+            <div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: isArabic ? "flex-end" : "flex-start",
+    gap: "10px",
+    flexWrap: "wrap",
+    marginBottom: "8px",
+  }}
+>
+  <h3 style={{ margin: 0 }}>
+    {isArabic ? "OrganHeal Plus" : "OrganHeal Plus"}
+  </h3>
+
+  <PremiumBadge label={isArabic ? "Plus" : "Plus"} />
+</div>
 
             <p>
               {isArabic
