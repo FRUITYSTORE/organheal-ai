@@ -585,6 +585,97 @@ export default function Home() {
           </Link>
         </div>
       </section>
+            <section className="homeAIFeatures">
+        <div className="homeSectionHeader">
+          <p className="sectionLabel">
+            {isArabic ? "مركز التثقيف الصحي" : "Education Hub Preview"}
+          </p>
+
+          <h2>
+            {isArabic
+              ? "تعلّم عن صحتك بلغة بسيطة وواضحة"
+              : "Learn about your health in simple, clear language"}
+          </h2>
+
+          <p>
+            {isArabic
+              ? "OrganHeal لا يكتفي بتحليل التقارير، بل يهدف أيضًا إلى مساعدتك على فهم المصطلحات الطبية، المؤشرات المخبرية، والأسئلة المهمة التي يمكن مناقشتها مع الطبيب."
+              : "OrganHeal is designed not only to analyze reports, but also to help you understand medical terms, lab markers, and the right questions to discuss with your doctor."}
+          </p>
+        </div>
+
+        <div className="aiFeaturesGrid">
+          <div className="aiFeatureCard">
+            <div>📚</div>
+            <h3>{isArabic ? "مقالات صحية مبسطة" : "Simple Health Articles"}</h3>
+            <p>
+              {isArabic
+                ? "مقالات قصيرة تشرح مواضيع مثل القلب، الكبد، الكلى، الدهون، السكر، والنوم بطريقة سهلة."
+                : "Short articles explaining topics like heart health, liver, kidneys, cholesterol, glucose, and sleep in an easy way."}
+            </p>
+          </div>
+
+          <div className="aiFeatureCard">
+            <div>🎥</div>
+            <h3>
+              {isArabic ? "فيديوهات تعليمية قصيرة" : "Short Educational Videos"}
+            </h3>
+            <p>
+              {isArabic
+                ? "محتوى مرئي مختصر يساعد المستخدم على فهم المفاهيم الصحية بسرعة ووضوح."
+                : "Short visual content to help users understand health concepts quickly and clearly."}
+            </p>
+          </div>
+
+          <div className="aiFeatureCard">
+            <div>🧪</div>
+            <h3>
+              {isArabic ? "شرح مؤشرات المختبر" : "Lab Marker Explanations"}
+            </h3>
+            <p>
+              {isArabic
+                ? "شرح مبسط لمعاني مؤشرات مثل LDL، HDL، HbA1c، الكرياتينين، إنزيمات الكبد، وفيتامين D."
+                : "Plain explanations for markers like LDL, HDL, HbA1c, creatinine, liver enzymes, and vitamin D."}
+            </p>
+          </div>
+
+          <div className="aiFeatureCard">
+            <div>🫀</div>
+            <h3>{isArabic ? "أدلة صحة الأعضاء" : "Organ Health Guides"}</h3>
+            <p>
+              {isArabic
+                ? "دليل مبسط لفهم صحة القلب، الكبد، الكلى، الرئة، والجهاز الهضمي."
+                : "Simple guides to understand heart, liver, kidney, lung, and digestive health."}
+            </p>
+          </div>
+
+          <div className="aiFeatureCard">
+            <div>❓</div>
+            <h3>
+              {isArabic
+                ? "أسئلة تناقشها مع طبيبك"
+                : "Questions to Ask Your Doctor"}
+            </h3>
+            <p>
+              {isArabic
+                ? "اقتراح أسئلة منظمة تساعدك على الاستفادة من موعد الطبيب بشكل أفضل."
+                : "Organized questions to help you get more value from your doctor visit."}
+            </p>
+          </div>
+
+          <div className="aiFeatureCard">
+            <div>🌱</div>
+            <h3>
+              {isArabic ? "تعليم صحي مستمر" : "Ongoing Health Learning"}
+            </h3>
+            <p>
+              {isArabic
+                ? "محتوى تعليمي يمكن تطويره لاحقًا ليصبح جزءًا من الاشتراك والمتابعة الصحية."
+                : "Educational content that can later become part of subscriptions and ongoing health follow-up."}
+            </p>
+          </div>
+        </div>
+      </section>
       <section className="homeFinalCTA">
         <div className="homeFinalCTAContent">
           <p className="sectionLabel">
