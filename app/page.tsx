@@ -673,6 +673,19 @@ export default function Home() {
             <h3>
               {isArabic ? "تعليم صحي مستمر" : "Ongoing Health Learning"}
             </h3>
+            <div
+  className="buttons"
+  style={{
+    marginTop: "26px",
+    justifyContent: "center",
+  }}
+>
+  <a href="/library">
+    <button className="primaryBtn">
+      {isArabic ? "استكشف مركز التثقيف الصحي" : "Explore Health Education"}
+    </button>
+  </a>
+</div>
             <p>
               {isArabic
                 ? "محتوى تعليمي يمكن تطويره لاحقًا ليصبح جزءًا من الاشتراك والمتابعة الصحية."
