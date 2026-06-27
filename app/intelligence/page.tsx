@@ -98,7 +98,10 @@ type HealthInsight = {
   uploaded_at?: string;
 };
 
+const REPORTS_PAGE_SIZE = 5;
+
 export default function IntelligencePage() {
+
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [healthEngine, setHealthEngine] = useState<HealthEngine | null>(null);
@@ -109,10 +112,12 @@ export default function IntelligencePage() {
   const [dailyCheckIn, setDailyCheckIn] = useState<DailyCheckIn | null>(null);
     const [generatedResult, setGeneratedResult] =
     useState<GeneratedIntelligenceResult | null>(null);
-  const [activeGeneratedInsightId, setActiveGeneratedInsightId] =
+      const [activeGeneratedInsightId, setActiveGeneratedInsightId] =
     useState<number | null>(null);
   const [expandedReportId, setExpandedReportId] = useState<number | null>(null);
-
+  const [visibleReportsCount, setVisibleReportsCount] =
+    useState(REPORTS_PAGE_SIZE);
+  
   useEffect(() => {
     loadIntelligence();
   }, []);
@@ -225,6 +230,7 @@ setDailyCheckIn(checkInData || null);
 setGeneratedResult(null);
 setActiveGeneratedInsightId(null);
 setExpandedReportId(null);
+setVisibleReportsCount(REPORTS_PAGE_SIZE);
 
 const generatedInsightIds = mergedInsights.map((item) => item.id);
 
@@ -589,6 +595,10 @@ if (saveGeneratedResultError) {
     return "Medical Report";
   }
 
+  const visibleHealthInsights = healthInsights.slice(0, visibleReportsCount);
+  const hasOlderReports = healthInsights.length > visibleReportsCount;
+  const canShowLessReports = visibleReportsCount > REPORTS_PAGE_SIZE;
+
   return (
     <main className="assistantPage">
       <div className="assistantContainer">
@@ -631,7 +641,7 @@ if (saveGeneratedResultError) {
 
           {!loading && (
   <MedicalReportList hasReports={healthInsights.length > 0}>
-    {healthInsights.map((item) => {
+    {visibleHealthInsights.map((item) => {
       const isGenerated =
   item.ai_status === "Generated" &&
   item.extraction_status === "Completed";
@@ -717,6 +727,44 @@ onHideGenerated={() => {
       );
     })}
   </MedicalReportList>
+)}
+{healthInsights.length > REPORTS_PAGE_SIZE && (
+  <div
+    style={{
+      display: "flex",
+      gap: "10px",
+      justifyContent: "center",
+      flexWrap: "wrap",
+      marginTop: "16px",
+    }}
+  >
+    {hasOlderReports && (
+      <button
+        className="secondaryBtn"
+        onClick={() =>
+          setVisibleReportsCount((currentCount) =>
+            Math.min(currentCount + REPORTS_PAGE_SIZE, healthInsights.length)
+          )
+        }
+      >
+        Show Older Reports
+      </button>
+    )}
+
+    {canShowLessReports && (
+      <button
+        className="secondaryBtn"
+        onClick={() => {
+          setVisibleReportsCount(REPORTS_PAGE_SIZE);
+          setExpandedReportId(null);
+          setGeneratedResult(null);
+          setActiveGeneratedInsightId(null);
+        }}
+      >
+        Show Less
+      </button>
+    )}
+  </div>
 )}
           {!loading && healthEngine && (
   <TopOpportunitiesCard
