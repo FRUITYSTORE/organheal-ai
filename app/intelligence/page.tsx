@@ -37,6 +37,7 @@ import MedicalReportCard from "./components/MedicalReportCard";
 import MedicalReportList from "./components/MedicalReportList";
 import HealthPassportCard from "./components/HealthPassportCard";
 import TopOpportunitiesCard from "./components/TopOpportunitiesCard";
+import DoctorReadySummaryCard from "./components/DoctorReadySummaryCard";
 
 
 
@@ -635,45 +636,14 @@ Clinical note: This is an educational interpretation and should be reviewed by a
   />
 )}
           {!loading && healthEngine && (
-            <div className="resultBox">
-              <p className="sectionLabel">🩺 DOCTOR READY SUMMARY</p>
-              <h2>Doctor Brief</h2>
-
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                  gap: "14px",
-                  marginTop: "18px",
-                  textAlign: "left",
-                }}
-              >
-                <div>
-                  <strong>Overall Score</strong>
-                  <p>{healthEngine.overallScore}/100</p>
-                </div>
-
-                <div>
-                  <strong>Priority Area</strong>
-                  <p>{healthEngine.priorityOrgan || "N/A"}</p>
-                </div>
-
-                <div>
-                  <strong>Risk Pattern</strong>
-                  <p>{healthEngine.riskPattern}</p>
-                </div>
-
-                <div>
-                  <strong>Main Opportunity</strong>
-                  <p>{healthEngine.opportunityTitle}</p>
-                </div>
-              </div>
-
-              <p style={{ marginTop: "18px", textAlign: "left" }}>
-                {healthEngine.bestNextAction}
-              </p>
-            </div>
-          )}
+  <DoctorReadySummaryCard
+    overallScore={healthEngine.overallScore}
+    priorityOrgan={healthEngine.priorityOrgan}
+    riskPattern={healthEngine.riskPattern}
+    opportunityTitle={healthEngine.opportunityTitle}
+    bestNextAction={healthEngine.bestNextAction}
+  />
+)}
         </section>
       </div>
     </main>
