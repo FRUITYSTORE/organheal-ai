@@ -210,6 +210,60 @@ export default function HealthPlanPage() {
       : dailyCheckIn
       ? "Your follow-up plan is active. Keep updating your wellness check-ins to track progress over time."
       : "Complete your first wellness check-in to make your follow-up plan more useful.";
+        const priorityAssessmentHref =
+    priorityOrgan === "Heart"
+      ? "/heart"
+      : priorityOrgan === "Lung"
+      ? "/lung"
+      : priorityOrgan === "Kidney"
+      ? "/kidney"
+      : priorityOrgan === "Liver"
+      ? "/liver"
+      : priorityOrgan === "Brain"
+      ? "/brain"
+      : priorityOrgan === "Metabolic"
+      ? "/metabolic"
+      : "/assessment";
+        const nextFollowUpStep =
+    priorityScore === null
+      ? {
+          label: "Complete your first organ assessment",
+          description:
+            "Start with one organ assessment so OrganHeal can identify your priority health area and activate your follow-up plan.",
+          href: "/assessment",
+          buttonText: "Start Assessment",
+        }
+      : !dailyCheckIn
+      ? {
+          label: "Complete your wellness check-in",
+          description:
+            "Add today’s wellness update so your follow-up plan reflects your latest sleep, stress, hydration, activity, energy, and mood.",
+          href: "/checkin",
+          buttonText: "Open Check-In",
+        }
+      : taskProgress === 0
+      ? {
+          label: "Start your first follow-up task",
+          description:
+            "Your plan is active. Choose one action task from the list below and start building weekly progress.",
+          href: "#action-tasks-section",
+          buttonText: "Review Tasks",
+        }
+      : taskProgress < 100
+      ? {
+          label: "Continue your follow-up tasks",
+          description:
+            "Keep working through your action tasks and update your wellness check-ins to track progress over time.",
+          href: "#action-tasks-section",
+          buttonText: "Continue Tasks",
+        }
+      : {
+          label: `Repeat your ${priorityOrgan} assessment`,
+          description:
+            "You completed your current task list. Repeat the priority assessment to compare progress and refresh your follow-up plan.",
+          href: priorityAssessmentHref,
+          buttonText: "Repeat Assessment",
+        };
   function toggleTask(task: string) {
     if (completedTasks.includes(task)) {
       setCompletedTasks(completedTasks.filter((item) => item !== task));
@@ -265,6 +319,30 @@ export default function HealthPlanPage() {
             <>
                           <div className="resultBox">
                 <p className="sectionLabel">Follow-Up Status</p>
+                              <div
+                className="resultBox"
+                style={{
+                  border: "1px solid rgba(34,211,238,0.22)",
+                }}
+              >
+                <p className="sectionLabel">Smart Next Follow-Up Step</p>
+
+                <h2>{nextFollowUpStep.label}</h2>
+
+                <p
+                  style={{
+                    opacity: 0.82,
+                    lineHeight: 1.7,
+                    marginBottom: "18px",
+                  }}
+                >
+                  {nextFollowUpStep.description}
+                </p>
+
+                <a href={nextFollowUpStep.href}>
+                  <button className="primaryBtn">{nextFollowUpStep.buttonText}</button>
+                </a>
+              </div>
 
                 <h2>{followUpStatus}</h2>
 
@@ -410,7 +488,7 @@ export default function HealthPlanPage() {
                 </div>
               </div>
 
-              <div className="resultBox">
+                            <div className="resultBox" id="action-tasks-section">
                 <p className="sectionLabel">Action Tasks</p>
 
                 <div style={{ display: "grid", gap: "14px", marginTop: "20px" }}>
