@@ -205,29 +205,29 @@ export default function HealthPlanPage() {
       <div className="assistantContainer">
         <PageBackActions />
         <div className="assistantHeader">
-          <p className="assistantBadge">HEALTH PLAN ENGINE</p>
+          <p className="assistantBadge">FOLLOW-UP & HEALTH PLAN</p>
 
-          <h1>{priorityOrgan} 4-Week Improvement Plan</h1>
+<h1>{priorityOrgan} Follow-Up Plan</h1>
 
-          <p>
-            A personalized educational action plan based on your current
-            priority health area, latest assessment score, and daily wellness
-            tracking.
-          </p>
+<p>
+  A structured follow-up center that connects your priority health area,
+  latest assessment score, wellness check-ins, and 4-week educational action
+  plan.
+</p>
         </div>
 
         <div className="chatWindow">
           {loading && (
             <div className="resultBox">
-              <p className="sectionLabel">Loading Plan</p>
-              <h2>Preparing your personalized health plan...</h2>
+              <p className="sectionLabel">Loading Follow-Up Plan</p>
+<h2>Preparing your follow-up and health plan...</h2>
             </div>
           )}
 
           {!loading && message && (
             <div className="resultBox">
-              <p className="sectionLabel">Health Plan</p>
-              <h2>Plan Not Ready</h2>
+              <p className="sectionLabel">Follow-Up Plan</p>
+<h2>Follow-Up Plan Not Ready</h2>
               <p>{message}</p>
 
               <a href="/assessment">
