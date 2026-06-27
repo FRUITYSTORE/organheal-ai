@@ -198,10 +198,9 @@ export default function DoctorBriefReportCard({
     printWindow.document.close();
 
     setTimeout(() => {
-      printWindow.focus();
-      printWindow.print();
-      printWindow.close();
-    }, 250);
+  printWindow.focus();
+  printWindow.print();
+}, 250);
   }
 
   async function downloadDoctorBriefPdf() {
