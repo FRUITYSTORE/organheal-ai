@@ -17,6 +17,8 @@ type ReportLibraryItem = {
   file_path?: string | null;
   uploaded_at?: string;
   extraction_status?: string | null;
+  has_saved_intelligence?: boolean;
+  saved_intelligence_updated_at?: string | null;
 };
 
 export default function ReportsPage() {
@@ -93,9 +95,30 @@ export default function ReportsPage() {
       uploadedReports = reportData || [];
     }
 
+      const insightIds = (insights || []).map((item) => item.id);
+
+    let savedIntelligenceRows: {
+      insight_id: number;
+      updated_at: string | null;
+    }[] = [];
+
+    if (insightIds.length > 0) {
+      const { data: savedData } = await supabase
+        .from("generated_intelligence_results")
+        .select("insight_id, updated_at")
+        .eq("user_id", userId)
+        .in("insight_id", insightIds);
+
+      savedIntelligenceRows = savedData || [];
+    }
+
     const mergedReports: ReportLibraryItem[] = (insights || []).map((item) => {
       const uploadedReport = uploadedReports.find(
         (report) => report.id === item.report_id
+      );
+
+      const savedIntelligence = savedIntelligenceRows.find(
+        (result) => result.insight_id === item.id
       );
 
       return {
@@ -104,6 +127,8 @@ export default function ReportsPage() {
         file_path: uploadedReport?.file_path || null,
         uploaded_at: uploadedReport?.created_at || item.created_at,
         extraction_status: uploadedReport?.extraction_status || "Pending",
+        has_saved_intelligence: Boolean(savedIntelligence),
+        saved_intelligence_updated_at: savedIntelligence?.updated_at || null,
       };
     });
 
@@ -392,6 +417,29 @@ export default function ReportsPage() {
                       >
                         {isArabic ? "الذكاء: " : "AI: "}
                         {report.ai_status || "Pending"}
+                      </span>
+
+                      <span
+                        style={{
+                          padding: "7px 10px",
+                          borderRadius: "999px",
+                          background: report.has_saved_intelligence
+                            ? "rgba(34,211,238,0.12)"
+                            : "rgba(148,163,184,0.08)",
+                          border: report.has_saved_intelligence
+                            ? "1px solid rgba(34,211,238,0.24)"
+                            : "1px solid rgba(148,163,184,0.16)",
+                          fontSize: "0.85rem",
+                          textAlign: "center",
+                        }}
+                      >
+                        {report.has_saved_intelligence
+                          ? isArabic
+                            ? "ذكاء محفوظ"
+                            : "Saved Intelligence"
+                          : isArabic
+                          ? "لا توجد نتيجة محفوظة"
+                          : "No Saved Result"}
                       </span>
                     </div>
                   </div>
