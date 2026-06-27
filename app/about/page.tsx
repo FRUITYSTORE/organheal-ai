@@ -69,18 +69,12 @@ export default function AboutPage() {
           </p>
 
           <div className="buttons">
-            <Link href="/dashboard">
-              <button className="primaryBtn">
-                {isArabic ? "افتح لوحة التحكم" : "Open Dashboard"}
-              </button>
-            </Link>
-
-            <Link href="/assessment">
-              <button className="secondaryBtn">
-                {isArabic ? "ابدأ التقييم" : "Start Assessment"}
-              </button>
-            </Link>
-          </div>
+  <Link href="/">
+    <button className="secondaryBtn">
+      {isArabic ? "العودة إلى الصفحة الرئيسية" : "← Back to Home"}
+    </button>
+  </Link>
+</div>
         </section>
 
         <section className="chatWindow">
@@ -192,22 +186,71 @@ export default function AboutPage() {
             </div>
           </div>
 
-          <div className="resultBox">
+                    <div className="resultBox">
             <p className="sectionLabel">
-              {isArabic ? "الثقة والخصوصية" : "TRUST & PRIVACY"}
+              {isArabic ? "الثقة والسلامة الطبية" : "TRUST & MEDICAL SAFETY"}
             </p>
 
             <h2>
               {isArabic
-                ? "مصمم لحماية المستخدم"
-                : "Designed with user protection in mind"}
+                ? "ماذا يفعل OrganHeal — وماذا لا يفعل"
+                : "What OrganHeal does — and does not do"}
             </h2>
 
-            <p>
-              {isArabic
-                ? "يدعم OrganHeal الوعي الصحي والتعليم الصحي ولا يستبدل التشخيص الطبي أو الرعاية الصحية المهنية."
-                : "OrganHeal AI supports health awareness and education. It does not replace medical diagnosis or professional care."}
-            </p>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                gap: "16px",
+                marginTop: "18px",
+              }}
+            >
+              <div className="aboutCard">
+                <h3>
+                  {isArabic ? "ما يقدمه OrganHeal" : "What OrganHeal provides"}
+                </h3>
+
+                <p>
+                  {isArabic
+                    ? "يساعد OrganHeal المستخدمين على تنظيم معلوماتهم الصحية، فهم نتائج المختبر والتقارير الطبية، متابعة صحة الأعضاء، والتحضير بشكل أفضل للنقاش مع الطبيب."
+                    : "OrganHeal helps users organize health information, understand lab results and medical reports, track organ health patterns, and prepare better questions for clinical visits."}
+                </p>
+              </div>
+
+              <div className="aboutCard">
+                <h3>
+                  {isArabic
+                    ? "ما لا يقدمه OrganHeal"
+                    : "What OrganHeal does not provide"}
+                </h3>
+
+                <p>
+                  {isArabic
+                    ? "لا يقدم OrganHeal تشخيصًا طبيًا، علاجًا، وصفات دوائية، أو نصيحة طبية طارئة، ولا يستبدل الطبيب أو الرعاية الطبية المرخصة."
+                    : "OrganHeal does not provide medical diagnosis, treatment, prescriptions, emergency advice, or replace licensed medical care."}
+                </p>
+              </div>
+
+              <div className="aboutCard">
+                <h3>{isArabic ? "خصوصية البيانات" : "Data privacy"}</h3>
+
+                <p>
+                  {isArabic
+                    ? "يجب التعامل مع البيانات الصحية بحذر واحترام. هدف OrganHeal هو تنظيم وفهم المعلومات الصحية بطريقة آمنة وواضحة للمستخدم."
+                    : "Health data should be handled carefully and respectfully. OrganHeal’s goal is to organize and explain health information in a clear and privacy-conscious way."}
+                </p>
+              </div>
+
+              <div className="aboutCard">
+                <h3>{isArabic ? "الأعراض العاجلة" : "Urgent symptoms"}</h3>
+
+                <p>
+                  {isArabic
+                    ? "في حال وجود ألم صدر شديد، ضيق نفس شديد، إغماء، تشوش، أو أعراض طارئة، يجب طلب الرعاية الطبية فورًا."
+                    : "For severe chest pain, severe shortness of breath, fainting, confusion, or emergency symptoms, seek medical care immediately."}
+                </p>
+              </div>
+            </div>
           </div>
         </section>
       </div>
