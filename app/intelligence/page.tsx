@@ -105,20 +105,7 @@ export default function IntelligencePage() {
   const [healthInsights, setHealthInsights] = useState<HealthInsight[]>([]);
   const [assessmentData, setAssessmentData] = useState<Assessment[]>([]);
 const [dailyCheckIn, setDailyCheckIn] = useState<DailyCheckIn | null>(null);
-  const [generatedStrategy, setGeneratedStrategy] = useState<any>(null);
-  const [generatedUnifiedHealth, setGeneratedUnifiedHealth] = useState<any>(null);
-  const [generatedCrossSource, setGeneratedCrossSource] = useState<any>(null);
-  const [generatedTimeline, setGeneratedTimeline] = useState<any>(null);
-  const [generatedLongitudinalRisk, setGeneratedLongitudinalRisk] = useState<any>(null);
-  const [generatedHealthStory, setGeneratedHealthStory] = useState("");
-  const [generatedActionPlan, setGeneratedActionPlan] = useState<any>(null);
-  const [generatedExecutiveSummary, setGeneratedExecutiveSummary] =
-  useState<any>(null);
-
-  const [generatedLabTrends, setGeneratedLabTrends] = useState<any[]>([]);
-  const [generatedForecast, setGeneratedForecast] = useState<any>(null);
- const [generatedDigitalTwin, setGeneratedDigitalTwin] = useState<any>(null);
-const [generatedResult, setGeneratedResult] =
+  const [generatedResult, setGeneratedResult] =
   useState<GeneratedIntelligenceResult | null>(null);
 const [activeGeneratedInsightId, setActiveGeneratedInsightId] =
   useState<number | null>(null);
@@ -438,18 +425,6 @@ const executiveSummary = {
 };
 
 setGeneratedResult(generatedResultPayload);
-
-setGeneratedStrategy(healthStrategy);
-setGeneratedUnifiedHealth(unifiedHealth);
-setGeneratedDigitalTwin(digitalTwin);
-setGeneratedCrossSource(crossSource);
-setGeneratedTimeline(timeline);
-setGeneratedLongitudinalRisk(longitudinalRisk);
-setGeneratedForecast(forecast);
-setGeneratedHealthStory(healthStory);
-setGeneratedActionPlan(actionPlan);
-setGeneratedExecutiveSummary(executiveSummary);
-setGeneratedLabTrends(labTrends);
 setActiveGeneratedInsightId(insightId);
 
   const intelligence = {
