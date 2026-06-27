@@ -36,6 +36,7 @@ import UnifiedHealthCard from "./components/UnifiedHealthCard";
 import MedicalReportCard from "./components/MedicalReportCard";
 import MedicalReportList from "./components/MedicalReportList";
 import HealthPassportCard from "./components/HealthPassportCard";
+import TopOpportunitiesCard from "./components/TopOpportunitiesCard";
 
 
 
@@ -626,76 +627,13 @@ Clinical note: This is an educational interpretation and should be reviewed by a
   </MedicalReportList>
 )}
           {!loading && healthEngine && (
-            <div className="resultBox">
-              <p className="sectionLabel">🏆 HEALTH INTELLIGENCE SNAPSHOT</p>
-              <h2>Top Opportunities</h2>
-
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                  gap: "14px",
-                  marginTop: "18px",
-                }}
-              >
-                <div>
-                  <strong>Strongest Area</strong>
-                  <p>{healthEngine.strongestOrgan || "N/A"}</p>
-                </div>
-
-                <div>
-                  <strong>Risk Pattern</strong>
-                  <p>{healthEngine.riskPattern}</p>
-                </div>
-
-                <div>
-                  <strong>Potential Gain</strong>
-                  <p>+{healthEngine.potentialGain}</p>
-                </div>
-              </div>
-
-              {healthEngine.opportunities.length === 0 ? (
-                <p style={{ marginTop: "18px" }}>
-                  Complete more assessments to generate opportunities.
-                </p>
-              ) : (
-                <div
-                  style={{
-                    display: "grid",
-                    gap: "14px",
-                    marginTop: "18px",
-                  }}
-                >
-                  {healthEngine.opportunities.slice(0, 3).map((item) => (
-                    <div
-                      key={item.organ}
-                      style={{
-                        padding: "16px",
-                        borderRadius: "16px",
-                        background: "rgba(15,23,42,0.75)",
-                        border: "1px solid rgba(34,211,238,0.18)",
-                        textAlign: "left",
-                      }}
-                    >
-                      <h3>{item.title}</h3>
-                      <p>
-                        Current: {item.currentScore}/100 → Potential:{" "}
-                        {item.potentialScore}/100
-                      </p>
-                      <p>
-                        Potential Gain: <strong>+{item.potentialGain}</strong>
-                      </p>
-                      <p>
-                        Priority: <strong>{item.priority}</strong>
-                      </p>
-                      <p>{item.action}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
+  <TopOpportunitiesCard
+    strongestOrgan={healthEngine.strongestOrgan}
+    riskPattern={healthEngine.riskPattern}
+    potentialGain={healthEngine.potentialGain}
+    opportunities={healthEngine.opportunities.slice(0, 3)}
+  />
+)}
           {!loading && healthEngine && (
             <div className="resultBox">
               <p className="sectionLabel">🩺 DOCTOR READY SUMMARY</p>
