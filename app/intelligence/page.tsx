@@ -40,7 +40,7 @@ import TopOpportunitiesCard from "./components/TopOpportunitiesCard";
 import DoctorReadySummaryCard from "./components/DoctorReadySummaryCard";
 import GeneratedReportDetailsCard from "./components/GeneratedReportDetailsCard";
 import PersonalHealthStrategyCard from "./components/PersonalHealthStrategyCard";
-
+import DoctorBriefReportCard from "./components/DoctorBriefReportCard";
 
 
 
@@ -686,6 +686,19 @@ onHideGenerated={() => {
 
     {isActiveGeneratedReport && generatedResult && (
       <>
+      <DoctorBriefReportCard
+  fileName={item.file_name || "Medical report"}
+  reportTypeLabel={getReportTypeLabel(item.report_type)}
+  uploadedAtText={new Date(
+    item.uploaded_at || item.created_at
+  ).toLocaleString()}
+  summary={item.summary}
+  keyFindings={item.key_findings}
+  riskSignals={item.risk_signals}
+  recommendations={item.recommendations}
+  doctorBrief={item.doctor_brief}
+  executiveSummary={generatedResult.executiveSummary}
+/>
         {generatedResult.executiveSummary && (
           <ExecutiveSummaryCard summary={generatedResult.executiveSummary} />
         )}
