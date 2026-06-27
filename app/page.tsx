@@ -889,19 +889,37 @@ export default function Home() {
           </div>
         </div>
 
-        <p
-          style={{
-            maxWidth: "760px",
-            margin: "22px auto 0",
-            textAlign: "center",
-            opacity: 0.72,
-            lineHeight: 1.7,
-          }}
-        >
-          {isArabic
-            ? "ملاحظة: هذه المرحلة تعرض قيمة الاشتراك فقط. الدفع والقفل الفعلي للميزات سيتم بناؤه لاحقًا بعد اعتماد صفحة الخطط."
-            : "Note: this stage only presents subscription value. Payments and real feature gating will be added later after the plans page is approved."}
-        </p>
+       <div
+  style={{
+    marginTop: "24px",
+    display: "flex",
+    justifyContent: "center",
+    gap: "12px",
+    flexWrap: "wrap",
+  }}
+>
+  <Link href="/pricing" className="secondaryBtn">
+    {isArabic ? "عرض الخطط" : "View Plans"}
+  </Link>
+
+  <Link href="/assessment" className="primaryBtn">
+    {isArabic ? "ابدأ مجانًا" : "Start Free"}
+  </Link>
+</div>
+
+<p
+  style={{
+    maxWidth: "760px",
+    margin: "18px auto 0",
+    textAlign: "center",
+    opacity: 0.72,
+    lineHeight: 1.7,
+  }}
+>
+  {isArabic
+    ? "ملاحظة: هذه المرحلة تعرض قيمة الاشتراك فقط. الدفع والقفل الفعلي للميزات سيتم بناؤه لاحقًا بعد اعتماد صفحة الخطط."
+    : "Note: this stage only presents subscription value. Payments and real feature gating will be added later after the plans page is approved."}
+</p>
       </section>
       <section className="homeFinalCTA">
         <div className="homeFinalCTAContent">
@@ -987,12 +1005,16 @@ export default function Home() {
               </Link>
 
               <Link href="/intelligence">
-                {isArabic ? "مركز الذكاء الصحي" : "Intelligence Center"}
-              </Link>
+  {isArabic ? "مركز الذكاء الصحي" : "Intelligence Center"}
+</Link>
 
-              <Link href="/assistant">
-                {isArabic ? "المساعد الصحي" : "Health Assistant"}
-              </Link>
+<Link href="/pricing">
+  {isArabic ? "الخطط والاشتراك" : "Pricing / Plans"}
+</Link>
+
+<Link href="/assistant">
+  {isArabic ? "المساعد الصحي" : "Health Assistant"}
+</Link>
             </div>
           </div>
 
