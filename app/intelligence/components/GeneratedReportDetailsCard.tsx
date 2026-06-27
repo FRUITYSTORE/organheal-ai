@@ -1,10 +1,10 @@
 type GeneratedReportDetailsCardProps = {
-  medicalCategory: string | null;
-  summary: string | null;
-  keyFindings: string | null;
-  riskSignals: string | null;
-  recommendations: string | null;
-  doctorBrief: string | null;
+  medicalCategory: string | null | undefined;
+  summary: string | null | undefined;
+  keyFindings: string | null | undefined;
+  riskSignals: string | null | undefined;
+  recommendations: string | null | undefined;
+  doctorBrief: string | null | undefined;
 };
 
 export default function GeneratedReportDetailsCard({

@@ -39,6 +39,7 @@ import HealthPassportCard from "./components/HealthPassportCard";
 import TopOpportunitiesCard from "./components/TopOpportunitiesCard";
 import DoctorReadySummaryCard from "./components/DoctorReadySummaryCard";
 import GeneratedReportDetailsCard from "./components/GeneratedReportDetailsCard";
+import PersonalHealthStrategyCard from "./components/PersonalHealthStrategyCard";
 
 
 
@@ -560,29 +561,14 @@ return (
           onOpen={() => openMedicalReport(item.file_path)}
           onGenerate={() => generateReportIntelligence(item.id)}
         >
-          <p>
-            <strong>Medical Category:</strong> {item.medical_category}
-          </p>
-
-          <p>
-            <strong>Summary:</strong> {item.summary}
-          </p>
-
-          <p>
-            <strong>Key Findings:</strong> {item.key_findings}
-          </p>
-
-          <p>
-            <strong>Risk Signals:</strong> {item.risk_signals}
-          </p>
-
-          <p>
-            <strong>Recommendations:</strong> {item.recommendations}
-          </p>
-
-          <p>
-            <strong>Doctor Brief:</strong> {item.doctor_brief}
-          </p>
+          <GeneratedReportDetailsCard
+  medicalCategory={item.medical_category}
+  summary={item.summary}
+  keyFindings={item.key_findings}
+  riskSignals={item.risk_signals}
+  recommendations={item.recommendations}
+  doctorBrief={item.doctor_brief}
+/>
 
           {isActiveGeneratedReport && generatedResult && (
   <>
@@ -590,31 +576,9 @@ return (
       <ExecutiveSummaryCard summary={generatedResult.executiveSummary} />
     )}
 
-    {generatedResult.strategy && (
-      <div className="resultBox">
-        <p className="sectionLabel">Personal Health Strategy</p>
-
-        <h3>Health Risks</h3>
-        <p style={{ whiteSpace: "pre-line" }}>
-          {generatedResult.strategy.healthRisks}
-        </p>
-
-        <h3>90-Day Action Plan</h3>
-        <p style={{ whiteSpace: "pre-line" }}>
-          {generatedResult.strategy.actionPlan90Days}
-        </p>
-
-        <h3>Nutrition Strategy</h3>
-        <p style={{ whiteSpace: "pre-line" }}>
-          {generatedResult.strategy.nutritionStrategy}
-        </p>
-
-        <h3>Follow-Up Plan</h3>
-        <p style={{ whiteSpace: "pre-line" }}>
-          {generatedResult.strategy.followUpPlan}
-        </p>
-      </div>
-    )}
+   {generatedResult.strategy && (
+  <PersonalHealthStrategyCard strategy={generatedResult.strategy} />
+)}
 
     {generatedResult.healthStory && (
       <HealthStoryCard story={generatedResult.healthStory} />
