@@ -165,8 +165,84 @@ export default function Home() {
                 : "OrganHeal provides educational health intelligence and does not replace medical diagnosis or licensed care."}
             </p>
           </div>
+                </div>
+      </section>
+
+      <section
+        style={{
+          maxWidth: "1180px",
+          margin: "18px auto 0",
+          padding: "0 20px",
+        }}
+      >
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
+            gap: "12px",
+          }}
+        >
+          {[
+            {
+              icon: "🧠",
+              title: isArabic
+                ? "ذكاء صحي تعليمي"
+                : "Educational Health Intelligence",
+              text: isArabic
+                ? "يساعدك على الفهم والتحضير، ولا يستبدل الطبيب."
+                : "Designed to help you understand and prepare, not replace doctors.",
+            },
+            {
+              icon: "👤",
+              title: isArabic
+                ? "تقارير مفهومة للمريض"
+                : "Patient-Friendly Reports",
+              text: isArabic
+                ? "ملخصات سهلة تساعدك على فهم معلوماتك الصحية."
+                : "Simple summaries that make health information easier to understand.",
+            },
+            {
+              icon: "🩺",
+              title: isArabic
+                ? "ملخصات جاهزة للطبيب"
+                : "Doctor-Ready Briefs",
+              text: isArabic
+                ? "تنظيم واضح يساعدك على مناقشة النتائج مع الطبيب."
+                : "Structured briefs to support better conversations with clinicians.",
+            },
+            {
+              icon: "🔒",
+              title: isArabic ? "بيانات صحية خاصة" : "Private Health Data",
+              text: isArabic
+                ? "تقاريرك ونتائجك تبقى ضمن حسابك الصحي."
+                : "Your reports and results stay connected to your own account.",
+            },
+          ].map((item) => (
+            <div
+              key={item.title}
+              style={{
+                padding: "16px",
+                borderRadius: "18px",
+                background: "rgba(15,23,42,0.72)",
+                border: "1px solid rgba(34,211,238,0.18)",
+                textAlign: isArabic ? "right" : "left",
+              }}
+            >
+              <div style={{ fontSize: "1.35rem", marginBottom: "8px" }}>
+                {item.icon}
+              </div>
+
+              <h3 style={{ marginBottom: "6px", fontSize: "1rem" }}>
+                {item.title}
+              </h3>
+
+              <p style={{ margin: 0, opacity: 0.78, lineHeight: 1.55 }}>
+                {item.text}
+              </p>
+            </div>
+          ))}
         </div>
-           </section>
+      </section>
 
       {!isLoggedIn && (
         <section className="onboardingBanner">
