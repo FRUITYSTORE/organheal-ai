@@ -695,18 +695,43 @@ onHideGenerated={() => {
         >
           {isExpandedReport && (
   <>
-    <GeneratedReportDetailsCard
-      medicalCategory={item.medical_category}
-      summary={item.summary}
-      keyFindings={item.key_findings}
-      riskSignals={item.risk_signals}
-      recommendations={item.recommendations}
-      doctorBrief={item.doctor_brief}
-    />
-
     {isActiveGeneratedReport && generatedResult && (
       <>
-      <DoctorBriefReportCard
+        <PatientReportPdfCard
+          fileName={item.file_name || "Medical report"}
+          uploadedAtText={new Date(
+            item.uploaded_at || item.created_at
+          ).toLocaleString()}
+          summary={item.summary}
+          keyFindings={item.key_findings}
+          riskSignals={item.risk_signals}
+          recommendations={item.recommendations}
+          healthStory={generatedResult.healthStory}
+          executiveSummary={generatedResult.executiveSummary}
+        />
+
+        <DoctorBriefReportCard
+          fileName={item.file_name || "Medical report"}
+          reportTypeLabel={getReportTypeLabel(item.report_type)}
+          uploadedAtText={new Date(
+            item.uploaded_at || item.created_at
+          ).toLocaleString()}
+          summary={item.summary}
+          keyFindings={item.key_findings}
+          riskSignals={item.risk_signals}
+          recommendations={item.recommendations}
+          doctorBrief={item.doctor_brief}
+          executiveSummary={generatedResult.executiveSummary}
+        />
+
+        <GeneratedReportDetailsCard
+          medicalCategory={item.medical_category}
+          summary={item.summary}
+          keyFindings={item.key_findings}
+          riskSignals={item.risk_signals}
+          recommendations={item.recommendations}
+          doctorBrief={item.doctor_brief}
+        />
   fileName={item.file_name || "Medical report"}
   reportTypeLabel={getReportTypeLabel(item.report_type)}
   uploadedAtText={new Date(
@@ -718,19 +743,6 @@ onHideGenerated={() => {
   recommendations={item.recommendations}
   doctorBrief={item.doctor_brief}
   executiveSummary={generatedResult.executiveSummary}
-/>
-<PatientReportPdfCard
-  fileName={item.file_name || "Medical report"}
-  uploadedAtText={new Date(
-    item.uploaded_at || item.created_at
-  ).toLocaleString()}
-  summary={item.summary}
-  keyFindings={item.key_findings}
-  riskSignals={item.risk_signals}
-  recommendations={item.recommendations}
-  healthStory={generatedResult.healthStory}
-  executiveSummary={generatedResult.executiveSummary}
-/>
         {generatedResult.executiveSummary && (
           <ExecutiveSummaryCard summary={generatedResult.executiveSummary} />
         )}
