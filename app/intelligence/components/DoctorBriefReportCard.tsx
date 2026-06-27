@@ -34,7 +34,7 @@ export default function DoctorBriefReportCard({
   executiveSummary,
 }: DoctorBriefReportCardProps) {
       const printRef = useRef<HTMLDivElement>(null);
-
+const generatedAtText = new Date().toLocaleString();
   function printDoctorBriefOnly() {
     if (!printRef.current) {
       window.print();
@@ -75,7 +75,64 @@ export default function DoctorBriefReportCard({
 
             .doctorBriefPrintButton {
               display: none !important;
-            }
+            }.doctorBriefPrintHeader {
+  border-bottom: 1px solid #d1d5db;
+  padding-bottom: 14px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+}
+
+.doctorBriefBrand {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: #374151 !important;
+  margin-bottom: 6px;
+}
+
+.doctorBriefTitle {
+  font-size: 24px;
+  font-weight: 800;
+  margin: 0 0 6px 0;
+  color: #111827 !important;
+}
+
+.doctorBriefSubtitle {
+  font-size: 12px;
+  color: #4b5563 !important;
+  margin: 0;
+}
+
+.doctorBriefMeta {
+  text-align: right;
+  font-size: 11px;
+  color: #4b5563 !important;
+  min-width: 180px;
+}
+
+.doctorBriefMeta p {
+  font-size: 11px;
+  margin: 0 0 6px 0;
+}
+
+.doctorBriefFooter {
+  border-top: 1px solid #d1d5db;
+  margin-top: 28px;
+  padding-top: 10px;
+  font-size: 10px;
+  line-height: 1.5;
+  color: #4b5563 !important;
+}
+
+.doctorBriefFooter p {
+  font-size: 10px;
+  color: #4b5563 !important;
+  margin: 0 0 6px 0;
+}
 
             .resultBox,
             .doctorBriefPrintArea {
@@ -141,27 +198,35 @@ export default function DoctorBriefReportCard({
   }
   return (
     <div ref={printRef} className="resultBox doctorBriefPrintArea">
-            <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          gap: "12px",
-          alignItems: "center",
-          flexWrap: "wrap",
-        }}
-      >
-        <div>
-          <p className="sectionLabel">🩺 DOCTOR BRIEF</p>
-          <h2>Doctor-Ready Report Summary</h2>
-        </div>
+  <div className="doctorBriefPrintHeader">
+    <div>
+      <p className="doctorBriefBrand">OrganHeal AI</p>
+      <h2 className="doctorBriefTitle">Doctor-Ready Report Summary</h2>
+      <p className="doctorBriefSubtitle">
+        Structured medical intelligence summary prepared for clinical review.
+      </p>
+    </div>
 
-       <button
-  className="secondaryBtn doctorBriefPrintButton"
-  onClick={printDoctorBriefOnly}
->
-  Print Doctor Brief
-</button>
-      </div>
+    <div className="doctorBriefMeta">
+      <p>
+        <strong>Generated:</strong>
+        <br />
+        {generatedAtText}
+      </p>
+      <p>
+        <strong>Use:</strong>
+        <br />
+        Educational / Clinical Review
+      </p>
+    </div>
+
+    <button
+      className="secondaryBtn doctorBriefPrintButton"
+      onClick={printDoctorBriefOnly}
+    >
+      Print Doctor Brief
+    </button>
+  </div>
 
       <div
         style={{
@@ -227,9 +292,22 @@ export default function DoctorBriefReportCard({
           <strong>{executiveSummary?.nextBestAction || "N/A"}</strong>
         </p>
 
-        <p style={{ marginTop: "18px", fontSize: "0.9rem", opacity: 0.75 }}>
+                <p style={{ marginTop: "18px", fontSize: "0.9rem", opacity: 0.75 }}>
           Educational interpretation only. This summary should be reviewed by a
           licensed healthcare professional.
+        </p>
+      </div>
+
+      <div className="doctorBriefFooter">
+        <p>
+          OrganHeal AI provides educational health intelligence and does not
+          replace medical diagnosis, treatment, or professional clinical
+          judgment.
+        </p>
+        <p>
+          This report should be interpreted by a licensed healthcare
+          professional in the context of the patient&apos;s full history,
+          examination, and original medical documents.
         </p>
       </div>
     </div>
