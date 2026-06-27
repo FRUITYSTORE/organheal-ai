@@ -221,12 +221,35 @@ setDailyCheckIn(checkInData || null);
 
     setHealthInsights(mergedInsights);
 
-    if (assessmentData.length === 0 && mergedInsights.length === 0) {
-      setMessage(
-        "Complete your first organ assessment or upload a medical report to unlock intelligence."
-      );
-    }
+setGeneratedResult(null);
+setActiveGeneratedInsightId(null);
 
+const generatedInsightIds = mergedInsights.map((item) => item.id);
+
+if (generatedInsightIds.length > 0) {
+  const { data: savedGeneratedResult, error: savedGeneratedResultError } =
+    await supabase
+      .from("generated_intelligence_results")
+      .select("insight_id, result, updated_at")
+      .eq("user_id", userId)
+      .in("insight_id", generatedInsightIds)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+  if (!savedGeneratedResultError && savedGeneratedResult?.result) {
+    setGeneratedResult(
+      savedGeneratedResult.result as GeneratedIntelligenceResult
+    );
+    setActiveGeneratedInsightId(savedGeneratedResult.insight_id);
+  }
+}
+
+if (assessmentData.length === 0 && mergedInsights.length === 0) {
+  setMessage(
+    "Complete your first organ assessment or upload a medical report to unlock intelligence."
+  );
+}
     setLoading(false);
   }
 
