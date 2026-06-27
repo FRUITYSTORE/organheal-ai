@@ -184,7 +184,32 @@ export default function HealthPlanPage() {
       : 0;
 
   const taskProgress = Math.round((completedTasks.length / planTasks.length) * 100);
+  const latestCheckInText = dailyCheckIn
+    ? `${new Date(dailyCheckIn.created_at).toLocaleDateString()} · ${dailyCheckIn.wellness_score}/100 · ${dailyCheckIn.mood}`
+    : "No wellness check-in saved yet";
 
+  const followUpRhythm =
+    priorityScore === null
+      ? "Complete an assessment first"
+      : priorityScore < 50
+      ? "Weekly follow-up recommended"
+      : priorityScore < 80
+      ? "Check in 2–3 times per week"
+      : "Weekly maintenance check-in";
+
+  const followUpStatus =
+    priorityScore === null
+      ? "Not Ready"
+      : dailyCheckIn
+      ? "Active Follow-Up"
+      : "Check-In Needed";
+
+  const followUpMessage =
+    priorityScore === null
+      ? "Complete at least one organ assessment to activate your follow-up plan."
+      : dailyCheckIn
+      ? "Your follow-up plan is active. Keep updating your wellness check-ins to track progress over time."
+      : "Complete your first wellness check-in to make your follow-up plan more useful.";
   function toggleTask(task: string) {
     if (completedTasks.includes(task)) {
       setCompletedTasks(completedTasks.filter((item) => item !== task));
@@ -238,6 +263,57 @@ export default function HealthPlanPage() {
 
           {!loading && !message && (
             <>
+                          <div className="resultBox">
+                <p className="sectionLabel">Follow-Up Status</p>
+
+                <h2>{followUpStatus}</h2>
+
+                <p
+                  style={{
+                    opacity: 0.82,
+                    lineHeight: 1.7,
+                    marginBottom: "18px",
+                  }}
+                >
+                  {followUpMessage}
+                </p>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                    gap: "14px",
+                  }}
+                >
+                  <div>
+                    <strong>Latest Check-In</strong>
+                    <p>{latestCheckInText}</p>
+                  </div>
+
+                  <div>
+                    <strong>Follow-Up Rhythm</strong>
+                    <p>{followUpRhythm}</p>
+                  </div>
+
+                  <div>
+                    <strong>Current Priority</strong>
+                    <p>{priorityOrgan}</p>
+                  </div>
+
+                  <div>
+                    <strong>Plan Intensity</strong>
+                    <p>{getPlanIntensity()}</p>
+                  </div>
+                </div>
+
+                {!dailyCheckIn && (
+                  <div style={{ marginTop: "18px" }}>
+                    <a href="/checkin">
+                      <button className="primaryBtn">Complete Wellness Check-In</button>
+                    </a>
+                  </div>
+                )}
+              </div>
               <div className="resultBox">
                 <p className="sectionLabel">Priority Area</p>
 
