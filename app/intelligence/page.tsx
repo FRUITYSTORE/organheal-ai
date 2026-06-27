@@ -533,11 +533,13 @@ Clinical note: This is an educational interpretation and should be reviewed by a
   <MedicalReportList hasReports={healthInsights.length > 0}>
     {healthInsights.map((item) => {
       const isGenerated =
-        item.ai_status === "Generated" &&
-        item.extraction_status === "Completed";
+  item.ai_status === "Generated" &&
+  item.extraction_status === "Completed";
 
-      return (
-        <MedicalReportCard
+const isActiveGeneratedReport = activeGeneratedInsightId === item.id;
+
+return (
+  <MedicalReportCard
           key={item.id}
           fileName={item.file_name || "Medical report"}
           reportTypeLabel={getReportTypeLabel(item.report_type)}
@@ -574,59 +576,63 @@ Clinical note: This is an educational interpretation and should be reviewed by a
             <strong>Doctor Brief:</strong> {item.doctor_brief}
           </p>
 
-          {generatedExecutiveSummary && (
-            <ExecutiveSummaryCard summary={generatedExecutiveSummary} />
-          )}
+          {isActiveGeneratedReport && (
+  <>
+    {generatedExecutiveSummary && (
+      <ExecutiveSummaryCard summary={generatedExecutiveSummary} />
+    )}
 
-          {generatedStrategy && (
-            <div className="resultBox">
-              <p className="sectionLabel">Personal Health Strategy</p>
+    {generatedStrategy && (
+      <div className="resultBox">
+        <p className="sectionLabel">Personal Health Strategy</p>
 
-              <h3>Health Risks</h3>
-              <p style={{ whiteSpace: "pre-line" }}>
-                {generatedStrategy.healthRisks}
-              </p>
+        <h3>Health Risks</h3>
+        <p style={{ whiteSpace: "pre-line" }}>
+          {generatedStrategy.healthRisks}
+        </p>
 
-              <h3>90-Day Action Plan</h3>
-              <p style={{ whiteSpace: "pre-line" }}>
-                {generatedStrategy.actionPlan90Days}
-              </p>
+        <h3>90-Day Action Plan</h3>
+        <p style={{ whiteSpace: "pre-line" }}>
+          {generatedStrategy.actionPlan90Days}
+        </p>
 
-              <h3>Nutrition Strategy</h3>
-              <p style={{ whiteSpace: "pre-line" }}>
-                {generatedStrategy.nutritionStrategy}
-              </p>
+        <h3>Nutrition Strategy</h3>
+        <p style={{ whiteSpace: "pre-line" }}>
+          {generatedStrategy.nutritionStrategy}
+        </p>
 
-              <h3>Follow-Up Plan</h3>
-              <p style={{ whiteSpace: "pre-line" }}>
-                {generatedStrategy.followUpPlan}
-              </p>
-            </div>
-          )}
+        <h3>Follow-Up Plan</h3>
+        <p style={{ whiteSpace: "pre-line" }}>
+          {generatedStrategy.followUpPlan}
+        </p>
+      </div>
+    )}
 
-          {generatedHealthStory && (
-            <HealthStoryCard story={generatedHealthStory} />
-          )}
+    {generatedHealthStory && (
+      <HealthStoryCard story={generatedHealthStory} />
+    )}
 
-          {generatedActionPlan && (
-            <ActionPlanCard actionPlan={generatedActionPlan} />
-          )}
+    {generatedActionPlan && (
+      <ActionPlanCard actionPlan={generatedActionPlan} />
+    )}
 
-          {generatedUnifiedHealth && (
-            <UnifiedHealthCard unifiedHealth={generatedUnifiedHealth} />
-          )}
+    {generatedUnifiedHealth && (
+      <UnifiedHealthCard unifiedHealth={generatedUnifiedHealth} />
+    )}
 
-          <TimelineCard timeline={generatedTimeline} />
+    <TimelineCard timeline={generatedTimeline} />
 
-          <LongitudinalRiskCard longitudinalRisk={generatedLongitudinalRisk} />
+    <LongitudinalRiskCard longitudinalRisk={generatedLongitudinalRisk} />
 
-          <LabTrendsCard labTrends={generatedLabTrends} />
+    <LabTrendsCard labTrends={generatedLabTrends} />
 
-          <CrossSourceCard crossSource={generatedCrossSource} />
+    <CrossSourceCard crossSource={generatedCrossSource} />
 
-          <DigitalTwinCard digitalTwin={generatedDigitalTwin} />
+    <DigitalTwinCard digitalTwin={generatedDigitalTwin} />
 
-          <ForecastCard forecast={generatedForecast} />
+    <ForecastCard forecast={generatedForecast} />
+  </>
+)}
         </MedicalReportCard>
       );
     })}
