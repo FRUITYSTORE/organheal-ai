@@ -362,23 +362,27 @@ export default function PricingPage() {
           </p>
         </section>
 
-        <div
-          style={{
-            marginTop: "28px",
-            display: "flex",
-            justifyContent: "center",
-            gap: "12px",
-            flexWrap: "wrap",
-          }}
-        >
-          <Link href="/" className="secondaryBtn">
-            {isArabic ? "العودة للرئيسية" : "Back to Home"}
-          </Link>
+       <div
+  style={{
+    marginTop: "28px",
+    display: "flex",
+    justifyContent: "center",
+    gap: "12px",
+    flexWrap: "wrap",
+  }}
+>
+  <Link href="/" className="secondaryBtn">
+    {isArabic ? "العودة للرئيسية" : "Back to Home"}
+  </Link>
 
-          <Link href="/assessment" className="primaryBtn">
-            {isArabic ? "ابدأ التقييم" : "Start Assessment"}
-          </Link>
-        </div>
+  <Link href="/reports" className="secondaryBtn">
+    {isArabic ? "مكتبة التقارير" : "Reports Library"}
+  </Link>
+
+  <Link href="/assessment" className="primaryBtn">
+    {isArabic ? "ابدأ التقييم" : "Start Assessment"}
+  </Link>
+</div>
       </section>
     </main>
   );

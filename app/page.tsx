@@ -151,13 +151,17 @@ export default function Home() {
     {isArabic ? "ابدأ التقييم المجاني" : "Start Free Assessment"}
   </Link>
 
-  <Link href="/lab-upload" className="secondaryBtn">
-    {isArabic ? "ارفع التقارير الطبية" : "Upload Medical Reports"}
-  </Link>
+  <Link href="/lab-upload">
+  {isArabic ? "رفع التقارير الطبية" : "Upload Medical Reports"}
+</Link>
 
-  <Link href="/intelligence" className="secondaryBtn">
-    {isArabic ? "مركز الذكاء الصحي" : "Intelligence Center"}
-  </Link>
+<Link href="/reports">
+  {isArabic ? "مكتبة التقارير" : "Reports Library"}
+</Link>
+
+<Link href="/intelligence">
+  {isArabic ? "مركز الذكاء الصحي" : "Intelligence Center"}
+</Link>
 </div>
 
             <p className="homeHeroDisclaimer">
