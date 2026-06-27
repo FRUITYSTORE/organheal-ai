@@ -1,4 +1,5 @@
 "use client";
+import { useRef } from "react";
 type ExecutiveSummary = {
   currentScore?: number;
   trend?: string;
@@ -32,8 +33,114 @@ export default function DoctorBriefReportCard({
   doctorBrief,
   executiveSummary,
 }: DoctorBriefReportCardProps) {
+      const printRef = useRef<HTMLDivElement>(null);
+
+  function printDoctorBriefOnly() {
+    if (!printRef.current) {
+      window.print();
+      return;
+    }
+
+    const printWindow = window.open("", "_blank", "width=900,height=700");
+
+    if (!printWindow) {
+      window.print();
+      return;
+    }
+
+    printWindow.document.open();
+    printWindow.document.write(`
+      <!doctype html>
+      <html>
+        <head>
+          <title>Doctor Brief</title>
+          <style>
+            @page {
+              size: A4;
+              margin: 18mm;
+            }
+
+            html,
+            body {
+              background: white;
+              color: #111827;
+              font-family: Arial, sans-serif;
+              margin: 0;
+              padding: 0;
+            }
+
+            * {
+              box-sizing: border-box;
+            }
+
+            .doctorBriefPrintButton {
+              display: none !important;
+            }
+
+            .resultBox,
+            .doctorBriefPrintArea {
+              background: white !important;
+              color: #111827 !important;
+              border: none !important;
+              box-shadow: none !important;
+              padding: 0 !important;
+              margin: 0 !important;
+            }
+
+            .sectionLabel {
+              font-size: 11px;
+              letter-spacing: 0.08em;
+              text-transform: uppercase;
+              font-weight: 700;
+              margin-bottom: 6px;
+              color: #374151 !important;
+            }
+
+            h2 {
+              font-size: 22px;
+              margin: 0 0 16px 0;
+              color: #111827 !important;
+            }
+
+            h3 {
+              font-size: 15px;
+              margin: 18px 0 6px 0;
+              color: #111827 !important;
+              break-after: avoid;
+            }
+
+            p {
+              font-size: 12px;
+              line-height: 1.55;
+              margin: 0 0 10px 0;
+              color: #111827 !important;
+              white-space: pre-line;
+            }
+
+            strong {
+              color: #111827 !important;
+            }
+
+            div {
+              break-inside: avoid;
+            }
+          </style>
+        </head>
+        <body>
+          ${printRef.current.innerHTML}
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+
+    setTimeout(() => {
+      printWindow.focus();
+      printWindow.print();
+      printWindow.close();
+    }, 250);
+  }
   return (
-    <div className="resultBox doctorBriefPrintArea">
+    <div ref={printRef} className="resultBox doctorBriefPrintArea">
             <div
         style={{
           display: "flex",
@@ -48,9 +155,9 @@ export default function DoctorBriefReportCard({
           <h2>Doctor-Ready Report Summary</h2>
         </div>
 
-        <button
+       <button
   className="secondaryBtn doctorBriefPrintButton"
-  onClick={() => window.print()}
+  onClick={printDoctorBriefOnly}
 >
   Print Doctor Brief
 </button>
