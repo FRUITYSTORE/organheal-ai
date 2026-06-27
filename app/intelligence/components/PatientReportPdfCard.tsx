@@ -88,26 +88,52 @@ export default function PatientReportPdfCard({
   }
 
   return (
-    <div ref={patientReportRef} className="resultBox">
-      <div
+    <div ref={patientReportRef} className="resultBox patientReportPdfArea">
+            <div
         style={{
           display: "flex",
           justifyContent: "space-between",
-          gap: "14px",
+          gap: "18px",
           alignItems: "flex-start",
           flexWrap: "wrap",
           borderBottom: "1px solid rgba(148,163,184,0.22)",
-          paddingBottom: "14px",
+          paddingBottom: "16px",
           marginBottom: "18px",
         }}
       >
         <div>
-          <p className="sectionLabel">👤 PATIENT REPORT</p>
-          <h2>Patient-Friendly Health Summary</h2>
-          <p style={{ marginTop: "6px", opacity: 0.82 }}>
-  A calm, simple explanation to help you understand your report and what to
-  discuss with your doctor.
-</p>
+          <p
+            style={{
+              margin: 0,
+              fontSize: "0.72rem",
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              fontWeight: 800,
+              opacity: 0.78,
+            }}
+          >
+            OrganHeal AI
+          </p>
+
+          <p className="sectionLabel" style={{ marginTop: "8px" }}>
+            👤 PATIENT REPORT
+          </p>
+
+          <h2 style={{ marginBottom: "6px" }}>
+            Patient-Friendly Health Summary
+          </h2>
+
+          <p
+            style={{
+              marginTop: "6px",
+              opacity: 0.84,
+              maxWidth: "620px",
+              lineHeight: 1.55,
+            }}
+          >
+            A calm, simple explanation to help you understand your report and
+            what to discuss with your doctor.
+          </p>
         </div>
 
         <div
@@ -139,13 +165,17 @@ language.
         </div>
       </div>
 
-      <div
+           <div
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
           gap: "14px",
-          marginBottom: "18px",
+          marginBottom: "20px",
           textAlign: "left",
+          padding: "14px",
+          borderRadius: "16px",
+          background: "rgba(15,23,42,0.38)",
+          border: "1px solid rgba(148,163,184,0.18)",
         }}
       >
         <div>
@@ -167,6 +197,23 @@ language.
           <strong>Main Focus</strong>
           <p>{executiveSummary?.prioritySystem || "N/A"}</p>
         </div>
+      </div>
+
+            <div
+        style={{
+          padding: "14px 16px",
+          borderRadius: "16px",
+          background: "rgba(34,211,238,0.08)",
+          border: "1px solid rgba(34,211,238,0.18)",
+          marginBottom: "20px",
+          textAlign: "left",
+        }}
+      >
+        <strong>How to use this report</strong>
+        <p style={{ marginTop: "6px", marginBottom: 0, lineHeight: 1.55 }}>
+          Read this as a simple guide. It is meant to help you understand your
+          health information and prepare better questions for your doctor.
+        </p>
       </div>
 
       <div style={{ textAlign: "left" }}>
@@ -203,13 +250,13 @@ language.
 
         <h3>6. Your Health Direction</h3>
 
-        <div
+                <div
           style={{
-            padding: "12px 14px",
-            borderRadius: "14px",
+            padding: "14px 16px",
+            borderRadius: "16px",
             background: "rgba(34,211,238,0.08)",
             border: "1px solid rgba(34,211,238,0.18)",
-            marginBottom: "14px",
+            marginBottom: "16px",
           }}
         >
           <p>
@@ -240,10 +287,28 @@ language.
 </p>
 
 <h3>Important Note</h3>
-<p style={{ fontSize: "0.9rem", opacity: 0.78 }}>
-  This patient report is for education and personal understanding only.
+        <p style={{ fontSize: "0.9rem", opacity: 0.78 }}>
+          This patient report is for education and personal understanding only.
           It does not replace medical advice, diagnosis, or treatment. Always
           review your results with a licensed healthcare professional.
+        </p>
+      </div>
+
+      <div
+        style={{
+          borderTop: "1px solid rgba(148,163,184,0.22)",
+          marginTop: "26px",
+          paddingTop: "12px",
+          fontSize: "0.82rem",
+          opacity: 0.72,
+          lineHeight: 1.5,
+          textAlign: "left",
+        }}
+      >
+        <p style={{ margin: 0 }}>
+          OrganHeal AI helps you understand your health information in simpler
+          language. This report should be used as a conversation guide with your
+          healthcare provider.
         </p>
       </div>
     </div>
