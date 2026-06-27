@@ -41,6 +41,7 @@ import DoctorReadySummaryCard from "./components/DoctorReadySummaryCard";
 import GeneratedReportDetailsCard from "./components/GeneratedReportDetailsCard";
 import PersonalHealthStrategyCard from "./components/PersonalHealthStrategyCard";
 import DoctorBriefReportCard from "./components/DoctorBriefReportCard";
+import PatientReportPdfCard from "./components/PatientReportPdfCard";
 
 
 
@@ -697,6 +698,18 @@ onHideGenerated={() => {
   riskSignals={item.risk_signals}
   recommendations={item.recommendations}
   doctorBrief={item.doctor_brief}
+  executiveSummary={generatedResult.executiveSummary}
+/>
+<PatientReportPdfCard
+  fileName={item.file_name || "Medical report"}
+  uploadedAtText={new Date(
+    item.uploaded_at || item.created_at
+  ).toLocaleString()}
+  summary={item.summary}
+  keyFindings={item.key_findings}
+  riskSignals={item.risk_signals}
+  recommendations={item.recommendations}
+  healthStory={generatedResult.healthStory}
   executiveSummary={generatedResult.executiveSummary}
 />
         {generatedResult.executiveSummary && (
