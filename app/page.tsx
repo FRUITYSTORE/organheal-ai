@@ -676,6 +676,103 @@ export default function Home() {
           </div>
         </div>
       </section>
+            <section className="homeAIFeatures">
+        <div className="homeSectionHeader">
+          <p className="sectionLabel">
+            {isArabic
+              ? "المتابعة والتذكيرات"
+              : "Follow-Up & Reminders Preview"}
+          </p>
+
+          <h2>
+            {isArabic
+              ? "ابقَ متصلًا برحلتك الصحية مع الوقت"
+              : "Stay connected to your health journey over time"}
+          </h2>
+
+          <p>
+            {isArabic
+              ? "OrganHeal يمكن تطويره ليذكّرك بتحديث تقييماتك، مراجعة تقاريرك، ومتابعة التغيرات الصحية المهمة بشكل دوري."
+              : "OrganHeal can grow into a follow-up system that reminds you to update assessments, review reports, and track important health changes over time."}
+          </p>
+        </div>
+
+        <div className="aiFeaturesGrid">
+          <div className="aiFeatureCard">
+            <div>📅</div>
+            <h3>
+              {isArabic ? "تحديثات صحية شهرية" : "Monthly Health Check-Ins"}
+            </h3>
+            <p>
+              {isArabic
+                ? "تذكير المستخدم بتحديث حالته الصحية بشكل منتظم بدل الاعتماد على تقييم واحد فقط."
+                : "Remind users to update their health status regularly instead of relying on a one-time assessment."}
+            </p>
+          </div>
+
+          <div className="aiFeatureCard">
+            <div>📄</div>
+            <h3>
+              {isArabic
+                ? "تذكير بتحديث التقارير"
+                : "Report Update Reminders"}
+            </h3>
+            <p>
+              {isArabic
+                ? "تشجيع المستخدم على رفع تقارير جديدة عند توفر نتائج مختبر أو متابعة طبية جديدة."
+                : "Encourage users to upload new reports when updated lab results or follow-up documents become available."}
+            </p>
+          </div>
+
+          <div className="aiFeatureCard">
+            <div>✉️</div>
+            <h3>{isArabic ? "متابعة عبر البريد" : "Email Follow-Up"}</h3>
+            <p>
+              {isArabic
+                ? "إمكانية إرسال ملخصات وتذكيرات صحية منظمة عبر البريد الإلكتروني لاحقًا."
+                : "Future ability to send organized health summaries and reminders by email."}
+            </p>
+          </div>
+
+          <div className="aiFeatureCard">
+            <div>💬</div>
+            <h3>
+              {isArabic
+                ? "تذكيرات بأسلوب WhatsApp"
+                : "WhatsApp-Style Reminders"}
+            </h3>
+            <p>
+              {isArabic
+                ? "إمكانية مستقبلية للتواصل مع المستخدمين بأسلوب رسائل قصيرة وسهلة المتابعة."
+                : "A future option for short, simple reminder-style communication that is easy to follow."}
+            </p>
+          </div>
+
+          <div className="aiFeatureCard">
+            <div>📈</div>
+            <h3>
+              {isArabic ? "متابعة التقدم الصحي" : "Health Progress Tracking"}
+            </h3>
+            <p>
+              {isArabic
+                ? "مساعدة المستخدم على رؤية التغيرات بين التقييمات والتقارير مع مرور الوقت."
+                : "Help users see changes between assessments and reports over time."}
+            </p>
+          </div>
+
+          <div className="aiFeatureCard">
+            <div>⭐</div>
+            <h3>
+              {isArabic ? "جاهز لفكرة الاشتراك" : "Premium-Ready Value"}
+            </h3>
+            <p>
+              {isArabic
+                ? "هذا النوع من المتابعة يمكن أن يصبح جزءًا مهمًا من الاشتراك الشهري لاحقًا."
+                : "This follow-up experience can become a strong part of a future monthly subscription."}
+            </p>
+          </div>
+        </div>
+      </section>
       <section className="homeFinalCTA">
         <div className="homeFinalCTAContent">
           <p className="sectionLabel">
