@@ -186,12 +186,10 @@ export default function DoctorPortalPage() {
     setCheckingShareCode(true);
 
     const { data, error } = await supabase
-      .from("shared_reports")
-      .select(
-        "share_code, report_type, expires_at, overall_score, lab_score, priority_organ, latest_checkin_score, organ_scores, recommendations, report_summary"
-      )
-      .eq("share_code", cleanCode)
-      .maybeSingle();
+  .rpc("get_shared_report_by_code", {
+    input_share_code: cleanCode,
+  })
+  .maybeSingle();
 
     if (error) {
       setShareMessage("Could not verify share code.");
@@ -205,11 +203,7 @@ export default function DoctorPortalPage() {
       return;
     }
 
-    if (new Date(data.expires_at) < new Date()) {
-      setShareMessage("This share code has expired.");
-      setCheckingShareCode(false);
-      return;
-    }
+    setShareMessage("Invalid or expired share code.");
 
     setSharedReport(data as SharedReport);
     setCheckingShareCode(false);
