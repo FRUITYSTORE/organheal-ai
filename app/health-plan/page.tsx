@@ -284,7 +284,7 @@ export default function HealthPlanPage() {
   }
 
   return (
-    <main className="assistantPage">
+    <main className="assistantPage healthPlanPage">
       <div className="assistantContainer">
         <PageBackActions />
         <div className="assistantHeader">

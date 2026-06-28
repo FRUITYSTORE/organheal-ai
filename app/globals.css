@@ -2318,6 +2318,79 @@ html[dir="rtl"] .homeHeroActions {
 .timelineItem.active {
   border-color: rgba(34, 211, 238, 0.45);
   background: rgba(34, 211, 238, 0.08);
+  /* ── Health Plan Polish ───────────────────────────────────── */
+
+.healthPlanPage .assistantContainer {
+  max-width: 920px;
+}
+
+.healthPlanPage .chatWindow {
+  gap: 16px;
+}
+
+.healthPlanPage .resultBox {
+  padding: 22px;
+  border-radius: 22px;
+}
+
+.healthPlanPage .resultBox h2 {
+  font-size: 24px;
+  line-height: 1.25;
+  margin-bottom: 12px;
+}
+
+.healthPlanPage .resultBox p {
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.healthPlanPage .sectionLabel {
+  font-size: 12px;
+  letter-spacing: 0.11em;
+  margin-bottom: 10px;
+}
+
+.healthPlanPage .primaryBtn,
+.healthPlanPage .secondaryBtn {
+  min-height: 46px;
+  padding: 12px 18px;
+  font-size: 15px;
+}
+
+@media (max-width: 640px) {
+  .healthPlanPage .assistantContainer {
+    width: 100%;
+    padding: 0 14px;
+  }
+
+  .healthPlanPage .assistantHeader h1 {
+    font-size: 34px;
+    line-height: 1.08;
+  }
+
+  .healthPlanPage .assistantHeader p {
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  .healthPlanPage .resultBox {
+    padding: 18px;
+    border-radius: 18px;
+  }
+
+  .healthPlanPage .resultBox h2 {
+    font-size: 21px;
+  }
+
+  .healthPlanPage .resultBox p {
+    font-size: 14px;
+  }
+
+  .healthPlanPage .primaryBtn,
+  .healthPlanPage .secondaryBtn {
+    width: 100%;
+  }
+}
 }@media print {
   body * {
     visibility: hidden;
