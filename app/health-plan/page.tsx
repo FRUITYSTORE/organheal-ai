@@ -183,7 +183,11 @@ export default function HealthPlanPage() {
       ? Math.min(100, Math.round((priorityScore / targetScore) * 100))
       : 0;
 
-  const taskProgress = Math.round((completedTasks.length / planTasks.length) * 100);
+    const totalTasks = planTasks.length;
+  const completedTaskCount = completedTasks.length;
+
+  const taskProgress =
+    totalTasks > 0 ? Math.round((completedTaskCount / totalTasks) * 100) : 0;
   const latestCheckInText = dailyCheckIn
     ? `${new Date(dailyCheckIn.created_at).toLocaleDateString()} · ${dailyCheckIn.wellness_score}/100 · ${dailyCheckIn.mood}`
     : "No wellness check-in saved yet";
@@ -488,8 +492,51 @@ export default function HealthPlanPage() {
                 </div>
               </div>
 
-                            <div className="resultBox" id="action-tasks-section">
+                                          <div className="resultBox" id="action-tasks-section">
                 <p className="sectionLabel">Action Tasks</p>
+
+                <h2>
+                  {completedTaskCount} of {totalTasks} Tasks Completed
+                </h2>
+
+                <p
+                  style={{
+                    opacity: 0.82,
+                    lineHeight: 1.7,
+                    marginBottom: "16px",
+                  }}
+                >
+                  Track your follow-up actions here. Your task progress updates
+                  as you complete items from the list below.
+                </p>
+
+                <div
+                  style={{
+                    width: "100%",
+                    height: "10px",
+                    background: "rgba(148,163,184,0.18)",
+                    borderRadius: "999px",
+                    overflow: "hidden",
+                    marginBottom: "8px",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: `${taskProgress}%`,
+                      height: "100%",
+                      background: "linear-gradient(90deg, #22c55e, #38bdf8)",
+                    }}
+                  />
+                </div>
+
+                <p
+                  style={{
+                    opacity: 0.76,
+                    marginBottom: "20px",
+                  }}
+                >
+                  {taskProgress}% complete
+                </p>
 
                 <div style={{ display: "grid", gap: "14px", marginTop: "20px" }}>
                   {planTasks.map((task) => (
