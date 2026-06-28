@@ -660,19 +660,21 @@ export default function HealthPlanPage() {
                     flexWrap: "wrap",
                   }}
                 >
-                  <a href="/history">
-                    <button className="primaryBtn">View Health History</button>
-                  </a>
+                  <p
+  style={{
+    margin: 0,
+    opacity: 0.76,
+    lineHeight: 1.7,
+    textAlign: "center",
+  }}
+>
+  Use the Smart Next Follow-Up Step above to continue your plan, review tasks,
+  or repeat your priority assessment when appropriate.
+</p>
 
-                  <a href={`/${priorityOrgan.toLowerCase()}`}>
-                    <button className="secondaryBtn">
-                      Reassess {priorityOrgan}
-                    </button>
-                  </a>
-
-                  <a href="/dashboard">
-                    <button className="secondaryBtn">Back to Dashboard</button>
-                  </a>
+<a href="/dashboard">
+  <button className="secondaryBtn">Back to Dashboard</button>
+</a>
                 </div>
               </div>
             </>
