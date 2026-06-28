@@ -375,78 +375,7 @@ export default function HealthPlanPage() {
 
                             <div className="resultBox healthPlanNextStepCard">
                 <p className="sectionLabel">Smart Next Follow-Up Step</p>
-                                           <div className="resultBox healthPlanReminderCard">
-                <p className="sectionLabel">Reminder Preview</p>
-
-                <h2>Smart reminders coming later</h2>
-
-                <p
-                  style={{
-                    opacity: 0.82,
-                    lineHeight: 1.7,
-                    marginBottom: "18px",
-                  }}
-                >
-                  OrganHeal will later help users stay consistent with check-ins,
-                  follow-up actions, report updates, and doctor visit preparation.
-                  This preview shows what reminders may support in future versions.
-                </p>
-
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                    gap: "14px",
-                  }}
-                >
-                  <div>
-                    <strong>Wellness Check-In Reminder</strong>
-                    <p>
-                      A gentle reminder to update sleep, stress, hydration,
-                      activity, mood, and energy.
-                    </p>
-                  </div>
-
-                  <div>
-                    <strong>Weekly Follow-Up Reminder</strong>
-                    <p>
-                      A weekly nudge to review your follow-up tasks and continue
-                      your 4-week plan.
-                    </p>
-                  </div>
-
-                  <div>
-                    <strong>Monthly Progress Reminder</strong>
-                    <p>
-                      A monthly prompt to review your health progress and repeat
-                      key assessments when appropriate.
-                    </p>
-                  </div>
-
-                  <div>
-                    <strong>Report Update Reminder</strong>
-                    <p>
-                      A future reminder to upload new medical reports or review
-                      saved intelligence when new data is available.
-                    </p>
-                  </div>
-                </div>
-
-                               <div className="healthPlanPremiumNote">
-                  <strong>Future premium value</strong>
-                  <p
-                    style={{
-                      opacity: 0.8,
-                      lineHeight: 1.7,
-                      marginBottom: 0,
-                    }}
-                  >
-                    Email reminders and WhatsApp-style reminders are planned for
-                    future versions. They are not active yet.
-                  </p>
-                </div>
-              </div>
-
+                                         
                 <h2>{nextFollowUpStep.label}</h2>
 
                 <p
@@ -464,7 +393,7 @@ export default function HealthPlanPage() {
                 </a>
               </div>
 
-              <div className="resultBox">
+                            <div className="resultBox healthPlanReminderCard">
                 <p className="sectionLabel">Reminder Preview</p>
 
                 <h2>Smart reminders coming later</h2>
@@ -522,14 +451,8 @@ export default function HealthPlanPage() {
                 </div>
 
                 <div
-                  style={{
-                    marginTop: "18px",
-                    padding: "14px",
-                    borderRadius: "14px",
-                    background: "rgba(15,23,42,0.55)",
-                    border: "1px solid rgba(148,163,184,0.2)",
-                  }}
-                >
+                  className="healthPlanPremiumNote">
+
                   <strong>Future premium value</strong>
                   <p
                     style={{
