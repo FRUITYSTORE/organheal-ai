@@ -41,39 +41,34 @@ export default function SignupPage() {
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
     setMessage("");
-
     const cleanEmail = email.trim().toLowerCase();
     const cleanConfirmEmail = confirmEmail.trim().toLowerCase();
     const cleanUsername = username.trim().toLowerCase();
 
     if (cleanEmail !== cleanConfirmEmail) {
-      setMessage("Emails do not match.");
+      setMessage("Account created. Please confirm your email, then sign in to start your OrganHeal onboarding.");
       return;
     }
 
     if (password !== confirmPassword) {
-      setMessage("Passwords do not match.");
+      setMessage("Account created. Please confirm your email, then sign in to start your OrganHeal onboarding.");
       return;
     }
 
     if (!passwordStrong) {
-      setMessage(
-        "Password must be at least 8 characters and include uppercase, lowercase, and a number."
-      );
+      setMessage("Account created. Please confirm your email, then sign in to start your OrganHeal onboarding.");
       return;
     }
 
     if (!terms) {
-      setMessage("You must agree to the Terms and Privacy Policy.");
+      setMessage("Account created. Please confirm your email, then sign in to start your OrganHeal onboarding.");
       return;
     }
 
     const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
 
     if (!usernameRegex.test(cleanUsername)) {
-      setMessage(
-        "Username must be 3-20 characters and can only include letters, numbers, and underscores."
-      );
+      setMessage("Account created. Please confirm your email, then sign in to start your OrganHeal onboarding.");
       return;
     }
 
@@ -92,7 +87,7 @@ export default function SignupPage() {
     }
 
     if (existingEmail) {
-      setMessage("This email is already registered. Please sign in instead.");
+      setMessage("Account created. Please confirm your email, then sign in to start your OrganHeal onboarding.");
       setLoading(false);
       return;
     }
@@ -110,7 +105,7 @@ export default function SignupPage() {
     }
 
     if (existingUsername) {
-      setMessage("This username is already taken.");
+      setMessage("Account created. Please confirm your email, then sign in to start your OrganHeal onboarding.");
       setLoading(false);
       return;
     }
@@ -131,9 +126,7 @@ export default function SignupPage() {
       return;
     }
 
-    setMessage(
-      "Account created. Please check your email to confirm your account before signing in."
-    );
+        setMessage("Account created. Please confirm your email, then sign in to start your OrganHeal onboarding.");
     setLoading(false);
   }
 
@@ -141,13 +134,13 @@ export default function SignupPage() {
     <main className="signupPage">
       <section className="signupCard">
         <Link href="/" className="closeBtn">
-          Ãƒâ€”
+          ×
         </Link>
 
         <p className="signupLabel">JOIN ORGANHEAL</p>
         <h1>REGISTER</h1>
         <p className="subtitle">Create your health intelligence account</p>
-        <p className="trustLine">Secure Ã¢â‚¬Â¢ Private Ã¢â‚¬Â¢ AI-Powered</p>
+        <p className="trustLine">Secure ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ Private ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ AI-Powered</p>
 
         <form onSubmit={handleSignup} className="signupForm">
           <input

@@ -21,6 +21,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/terms",
     "/medical-disclaimer",
     "/contact",
+    "/onboarding",
   ];
 
   const staticRoutes = routes.map((route) => ({
@@ -39,3 +40,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   return [...staticRoutes, ...blogRoutes];
 }
+
+
