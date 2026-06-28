@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { supabase } from "../../lib/supabase";
-import DashboardEmptyState from "../components/DashboardEmptyState";
+import { supabase } from "@/lib/supabase";
 import { buildHealthIntelligence } from "../../lib/intelligenceBuilder";
+
+type Language = "en" | "ar";
 
 type Assessment = {
   organ_name: string;
@@ -15,7 +16,7 @@ type Assessment = {
 };
 
 type DailyCheckIn = {
-  mood: string;
+  mood: string | null;
   wellness_score: number;
   created_at: string;
 };
@@ -23,16 +24,16 @@ type DailyCheckIn = {
 type ReportStats = {
   uploadedReports: number;
   savedIntelligence: number;
-  latestReportDate: string | null;
+  latestIntelligenceDate: string | null;
 };
 
-type HealthInsightRecord = {
-  id: number;
-  ai_status: string | null;
-  created_at: string | null;
+type NextStep = {
+  label: string;
+  description: string;
+  href: string;
+  buttonText: string;
+  tag: string;
 };
-
-type Language = "en" | "ar";
 
 export default function DashboardPage() {
   const [assessments, setAssessments] = useState<Assessment[]>([]);
@@ -40,17 +41,14 @@ export default function DashboardPage() {
   const [reportStats, setReportStats] = useState<ReportStats>({
     uploadedReports: 0,
     savedIntelligence: 0,
-    latestReportDate: null,
+    latestIntelligenceDate: null,
   });
-
+  const [username, setUsername] = useState("");
+  const [language, setLanguage] = useState<Language>("en");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
-  const [language, setLanguage] = useState<Language>("en");
-  const [username, setUsername] = useState("");
 
   useEffect(() => {
-    fetchDashboardData();
-
     const savedLanguage =
       (localStorage.getItem("organheal-language") as Language) || "en";
 
@@ -61,6 +59,8 @@ export default function DashboardPage() {
         (localStorage.getItem("organheal-language") as Language) || "en";
       setLanguage(currentLanguage);
     }, 300);
+
+    fetchDashboardData();
 
     return () => clearInterval(interval);
   }, []);
@@ -84,7 +84,7 @@ export default function DashboardPage() {
       .from("profiles")
       .select("username")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
 
     setUsername(profileData?.username || user.email || "User");
 
@@ -106,9 +106,9 @@ export default function DashboardPage() {
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
-    if (checkInError && checkInError.code !== "PGRST116") {
+    if (checkInError) {
       setMessage("Database error: " + checkInError.message);
       setLoading(false);
       return;
@@ -119,24 +119,39 @@ export default function DashboardPage() {
       .select("id", { count: "exact", head: true })
       .eq("user_id", user.id);
 
-    const { data: insightData } = await supabase
-      .from("health_insights")
-      .select("id, ai_status, created_at")
+    let savedIntelligenceCount = 0;
+    let latestIntelligenceDate: string | null = null;
+
+    const { data: generatedResults, error: generatedError } = await supabase
+      .from("generated_intelligence_results")
+      .select("id, created_at")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
-    const insights = (insightData || []) as HealthInsightRecord[];
+    if (!generatedError && generatedResults) {
+      savedIntelligenceCount = generatedResults.length;
+      latestIntelligenceDate = generatedResults[0]?.created_at || null;
+    } else {
+      const { data: insightData } = await supabase
+        .from("health_insights")
+        .select("id, ai_status, created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
 
-    const savedIntelligenceCount = insights.filter(
-      (item) => item.ai_status === "Generated"
-    ).length;
+      const generatedInsights = (insightData || []).filter(
+        (item) => item.ai_status === "Generated"
+      );
+
+      savedIntelligenceCount = generatedInsights.length;
+      latestIntelligenceDate = generatedInsights[0]?.created_at || null;
+    }
 
     setAssessments((organData || []) as Assessment[]);
     setDailyCheckIn((checkInData || null) as DailyCheckIn | null);
     setReportStats({
       uploadedReports: uploadedReportCount || 0,
       savedIntelligence: savedIntelligenceCount,
-      latestReportDate: insights[0]?.created_at || null,
+      latestIntelligenceDate,
     });
 
     setLoading(false);
@@ -146,19 +161,31 @@ export default function DashboardPage() {
     if (isArabic) {
       if (score >= 80) return "جيد";
       if (score >= 50) return "متوسط";
-      return "مرتفع الخطورة";
+      return "يحتاج متابعة";
     }
 
     if (score >= 80) return "Good";
     if (score >= 50) return "Moderate";
-    return "High Risk";
+    return "Needs Follow-Up";
   }
 
   function getScoreClass(score: number) {
-    if (score >= 80) return "goodScore";
-    if (score >= 50) return "moderateScore";
-    return "riskScore";
+    if (score >= 80) return "good";
+    if (score >= 50) return "moderate";
+    return "risk";
   }
+
+  function formatDate(value: string | null) {
+    if (!value) return isArabic ? "غير متاح" : "Not available";
+    return new Date(value).toLocaleDateString();
+  }
+
+  const hasAssessments = assessments.length > 0;
+  const hasReports = reportStats.uploadedReports > 0;
+  const hasSavedIntelligence = reportStats.savedIntelligence > 0;
+  const hasCheckIn = Boolean(dailyCheckIn);
+  const hasAnyData =
+    hasAssessments || hasReports || hasSavedIntelligence || hasCheckIn;
 
   const intelligence = buildHealthIntelligence({
     assessments: assessments.map((item) => ({
@@ -171,398 +198,338 @@ export default function DashboardPage() {
     isArabic,
   });
 
-  const allScores = [
-    ...assessments.map((item) => item.score),
-    ...(dailyCheckIn ? [dailyCheckIn.wellness_score] : []),
+  const latestAssessment = assessments[0] || null;
+
+  const completedSteps = [
+    hasAssessments,
+    hasReports,
+    hasSavedIntelligence,
+    hasCheckIn,
+  ].filter(Boolean).length;
+
+  const progressPercent = Math.round((completedSteps / 4) * 100);
+
+  const nextStep: NextStep = !hasAssessments && !hasReports
+    ? {
+        tag: isArabic ? "ابدأ هنا" : "Start here",
+        label: isArabic
+          ? "ابدأ بأول تقييم صحي"
+          : "Start your first health assessment",
+        description: isArabic
+          ? "ابدأ بتقييم بسيط لصحة الأعضاء حتى يستطيع OrganHeal بناء أول صورة صحية لك."
+          : "Start with a simple organ health assessment so OrganHeal can build your first health picture.",
+        href: "/assessment",
+        buttonText: isArabic ? "ابدأ التقييم" : "Start Assessment",
+      }
+    : hasAssessments && !hasReports
+    ? {
+        tag: isArabic ? "الخطوة التالية" : "Next step",
+        label: isArabic
+          ? "ارفع أول تقرير طبي"
+          : "Upload your first medical report",
+        description: isArabic
+          ? "أضف تقرير مختبر أو تقرير طبي مكتوب حتى تربط التقييمات ببيانات صحية فعلية."
+          : "Add a lab result or written medical report to connect your assessment with real health data.",
+        href: "/lab-upload",
+        buttonText: isArabic ? "ارفع تقريرًا" : "Upload Report",
+      }
+    : hasReports && !hasSavedIntelligence
+    ? {
+        tag: isArabic ? "جاهز للذكاء" : "Ready for intelligence",
+        label: isArabic
+          ? "ولّد ذكاء التقرير"
+          : "Generate report intelligence",
+        description: isArabic
+          ? "افتح مركز الذكاء لتحويل تقاريرك إلى ملخص مفهوم للمريض وملخص جاهز للطبيب."
+          : "Open the Intelligence Center to turn your reports into a patient-friendly summary and doctor-ready brief.",
+        href: "/intelligence",
+        buttonText: isArabic ? "افتح مركز الذكاء" : "Open Intelligence",
+      }
+    : hasSavedIntelligence && !hasCheckIn
+    ? {
+        tag: isArabic ? "اجعل المتابعة واقعية" : "Make follow-up realistic",
+        label: isArabic
+          ? "أكمل أول تسجيل صحي"
+          : "Complete your first check-in",
+        description: isArabic
+          ? "أضف النوم، التوتر، الطاقة، والمزاج حتى تصبح خطة المتابعة أقرب لحياتك اليومية."
+          : "Add sleep, stress, energy, and mood so your follow-up plan becomes closer to your daily life.",
+        href: "/checkin",
+        buttonText: isArabic ? "افتح التسجيل الصحي" : "Open Check-In",
+      }
+    : {
+        tag: isArabic ? "استمر" : "Continue",
+        label: isArabic ? "راجع خطة المتابعة" : "Review your health plan",
+        description: isArabic
+          ? "لديك بيانات كافية لبدء مراجعة الخطة الصحية، المهام، والاتجاهات القادمة."
+          : "You have enough data to review your health plan, tasks, and upcoming follow-up direction.",
+        href: "/health-plan",
+        buttonText: isArabic ? "افتح خطة الصحة" : "Open Health Plan",
+      };
+
+  const overviewCards = [
+    {
+      label: isArabic ? "التقييمات" : "Assessments",
+      value: String(assessments.length),
+      detail: latestAssessment
+        ? `${latestAssessment.organ_name} · ${latestAssessment.score}/100`
+        : isArabic
+        ? "لم يبدأ بعد"
+        : "Not started yet",
+      href: "/assessment",
+    },
+    {
+      label: isArabic ? "التقارير" : "Reports",
+      value: String(reportStats.uploadedReports),
+      detail: hasReports
+        ? isArabic
+          ? "تقارير محفوظة"
+          : "Reports saved"
+        : isArabic
+        ? "لا يوجد تقارير بعد"
+        : "No reports yet",
+      href: "/reports",
+    },
+    {
+      label: isArabic ? "الذكاء المحفوظ" : "Saved Intelligence",
+      value: String(reportStats.savedIntelligence),
+      detail: hasSavedIntelligence
+        ? `${isArabic ? "آخر نتيجة" : "Latest"}: ${formatDate(
+            reportStats.latestIntelligenceDate
+          )}`
+        : isArabic
+        ? "لم يتم التوليد بعد"
+        : "Not generated yet",
+      href: "/intelligence",
+    },
+    {
+      label: isArabic ? "التسجيل الصحي" : "Check-In",
+      value: dailyCheckIn ? `${dailyCheckIn.wellness_score}/100` : "N/A",
+      detail: dailyCheckIn
+        ? `${dailyCheckIn.mood || (isArabic ? "مسجل" : "Logged")} · ${formatDate(
+            dailyCheckIn.created_at
+          )}`
+        : isArabic
+        ? "لا يوجد تسجيل بعد"
+        : "No check-in yet",
+      href: "/checkin",
+    },
   ];
 
-  const latestAssessment = assessments[0] || null;
-  const hasScoreData = allScores.length > 0;
-  const hasAnyData =
-    hasScoreData ||
-    reportStats.uploadedReports > 0 ||
-    reportStats.savedIntelligence > 0;
-
-  const recommendedNextStep =
-    assessments.length === 0
-      ? {
-          label: isArabic
-            ? "ابدأ بأول تقييم صحي"
-            : "Start your first health assessment",
-          description: isArabic
-            ? "ابدأ بتقييم عضو واحد حتى يستطيع OrganHeal بناء أول صورة صحية لك."
-            : "Start with one organ assessment so OrganHeal can build your first health picture.",
-          href: "/assessment",
-          buttonText: isArabic ? "ابدأ التقييم" : "Start Assessment",
-        }
-      : reportStats.uploadedReports === 0
-      ? {
-          label: isArabic
-            ? "ارفع أول تقرير طبي"
-            : "Upload your first medical report",
-          description: isArabic
-            ? "ارفع تقرير مختبر أو تقرير طبي حتى يتم ربط التقييمات مع بيانات طبية فعلية."
-            : "Upload a lab or medical report so your assessments can connect with real medical data.",
-          href: "/lab-upload",
-          buttonText: isArabic ? "ارفع تقريرًا" : "Upload Report",
-        }
-      : !dailyCheckIn
-      ? {
-          label: isArabic
-            ? "أكمل أول تسجيل صحي"
-            : "Complete your first wellness check-in",
-          description: isArabic
-            ? "أضف النوم، التوتر، الطاقة، والمزاج حتى تصبح خطة المتابعة أكثر واقعية."
-            : "Add sleep, stress, energy, and mood so your follow-up plan becomes more realistic.",
-          href: "/checkin",
-          buttonText: isArabic ? "افتح التسجيل الصحي" : "Open Check-In",
-        }
-      : reportStats.savedIntelligence === 0
-      ? {
-          label: isArabic
-            ? "ولّد الذكاء الصحي للتقارير"
-            : "Generate report intelligence",
-          description: isArabic
-            ? "افتح مركز الذكاء لتحويل تقاريرك إلى ملخصات مفهومة وخطوات متابعة."
-            : "Open Intelligence Center to turn your reports into summaries and follow-up steps.",
-          href: "/intelligence",
-          buttonText: isArabic ? "افتح مركز الذكاء" : "Open Intelligence",
-        }
-      : {
-          label: isArabic
-            ? "تابع خطة الصحة"
-            : "Continue your health plan",
-          description: isArabic
-            ? "راجع خطة المتابعة، المهام، والتذكيرات المستقبلية بناءً على بياناتك."
-            : "Review your follow-up plan, tasks, and future reminder preview based on your data.",
-          href: "/health-plan",
-          buttonText: isArabic ? "افتح خطة الصحة" : "Open Health Plan",
-        };
+  const startCards = [
+    {
+      icon: "🫀",
+      title: isArabic ? "ابدأ بتقييم" : "Start assessment",
+      text: isArabic
+        ? "أفضل بداية لبناء صورة صحية أولية."
+        : "The best first step to build your first health picture.",
+      href: "/assessment",
+    },
+    {
+      icon: "📄",
+      title: isArabic ? "ارفع تقريرًا" : "Upload report",
+      text: isArabic
+        ? "ارفع مختبرات أو تقريرًا طبيًا مكتوبًا."
+        : "Upload labs or a written medical report.",
+      href: "/lab-upload",
+    },
+    {
+      icon: "🧠",
+      title: isArabic ? "افتح الذكاء" : "Open Intelligence",
+      text: isArabic
+        ? "بعد إضافة بياناتك، ولّد ملخصًا صحيًا واضحًا."
+        : "After adding data, generate a clear health summary.",
+      href: "/intelligence",
+    },
+  ];
 
   return (
-    <main className="assistantPage">
-      <div className="assistantContainer">
-        <div className="assistantHeader">
-          <p className="assistantBadge">
-            {isArabic ? "لوحة الصحة الشخصية" : "PERSONAL HEALTH DASHBOARD"}
+    <main className="smartDashboardPage" dir={isArabic ? "rtl" : "ltr"}>
+      <section className="smartDashboardHero">
+        <div>
+          <p className="launchEyebrow">
+            {isArabic ? "لوحة الصحة الشخصية" : "Personal Health Dashboard"}
           </p>
 
-          <h1>{isArabic ? "لوحة التحكم" : "Dashboard"}</h1>
+          <h1>
+            {isArabic
+              ? `مرحبًا ${username || "بك"}`
+              : `Welcome, ${username || "User"}`}
+          </h1>
 
           <p>
             {isArabic
-              ? "نقطة البداية لرحلتك الصحية: التقييمات، التقارير، الذكاء الصحي، خطة المتابعة، والتسجيل الصحي."
-              : "Your starting point for assessments, reports, intelligence, follow-up planning, and wellness check-ins."}
+              ? "هذه الصفحة تقرأ حالة رحلتك الصحية وتعرض لك الخطوة التالية الأفضل داخل OrganHeal."
+              : "This page reads your health journey state and shows the best next action inside OrganHeal."}
           </p>
         </div>
 
-        <div className="dashboardWelcomeCard">
+        <div className="dashboardProgressCard">
+          <span>{isArabic ? "تقدم الملف الصحي" : "Health profile progress"}</span>
+          <strong>{progressPercent}%</strong>
           <div>
-            <p className="sectionLabel">
-              {isArabic ? "مرحبًا بعودتك" : "Welcome Back"}
-            </p>
-
-            <h2>{username || (isArabic ? "المستخدم" : "User")}</h2>
-
-            <p>
-              {isArabic
-                ? "استخدم هذه اللوحة لمعرفة أين تقف الآن وما هي الخطوة التالية الأفضل داخل OrganHeal."
-                : "Use this dashboard to understand where you are now and what the best next step is inside OrganHeal."}
-            </p>
+            <i style={{ width: `${progressPercent}%` }}></i>
           </div>
+          <small>
+            {completedSteps}/4{" "}
+            {isArabic ? "خطوات أساسية مكتملة" : "core steps completed"}
+          </small>
+        </div>
+      </section>
 
-          <div className="dashboardWelcomeActions">
-            <Link href={recommendedNextStep.href} className="primaryBtn">
-              {recommendedNextStep.buttonText}
-            </Link>
-
-            <Link href="/intelligence" className="secondaryBtn">
-              {isArabic ? "مركز الذكاء" : "Intelligence Center"}
-            </Link>
-
-            <Link href="/health-plan" className="secondaryBtn">
-              {isArabic ? "خطة المتابعة" : "Health Plan"}
-            </Link>
-          </div>
+      <section className="dashboardNextAction">
+        <div>
+          <p>{nextStep.tag}</p>
+          <h2>{nextStep.label}</h2>
+          <span>{nextStep.description}</span>
         </div>
 
-        <div className="chatWindow">
-          {loading && (
-            <div className="resultBox">
-              <p className="sectionLabel">
-                {isArabic ? "تحميل لوحة التحكم" : "Loading Dashboard"}
-              </p>
+        <Link href={nextStep.href} className="launchPrimary">
+          {nextStep.buttonText}
+        </Link>
+      </section>
 
-              <h2>
-                {isArabic
-                  ? "جارِ تجهيز ملخصك الصحي..."
-                  : "Preparing your health overview..."}
-              </h2>
-            </div>
-          )}
+      {loading && (
+        <section className="dashboardPanel">
+          <p className="launchEyebrow">
+            {isArabic ? "تحميل" : "Loading"}
+          </p>
+          <h2>
+            {isArabic
+              ? "جاري تجهيز ملخصك الصحي..."
+              : "Preparing your health overview..."}
+          </h2>
+        </section>
+      )}
 
-          {!loading && message && (
-            <div className="resultBox">
-              <p className="sectionLabel">
-                {isArabic ? "تنبيه" : "Dashboard Notice"}
-              </p>
-              <h2>{isArabic ? "تعذر تحميل البيانات" : "Could not load data"}</h2>
-              <p>{message}</p>
-            </div>
-          )}
+      {!loading && message && (
+        <section className="dashboardPanel">
+          <p className="launchEyebrow">
+            {isArabic ? "تنبيه" : "Dashboard Notice"}
+          </p>
+          <h2>{isArabic ? "تعذر تحميل البيانات" : "Could not load data"}</h2>
+          <p>{message}</p>
+        </section>
+      )}
 
-          {!loading && !message && !hasAnyData && (
-            <DashboardEmptyState
-              title={
-                isArabic
-                  ? "لوحة التحكم جاهزة"
-                  : "Your Dashboard Is Ready"
-              }
-              description={
-                isArabic
-                  ? "ابدأ بأول تقييم صحي أو ارفع تقريرًا طبيًا لبناء ملفك الصحي."
-                  : "Start your first health assessment or upload a medical report to build your health profile."
-              }
-              buttonText={isArabic ? "ابدأ أول تقييم" : "Start First Assessment"}
-              href="/assessment"
-            />
-          )}
-
-          {!loading && !message && hasAnyData && (
-            <>
-              {hasScoreData ? (
-                <div className="resultBox">
-                  <p className="sectionLabel">
-                    {isArabic
-                      ? "الملخص الصحي التنفيذي"
-                      : "Executive Health Overview"}
-                  </p>
-
-                  <h2 className={getScoreClass(intelligence.overallScore)}>
-                    {intelligence.overallScore}/100
-                  </h2>
-
-                  <h3>{getStatus(intelligence.overallScore)}</h3>
-
-                  <p>
-                    {isArabic
-                      ? `منطقة الأولوية الحالية: ${
-                          intelligence.priorityOrgan || "الصحة العامة"
-                        }.`
-                      : `Current priority area: ${
-                          intelligence.priorityOrgan || "General Health"
-                        }.`}
-                  </p>
-
-                  <p>
-                    <strong>
-                      {isArabic ? "الخطوة التالية:" : "Next best action:"}
-                    </strong>{" "}
-                    {intelligence.bestNextAction}
-                  </p>
-
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "12px",
-                      flexWrap: "wrap",
-                      justifyContent: "center",
-                      marginTop: "20px",
-                    }}
-                  >
-                    <Link href="/intelligence" className="primaryBtn">
-                      {isArabic ? "افتح مركز الذكاء" : "Open Intelligence"}
-                    </Link>
-
-                    <Link href="/health-plan" className="secondaryBtn">
-                      {isArabic ? "افتح خطة المتابعة" : "Open Health Plan"}
-                    </Link>
-                  </div>
-                </div>
-              ) : (
-                <div className="resultBox">
-                  <p className="sectionLabel">
-                    {isArabic ? "تقارير جاهزة" : "Reports Found"}
-                  </p>
-
-                  <h2>{reportStats.uploadedReports}</h2>
-
-                  <p>
-                    {isArabic
-                      ? "لديك تقارير محفوظة. أكمل تقييمًا صحيًا أو افتح مركز الذكاء للحصول على فهم أعمق."
-                      : "You have saved reports. Complete an assessment or open Intelligence Center for deeper understanding."}
-                  </p>
-
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "12px",
-                      flexWrap: "wrap",
-                      justifyContent: "center",
-                      marginTop: "20px",
-                    }}
-                  >
-                    <Link href="/assessment" className="primaryBtn">
-                      {isArabic ? "ابدأ التقييم" : "Start Assessment"}
-                    </Link>
-
-                    <Link href="/intelligence" className="secondaryBtn">
-                      {isArabic ? "مركز الذكاء" : "Intelligence Center"}
-                    </Link>
-                  </div>
-                </div>
-              )}
-
-              <div className="resultBox">
-                <p className="sectionLabel">
-                  {isArabic ? "الخطوة الذكية التالية" : "Smart Next Step"}
+      {!loading && !message && (
+        <>
+          {!hasAnyData ? (
+            <section className="dashboardStartSection">
+              <div className="dashboardSectionHeader">
+                <p className="launchEyebrow">
+                  {isArabic ? "ابدأ هنا" : "Start here"}
                 </p>
-
-                <h2>{recommendedNextStep.label}</h2>
-
-                <p
-                  style={{
-                    opacity: 0.82,
-                    lineHeight: 1.7,
-                    maxWidth: "720px",
-                    margin: "0 auto 20px",
-                  }}
-                >
-                  {recommendedNextStep.description}
-                </p>
-
-                <Link href={recommendedNextStep.href} className="primaryBtn">
-                  {recommendedNextStep.buttonText}
-                </Link>
-              </div>
-
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))",
-                  gap: "16px",
-                }}
-              >
-                <div className="resultBox">
-                  <p className="sectionLabel">
-                    {isArabic ? "التقييمات" : "Assessments"}
-                  </p>
-                  <h2>{assessments.length}</h2>
-                  <p>
-                    {latestAssessment
-                      ? `${latestAssessment.organ_name} · ${latestAssessment.score}/100`
-                      : isArabic
-                      ? "لم يتم تسجيل تقييم بعد"
-                      : "No assessment yet"}
-                  </p>
-                </div>
-
-                <div className="resultBox">
-                  <p className="sectionLabel">
-                    {isArabic ? "التقارير" : "Reports"}
-                  </p>
-                  <h2>{reportStats.uploadedReports}</h2>
-                  <p>
-                    {reportStats.uploadedReports > 0
-                      ? isArabic
-                        ? "تقارير محفوظة في مكتبة التقارير"
-                        : "Reports saved in your reports library"
-                      : isArabic
-                      ? "لم يتم رفع تقارير بعد"
-                      : "No reports uploaded yet"}
-                  </p>
-                </div>
-
-                <div className="resultBox">
-                  <p className="sectionLabel">
-                    {isArabic ? "الذكاء المحفوظ" : "Saved Intelligence"}
-                  </p>
-                  <h2>{reportStats.savedIntelligence}</h2>
-                  <p>
-                    {reportStats.savedIntelligence > 0
-                      ? isArabic
-                        ? "نتائج ذكاء صحي محفوظة"
-                        : "Saved intelligence results available"
-                      : isArabic
-                      ? "لم يتم حفظ ذكاء صحي بعد"
-                      : "No saved intelligence yet"}
-                  </p>
-                </div>
-
-                <div className="resultBox">
-                  <p className="sectionLabel">
-                    {isArabic ? "التسجيل الصحي" : "Check-In"}
-                  </p>
-                  <h2>{dailyCheckIn ? `${dailyCheckIn.wellness_score}/100` : "N/A"}</h2>
-                  <p>
-                    {dailyCheckIn
-                      ? `${dailyCheckIn.mood} · ${new Date(
-                          dailyCheckIn.created_at
-                        ).toLocaleDateString()}`
-                      : isArabic
-                      ? "لم يتم تسجيل متابعة بعد"
-                      : "No wellness check-in yet"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="resultBox">
-                <p className="sectionLabel">
-                  {isArabic ? "رحلة OrganHeal" : "OrganHeal Journey"}
-                </p>
-
                 <h2>
                   {isArabic
-                    ? "تابع رحلتك بدون تشتت"
-                    : "Continue without getting lost"}
+                    ? "لوحتك جاهزة، لكنها تحتاج أول بيانات"
+                    : "Your dashboard is ready, but it needs your first data"}
                 </h2>
-
-                <p
-                  style={{
-                    opacity: 0.82,
-                    lineHeight: 1.7,
-                    maxWidth: "760px",
-                    margin: "0 auto 22px",
-                  }}
-                >
+                <p>
                   {isArabic
-                    ? "لوحة التحكم تعرض فقط أهم المسارات: الملف الصحي، التقارير، الذكاء، خطة المتابعة، والتسجيل الصحي."
-                    : "The dashboard now keeps the main paths clear: profile, reports, intelligence, health plan, and check-ins."}
+                    ? "ابدأ بخطوة واحدة فقط. لا تحتاج إلى إدخال كل شيء الآن."
+                    : "Start with one step only. You do not need to add everything now."}
                 </p>
+              </div>
 
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "12px",
-                    flexWrap: "wrap",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Link href="/profile" className="secondaryBtn">
-                    {isArabic ? "الملف الصحي" : "Profile"}
+              <div className="dashboardStartGrid">
+                {startCards.map((item) => (
+                  <Link href={item.href} className="dashboardStartCard" key={item.title}>
+                    <div>{item.icon}</div>
+                    <h3>{item.title}</h3>
+                    <p>{item.text}</p>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          ) : (
+            <>
+              <section className="dashboardOverviewGrid">
+                {overviewCards.map((card) => (
+                  <Link href={card.href} className="dashboardMetricCard" key={card.label}>
+                    <span>{card.label}</span>
+                    <strong>{card.value}</strong>
+                    <p>{card.detail}</p>
+                  </Link>
+                ))}
+              </section>
+
+              <section className="dashboardInsightPanel">
+                <div>
+                  <p className="launchEyebrow">
+                    {isArabic ? "ملخص ذكي" : "Smart Summary"}
+                  </p>
+
+                  <h2>
+                    {hasAssessments || hasCheckIn
+                      ? `${intelligence.overallScore}/100`
+                      : isArabic
+                      ? "التقارير جاهزة"
+                      : "Reports ready"}
+                  </h2>
+
+                  {(hasAssessments || hasCheckIn) && (
+                    <strong className={`dashboardScore ${getScoreClass(intelligence.overallScore)}`}>
+                      {getStatus(intelligence.overallScore)}
+                    </strong>
+                  )}
+
+                  <p>
+                    {hasAssessments || hasCheckIn
+                      ? isArabic
+                        ? `منطقة الأولوية الحالية: ${
+                            intelligence.priorityOrgan || "الصحة العامة"
+                          }.`
+                        : `Current priority area: ${
+                            intelligence.priorityOrgan || "General Health"
+                          }.`
+                      : isArabic
+                      ? "لديك تقارير محفوظة. الخطوة التالية هي توليد ذكاء التقرير أو إضافة تقييم صحي."
+                      : "You have saved reports. The next step is to generate report intelligence or add a health assessment."}
+                  </p>
+                </div>
+
+                <div className="dashboardInsightActions">
+                  <Link href="/intelligence" className="launchPrimary">
+                    {isArabic ? "مركز الذكاء" : "Intelligence Center"}
                   </Link>
 
-                  <Link href="/reports" className="secondaryBtn">
-                    {isArabic ? "مكتبة التقارير" : "Reports"}
-                  </Link>
-
-                  <Link href="/intelligence" className="primaryBtn">
-                    {isArabic ? "مركز الذكاء" : "Intelligence"}
-                  </Link>
-
-                  <Link href="/health-plan" className="secondaryBtn">
+                  <Link href="/health-plan" className="launchSecondary">
                     {isArabic ? "خطة المتابعة" : "Health Plan"}
                   </Link>
-
-                  <Link href="/checkin" className="secondaryBtn">
-                    {isArabic ? "التسجيل الصحي" : "Check-In"}
-                  </Link>
                 </div>
-              </div>
+              </section>
             </>
           )}
-        </div>
-      </div>
+
+          <section className="dashboardPathPanel">
+            <div>
+              <p className="launchEyebrow">
+                {isArabic ? "المسارات الرئيسية" : "Main paths"}
+              </p>
+              <h2>
+                {isArabic
+                  ? "تابع رحلتك بدون تشتيت"
+                  : "Continue your journey without getting lost"}
+              </h2>
+              <p>
+                {isArabic
+                  ? "استخدم هذه الروابط للوصول السريع إلى أهم أجزاء OrganHeal."
+                  : "Use these links to quickly reach the most important parts of OrganHeal."}
+              </p>
+            </div>
+
+            <div className="dashboardPathLinks">
+              <Link href="/profile">{isArabic ? "الملف الصحي" : "Profile"}</Link>
+              <Link href="/reports">{isArabic ? "التقارير" : "Reports"}</Link>
+              <Link href="/intelligence">{isArabic ? "الذكاء" : "Intelligence"}</Link>
+              <Link href="/health-plan">{isArabic ? "خطة الصحة" : "Health Plan"}</Link>
+              <Link href="/checkin">{isArabic ? "التسجيل الصحي" : "Check-In"}</Link>
+              <Link href="/history">{isArabic ? "السجل الصحي" : "History"}</Link>
+            </div>
+          </section>
+        </>
+      )}
     </main>
   );
 }
