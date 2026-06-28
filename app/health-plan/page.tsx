@@ -321,7 +321,7 @@ export default function HealthPlanPage() {
 
           {!loading && !message && (
             <>
-                         <div className="resultBox">
+                                       <div className="resultBox healthPlanStatusCard">
                 <p className="sectionLabel">Follow-Up Status</p>
 
                 <h2>{followUpStatus}</h2>
@@ -373,14 +373,9 @@ export default function HealthPlanPage() {
                 )}
               </div>
 
-              <div
-                className="resultBox"
-                style={{
-                  border: "1px solid rgba(34,211,238,0.22)",
-                }}
-              >
+                            <div className="resultBox healthPlanNextStepCard">
                 <p className="sectionLabel">Smart Next Follow-Up Step</p>
-                              <div className="resultBox">
+                                           <div className="resultBox healthPlanReminderCard">
                 <p className="sectionLabel">Reminder Preview</p>
 
                 <h2>Smart reminders coming later</h2>
@@ -437,15 +432,7 @@ export default function HealthPlanPage() {
                   </div>
                 </div>
 
-                <div
-                  style={{
-                    marginTop: "18px",
-                    padding: "14px",
-                    borderRadius: "14px",
-                    background: "rgba(15,23,42,0.55)",
-                    border: "1px solid rgba(148,163,184,0.2)",
-                  }}
-                >
+                               <div className="healthPlanPremiumNote">
                   <strong>Future premium value</strong>
                   <p
                     style={{
