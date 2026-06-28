@@ -241,7 +241,7 @@ export default function ReportsPage() {
           >
             {isArabic
               ? "اعرض التقارير الطبية المرتبطة بحسابك، وتابع حالة الاستخراج ونتائج الذكاء الصحي المرتبطة بكل تقرير."
-              : "View medical reports connected to your account, track extraction status, and see the intelligence status for each report."}
+              : "View medical reports connected to your account, track extraction status, continue to Health Intelligence, and use saved results for your follow-up plan."}
           </p>
         </div>
 
@@ -330,6 +330,9 @@ export default function ReportsPage() {
 
                 <Link href="/intelligence" className="secondaryBtn">
                   {isArabic ? "افتح مركز الذكاء" : "Open Intelligence Center"}
+                </Link>
+                                <Link href="/health-plan" className="secondaryBtn">
+                  {isArabic ? "خطة المتابعة" : "Health Plan"}
                 </Link>
               </div>
             </div>
@@ -505,6 +508,11 @@ export default function ReportsPage() {
                         ? "المتابعة في مركز الذكاء"
                         : "Continue in Intelligence"}
                     </Link>
+                                        {report.has_saved_intelligence && (
+                      <Link href="/health-plan" className="secondaryBtn">
+                        {isArabic ? "خطة المتابعة" : "Health Plan"}
+                      </Link>
+                    )}
                   </div>
                 </div>
               ))}
@@ -546,17 +554,21 @@ export default function ReportsPage() {
             flexWrap: "wrap",
           }}
         >
-          <Link href="/" className="secondaryBtn">
-            {isArabic ? "العودة للرئيسية" : "Back to Home"}
-          </Link>
+          <Link href="/dashboard" className="secondaryBtn">
+  {isArabic ? "لوحة التحكم" : "Dashboard"}
+</Link>
 
-          <Link href="/lab-upload" className="primaryBtn">
-            {isArabic ? "ارفع تقريرًا طبيًا" : "Upload Medical Report"}
-          </Link>
+<Link href="/lab-upload" className="primaryBtn">
+  {isArabic ? "ارفع تقريرًا طبيًا" : "Upload Medical Report"}
+</Link>
 
-          <Link href="/intelligence" className="secondaryBtn">
-            {isArabic ? "مركز الذكاء" : "Intelligence Center"}
-          </Link>
+<Link href="/intelligence" className="secondaryBtn">
+  {isArabic ? "مركز الذكاء" : "Intelligence Center"}
+</Link>
+
+<Link href="/health-plan" className="secondaryBtn">
+  {isArabic ? "خطة المتابعة" : "Health Plan"}
+</Link>
         </div>
       </section>
     </main>
