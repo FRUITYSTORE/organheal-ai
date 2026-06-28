@@ -321,16 +321,84 @@ export default function HealthPlanPage() {
 
           {!loading && !message && (
             <>
-                          <div className="resultBox">
+                         <div className="resultBox">
                 <p className="sectionLabel">Follow-Up Status</p>
-                              <div
+
+                <h2>{followUpStatus}</h2>
+
+                <p
+                  style={{
+                    opacity: 0.82,
+                    lineHeight: 1.7,
+                    marginBottom: "18px",
+                  }}
+                >
+                  {followUpMessage}
+                </p>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                    gap: "14px",
+                  }}
+                >
+                  <div>
+                    <strong>Latest Check-In</strong>
+                    <p>{latestCheckInText}</p>
+                  </div>
+
+                  <div>
+                    <strong>Follow-Up Rhythm</strong>
+                    <p>{followUpRhythm}</p>
+                  </div>
+
+                  <div>
+                    <strong>Current Priority</strong>
+                    <p>{priorityOrgan}</p>
+                  </div>
+
+                  <div>
+                    <strong>Plan Intensity</strong>
+                    <p>{getPlanIntensity()}</p>
+                  </div>
+                </div>
+
+                {!dailyCheckIn && (
+                  <div style={{ marginTop: "18px" }}>
+                    <a href="/checkin">
+                      <button className="primaryBtn">Complete Wellness Check-In</button>
+                    </a>
+                  </div>
+                )}
+              </div>
+
+              <div
                 className="resultBox"
                 style={{
                   border: "1px solid rgba(34,211,238,0.22)",
                 }}
               >
                 <p className="sectionLabel">Smart Next Follow-Up Step</p>
-                              <div className="resultBox">
+
+                <h2>{nextFollowUpStep.label}</h2>
+
+                <p
+                  style={{
+                    opacity: 0.82,
+                    lineHeight: 1.7,
+                    marginBottom: "18px",
+                  }}
+                >
+                  {nextFollowUpStep.description}
+                </p>
+
+                <a href={nextFollowUpStep.href}>
+                  <button className="primaryBtn">{nextFollowUpStep.buttonText}</button>
+                </a>
+              </div>
+
+              <div className="resultBox">
                 <p className="sectionLabel">Reminder Preview</p>
 
                 <h2>Smart reminders coming later</h2>
@@ -409,72 +477,6 @@ export default function HealthPlanPage() {
                   </p>
                 </div>
               </div>
-
-                <h2>{nextFollowUpStep.label}</h2>
-
-                <p
-                  style={{
-                    opacity: 0.82,
-                    lineHeight: 1.7,
-                    marginBottom: "18px",
-                  }}
-                >
-                  {nextFollowUpStep.description}
-                </p>
-
-                <a href={nextFollowUpStep.href}>
-                  <button className="primaryBtn">{nextFollowUpStep.buttonText}</button>
-                </a>
-              </div>
-
-                <h2>{followUpStatus}</h2>
-
-                <p
-                  style={{
-                    opacity: 0.82,
-                    lineHeight: 1.7,
-                    marginBottom: "18px",
-                  }}
-                >
-                  {followUpMessage}
-                </p>
-
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                    gap: "14px",
-                  }}
-                >
-                  <div>
-                    <strong>Latest Check-In</strong>
-                    <p>{latestCheckInText}</p>
-                  </div>
-
-                  <div>
-                    <strong>Follow-Up Rhythm</strong>
-                    <p>{followUpRhythm}</p>
-                  </div>
-
-                  <div>
-                    <strong>Current Priority</strong>
-                    <p>{priorityOrgan}</p>
-                  </div>
-
-                  <div>
-                    <strong>Plan Intensity</strong>
-                    <p>{getPlanIntensity()}</p>
-                  </div>
-                </div>
-
-                {!dailyCheckIn && (
-                  <div style={{ marginTop: "18px" }}>
-                    <a href="/checkin">
-                      <button className="primaryBtn">Complete Wellness Check-In</button>
-                    </a>
-                  </div>
-                )}
-              </div>
               <div className="resultBox">
                 <p className="sectionLabel">Priority Area</p>
 
@@ -493,7 +495,7 @@ export default function HealthPlanPage() {
 
                 {dailyCheckIn && (
                   <p>
-                    Latest Wellness Check-In: {dailyCheckIn.wellness_score}/100
+                      Latest Wellness Check-In: {dailyCheckIn.wellness_score}/100{" "}
                     · Mood: {dailyCheckIn.mood}
                   </p>
                 )}
@@ -517,32 +519,6 @@ export default function HealthPlanPage() {
                   <div
                     style={{
                       width: `${scoreProgress}%`,
-                      height: "100%",
-                      background: "linear-gradient(90deg, #22c55e, #38bdf8)",
-                      borderRadius: "999px",
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div className="resultBox">
-                <p className="sectionLabel">Task Progress</p>
-
-                <h2>{taskProgress}% Complete</h2>
-
-                <div
-                  style={{
-                    width: "100%",
-                    height: "14px",
-                    background: "rgba(255,255,255,0.12)",
-                    borderRadius: "999px",
-                    overflow: "hidden",
-                    marginTop: "16px",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: `${taskProgress}%`,
                       height: "100%",
                       background: "linear-gradient(90deg, #22c55e, #38bdf8)",
                       borderRadius: "999px",
