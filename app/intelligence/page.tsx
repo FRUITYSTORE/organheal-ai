@@ -607,12 +607,60 @@ if (saveGeneratedResultError) {
   }
 
   const visibleHealthInsights = healthInsights.slice(0, visibleReportsCount);
+
+const totalReportInsights = healthInsights.length;
+const generatedReportsCount = healthInsights.filter(
+  (item) => item.ai_status === "Generated"
+).length;
+const pendingReportsCount = Math.max(totalReportInsights - generatedReportsCount, 0);
+const hasOpenGeneratedResult = Boolean(generatedResult && activeGeneratedInsightId);
+
+const activeGeneratedReport = activeGeneratedInsightId
+  ? healthInsights.find((item) => item.id === activeGeneratedInsightId)
+  : null;
+
+const intelligenceNextStep =
+  totalReportInsights === 0
+    ? {
+        label: "START HERE",
+        title: "Upload a medical report first",
+        description:
+          "Add a lab report, radiology report, discharge summary, prescription, or medical document before generating intelligence.",
+        href: "/lab-upload",
+        buttonText: "Upload Report",
+      }
+    : hasOpenGeneratedResult
+    ? {
+        label: "RESULT READY",
+        title: "Review your generated intelligence",
+        description:
+          "Your patient-friendly report and doctor-ready brief are available below. The next best step is to continue to your Health Plan.",
+        href: "/health-plan",
+        buttonText: "Open Health Plan",
+      }
+    : generatedReportsCount > 0
+    ? {
+        label: "SAVED RESULTS",
+        title: "Open a saved intelligence result",
+        description:
+          "Some reports already have generated intelligence. Open a saved result or generate intelligence for another report.",
+        href: "/reports",
+        buttonText: "Reports Library",
+      }
+    : {
+        label: "READY TO GENERATE",
+        title: "Generate intelligence for your report",
+        description:
+          "Choose a report below and press Generate to create a patient-friendly summary, doctor-ready brief, and follow-up direction.",
+        href: "#report-intelligence-list",
+        buttonText: "Go to Reports",
+      };
   const hasOlderReports = healthInsights.length > visibleReportsCount;
   const canShowLessReports = visibleReportsCount > REPORTS_PAGE_SIZE;
 
   return (
-    <main className="assistantPage">
-      <div className="assistantContainer">
+    <main className="intelligenceConversionPage">
+      <div className="intelligenceConversionContainer">
         <PageBackActions />
 
         <section className="assistantHeader">
