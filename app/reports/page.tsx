@@ -174,7 +174,7 @@ export default function ReportsPage() {
     if (!filePath) {
       alert(
         isArabic
-          ? "Ã™â€žÃ˜Â§ Ã™Å Ã™Ë†Ã˜Â¬Ã˜Â¯ Ã™â€¦Ã˜Â³Ã˜Â§Ã˜Â± Ã™â€¦Ã™â€žÃ™Â Ã™â€¦Ã˜Â­Ã™ÂÃ™Ë†Ã˜Â¸ Ã™â€žÃ™â€¡Ã˜Â°Ã˜Â§ Ã˜Â§Ã™â€žÃ˜ÂªÃ™â€šÃ˜Â±Ã™Å Ã˜Â±."
+          ? "لا يوجد مسار ملف محفوظ لهذا التقرير."
           : "No saved file path was found for this report."
       );
       return;
@@ -187,7 +187,7 @@ export default function ReportsPage() {
     if (error) {
       alert(
         isArabic
-          ? "Ã˜ÂªÃ˜Â¹Ã˜Â°Ã˜Â± Ã™ÂÃ˜ÂªÃ˜Â­ Ã˜Â§Ã™â€žÃ˜ÂªÃ™â€šÃ˜Â±Ã™Å Ã˜Â± Ã˜Â§Ã™â€žÃ˜Â¢Ã™â€ ."
+          ? "تعذر فتح التقرير الآن."
           : "Unable to open the report right now."
       );
       return;
@@ -197,17 +197,17 @@ export default function ReportsPage() {
   }
 
   function formatDate(value: string | null) {
-    if (!value) return isArabic ? "Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã˜ÂªÃ˜Â§Ã˜Â­" : "Not available";
+    if (!value) return isArabic ? "غير متاح" : "Not available";
     return new Date(value).toLocaleString();
   }
 
   function getReportTypeLabel(type: string | null) {
-    if (!type) return isArabic ? "Ã˜ÂªÃ™â€šÃ˜Â±Ã™Å Ã˜Â± Ã˜Â·Ã˜Â¨Ã™Å " : "Medical report";
+    if (!type) return isArabic ? "تقرير طبي" : "Medical report";
 
-    if (type === "lab") return isArabic ? "Ã™â€¦Ã˜Â®Ã˜ÂªÃ˜Â¨Ã˜Â±" : "Laboratory";
-    if (type === "radiology") return isArabic ? "Ã˜Â£Ã˜Â´Ã˜Â¹Ã˜Â©" : "Radiology";
-    if (type === "clinical") return isArabic ? "Ã˜ÂªÃ™â€šÃ˜Â±Ã™Å Ã˜Â± Ã˜Â³Ã˜Â±Ã™Å Ã˜Â±Ã™Å " : "Clinical";
-    if (type === "prescription") return isArabic ? "Ã™Ë†Ã˜ÂµÃ™ÂÃ˜Â© Ã˜Â·Ã˜Â¨Ã™Å Ã˜Â©" : "Prescription";
+    if (type === "lab") return isArabic ? "مختبر" : "Laboratory";
+    if (type === "radiology") return isArabic ? "أشعة" : "Radiology";
+    if (type === "clinical") return isArabic ? "تقرير سريري" : "Clinical";
+    if (type === "prescription") return isArabic ? "وصفة طبية" : "Prescription";
 
     return type;
   }
@@ -216,10 +216,10 @@ export default function ReportsPage() {
     const cleanStatus = status || "Pending";
 
     if (isArabic) {
-      if (cleanStatus === "Completed") return "Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â³Ã˜ÂªÃ˜Â®Ã˜Â±Ã˜Â§Ã˜Â¬ Ã™â€¦Ã™Æ’Ã˜ÂªÃ™â€¦Ã™â€ž";
-      if (cleanStatus === "Processing") return "Ã˜Â¬Ã˜Â§Ã˜Â±Ã™Å  Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â³Ã˜ÂªÃ˜Â®Ã˜Â±Ã˜Â§Ã˜Â¬";
-      if (cleanStatus === "Failed") return "Ã™ÂÃ˜Â´Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â³Ã˜ÂªÃ˜Â®Ã˜Â±Ã˜Â§Ã˜Â¬";
-      return "Ã˜Â¨Ã˜Â§Ã™â€ Ã˜ÂªÃ˜Â¸Ã˜Â§Ã˜Â± Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â³Ã˜ÂªÃ˜Â®Ã˜Â±Ã˜Â§Ã˜Â¬";
+      if (cleanStatus === "Completed") return "الاستخراج مكتمل";
+      if (cleanStatus === "Processing") return "جاري الاستخراج";
+      if (cleanStatus === "Failed") return "فشل الاستخراج";
+      return "بانتظار الاستخراج";
     }
 
     if (cleanStatus === "Completed") return "Extraction completed";
@@ -231,42 +231,42 @@ export default function ReportsPage() {
   function getReportDecision(report: ReportLibraryItem) {
     if (report.hasSavedIntelligence) {
       return {
-        label: isArabic ? "Ã˜Â°Ã™Æ’Ã˜Â§Ã˜Â¡ Ã™â€¦Ã˜Â­Ã™ÂÃ™Ë†Ã˜Â¸" : "Saved intelligence",
+        label: isArabic ? "ذكاء محفوظ" : "Saved intelligence",
         title: isArabic
-          ? "Ã™â€ Ã˜ÂªÃ™Å Ã˜Â¬Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â°Ã™Æ’Ã˜Â§Ã˜Â¡ Ã˜Â§Ã™â€žÃ˜ÂµÃ˜Â­Ã™Å  Ã™â€¦Ã˜Â­Ã™ÂÃ™Ë†Ã˜Â¸Ã˜Â©"
+          ? "نتيجة الذكاء الصحي محفوظة"
           : "Health intelligence is saved",
         description: isArabic
-          ? "Ã™Å Ã™â€¦Ã™Æ’Ã™â€ Ã™Æ’ Ã™ÂÃ˜ÂªÃ˜Â­ Ã™â€¦Ã˜Â±Ã™Æ’Ã˜Â² Ã˜Â§Ã™â€žÃ˜Â°Ã™Æ’Ã˜Â§Ã˜Â¡ Ã™â€žÃ™â€¦Ã˜Â±Ã˜Â§Ã˜Â¬Ã˜Â¹Ã˜Â© Ã˜Â§Ã™â€žÃ™â€¦Ã™â€žÃ˜Â®Ã˜ÂµÃ˜Â§Ã˜ÂªÃ˜Å’ Ã˜Â£Ã™Ë† Ã˜Â§Ã™â€žÃ˜Â§Ã™â€ Ã˜ÂªÃ™â€šÃ˜Â§Ã™â€ž Ã˜Â¥Ã™â€žÃ™â€° Ã˜Â®Ã˜Â·Ã˜Â© Ã˜Â§Ã™â€žÃ™â€¦Ã˜ÂªÃ˜Â§Ã˜Â¨Ã˜Â¹Ã˜Â©."
+          ? "يمكنك فتح مركز الذكاء لمراجعة الملخصات، أو الانتقال إلى خطة المتابعة."
           : "Open Intelligence Center to review summaries, or continue to your follow-up plan.",
         href: "/intelligence",
-        buttonText: isArabic ? "Ã˜Â§Ã™ÂÃ˜ÂªÃ˜Â­ Ã˜Â§Ã™â€žÃ™â€ Ã˜ÂªÃ™Å Ã˜Â¬Ã˜Â©" : "Open Result",
+        buttonText: isArabic ? "افتح النتيجة" : "Open Result",
       };
     }
 
     if (report.insightId) {
       return {
-        label: isArabic ? "Ã˜Â¬Ã˜Â§Ã™â€¡Ã˜Â² Ã™â€žÃ™â€žÃ˜ÂªÃ™Ë†Ã™â€žÃ™Å Ã˜Â¯" : "Ready to generate",
+        label: isArabic ? "جاهز للتوليد" : "Ready to generate",
         title: isArabic
-          ? "Ã™â€¡Ã˜Â°Ã˜Â§ Ã˜Â§Ã™â€žÃ˜ÂªÃ™â€šÃ˜Â±Ã™Å Ã˜Â± Ã™Å Ã˜Â­Ã˜ÂªÃ˜Â§Ã˜Â¬ Ã˜ÂªÃ™Ë†Ã™â€žÃ™Å Ã˜Â¯ Ã˜Â§Ã™â€žÃ˜Â°Ã™Æ’Ã˜Â§Ã˜Â¡"
+          ? "هذا التقرير يحتاج توليد الذكاء"
           : "This report needs intelligence generation",
         description: isArabic
-          ? "Ã˜Â§Ã™ÂÃ˜ÂªÃ˜Â­ Ã™â€¦Ã˜Â±Ã™Æ’Ã˜Â² Ã˜Â§Ã™â€žÃ˜Â°Ã™Æ’Ã˜Â§Ã˜Â¡ Ã™Ë†Ã˜Â§Ã˜Â¶Ã˜ÂºÃ˜Â· Generate Ã™â€žÃ˜ÂªÃ˜Â­Ã™Ë†Ã™Å Ã™â€ž Ã˜Â§Ã™â€žÃ˜ÂªÃ™â€šÃ˜Â±Ã™Å Ã˜Â± Ã˜Â¥Ã™â€žÃ™â€° Ã™â€¦Ã™â€žÃ˜Â®Ã˜ÂµÃ˜Â§Ã˜Âª Ã™Ë†Ã˜Â®Ã˜Â·Ã˜Â© Ã™â€¦Ã˜ÂªÃ˜Â§Ã˜Â¨Ã˜Â¹Ã˜Â©."
+          ? "افتح مركز الذكاء واضغط Generate لتحويل التقرير إلى ملخصات وخطة متابعة."
           : "Open Intelligence Center and press Generate to turn this report into summaries and follow-up steps.",
         href: "/intelligence",
-        buttonText: isArabic ? "Ã™Ë†Ã™â€žÃ™â€˜Ã˜Â¯ Ã™ÂÃ™Å  Ã™â€¦Ã˜Â±Ã™Æ’Ã˜Â² Ã˜Â§Ã™â€žÃ˜Â°Ã™Æ’Ã˜Â§Ã˜Â¡" : "Generate in Intelligence",
+        buttonText: isArabic ? "ولّد في مركز الذكاء" : "Generate in Intelligence",
       };
     }
 
     return {
-      label: isArabic ? "Ã˜ÂªÃ™â€¦ Ã˜Â§Ã™â€žÃ˜Â­Ã™ÂÃ˜Â¸" : "Saved",
+      label: isArabic ? "تم الحفظ" : "Saved",
       title: isArabic
-        ? "Ã˜Â§Ã™â€žÃ˜ÂªÃ™â€šÃ˜Â±Ã™Å Ã˜Â± Ã™â€¦Ã˜Â­Ã™ÂÃ™Ë†Ã˜Â¸ Ã™Ë†Ã™Å Ã˜Â­Ã˜ÂªÃ˜Â§Ã˜Â¬ Ã™â€¦Ã˜ÂªÃ˜Â§Ã˜Â¨Ã˜Â¹Ã˜Â©"
+        ? "التقرير محفوظ ويحتاج متابعة"
         : "The report is saved and needs follow-up",
       description: isArabic
-        ? "Ã˜Â§Ã™ÂÃ˜ÂªÃ˜Â­ Ã™â€¦Ã˜Â±Ã™Æ’Ã˜Â² Ã˜Â§Ã™â€žÃ˜Â°Ã™Æ’Ã˜Â§Ã˜Â¡ Ã˜Â£Ã™Ë† Ã˜Â§Ã˜Â±Ã™ÂÃ˜Â¹ Ã˜ÂªÃ™â€šÃ˜Â±Ã™Å Ã˜Â±Ã™â€¹Ã˜Â§ Ã˜Â¢Ã˜Â®Ã˜Â± Ã˜Â¥Ã˜Â°Ã˜Â§ Ã™â€žÃ™â€¦ Ã™Å Ã˜Â¸Ã™â€¡Ã˜Â± Ã˜Â¨Ã˜Â¹Ã˜Â¯."
+        ? "افتح مركز الذكاء أو ارفع تقريرًا آخر إذا لم يظهر بعد."
         : "Open Intelligence Center or upload another report if it does not appear yet.",
       href: "/intelligence",
-      buttonText: isArabic ? "Ã˜Â§Ã™ÂÃ˜ÂªÃ˜Â­ Ã™â€¦Ã˜Â±Ã™Æ’Ã˜Â² Ã˜Â§Ã™â€žÃ˜Â°Ã™Æ’Ã˜Â§Ã˜Â¡" : "Open Intelligence",
+      buttonText: isArabic ? "افتح مركز الذكاء" : "Open Intelligence",
     };
   }
 
@@ -294,36 +294,36 @@ export default function ReportsPage() {
   const primaryNextStep =
     reports.length === 0
       ? {
-          label: isArabic ? "Ã˜Â§Ã˜Â¨Ã˜Â¯Ã˜Â£ Ã™â€¡Ã™â€ Ã˜Â§" : "Start here",
+          label: isArabic ? "ابدأ هنا" : "Start here",
           title: isArabic
-            ? "Ã˜Â§Ã˜Â±Ã™ÂÃ˜Â¹ Ã˜Â£Ã™Ë†Ã™â€ž Ã˜ÂªÃ™â€šÃ˜Â±Ã™Å Ã˜Â± Ã˜Â·Ã˜Â¨Ã™Å "
+            ? "ارفع أول تقرير طبي"
             : "Upload your first medical report",
           description: isArabic
-            ? "Ã˜Â¨Ã˜Â¹Ã˜Â¯ Ã˜Â±Ã™ÂÃ˜Â¹ Ã˜Â§Ã™â€žÃ˜ÂªÃ™â€šÃ˜Â±Ã™Å Ã˜Â±Ã˜Å’ Ã˜Â³Ã™Å Ã˜Â¸Ã™â€¡Ã˜Â± Ã™â€¡Ã™â€ Ã˜Â§ Ã™Ë†Ã™Å Ã™â€¦Ã™Æ’Ã™â€ Ã™Æ’ Ã˜Â§Ã™â€žÃ™â€¦Ã˜ÂªÃ˜Â§Ã˜Â¨Ã˜Â¹Ã˜Â© Ã˜Â¥Ã™â€žÃ™â€° Ã™â€¦Ã˜Â±Ã™Æ’Ã˜Â² Ã˜Â§Ã™â€žÃ˜Â°Ã™Æ’Ã˜Â§Ã˜Â¡."
+            ? "بعد رفع التقرير، سيظهر هنا ويمكنك المتابعة إلى مركز الذكاء."
             : "After uploading a report, it will appear here and you can continue to Intelligence Center.",
           href: "/lab-upload",
-          buttonText: isArabic ? "Ã˜Â§Ã˜Â±Ã™ÂÃ˜Â¹ Ã˜ÂªÃ™â€šÃ˜Â±Ã™Å Ã˜Â±Ã™â€¹Ã˜Â§" : "Upload Report",
+          buttonText: isArabic ? "ارفع تقريرًا" : "Upload Report",
         }
       : stats.saved > 0
       ? {
-          label: isArabic ? "Ã˜Â§Ã™â€žÃ˜Â®Ã˜Â·Ã™Ë†Ã˜Â© Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â§Ã™â€žÃ™Å Ã˜Â©" : "Next step",
-          title: isArabic ? "Ã˜Â±Ã˜Â§Ã˜Â¬Ã˜Â¹ Ã˜Â®Ã˜Â·Ã˜Â© Ã˜Â§Ã™â€žÃ™â€¦Ã˜ÂªÃ˜Â§Ã˜Â¨Ã˜Â¹Ã˜Â©" : "Review your follow-up plan",
+          label: isArabic ? "الخطوة التالية" : "Next step",
+          title: isArabic ? "راجع خطة المتابعة" : "Review your follow-up plan",
           description: isArabic
-            ? "Ã™â€žÃ˜Â¯Ã™Å Ã™Æ’ Ã™â€ Ã˜ÂªÃ˜Â§Ã˜Â¦Ã˜Â¬ Ã˜Â°Ã™Æ’Ã˜Â§Ã˜Â¡ Ã™â€¦Ã˜Â­Ã™ÂÃ™Ë†Ã˜Â¸Ã˜Â©. Ã˜Â§Ã˜Â³Ã˜ÂªÃ˜Â®Ã˜Â¯Ã™â€¦Ã™â€¡Ã˜Â§ Ã™â€žÃ™â€žÃ˜Â§Ã™â€ Ã˜ÂªÃ™â€šÃ˜Â§Ã™â€ž Ã˜Â¥Ã™â€žÃ™â€° Ã˜Â®Ã˜Â·Ã˜Â© Ã˜Â§Ã™â€žÃ™â€¦Ã˜ÂªÃ˜Â§Ã˜Â¨Ã˜Â¹Ã˜Â©."
+            ? "لديك نتائج ذكاء محفوظة. استخدمها للانتقال إلى خطة المتابعة."
             : "You have saved intelligence results. Use them to continue into your follow-up plan.",
           href: "/health-plan",
-          buttonText: isArabic ? "Ã˜Â§Ã™ÂÃ˜ÂªÃ˜Â­ Ã˜Â®Ã˜Â·Ã˜Â© Ã˜Â§Ã™â€žÃ˜ÂµÃ˜Â­Ã˜Â©" : "Open Health Plan",
+          buttonText: isArabic ? "افتح خطة الصحة" : "Open Health Plan",
         }
       : {
-          label: isArabic ? "Ã˜Â§Ã™â€žÃ˜Â®Ã˜Â·Ã™Ë†Ã˜Â© Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â§Ã™â€žÃ™Å Ã˜Â©" : "Next step",
+          label: isArabic ? "الخطوة التالية" : "Next step",
           title: isArabic
-            ? "Ã™Ë†Ã™â€žÃ™â€˜Ã˜Â¯ Ã˜Â§Ã™â€žÃ˜Â°Ã™Æ’Ã˜Â§Ã˜Â¡ Ã˜Â§Ã™â€žÃ˜ÂµÃ˜Â­Ã™Å  Ã™â€žÃ™â€žÃ˜ÂªÃ™â€šÃ˜Â§Ã˜Â±Ã™Å Ã˜Â±"
+            ? "ولّد الذكاء الصحي للتقارير"
             : "Generate intelligence for your reports",
           description: isArabic
-            ? "Ã™â€žÃ˜Â¯Ã™Å Ã™Æ’ Ã˜ÂªÃ™â€šÃ˜Â§Ã˜Â±Ã™Å Ã˜Â± Ã™â€¦Ã˜Â­Ã™ÂÃ™Ë†Ã˜Â¸Ã˜Â©Ã˜Å’ Ã™Ë†Ã˜Â§Ã™â€žÃ˜Â¢Ã™â€  Ã˜ÂªÃ˜Â­Ã˜ÂªÃ˜Â§Ã˜Â¬ Ã˜Â¥Ã™â€žÃ™â€° Ã™ÂÃ˜ÂªÃ˜Â­ Ã™â€¦Ã˜Â±Ã™Æ’Ã˜Â² Ã˜Â§Ã™â€žÃ˜Â°Ã™Æ’Ã˜Â§Ã˜Â¡ Ã™â€žÃ˜ÂªÃ™Ë†Ã™â€žÃ™Å Ã˜Â¯ Ã˜Â§Ã™â€žÃ™â€¦Ã™â€žÃ˜Â®Ã˜ÂµÃ˜Â§Ã˜Âª."
+            ? "لديك تقارير محفوظة، والآن تحتاج إلى فتح مركز الذكاء لتوليد الملخصات."
             : "You have saved reports. Now open Intelligence Center to generate summaries.",
           href: "/intelligence",
-          buttonText: isArabic ? "Ã˜Â§Ã™ÂÃ˜ÂªÃ˜Â­ Ã™â€¦Ã˜Â±Ã™Æ’Ã˜Â² Ã˜Â§Ã™â€žÃ˜Â°Ã™Æ’Ã˜Â§Ã˜Â¡" : "Open Intelligence",
+          buttonText: isArabic ? "افتح مركز الذكاء" : "Open Intelligence",
         };
 
   return (
@@ -331,18 +331,18 @@ export default function ReportsPage() {
       <section className="reportsHero">
         <div>
           <p className="launchEyebrow">
-            {isArabic ? "Ã™â€¦Ã™Æ’Ã˜ÂªÃ˜Â¨Ã˜Â© Ã˜Â§Ã™â€žÃ˜ÂªÃ™â€šÃ˜Â§Ã˜Â±Ã™Å Ã˜Â±" : "Reports Library"}
+            {isArabic ? "مكتبة التقارير" : "Reports Library"}
           </p>
 
           <h1>
             {isArabic
-              ? "Ã˜ÂªÃ˜Â§Ã˜Â¨Ã˜Â¹ Ã˜ÂªÃ™â€šÃ˜Â§Ã˜Â±Ã™Å Ã˜Â±Ã™Æ’ Ã˜Â§Ã™â€žÃ˜Â·Ã˜Â¨Ã™Å Ã˜Â© Ã™Ë†Ã™â€ Ã˜ÂªÃ˜Â§Ã˜Â¦Ã˜Â¬ Ã˜Â§Ã™â€žÃ˜Â°Ã™Æ’Ã˜Â§Ã˜Â¡"
+              ? "تابع تقاريرك الطبية ونتائج الذكاء"
               : "Track your medical reports and intelligence results"}
           </h1>
 
           <p>
             {isArabic
-              ? "Ã™â€¡Ã˜Â°Ã™â€¡ Ã˜Â§Ã™â€žÃ˜ÂµÃ™ÂÃ˜Â­Ã˜Â© Ã˜ÂªÃ™Ë†Ã˜Â¶Ã™â€˜Ã˜Â­ Ã™â€¡Ã™â€ž Ã˜Â§Ã™â€žÃ˜ÂªÃ™â€šÃ˜Â±Ã™Å Ã˜Â± Ã™â€¦Ã˜Â­Ã™ÂÃ™Ë†Ã˜Â¸Ã˜Å’ Ã™â€¡Ã™â€ž Ã™Å Ã˜Â­Ã˜ÂªÃ˜Â§Ã˜Â¬ Ã˜ÂªÃ™Ë†Ã™â€žÃ™Å Ã˜Â¯ Ã˜Â°Ã™Æ’Ã˜Â§Ã˜Â¡ Ã˜ÂµÃ˜Â­Ã™Å Ã˜Å’ Ã™Ë†Ã™â€¡Ã™â€ž Ã˜ÂªÃ™Ë†Ã˜Â¬Ã˜Â¯ Ã™â€ Ã˜ÂªÃ™Å Ã˜Â¬Ã˜Â© Ã™â€¦Ã˜Â­Ã™ÂÃ™Ë†Ã˜Â¸Ã˜Â© Ã™Å Ã™â€¦Ã™Æ’Ã™â€  Ã˜Â§Ã˜Â³Ã˜ÂªÃ˜Â®Ã˜Â¯Ã˜Â§Ã™â€¦Ã™â€¡Ã˜Â§ Ã™ÂÃ™Å  Ã˜Â®Ã˜Â·Ã˜Â© Ã˜Â§Ã™â€žÃ™â€¦Ã˜ÂªÃ˜Â§Ã˜Â¨Ã˜Â¹Ã˜Â©."
+              ? "هذه الصفحة توضّح هل التقرير محفوظ، هل يحتاج توليد ذكاء صحي، وهل توجد نتيجة محفوظة يمكن استخدامها في خطة المتابعة."
               : "This page shows whether a report is saved, whether it needs health intelligence generation, and whether a saved result can be used for your follow-up plan."}
           </p>
         </div>
@@ -359,36 +359,36 @@ export default function ReportsPage() {
 
       <section className="reportsStatsGrid">
         <article>
-          <span>{isArabic ? "Ã™Æ’Ã™â€ž Ã˜Â§Ã™â€žÃ˜ÂªÃ™â€šÃ˜Â§Ã˜Â±Ã™Å Ã˜Â±" : "Total reports"}</span>
+          <span>{isArabic ? "كل التقارير" : "Total reports"}</span>
           <strong>{stats.total}</strong>
-          <p>{isArabic ? "Ã˜ÂªÃ™â€šÃ˜Â§Ã˜Â±Ã™Å Ã˜Â± Ã™â€¦Ã˜Â­Ã™ÂÃ™Ë†Ã˜Â¸Ã˜Â© Ã™ÂÃ™Å  Ã˜Â­Ã˜Â³Ã˜Â§Ã˜Â¨Ã™Æ’" : "Reports saved in your account"}</p>
+          <p>{isArabic ? "تقارير محفوظة في حسابك" : "Reports saved in your account"}</p>
         </article>
 
         <article>
-          <span>{isArabic ? "Ã˜Â°Ã™Æ’Ã˜Â§Ã˜Â¡ Ã™â€¦Ã˜Â­Ã™ÂÃ™Ë†Ã˜Â¸" : "Saved intelligence"}</span>
+          <span>{isArabic ? "ذكاء محفوظ" : "Saved intelligence"}</span>
           <strong>{stats.saved}</strong>
-          <p>{isArabic ? "Ã™â€ Ã˜ÂªÃ˜Â§Ã˜Â¦Ã˜Â¬ Ã˜Â¬Ã˜Â§Ã™â€¡Ã˜Â²Ã˜Â© Ã™â€žÃ™â€žÃ™â€¦Ã˜Â±Ã˜Â§Ã˜Â¬Ã˜Â¹Ã˜Â©" : "Results ready for review"}</p>
+          <p>{isArabic ? "نتائج جاهزة للمراجعة" : "Results ready for review"}</p>
         </article>
 
         <article>
-          <span>{isArabic ? "Ã˜ÂªÃ˜Â­Ã˜ÂªÃ˜Â§Ã˜Â¬ Ã˜ÂªÃ™Ë†Ã™â€žÃ™Å Ã˜Â¯" : "Need generation"}</span>
+          <span>{isArabic ? "تحتاج توليد" : "Need generation"}</span>
           <strong>{stats.needsGeneration}</strong>
-          <p>{isArabic ? "Ã˜ÂªÃ™â€šÃ˜Â§Ã˜Â±Ã™Å Ã˜Â± Ã˜ÂªÃ˜Â­Ã˜ÂªÃ˜Â§Ã˜Â¬ Generate" : "Reports that need Generate"}</p>
+          <p>{isArabic ? "تقارير تحتاج Generate" : "Reports that need Generate"}</p>
         </article>
 
         <article>
-          <span>{isArabic ? "Ã˜Â§Ã˜Â³Ã˜ÂªÃ˜Â®Ã˜Â±Ã˜Â§Ã˜Â¬ Ã™â€¦Ã™Æ’Ã˜ÂªÃ™â€¦Ã™â€ž" : "Extraction completed"}</span>
+          <span>{isArabic ? "استخراج مكتمل" : "Extraction completed"}</span>
           <strong>{stats.completedExtraction}</strong>
-          <p>{isArabic ? "Ã˜ÂªÃ™â€šÃ˜Â§Ã˜Â±Ã™Å Ã˜Â± Ã˜Â¬Ã˜Â§Ã™â€¡Ã˜Â²Ã˜Â© Ã™â€žÃ™â€žÃ˜ÂªÃ˜Â­Ã™â€žÃ™Å Ã™â€ž" : "Reports ready for analysis"}</p>
+          <p>{isArabic ? "تقارير جاهزة للتحليل" : "Reports ready for analysis"}</p>
         </article>
       </section>
 
       {loading && (
         <section className="reportsPanel">
-          <p className="launchEyebrow">{isArabic ? "Ã˜ÂªÃ˜Â­Ã™â€¦Ã™Å Ã™â€ž" : "Loading"}</p>
+          <p className="launchEyebrow">{isArabic ? "تحميل" : "Loading"}</p>
           <h2>
             {isArabic
-              ? "Ã˜Â¬Ã˜Â§Ã˜Â±Ã™Å  Ã˜ÂªÃ˜Â­Ã™â€¦Ã™Å Ã™â€ž Ã™â€¦Ã™Æ’Ã˜ÂªÃ˜Â¨Ã˜Â© Ã˜Â§Ã™â€žÃ˜ÂªÃ™â€šÃ˜Â§Ã˜Â±Ã™Å Ã˜Â±..."
+              ? "جاري تحميل مكتبة التقارير..."
               : "Loading your reports library..."}
           </h2>
         </section>
@@ -396,9 +396,9 @@ export default function ReportsPage() {
 
       {!loading && message && (
         <section className="reportsPanel">
-          <p className="launchEyebrow">{isArabic ? "Ã˜ÂªÃ™â€ Ã˜Â¨Ã™Å Ã™â€¡" : "Notice"}</p>
+          <p className="launchEyebrow">{isArabic ? "تنبيه" : "Notice"}</p>
           <h2>
-            {isArabic ? "Ã˜ÂªÃ˜Â¹Ã˜Â°Ã˜Â± Ã˜ÂªÃ˜Â­Ã™â€¦Ã™Å Ã™â€ž Ã˜Â§Ã™â€žÃ˜ÂªÃ™â€šÃ˜Â§Ã˜Â±Ã™Å Ã˜Â±" : "Could not load reports"}
+            {isArabic ? "تعذر تحميل التقارير" : "Could not load reports"}
           </h2>
           <p>{message}</p>
         </section>
@@ -407,28 +407,28 @@ export default function ReportsPage() {
       {!loading && !message && reports.length === 0 && (
         <section className="reportsEmptyState">
           <p className="launchEyebrow">
-            {isArabic ? "Ã™â€žÃ˜Â§ Ã˜ÂªÃ™Ë†Ã˜Â¬Ã˜Â¯ Ã˜ÂªÃ™â€šÃ˜Â§Ã˜Â±Ã™Å Ã˜Â± Ã˜Â¨Ã˜Â¹Ã˜Â¯" : "No reports yet"}
+            {isArabic ? "لا توجد تقارير بعد" : "No reports yet"}
           </p>
 
           <h2>
             {isArabic
-              ? "Ã˜Â§Ã˜Â±Ã™ÂÃ˜Â¹ Ã˜ÂªÃ™â€šÃ˜Â±Ã™Å Ã˜Â±Ã™â€¹Ã˜Â§ Ã˜Â·Ã˜Â¨Ã™Å Ã™â€¹Ã˜Â§ Ã™â€žÃ˜ÂªÃ˜Â¨Ã˜Â¯Ã˜Â£ Ã˜Â±Ã˜Â­Ã™â€žÃ˜Â© Ã˜Â§Ã™â€žÃ˜Â°Ã™Æ’Ã˜Â§Ã˜Â¡ Ã˜Â§Ã™â€žÃ˜ÂµÃ˜Â­Ã™Å "
+              ? "ارفع تقريرًا طبيًا لتبدأ رحلة الذكاء الصحي"
               : "Upload a medical report to start health intelligence"}
           </h2>
 
           <p>
             {isArabic
-              ? "Ã˜Â¨Ã˜Â¹Ã˜Â¯ Ã˜Â§Ã™â€žÃ˜Â±Ã™ÂÃ˜Â¹Ã˜Å’ Ã˜Â³Ã™Å Ã˜Â¸Ã™â€¡Ã˜Â± Ã˜Â§Ã™â€žÃ˜ÂªÃ™â€šÃ˜Â±Ã™Å Ã˜Â± Ã™â€¡Ã™â€ Ã˜Â§Ã˜Å’ Ã˜Â«Ã™â€¦ Ã˜ÂªÃ˜Â³Ã˜ÂªÃ˜Â·Ã™Å Ã˜Â¹ Ã˜Â§Ã™â€žÃ˜Â§Ã™â€ Ã˜ÂªÃ™â€šÃ˜Â§Ã™â€ž Ã˜Â¥Ã™â€žÃ™â€° Ã™â€¦Ã˜Â±Ã™Æ’Ã˜Â² Ã˜Â§Ã™â€žÃ˜Â°Ã™Æ’Ã˜Â§Ã˜Â¡ Ã™â€žÃ˜ÂªÃ™Ë†Ã™â€žÃ™Å Ã˜Â¯ Ã™â€¦Ã™â€žÃ˜Â®Ã˜Âµ Ã™â€žÃ™â€žÃ™â€¦Ã˜Â±Ã™Å Ã˜Â¶ Ã™Ë†Ã™â€¦Ã™â€žÃ˜Â®Ã˜Âµ Ã˜Â¬Ã˜Â§Ã™â€¡Ã˜Â² Ã™â€žÃ™â€žÃ˜Â·Ã˜Â¨Ã™Å Ã˜Â¨."
+              ? "بعد الرفع، سيظهر التقرير هنا، ثم تستطيع الانتقال إلى مركز الذكاء لتوليد ملخص للمريض وملخص جاهز للطبيب."
               : "After upload, the report will appear here, then you can move to Intelligence Center to generate a patient-friendly summary and doctor-ready brief."}
           </p>
 
           <div className="reportsActionRow">
             <Link href="/lab-upload" className="launchPrimary">
-              {isArabic ? "Ã˜Â§Ã˜Â±Ã™ÂÃ˜Â¹ Ã˜ÂªÃ™â€šÃ˜Â±Ã™Å Ã˜Â±Ã™â€¹Ã˜Â§ Ã˜Â·Ã˜Â¨Ã™Å Ã™â€¹Ã˜Â§" : "Upload Medical Report"}
+              {isArabic ? "ارفع تقريرًا طبيًا" : "Upload Medical Report"}
             </Link>
 
             <Link href="/dashboard" className="launchSecondary">
-              {isArabic ? "Ã™â€žÃ™Ë†Ã˜Â­Ã˜Â© Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â­Ã™Æ’Ã™â€¦" : "Dashboard"}
+              {isArabic ? "لوحة التحكم" : "Dashboard"}
             </Link>
           </div>
           {reports.length > REPORTS_INITIAL_LIMIT && (
@@ -444,7 +444,7 @@ export default function ReportsPage() {
                   }
                 >
                   {isArabic
-                    ? `??? ?????? (${Math.min(REPORTS_LOAD_STEP, hiddenReportsCount)})`
+                    ? `عرض المزيد (${Math.min(REPORTS_LOAD_STEP, hiddenReportsCount)})`
                     : `Show More (${Math.min(REPORTS_LOAD_STEP, hiddenReportsCount)})`}
                 </button>
               )}
@@ -455,7 +455,7 @@ export default function ReportsPage() {
                   className="launchSecondary"
                   onClick={() => setVisibleReportsCount(REPORTS_INITIAL_LIMIT)}
                 >
-                  {isArabic ? "??? ???" : "Show Less"}
+                  {isArabic ? "عرض أقل" : "Show Less"}
                 </button>
               )}
             </div>
@@ -467,18 +467,18 @@ export default function ReportsPage() {
         <section className="reportsListSection">
           <div className="reportsSectionHeader">
             <p className="launchEyebrow">
-              {isArabic ? "Ã˜Â§Ã™â€žÃ˜ÂªÃ™â€šÃ˜Â§Ã˜Â±Ã™Å Ã˜Â± Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â­Ã™ÂÃ™Ë†Ã˜Â¸Ã˜Â©" : "Saved reports"}
+              {isArabic ? "التقارير المحفوظة" : "Saved reports"}
             </p>
 
             <h2>
               {isArabic
-                ? "Ã™Æ’Ã™â€ž Ã˜ÂªÃ™â€šÃ˜Â±Ã™Å Ã˜Â± Ã™Å Ã˜Â¬Ã˜Â¨ Ã˜Â£Ã™â€  Ã™Å Ã™â€šÃ™Ë†Ã˜Â¯ Ã˜Â¥Ã™â€žÃ™â€° Ã˜Â®Ã˜Â·Ã™Ë†Ã˜Â© Ã™Ë†Ã˜Â§Ã˜Â¶Ã˜Â­Ã˜Â©"
+                ? "كل تقرير يجب أن يقود إلى خطوة واضحة"
                 : "Every report should lead to a clear next step"}
             </h2>
 
             <p>
               {isArabic
-                ? "Ã˜Â§Ã™ÂÃ˜ÂªÃ˜Â­ Ã˜Â§Ã™â€žÃ˜ÂªÃ™â€šÃ˜Â±Ã™Å Ã˜Â± Ã˜Â§Ã™â€žÃ˜Â£Ã˜ÂµÃ™â€žÃ™Å Ã˜Å’ Ã˜Â£Ã™Ë† Ã˜Â§Ã™â€ Ã˜ÂªÃ™â€šÃ™â€ž Ã˜Â¥Ã™â€žÃ™â€° Ã™â€¦Ã˜Â±Ã™Æ’Ã˜Â² Ã˜Â§Ã™â€žÃ˜Â°Ã™Æ’Ã˜Â§Ã˜Â¡ Ã™â€žÃ˜ÂªÃ™Ë†Ã™â€žÃ™Å Ã˜Â¯/Ã™â€¦Ã˜Â±Ã˜Â§Ã˜Â¬Ã˜Â¹Ã˜Â© Ã˜Â§Ã™â€žÃ™â€ Ã˜ÂªÃ™Å Ã˜Â¬Ã˜Â©Ã˜Å’ Ã˜Â«Ã™â€¦ Ã˜Â§Ã˜Â³Ã˜ÂªÃ˜Â®Ã˜Â¯Ã™â€¦ Ã˜Â§Ã™â€žÃ˜Â®Ã˜Â·Ã˜Â© Ã˜Â§Ã™â€žÃ˜ÂµÃ˜Â­Ã™Å Ã˜Â© Ã™â€žÃ™â€žÃ™â€¦Ã˜ÂªÃ˜Â§Ã˜Â¨Ã˜Â¹Ã˜Â©."
+                ? "افتح التقرير الأصلي، أو انتقل إلى مركز الذكاء لتوليد/مراجعة النتيجة، ثم استخدم الخطة الصحية للمتابعة."
                 : "Open the original report, continue to Intelligence Center to generate or review results, then use Health Plan for follow-up."}
             </p>
           </div>
@@ -498,23 +498,23 @@ export default function ReportsPage() {
 
                   <div className="reportMetaGrid">
                     <div>
-                      <span>{isArabic ? "Ã˜ÂªÃ˜Â§Ã˜Â±Ã™Å Ã˜Â® Ã˜Â§Ã™â€žÃ˜Â±Ã™ÂÃ˜Â¹" : "Uploaded"}</span>
+                      <span>{isArabic ? "تاريخ الرفع" : "Uploaded"}</span>
                       <strong>{formatDate(report.uploadedAt)}</strong>
                     </div>
 
                     <div>
-                      <span>{isArabic ? "Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â³Ã˜ÂªÃ˜Â®Ã˜Â±Ã˜Â§Ã˜Â¬" : "Extraction"}</span>
+                      <span>{isArabic ? "الاستخراج" : "Extraction"}</span>
                       <strong>{getExtractionLabel(report.extractionStatus)}</strong>
                     </div>
 
                     <div>
-                      <span>{isArabic ? "Ã˜Â­Ã˜Â§Ã™â€žÃ˜Â© Ã˜Â§Ã™â€žÃ˜Â°Ã™Æ’Ã˜Â§Ã˜Â¡" : "Intelligence"}</span>
+                      <span>{isArabic ? "حالة الذكاء" : "Intelligence"}</span>
                       <strong>
                         {report.hasSavedIntelligence
                           ? isArabic
-                            ? "Ã™â€¦Ã˜Â­Ã™ÂÃ™Ë†Ã˜Â¸"
+                            ? "محفوظ"
                             : "Saved"
-                          : report.aiStatus || (isArabic ? "Ã˜Â¨Ã˜Â§Ã™â€ Ã˜ÂªÃ˜Â¸Ã˜Â§Ã˜Â±" : "Pending")}
+                          : report.aiStatus || (isArabic ? "بانتظار" : "Pending")}
                       </strong>
                     </div>
                   </div>
@@ -534,7 +534,7 @@ export default function ReportsPage() {
 
                   {report.nextBestAction && (
                     <p className="reportNextText">
-                      <strong>{isArabic ? "Ã˜Â§Ã™â€žÃ˜Â®Ã˜Â·Ã™Ë†Ã˜Â© Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â§Ã™â€žÃ™Å Ã˜Â©:" : "Next:"}</strong>{" "}
+                      <strong>{isArabic ? "الخطوة التالية:" : "Next:"}</strong>{" "}
                       {report.nextBestAction}
                     </p>
                   )}
@@ -546,7 +546,7 @@ export default function ReportsPage() {
                       onClick={() => openMedicalReport(report.filePath)}
                       disabled={!report.filePath}
                     >
-                      {isArabic ? "Ã™ÂÃ˜ÂªÃ˜Â­ Ã˜Â§Ã™â€žÃ˜ÂªÃ™â€šÃ˜Â±Ã™Å Ã˜Â±" : "Open Report"}
+                      {isArabic ? "فتح التقرير" : "Open Report"}
                     </button>
 
                     <Link href={decision.href} className="launchPrimary">
@@ -555,7 +555,7 @@ export default function ReportsPage() {
 
                     {report.hasSavedIntelligence && (
                       <Link href="/health-plan" className="launchSecondary">
-                        {isArabic ? "Ã˜Â®Ã˜Â·Ã˜Â© Ã˜Â§Ã™â€žÃ˜ÂµÃ˜Â­Ã˜Â©" : "Health Plan"}
+                        {isArabic ? "خطة الصحة" : "Health Plan"}
                       </Link>
                     )}
                   </div>
@@ -576,7 +576,7 @@ export default function ReportsPage() {
                   }
                 >
                   {isArabic
-                    ? `??? ?????? (${Math.min(REPORTS_LOAD_STEP, hiddenReportsCount)})`
+                    ? `عرض المزيد (${Math.min(REPORTS_LOAD_STEP, hiddenReportsCount)})`
                     : `Show More (${Math.min(REPORTS_LOAD_STEP, hiddenReportsCount)})`}
                 </button>
               )}
@@ -587,7 +587,7 @@ export default function ReportsPage() {
                   className="launchSecondary"
                   onClick={() => setVisibleReportsCount(REPORTS_INITIAL_LIMIT)}
                 >
-                  {isArabic ? "??? ???" : "Show Less"}
+                  {isArabic ? "عرض أقل" : "Show Less"}
                 </button>
               )}
             </div>
@@ -598,26 +598,26 @@ export default function ReportsPage() {
       <section className="reportsBottomNav">
         <div>
           <p className="launchEyebrow">
-            {isArabic ? "Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â³Ã˜Â§Ã˜Â± Ã˜Â§Ã™â€žÃ™Æ’Ã˜Â§Ã™â€¦Ã™â€ž" : "Full path"}
+            {isArabic ? "المسار الكامل" : "Full path"}
           </p>
           <h2>
             {isArabic
-              ? "Ã™â€¦Ã™â€  Ã˜Â±Ã™ÂÃ˜Â¹ Ã˜Â§Ã™â€žÃ˜ÂªÃ™â€šÃ˜Â±Ã™Å Ã˜Â± Ã˜Â¥Ã™â€žÃ™â€° Ã˜Â®Ã˜Â·Ã˜Â© Ã˜Â§Ã™â€žÃ™â€¦Ã˜ÂªÃ˜Â§Ã˜Â¨Ã˜Â¹Ã˜Â©"
+              ? "من رفع التقرير إلى خطة المتابعة"
               : "From report upload to follow-up plan"}
           </h2>
           <p>
             {isArabic
-              ? "Ã˜Â§Ã˜Â±Ã™ÂÃ˜Â¹ Ã˜Â§Ã™â€žÃ˜ÂªÃ™â€šÃ˜Â±Ã™Å Ã˜Â±Ã˜Å’ Ã˜Â§Ã™ÂÃ˜ÂªÃ˜Â­ Ã™â€¦Ã˜Â±Ã™Æ’Ã˜Â² Ã˜Â§Ã™â€žÃ˜Â°Ã™Æ’Ã˜Â§Ã˜Â¡Ã˜Å’ Ã˜Â±Ã˜Â§Ã˜Â¬Ã˜Â¹ Ã˜Â§Ã™â€žÃ™â€¦Ã™â€žÃ˜Â®Ã˜ÂµÃ˜Â§Ã˜ÂªÃ˜Å’ Ã˜Â«Ã™â€¦ Ã˜Â§Ã™â€ Ã˜ÂªÃ™â€šÃ™â€ž Ã˜Â¥Ã™â€žÃ™â€° Ã˜Â®Ã˜Â·Ã˜Â© Ã˜Â§Ã™â€žÃ™â€¦Ã˜ÂªÃ˜Â§Ã˜Â¨Ã˜Â¹Ã˜Â©."
+              ? "ارفع التقرير، افتح مركز الذكاء، راجع الملخصات، ثم انتقل إلى خطة المتابعة."
               : "Upload the report, open Intelligence Center, review summaries, then continue to your follow-up plan."}
           </p>
         </div>
 
         <div className="reportsBottomLinks">
-          <Link href="/lab-upload">{isArabic ? "Ã˜Â±Ã™ÂÃ˜Â¹ Ã˜ÂªÃ™â€šÃ˜Â±Ã™Å Ã˜Â±" : "Upload"}</Link>
-          <Link href="/intelligence">{isArabic ? "Ã˜Â§Ã™â€žÃ˜Â°Ã™Æ’Ã˜Â§Ã˜Â¡" : "Intelligence"}</Link>
-          <Link href="/health-plan">{isArabic ? "Ã˜Â§Ã™â€žÃ˜Â®Ã˜Â·Ã˜Â©" : "Health Plan"}</Link>
-          <Link href="/doctor-portal">{isArabic ? "Ã˜Â¨Ã™Ë†Ã˜Â§Ã˜Â¨Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â·Ã˜Â¨Ã™Å Ã˜Â¨" : "Doctor Portal"}</Link>
-          <Link href="/dashboard">{isArabic ? "Ã™â€žÃ™Ë†Ã˜Â­Ã˜Â© Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â­Ã™Æ’Ã™â€¦" : "Dashboard"}</Link>
+          <Link href="/lab-upload">{isArabic ? "رفع تقرير" : "Upload"}</Link>
+          <Link href="/intelligence">{isArabic ? "الذكاء" : "Intelligence"}</Link>
+          <Link href="/health-plan">{isArabic ? "الخطة" : "Health Plan"}</Link>
+          <Link href="/doctor-portal">{isArabic ? "بوابة الطبيب" : "Doctor Portal"}</Link>
+          <Link href="/dashboard">{isArabic ? "لوحة التحكم" : "Dashboard"}</Link>
         </div>
       </section>
     </main>
