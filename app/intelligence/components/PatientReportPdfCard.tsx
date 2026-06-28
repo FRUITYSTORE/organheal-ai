@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import ArabicSafeText from "./ArabicSafeText";
 
 type ExecutiveSummary = {
   currentScore?: number;
@@ -218,35 +219,34 @@ language.
 
       <div style={{ textAlign: "left" }}>
         <h3>1. What This Report Means</h3>
-        <p style={{ whiteSpace: "pre-line" }}>
-          {summary ||
-            "Your report was reviewed by OrganHeal AI and summarized in a simple way."}
-        </p>
+        <ArabicSafeText
+          text={summary}
+          fallback="Your report was reviewed by OrganHeal AI and summarized in a simple way."
+        />
 
         <h3>2. Main Things Noticed</h3>
-        <p style={{ whiteSpace: "pre-line" }}>
-          {keyFindings ||
-            "No major findings were clearly identified from the available data."}
-        </p>
+        <ArabicSafeText
+          text={keyFindings}
+          fallback="No major findings were clearly identified from the available data."
+        />
 
         <h3>3. What May Need Attention</h3>
-        <p style={{ whiteSpace: "pre-line" }}>
-          {riskSignals ||
-            "No urgent warning signals were clearly detected. Please review your original report with a healthcare professional."}
-        </p>
+        <ArabicSafeText
+          text={riskSignals}
+          fallback="No urgent warning signals were clearly detected. Please review your original report with a healthcare professional."
+        />
 
         <h3>4. Helpful Next Steps</h3>
-        <p style={{ whiteSpace: "pre-line" }}>
-          {recommendations ||
-            executiveSummary?.nextBestAction ||
-            "Follow up with your healthcare provider if you have symptoms or concerns."}
-        </p>
+        <ArabicSafeText
+          text={recommendations || executiveSummary?.nextBestAction}
+          fallback="Follow up with your healthcare provider if you have symptoms or concerns."
+        />
 
         <h3>5. Your Health Story in Simple Words</h3>
-        <p style={{ whiteSpace: "pre-line" }}>
-          {healthStory ||
-            "As more assessments, check-ins, and reports are added, OrganHeal will build a clearer picture of your health journey."}
-        </p>
+        <ArabicSafeText
+          text={healthStory}
+          fallback="As more assessments, check-ins, and reports are added, OrganHeal will build a clearer picture of your health journey."
+        />
 
         <h3>6. Your Health Direction</h3>
 

@@ -1,3 +1,4 @@
+import ArabicSafeText from "./ArabicSafeText";
 type GeneratedReportDetailsCardProps = {
   medicalCategory: string | null | undefined;
   summary: string | null | undefined;
@@ -22,23 +23,23 @@ export default function GeneratedReportDetailsCard({
       </p>
 
       <p>
-        <strong>Summary:</strong> {summary || "N/A"}
+        <strong>Summary:</strong>{" "}<ArabicSafeText as="span" text={summary} />
       </p>
 
       <p>
-        <strong>Key Findings:</strong> {keyFindings || "N/A"}
+        <strong>Key Findings:</strong>{" "}<ArabicSafeText as="span" text={keyFindings} />
       </p>
 
       <p>
-        <strong>Risk Signals:</strong> {riskSignals || "N/A"}
+        <strong>Risk Signals:</strong>{" "}<ArabicSafeText as="span" text={riskSignals} />
       </p>
 
       <p>
-        <strong>Recommendations:</strong> {recommendations || "N/A"}
+        <strong>Recommendations:</strong>{" "}<ArabicSafeText as="span" text={recommendations} />
       </p>
 
       <p>
-        <strong>Doctor Brief:</strong> {doctorBrief || "N/A"}
+        <strong>Doctor Brief:</strong>{" "}<ArabicSafeText as="span" text={doctorBrief} />
       </p>
     </>
   );

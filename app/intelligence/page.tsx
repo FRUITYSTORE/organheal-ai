@@ -741,13 +741,7 @@ isExpanded={isExpandedReport}
 canOpen={Boolean(item.file_path)}
 onOpen={() => openMedicalReport(item.file_path)}
 onGenerate={() => {
-  const agreed = window.confirm(
-    "OrganHeal AI provides educational health intelligence only. It does not diagnose, treat, or replace licensed medical care. Continue generating this report intelligence?"
-  );
-
-  if (agreed) {
-    generateReportIntelligence(item.id);
-  }
+  generateReportIntelligence(item.id);
 }}
 onViewGenerated={() => openSavedGeneratedResult(item.id)}
 onHideGenerated={() => {

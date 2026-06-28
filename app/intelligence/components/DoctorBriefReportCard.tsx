@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import ArabicSafeText from "./ArabicSafeText";
 
 type ExecutiveSummary = {
   currentScore?: number;
@@ -373,19 +374,19 @@ export default function DoctorBriefReportCard({
 
       <div style={{ marginTop: "18px", textAlign: "left" }}>
         <h3>1. Clinical Summary</h3>
-        <p style={{ whiteSpace: "pre-line" }}>{summary || "N/A"}</p>
+        <ArabicSafeText text={summary} />
 
         <h3>2. Key Clinical Findings</h3>
-        <p style={{ whiteSpace: "pre-line" }}>{keyFindings || "N/A"}</p>
+        <ArabicSafeText text={keyFindings} />
 
         <h3>3. Important Risk Signals</h3>
-        <p style={{ whiteSpace: "pre-line" }}>{riskSignals || "N/A"}</p>
+        <ArabicSafeText text={riskSignals} />
 
         <h3>4. Recommended Follow-Up</h3>
-        <p style={{ whiteSpace: "pre-line" }}>{recommendations || "N/A"}</p>
+        <ArabicSafeText text={recommendations} />
 
         <h3>5. Clinical Review Note</h3>
-        <p style={{ whiteSpace: "pre-line" }}>{doctorBrief || "N/A"}</p>
+        <ArabicSafeText text={doctorBrief} />
 
         <h3>6. AI Intelligence Snapshot</h3>
 
