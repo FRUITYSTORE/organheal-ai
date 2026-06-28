@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import "./globals.css";
 
 import Navbar from "./components/Navbar";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://organheal.com"),
+  metadataBase: new URL("https://www.organheal.com"),
 
   title: {
     default: "OrganHeal AI | AI-Powered Health Intelligence",
@@ -38,7 +39,7 @@ export const metadata: Metadata = {
     title: "OrganHeal AI | AI-Powered Health Intelligence",
     description:
       "Understand organ health, track wellness patterns, interpret labs, and generate personalized health reports with OrganHeal AI.",
-    url: "https://organheal.com",
+    url: "https://www.organheal.com",
     siteName: "OrganHeal AI",
     images: [
       {
@@ -69,7 +70,7 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: ReactNode;
 }>) {
   return (
     <html lang="en">

@@ -2,15 +2,21 @@ import type { MetadataRoute } from "next";
 import { blogPosts } from "../lib/blogData";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://organheal.com";
+  const baseUrl = "https://www.organheal.com";
 
   const routes = [
     "",
     "/about",
     "/blog",
+    "/pricing",
+    "/library",
     "/assessment",
-    "/lab-analyzer",
-    "/organ-report",
+    "/heart",
+    "/brain",
+    "/kidney",
+    "/liver",
+    "/lung",
+    "/metabolic",
   ];
 
   const staticRoutes = routes.map((route) => ({
