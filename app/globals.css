@@ -4850,7 +4850,7 @@ html[dir="rtl"] .homeHeroActions {
   font-size: 14px;
 }
 
-/* â”€â”€ Phase 33 Health Plan Personalization â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Phase 33 Health Plan Personalization Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 .healthPlanIntelligencePage {
   min-height: 100vh;
   padding: 52px 20px 88px;
@@ -5197,7 +5197,7 @@ html[dir="rtl"] .homeHeroActions {
     grid-template-columns: 1fr;
   }
 }
-/* ── Phase 34 Pricing Subscription Value Layer ───────────── */
+/* â”€â”€ Phase 34 Pricing Subscription Value Layer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .pricingValuePage {
   min-height: 100vh;
   padding: 52px 20px 88px;
@@ -5482,4 +5482,12 @@ html[dir="rtl"] .homeHeroActions {
     width: 100%;
     text-align: center;
   }
+}
+.launchPlanNote {
+  margin: 16px auto 0;
+  max-width: 780px;
+  color: #64748b;
+  line-height: 1.7;
+  text-align: center;
+  font-weight: 800;
 }
