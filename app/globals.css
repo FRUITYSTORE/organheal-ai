@@ -2356,7 +2356,86 @@ html[dir="rtl"] .homeHeroActions {
   padding: 12px 18px;
   font-size: 15px;
 }
+/* ── Health Plan Action Tasks Polish ─────────────────────── */
 
+.healthPlanPage .healthPlanTaskItem {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 54px;
+  padding: 13px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(15, 23, 42, 0.42);
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.healthPlanPage .healthPlanTaskItem:hover {
+  border-color: rgba(103, 232, 249, 0.55);
+  background: rgba(15, 23, 42, 0.68);
+  transform: translateY(-1px);
+}
+
+.healthPlanPage .healthPlanTaskItem.completed {
+  border-color: rgba(34, 197, 94, 0.45);
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.healthPlanPage .healthPlanTaskCheckbox {
+  width: 18px;
+  height: 18px;
+  accent-color: #22c55e;
+  cursor: pointer;
+}
+
+.healthPlanPage .healthPlanTaskText {
+  color: #e5e7eb;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.healthPlanPage .healthPlanTaskItem.completed .healthPlanTaskText {
+  color: #a7f3d0;
+  text-decoration: line-through;
+  text-decoration-color: rgba(34, 197, 94, 0.65);
+  text-decoration-thickness: 1px;
+}
+
+.healthPlanPage .healthPlanTaskStatus {
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.12);
+  color: #cbd5e1;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.healthPlanPage .healthPlanTaskItem.completed .healthPlanTaskStatus {
+  background: rgba(34, 197, 94, 0.16);
+  color: #86efac;
+}
+
+@media (max-width: 640px) {
+  .healthPlanPage .healthPlanTaskItem {
+    grid-template-columns: auto 1fr;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .healthPlanPage .healthPlanTaskCheckbox {
+    margin-top: 2px;
+  }
+
+  .healthPlanPage .healthPlanTaskStatus {
+    grid-column: 2;
+    width: fit-content;
+    margin-top: -2px;
+  }
+}
 @media (max-width: 640px) {
   .healthPlanPage .assistantContainer {
     width: 100%;

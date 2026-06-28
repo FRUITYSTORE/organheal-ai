@@ -673,27 +673,31 @@ export default function HealthPlanPage() {
                 </p>
 
                 <div style={{ display: "grid", gap: "14px", marginTop: "20px" }}>
-                  {planTasks.map((task) => (
-                    <label
-                      key={task}
-                      style={{
-                        display: "flex",
-                        gap: "12px",
-                        alignItems: "center",
-                        padding: "14px",
-                        borderRadius: "14px",
-                        border: "1px solid rgba(255,255,255,0.2)",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={completedTasks.includes(task)}
-                        onChange={() => toggleTask(task)}
-                      />
-                      <span>{task}</span>
-                    </label>
-                  ))}
+                                    {planTasks.map((task) => {
+                    const isCompleted = completedTasks.includes(task);
+
+                    return (
+                      <label
+                        key={task}
+                        className={`healthPlanTaskItem ${
+                          isCompleted ? "completed" : ""
+                        }`}
+                      >
+                        <input
+                          className="healthPlanTaskCheckbox"
+                          type="checkbox"
+                          checked={isCompleted}
+                          onChange={() => toggleTask(task)}
+                        />
+
+                        <span className="healthPlanTaskText">{task}</span>
+
+                        <span className="healthPlanTaskStatus" aria-hidden="true">
+                          {isCompleted ? "Done" : "To do"}
+                        </span>
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
 
