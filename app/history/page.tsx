@@ -1,22 +1,16 @@
 "use client";
+
 import PageBackActions from "../components/PageBackActions";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { supabase } from "../../lib/supabase";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
 
 type HealthHistory = {
   id: string;
   module_name: string;
   score: number;
-  status: string;
-  notes: string;
+  status: string | null;
+  notes: string | null;
   created_at: string;
 };
 
@@ -32,19 +26,45 @@ type DailyCheckIn = {
   created_at: string;
 };
 
-const filters = [
-  "All",
-  "Heart",
-  "Lung",
-  "Kidney",
-  "Liver",
-  "Brain",
-  "Metabolic",
-];
+type UploadedReport = {
+  id: number;
+  file_name: string | null;
+  extraction_status: string | null;
+  created_at: string;
+};
+
+type HealthInsight = {
+  id: number;
+  report_id: number | null;
+  ai_status: string | null;
+  insight_title: string | null;
+  created_at: string | null;
+};
+
+type SavedIntelligence = {
+  insight_id: number;
+  updated_at: string | null;
+};
+
+type TimelineItem = {
+  id: string;
+  type: "Assessment" | "Check-In" | "Report" | "Intelligence";
+  title: string;
+  subtitle: string;
+  score?: number | null;
+  date: string;
+  href: string;
+};
 
 export default function HistoryPage() {
   const [history, setHistory] = useState<HealthHistory[]>([]);
   const [dailyCheckIns, setDailyCheckIns] = useState<DailyCheckIn[]>([]);
+  const [uploadedReports, setUploadedReports] = useState<UploadedReport[]>([]);
+  const [healthInsights, setHealthInsights] = useState<HealthInsight[]>([]);
+  const [savedIntelligence, setSavedIntelligence] = useState<SavedIntelligence[]>(
+    []
+  );
+
   const [selectedFilter, setSelectedFilter] = useState("All");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
@@ -55,6 +75,7 @@ export default function HistoryPage() {
 
   async function fetchHistory() {
     setLoading(true);
+    setMessage("");
 
     const { data: userData, error: userError } = await supabase.auth.getUser();
 
@@ -64,10 +85,12 @@ export default function HistoryPage() {
       return;
     }
 
+    const userId = userData.user.id;
+
     const { data: historyData, error: historyError } = await supabase
       .from("health_history")
       .select("id, module_name, score, status, notes, created_at")
-      .eq("user_id", userData.user.id)
+      .eq("user_id", userId)
       .order("created_at", { ascending: false });
 
     if (historyError) {
@@ -81,7 +104,7 @@ export default function HistoryPage() {
       .select(
         "id, mood, energy_level, stress_level, sleep_quality, hydration, physical_activity, wellness_score, created_at"
       )
-      .eq("user_id", userData.user.id)
+      .eq("user_id", userId)
       .order("created_at", { ascending: false });
 
     if (checkInError) {
@@ -90,406 +113,287 @@ export default function HistoryPage() {
       return;
     }
 
-    setHistory(historyData || []);
-    setDailyCheckIns(checkInData || []);
+    const { data: reportData } = await supabase
+      .from("uploaded_lab_files")
+      .select("id, file_name, extraction_status, created_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+
+    const { data: insightData } = await supabase
+      .from("health_insights")
+      .select("id, report_id, ai_status, insight_title, created_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+
+    const insightIds = (insightData || []).map((item) => item.id);
+
+    let savedDataRows: SavedIntelligence[] = [];
+
+    if (insightIds.length > 0) {
+      const { data: savedData } = await supabase
+        .from("generated_intelligence_results")
+        .select("insight_id, updated_at")
+        .eq("user_id", userId)
+        .in("insight_id", insightIds)
+        .order("updated_at", { ascending: false });
+
+      savedDataRows = savedData || [];
+    }
+
+    setHistory((historyData || []) as HealthHistory[]);
+    setDailyCheckIns((checkInData || []) as DailyCheckIn[]);
+    setUploadedReports((reportData || []) as UploadedReport[]);
+    setHealthInsights((insightData || []) as HealthInsight[]);
+    setSavedIntelligence(savedDataRows);
     setLoading(false);
   }
 
   function getScoreClass(score: number) {
     if (score >= 80) return "goodScore";
-    if (score >= 50) return "moderateScore";
+    if (score >= 60) return "moderateScore";
     return "riskScore";
   }
 
-  function getTrend(item: HealthHistory) {
-    const sameModuleRecords = history
-      .filter((record) => record.module_name === item.module_name)
-      .sort(
-        (a, b) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
+  function getScoreStatus(score: number) {
+    if (score >= 80) return "Strong";
+    if (score >= 60) return "Stable";
+    if (score >= 40) return "Needs Attention";
+    return "Recovery Needed";
+  }
 
-    const currentIndex = sameModuleRecords.findIndex(
-      (record) => record.id === item.id
-    );
+  const allScores = [
+    ...history.map((item) => item.score),
+    ...dailyCheckIns.map((item) => item.wellness_score),
+  ];
 
-    const previousRecord = sameModuleRecords[currentIndex + 1];
+  const overallProgressScore =
+    allScores.length > 0
+      ? Math.round(allScores.reduce((sum, score) => sum + score, 0) / allScores.length)
+      : 0;
 
-    if (!previousRecord) {
+  const latestAssessment = history[0] || null;
+  const latestCheckIn = dailyCheckIns[0] || null;
+
+  const bestAssessment =
+    history.length > 0 ? [...history].sort((a, b) => b.score - a.score)[0] : null;
+
+  const priorityAssessment =
+    history.length > 0 ? [...history].sort((a, b) => a.score - b.score)[0] : null;
+
+  const processedReports = uploadedReports.filter(
+    (item) => item.extraction_status === "Completed"
+  ).length;
+
+  const pendingReports = uploadedReports.filter(
+    (item) => item.extraction_status !== "Completed"
+  ).length;
+
+  const savedIntelligenceIds = new Set(
+    savedIntelligence.map((item) => item.insight_id)
+  );
+
+  const generatedInsights = healthInsights.filter(
+    (item) => item.ai_status === "Generated" || savedIntelligenceIds.has(item.id)
+  );
+
+  const assessmentTrend = useMemo(() => {
+    if (history.length < 2) {
       return {
-        text: "First recorded result",
-        symbol: "•",
+        label: "Assessment trend not ready",
+        description:
+          "Complete at least two assessments to compare progress over time.",
         className: "",
       };
     }
 
-    const difference = item.score - previousRecord.score;
+    const latest = history[0];
+    const previous = history[1];
+    const difference = latest.score - previous.score;
 
     if (difference > 0) {
       return {
-        text: `Improved by +${difference} points`,
-        symbol: "↑",
+        label: "Assessment progress improving",
+        description: `${latest.module_name} improved by ${difference} points compared with the previous record.`,
         className: "goodScore",
       };
     }
 
     if (difference < 0) {
       return {
-        text: `Declined by ${difference} points`,
-        symbol: "↓",
+        label: "Assessment progress declined",
+        description: `${latest.module_name} declined by ${Math.abs(
+          difference
+        )} points. Review your follow-up plan and reassess after 4 weeks.`,
         className: "riskScore",
       };
     }
 
     return {
-      text: "No change since previous result",
-      symbol: "→",
+      label: "Assessment progress stable",
+      description:
+        "Your latest assessment score is stable compared with the previous record.",
       className: "moderateScore",
     };
-  }
+  }, [history]);
 
-  function getAchievements() {
-    const milestones: string[] = [];
-
-    const hasAllOrgans = filters
-      .filter((item) => item !== "All")
-      .every((organ) => history.some((item) => item.module_name === organ));
-
-    if (hasAllOrgans) {
-      milestones.push("✅ Full Organ Review Completed");
-    }
-
-    const highRiskArea = history.find((item) => item.score < 50);
-
-    if (highRiskArea) {
-      milestones.push(`⚠️ ${highRiskArea.module_name} Needs Priority Follow-up`);
-    }
-
-    const bestArea = history
-      .filter((item) => item.score >= 80)
-      .sort((a, b) => b.score - a.score)[0];
-
-    if (bestArea) {
-      milestones.push(`🌟 Strong Area Identified: ${bestArea.module_name}`);
-    }
-
-    const heartRecords = history
-      .filter((item) => item.module_name === "Heart")
-      .sort(
-        (a, b) =>
-          new Date(a.created_at).getTime() -
-          new Date(b.created_at).getTime()
-      );
-
-    if (heartRecords.length >= 2) {
-      const first = heartRecords[0].score;
-      const latest = heartRecords[heartRecords.length - 1].score;
-
-      if (latest > first) {
-        milestones.push(`📈 Heart Improved by ${latest - first} Points`);
-      }
-
-      if (latest < first) {
-        milestones.push(`📉 Heart Declined by ${first - latest} Points`);
-      }
-    }
-
-    if (milestones.length === 0) {
-      milestones.push("📌 Keep tracking your assessments to unlock milestones");
-    }
-
-    return milestones;
-  }
-
-  function getWellnessTrend() {
+  const wellnessTrend = useMemo(() => {
     if (dailyCheckIns.length < 2) {
       return {
-        title: "Not Enough Wellness Data",
-        message:
-          "Complete at least two daily check-ins to receive wellness trend insights.",
+        label: "Wellness trend not ready",
+        description:
+          "Complete at least two check-ins to compare wellness movement.",
         className: "",
       };
     }
 
-    const sortedCheckIns = [...dailyCheckIns].sort(
-      (a, b) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    );
-
-    const latest = sortedCheckIns[0];
-    const previous = sortedCheckIns[1];
+    const latest = dailyCheckIns[0];
+    const previous = dailyCheckIns[1];
     const difference = latest.wellness_score - previous.wellness_score;
 
     if (difference > 0) {
       return {
-        title: "📈 Wellness Improved",
-        message: `Your wellness score improved by ${difference} points compared with your previous check-in. Keep following your current routine and repeat your check-in tomorrow.`,
+        label: "Wellness improving",
+        description: `Your wellness score improved by ${difference} points compared with your previous check-in.`,
         className: "goodScore",
       };
     }
 
     if (difference < 0) {
       return {
-        title: "📉 Wellness Declined",
-        message: `Your wellness score decreased by ${Math.abs(
+        label: "Wellness needs attention",
+        description: `Your wellness score decreased by ${Math.abs(
           difference
-        )} points compared with your previous check-in. Focus on sleep, stress, hydration, and recovery today.`,
+        )} points. Focus on sleep, stress, hydration, and recovery today.`,
         className: "riskScore",
       };
     }
 
     return {
-      title: "➡️ Wellness Stable",
-      message:
-        "Your wellness score stayed the same compared with your previous check-in. Continue tracking your daily patterns.",
+      label: "Wellness stable",
+      description:
+        "Your wellness score stayed the same compared with your previous check-in.",
       className: "moderateScore",
     };
-  }function getForecastConfidence(change: number) {
-  const absChange = Math.abs(change);
+  }, [dailyCheckIns]);
 
-  if (absChange >= 15) return "High";
-  if (absChange >= 5) return "Moderate";
-
-  return "Low";
-}function getForecastV2() {
-  if (history.length < 2) {
-    return null;
-  }
-
-  const sortedRecords = [...history].sort(
-    (a, b) =>
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-  );
-
-  const latest = sortedRecords[0];
-  const previous = sortedRecords[1];
-
-  const change = latest.score - previous.score;
-
-  const thirtyDayForecast = Math.max(
-    0,
-    Math.min(100, latest.score + Math.round(change * 0.5))
-  );
-
-  const ninetyDayForecast = Math.max(
-    0,
-    Math.min(100, latest.score + Math.round(change * 1.5))
-  );
-
-  const potentialForecast =
-    latest.score < 50
-      ? Math.min(100, latest.score + 20)
-      : latest.score < 60
-      ? Math.min(100, latest.score + 16)
-      : latest.score < 70
-      ? Math.min(100, latest.score + 12)
-      : latest.score < 80
-      ? Math.min(100, latest.score + 8)
-      : Math.min(100, latest.score + 4);
-
-  const confidence =
-    Math.abs(change) >= 15
-      ? "High"
-      : Math.abs(change) >= 5
-      ? "Moderate"
-      : "Low";
-
-  const forecastRisk =
-    ninetyDayForecast < 50
-      ? "High"
-      : ninetyDayForecast < 70
-      ? "Moderate"
-      : "Low";
-
-  const direction =
-    change > 0 ? "Improving" : change < 0 ? "Declining" : "Stable";
-
-  return {
-    latestScore: latest.score,
-    previousScore: previous.score,
-    change,
-    direction,
-    thirtyDayForecast,
-    ninetyDayForecast,
-    potentialForecast,
-    confidence,
-    forecastRisk,
-  };
-}
-function getHealthForecasts() {
-  const modules = filters.filter((item) => item !== "All");
-
-  return modules
-    .map((module) => {
-      const records = history
-        .filter((item) => item.module_name === module)
-        .sort(
-          (a, b) =>
-            new Date(b.created_at).getTime() -
-            new Date(a.created_at).getTime()
-        );
-
-      if (records.length < 2) {
-        return null;
-      }
-
-      const latest = records[0];
-      const previous = records[1];
-      const difference = latest.score - previous.score;
-const expectedNextScore = Math.max(
-  0,
-  Math.min(100, latest.score + difference)
-);
-
-const confidence = getForecastConfidence(difference);
-      let trend = "Stable";
-      let message =
-        "Your score is stable compared with the previous assessment.";
-      let forecast =
-        "Continue monitoring this area and repeat assessment after 4 weeks.";
-      let className = "moderateScore";
-
-      if (difference > 0) {
-        trend = "Improving";
-        message = `${module} improved by ${difference} points compared with the previous assessment.`;
-        forecast = `If this trend continues, ${module} may improve by another 5–15 points in the next assessment cycle.`;
-        className = "goodScore";
-      }
-
-      if (difference < 0) {
-        trend = "Declining";
-        message = `${module} declined by ${Math.abs(
-          difference
-        )} points compared with the previous assessment.`;
-        forecast = `${module} needs closer attention. Follow the recommended plan and reassess after 4 weeks.`;
-        className = "riskScore";
-      }
-
-      return {
-  module,
-  latestScore: latest.score,
-  previousScore: previous.score,
-  expectedNextScore,
-  confidence,
-        difference,
-        trend,
-        message,
-        forecast,
-        className,
-      };
-    })
-    .filter(Boolean);
-}
-  const filteredHistory =
-    selectedFilter === "All"
-      ? history
-      : history.filter((item) => item.module_name === selectedFilter);
-
-  const latestRecord = filteredHistory[0];
-
-  const bestScore =
-    filteredHistory.length > 0
-      ? Math.max(...filteredHistory.map((item) => item.score))
-      : 0;
-
-  const lowestScore =
-    filteredHistory.length > 0
-      ? Math.min(...filteredHistory.map((item) => item.score))
-      : 0;
-
-  const averageScore =
-    filteredHistory.length > 0
-      ? Math.round(
-          filteredHistory.reduce((sum, item) => sum + item.score, 0) /
-            filteredHistory.length
-        )
-      : 0;
-function getHealthGoals() {
-  const modules = filters.filter((item) => item !== "All");
-
-  return modules
-    .map((module) => {
-      const records = history
-        .filter((item) => item.module_name === module)
-        .sort(
-          (a, b) =>
-            new Date(b.created_at).getTime() -
-            new Date(a.created_at).getTime()
-        );
-
-      if (records.length === 0) return null;
-
-      const latest = records[0];
-      const targetScore = latest.score < 50 ? 70 : latest.score < 80 ? 85 : 95;
-
-      const progress = Math.min(
-        100,
-        Math.round((latest.score / targetScore) * 100)
-      );
-
-      return {
-        module,
-        currentScore: latest.score,
-        targetScore,
-        progress,
-        status:
-          progress >= 100
-            ? "Goal Reached"
-            : progress >= 75
-            ? "Close to Goal"
-            : "In Progress",
-      };
-    })
-    .filter(Boolean);
-}
-  const achievements = getAchievements();
-  const wellnessTrend = getWellnessTrend();
-  const healthForecasts = getHealthForecasts();
-  const forecastV2 = getForecastV2();
-  const healthGoals = getHealthGoals();
-const overallHealthScore =
-  history.length > 0
-    ? Math.round(
-        history.reduce((sum, item) => sum + item.score, 0) /
-          history.length
-      )
-    : 0;
-
-const bestOrgan =
-  history.length > 0
-    ? [...history].sort((a, b) => b.score - a.score)[0]
-    : null;
-
-const priorityOrgan =
-  history.length > 0
-    ? [...history].sort((a, b) => a.score - b.score)[0]
-    : null;
-  const chartData = filteredHistory
-    .slice()
-    .sort(
-      (a, b) =>
-        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-    )
-    .map((item) => ({
-      date: new Date(item.created_at).toLocaleDateString(),
+  const timelineItems: TimelineItem[] = [
+    ...history.map((item) => ({
+      id: `assessment-${item.id}`,
+      type: "Assessment" as const,
+      title: item.module_name,
+      subtitle: item.status || "Assessment saved",
       score: item.score,
-    }));
+      date: item.created_at,
+      href: "/assessment",
+    })),
+
+    ...dailyCheckIns.map((item) => ({
+      id: `checkin-${item.id}`,
+      type: "Check-In" as const,
+      title: `Wellness Check-In · ${item.mood}`,
+      subtitle: `Energy ${item.energy_level}/5 · Sleep ${item.sleep_quality}/5 · Stress ${item.stress_level}/5`,
+      score: item.wellness_score,
+      date: item.created_at,
+      href: "/checkin",
+    })),
+
+    ...uploadedReports.map((item) => ({
+      id: `report-${item.id}`,
+      type: "Report" as const,
+      title: item.file_name || "Medical report",
+      subtitle: item.extraction_status || "Uploaded",
+      score: null,
+      date: item.created_at,
+      href: "/reports",
+    })),
+
+    ...generatedInsights.map((item) => ({
+      id: `intelligence-${item.id}`,
+      type: "Intelligence" as const,
+      title: item.insight_title || "Saved health intelligence",
+      subtitle:
+        item.ai_status === "Generated"
+          ? "Generated intelligence result"
+          : "Saved intelligence result",
+      score: null,
+      date: item.created_at || new Date().toISOString(),
+      href: "/intelligence",
+    })),
+  ].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+
+  const filters = ["All", "Assessment", "Check-In", "Report", "Intelligence"];
+
+  const filteredTimeline =
+    selectedFilter === "All"
+      ? timelineItems
+      : timelineItems.filter((item) => item.type === selectedFilter);
+
+  const recommendedAction =
+    history.length === 0
+      ? {
+          label: "Start your progress history",
+          description:
+            "Complete an assessment so OrganHeal can begin building your progress timeline.",
+          href: "/assessment",
+          buttonText: "Start Assessment",
+        }
+      : dailyCheckIns.length === 0
+      ? {
+          label: "Add wellness tracking",
+          description:
+            "Complete a daily check-in so your progress timeline reflects how you feel today.",
+          href: "/checkin",
+          buttonText: "Open Check-In",
+        }
+      : uploadedReports.length === 0
+      ? {
+          label: "Add medical reports",
+          description:
+            "Upload a medical report to connect your progress timeline with report intelligence.",
+          href: "/lab-upload",
+          buttonText: "Upload Report",
+        }
+      : savedIntelligence.length === 0
+      ? {
+          label: "Generate saved intelligence",
+          description:
+            "Open Intelligence Center to generate and save report-based health intelligence.",
+          href: "/intelligence",
+          buttonText: "Open Intelligence",
+        }
+      : {
+          label: "Continue your follow-up plan",
+          description:
+            "Your history has assessments, check-ins, reports, and saved intelligence. Continue with your health plan.",
+          href: "/health-plan",
+          buttonText: "Open Health Plan",
+        };
+
+  const hasAnyHistory = timelineItems.length > 0;
 
   return (
     <main className="assistantPage">
       <div className="assistantContainer">
         <PageBackActions />
+
         <div className="assistantHeader">
           <p className="assistantBadge">HEALTH HISTORY</p>
-          <h1>Health History Timeline</h1>
+          <h1>Progress Timeline</h1>
           <p>
-            Review saved assessment results, daily wellness check-ins, trends,
-            milestones, and progress over time.
+            Review your assessments, wellness check-ins, uploaded reports, saved
+            intelligence, trends, and recommended next step.
           </p>
         </div>
 
         <div className="chatWindow">
-          {loading && <p>Loading health history...</p>}
+          {loading && (
+            <div className="resultBox">
+              <p className="sectionLabel">Loading History</p>
+              <h2>Preparing your progress timeline...</h2>
+            </div>
+          )}
 
           {!loading && message && (
             <div className="resultBox">
@@ -497,112 +401,131 @@ const priorityOrgan =
               <h2>Access Protected</h2>
               <p>{message}</p>
 
-              <a href="/login">
-                <button className="primaryBtn">Login</button>
-              </a>
+              <Link href="/login" className="primaryBtn">
+                Login
+              </Link>
             </div>
           )}
 
-          {!loading && !message && history.length === 0 && (
-            <div className="resultBox">
-              <p className="sectionLabel">No History Yet</p>
-              <h2>No saved results</h2>
-              <p>
-                Complete an assessment to start building your health timeline.
-              </p>
-
-              <a href="/assessment">
-                <button className="primaryBtn">Start Assessment</button>
-              </a>
-            </div>
-          )}
-
-          {!loading && !message && history.length > 0 && (
+          {!loading && !message && (
             <>
-            <div className="resultBox">
-  <p className="sectionLabel">
-    🧠 Overall Health Intelligence
-  </p>
+              <div className="resultBox">
+                <p className="sectionLabel">Recommended Next Step</p>
 
-  <h2 className={getScoreClass(overallHealthScore)}>
-    {overallHealthScore}/100
-  </h2>
+                <h2>{recommendedAction.label}</h2>
 
-  <p>
-    Based on all completed assessments and historical records.
-  </p>
+                <p
+                  style={{
+                    opacity: 0.82,
+                    lineHeight: 1.7,
+                    marginBottom: "18px",
+                  }}
+                >
+                  {recommendedAction.description}
+                </p>
 
-  <div
-    style={{
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))",
-      gap: "16px",
-      marginTop: "20px",
-    }}
-  >
-    <div>
-      <strong>🌟 Best Organ</strong>
-      <p>
-        {bestOrgan
-          ? `${bestOrgan.module_name} (${bestOrgan.score}/100)`
-          : "N/A"}
-      </p>
-    </div>
+                <Link href={recommendedAction.href} className="primaryBtn">
+                  {recommendedAction.buttonText}
+                </Link>
+              </div>
 
-    <div>
-      <strong>⚠️ Priority Organ</strong>
-      <p>
-        {priorityOrgan
-          ? `${priorityOrgan.module_name} (${priorityOrgan.score}/100)`
-          : "N/A"}
-      </p>
-    </div>
-  </div>
-</div>
               <div className="assessmentForm">
                 <div className="resultBox">
-                  <p className="sectionLabel">Total Records</p>
-                  <h2>{filteredHistory.length}</h2>
-                  <p>Saved assessment records.</p>
-                </div>
-
-                <div className="resultBox">
-                  <p className="sectionLabel">Latest Score</p>
-                  <h2
-                    className={
-                      latestRecord ? getScoreClass(latestRecord.score) : ""
-                    }
-                  >
-                    {latestRecord ? `${latestRecord.score}/100` : "N/A"}
+                  <p className="sectionLabel">Overall Progress Score</p>
+                  <h2 className={getScoreClass(overallProgressScore)}>
+                    {overallProgressScore}/100
                   </h2>
-                  <p>{latestRecord ? latestRecord.module_name : "No record"}</p>
+                  <h3>
+                    {allScores.length > 0
+                      ? getScoreStatus(overallProgressScore)
+                      : "No Data Yet"}
+                  </h3>
                 </div>
 
                 <div className="resultBox">
-                  <p className="sectionLabel">Best Score</p>
-                  <h2 className={getScoreClass(bestScore)}>{bestScore}/100</h2>
-                  <p>Highest saved score.</p>
+                  <p className="sectionLabel">Assessments</p>
+                  <h2>{history.length}</h2>
+                  <p>Total saved assessment records.</p>
                 </div>
 
                 <div className="resultBox">
-                  <p className="sectionLabel">Average Score</p>
-                  <h2 className={getScoreClass(averageScore)}>
-                    {averageScore}/100
-                  </h2>
-                  <p>Average based on selected records.</p>
+                  <p className="sectionLabel">Check-Ins</p>
+                  <h2>{dailyCheckIns.length}</h2>
+                  <p>Total wellness check-ins saved.</p>
                 </div>
 
                 <div className="resultBox">
-                  <p className="sectionLabel">Lowest Score</p>
-                  <h2 className={getScoreClass(lowestScore)}>
-                    {lowestScore}/100
-                  </h2>
-                  <p>Lowest saved score.</p>
+                  <p className="sectionLabel">Reports</p>
+                  <h2>{uploadedReports.length}</h2>
+                  <p>
+                    {processedReports} processed · {pendingReports} pending
+                  </p>
+                </div>
+
+                <div className="resultBox">
+                  <p className="sectionLabel">Saved Intelligence</p>
+                  <h2>{savedIntelligence.length}</h2>
+                  <p>Saved intelligence results connected to your reports.</p>
+                </div>
+
+                <div className="resultBox">
+                  <p className="sectionLabel">Priority Focus</p>
+                  <h2>{priorityAssessment?.module_name || "N/A"}</h2>
+                  <p>
+                    {priorityAssessment
+                      ? `Lowest assessment score: ${priorityAssessment.score}/100`
+                      : "Complete assessments to identify a priority area."}
+                  </p>
                 </div>
               </div>
 
               <div className="resultBox">
-                <p className="sectionLabel">Filter History</p>
+                <p className="sectionLabel">Progress Trends</p>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                    gap: "14px",
+                    textAlign: "left",
+                  }}
+                >
+                  <div>
+                    <strong className={assessmentTrend.className}>
+                      {assessmentTrend.label}
+                    </strong>
+                    <p>{assessmentTrend.description}</p>
+                  </div>
+
+                  <div>
+                    <strong className={wellnessTrend.className}>
+                      {wellnessTrend.label}
+                    </strong>
+                    <p>{wellnessTrend.description}</p>
+                  </div>
+
+                  <div>
+                    <strong>Best Assessment</strong>
+                    <p>
+                      {bestAssessment
+                        ? `${bestAssessment.module_name} · ${bestAssessment.score}/100`
+                        : "No assessment yet"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <strong>Latest Check-In</strong>
+                    <p>
+                      {latestCheckIn
+                        ? `${latestCheckIn.wellness_score}/100 · ${latestCheckIn.mood}`
+                        : "No check-in yet"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="resultBox">
+                <p className="sectionLabel">Filter Timeline</p>
 
                 <div
                   style={{
@@ -627,78 +550,56 @@ const priorityOrgan =
               </div>
 
               <div className="resultBox">
-                <p className="sectionLabel">🏅 Health Milestones</p>
+                <p className="sectionLabel">Progress Timeline</p>
 
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "12px",
-                    marginTop: "20px",
-                  }}
-                >
-                  {achievements.map((achievement, index) => (
-                    <div key={index}>{achievement}</div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="resultBox">
-                <p className="sectionLabel">☀️ Daily Wellness History</p>
-
-                {dailyCheckIns.length === 0 ? (
+                {!hasAnyHistory ? (
                   <>
-                    <h2>No check-ins yet</h2>
+                    <h2>No saved progress yet</h2>
                     <p>
-                      Complete your daily check-in to start tracking wellness
-                      patterns.
+                      Start with an assessment or daily check-in to build your
+                      progress timeline.
                     </p>
 
-                    <a href="/checkin">
-                      <button className="primaryBtn">
-                        Start Daily Check-In
-                      </button>
-                    </a>
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "12px",
+                        justifyContent: "center",
+                        flexWrap: "wrap",
+                        marginTop: "18px",
+                      }}
+                    >
+                      <Link href="/assessment" className="primaryBtn">
+                        Start Assessment
+                      </Link>
+
+                      <Link href="/checkin" className="secondaryBtn">
+                        Open Check-In
+                      </Link>
+                    </div>
                   </>
+                ) : filteredTimeline.length === 0 ? (
+                  <p>No records found for this filter.</p>
                 ) : (
-                  <div style={{ display: "grid", gap: "14px" }}>
-                    {dailyCheckIns.slice(0, 7).map((item) => (
-                      <div
-                        key={item.id}
-                        style={{
-                          display: "grid",
-                          gridTemplateColumns: "1fr auto",
-                          gap: "12px",
-                          alignItems: "center",
-                          padding: "16px",
-                          borderRadius: "16px",
-                          background: "rgba(15, 23, 42, 0.75)",
-                          border: "1px solid rgba(34, 211, 238, 0.18)",
-                          textAlign: "left",
-                        }}
-                      >
-                        <div>
-                          <h3 style={{ margin: "0 0 6px" }}>{item.mood}</h3>
+                  <div className="healthTimeline">
+                    {filteredTimeline.map((item) => (
+                      <div className="timelineItem active" key={item.id}>
+                        <strong>
+                          {item.type}: {item.title}
+                        </strong>
 
-                          <p style={{ margin: "0 0 6px" }}>
-                            Energy {item.energy_level}/5 · Sleep{" "}
-                            {item.sleep_quality}/5 · Stress{" "}
-                            {item.stress_level}/5
-                          </p>
+                        <span>
+                          {item.score !== null && item.score !== undefined
+                            ? `${item.score}/100 · `
+                            : ""}
+                          {item.subtitle}
+                        </span>
 
-                          <p style={{ margin: 0 }}>
-                            {new Date(item.created_at).toLocaleString()}
-                          </p>
-                        </div>
+                        <span>{new Date(item.date).toLocaleString()}</span>
 
-                        <div style={{ textAlign: "right" }}>
-                          <h2
-                            className={getScoreClass(item.wellness_score)}
-                            style={{ margin: 0 }}
-                          >
-                            {item.wellness_score}/100
-                          </h2>
-                        </div>
+                        <Link href={item.href} className="secondaryBtn">
+                          Open
+                        </Link>
                       </div>
                     ))}
                   </div>
@@ -706,257 +607,54 @@ const priorityOrgan =
               </div>
 
               <div className="resultBox">
-                <p className="sectionLabel">🧠 Wellness Trend Intelligence</p>
+                <p className="sectionLabel">History Journey</p>
 
-                <h2 className={wellnessTrend.className}>
-                  {wellnessTrend.title}
-                </h2>
+                <h2>Continue from your progress timeline</h2>
 
-                <p>{wellnessTrend.message}</p>
-              </div>
-<div className="resultBox">
-  <p className="sectionLabel">🎯 Health Goals System</p>
+                <p
+                  style={{
+                    opacity: 0.82,
+                    lineHeight: 1.7,
+                    maxWidth: "760px",
+                    margin: "0 auto 22px",
+                  }}
+                >
+                  Your history connects assessments, wellness check-ins,
+                  reports, saved intelligence, and your follow-up plan.
+                </p>
 
-  {healthGoals.length === 0 ? (
-    <p>Complete assessments to generate health goals.</p>
-  ) : (
-    <div style={{ display: "grid", gap: "14px" }}>
-      {healthGoals.map((goal: any) => (
-        <div
-          key={goal.module}
-          style={{
-            padding: "16px",
-            borderRadius: "16px",
-            background: "rgba(15, 23, 42, 0.75)",
-            border: "1px solid rgba(34, 211, 238, 0.18)",
-            textAlign: "left",
-          }}
-        >
-          <h3 style={{ margin: "0 0 8px" }}>{goal.module}</h3>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "12px",
+                    justifyContent: "center",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <Link href="/dashboard" className="secondaryBtn">
+                    Dashboard
+                  </Link>
 
-          <p>
-            Current: {goal.currentScore}/100 → Target: {goal.targetScore}/100
-          </p>
+                  <Link href="/profile" className="secondaryBtn">
+                    Profile
+                  </Link>
 
-          <h3>{goal.status}</h3>
+                  <Link href="/checkin" className="secondaryBtn">
+                    Check-In
+                  </Link>
 
-          <div
-            style={{
-              width: "100%",
-              height: "12px",
-              background: "rgba(255,255,255,0.12)",
-              borderRadius: "999px",
-              overflow: "hidden",
-              marginTop: "12px",
-            }}
-          >
-            <div
-              style={{
-                width: `${goal.progress}%`,
-                height: "100%",
-                background: "linear-gradient(90deg, #22c55e, #38bdf8)",
-                borderRadius: "999px",
-              }}
-            />
-          </div>
+                  <Link href="/reports" className="secondaryBtn">
+                    Reports
+                  </Link>
 
-          <p style={{ marginTop: "8px" }}>{goal.progress}% complete</p>
-        </div>
-      ))}
-    </div>
-  )}
-</div>
-<div className="resultBox">
-  <p className="sectionLabel">🔮 Predictive Health Forecast v2</p>
+                  <Link href="/intelligence" className="secondaryBtn">
+                    Intelligence
+                  </Link>
 
-  {!forecastV2 ? (
-    <p>
-      Complete at least two health records to generate predictive health
-      forecasts.
-    </p>
-  ) : (
-    <>
-      <h2 className={getScoreClass(forecastV2.ninetyDayForecast)}>
-        {forecastV2.ninetyDayForecast}/100
-      </h2>
-
-      <h3>{forecastV2.direction}</h3>
-
-      <p>
-        Forecast based on your latest score movement from{" "}
-        {forecastV2.previousScore}/100 to {forecastV2.latestScore}/100.
-      </p>
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-          gap: "14px",
-          marginTop: "18px",
-        }}
-      >
-        <div>
-          <strong>30-Day Forecast</strong>
-          <p>{forecastV2.thirtyDayForecast}/100</p>
-        </div>
-
-        <div>
-          <strong>90-Day Forecast</strong>
-          <p>{forecastV2.ninetyDayForecast}/100</p>
-        </div>
-
-        <div>
-          <strong>Potential Forecast</strong>
-          <p>{forecastV2.potentialForecast}/100</p>
-        </div>
-
-        <div>
-          <strong>Confidence</strong>
-          <p>{forecastV2.confidence}</p>
-        </div>
-
-        <div>
-          <strong>Forecast Risk</strong>
-          <p>{forecastV2.forecastRisk}</p>
-        </div>
-      </div>
-    </>
-  )}
-</div>
-<div className="resultBox">
-  <p className="sectionLabel">🔮 Health Forecast Engine</p>
-
-  {healthForecasts.length === 0 ? (
-    <p>
-      Complete at least two assessments for the same organ to generate health
-      forecasts.
-    </p>
-  ) : (
-    <div style={{ display: "grid", gap: "14px" }}>
-      {healthForecasts.map((item: any) => (
-        <div
-          key={item.module}
-          style={{
-            padding: "16px",
-            borderRadius: "16px",
-            background: "rgba(15, 23, 42, 0.75)",
-            border: "1px solid rgba(34, 211, 238, 0.18)",
-            textAlign: "left",
-          }}
-        >
-          <h3 style={{ margin: "0 0 8px" }}>{item.module}</h3>
-
-          <p>
-            Previous: {item.previousScore}/100 → Current:{" "}
-            {item.latestScore}/100
-          </p>
-
-          <h3 className={item.className}>{item.trend}</h3>
-
-          <p>{item.message}</p>
-
-          <p>
-            <strong>Forecast:</strong> {item.forecast}
-          </p>
-          <p>
-  <strong>Expected Next Score:</strong>{" "}
-  {item.expectedNextScore}/100
-</p>
-
-<p>
-  <strong>Confidence:</strong>{" "}
-  {item.confidence}
-</p>
-        </div>
-      ))}
-    </div>
-  )}
-</div>
-              <div className="resultBox">
-                <p className="sectionLabel">📈 Health Progress Chart</p>
-
-                {chartData.length < 2 ? (
-                  <p>Complete at least two assessments to view progress trends.</p>
-                ) : (
-                  <div style={{ width: "100%", height: "320px" }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={chartData}>
-                        <XAxis dataKey="date" />
-                        <YAxis domain={[0, 100]} />
-                        <Tooltip />
-                        <Line
-                          type="monotone"
-                          dataKey="score"
-                          strokeWidth={4}
-                          dot={{ r: 6 }}
-                          activeDot={{ r: 8 }}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                )}
-              </div>
-
-              <div className="resultBox">
-                <p className="sectionLabel">Timeline</p>
-
-                {filteredHistory.length === 0 ? (
-                  <p>No records found for this filter.</p>
-                ) : (
-                  <div style={{ display: "grid", gap: "14px" }}>
-                    {filteredHistory.map((item) => {
-                      const trend = getTrend(item);
-
-                      return (
-                        <div
-                          key={item.id}
-                          style={{
-                            display: "grid",
-                            gridTemplateColumns: "1fr auto",
-                            gap: "12px",
-                            alignItems: "center",
-                            padding: "16px",
-                            borderRadius: "16px",
-                            background: "rgba(15, 23, 42, 0.75)",
-                            border: "1px solid rgba(34, 211, 238, 0.18)",
-                            textAlign: "left",
-                          }}
-                        >
-                          <div>
-                            <h3 style={{ margin: "0 0 6px" }}>
-                              {item.module_name}
-                            </h3>
-
-                            <p style={{ margin: "0 0 6px" }}>{item.status}</p>
-
-                            <p style={{ margin: 0 }}>
-                              {new Date(item.created_at).toLocaleString()}
-                            </p>
-
-                            <p
-                              className={trend.className}
-                              style={{
-                                margin: "8px 0 0",
-                                fontWeight: 800,
-                              }}
-                            >
-                              {trend.symbol} {trend.text}
-                            </p>
-                          </div>
-
-                          <div style={{ textAlign: "right" }}>
-                            <h2
-                              className={getScoreClass(item.score)}
-                              style={{ margin: 0 }}
-                            >
-                              {item.score}/100
-                            </h2>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+                  <Link href="/health-plan" className="primaryBtn">
+                    Health Plan
+                  </Link>
+                </div>
               </div>
             </>
           )}
