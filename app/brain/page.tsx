@@ -191,8 +191,8 @@ export default function BrainPage() {
               <h3>{result.level}</h3>
               <p>{result.message}</p>
 
-              <a href="/organ-report">
-                <button className="secondaryBtn">View Organ Report</button>
+              <a href="/history">
+                <button className="secondaryBtn">View Progress Timeline</button>
               </a>
             </div>
           )}

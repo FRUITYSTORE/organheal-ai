@@ -163,8 +163,8 @@ async function loadHealthContext() {
               {isArabic ? "مركز الذكاء" : "Intelligence Center"}
             </Link>
 
-            <Link href="/organ-report" className="secondaryBtn">
-              {isArabic ? "التقرير" : "Report"}
+            <Link href="/history" className="secondaryBtn">
+              {isArabic ? "التقرير" : "History"}
             </Link>
           </div>
         </div>

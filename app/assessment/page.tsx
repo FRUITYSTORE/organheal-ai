@@ -16,8 +16,8 @@ export default function AssessmentPage() {
           </p>
 
           <div className="buttons">
-            <Link href="/organ-report">
-              <button className="primaryBtn">View Full Organ Report</button>
+            <Link href="/history">
+              <button className="primaryBtn">View Progress Timeline</button>
             </Link>
           </div>
         </div>
