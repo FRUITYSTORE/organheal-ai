@@ -198,7 +198,7 @@ export default function DoctorPortalPage() {
     }
 
     if (!data) {
-      setShareMessage("Invalid share code.");
+      setShareMessage("Invalid or expired share code.");
       setCheckingShareCode(false);
       return;
     }
