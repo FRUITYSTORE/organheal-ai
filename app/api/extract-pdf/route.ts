@@ -121,13 +121,19 @@ export async function POST(req: Request) {
   try {
     const payload = await req.json();
 
-    const reportId = payload?.reportId;
+    const rawReportId = payload?.reportId;
+    const reportId =
+      typeof rawReportId === "number"
+        ? rawReportId
+        : typeof rawReportId === "string"
+        ? Number(rawReportId)
+        : null;
+
     const payloadFilePath =
       typeof payload?.filePath === "string" ? payload.filePath : "";
-    const payloadFileName =
-      typeof payload?.fileName === "string" ? payload.fileName : "";
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!reportId && !payloadFilePath) {
@@ -156,9 +162,10 @@ export async function POST(req: Request) {
       );
     }
 
-    if (!serviceRoleKey) {
-      logExtractionError("Missing service role key", {
-        hasServiceRoleKey: false,
+    if (!anonKey || !serviceRoleKey) {
+      logExtractionError("Missing Supabase server keys", {
+        hasAnonKey: Boolean(anonKey),
+        hasServiceRoleKey: Boolean(serviceRoleKey),
       });
 
       return NextResponse.json(
@@ -171,6 +178,48 @@ export async function POST(req: Request) {
       );
     }
 
+    const authorizationHeader = req.headers.get("authorization") || "";
+    const token = authorizationHeader.startsWith("Bearer ")
+      ? authorizationHeader.replace("Bearer ", "").trim()
+      : "";
+
+    if (!token) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Unauthorized. Please login again.",
+        },
+        { status: 401 }
+      );
+    }
+
+    const userSupabase = createClient(supabaseUrl, anonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    });
+
+    const { data: authData, error: authError } =
+      await userSupabase.auth.getUser(token);
+
+    if (authError || !authData.user) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Unauthorized. Please login again.",
+        },
+        { status: 401 }
+      );
+    }
+
+    const user = authData.user;
+
     const adminSupabase = createClient(supabaseUrl, serviceRoleKey, {
       auth: {
         persistSession: false,
@@ -180,6 +229,7 @@ export async function POST(req: Request) {
 
     let reportRow: {
       id: number;
+      user_id: string;
       file_name: string | null;
       file_path: string | null;
       created_at?: string;
@@ -188,14 +238,16 @@ export async function POST(req: Request) {
     if (reportId) {
       const { data, error } = await adminSupabase
         .from("uploaded_lab_files")
-        .select("id, file_name, file_path, created_at")
+        .select("id, user_id, file_name, file_path, created_at")
         .eq("id", reportId)
+        .eq("user_id", user.id)
         .limit(1)
         .maybeSingle();
 
       if (error) {
         logExtractionError("Report lookup by id failed", {
           reportId,
+          userId: user.id,
           error: error.message,
         });
       }
@@ -206,9 +258,20 @@ export async function POST(req: Request) {
     if (!reportRow && payloadFilePath) {
       const normalizedPayloadPath = normalizeStoragePath(payloadFilePath);
 
+      if (!normalizedPayloadPath.startsWith(`${user.id}/`)) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Forbidden. This report does not belong to your account.",
+          },
+          { status: 403 }
+        );
+      }
+
       const { data, error } = await adminSupabase
         .from("uploaded_lab_files")
-        .select("id, file_name, file_path, created_at")
+        .select("id, user_id, file_name, file_path, created_at")
+        .eq("user_id", user.id)
         .eq("file_path", normalizedPayloadPath)
         .order("created_at", { ascending: false })
         .limit(1)
@@ -218,6 +281,7 @@ export async function POST(req: Request) {
         logExtractionError("Report lookup by file path failed", {
           payloadFilePath,
           normalizedPayloadPath,
+          userId: user.id,
           error: error.message,
         });
       }
@@ -225,9 +289,17 @@ export async function POST(req: Request) {
       reportRow = data || null;
     }
 
-    const filePath =
-      reportRow?.file_path ||
-      (typeof payloadFilePath === "string" ? payloadFilePath : "");
+    if (!reportRow) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Report was not found for your account.",
+        },
+        { status: 404 }
+      );
+    }
+
+    const filePath = reportRow.file_path || "";
 
     if (!filePath) {
       return NextResponse.json(
@@ -240,10 +312,21 @@ export async function POST(req: Request) {
       );
     }
 
+    let storagePath = normalizeStoragePath(filePath);
+
+    if (!storagePath.startsWith(`${user.id}/`)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Forbidden. This report file does not belong to your account.",
+        },
+        { status: 403 }
+      );
+    }
+
     const fileName =
-      reportRow?.file_name ||
-      payloadFileName ||
-      filePath.split("/").pop() ||
+      reportRow.file_name ||
+      getFileNameFromPath(storagePath) ||
       "";
 
     const fileType = getFileType(fileName);
@@ -258,16 +341,11 @@ export async function POST(req: Request) {
       );
     }
 
-    const reportDbId = reportRow?.id || reportId;
-
-    if (reportDbId) {
-      await adminSupabase
-        .from("uploaded_lab_files")
-        .update({ extraction_status: "Processing" })
-        .eq("id", reportDbId);
-    }
-
-    let storagePath = normalizeStoragePath(filePath);
+    await adminSupabase
+      .from("uploaded_lab_files")
+      .update({ extraction_status: "Processing" })
+      .eq("id", reportRow.id)
+      .eq("user_id", user.id);
 
     let { data: fileBlob, error: downloadError } = await adminSupabase.storage
       .from("lab-reports")
@@ -308,16 +386,15 @@ export async function POST(req: Request) {
       });
 
       if (listError || !matchedObject) {
-        if (reportDbId) {
-          await adminSupabase
-            .from("uploaded_lab_files")
-            .update({ extraction_status: "Failed" })
-            .eq("id", reportDbId);
-        }
+        await adminSupabase
+          .from("uploaded_lab_files")
+          .update({ extraction_status: "Failed" })
+          .eq("id", reportRow.id)
+          .eq("user_id", user.id);
 
         logExtractionError("Storage object not found after listing folder", {
-          reportDbId,
-          filePath,
+          reportId: reportRow.id,
+          userId: user.id,
           storagePath,
           folderPath,
           fileBaseName,
@@ -341,6 +418,22 @@ export async function POST(req: Request) {
         ? `${folderPath}/${matchedObject.name}`
         : matchedObject.name;
 
+      if (!storagePath.startsWith(`${user.id}/`)) {
+        await adminSupabase
+          .from("uploaded_lab_files")
+          .update({ extraction_status: "Failed" })
+          .eq("id", reportRow.id)
+          .eq("user_id", user.id);
+
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Forbidden. Storage path ownership validation failed.",
+          },
+          { status: 403 }
+        );
+      }
+
       const retryDownload = await adminSupabase.storage
         .from("lab-reports")
         .download(storagePath);
@@ -348,24 +441,25 @@ export async function POST(req: Request) {
       fileBlob = retryDownload.data;
       downloadError = retryDownload.error;
 
-      if (!downloadError && fileBlob && reportDbId) {
+      if (!downloadError && fileBlob) {
         await adminSupabase
           .from("uploaded_lab_files")
           .update({ file_path: storagePath })
-          .eq("id", reportDbId);
+          .eq("id", reportRow.id)
+          .eq("user_id", user.id);
       }
     }
 
     if (downloadError || !fileBlob) {
-      if (reportDbId) {
-        await adminSupabase
-          .from("uploaded_lab_files")
-          .update({ extraction_status: "Failed" })
-          .eq("id", reportDbId);
-      }
+      await adminSupabase
+        .from("uploaded_lab_files")
+        .update({ extraction_status: "Failed" })
+        .eq("id", reportRow.id)
+        .eq("user_id", user.id);
 
       logExtractionError("Storage retry failed", {
-        reportDbId,
+        reportId: reportRow.id,
+        userId: user.id,
         finalStoragePath: storagePath,
         downloadError: downloadError?.message || null,
       });
@@ -398,16 +492,15 @@ export async function POST(req: Request) {
         ? cleanText
         : "No readable text extracted from this report.";
 
-    if (reportDbId) {
-      await adminSupabase
-        .from("uploaded_lab_files")
-        .update({
-          extracted_text: finalText,
-          extraction_status: "Completed",
-          extracted_at: new Date().toISOString(),
-        })
-        .eq("id", reportDbId);
-    }
+    await adminSupabase
+      .from("uploaded_lab_files")
+      .update({
+        extracted_text: finalText,
+        extraction_status: "Completed",
+        extracted_at: new Date().toISOString(),
+      })
+      .eq("id", reportRow.id)
+      .eq("user_id", user.id);
 
     return NextResponse.json({
       success: true,
