@@ -485,18 +485,55 @@ return (
 
   {message && (
   <div className="resultBox">
-    <p style={{ whiteSpace: "pre-line" }}>{message}</p>
+    <p className="sectionLabel">
+      {showIntelligenceLink ? "Report Saved" : "Upload Status"}
+    </p>
+
+    <h2>
+      {showIntelligenceLink
+        ? "Your report is ready for review"
+        : "Upload update"}
+    </h2>
+
+    <p
+      style={{
+        whiteSpace: "pre-line",
+        opacity: 0.82,
+        lineHeight: 1.7,
+        maxWidth: "760px",
+        margin: "0 auto 20px",
+      }}
+    >
+      {message}
+    </p>
 
     {showIntelligenceLink && (
-      <button
-        className="primaryBtn"
-        style={{ marginTop: "16px" }}
-        onClick={() => {
-          window.location.href = "/intelligence";
+      <div
+        style={{
+          display: "flex",
+          gap: "12px",
+          flexWrap: "wrap",
+          justifyContent: "center",
         }}
       >
-        Open Intelligence Center
-      </button>
+        <button
+          className="primaryBtn"
+          onClick={() => {
+            window.location.href = "/reports";
+          }}
+        >
+          Open Reports Library
+        </button>
+
+        <button
+          className="secondaryBtn"
+          onClick={() => {
+            window.location.href = "/intelligence";
+          }}
+        >
+          Open Intelligence Center
+        </button>
+      </div>
     )}
   </div>
 )}
