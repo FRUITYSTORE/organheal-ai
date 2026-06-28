@@ -1,5 +1,4 @@
 "use client";
-import MedicalSafetyNotice from "../components/MedicalSafetyNotice";
 import { buildActionPlan } from "../../lib/actionPlanEngine";
 import { buildHealthStory } from "../../lib/healthStoryEngine";
 import { buildHistoricalLabTrends } from "../../lib/historicalLabTrendEngine";
@@ -624,8 +623,6 @@ if (saveGeneratedResultError) {
             opportunities, and doctor-ready intelligence.
           </p>
         </section>
-
-        <MedicalSafetyNotice context="intelligence" />
 
         <section className="chatWindow">
           {loading && (

@@ -1,5 +1,4 @@
 "use client";
-import MedicalSafetyNotice from "../components/MedicalSafetyNotice";
 import { generateLabSummary } from "../../lib/labAnalyzer";
 import PageBackActions from "../components/PageBackActions";
 import { useEffect, useState } from "react";
@@ -383,8 +382,8 @@ return (
             <p className="sectionLabel">Medical Report Upload</p>
             <h2>Drop your medical report here</h2>
             <p>
-  Laboratory Reports â€¢ Radiology Reports â€¢ Medical Reports â€¢
-  Discharge Summaries â€¢ PDF â€¢ JPG â€¢ PNG
+  Laboratory Reports Ã¢â‚¬Â¢ Radiology Reports Ã¢â‚¬Â¢ Medical Reports Ã¢â‚¬Â¢
+  Discharge Summaries Ã¢â‚¬Â¢ PDF Ã¢â‚¬Â¢ JPG Ã¢â‚¬Â¢ PNG
 </p>
 <div style={{ marginBottom: "16px" }}>
   <select
@@ -411,7 +410,7 @@ return (
     hidden
   />
 
-  <div className="labDropIcon">ðŸ“„</div>
+  <div className="labDropIcon">Ã°Å¸â€œâ€ž</div>
 
   <strong>
     {fileNames.length > 0
