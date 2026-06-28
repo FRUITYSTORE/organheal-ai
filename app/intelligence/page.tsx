@@ -766,6 +766,45 @@ onHideGenerated={() => {
         <DigitalTwinCard digitalTwin={generatedResult.digitalTwin} />
 
         <ForecastCard forecast={generatedResult.forecast} />
+                <div className="resultBox">
+          <p className="sectionLabel">NEXT STEP</p>
+
+          <h2>Continue your health journey</h2>
+
+          <p
+            style={{
+              opacity: 0.82,
+              lineHeight: 1.7,
+              maxWidth: "760px",
+              margin: "0 auto 22px",
+            }}
+          >
+            Your report intelligence is now available. You can return to your
+            reports library, continue your follow-up plan, or go back to your
+            dashboard overview.
+          </p>
+
+          <div
+            style={{
+              display: "flex",
+              gap: "12px",
+              flexWrap: "wrap",
+              justifyContent: "center",
+            }}
+          >
+            <a href="/reports">
+              <button className="secondaryBtn">Reports Library</button>
+            </a>
+
+            <a href="/health-plan">
+              <button className="primaryBtn">Open Health Plan</button>
+            </a>
+
+            <a href="/dashboard">
+              <button className="secondaryBtn">Dashboard</button>
+            </a>
+          </div>
+        </div>
       </>
     )}
   </>
