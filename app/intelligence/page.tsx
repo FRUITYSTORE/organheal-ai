@@ -325,18 +325,28 @@ setGeneratedResult(null);
 let extractedText: string | null = null;
 
   if (selectedInsight.report_id && selectedInsight.file_path) {
-    try {
-      const extractionResponse = await fetch("/api/extract-pdf", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          reportId: selectedInsight.report_id,
-          filePath: selectedInsight.file_path,
-          fileName: selectedInsight.file_name,
-        }),
-      });
+  try {
+    const { data: sessionData, error: sessionError } =
+      await supabase.auth.getSession();
+
+    if (sessionError || !sessionData.session?.access_token) {
+      alert("Your session expired. Please login again.");
+      window.location.href = "/login";
+      return;
+    }
+
+    const extractionResponse = await fetch("/api/extract-pdf", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${sessionData.session.access_token}`,
+      },
+      body: JSON.stringify({
+        reportId: selectedInsight.report_id,
+        filePath: selectedInsight.file_path,
+        fileName: selectedInsight.file_name,
+      }),
+    });
 
       const extractionResult = await extractionResponse.json();
 
