@@ -1,8 +1,14 @@
 "use client";
-import { generateLabSummary } from "../../lib/labAnalyzer";
-import PageBackActions from "../components/PageBackActions";
-import { useEffect, useState } from "react";
-import { supabase } from "../../lib/supabase";
+
+import type { ChangeEvent, DragEvent } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { supabase } from "@/lib/supabase";
+
+type Language = "en" | "ar";
+type UploadStep = "idle" | "uploading" | "saved" | "extracting" | "error";
+type ReportFilter = "all" | "pending" | "processing" | "completed" | "failed";
+type ReportType = "lab" | "radiology" | "clinical" | "prescription" | "medical";
 
 type UploadedFile = {
   id: number;
@@ -13,116 +19,86 @@ type UploadedFile = {
   analysis_status: string | null;
   extracted_text: string | null;
   ai_summary: string | null;
-  extraction_status?: string | null;
-  extracted_at?: string | null;
+  extraction_status: string | null;
+  extracted_at: string | null;
+  report_type?: string | null;
 };
 
-type AnalysisStep = "idle" | "uploading" | "extracting" | "analyzing" | "ready";
+const MAX_FILES = 10;
+const MAX_FILE_SIZE_MB = 20;
 
 export default function LabUploadPage() {
- const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-const [fileNames, setFileNames] = useState<string[]>([]);
-const [reportType, setReportType] = useState("medical");
-const [message, setMessage] = useState("");
-  const [uploading, setUploading] = useState(false);
+  const [language, setLanguage] = useState<Language>("en");
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [latestUploadedFileName, setLatestUploadedFileName] = useState("");
-  const [analysisStep, setAnalysisStep] = useState<AnalysisStep>("idle");
+  const [message, setMessage] = useState("");
+  const [uploadStep, setUploadStep] = useState<UploadStep>("idle");
+  const [uploading, setUploading] = useState(false);
+  const [extractingReportId, setExtractingReportId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-const [reportFilter, setReportFilter] = useState("all");
-const [showIntelligenceLink, setShowIntelligenceLink] = useState(false);
+  const [reportFilter, setReportFilter] = useState<ReportFilter>("all");
+  const [reportType, setReportType] = useState<ReportType>("lab");
 
-useEffect(() => {
-  checkAuth();
-}, []);
+  useEffect(() => {
+    const savedLanguage =
+      (localStorage.getItem("organheal-language") as Language) || "en";
 
-async function checkAuth() {
-  const { data: userData, error: userError } =
-    await supabase.auth.getUser();
+    setLanguage(savedLanguage);
 
-  if (userError || !userData.user) {
-    window.location.href = "/login";
-    return;
-  }
+    const interval = setInterval(() => {
+      const currentLanguage =
+        (localStorage.getItem("organheal-language") as Language) || "en";
+      setLanguage(currentLanguage);
+    }, 300);
 
-  fetchUploadedFiles();
-  loadPendingHeroFile();
-}
-function loadPendingHeroFile() {
-  const uploadedFileName = sessionStorage.getItem(
-    "organheal-latest-uploaded-lab-file"
-  );
+    fetchUploadedFiles();
+    loadPendingHeroFile();
 
-  if (uploadedFileName) {
-  setLatestUploadedFileName(uploadedFileName);
+    return () => clearInterval(interval);
+  }, []);
 
-  setMessage(
-    `Your file "${uploadedFileName}" was uploaded successfully from the homepage. AI extraction will be connected in the next phase.`
-  );
+  const isArabic = language === "ar";
 
-  sessionStorage.removeItem("organheal-latest-uploaded-lab-file");
-  return;
-}
+  function loadPendingHeroFile() {
+    const uploadedFileName = sessionStorage.getItem(
+      "organheal-latest-uploaded-lab-file"
+    );
 
-  const savedFileName = sessionStorage.getItem(
-    "organheal-pending-lab-file-name"
-  );
-
-  if (!savedFileName) return;
-
-  setMessage(
-    `You selected "${savedFileName}" from the homepage. Please upload it here to continue analysis.`
-  );
-
-  sessionStorage.removeItem("organheal-pending-lab-file-name");
-}
- function handleFiles(files: FileList | File[]) {
-  const newFiles = Array.from(files);
-setShowIntelligenceLink(false);
-  setSelectedFiles((previousFiles) => {
-    const combinedFiles = [...previousFiles, ...newFiles].slice(0, 10);
-
-    setFileNames(combinedFiles.map((file) => file.name));
-
-    if (combinedFiles.length >= 10) {
-      setMessage("Maximum 10 files selected.");
-    } else {
-      setMessage("");
+    if (uploadedFileName) {
+      setLatestUploadedFileName(uploadedFileName);
+      setMessage(
+        `Your file "${uploadedFileName}" was selected from the homepage. Upload it here to save it securely and continue to extraction or intelligence review.`
+      );
+      sessionStorage.removeItem("organheal-latest-uploaded-lab-file");
+      return;
     }
 
-    return combinedFiles;
-  });
+    const savedFileName = sessionStorage.getItem("organheal-pending-lab-file");
 
-  setAnalysisStep("idle");
-}
-
-function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
-  const files = event.target.files;
-  if (files && files.length > 0) handleFiles(files);
-}
-
- function handleDrop(event: React.DragEvent<HTMLLabelElement>) {
-  event.preventDefault();
-
-  const files = event.dataTransfer.files;
-  if (files && files.length > 0) handleFiles(files);
-}
-
-  function handleDragOver(event: React.DragEvent<HTMLLabelElement>) {
-    event.preventDefault();
+    if (savedFileName) {
+      setLatestUploadedFileName(savedFileName);
+      setMessage(
+        `You selected "${savedFileName}" from the homepage. Please upload it here to continue.`
+      );
+      sessionStorage.removeItem("organheal-pending-lab-file");
+    }
   }
 
   async function fetchUploadedFiles() {
     const { data: userData, error: userError } = await supabase.auth.getUser();
 
-    if (userError || !userData.user) return;
-
-    const user = userData.user;
+    if (userError || !userData.user) {
+      setUploadedFiles([]);
+      return;
+    }
 
     const { data, error } = await supabase
       .from("uploaded_lab_files")
-      .select("id, file_name, file_path, file_url, created_at, analysis_status, extracted_text, ai_summary, extraction_status, extracted_at")
-      .eq("user_id", user.id)
+      .select(
+        "id, file_name, file_path, file_url, created_at, analysis_status, extracted_text, ai_summary, extraction_status, extracted_at, report_type"
+      )
+      .eq("user_id", userData.user.id)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -130,190 +106,309 @@ function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
       return;
     }
 
-setUploadedFiles(data || []);
+    setUploadedFiles((data || []) as UploadedFile[]);
 
-const params = new URLSearchParams(window.location.search);
-const wasUploadedFromHomepage = params.get("uploaded") === "1";
+    const params = new URLSearchParams(window.location.search);
+    const wasUploadedFromHomepage = params.get("uploaded") === "1";
 
-if (wasUploadedFromHomepage && data && data.length > 0) {
-  setLatestUploadedFileName(data[0].file_name);
+    if (wasUploadedFromHomepage && data && data.length > 0) {
+      setLatestUploadedFileName(data[0].file_name);
+      setMessage(
+        `Your file "${data[0].file_name}" is saved. You can run extraction, open the report, or continue to Intelligence Center.`
+      );
+    }
+  }
 
-  setMessage(
-    `Your file "${data[0].file_name}" was uploaded successfully and is ready for AI extraction.`
-  );
-}
-}
-function removeSelectedFile(index: number) {
-  const updatedFiles = selectedFiles.filter((_, fileIndex) => fileIndex !== index);
+  function isAllowedFile(file: File) {
+    const lowerName = file.name.toLowerCase();
 
-  setSelectedFiles(updatedFiles);
-  setFileNames(updatedFiles.map((file) => file.name));
+    return (
+      file.type === "application/pdf" ||
+      file.type === "image/png" ||
+      file.type === "image/jpeg" ||
+      lowerName.endsWith(".pdf") ||
+      lowerName.endsWith(".png") ||
+      lowerName.endsWith(".jpg") ||
+      lowerName.endsWith(".jpeg")
+    );
+  }
 
-  if (updatedFiles.length === 0) {
+  function getSafeStorageFileName(name: string) {
+    const safeName = name
+      .trim()
+      .replace(/\s+/g, "_")
+      .replace(/[^a-zA-Z0-9._-]/g, "_")
+      .replace(/_+/g, "_");
+
+    return safeName || "medical-report";
+  }
+
+  function addFiles(files: File[]) {
+    const validFiles: File[] = [];
+    const rejectedFiles: string[] = [];
+
+    for (const file of files) {
+      const sizeMb = file.size / (1024 * 1024);
+
+      if (!isAllowedFile(file)) {
+        rejectedFiles.push(`${file.name} - unsupported type`);
+        continue;
+      }
+
+      if (sizeMb > MAX_FILE_SIZE_MB) {
+        rejectedFiles.push(`${file.name} - larger than ${MAX_FILE_SIZE_MB} MB`);
+        continue;
+      }
+
+      validFiles.push(file);
+    }
+
+    const combinedFiles = [...selectedFiles, ...validFiles].slice(0, MAX_FILES);
+    setSelectedFiles(combinedFiles);
+
+    if (rejectedFiles.length > 0) {
+      setMessage(
+        `Some files were not added: ${rejectedFiles.join(", ")}. Supported files: PDF, PNG, JPG, JPEG.`
+      );
+    } else if (combinedFiles.length > 0) {
+      setMessage("");
+    }
+  }
+
+  function handleFileInput(event: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files || []);
+    addFiles(files);
+    event.target.value = "";
+  }
+
+  function handleDrop(event: DragEvent<HTMLLabelElement>) {
+    event.preventDefault();
+    addFiles(Array.from(event.dataTransfer.files || []));
+  }
+
+  function removeSelectedFile(index: number) {
+    setSelectedFiles((current) => current.filter((_, itemIndex) => itemIndex !== index));
+  }
+
+  async function uploadFile() {
+    if (selectedFiles.length === 0) {
+      setMessage(
+        isArabic
+          ? "يرجى اختيار ملف PDF أو صورة أولًا."
+          : "Please select at least one PDF or image first."
+      );
+      return;
+    }
+
+    if (selectedFiles.length > MAX_FILES) {
+      setMessage(
+        isArabic
+          ? `يمكنك رفع ${MAX_FILES} ملفات كحد أقصى في كل مرة.`
+          : `You can upload up to ${MAX_FILES} files at a time.`
+      );
+      return;
+    }
+
+    setUploading(true);
+    setUploadStep("uploading");
     setMessage("");
-    setAnalysisStep("idle");
-  }
-}
-async function uploadFile() {
-  if (selectedFiles.length === 0) {
-    setMessage("Please upload at least one PDF or image first.");
-    return;
-  }
 
-  if (selectedFiles.length > 10) {
-    setMessage("You can upload up to 10 files at a time.");
-    return;
-  }
+    const { data: userData, error: userError } = await supabase.auth.getUser();
 
-  setUploading(true);
-  setMessage("");
-  setAnalysisStep("uploading");
-
-  const { data: userData, error: userError } = await supabase.auth.getUser();
-
-  if (userError || !userData.user) {
-    setMessage("Please login or sign up to upload lab reports.");
-    setUploading(false);
-    setAnalysisStep("idle");
-    return;
-  }
-
-  const user = userData.user;
-  let uploadedCount = 0;
-
-  for (const file of selectedFiles) {
-    const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-    const filePath = `${user.id}/${Date.now()}-${safeFileName}`;
-
-    const { data: uploadData, error: uploadError } = await supabase.storage
-  .from("lab-reports")
-  .upload(filePath, file, {
-    upsert: false,
-  });
-
-
-    if (uploadError) {
-      setMessage("Upload error: " + uploadError.message);
+    if (userError || !userData.user) {
+      setMessage(
+        isArabic
+          ? "يرجى تسجيل الدخول أو إنشاء حساب لرفع التقارير."
+          : "Please login or sign up to upload medical reports."
+      );
       setUploading(false);
-      setAnalysisStep("idle");
+      setUploadStep("error");
       return;
     }
-      if (!uploadData?.path) {
-  setMessage("Upload error: Supabase did not return a saved file path.");
-  setUploading(false);
-  setAnalysisStep("idle");
-  return;
-}
-const savedFilePath = uploadData.path;
 
-    const { data: signedUrlData, error: signedUrlError } =
-      await supabase.storage
+    const user = userData.user;
+    let uploadedCount = 0;
+
+    for (const file of selectedFiles) {
+      const safeName = getSafeStorageFileName(file.name);
+      const filePath = `${user.id}/${Date.now()}-${safeName}`;
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from("lab-reports")
-        .createSignedUrl(savedFilePath, 60 * 60);
+        .upload(filePath, file, {
+          upsert: false,
+        });
 
-    if (signedUrlError) {
-      setMessage("Signed URL error: " + signedUrlError.message);
-      setUploading(false);
-      setAnalysisStep("idle");
+      if (uploadError) {
+        setMessage("Upload error: " + uploadError.message);
+        setUploading(false);
+        setUploadStep("error");
+        return;
+      }
+
+      if (!uploadData?.path) {
+        setMessage("Upload error: Supabase did not return a saved file path.");
+        setUploading(false);
+        setUploadStep("error");
+        return;
+      }
+
+      const savedFilePath = uploadData.path;
+
+      const { data: signedUrlData, error: signedUrlError } =
+        await supabase.storage
+          .from("lab-reports")
+          .createSignedUrl(savedFilePath, 60 * 60);
+
+      if (signedUrlError) {
+        setMessage("Signed URL error: " + signedUrlError.message);
+        setUploading(false);
+        setUploadStep("error");
+        return;
+      }
+
+      const { data: insertedFile, error: databaseError } = await supabase
+        .from("uploaded_lab_files")
+        .insert({
+          user_id: user.id,
+          file_name: file.name,
+          file_path: savedFilePath,
+          file_url: signedUrlData.signedUrl,
+          report_type: reportType,
+          analysis_status: "uploaded",
+          ai_summary:
+            "Medical report uploaded successfully. Text extraction and health intelligence review are available from OrganHeal.",
+          extraction_status: "Pending",
+          extracted_text: null,
+          extracted_at: null,
+        })
+        .select("id")
+        .single();
+
+      if (databaseError) {
+        setMessage("Database error: " + databaseError.message);
+        setUploading(false);
+        setUploadStep("error");
+        return;
+      }
+
+      if (insertedFile) {
+        await supabase.from("health_insights").insert([
+          {
+            user_id: user.id,
+            report_id: insertedFile.id,
+            report_type: reportType,
+            insight_title: "Medical report uploaded",
+            ai_status: "Pending",
+            risk_level: "pending",
+            summary:
+              "Report uploaded successfully and ready for extraction and intelligence review.",
+            key_findings: "Pending extraction.",
+            risk_signals: "Pending extraction.",
+            recommendations:
+              "Open Intelligence Center to generate a patient-friendly summary and doctor-ready brief.",
+            doctor_brief: "Pending intelligence generation.",
+            next_best_action:
+              "Open Intelligence Center to generate structured report intelligence.",
+          },
+        ]);
+      }
+
+      uploadedCount++;
+      setLatestUploadedFileName(file.name);
+    }
+
+    setSelectedFiles([]);
+    setUploading(false);
+    setUploadStep("saved");
+    setMessage(
+      `${uploadedCount} report(s) uploaded successfully. You can run extraction now, open Reports Library, or continue to Intelligence Center.`
+    );
+
+    await fetchUploadedFiles();
+  }
+
+  async function runExtraction(file: UploadedFile) {
+    setExtractingReportId(file.id);
+    setUploadStep("extracting");
+    setMessage("");
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData.session?.access_token;
+
+    if (!accessToken) {
+      setMessage(
+        isArabic
+          ? "انتهت الجلسة. يرجى تسجيل الدخول مرة أخرى."
+          : "Session expired. Please login again."
+      );
+      setExtractingReportId(null);
+      setUploadStep("error");
       return;
     }
 
-    setAnalysisStep("analyzing");
+    const response = await fetch("/api/extract-pdf", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        reportId: file.id,
+        filePath: file.file_path,
+      }),
+    });
 
-    const analysis = generateLabSummary(file.name);
+    const result = await response.json();
 
-   const { data: insertedFile, error: databaseError } = await supabase
-  .from("uploaded_lab_files")
-  .insert({
-    user_id: user.id,
-    file_name: file.name,
-    file_path: savedFilePath,
-    file_url: signedUrlData.signedUrl,
-    report_type: reportType,
-    analysis_status: analysis.status,
-    ai_summary: analysis.summary,
-    extraction_status: "Pending",
-extracted_text: null,
-extracted_at: null,
-  })
-  .select("id")
-  .single();
+    if (!response.ok || !result?.success) {
+      setMessage(result?.error || "Extraction failed. Please try again.");
+      setExtractingReportId(null);
+      setUploadStep("error");
+      await fetchUploadedFiles();
+      return;
+    }
 
-  if (databaseError) {
-  setMessage("Database error: " + databaseError.message);
-  setUploading(false);
-  setAnalysisStep("idle");
-  return;
-}
-
-if (insertedFile) {
-  await supabase.from("health_insights").insert([
-    {
-      user_id: user.id,
-      report_id: insertedFile.id,
-      report_type: reportType,
-
-      insight_title: "Medical report uploaded",
-      ai_status: "Pending",
-      risk_level: "pending",
-
-      summary: "Report uploaded successfully and awaiting AI extraction.",
-      key_findings: "Pending analysis.",
-      risk_signals: "Pending analysis.",
-      recommendations: "Pending analysis.",
-      doctor_brief: "Pending AI interpretation.",
-    },
-  ]);
-}
-
-uploadedCount++;
+    setMessage(
+      isArabic
+        ? "تم استخراج نص التقرير بنجاح. يمكنك الآن فتح مركز الذكاء."
+        : "Report text extracted successfully. You can now open Intelligence Center."
+    );
+    setExtractingReportId(null);
+    setUploadStep("saved");
+    await fetchUploadedFiles();
   }
 
-  setAnalysisStep("ready");
-  setShowIntelligenceLink(true);
-setMessage(
-  `${uploadedCount} report(s) uploaded successfully.
+  async function deleteFile(file: UploadedFile) {
+    const confirmDelete = window.confirm(`Delete "${file.file_name}"?`);
 
-Your report is now ready for intelligence review.
+    if (!confirmDelete) return;
 
-Open Intelligence Center to view your Health Story, Forecast, Digital Twin, Risk Analysis, and Action Plan.`
-);
+    const { error: storageError } = await supabase.storage
+      .from("lab-reports")
+      .remove([file.file_path]);
 
-  setSelectedFiles([]);
-  setFileNames([]);
-  setUploading(false);
+    if (storageError) {
+      setMessage("Storage delete error: " + storageError.message);
+      return;
+    }
 
-  await fetchUploadedFiles();
-}async function deleteFile(file: UploadedFile) {
-  const confirmDelete = window.confirm(
-    `Delete "${file.file_name}"?`
-  );
+    await supabase.from("health_insights").delete().eq("report_id", file.id);
 
-  if (!confirmDelete) return;
+    const { error: databaseError } = await supabase
+      .from("uploaded_lab_files")
+      .delete()
+      .eq("id", file.id);
 
-  const { error: storageError } = await supabase.storage
-    .from("lab-reports")
-    .remove([file.file_path]);
+    if (databaseError) {
+      setMessage("Database delete error: " + databaseError.message);
+      return;
+    }
 
-  if (storageError) {
-    setMessage("Storage delete error: " + storageError.message);
-    return;
+    setMessage(`"${file.file_name}" deleted successfully.`);
+    await fetchUploadedFiles();
   }
 
-  const { error: databaseError } = await supabase
-    .from("uploaded_lab_files")
-    .delete()
-    .eq("id", file.id);
-
-  if (databaseError) {
-    setMessage("Database delete error: " + databaseError.message);
-    return;
-  }
-
-  setMessage(`"${file.file_name}" deleted successfully.`);
-
-  await fetchUploadedFiles();
-}
   async function openFile(filePath: string) {
     const { data, error } = await supabase.storage
       .from("lab-reports")
@@ -327,323 +422,470 @@ Open Intelligence Center to view your Health Story, Forecast, Digital Twin, Risk
     window.open(data.signedUrl, "_blank");
   }
 
-  const steps = [
-    {
-      key: "uploading",
-      title: "Uploading",
-      description: "Securely saving the lab report.",
-    },
-    {
-      key: "extracting",
-      title: "Extracting",
-      description: "Preparing lab values for AI extraction.",
-    },
-    {
-      key: "analyzing",
-      title: "Analyzing",
-      description: "Generating educational health insights.",
-    },
-    {
-      key: "ready",
-      title: "Ready",
-      description: "Report is saved and ready for the next AI phase.",
-    },
-  ];
-const filteredFiles = uploadedFiles.filter((file) => {
-  const matchesSearch = file.file_name
-    .toLowerCase()
-    .includes(searchTerm.toLowerCase());
+  function getExtractionLabel(status: string | null) {
+    const cleanStatus = status || "Pending";
 
-  const matchesFilter =
-    reportFilter === "all" || file.analysis_status === reportFilter;
+    if (isArabic) {
+      if (cleanStatus === "Completed") return "مكتمل";
+      if (cleanStatus === "Processing") return "جاري الاستخراج";
+      if (cleanStatus === "Failed") return "فشل";
+      return "بانتظار";
+    }
 
-  return matchesSearch && matchesFilter;
-});
-const latestFiles = filteredFiles.slice(0, 10);
-return (
-  <main className="assistantPage">
-      <div className="assistantContainer">
-        <PageBackActions />
+    if (cleanStatus === "Completed") return "Completed";
+    if (cleanStatus === "Processing") return "Processing";
+    if (cleanStatus === "Failed") return "Failed";
+    return "Pending";
+  }
 
-        <div className="assistantHeader">
-          <p className="assistantBadge">
-  MEDICAL REPORT INTELLIGENCE
-</p>
-          <h1>Upload Medical Report</h1>
+  function getReportTypeLabel(type: string | null | undefined) {
+    if (isArabic) {
+      if (type === "lab") return "مختبر";
+      if (type === "radiology") return "أشعة";
+      if (type === "clinical") return "تقرير سريري";
+      if (type === "prescription") return "وصفة طبية";
+      return "تقرير طبي";
+    }
+
+    if (type === "lab") return "Laboratory";
+    if (type === "radiology") return "Radiology";
+    if (type === "clinical") return "Clinical Summary";
+    if (type === "prescription") return "Prescription";
+    return "Medical Report";
+  }
+
+  function formatDate(value: string | null) {
+    if (!value) return isArabic ? "غير متاح" : "Not available";
+    return new Date(value).toLocaleString();
+  }
+
+  const filteredFiles = uploadedFiles.filter((file) => {
+    const matchesSearch = file.file_name
+      .toLowerCase()
+      .includes(searchTerm.trim().toLowerCase());
+
+    const cleanStatus = (file.extraction_status || "Pending").toLowerCase();
+
+    const matchesFilter =
+      reportFilter === "all" || cleanStatus === reportFilter;
+
+    return matchesSearch && matchesFilter;
+  });
+
+  const latestFiles = filteredFiles.slice(0, 8);
+
+  const stats = useMemo(() => {
+    const completed = uploadedFiles.filter(
+      (file) => file.extraction_status === "Completed"
+    ).length;
+
+    const processing = uploadedFiles.filter(
+      (file) => file.extraction_status === "Processing"
+    ).length;
+
+    const failed = uploadedFiles.filter(
+      (file) => file.extraction_status === "Failed"
+    ).length;
+
+    const pending = uploadedFiles.filter(
+      (file) =>
+        !file.extraction_status || file.extraction_status === "Pending"
+    ).length;
+
+    return {
+      total: uploadedFiles.length,
+      completed,
+      processing,
+      pending,
+      failed,
+    };
+  }, [uploadedFiles]);
+
+  const canShowNextStep =
+    uploadStep === "saved" || uploadedFiles.length > 0 || latestUploadedFileName;
+
+  return (
+    <main className="labUploadConversionPage" dir={isArabic ? "rtl" : "ltr"}>
+      <section className="labUploadHero">
+        <div>
+          <p className="launchEyebrow">
+            {isArabic ? "رفع التقارير الطبية" : "Medical Report Upload"}
+          </p>
+
+          <h1>
+            {isArabic
+              ? "ارفع تقريرك الطبي وابدأ الذكاء الصحي"
+              : "Upload your medical report and start health intelligence"}
+          </h1>
+
           <p>
-  Upload laboratory reports, radiology reports, discharge summaries,
-  prescriptions, or medical documents. OrganHeal will organize,
-  explain, and prepare these reports for future health intelligence.
-</p>
+            {isArabic
+              ? "ارفع تقارير المختبر، الأشعة، ملخصات الخروج، الوصفات، أو المستندات الطبية. بعد الحفظ يمكنك تشغيل الاستخراج أو الانتقال إلى مركز الذكاء."
+              : "Upload lab reports, radiology reports, discharge summaries, prescriptions, or medical documents. After saving, you can run extraction or continue to Intelligence Center."}
+          </p>
         </div>
 
-        <div className="chatWindow">
-          <div className="labUploadBox">
-            <p className="sectionLabel">Medical Report Upload</p>
-            <h2>Drop your medical report here</h2>
-            <p>
-  Laboratory Reports Ã¢â‚¬Â¢ Radiology Reports Ã¢â‚¬Â¢ Medical Reports Ã¢â‚¬Â¢
-  Discharge Summaries Ã¢â‚¬Â¢ PDF Ã¢â‚¬Â¢ JPG Ã¢â‚¬Â¢ PNG
-</p>
-<div style={{ marginBottom: "16px" }}>
-  <select
-    value={reportType}
-    onChange={(event) => setReportType(event.target.value)}
-    className="reportTypeSelect"
-  >
-    <option value="lab">Laboratory Report</option>
-    <option value="radiology">Radiology Report</option>
-    <option value="medical">Medical Report</option>
-    <option value="discharge">Discharge Summary</option>
-  </select>
-</div>
-  <label
-  className="labDropZone"
-  onDrop={handleDrop}
-  onDragOver={handleDragOver}
->
-  <input
-    type="file"
-    accept=".pdf,.jpg,.jpeg,.png"
-    onChange={handleFileChange}
-    multiple
-    hidden
-  />
+        <div className="labUploadHeroCard">
+          <span>{isArabic ? "الخطوة التالية" : "Next step"}</span>
+          <h2>
+            {stats.total === 0
+              ? isArabic
+                ? "ارفع أول تقرير"
+                : "Upload your first report"
+              : isArabic
+              ? "افتح مركز الذكاء"
+              : "Open Intelligence Center"}
+          </h2>
+          <p>
+            {stats.total === 0
+              ? isArabic
+                ? "بعد الرفع، سيظهر التقرير في مكتبة التقارير ومركز الذكاء."
+                : "After upload, the report will appear in Reports Library and Intelligence Center."
+              : isArabic
+              ? "لديك تقارير محفوظة. الخطوة التالية هي توليد أو مراجعة الذكاء الصحي."
+              : "You have saved reports. The next step is to generate or review health intelligence."}
+          </p>
 
-  <div className="labDropIcon">Ã°Å¸â€œâ€ž</div>
-
-  <strong>
-    {fileNames.length > 0
-      ? `${fileNames.length} file${fileNames.length > 1 ? "s" : ""} selected`
-      : latestUploadedFileName
-      ? latestUploadedFileName
-      : "Drop up to 10 PDF or image files, or click to upload"}
-  </strong>
-
-  <span>
-    {fileNames.length > 0
-      ? fileNames.join(", ")
-      : latestUploadedFileName
-      ? "Ready for AI extraction"
-      : "PDF, JPG, JPEG, PNG supported"}
-  </span>
-
-  {fileNames.length > 0 && (
-    <div className="selectedFileList">
-      {fileNames.map((name, index) => (
-        <div key={name + index} className="selectedFileItem">
-          <span>{name}</span>
-
-          <button
-            type="button"
-            onClick={(event) => {
-              event.preventDefault();
-              removeSelectedFile(index);
-            }}
+          <Link
+            href={stats.total === 0 ? "/reports" : "/intelligence"}
+            className="launchPrimary"
           >
-            Remove
-          </button>
+            {stats.total === 0
+              ? isArabic
+                ? "مكتبة التقارير"
+                : "Reports Library"
+              : isArabic
+              ? "مركز الذكاء"
+              : "Intelligence Center"}
+          </Link>
         </div>
-      ))}
-    </div>
-  )}
+      </section>
 
-<div
-  style={{
-    marginTop: "20px",
-    display: "flex",
-    justifyContent: "center",
-  }}
->
-  <button
-    type="button"
-    className="primaryBtn"
-    onClick={(event) => {
-      event.preventDefault();
-      uploadFile();
-    }}
-    disabled={uploading}
-  >
-    {uploading ? "Processing..." : "Analyze Report"}
-  </button>
-</div>
-</label>
-            <div className="labAnalysisSteps">
-              {steps.map((step) => (
-                <div
-                  key={step.key}
-                  className={`labAnalysisStep ${
-                    analysisStep === step.key ? "active" : ""
-                  }`}
-                >
-                  <strong>{step.title}</strong>
-                  <span>{step.description}</span>
-                </div>
-              ))}
-            </div>
-              
+      <section className="labUploadStatsGrid">
+        <article>
+          <span>{isArabic ? "كل التقارير" : "Total reports"}</span>
+          <strong>{stats.total}</strong>
+          <p>{isArabic ? "محفوظة في حسابك" : "Saved in your account"}</p>
+        </article>
 
-  {message && (
-  <div className="resultBox">
-    <p className="sectionLabel">
-      {showIntelligenceLink ? "Report Saved" : "Upload Status"}
-    </p>
+        <article>
+          <span>{isArabic ? "استخراج مكتمل" : "Extraction completed"}</span>
+          <strong>{stats.completed}</strong>
+          <p>{isArabic ? "جاهزة للذكاء" : "Ready for intelligence"}</p>
+        </article>
 
-    <h2>
-      {showIntelligenceLink
-        ? "Your report is ready for review"
-        : "Upload update"}
-    </h2>
+        <article>
+          <span>{isArabic ? "بانتظار" : "Pending"}</span>
+          <strong>{stats.pending + stats.processing}</strong>
+          <p>{isArabic ? "تحتاج تشغيل أو انتظار" : "Need extraction or review"}</p>
+        </article>
 
-    <p
-      style={{
-        whiteSpace: "pre-line",
-        opacity: 0.82,
-        lineHeight: 1.7,
-        maxWidth: "760px",
-        margin: "0 auto 20px",
-      }}
-    >
-      {message}
-    </p>
+        <article>
+          <span>{isArabic ? "فشل" : "Failed"}</span>
+          <strong>{stats.failed}</strong>
+          <p>{isArabic ? "يمكن إعادة المحاولة" : "Can be retried"}</p>
+        </article>
+      </section>
 
-    {showIntelligenceLink && (
-      <div
-        style={{
-          display: "flex",
-          gap: "12px",
-          flexWrap: "wrap",
-          justifyContent: "center",
-        }}
-      >
-        <button
-          className="primaryBtn"
-          onClick={() => {
-            window.location.href = "/reports";
-          }}
+      <section className="labUploadPanel">
+        <div className="labUploadPanelHeader">
+          <p className="launchEyebrow">
+            {isArabic ? "ارفع ملفًا" : "Upload file"}
+          </p>
+
+          <h2>
+            {isArabic
+              ? "اسحب التقرير أو اختره من جهازك"
+              : "Drop your report or choose it from your device"}
+          </h2>
+
+          <p>
+            {isArabic
+              ? "يدعم PDF و PNG و JPG و JPEG. يمكنك رفع حتى 10 ملفات في كل مرة."
+              : "Supports PDF, PNG, JPG, and JPEG. You can upload up to 10 files at a time."}
+          </p>
+        </div>
+
+        <div className="labUploadControls">
+          <label>
+            <span>{isArabic ? "نوع التقرير" : "Report type"}</span>
+            <select
+              value={reportType}
+              onChange={(event) => setReportType(event.target.value as ReportType)}
+            >
+              <option value="lab">{isArabic ? "مختبر" : "Laboratory"}</option>
+              <option value="radiology">{isArabic ? "أشعة" : "Radiology"}</option>
+              <option value="clinical">
+                {isArabic ? "تقرير سريري" : "Clinical Summary"}
+              </option>
+              <option value="prescription">
+                {isArabic ? "وصفة طبية" : "Prescription"}
+              </option>
+              <option value="medical">
+                {isArabic ? "تقرير طبي عام" : "General Medical"}
+              </option>
+            </select>
+          </label>
+        </div>
+
+        <label
+          className="labUploadDropZone"
+          onDragOver={(event) => event.preventDefault()}
+          onDrop={handleDrop}
         >
-          Open Reports Library
-        </button>
+          <input
+            type="file"
+            multiple
+            accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg"
+            onChange={handleFileInput}
+          />
 
-        <button
-          className="secondaryBtn"
-          onClick={() => {
-            window.location.href = "/intelligence";
-          }}
-        >
-          Open Intelligence Center
-        </button>
-      </div>
-    )}
-  </div>
-)}
-{latestUploadedFileName && (
-  <div className="resultBox">
-    <p className="sectionLabel">Latest Uploaded File</p>
-    <h3>{latestUploadedFileName}</h3>
-    <p>Status: uploaded and ready for AI extraction</p>
-  </div>
-)}
-</div>
-<div className="resultBox">
-  <p className="sectionLabel">Latest Uploaded Reports</p>
-<h2>Recently Uploaded Medical Reports</h2>
+          <div className="labDropIcon">PDF</div>
 
-  <div style={{ display: "flex", gap: "12px", marginBottom: "20px" }}>
-    <input
-      type="text"
-      placeholder="Search reports..."
-      value={searchTerm}
-      onChange={(e) => setSearchTerm(e.target.value)}
-      className="searchInput"
-    />
+          <strong>
+            {selectedFiles.length > 0
+              ? `${selectedFiles.length} file${selectedFiles.length > 1 ? "s" : ""} selected`
+              : latestUploadedFileName
+              ? latestUploadedFileName
+              : isArabic
+              ? "اسحب حتى 10 ملفات أو اضغط للاختيار"
+              : "Drop up to 10 files or click to upload"}
+          </strong>
 
-    <select
-      value={reportFilter}
-      onChange={(e) => setReportFilter(e.target.value)}
-      className="reportTypeSelect"
-    >
-      <option value="all">All</option>
-      <option value="uploaded">Uploaded</option>
-      <option value="analyzed">Analyzed</option>
-      <option value="pending">Pending</option>
-    </select>
-  </div>
+          <span>
+            {selectedFiles.length > 0
+              ? selectedFiles.map((file) => file.name).join(", ")
+              : isArabic
+              ? "PDF, PNG, JPG, JPEG"
+              : "PDF, PNG, JPG, JPEG supported"}
+          </span>
+        </label>
 
-  {uploadedFiles.length === 0 ? (
-    <p>No uploaded lab reports yet.</p>
-  ) : (
-    latestFiles.map((file) => (
-      <div
-        key={file.id}
-        style={{
-          padding: "14px 0",
-          borderBottom: "1px solid rgba(255,255,255,0.12)",
-        }}
-      >
-        <h3>{file.file_name}</h3>
-
-        <p>Uploaded on: {new Date(file.created_at).toLocaleString()}</p>
-
-        <p>
-          Status: <strong>{file.analysis_status || "uploaded"}</strong>
-        </p>
-
-        {file.ai_summary && (
-          <div className="resultBox">
-            <p>{file.ai_summary}</p>
+        {selectedFiles.length > 0 && (
+          <div className="labSelectedFiles">
+            {selectedFiles.map((file, index) => (
+              <div key={`${file.name}-${index}`}>
+                <span>{file.name}</span>
+                <button type="button" onClick={() => removeSelectedFile(index)}>
+                  {isArabic ? "إزالة" : "Remove"}
+                </button>
+              </div>
+            ))}
           </div>
         )}
 
-        <div
-          style={{
-            display: "flex",
-            gap: "10px",
-            marginTop: "12px",
-            flexWrap: "wrap",
-          }}
-        >
+        <div className="labUploadActions">
           <button
-            className="secondaryBtn"
-            onClick={() => openFile(file.file_path)}
+            type="button"
+            className="launchPrimary labUploadButton"
+            onClick={uploadFile}
+            disabled={uploading}
           >
-            Open File
+            {uploading
+              ? isArabic
+                ? "جاري الحفظ..."
+                : "Saving..."
+              : isArabic
+              ? "حفظ التقرير"
+              : "Save Report"}
           </button>
 
-          <button
-            className="primaryBtn"
-            onClick={() => {
-              window.location.href = "/intelligence";
-            }}
-          >
-            View Intelligence
-          </button>
+          <Link href="/reports" className="launchSecondary">
+            {isArabic ? "مكتبة التقارير" : "Reports Library"}
+          </Link>
 
-          <button
-            className="secondaryBtn"
-            onClick={() => deleteFile(file)}
-          >
-            Delete File
-          </button>
+          <Link href="/intelligence" className="launchSecondary">
+            {isArabic ? "مركز الذكاء" : "Intelligence Center"}
+          </Link>
         </div>
-      </div>
-    ))
-  )}
-</div>
 
-<div className="trustBox">
-  <p className="sectionLabel">Important Notice</p>
+        {message && (
+          <div className={`labUploadMessage ${uploadStep === "error" ? "error" : "success"}`}>
+            <p>{message}</p>
 
-  <h2>Educational Use Only</h2>
+            {canShowNextStep && (
+              <div className="labUploadMessageActions">
+                <Link href="/reports" className="launchPrimary">
+                  {isArabic ? "افتح مكتبة التقارير" : "Open Reports Library"}
+                </Link>
 
-  <p>
-    OrganHeal AI is designed for educational health awareness and wellness
-    tracking. It does not provide diagnosis, treatment, or emergency medical
-    advice.
-  </p>
-</div>
-</div>
-</div>
-</main>
-);
+                <Link href="/intelligence" className="launchSecondary">
+                  {isArabic ? "افتح مركز الذكاء" : "Open Intelligence"}
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
+      </section>
+
+      <section className="labUploadReportsSection">
+        <div className="labUploadReportsHeader">
+          <div>
+            <p className="launchEyebrow">
+              {isArabic ? "التقارير الأخيرة" : "Recent reports"}
+            </p>
+
+            <h2>
+              {isArabic
+                ? "تابع حالة الحفظ والاستخراج"
+                : "Track saving and extraction status"}
+            </h2>
+
+            <p>
+              {isArabic
+                ? "يمكنك فتح الملف الأصلي، تشغيل الاستخراج، أو الانتقال إلى مركز الذكاء."
+                : "You can open the original file, run extraction, or continue to Intelligence Center."}
+            </p>
+          </div>
+
+          <div className="labUploadFilters">
+            <input
+              type="text"
+              placeholder={isArabic ? "ابحث باسم الملف" : "Search by file name"}
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+            />
+
+            <select
+              value={reportFilter}
+              onChange={(event) => setReportFilter(event.target.value as ReportFilter)}
+            >
+              <option value="all">{isArabic ? "الكل" : "All"}</option>
+              <option value="pending">{isArabic ? "بانتظار" : "Pending"}</option>
+              <option value="processing">
+                {isArabic ? "جاري الاستخراج" : "Processing"}
+              </option>
+              <option value="completed">
+                {isArabic ? "مكتمل" : "Completed"}
+              </option>
+              <option value="failed">{isArabic ? "فشل" : "Failed"}</option>
+            </select>
+          </div>
+        </div>
+
+        {uploadedFiles.length === 0 ? (
+          <div className="labUploadEmpty">
+            <h3>
+              {isArabic
+                ? "لا توجد تقارير محفوظة بعد"
+                : "No saved reports yet"}
+            </h3>
+            <p>
+              {isArabic
+                ? "ارفع أول تقرير طبي حتى يظهر هنا."
+                : "Upload your first medical report so it appears here."}
+            </p>
+          </div>
+        ) : latestFiles.length === 0 ? (
+          <div className="labUploadEmpty">
+            <h3>{isArabic ? "لا توجد نتائج مطابقة" : "No matching results"}</h3>
+            <p>
+              {isArabic
+                ? "غيّر البحث أو الفلتر الحالي."
+                : "Change the search term or current filter."}
+            </p>
+          </div>
+        ) : (
+          <div className="labUploadReportGrid">
+            {latestFiles.map((file) => (
+              <article className="labUploadReportCard" key={file.id}>
+                <div className="labReportTop">
+                  <span>{getReportTypeLabel(file.report_type)}</span>
+                  <strong>{getExtractionLabel(file.extraction_status)}</strong>
+                </div>
+
+                <h3>{file.file_name}</h3>
+
+                <div className="labReportMeta">
+                  <div>
+                    <span>{isArabic ? "تاريخ الرفع" : "Uploaded"}</span>
+                    <strong>{formatDate(file.created_at)}</strong>
+                  </div>
+
+                  <div>
+                    <span>{isArabic ? "تاريخ الاستخراج" : "Extracted"}</span>
+                    <strong>{formatDate(file.extracted_at)}</strong>
+                  </div>
+                </div>
+
+                <p>
+                  {file.extraction_status === "Completed"
+                    ? isArabic
+                      ? "تم استخراج النص. يمكنك فتح مركز الذكاء لتوليد الملخص."
+                      : "Text extraction is completed. Open Intelligence Center to generate summaries."
+                    : isArabic
+                    ? "التقرير محفوظ. يمكنك تشغيل الاستخراج أو الانتقال لمركز الذكاء."
+                    : "The report is saved. You can run extraction or continue to Intelligence Center."}
+                </p>
+
+                <div className="labReportActions">
+                  <button
+                    type="button"
+                    className="launchSecondary labUploadButton"
+                    onClick={() => openFile(file.file_path)}
+                  >
+                    {isArabic ? "فتح الملف" : "Open File"}
+                  </button>
+
+                  <button
+                    type="button"
+                    className="launchSecondary labUploadButton"
+                    onClick={() => runExtraction(file)}
+                    disabled={extractingReportId === file.id}
+                  >
+                    {extractingReportId === file.id
+                      ? isArabic
+                        ? "جاري الاستخراج..."
+                        : "Extracting..."
+                      : isArabic
+                      ? "تشغيل الاستخراج"
+                      : "Run Extraction"}
+                  </button>
+
+                  <Link href="/intelligence" className="launchPrimary">
+                    {isArabic ? "مركز الذكاء" : "Intelligence"}
+                  </Link>
+
+                  <button
+                    type="button"
+                    className="launchSecondary labUploadButton"
+                    onClick={() => deleteFile(file)}
+                  >
+                    {isArabic ? "حذف" : "Delete"}
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="labUploadBottomNav">
+        <div>
+          <p className="launchEyebrow">
+            {isArabic ? "المسار الصحيح" : "Recommended path"}
+          </p>
+
+          <h2>
+            {isArabic
+              ? "من الرفع إلى الذكاء الصحي"
+              : "From upload to health intelligence"}
+          </h2>
+
+          <p>
+            {isArabic
+              ? "احفظ التقرير، شغّل الاستخراج عند الحاجة، افتح مركز الذكاء، ثم انتقل إلى خطة المتابعة."
+              : "Save the report, run extraction when needed, open Intelligence Center, then continue to your follow-up plan."}
+          </p>
+        </div>
+
+        <div className="labUploadBottomLinks">
+          <Link href="/reports">{isArabic ? "التقارير" : "Reports"}</Link>
+          <Link href="/intelligence">{isArabic ? "الذكاء" : "Intelligence"}</Link>
+          <Link href="/health-plan">{isArabic ? "الخطة" : "Health Plan"}</Link>
+          <Link href="/dashboard">{isArabic ? "لوحة التحكم" : "Dashboard"}</Link>
+        </div>
+      </section>
+    </main>
+  );
 }
