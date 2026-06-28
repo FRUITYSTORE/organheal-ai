@@ -17,6 +17,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/liver",
     "/lung",
     "/metabolic",
+    "/privacy",
+    "/terms",
+    "/medical-disclaimer",
+    "/contact",
   ];
 
   const staticRoutes = routes.map((route) => ({

@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 import Navbar from "./components/Navbar";
+import SiteFooter from "./components/SiteFooter";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.organheal.com"),
@@ -77,7 +78,13 @@ export default function RootLayout({
       <body>
         <Navbar />
         {children}
+        <SiteFooter />
       </body>
     </html>
   );
 }
+
+
+
+
+
