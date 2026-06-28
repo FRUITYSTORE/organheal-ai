@@ -98,7 +98,7 @@ export default function Navbar() {
         </div>
       </Link>
 
-            <div className="navLinks">
+                  <div className="navLinks">
         <Link href="/">Home</Link>
         <Link href="/dashboard">Dashboard</Link>
         <Link href="/reports">Reports</Link>
@@ -107,6 +107,8 @@ export default function Navbar() {
         {isLoggedIn ? (
           <>
             <Link href="/health-plan">Health Plan</Link>
+            <Link href="/history">History</Link>
+            <Link href="/doctor-portal">Doctor Portal</Link>
             <Link href="/profile">Profile</Link>
 
             <LanguageToggle />
