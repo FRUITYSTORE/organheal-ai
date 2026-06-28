@@ -1,4 +1,5 @@
 "use client";
+import MedicalSafetyNotice from "../components/MedicalSafetyNotice";
 import { buildActionPlan } from "../../lib/actionPlanEngine";
 import { buildHealthStory } from "../../lib/healthStoryEngine";
 import { buildHistoricalLabTrends } from "../../lib/historicalLabTrendEngine";
@@ -624,6 +625,8 @@ if (saveGeneratedResultError) {
           </p>
         </section>
 
+        <MedicalSafetyNotice context="intelligence" />
+
         <section className="chatWindow">
           {loading && (
             <div className="resultBox">
@@ -692,7 +695,15 @@ return (
 isExpanded={isExpandedReport}
 canOpen={Boolean(item.file_path)}
 onOpen={() => openMedicalReport(item.file_path)}
-onGenerate={() => generateReportIntelligence(item.id)}
+onGenerate={() => {
+  const agreed = window.confirm(
+    "OrganHeal AI provides educational health intelligence only. It does not diagnose, treat, or replace licensed medical care. Continue generating this report intelligence?"
+  );
+
+  if (agreed) {
+    generateReportIntelligence(item.id);
+  }
+}}
 onViewGenerated={() => openSavedGeneratedResult(item.id)}
 onHideGenerated={() => {
   setExpandedReportId(null);

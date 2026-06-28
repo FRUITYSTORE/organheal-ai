@@ -1,4 +1,5 @@
 "use client";
+import MedicalSafetyNotice from "../components/MedicalSafetyNotice";
 
 import Link from "next/link";
 import { useState } from "react";
@@ -141,13 +142,13 @@ export default function SignupPage() {
     <main className="signupPage">
       <section className="signupCard">
         <Link href="/" className="closeBtn">
-          ×
+          Ã—
         </Link>
 
         <p className="signupLabel">JOIN ORGANHEAL</p>
         <h1>REGISTER</h1>
         <p className="subtitle">Create your health intelligence account</p>
-        <p className="trustLine">Secure • Private • AI-Powered</p>
+        <p className="trustLine">Secure â€¢ Private â€¢ AI-Powered</p>
 
         <form onSubmit={handleSignup} className="signupForm">
           <input
