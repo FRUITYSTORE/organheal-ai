@@ -4849,3 +4849,351 @@ html[dir="rtl"] .homeHeroActions {
   cursor: pointer;
   font-size: 14px;
 }
+
+/* ── Phase 33 Health Plan Personalization ───────────── */
+.healthPlanIntelligencePage {
+  min-height: 100vh;
+  padding: 52px 20px 88px;
+  background:
+    radial-gradient(circle at 12% 8%, rgba(34, 211, 238, 0.16), transparent 32%),
+    radial-gradient(circle at 86% 18%, rgba(16, 185, 129, 0.13), transparent 30%),
+    linear-gradient(135deg, #f8fafc 0%, #eefcff 48%, #ffffff 100%);
+  color: #0f172a;
+}
+
+.healthPlanShell {
+  max-width: 1160px;
+  margin: 0 auto;
+}
+
+.healthPlanHero {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 24px;
+  align-items: center;
+}
+
+.healthPlanHero h1 {
+  margin: 16px 0 14px;
+  color: #061827;
+  font-size: clamp(40px, 6vw, 70px);
+  line-height: 0.98;
+  letter-spacing: -0.07em;
+}
+
+.healthPlanHero p:not(.launchEyebrow),
+.healthPlanHeroCard p,
+.healthPlanPanel p,
+.healthPlanCard p,
+.healthPlanBottomNav p {
+  margin: 0;
+  color: #475569;
+  line-height: 1.8;
+}
+
+.healthPlanHeroCard {
+  padding: 26px;
+  border-radius: 28px;
+  background: #020617;
+  border: 1px solid rgba(34, 211, 238, 0.18);
+  color: #e2e8f0;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.14);
+  display: grid;
+  gap: 12px;
+}
+
+.healthPlanHeroCard span,
+.healthPlanMetricsGrid span,
+.healthPlanInfoList span {
+  color: #0e7490;
+  font-size: 12px;
+  font-weight: 1000;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.healthPlanHeroCard span {
+  color: #67e8f9;
+}
+
+.healthPlanHeroCard strong {
+  color: #ffffff;
+  font-size: 58px;
+  letter-spacing: -0.08em;
+}
+
+.healthPlanHeroCard p {
+  color: #cbd5e1;
+}
+
+.healthPlanMetricsGrid {
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.healthPlanMetricsGrid article,
+.healthPlanPanel,
+.healthPlanCard,
+.healthPlanBottomNav {
+  padding: 28px;
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 18px 54px rgba(15, 23, 42, 0.06);
+}
+
+.healthPlanMetricsGrid strong {
+  display: block;
+  margin: 8px 0 4px;
+  color: #0f172a;
+  font-size: 34px;
+  letter-spacing: -0.05em;
+  overflow-wrap: anywhere;
+}
+
+.healthPlanMetricsGrid p {
+  margin: 0;
+  color: #64748b;
+  line-height: 1.6;
+}
+
+.healthPlanPanel,
+.healthPlanGrid,
+.healthPlanBottomNav {
+  margin-top: 22px;
+}
+
+.healthPlanPanel h2,
+.healthPlanCard h2,
+.healthPlanBottomNav h2 {
+  margin: 12px 0 10px;
+  color: #061827;
+  font-size: clamp(28px, 4vw, 44px);
+  letter-spacing: -0.05em;
+}
+
+.healthPlanNextPanel {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 20px;
+  align-items: center;
+  background: #020617;
+  color: #e2e8f0;
+}
+
+.healthPlanNextPanel h2 {
+  color: #ffffff;
+}
+
+.healthPlanNextPanel p {
+  color: #cbd5e1;
+}
+
+.healthPlanGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.healthPlanInfoList {
+  margin-top: 18px;
+  display: grid;
+  gap: 12px;
+}
+
+.healthPlanInfoList div {
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(248, 250, 252, 0.9);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  display: grid;
+  gap: 6px;
+}
+
+.healthPlanInfoList strong {
+  color: #0f172a;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.healthPlanActionRow {
+  margin-top: 18px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.healthPlanActionRow a {
+  text-decoration: none;
+  padding: 10px 14px;
+  border-radius: 999px;
+  color: #0f172a;
+  background: rgba(8, 145, 178, 0.08);
+  border: 1px solid rgba(8, 145, 178, 0.14);
+  font-weight: 900;
+}
+
+.healthPlanCard small {
+  display: block;
+  margin-top: 14px;
+  color: #64748b;
+  font-weight: 800;
+}
+
+.healthPlanRoadmap {
+  margin-top: 20px;
+  display: grid;
+  gap: 12px;
+}
+
+.healthPlanRoadmap.month {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.healthPlanRoadmap div {
+  padding: 16px;
+  border-radius: 20px;
+  background: rgba(248, 250, 252, 0.92);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  display: grid;
+  gap: 10px;
+}
+
+.healthPlanRoadmap span {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: rgba(8, 145, 178, 0.1);
+  color: #0e7490;
+  font-weight: 1000;
+}
+
+.healthPlanSectionHeader {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 18px;
+  align-items: center;
+}
+
+.healthPlanSectionHeader > strong {
+  color: #0e7490;
+  font-size: 42px;
+  letter-spacing: -0.06em;
+}
+
+.healthPlanProgressBar {
+  margin: 18px 0 18px;
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.22);
+  overflow: hidden;
+}
+
+.healthPlanProgressBar div {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #22c55e, #38bdf8);
+}
+
+.healthPlanTaskList {
+  display: grid;
+  gap: 12px;
+}
+
+.healthPlanTaskItem {
+  padding: 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(248, 250, 252, 0.92);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.healthPlanTaskItem input {
+  width: 18px;
+  height: 18px;
+  accent-color: #22c55e;
+}
+
+.healthPlanTaskItem span {
+  color: #0f172a;
+  line-height: 1.6;
+}
+
+.healthPlanTaskItem small {
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.14);
+  color: #475569;
+  font-weight: 900;
+}
+
+.healthPlanTaskItem.completed {
+  border-color: rgba(34, 197, 94, 0.25);
+  background: rgba(34, 197, 94, 0.08);
+}
+
+.healthPlanTaskItem.completed span {
+  color: #047857;
+  text-decoration: line-through;
+  text-decoration-color: rgba(34, 197, 94, 0.55);
+}
+
+.healthPlanBottomNav {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 20px;
+  align-items: center;
+}
+
+@media (max-width: 960px) {
+  .healthPlanHero,
+  .healthPlanNextPanel,
+  .healthPlanGrid,
+  .healthPlanBottomNav {
+    grid-template-columns: 1fr;
+  }
+
+  .healthPlanMetricsGrid,
+  .healthPlanRoadmap.month {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .healthPlanIntelligencePage {
+    padding: 34px 14px 64px;
+  }
+
+  .healthPlanMetricsGrid,
+  .healthPlanRoadmap.month,
+  .healthPlanTaskItem {
+    grid-template-columns: 1fr;
+  }
+
+  .healthPlanHeroCard,
+  .healthPlanMetricsGrid article,
+  .healthPlanPanel,
+  .healthPlanCard,
+  .healthPlanBottomNav {
+    border-radius: 22px;
+    padding: 22px;
+  }
+
+  .healthPlanActionRow a,
+  .healthPlanNextPanel .launchPrimary {
+    width: 100%;
+    text-align: center;
+  }
+
+  .healthPlanSectionHeader {
+    grid-template-columns: 1fr;
+  }
+}

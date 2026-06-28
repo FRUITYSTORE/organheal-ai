@@ -1,654 +1,763 @@
 "use client";
-import PageBackActions from "../components/PageBackActions";
-import { useEffect, useState } from "react";
-import { supabase } from "../../lib/supabase";
 
-type Assessment = {
-  organ_name: string;
-  score: number;
-  risk_level: string;
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import PageBackActions from "../components/PageBackActions";
+import { supabase } from "@/lib/supabase";
+
+type Language = "en" | "ar";
+
+type PriorityAssessment = {
+  organ_name: string | null;
+  score: number | null;
+  risk_level: string | null;
 };
 
 type DailyCheckIn = {
-  mood: string;
-  wellness_score: number;
+  mood: string | null;
+  wellness_score: number | null;
   created_at: string;
 };
 
-const taskPlans: Record<string, string[]> = {
+type UploadedReport = {
+  id: number;
+  file_name: string | null;
+  extraction_status: string | null;
+  created_at: string;
+  extracted_at: string | null;
+};
+
+type HealthInsight = {
+  id: number;
+  report_id: number | null;
+  ai_status: string | null;
+  risk_level: string | null;
+  summary: string | null;
+  next_best_action: string | null;
+  created_at: string;
+};
+
+type GeneratedResult = {
+  insight_id: number | null;
+  report_id: number | null;
+  updated_at: string | null;
+};
+
+type HistoryItem = {
+  id: number;
+  created_at: string | null;
+};
+
+const organTaskPlans: Record<string, string[]> = {
   Heart: [
-    "Monitor blood pressure at least 3 times this week",
-    "Reduce high-salt and high-fat meals",
-    "Walk or exercise for at least 20 minutes on 4 days",
-    "Review cholesterol or lipid profile when available",
-    "Repeat Heart assessment after 4 weeks",
-  ],
-  Lung: [
-    "Avoid smoking and second-hand smoke exposure",
-    "Track cough, wheezing, or shortness of breath symptoms",
-    "Practice light breathing exercises daily",
-    "Avoid dust, strong perfumes, and respiratory irritants",
-    "Repeat Lung assessment after 4 weeks",
+    "Check blood pressure at least 3 times this week.",
+    "Reduce salty or heavily processed food for the next 7 days.",
+    "Walk for 20 minutes on at least 4 days this week.",
+    "Review any chest pain, shortness of breath, or palpitation pattern.",
   ],
   Kidney: [
-    "Track daily hydration unless medically restricted",
-    "Monitor blood pressure regularly",
-    "Avoid unnecessary kidney stressors such as NSAIDs without medical advice",
-    "Complete kidney function and urine testing if recommended",
-    "Repeat Kidney assessment after 4 weeks",
+    "Track hydration and urine changes for the next 7 days.",
+    "Review blood pressure and avoid unnecessary NSAID use.",
+    "Prepare latest creatinine, eGFR, and urine results for review.",
+    "Reduce high-salt meals this week.",
   ],
   Liver: [
-    "Reduce sugary and high-fat meals",
-    "Focus on weight control and balanced nutrition",
-    "Avoid unnecessary liver stressors",
-    "Review liver enzymes if available",
-    "Repeat Liver assessment after 4 weeks",
+    "Review liver enzymes and medication or supplement exposure.",
+    "Avoid alcohol and unnecessary supplements.",
+    "Track abdominal discomfort, fatigue, or yellowing symptoms.",
+    "Prepare previous liver-related reports for comparison.",
+  ],
+  Lung: [
+    "Track cough, breathing difficulty, and activity tolerance.",
+    "Avoid smoke, dust, and strong respiratory irritants.",
+    "Record oxygen saturation if clinically relevant and available.",
+    "Review inhaler or respiratory medication adherence if applicable.",
   ],
   Brain: [
-    "Improve sleep routine and sleep duration",
-    "Practice stress reduction for 10 minutes daily",
-    "Add regular physical activity",
-    "Monitor headaches, memory concerns, or neurological symptoms",
-    "Repeat Brain assessment after 4 weeks",
+    "Track sleep quality, headache pattern, focus, and stress level.",
+    "Reduce late screen exposure for the next 7 days.",
+    "Practice a short breathing or relaxation routine daily.",
+    "Review any dizziness, weakness, or neurological warning symptoms.",
   ],
   Metabolic: [
-    "Track weight and waist changes weekly",
-    "Reduce sugary drinks and refined carbohydrates",
-    "Walk or exercise regularly",
-    "Review glucose, HbA1c, and lipid results when available",
-    "Repeat Metabolic assessment after 4 weeks",
+    "Track weight, waist, or glucose-related changes weekly.",
+    "Reduce sugary drinks and refined carbohydrates.",
+    "Walk or exercise for at least 20 minutes on 4 days this week.",
+    "Prepare lipid, glucose, HbA1c, or metabolic lab reports.",
   ],
   General: [
-    "Follow the recommended action from your dashboard",
-    "Track hydration and daily wellness habits",
-    "Monitor blood pressure if relevant",
-    "Complete suggested follow-up tests",
-    "Repeat the priority organ assessment after 4 weeks",
+    "Complete one wellness check-in this week.",
+    "Review your latest reports and generated intelligence.",
+    "Choose one realistic lifestyle action for the next 7 days.",
+    "Repeat your priority assessment after 4 weeks.",
   ],
 };
 
-const weeklyPlan: Record<string, string[]> = {
-  Heart: [
-    "Week 1: Record blood pressure and review major lifestyle risk factors.",
-    "Week 2: Improve activity routine and reduce high-salt meals.",
-    "Week 3: Review cholesterol-related habits and repeat daily check-ins.",
-    "Week 4: Repeat Heart assessment and compare trend in Health History.",
-  ],
-  Lung: [
-    "Week 1: Track respiratory symptoms and avoid smoke exposure.",
-    "Week 2: Add light daily breathing or walking activity.",
-    "Week 3: Reduce exposure to dust, perfumes, and irritants.",
-    "Week 4: Repeat Lung assessment and review symptom trend.",
-  ],
-  Kidney: [
-    "Week 1: Track hydration and blood pressure if relevant.",
-    "Week 2: Review kidney stressors and avoid unnecessary NSAIDs unless advised.",
-    "Week 3: Complete kidney function or urine testing if recommended.",
-    "Week 4: Repeat Kidney assessment and compare progress.",
-  ],
-  Liver: [
-    "Week 1: Reduce sugary and high-fat meals.",
-    "Week 2: Focus on balanced nutrition and weight control.",
-    "Week 3: Review liver enzyme results if available.",
-    "Week 4: Repeat Liver assessment and monitor improvement.",
-  ],
-  Brain: [
-    "Week 1: Improve sleep timing and reduce late-night screen time.",
-    "Week 2: Practice stress reduction for 10 minutes daily.",
-    "Week 3: Add regular physical activity and hydration tracking.",
-    "Week 4: Repeat Brain assessment and review cognitive wellness trend.",
-  ],
-  Metabolic: [
-    "Week 1: Track weight, sugar intake, and activity level.",
-    "Week 2: Reduce refined carbohydrates and sugary drinks.",
-    "Week 3: Review glucose, HbA1c, or lipid results if available.",
-    "Week 4: Repeat Metabolic assessment and compare progress.",
-  ],
-  General: [
-    "Week 1: Complete your priority assessment and daily check-ins.",
-    "Week 2: Follow dashboard recommendations.",
-    "Week 3: Review history and trends.",
-    "Week 4: Repeat assessment and compare results.",
-  ],
+const organAssessmentLinks: Record<string, string> = {
+  Heart: "/heart",
+  Kidney: "/kidney",
+  Liver: "/liver",
+  Lung: "/lung",
+  Brain: "/brain",
+  Metabolic: "/metabolic",
+  General: "/assessment",
 };
 
 export default function HealthPlanPage() {
-  const [priorityOrgan, setPriorityOrgan] = useState("General");
-  const [priorityScore, setPriorityScore] = useState<number | null>(null);
-  const [riskLevel, setRiskLevel] = useState("");
-  const [dailyCheckIn, setDailyCheckIn] = useState<DailyCheckIn | null>(null);
-  const [completedTasks, setCompletedTasks] = useState<string[]>([]);
+  const [language, setLanguage] = useState<Language>("en");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [priorityAssessment, setPriorityAssessment] =
+    useState<PriorityAssessment | null>(null);
+  const [latestCheckIn, setLatestCheckIn] = useState<DailyCheckIn | null>(null);
+  const [uploadedReports, setUploadedReports] = useState<UploadedReport[]>([]);
+  const [healthInsights, setHealthInsights] = useState<HealthInsight[]>([]);
+  const [generatedResults, setGeneratedResults] = useState<GeneratedResult[]>([]);
+  const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
+  const [completedTasks, setCompletedTasks] = useState<string[]>([]);
 
   useEffect(() => {
+    const savedLanguage =
+      (localStorage.getItem("organheal-language") as Language) || "en";
+
+    setLanguage(savedLanguage);
+
+    const interval = setInterval(() => {
+      const currentLanguage =
+        (localStorage.getItem("organheal-language") as Language) || "en";
+      setLanguage(currentLanguage);
+    }, 300);
+
     fetchHealthPlanData();
+
+    return () => clearInterval(interval);
   }, []);
+
+  const isArabic = language === "ar";
+  const priorityOrgan = priorityAssessment?.organ_name || "General";
+  const priorityScore =
+    typeof priorityAssessment?.score === "number"
+      ? priorityAssessment.score
+      : null;
+  const riskLevel = priorityAssessment?.risk_level || "Not available";
+
+  const taskStorageKey = `organheal-health-plan-tasks-${priorityOrgan}`;
+
+  const completedExtractionCount = uploadedReports.filter(
+    (report) => report.extraction_status === "Completed"
+  ).length;
+
+  const pendingExtractionCount = uploadedReports.filter(
+    (report) =>
+      !report.extraction_status || report.extraction_status === "Pending"
+  ).length;
+
+  const generatedCount = generatedResults.length;
+  const latestGenerated = generatedResults[0] || null;
+  const latestInsight = healthInsights[0] || null;
+
+  const hasAssessment = Boolean(priorityAssessment);
+  const hasReports = uploadedReports.length > 0;
+  const hasGeneratedIntelligence = generatedCount > 0;
+  const hasCheckIn = Boolean(latestCheckIn);
+  const hasHistory = historyItems.length > 0;
+
+  const planReadinessScore = [
+    hasAssessment,
+    hasReports,
+    hasGeneratedIntelligence,
+    hasCheckIn,
+    hasHistory,
+  ].filter(Boolean).length * 20;
+
+  const planIntensity =
+    priorityScore === null
+      ? isArabic
+        ? "بانتظار التقييم"
+        : "Waiting for assessment"
+      : priorityScore < 50
+      ? isArabic
+        ? "متابعة عالية"
+        : "High follow-up"
+      : priorityScore < 80
+      ? isArabic
+        ? "متابعة متوسطة"
+        : "Moderate follow-up"
+      : isArabic
+      ? "متابعة وقائية"
+      : "Preventive follow-up";
+
+  const latestCheckInText = latestCheckIn
+    ? `${new Date(latestCheckIn.created_at).toLocaleDateString()} - ${
+        latestCheckIn.wellness_score ?? "N/A"
+      }/100 - ${latestCheckIn.mood || "Mood not recorded"}`
+    : isArabic
+    ? "لا يوجد Check-In بعد"
+    : "No check-in yet";
+
+  const followUpRhythm =
+    priorityScore === null
+      ? isArabic
+        ? "ابدأ بتقييم صحي"
+        : "Start with an assessment"
+      : priorityScore < 50
+      ? isArabic
+        ? "متابعة أسبوعية مقترحة"
+        : "Weekly follow-up recommended"
+      : priorityScore < 80
+      ? isArabic
+        ? "Check-In مرتين إلى ثلاث مرات أسبوعيًا"
+        : "Check in 2 to 3 times per week"
+      : isArabic
+      ? "متابعة وقائية أسبوعية"
+      : "Weekly preventive check-in";
+
+  const nextBestAction = !hasAssessment
+    ? {
+        label: isArabic ? "ابدأ بالتقييم" : "Start your assessment",
+        description: isArabic
+          ? "أكمل تقييمًا واحدًا على الأقل حتى يحدد OrganHeal أولوية الخطة."
+          : "Complete at least one assessment so OrganHeal can identify the priority area for your plan.",
+        href: "/assessment",
+        button: isArabic ? "ابدأ التقييم" : "Start Assessment",
+      }
+    : !hasReports
+    ? {
+        label: isArabic ? "أضف تقريرًا طبيًا" : "Add a medical report",
+        description: isArabic
+          ? "ارفع تقرير مختبر أو أشعة أو ملخص طبي حتى تصبح الخطة مبنية على بيانات أكثر."
+          : "Upload a lab, radiology, or clinical report so your plan can use more health data.",
+        href: "/lab-upload",
+        button: isArabic ? "رفع تقرير" : "Upload Report",
+      }
+    : !hasGeneratedIntelligence
+    ? {
+        label: isArabic ? "ولّد الذكاء الصحي" : "Generate health intelligence",
+        description: isArabic
+          ? "لديك تقارير محفوظة. افتح مركز الذكاء لتوليد ملخص المريض وDoctor Brief."
+          : "You have saved reports. Open Intelligence Center to generate a patient summary and doctor-ready brief.",
+        href: "/intelligence",
+        button: isArabic ? "مركز الذكاء" : "Intelligence Center",
+      }
+    : !hasCheckIn
+    ? {
+        label: isArabic ? "أكمل Check-In اليوم" : "Complete today check-in",
+        description: isArabic
+          ? "أضف تحديث النوم، الضغط النفسي، النشاط، الطاقة، والمزاج حتى تصبح الخطة أكثر شخصية."
+          : "Add sleep, stress, activity, energy, and mood updates so the plan becomes more personal.",
+        href: "/checkin",
+        button: isArabic ? "افتح Check-In" : "Open Check-In",
+      }
+    : {
+        label: isArabic ? "تابع خطة الأسبوع" : "Continue this week plan",
+        description: isArabic
+          ? "الخطة فعالة الآن. أكمل المهام، وراجع التقارير، وحدث Check-In بشكل منتظم."
+          : "Your plan is active. Complete tasks, review reports, and keep check-ins updated.",
+        href: "#action-tasks-section",
+        button: isArabic ? "متابعة المهام" : "Continue Tasks",
+      };
+
+  const baseTasks = organTaskPlans[priorityOrgan] || organTaskPlans.General;
+
+  const dynamicTasks = [
+    !hasGeneratedIntelligence && hasReports
+      ? isArabic
+        ? "ولّد الذكاء الصحي لأحدث تقرير محفوظ."
+        : "Generate intelligence for the latest saved report."
+      : null,
+    hasGeneratedIntelligence
+      ? isArabic
+        ? "راجع ملخص المريض وDoctor Brief من مركز الذكاء."
+        : "Review the patient summary and doctor-ready brief in Intelligence Center."
+      : null,
+    !hasCheckIn
+      ? isArabic
+        ? "أكمل Wellness Check-In هذا الأسبوع."
+        : "Complete a wellness check-in this week."
+      : null,
+    completedExtractionCount > 0
+      ? isArabic
+        ? "راجع التقارير التي اكتمل استخراجها واربطها بالخطة."
+        : "Review extracted reports and connect them to this plan."
+      : null,
+    hasHistory
+      ? isArabic
+        ? "راجع Health History لمقارنة التقدم السابق."
+        : "Review Health History to compare previous progress."
+      : null,
+  ].filter(Boolean) as string[];
+
+  const planTasks = [...dynamicTasks, ...baseTasks].slice(0, 8);
+
+  const sevenDayPlan = [
+    isArabic
+      ? "اليوم 1: راجع الأولوية الصحية والخطوة التالية."
+      : "Day 1: Review your priority area and next best action.",
+    isArabic
+      ? "اليوم 2: أكمل Check-In وحدد أهم عرض أو عادة تحتاج متابعة."
+      : "Day 2: Complete a check-in and identify the main symptom or habit to track.",
+    isArabic
+      ? "اليوم 3: راجع آخر تقرير أو ولّد الذكاء الصحي إن لم يكن موجودًا."
+      : "Day 3: Review the latest report or generate intelligence if missing.",
+    isArabic
+      ? "اليوم 4: نفذ مهمة واحدة من قائمة الخطة."
+      : "Day 4: Complete one action task from the plan.",
+    isArabic
+      ? "اليوم 5: راجع مؤشرات التحسن أو التراجع."
+      : "Day 5: Review improvement or worsening signals.",
+    isArabic
+      ? "اليوم 6: جهز أسئلة للطبيب إذا توجد نتائج مقلقة."
+      : "Day 6: Prepare doctor questions if there are concerning results.",
+    isArabic
+      ? "اليوم 7: راجع التقدم وحدد الأسبوع القادم."
+      : "Day 7: Review progress and decide next week focus.",
+  ];
+
+  const thirtyDayRoadmap = [
+    isArabic
+      ? "الأسبوع 1: تثبيت البيانات الأساسية والتقارير."
+      : "Week 1: Build your baseline from assessments and reports.",
+    isArabic
+      ? "الأسبوع 2: متابعة Check-Ins وتنفيذ المهام الواقعية."
+      : "Week 2: Track check-ins and complete realistic actions.",
+    isArabic
+      ? "الأسبوع 3: مراجعة الأنماط من التقارير والذكاء الصحي."
+      : "Week 3: Review patterns from reports and generated intelligence.",
+    isArabic
+      ? "الأسبوع 4: إعادة تقييم الأولوية ومقارنة Health History."
+      : "Week 4: Repeat the priority assessment and compare Health History.",
+  ];
+
+  const completedTaskCount = completedTasks.length;
+  const totalTasks = planTasks.length;
+  const taskProgress =
+    totalTasks > 0 ? Math.round((completedTaskCount / totalTasks) * 100) : 0;
+
+  useEffect(() => {
+    try {
+      const savedTasks = localStorage.getItem(taskStorageKey);
+      setCompletedTasks(savedTasks ? JSON.parse(savedTasks) : []);
+    } catch {
+      setCompletedTasks([]);
+    }
+  }, [taskStorageKey]);
 
   async function fetchHealthPlanData() {
     setLoading(true);
+    setMessage("");
 
     const { data: userData, error: userError } = await supabase.auth.getUser();
 
     if (userError || !userData.user) {
-      setMessage("Please login to view your personalized health plan.");
+      setMessage(
+        isArabic
+          ? "يرجى تسجيل الدخول لعرض خطة المتابعة."
+          : "Please login to view your follow-up plan."
+      );
       setLoading(false);
       return;
     }
 
-    const { data: priorityData, error: priorityError } = await supabase
-      .from("organ_assessments")
-      .select("organ_name, score, risk_level")
-      .eq("user_id", userData.user.id)
-      .order("score", { ascending: true })
-      .limit(1)
-      .single();
+    const userId = userData.user.id;
 
-    if (priorityError) {
-      setMessage("Complete at least one organ assessment to generate a health plan.");
-      setLoading(false);
-      return;
+    const [
+      assessmentResponse,
+      checkInResponse,
+      reportsResponse,
+      insightsResponse,
+      generatedResponse,
+      historyResponse,
+    ] = await Promise.all([
+      supabase
+        .from("organ_assessments")
+        .select("organ_name, score, risk_level")
+        .eq("user_id", userId)
+        .order("score", { ascending: true })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("daily_checkins")
+        .select("mood, wellness_score, created_at")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("uploaded_lab_files")
+        .select("id, file_name, extraction_status, created_at, extracted_at")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(10),
+      supabase
+        .from("health_insights")
+        .select("id, report_id, ai_status, risk_level, summary, next_best_action, created_at")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(10),
+      supabase
+        .from("generated_intelligence_results")
+        .select("insight_id, report_id, updated_at")
+        .eq("user_id", userId)
+        .order("updated_at", { ascending: false })
+        .limit(10),
+      supabase
+        .from("health_history")
+        .select("id, created_at")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(10),
+    ]);
+
+    if (assessmentResponse.error) {
+      setPriorityAssessment(null);
+    } else {
+      setPriorityAssessment(assessmentResponse.data || null);
     }
 
-    const { data: checkInData, error: checkInError } = await supabase
-      .from("daily_checkins")
-      .select("mood, wellness_score, created_at")
-      .eq("user_id", userData.user.id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .single();
-
-    if (checkInError && checkInError.code !== "PGRST116") {
-      setMessage("Database error: " + checkInError.message);
-      setLoading(false);
-      return;
+    if (checkInResponse.error) {
+      setLatestCheckIn(null);
+    } else {
+      setLatestCheckIn(checkInResponse.data || null);
     }
 
-    setPriorityOrgan(priorityData?.organ_name || "General");
-    setPriorityScore(priorityData?.score ?? null);
-    setRiskLevel(priorityData?.risk_level || "");
-    setDailyCheckIn(checkInData || null);
-    setCompletedTasks([]);
+    setUploadedReports((reportsResponse.data || []) as UploadedReport[]);
+    setHealthInsights((insightsResponse.data || []) as HealthInsight[]);
+    setGeneratedResults((generatedResponse.data || []) as GeneratedResult[]);
+    setHistoryItems((historyResponse.data || []) as HistoryItem[]);
+
     setLoading(false);
   }
 
-  const planTasks = taskPlans[priorityOrgan] || taskPlans.General;
-  const weekPlan = weeklyPlan[priorityOrgan] || weeklyPlan.General;
-
-  const targetScore =
-    priorityScore === null ? 0 : priorityScore < 50 ? 70 : priorityScore < 80 ? 85 : 95;
-
-  const scoreProgress =
-    priorityScore && targetScore
-      ? Math.min(100, Math.round((priorityScore / targetScore) * 100))
-      : 0;
-
-    const totalTasks = planTasks.length;
-  const completedTaskCount = completedTasks.length;
-
-  const taskProgress =
-    totalTasks > 0 ? Math.round((completedTaskCount / totalTasks) * 100) : 0;
-  const latestCheckInText = dailyCheckIn
-    ? `${new Date(dailyCheckIn.created_at).toLocaleDateString()} · ${dailyCheckIn.wellness_score}/100 · ${dailyCheckIn.mood}`
-    : "No wellness check-in saved yet";
-
-  const followUpRhythm =
-    priorityScore === null
-      ? "Complete an assessment first"
-      : priorityScore < 50
-      ? "Weekly follow-up recommended"
-      : priorityScore < 80
-      ? "Check in 2–3 times per week"
-      : "Weekly maintenance check-in";
-
-  const followUpStatus =
-    priorityScore === null
-      ? "Not Ready"
-      : dailyCheckIn
-      ? "Active Follow-Up"
-      : "Check-In Needed";
-
-  const followUpMessage =
-    priorityScore === null
-      ? "Complete at least one organ assessment to activate your follow-up plan."
-      : dailyCheckIn
-      ? "Your follow-up plan is active. Keep updating your wellness check-ins to track progress over time."
-      : "Complete your first wellness check-in to make your follow-up plan more useful.";
-        const priorityAssessmentHref =
-    priorityOrgan === "Heart"
-      ? "/heart"
-      : priorityOrgan === "Lung"
-      ? "/lung"
-      : priorityOrgan === "Kidney"
-      ? "/kidney"
-      : priorityOrgan === "Liver"
-      ? "/liver"
-      : priorityOrgan === "Brain"
-      ? "/brain"
-      : priorityOrgan === "Metabolic"
-      ? "/metabolic"
-      : "/assessment";
-        const nextFollowUpStep =
-    priorityScore === null
-      ? {
-          label: "Complete your first organ assessment",
-          description:
-            "Start with one organ assessment so OrganHeal can identify your priority health area and activate your follow-up plan.",
-          href: "/assessment",
-          buttonText: "Start Assessment",
-        }
-      : !dailyCheckIn
-      ? {
-          label: "Complete your wellness check-in",
-          description:
-            "Add today’s wellness update so your follow-up plan reflects your latest sleep, stress, hydration, activity, energy, and mood.",
-          href: "/checkin",
-          buttonText: "Open Check-In",
-        }
-      : taskProgress === 0
-      ? {
-          label: "Start your first follow-up task",
-          description:
-            "Your plan is active. Choose one action task from the list below and start building weekly progress.",
-          href: "#action-tasks-section",
-          buttonText: "Review Tasks",
-        }
-      : taskProgress < 100
-      ? {
-          label: "Continue your follow-up tasks",
-          description:
-            "Keep working through your action tasks and update your wellness check-ins to track progress over time.",
-          href: "#action-tasks-section",
-          buttonText: "Continue Tasks",
-        }
-      : {
-          label: `Repeat your ${priorityOrgan} assessment`,
-          description:
-            "You completed your current task list. Repeat the priority assessment to compare progress and refresh your follow-up plan.",
-          href: priorityAssessmentHref,
-          buttonText: "Repeat Assessment",
-        };
   function toggleTask(task: string) {
-    if (completedTasks.includes(task)) {
-      setCompletedTasks(completedTasks.filter((item) => item !== task));
-    } else {
-      setCompletedTasks([...completedTasks, task]);
-    }
-  }
+    const nextTasks = completedTasks.includes(task)
+      ? completedTasks.filter((item) => item !== task)
+      : [...completedTasks, task];
 
-  function getPlanIntensity() {
-    if (priorityScore === null) return "General";
-    if (priorityScore < 50) return "High Priority";
-    if (priorityScore < 80) return "Moderate Priority";
-    return "Maintenance";
+    setCompletedTasks(nextTasks);
+    localStorage.setItem(taskStorageKey, JSON.stringify(nextTasks));
   }
 
   return (
-    <main className="assistantPage healthPlanPage">
-      <div className="assistantContainer">
+    <main className="healthPlanIntelligencePage" dir={isArabic ? "rtl" : "ltr"}>
+      <div className="healthPlanShell">
         <PageBackActions />
-        <div className="assistantHeader">
-          <p className="assistantBadge">FOLLOW-UP & HEALTH PLAN</p>
 
-<h1>{priorityOrgan} Follow-Up Plan</h1>
+        <section className="healthPlanHero">
+          <div>
+            <p className="launchEyebrow">
+              {isArabic ? "خطة المتابعة الذكية" : "Personal Follow-Up Intelligence"}
+            </p>
 
-<p>
-  A structured follow-up center that connects your priority health area,
-  latest assessment score, wellness check-ins, and 4-week educational action
-  plan.
-</p>
-        </div>
+            <h1>
+              {isArabic
+                ? `خطة ${priorityOrgan} الشخصية`
+                : `${priorityOrgan} Personal Health Plan`}
+            </h1>
 
-        <div className="chatWindow">
-          {loading && (
-            <div className="resultBox">
-              <p className="sectionLabel">Loading Follow-Up Plan</p>
-<h2>Preparing your follow-up and health plan...</h2>
-            </div>
-          )}
+            <p>
+              {isArabic
+                ? "خطة متابعة تجمع التقييمات، التقارير، الذكاء الصحي، Check-Ins، والتاريخ الصحي لتوجيه الخطوة التالية."
+                : "A follow-up plan that connects assessments, reports, generated intelligence, check-ins, and health history into a clear next step."}
+            </p>
+          </div>
 
-          {!loading && message && (
-            <div className="resultBox">
-              <p className="sectionLabel">Follow-Up Plan</p>
-<h2>Follow-Up Plan Not Ready</h2>
-              <p>{message}</p>
+          <div className="healthPlanHeroCard">
+            <span>{isArabic ? "جاهزية الخطة" : "Plan readiness"}</span>
+            <strong>{planReadinessScore}%</strong>
+            <p>
+              {isArabic
+                ? "كلما أضفت بيانات أكثر أصبحت الخطة أكثر شخصية."
+                : "The more data you add, the more personalized this plan becomes."}
+            </p>
 
-              <a href="/assessment">
-                <button className="primaryBtn">Start Assessment</button>
-              </a>
-            </div>
-          )}
+            <Link href={nextBestAction.href} className="launchPrimary">
+              {nextBestAction.button}
+            </Link>
+          </div>
+        </section>
 
-          {!loading && !message && (
-            <>
-                                       <div className="resultBox healthPlanStatusCard">
-                <p className="sectionLabel">Follow-Up Status</p>
-
-                <h2>{followUpStatus}</h2>
-
-                <p
-                  style={{
-                    opacity: 0.82,
-                    lineHeight: 1.7,
-                    marginBottom: "18px",
-                  }}
-                >
-                  {followUpMessage}
-                </p>
-
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                    gap: "14px",
-                  }}
-                >
-                  <div>
-                    <strong>Latest Check-In</strong>
-                    <p>{latestCheckInText}</p>
-                  </div>
-
-                  <div>
-                    <strong>Follow-Up Rhythm</strong>
-                    <p>{followUpRhythm}</p>
-                  </div>
-
-                  <div>
-                    <strong>Current Priority</strong>
-                    <p>{priorityOrgan}</p>
-                  </div>
-
-                  <div>
-                    <strong>Plan Intensity</strong>
-                    <p>{getPlanIntensity()}</p>
-                  </div>
-                </div>
-
-                {!dailyCheckIn && (
-                  <div style={{ marginTop: "18px" }}>
-                    <a href="/checkin">
-                      <button className="primaryBtn">Complete Wellness Check-In</button>
-                    </a>
-                  </div>
-                )}
-              </div>
-
-                            <div className="resultBox healthPlanNextStepCard">
-                <p className="sectionLabel">Smart Next Follow-Up Step</p>
-                                         
-                <h2>{nextFollowUpStep.label}</h2>
-
-                <p
-                  style={{
-                    opacity: 0.82,
-                    lineHeight: 1.7,
-                    marginBottom: "18px",
-                  }}
-                >
-                  {nextFollowUpStep.description}
-                </p>
-
-                <a href={nextFollowUpStep.href}>
-                  <button className="primaryBtn">{nextFollowUpStep.buttonText}</button>
-                </a>
-              </div>
-
-                            <div className="resultBox healthPlanReminderCard">
-                <p className="sectionLabel">Reminder Preview</p>
-
-                <h2>Smart reminders coming later</h2>
-
-                <p
-                  style={{
-                    opacity: 0.82,
-                    lineHeight: 1.7,
-                    marginBottom: "18px",
-                  }}
-                >
-                  OrganHeal will later help users stay consistent with check-ins,
-                  follow-up actions, report updates, and doctor visit preparation.
-                  This preview shows what reminders may support in future versions.
-                </p>
-
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                    gap: "14px",
-                  }}
-                >
-                  <div>
-                    <strong>Wellness Check-In Reminder</strong>
-                    <p>
-                      A gentle reminder to update sleep, stress, hydration,
-                      activity, mood, and energy.
-                    </p>
-                  </div>
-
-                  <div>
-                    <strong>Weekly Follow-Up Reminder</strong>
-                    <p>
-                      A weekly nudge to review your follow-up tasks and continue
-                      your 4-week plan.
-                    </p>
-                  </div>
-
-                  <div>
-                    <strong>Monthly Progress Reminder</strong>
-                    <p>
-                      A monthly prompt to review your health progress and repeat
-                      key assessments when appropriate.
-                    </p>
-                  </div>
-
-                  <div>
-                    <strong>Report Update Reminder</strong>
-                    <p>
-                      A future reminder to upload new medical reports or review
-                      saved intelligence when new data is available.
-                    </p>
-                  </div>
-                </div>
-
-                <div
-                  className="healthPlanPremiumNote">
-
-                  <strong>Future premium value</strong>
-                  <p
-                    style={{
-                      opacity: 0.8,
-                      lineHeight: 1.7,
-                      marginBottom: 0,
-                    }}
-                  >
-                    Email reminders and WhatsApp-style reminders are planned for
-                    future versions. They are not active yet.
-                  </p>
-                </div>
-              </div>
-              <div className="resultBox">
-                <p className="sectionLabel">Priority Area</p>
-
-                <h2>{priorityOrgan}</h2>
-
+        {loading ? (
+          <section className="healthPlanPanel">
+            <p className="launchEyebrow">
+              {isArabic ? "تحميل الخطة" : "Loading plan"}
+            </p>
+            <h2>
+              {isArabic
+                ? "جاري تحضير خطة المتابعة..."
+                : "Preparing your personalized follow-up plan..."}
+            </h2>
+          </section>
+        ) : message ? (
+          <section className="healthPlanPanel">
+            <p className="launchEyebrow">
+              {isArabic ? "الخطة غير جاهزة" : "Plan not ready"}
+            </p>
+            <h2>{message}</h2>
+            <Link href="/login" className="launchPrimary">
+              {isArabic ? "تسجيل الدخول" : "Login"}
+            </Link>
+          </section>
+        ) : (
+          <>
+            <section className="healthPlanMetricsGrid">
+              <article>
+                <span>{isArabic ? "الأولوية" : "Priority"}</span>
+                <strong>{priorityOrgan}</strong>
                 <p>
-                  Current Score:{" "}
-                  {priorityScore !== null ? `${priorityScore}/100` : "N/A"}
+                  {priorityScore !== null
+                    ? `${priorityScore}/100`
+                    : isArabic
+                    ? "لا يوجد تقييم"
+                    : "No assessment"}
                 </p>
+              </article>
 
-                <p>Target Score: {targetScore}/100</p>
+              <article>
+                <span>{isArabic ? "التقارير" : "Reports"}</span>
+                <strong>{uploadedReports.length}</strong>
+                <p>
+                  {completedExtractionCount}{" "}
+                  {isArabic ? "استخراج مكتمل" : "extracted"}
+                </p>
+              </article>
 
-                <p>Risk Level: {riskLevel || getPlanIntensity()}</p>
+              <article>
+                <span>{isArabic ? "الذكاء" : "Intelligence"}</span>
+                <strong>{generatedCount}</strong>
+                <p>
+                  {hasGeneratedIntelligence
+                    ? isArabic
+                      ? "نتائج محفوظة"
+                      : "saved results"
+                    : isArabic
+                    ? "بحاجة توليد"
+                    : "needs generation"}
+                </p>
+              </article>
 
-                <p>Plan Intensity: {getPlanIntensity()}</p>
+              <article>
+                <span>Check-In</span>
+                <strong>
+                  {latestCheckIn?.wellness_score
+                    ? `${latestCheckIn.wellness_score}/100`
+                    : "--"}
+                </strong>
+                <p>{latestCheckIn?.mood || (isArabic ? "غير متاح" : "Not available")}</p>
+              </article>
+            </section>
 
-                {dailyCheckIn && (
-                  <p>
-                      Latest Wellness Check-In: {dailyCheckIn.wellness_score}/100{" "}
-                    · Mood: {dailyCheckIn.mood}
-                  </p>
-                )}
+            <section className="healthPlanPanel healthPlanNextPanel">
+              <div>
+                <p className="launchEyebrow">
+                  {isArabic ? "الخطوة التالية" : "Next best action"}
+                </p>
+                <h2>{nextBestAction.label}</h2>
+                <p>{nextBestAction.description}</p>
               </div>
 
-              <div className="resultBox">
-                <p className="sectionLabel">Goal Progress</p>
+              <Link href={nextBestAction.href} className="launchPrimary">
+                {nextBestAction.button}
+              </Link>
+            </section>
 
-                <h2>{scoreProgress}% Toward Target</h2>
+            <section className="healthPlanGrid">
+              <article className="healthPlanCard">
+                <p className="launchEyebrow">
+                  {isArabic ? "ملخص الخطة" : "Plan summary"}
+                </p>
+                <h2>{planIntensity}</h2>
 
-                <div
-                  style={{
-                    width: "100%",
-                    height: "14px",
-                    background: "rgba(255,255,255,0.12)",
-                    borderRadius: "999px",
-                    overflow: "hidden",
-                    marginTop: "16px",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: `${scoreProgress}%`,
-                      height: "100%",
-                      background: "linear-gradient(90deg, #22c55e, #38bdf8)",
-                      borderRadius: "999px",
-                    }}
-                  />
+                <div className="healthPlanInfoList">
+                  <div>
+                    <span>{isArabic ? "آخر Check-In" : "Latest check-in"}</span>
+                    <strong>{latestCheckInText}</strong>
+                  </div>
+
+                  <div>
+                    <span>{isArabic ? "إيقاع المتابعة" : "Follow-up rhythm"}</span>
+                    <strong>{followUpRhythm}</strong>
+                  </div>
+
+                  <div>
+                    <span>{isArabic ? "مستوى الخطورة" : "Risk level"}</span>
+                    <strong>{riskLevel}</strong>
+                  </div>
+
+                  <div>
+                    <span>{isArabic ? "Health History" : "Health History"}</span>
+                    <strong>{historyItems.length}</strong>
+                  </div>
                 </div>
-              </div>
+              </article>
 
-              <div className="resultBox">
-                <p className="sectionLabel">Weekly Roadmap</p>
-
-                <div style={{ display: "grid", gap: "12px", marginTop: "16px" }}>
-                  {weekPlan.map((week) => (
-                    <div
-                      key={week}
-                      style={{
-                        padding: "14px",
-                        borderRadius: "14px",
-                        border: "1px solid rgba(255,255,255,0.16)",
-                        background: "rgba(15, 23, 42, 0.55)",
-                      }}
-                    >
-                      {week}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-                                          <div className="resultBox" id="action-tasks-section">
-                <p className="sectionLabel">Action Tasks</p>
-
+              <article className="healthPlanCard">
+                <p className="launchEyebrow">
+                  {isArabic ? "التقارير والذكاء" : "Reports and intelligence"}
+                </p>
                 <h2>
-                  {completedTaskCount} of {totalTasks} Tasks Completed
+                  {hasGeneratedIntelligence
+                    ? isArabic
+                      ? "الذكاء الصحي محفوظ"
+                      : "Generated intelligence is saved"
+                    : isArabic
+                    ? "الذكاء الصحي غير مكتمل"
+                    : "Generated intelligence is incomplete"}
                 </h2>
 
-                <p
-                  style={{
-                    opacity: 0.82,
-                    lineHeight: 1.7,
-                    marginBottom: "16px",
-                  }}
-                >
-                  Track your follow-up actions here. Your task progress updates
-                  as you complete items from the list below.
+                <p>
+                  {latestInsight?.next_best_action ||
+                    latestInsight?.summary ||
+                    (isArabic
+                      ? "ارفع تقريرًا أو ولّد الذكاء الصحي لتحسين الخطة."
+                      : "Upload a report or generate health intelligence to improve this plan.")}
                 </p>
 
-                <div
-                  style={{
-                    width: "100%",
-                    height: "10px",
-                    background: "rgba(148,163,184,0.18)",
-                    borderRadius: "999px",
-                    overflow: "hidden",
-                    marginBottom: "8px",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: `${taskProgress}%`,
-                      height: "100%",
-                      background: "linear-gradient(90deg, #22c55e, #38bdf8)",
-                    }}
-                  />
+                <div className="healthPlanActionRow">
+                  <Link href="/reports" className="launchSecondary">
+                    {isArabic ? "التقارير" : "Reports"}
+                  </Link>
+                  <Link href="/intelligence" className="launchPrimary">
+                    {isArabic ? "مركز الذكاء" : "Intelligence"}
+                  </Link>
                 </div>
 
-                <p
-                  style={{
-                    opacity: 0.76,
-                    marginBottom: "20px",
-                  }}
-                >
-                  {taskProgress}% complete
-                </p>
+                {latestGenerated?.updated_at && (
+                  <small>
+                    {isArabic ? "آخر توليد: " : "Latest generated: "}
+                    {new Date(latestGenerated.updated_at).toLocaleString()}
+                  </small>
+                )}
+              </article>
+            </section>
 
-                <div style={{ display: "grid", gap: "14px", marginTop: "20px" }}>
-                                    {planTasks.map((task) => {
-                    const isCompleted = completedTasks.includes(task);
+            <section className="healthPlanPanel">
+              <p className="launchEyebrow">
+                {isArabic ? "خطة 7 أيام" : "7-Day follow-up plan"}
+              </p>
 
-                    return (
-                      <label
-                        key={task}
-                        className={`healthPlanTaskItem ${
-                          isCompleted ? "completed" : ""
-                        }`}
-                      >
-                        <input
-                          className="healthPlanTaskCheckbox"
-                          type="checkbox"
-                          checked={isCompleted}
-                          onChange={() => toggleTask(task)}
-                        />
+              <h2>
+                {isArabic
+                  ? "ابدأ بخطوات صغيرة قابلة للتنفيذ"
+                  : "Start with small, realistic actions"}
+              </h2>
 
-                        <span className="healthPlanTaskText">{task}</span>
+              <div className="healthPlanRoadmap">
+                {sevenDayPlan.map((item, index) => (
+                  <div key={item}>
+                    <span>{index + 1}</span>
+                    <p>{item}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
 
-                        <span className="healthPlanTaskStatus" aria-hidden="true">
-                          {isCompleted ? "Done" : "To do"}
-                        </span>
-                      </label>
-                    );
-                  })}
+            <section className="healthPlanPanel">
+              <p className="launchEyebrow">
+                {isArabic ? "خريطة 30 يوم" : "30-Day improvement roadmap"}
+              </p>
+
+              <h2>
+                {isArabic
+                  ? "من البيانات إلى المتابعة"
+                  : "From data to follow-up"}
+              </h2>
+
+              <div className="healthPlanRoadmap month">
+                {thirtyDayRoadmap.map((item, index) => (
+                  <div key={item}>
+                    <span>{index + 1}</span>
+                    <p>{item}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="healthPlanPanel" id="action-tasks-section">
+              <div className="healthPlanSectionHeader">
+                <div>
+                  <p className="launchEyebrow">
+                    {isArabic ? "مهام المتابعة" : "Action tasks"}
+                  </p>
+
+                  <h2>
+                    {completedTaskCount} {isArabic ? "من" : "of"} {totalTasks}{" "}
+                    {isArabic ? "مكتملة" : "completed"}
+                  </h2>
+
+                  <p>
+                    {isArabic
+                      ? "اختر مهام بسيطة. يتم حفظ التقدم على نفس الجهاز."
+                      : "Choose simple tasks. Progress is saved on this device."}
+                  </p>
                 </div>
+
+                <strong>{taskProgress}%</strong>
               </div>
 
-              <div className="resultBox">
-                <p className="sectionLabel">Next Step</p>
+              <div className="healthPlanProgressBar">
+                <div style={{ width: `${taskProgress}%` }} />
+              </div>
 
-                <h2>Reassess After 4 Weeks</h2>
+              <div className="healthPlanTaskList">
+                {planTasks.map((task) => {
+                  const isCompleted = completedTasks.includes(task);
+
+                  return (
+                    <label
+                      key={task}
+                      className={`healthPlanTaskItem ${
+                        isCompleted ? "completed" : ""
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isCompleted}
+                        onChange={() => toggleTask(task)}
+                      />
+                      <span>{task}</span>
+                      <small>{isCompleted ? "Done" : "To do"}</small>
+                    </label>
+                  );
+                })}
+              </div>
+            </section>
+
+            <section className="healthPlanBottomNav">
+              <div>
+                <p className="launchEyebrow">
+                  {isArabic ? "استمرار الرحلة" : "Continue the journey"}
+                </p>
+
+                <h2>
+                  {isArabic
+                    ? "راجع، حدّث، وكرر"
+                    : "Review, update, and reassess"}
+                </h2>
 
                 <p>
-                  After completing your weekly actions, repeat your {priorityOrgan}
-                  assessment and compare your progress in Health History.
+                  {pendingExtractionCount > 0
+                    ? isArabic
+                      ? "يوجد تقارير بانتظار الاستخراج. شغّل الاستخراج أو افتح مركز الذكاء."
+                      : "Some reports are pending extraction. Run extraction or open Intelligence Center."
+                    : isArabic
+                    ? "استمر في تحديث Check-Ins ومراجعة Health History."
+                    : "Keep updating check-ins and reviewing Health History."}
                 </p>
-
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "12px",
-                    justifyContent: "center",
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <p
-  style={{
-    margin: 0,
-    opacity: 0.76,
-    lineHeight: 1.7,
-    textAlign: "center",
-  }}
->
-  Use the Smart Next Follow-Up Step above to continue your plan, review tasks,
-  or repeat your priority assessment when appropriate.
-</p>
-
-<a href="/dashboard">
-  <button className="secondaryBtn">Back to Dashboard</button>
-</a>
-                </div>
               </div>
-            </>
-          )}
-        </div>
+
+              <div className="healthPlanActionRow">
+                <Link href="/checkin">{isArabic ? "Check-In" : "Check-In"}</Link>
+                <Link href="/history">{isArabic ? "التاريخ" : "History"}</Link>
+                <Link href="/doctor-portal">
+                  {isArabic ? "بوابة الطبيب" : "Doctor Portal"}
+                </Link>
+                <Link href="/dashboard">
+                  {isArabic ? "لوحة التحكم" : "Dashboard"}
+                </Link>
+              </div>
+            </section>
+          </>
+        )}
       </div>
     </main>
   );
