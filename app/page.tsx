@@ -122,7 +122,7 @@ export default function Home() {
                 onClick={askHeroAI}
                 disabled={heroLoading}
               >
-                {heroLoading ? "..." : isArabic ? "اسأل الذكاء الصحي" : "Ask AI"}
+                {heroLoading ? "..." : isArabic ? "اسأل الذكاء الصحي" : "Open Intelligence"}
               </button>
             </div>
 
@@ -135,8 +135,8 @@ export default function Home() {
                 <p>{heroAnswer}</p>
 
                 <div className="homeHeroAIActions">
-                  <Link href="/assistant" className="primaryBtn">
-                    {isArabic ? "متابعة في المساعد" : "Continue in Assistant"}
+                  <Link href="/intelligence" className="primaryBtn">
+                    {isArabic ? "متابعة في المساعد" : "Continue in Intelligence"}
                   </Link>
 
                   <Link href="/intelligence" className="secondaryBtn">
@@ -847,7 +847,7 @@ export default function Home() {
               }}
             >
               <li>{isArabic ? "تقييم صحي أساسي" : "Basic health assessment"}</li>
-              <li>{isArabic ? "مساعد صحي محدود" : "Limited health assistant"}</li>
+              <li>{isArabic ? "مساعد صحي محدود" : "Limited Health Intelligence"}</li>
               <li>{isArabic ? "رفع محدود للتقارير" : "Limited report uploads"}</li>
               <li>{isArabic ? "شرح صحي مبسط" : "Basic health explanation"}</li>
               <li>{isArabic ? "محتوى تثقيفي أساسي" : "Basic education content"}</li>
@@ -1045,8 +1045,8 @@ export default function Home() {
   {isArabic ? "الخطط والاشتراك" : "Pricing / Plans"}
 </Link>
 
-<Link href="/assistant">
-  {isArabic ? "المساعد الصحي" : "Health Assistant"}
+<Link href="/intelligence">
+  {isArabic ? "المساعد الصحي" : "Health Intelligence"}
 </Link>
             </div>
           </div>

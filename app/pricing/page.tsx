@@ -31,7 +31,7 @@ export default function PricingPage() {
       ]
     : [
         "Basic health assessment",
-        "Limited health assistant",
+        "Limited health intelligence",
         "Limited medical report uploads",
         "Basic health explanation",
         "Basic education content",
