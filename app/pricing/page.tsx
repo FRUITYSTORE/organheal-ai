@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 type Language = "en" | "ar";
 
@@ -27,258 +27,312 @@ export default function PricingPage() {
 
   const freeFeatures = isArabic
     ? [
-        "تقييم صحي أساسي",
-        "تجربة رفع تقرير طبي",
-        "شرح صحي مبسط",
-        "الوصول إلى المحتوى التعليمي",
-        "بدء ملفك الصحي الشخصي",
+        "تقييمات صحية أساسية للأعضاء",
+        "Dashboard مبسط لبدء الرحلة",
+        "رفع محدود للتقارير الطبية",
+        "Check-In صحي أساسي",
+        "شرح صحي تعليمي مبسط",
       ]
     : [
-        "Basic health assessment",
-        "Try medical report upload",
-        "Simple health explanation",
-        "Access health education content",
-        "Start your personal health profile",
+        "Basic organ health assessments",
+        "Simple dashboard to start the journey",
+        "Limited medical report uploads",
+        "Basic wellness check-ins",
+        "Simple educational health explanations",
       ];
 
   const plusFeatures = isArabic
     ? [
-        "ذكاء صحي متقدم للتقارير",
-        "ملخص مبسط للمريض",
-        "ملخص منظم للطبيب",
-        "حفظ نتائج الذكاء الصحي",
-        "متابعة الاتجاهات وإشارات المخاطر",
-        "خطة متابعة صحية شهرية",
-        "تحضير أفضل للزيارة الطبية",
+        "ذكاء صحي متقدم للتقارير الطبية",
+        "Patient-Friendly PDF قابل للمشاركة",
+        "Doctor Brief منظم للتحضير للزيارة",
+        "حفظ نتائج الذكاء الصحي داخل الحساب",
+        "Health Plan شخصي مبني على البيانات",
+        "Follow-Up Intelligence وخطوة تالية واضحة",
+        "Health History لمتابعة التغير مع الوقت",
+        "قيمة أعلى للمستخدم الذي يتابع صحته شهريًا",
       ]
     : [
-        "Advanced report intelligence",
-        "Patient-friendly summary",
-        "Doctor-ready brief",
-        "Saved intelligence history",
-        "Trends and risk signals",
-        "Monthly follow-up plan",
-        "Better doctor visit preparation",
+        "Advanced medical report intelligence",
+        "Patient-friendly PDF summary",
+        "Doctor-ready brief for visit preparation",
+        "Saved intelligence results inside the account",
+        "Personal health plan based on connected data",
+        "Follow-up intelligence with a clear next best action",
+        "Health History to track changes over time",
+        "Higher value for users who follow their health monthly",
       ];
 
-  const valuePoints = isArabic
+  const futureFeatures = isArabic
     ? [
-        {
-          title: "ليس قراءة واحدة فقط",
-          text: "القيمة في متابعة التقارير، التقييمات، والنتائج مع الوقت.",
-        },
-        {
-          title: "يساعدك قبل زيارة الطبيب",
-          text: "ينظم أهم النقاط والأسئلة بدل الدخول للزيارة بمعلومات متفرقة.",
-        },
-        {
-          title: "اشتراك واقعي",
-          text: "العودة الشهرية تكون للتحديث، المراجعة، الخطة، والتذكيرات، وليس للفحوصات اليومية.",
-        },
+        "تذكيرات ذكية عبر البريد أو WhatsApp-style",
+        "ملفات عائلية",
+        "تعاون أعمق مع الطبيب",
+        "تنبيهات عند تغير الأنماط الصحية",
       ]
     : [
-        {
-          title: "Not a one-time reading",
-          text: "The value is in following reports, assessments, and results over time.",
-        },
-        {
-          title: "Better before doctor visits",
-          text: "Organizes key points and questions instead of scattered health information.",
-        },
-        {
-          title: "Realistic subscription value",
-          text: "Monthly return is for updates, review, planning, and reminders, not daily lab testing.",
-        },
+        "Smart email or WhatsApp-style reminders",
+        "Family profiles",
+        "Deeper doctor collaboration",
+        "Alerts when health patterns change",
+      ];
+
+  const comparisonRows = isArabic
+    ? [
+        ["التقييمات الصحية", "أساسي", "متقدم ومربوط بالخطة"],
+        ["رفع التقارير", "محدود", "أوسع ومنظم داخل Reports Library"],
+        ["Generated Intelligence", "محدود", "أساسي في Plus"],
+        ["Patient PDF", "غير متاح أو محدود", "متاح"],
+        ["Doctor Brief", "غير متاح أو محدود", "متاح"],
+        ["Health Plan", "عام", "شخصي ومبني على البيانات"],
+        ["Health History", "أساسي", "متابعة أوضح للتغيرات"],
+      ]
+    : [
+        ["Health assessments", "Basic", "Advanced and connected to the plan"],
+        ["Report uploads", "Limited", "Expanded and organized in Reports Library"],
+        ["Generated Intelligence", "Limited", "Core Plus value"],
+        ["Patient PDF", "Unavailable or limited", "Available"],
+        ["Doctor Brief", "Unavailable or limited", "Available"],
+        ["Health Plan", "General", "Personalized from connected data"],
+        ["Health History", "Basic", "Clearer trend tracking"],
       ];
 
   return (
-    <main className="launchPage pricingLaunchPage" dir={isArabic ? "rtl" : "ltr"}>
-      <section className="launchSection pricingHeroSection">
-        <div className="launchSectionHeader">
-          <p className="launchEyebrow">
-            {isArabic ? "خطط OrganHeal" : "OrganHeal Plans"}
-          </p>
+    <main className="pricingValuePage" dir={isArabic ? "rtl" : "ltr"}>
+      <section className="pricingValueHero">
+        <p className="launchEyebrow">
+          {isArabic ? "خطط OrganHeal" : "OrganHeal Plans"}
+        </p>
 
-          <h1 className="pricingHeroTitle">
-            {isArabic
-              ? "ابدأ مجانًا، ثم انتقل إلى متابعة صحية أعمق"
-              : "Start free, then move into deeper health follow-up"}
-          </h1>
+        <h1>
+          {isArabic
+            ? "ابدأ مجانًا، ثم انتقل إلى متابعة صحية أعمق"
+            : "Start free, then move into deeper health follow-up"}
+        </h1>
 
-          <p>
-            {isArabic
-              ? "OrganHeal Free يساعدك على تجربة الأساسيات. OrganHeal Plus سيكون مخصصًا للمستخدم الذي يريد حفظ النتائج، فهم التقارير، متابعة التغيرات، وتجهيز ملخصات منظمة للطبيب."
-              : "OrganHeal Free helps you try the basics. OrganHeal Plus will be designed for users who want saved results, report understanding, trend follow-up, and doctor-ready summaries."}
-          </p>
-        </div>
+        <p>
+          {isArabic
+            ? "OrganHeal Free يساعدك على تجربة الأساسيات. OrganHeal Plus مصمم للمستخدم الذي يريد حفظ التقارير، توليد ذكاء صحي، تحضير Doctor Brief، ومتابعة خطة صحية شخصية بشكل مستمر."
+            : "OrganHeal Free helps users try the basics. OrganHeal Plus is designed for people who want saved reports, generated health intelligence, doctor-ready briefs, and a personalized follow-up plan over time."}
+        </p>
 
         <div className="pricingStatusBanner">
           <strong>
-            {isArabic ? "ملاحظة قبل الإطلاق التجاري" : "Pre-commercial launch note"}
+            {isArabic ? "ملاحظة حالية:" : "Current status:"}
           </strong>
           <span>
             {isArabic
-              ? "الدفع غير مفعل حاليًا. السعر النهائي سيتم اعتماده لاحقًا قبل فتح الاشتراكات المدفوعة."
-              : "Payments are not active yet. Final pricing will be approved later before paid subscriptions are enabled."}
+              ? "الدفع والاشتراكات غير مفعلة بعد. هذه الصفحة توضّح هيكل القيمة المتوقع قبل تفعيل الدفع."
+              : "Payments and subscriptions are not enabled yet. This page explains the intended value structure before payment activation."}
           </span>
         </div>
       </section>
 
-      <section className="launchSection">
-        <div className="launchPlanGrid">
-          <article className="launchPlanCard pricingPlan">
-            <p className="launchEyebrow">
-              {isArabic ? "للبداية" : "For getting started"}
-            </p>
-
+      <section className="pricingPlanGrid">
+        <article className="pricingPlanCard">
+          <div className="pricingPlanTop">
+            <span>{isArabic ? "للبداية" : "Starter"}</span>
             <h2>OrganHeal Free</h2>
+          </div>
 
-            <div className="pricingAmount">
-              {isArabic ? "مجاني" : "Free"}
-            </div>
+          <p>
+            {isArabic
+              ? "مناسب لتجربة OrganHeal وفهم الفكرة الأساسية."
+              : "Best for trying OrganHeal and understanding the core experience."}
+          </p>
 
-            <p>
-              {isArabic
-                ? "خطة البداية لتجربة التقييم الصحي وفهم كيف يستطيع OrganHeal تنظيم معلوماتك الصحية."
-                : "The starting plan for trying health assessment and seeing how OrganHeal organizes your health information."}
-            </p>
+          <div className="pricingAmount">
+            {isArabic ? "مجاني" : "Free"}
+          </div>
 
-            <ul>
-              {freeFeatures.map((feature) => (
-                <li key={feature}>{feature}</li>
-              ))}
-            </ul>
+          <ul>
+            {freeFeatures.map((feature) => (
+              <li key={feature}>{feature}</li>
+            ))}
+          </ul>
 
-            <Link href="/signup" className="launchSecondary">
-              {isArabic ? "ابدأ مجانًا" : "Start Free"}
-            </Link>
-          </article>
+          <Link href="/signup" className="launchSecondary">
+            {isArabic ? "ابدأ مجانًا" : "Start Free"}
+          </Link>
+        </article>
 
-          <article className="launchPlanCard launchPlanFeatured pricingPlan">
-            <p className="launchEyebrow">
-              {isArabic ? "للمتابعة الشهرية" : "For monthly follow-up"}
-            </p>
-
+        <article className="pricingPlanCard pricingPlanFeatured">
+          <div className="pricingPlanTop">
+            <span>{isArabic ? "قيمة الاشتراك" : "Subscription value"}</span>
             <h2>OrganHeal Plus</h2>
+          </div>
 
-            <div className="pricingAmount">
-              {isArabic ? "سيتم تحديد السعر" : "Pricing to be approved"}
-            </div>
+          <p>
+            {isArabic
+              ? "الخطة التي تعطي OrganHeal قيمته الشهرية: تقارير محفوظة، ذكاء صحي، PDF للمريض، Doctor Brief، وخطة متابعة شخصية."
+              : "The plan that creates monthly value: saved reports, health intelligence, patient PDF, doctor brief, and a personalized follow-up plan."}
+          </p>
 
-            <p>
-              {isArabic
-                ? "خطة Plus ستكون للمتابعة المستمرة: تقارير محفوظة، ملخصات PDF، اتجاهات صحية، وخطة متابعة شهرية."
-                : "Plus will support ongoing follow-up: saved reports, PDF summaries, health trends, and monthly planning."}
-            </p>
+          <div className="pricingAmount premium">
+            {isArabic ? "السعر لاحقًا" : "Price to be announced"}
+          </div>
 
-            <ul>
-              {plusFeatures.map((feature) => (
-                <li key={feature}>{feature}</li>
-              ))}
-            </ul>
+          <ul>
+            {plusFeatures.map((feature) => (
+              <li key={feature}>{feature}</li>
+            ))}
+          </ul>
 
-            <Link href="/intelligence" className="launchPrimary">
-              {isArabic ? "استكشف الذكاء الصحي" : "Explore Intelligence"}
-            </Link>
-          </article>
-        </div>
+          <Link href="/intelligence" className="launchPrimary">
+            {isArabic ? "استكشف قيمة Plus" : "Explore Plus Value"}
+          </Link>
+        </article>
       </section>
 
-      <section className="launchSection">
-        <div className="launchSectionHeader">
+      <section className="pricingCompareBox">
+        <div>
           <p className="launchEyebrow">
-            {isArabic ? "لماذا Plus؟" : "Why Plus?"}
+            {isArabic ? "المقارنة" : "Comparison"}
           </p>
 
           <h2>
             {isArabic
-              ? "الاشتراك يجب أن يعطي سببًا واضحًا للعودة"
-              : "A subscription needs a clear reason to return"}
+              ? "الفرق الحقيقي ليس عدد الصفحات، بل استمرار المتابعة"
+              : "The real difference is not pages, it is continuous follow-up"}
           </h2>
 
           <p>
             {isArabic
-              ? "OrganHeal Plus ليس مجرد تحليل تقرير. الفكرة أن يكون للمستخدم مكان واحد يعود إليه لمراجعة صحته، تحديث بياناته، حفظ التقارير، وتحضير أسئلة أفضل للطبيب."
-              : "OrganHeal Plus is not just report analysis. It gives users one place to return to for reviewing health, updating data, saving reports, and preparing better questions for doctors."}
+              ? "Free يشرح البداية. Plus يربط التقارير والذكاء الصحي والخطة والتاريخ الصحي في تجربة متابعة واحدة."
+              : "Free explains the starting point. Plus connects reports, intelligence, health plan, and history into one follow-up experience."}
           </p>
         </div>
 
-        <div className="pricingMiniGrid">
-          {valuePoints.map((item) => (
-            <article className="launchValueCard" key={item.title}>
-              <h3>{item.title}</h3>
-              <p>{item.text}</p>
-            </article>
+        <div className="pricingCompareTable">
+          {comparisonRows.map(([feature, free, plus]) => (
+            <div key={feature}>
+              <span>{feature}</span>
+              <strong>{free}</strong>
+              <strong>{plus}</strong>
+            </div>
           ))}
         </div>
       </section>
 
-      <section className="launchSection">
-        <div className="pricingCompareBox">
-          <div>
-            <h2>{isArabic ? "مقارنة سريعة" : "Quick comparison"}</h2>
+      <section className="pricingValueSection">
+        <div className="pricingValueHeader">
+          <p className="launchEyebrow">
+            {isArabic ? "لماذا يدفع المستخدم؟" : "Why would users subscribe?"}
+          </p>
+
+          <h2>
+            {isArabic
+              ? "القيمة الشهرية تأتي من المتابعة وليس من تقرير واحد"
+              : "Monthly value comes from follow-up, not one report"}
+          </h2>
+
+          <p>
+            {isArabic
+              ? "المستخدم لا يدفع فقط مقابل قراءة تقرير. يدفع لأنه يريد معرفة ماذا يفعل بعد التقرير، كيف يتابع، وما الذي تغير مع الوقت."
+              : "Users do not pay only to read a report. They pay to know what to do after the report, how to follow up, and what changed over time."}
+          </p>
+        </div>
+
+        <div className="pricingValueCards">
+          <article>
+            <span>01</span>
+            <h3>{isArabic ? "تنظيم التقارير" : "Report organization"}</h3>
             <p>
               {isArabic
-                ? "ابدأ مجانًا، ثم استخدم Plus عندما تحتاج متابعة أعمق وحفظًا أفضل لمعلوماتك الصحية."
-                : "Start free, then use Plus when you need deeper follow-up and better saved health intelligence."}
+                ? "كل تقرير محفوظ ومربوط بمسار واضح داخل Reports Library وIntelligence Center."
+                : "Every report is saved and connected to a clear path inside Reports Library and Intelligence Center."}
             </p>
-          </div>
+          </article>
 
-          <div className="pricingCompareTable">
-            <div>
-              <span>{isArabic ? "التجربة الأساسية" : "Basic experience"}</span>
-              <strong>Free</strong>
-            </div>
+          <article>
+            <span>02</span>
+            <h3>{isArabic ? "تفسير قابل للفهم" : "Understandable intelligence"}</h3>
+            <p>
+              {isArabic
+                ? "تحويل التقارير إلى ملخص مفهوم للمريض وBrief منظم للطبيب."
+                : "Turning reports into a patient-friendly summary and a doctor-ready brief."}
+            </p>
+          </article>
 
-            <div>
-              <span>{isArabic ? "متابعة التقارير" : "Report follow-up"}</span>
-              <strong>Plus</strong>
-            </div>
+          <article>
+            <span>03</span>
+            <h3>{isArabic ? "خطة متابعة" : "Follow-up plan"}</h3>
+            <p>
+              {isArabic
+                ? "Health Plan يربط التقييمات، التقارير، الذكاء الصحي، Check-Ins، والتاريخ الصحي."
+                : "Health Plan connects assessments, reports, generated intelligence, check-ins, and health history."}
+            </p>
+          </article>
 
-            <div>
-              <span>{isArabic ? "ملخصات PDF" : "PDF summaries"}</span>
-              <strong>Plus</strong>
-            </div>
-
-            <div>
-              <span>{isArabic ? "الخطة الشهرية" : "Monthly plan"}</span>
-              <strong>Plus</strong>
-            </div>
-          </div>
+          <article>
+            <span>04</span>
+            <h3>{isArabic ? "استمرارية" : "Continuity"}</h3>
+            <p>
+              {isArabic
+                ? "القيمة تزيد كلما عاد المستخدم وأضاف Check-In أو تقرير جديد أو نتيجة متابعة."
+                : "Value increases as the user returns with check-ins, new reports, or follow-up results."}
+            </p>
+          </article>
         </div>
       </section>
 
-      <section className="launchFinalCta">
-        <p className="launchEyebrow">
-          {isArabic ? "ابدأ الآن" : "Start now"}
-        </p>
+      <section className="pricingFutureBox">
+        <div>
+          <p className="launchEyebrow">
+            {isArabic ? "ميزات مستقبلية" : "Future premium layer"}
+          </p>
 
+          <h2>
+            {isArabic
+              ? "Premium لاحقًا، وليس الآن"
+              : "Premium later, not now"}
+          </h2>
+
+          <p>
+            {isArabic
+              ? "هذه الميزات لا نحتاج بناءها قبل تثبيت Free وPlus. نذكرها كاتجاه مستقبلي بدون وعد تفعيل فوري."
+              : "These features do not need to be built before Free and Plus are stable. They are positioned as a future direction without promising immediate activation."}
+          </p>
+        </div>
+
+        <ul>
+          {futureFeatures.map((feature) => (
+            <li key={feature}>{feature}</li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="pricingFinalCta">
         <h2>
           {isArabic
-            ? "جرّب OrganHeal قبل تفعيل الاشتراكات"
-            : "Try OrganHeal before subscriptions are activated"}
+            ? "ابدأ بالبيانات، ثم ابنِ المتابعة"
+            : "Start with data, then build follow-up"}
         </h2>
 
         <p>
           {isArabic
-            ? "ابدأ بالحساب المجاني، اختبر التقييم ورفع التقارير، ثم نجهّز Plus كطبقة متابعة شهرية أقوى."
-            : "Start with a free account, test assessment and report upload, then Plus can become the stronger monthly follow-up layer."}
+            ? "ابدأ بتقييم مجاني، ارفع تقريرًا عند توفره، ثم افتح Intelligence وHealth Plan لرؤية القيمة الكاملة."
+            : "Start with a free assessment, upload a report when available, then open Intelligence and Health Plan to see the full value."}
         </p>
 
-        <div className="launchHeroActions">
+        <div className="pricingCtaActions">
           <Link href="/signup" className="launchPrimary">
             {isArabic ? "أنشئ حسابًا مجانيًا" : "Create Free Account"}
           </Link>
 
-          <Link href="/about" className="launchSecondary">
-            {isArabic ? "تعرف على OrganHeal" : "Learn More"}
+          <Link href="/lab-upload" className="launchSecondary">
+            {isArabic ? "ارفع تقريرًا" : "Upload Report"}
+          </Link>
+
+          <Link href="/health-plan" className="launchSecondary">
+            {isArabic ? "خطة المتابعة" : "Health Plan"}
           </Link>
         </div>
 
         <small>
           {isArabic
-            ? "OrganHeal AI يقدم معلومات صحية تعليمية وتنظيمية فقط، ولا يقدم تشخيصًا أو علاجًا أو نصيحة طبية طارئة."
-            : "OrganHeal AI provides educational and organizational health intelligence only. It does not provide diagnosis, treatment, or emergency medical advice."}
+            ? "OrganHeal AI يقدم ذكاء صحي تعليمي وتنظيمي فقط، ولا يقدم تشخيصًا أو علاجًا أو وصفات طبية أو نصيحة طبية طارئة."
+            : "OrganHeal AI provides educational and organizational health intelligence only. It does not diagnose, treat, prescribe, provide emergency advice, or replace licensed medical care."}
         </small>
       </section>
     </main>
