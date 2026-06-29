@@ -1185,6 +1185,85 @@ export default function HealthPlanPage() {
           }
         `}</style>
 
+
+        <style>{`
+          /* ORGANHEAL_PRINT_NO_BLANK_PAGES_FIX */
+          @media print {
+            html,
+            body {
+              width: 100% !important;
+              min-height: 0 !important;
+              height: auto !important;
+              overflow: visible !important;
+              background: #ffffff !important;
+            }
+
+            .healthPlanIntelligencePage {
+              display: block !important;
+              width: 100% !important;
+              min-height: 0 !important;
+              height: auto !important;
+              padding: 0 !important;
+              margin: 0 !important;
+              background: #ffffff !important;
+            }
+
+            .healthPlanShell {
+              display: block !important;
+              width: 100% !important;
+              max-width: 100% !important;
+              min-height: 0 !important;
+              height: auto !important;
+              padding: 0 !important;
+              margin: 0 !important;
+              background: #ffffff !important;
+            }
+
+            .healthPlanShell > :not(.healthPlanPrintOnly) {
+              display: none !important;
+            }
+
+            .healthPlanPrintOnly {
+              display: block !important;
+              visibility: visible !important;
+              position: static !important;
+              width: 100% !important;
+              max-width: 100% !important;
+              min-height: 0 !important;
+              height: auto !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              overflow: visible !important;
+              background: #ffffff !important;
+            }
+
+            .healthPlanPrintPage {
+              display: block !important;
+              width: 100% !important;
+              max-width: 100% !important;
+              min-height: 0 !important;
+              height: auto !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              overflow: visible !important;
+              background: #ffffff !important;
+              page-break-after: auto !important;
+              break-after: auto !important;
+            }
+
+            .healthPlanPrintOnly::after,
+            .healthPlanPrintPage::after {
+              display: none !important;
+              content: none !important;
+            }
+
+            .healthPlanBottomNav,
+            .healthPlanNoPrint {
+              display: none !important;
+            }
+          }
+        `}</style>
+
         <PageBackActions />
 
         <section className="healthPlanHero">
