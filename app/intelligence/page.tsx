@@ -101,10 +101,29 @@ type HealthInsight = {
 
 const REPORTS_PAGE_SIZE = 5;
 
+
+type IntelligenceUiLanguage = "en" | "ar";
+
+function getIntelligenceStoredLanguage(): IntelligenceUiLanguage {
+  if (typeof window === "undefined") return "en";
+
+  const savedLanguage =
+    localStorage.getItem("organheal-language") ||
+    localStorage.getItem("organhealLanguage") ||
+    localStorage.getItem("organheal_language") ||
+    localStorage.getItem("language") ||
+    "";
+
+  return savedLanguage.toLowerCase().startsWith("ar") ? "ar" : "en";
+}
+
 export default function IntelligencePage() {
 
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [uiLanguage, setUiLanguage] =
+    useState<IntelligenceUiLanguage>("en");
+  const isArabicUi = uiLanguage === "ar";
   const [healthEngine, setHealthEngine] = useState<HealthEngine | null>(null);
 
 
@@ -121,6 +140,28 @@ export default function IntelligencePage() {
   
   useEffect(() => {
     loadIntelligence();
+  }, []);
+
+  useEffect(() => {
+    function syncUiLanguage() {
+      setUiLanguage(getIntelligenceStoredLanguage());
+    }
+
+    function syncUiLanguageAfterClick() {
+      setTimeout(syncUiLanguage, 50);
+    }
+
+    syncUiLanguage();
+
+    window.addEventListener("storage", syncUiLanguage);
+    window.addEventListener("focus", syncUiLanguage);
+    document.addEventListener("click", syncUiLanguageAfterClick);
+
+    return () => {
+      window.removeEventListener("storage", syncUiLanguage);
+      window.removeEventListener("focus", syncUiLanguage);
+      document.removeEventListener("click", syncUiLanguageAfterClick);
+    };
   }, []);
 
   async function loadIntelligence() {
@@ -663,12 +704,23 @@ const intelligenceNextStep =
       <div className="intelligenceConversionContainer">
         <PageBackActions />
 
-        <section className="assistantHeader">
-          <p className="assistantBadge">ORGANHEAL INTELLIGENCE CENTER</p>
-          <h1>Health Intelligence Center</h1>
+        <section
+          className="assistantHeader"
+          dir={isArabicUi ? "rtl" : "ltr"}
+          lang={isArabicUi ? "ar" : "en"}
+        >
+          <p className="assistantBadge">
+            {isArabicUi ? "\u0645\u0631\u0643\u0632 \u0627\u0644\u0630\u0643\u0627\u0621 \u0641\u064a OrganHeal" : "ORGANHEAL INTELLIGENCE CENTER"}
+          </p>
+
+          <h1>
+            {isArabicUi ? "\u0645\u0631\u0643\u0632 \u0627\u0644\u0630\u0643\u0627\u0621 \u0627\u0644\u0635\u062d\u064a" : "Health Intelligence Center"}
+          </h1>
+
           <p>
-            A focused view for your health profile, medical reports, top
-            opportunities, and doctor-ready intelligence.
+            {isArabicUi
+              ? "\u0635\u0641\u062d\u0629 \u0645\u0631\u0643\u0632\u0629 \u0644\u0645\u0644\u0641\u0643 \u0627\u0644\u0635\u062d\u064a \u0648\u062a\u0642\u0627\u0631\u064a\u0631\u0643 \u0627\u0644\u0637\u0628\u064a\u0629 \u0648\u0627\u0644\u0645\u0644\u062e\u0635\u0627\u062a \u0627\u0644\u062c\u0627\u0647\u0632\u0629 \u0644\u0644\u0637\u0628\u064a\u0628."
+              : "A focused view for your health profile, medical reports, top opportunities, and doctor-ready intelligence."}
           </p>
         </section>
 
