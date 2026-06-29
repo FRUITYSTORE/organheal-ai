@@ -672,29 +672,29 @@ const intelligenceNextStep =
       }
     : hasOpenGeneratedResult
     ? {
-        label: "RESULT READY",
-        title: "Review your generated intelligence",
+        label: isArabicUi ? "\u0627\u0644\u0646\u062a\u064a\u062c\u0629 \u062c\u0627\u0647\u0632\u0629" : "RESULT READY",
+        title: isArabicUi ? "\u0631\u0627\u062c\u0639 \u0627\u0644\u0630\u0643\u0627\u0621 \u0627\u0644\u0645\u0648\u0644\u062f" : "Review your generated intelligence",
         description:
-          "Your patient-friendly report and doctor-ready brief are available below. The next best step is to continue to your Health Plan.",
+          isArabicUi ? "\u0645\u0644\u062e\u0635 \u0627\u0644\u0645\u0631\u064a\u0636 \u0648\u0627\u0644\u0645\u0644\u062e\u0635 \u0627\u0644\u062c\u0627\u0647\u0632 \u0644\u0644\u0637\u0628\u064a\u0628 \u0645\u062a\u0627\u062d\u0627\u0646 \u0623\u062f\u0646\u0627\u0647. \u0627\u0644\u062e\u0637\u0648\u0629 \u0627\u0644\u062a\u0627\u0644\u064a\u0629 \u0647\u064a \u0627\u0644\u0645\u062a\u0627\u0628\u0639\u0629 \u0625\u0644\u0649 \u062e\u0637\u0629 \u0627\u0644\u0635\u062d\u0629." : "Your patient-friendly report and doctor-ready brief are available below. The next best step is to continue to your Health Plan.",
         href: "/health-plan",
-        buttonText: "Open Health Plan",
+        buttonText: isArabicUi ? "\u0627\u0641\u062a\u062d \u062e\u0637\u0629 \u0627\u0644\u0635\u062d\u0629" : "Open Health Plan",
       }
     : generatedReportsCount > 0
     ? {
-        label: "SAVED RESULTS",
-        title: "Open a saved intelligence result",
+        label: isArabicUi ? "\u0646\u062a\u0627\u0626\u062c \u0645\u062d\u0641\u0648\u0638\u0629" : "SAVED RESULTS",
+        title: isArabicUi ? "\u0627\u0641\u062a\u062d \u0646\u062a\u064a\u062c\u0629 \u0630\u0643\u0627\u0621 \u0645\u062d\u0641\u0648\u0638\u0629" : "Open a saved intelligence result",
         description:
-          "Some reports already have generated intelligence. Open a saved result or generate intelligence for another report.",
+          isArabicUi ? "\u0628\u0639\u0636 \u0627\u0644\u062a\u0642\u0627\u0631\u064a\u0631 \u0644\u062f\u064a\u0647\u0627 \u0630\u0643\u0627\u0621 \u0645\u0648\u0644\u062f \u0645\u0633\u0628\u0642\u064b\u0627. \u0627\u0641\u062a\u062d \u0646\u062a\u064a\u062c\u0629 \u0645\u062d\u0641\u0648\u0638\u0629 \u0623\u0648 \u0648\u0644\u062f \u0630\u0643\u0627\u0621 \u0644\u062a\u0642\u0631\u064a\u0631 \u0622\u062e\u0631." : "Some reports already have generated intelligence. Open a saved result or generate intelligence for another report.",
         href: "/reports",
-        buttonText: "Reports Library",
+        buttonText: isArabicUi ? "\u0645\u0643\u062a\u0628\u0629 \u0627\u0644\u062a\u0642\u0627\u0631\u064a\u0631" : "Reports Library",
       }
     : {
-        label: "READY TO GENERATE",
-        title: "Generate intelligence for your report",
+        label: isArabicUi ? "\u062c\u0627\u0647\u0632 \u0644\u0644\u062a\u0648\u0644\u064a\u062f" : "READY TO GENERATE",
+        title: isArabicUi ? "\u0648\u0644\u062f \u0627\u0644\u0630\u0643\u0627\u0621 \u0644\u0647\u0630\u0627 \u0627\u0644\u062a\u0642\u0631\u064a\u0631" : "Generate intelligence for your report",
         description:
-          "Choose a report below and press Generate to create a patient-friendly summary, doctor-ready brief, and follow-up direction.",
+          isArabicUi ? "\u0627\u062e\u062a\u0631 \u062a\u0642\u0631\u064a\u0631\u064b\u0627 \u0628\u0627\u0644\u0623\u0633\u0641\u0644 \u0648\u0627\u0636\u063a\u0637 \u062a\u0648\u0644\u064a\u062f \u0627\u0644\u0630\u0643\u0627\u0621 \u0644\u0625\u0646\u0634\u0627\u0621 \u0645\u0644\u062e\u0635 \u0644\u0644\u0645\u0631\u064a\u0636 \u0648\u0645\u0644\u062e\u0635 \u062c\u0627\u0647\u0632 \u0644\u0644\u0637\u0628\u064a\u0628 \u0648\u0627\u062a\u062c\u0627\u0647 \u0645\u062a\u0627\u0628\u0639\u0629." : "Choose a report below and press Generate to create a patient-friendly summary, doctor-ready brief, and follow-up direction.",
         href: "#report-intelligence-list",
-        buttonText: "Go to Reports",
+        buttonText: isArabicUi ? "\u0627\u0630\u0647\u0628 \u0625\u0644\u0649 \u0627\u0644\u062a\u0642\u0627\u0631\u064a\u0631" : "Go to Reports",
       };
   const hasOlderReports = healthInsights.length > visibleReportsCount;
   const canShowLessReports = visibleReportsCount > REPORTS_PAGE_SIZE;
@@ -879,9 +879,9 @@ onHideGenerated={() => {
 
         <ForecastCard forecast={generatedResult.forecast} />
                 <div className="resultBox">
-          <p className="sectionLabel">NEXT STEP</p>
+          <p className="sectionLabel">{isArabicUi ? "\u0627\u0644\u062e\u0637\u0648\u0629 \u0627\u0644\u062a\u0627\u0644\u064a\u0629" : "NEXT STEP"}</p>
 
-          <h2>Continue your health journey</h2>
+          <h2>{isArabicUi ? "\u062a\u0627\u0628\u0639 \u0631\u062d\u0644\u062a\u0643 \u0627\u0644\u0635\u062d\u064a\u0629" : "Continue your health journey"}</h2>
 
           <p
             style={{
@@ -891,9 +891,7 @@ onHideGenerated={() => {
               margin: "0 auto 22px",
             }}
           >
-            Your report intelligence is now available. You can return to your
-            reports library, continue your follow-up plan, or go back to your
-            dashboard overview.
+            {isArabicUi ? "\u0623\u0635\u0628\u062d \u0630\u0643\u0627\u0621 \u0627\u0644\u062a\u0642\u0631\u064a\u0631 \u0645\u062a\u0627\u062d\u064b\u0627 \u0627\u0644\u0622\u0646. \u064a\u0645\u0643\u0646\u0643 \u0627\u0644\u0639\u0648\u062f\u0629 \u0625\u0644\u0649 \u0645\u0643\u062a\u0628\u0629 \u0627\u0644\u062a\u0642\u0627\u0631\u064a\u0631\u060c \u0645\u062a\u0627\u0628\u0639\u0629 \u062e\u0637\u0629 \u0627\u0644\u0635\u062d\u0629\u060c \u0623\u0648 \u0627\u0644\u0631\u062c\u0648\u0639 \u0625\u0644\u0649 \u0644\u0648\u062d\u0629 \u0627\u0644\u062a\u062d\u0643\u0645." : "Your report intelligence is now available. You can return to your reports library, continue your follow-up plan, or go back to your dashboard overview."}
           </p>
 
           <div
@@ -905,15 +903,15 @@ onHideGenerated={() => {
             }}
           >
             <a href="/reports">
-              <button className="secondaryBtn">Reports Library</button>
+              <button className="secondaryBtn">{isArabicUi ? "\u0645\u0643\u062a\u0628\u0629 \u0627\u0644\u062a\u0642\u0627\u0631\u064a\u0631" : "Reports Library"}</button>
             </a>
 
             <a href="/health-plan">
-              <button className="primaryBtn">Open Health Plan</button>
+              <button className="primaryBtn">{isArabicUi ? "\u0627\u0641\u062a\u062d \u062e\u0637\u0629 \u0627\u0644\u0635\u062d\u0629" : "Open Health Plan"}</button>
             </a>
 
             <a href="/dashboard">
-              <button className="secondaryBtn">Dashboard</button>
+              <button className="secondaryBtn">{isArabicUi ? "\u0644\u0648\u062d\u0629 \u0627\u0644\u062a\u062d\u0643\u0645" : "Dashboard"}</button>
             </a>
           </div>
         </div>
@@ -959,7 +957,7 @@ onHideGenerated={() => {
           setActiveGeneratedInsightId(null);
         }}
       >
-        Show Less
+        {isArabicUi ? "\u0639\u0631\u0636 \u0623\u0642\u0644" : "Show Less"}
       </button>
     )}
   </div>
