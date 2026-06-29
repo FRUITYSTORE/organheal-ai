@@ -1013,6 +1013,178 @@ export default function HealthPlanPage() {
           }
         `}</style>
 
+
+        <style>{`
+          /* ORGANHEAL_SAFE_PRINT_EXPORT_PATCH */
+          .healthPlanPrintOnly {
+            display: none;
+          }
+
+          @media print {
+            @page {
+              size: A4;
+              margin: 14mm 12mm;
+            }
+
+            html,
+            body {
+              background: #ffffff !important;
+              color: #111827 !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+
+            body * {
+              visibility: hidden !important;
+            }
+
+            .healthPlanPrintOnly,
+            .healthPlanPrintOnly * {
+              visibility: visible !important;
+            }
+
+            .healthPlanPrintOnly {
+              display: block !important;
+              position: absolute !important;
+              left: 0 !important;
+              top: 0 !important;
+              width: 100% !important;
+              max-width: 100% !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              background: #ffffff !important;
+              color: #111827 !important;
+              font-family: Tahoma, Arial, sans-serif !important;
+              line-height: 1.7 !important;
+            }
+
+            .healthPlanPrintOnly[dir="rtl"],
+            .healthPlanPrintOnly[dir="rtl"] * {
+              direction: rtl !important;
+              text-align: right !important;
+              letter-spacing: normal !important;
+              word-spacing: normal !important;
+              text-transform: none !important;
+              unicode-bidi: isolate !important;
+            }
+
+            .healthPlanPrintPage {
+              width: 100% !important;
+              max-width: 100% !important;
+              box-sizing: border-box !important;
+              background: #ffffff !important;
+              color: #111827 !important;
+            }
+
+            .healthPlanPrintOnlyHeader {
+              border-bottom: 2px solid #0f172a !important;
+              padding-bottom: 12px !important;
+              margin-bottom: 18px !important;
+              break-inside: avoid !important;
+              page-break-inside: avoid !important;
+            }
+
+            .healthPlanPrintOnlyHeader p {
+              margin: 0 0 6px !important;
+              font-size: 11px !important;
+              color: #475569 !important;
+            }
+
+            .healthPlanPrintOnlyHeader h1 {
+              margin: 0 !important;
+              font-size: 28px !important;
+              line-height: 1.35 !important;
+              color: #0f172a !important;
+              break-after: avoid !important;
+              page-break-after: avoid !important;
+            }
+
+            .healthPlanPrintOnlyGrid {
+              display: grid !important;
+              grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+              gap: 10px !important;
+              margin-bottom: 16px !important;
+              break-inside: avoid !important;
+              page-break-inside: avoid !important;
+            }
+
+            .healthPlanPrintOnlyBox {
+              border: 1px solid #d1d5db !important;
+              border-radius: 10px !important;
+              padding: 10px 12px !important;
+              background: #f8fafc !important;
+              break-inside: avoid !important;
+              page-break-inside: avoid !important;
+            }
+
+            .healthPlanPrintOnlyBox span {
+              display: block !important;
+              font-size: 11px !important;
+              color: #64748b !important;
+              margin-bottom: 4px !important;
+            }
+
+            .healthPlanPrintOnlyBox strong {
+              display: block !important;
+              font-size: 14px !important;
+              color: #0f172a !important;
+              line-height: 1.5 !important;
+            }
+
+            .healthPlanPrintOnlySection {
+              margin-top: 16px !important;
+              padding-top: 10px !important;
+              border-top: 1px solid #e5e7eb !important;
+              break-inside: avoid !important;
+              page-break-inside: avoid !important;
+            }
+
+            .healthPlanPrintOnlySection h2 {
+              margin: 0 0 8px !important;
+              font-size: 18px !important;
+              line-height: 1.35 !important;
+              color: #0f172a !important;
+              break-after: avoid !important;
+              page-break-after: avoid !important;
+            }
+
+            .healthPlanPrintOnlySection ul {
+              margin: 0 !important;
+              padding-inline-start: 20px !important;
+            }
+
+            .healthPlanPrintOnlySection li {
+              margin-bottom: 6px !important;
+              break-inside: avoid !important;
+              page-break-inside: avoid !important;
+              color: #111827 !important;
+            }
+
+            .healthPlanPrintOnlyNote {
+              margin-top: 18px !important;
+              padding: 10px 12px !important;
+              border: 1px solid #d1d5db !important;
+              border-radius: 10px !important;
+              background: #f9fafb !important;
+              font-size: 12px !important;
+              color: #374151 !important;
+              break-inside: avoid !important;
+              page-break-inside: avoid !important;
+            }
+
+            h1,
+            h2,
+            h3,
+            p,
+            li,
+            strong,
+            span {
+              orphans: 3 !important;
+              widows: 3 !important;
+            }
+          }
+        `}</style>
+
         <PageBackActions />
 
         <section className="healthPlanHero">
@@ -1521,6 +1693,121 @@ export default function HealthPlanPage() {
                   ? "تنبيه: هذه الخطة تعليمية وتنظيمية ولا تستبدل تقييم الطبيب أو العلاج الطبي. راجع مقدم رعاية صحية عند وجود أعراض مقلقة أو نتائج غير طبيعية."
                   : "Note: This plan is educational and organizational. It does not replace medical evaluation or treatment. Consult a licensed healthcare professional for concerning symptoms or abnormal results."}
               </p>
+            </section>
+
+
+            {/* ORGANHEAL_PRINT_ONLY_SECTION */}
+            <section
+              className="healthPlanPrintOnly"
+              dir={isArabic ? "rtl" : "ltr"}
+              lang={isArabic ? "ar" : "en"}
+              aria-hidden="true"
+            >
+              <div className="healthPlanPrintPage">
+                <div className="healthPlanPrintOnlyHeader">
+                  <p>OrganHeal AI</p>
+                  <h1>
+                    {isArabic
+                      ? `خطة ${priorityOrganDisplay} الشخصية`
+                      : `${priorityOrgan} Personal Health Plan`}
+                  </h1>
+                  <p>
+                    {isArabic
+                      ? "نسخة منظمة للطباعة أو الحفظ كملف PDF"
+                      : "Printable plan summary for review or PDF saving"}
+                  </p>
+                </div>
+
+                <div className="healthPlanPrintOnlyGrid">
+                  <div className="healthPlanPrintOnlyBox">
+                    <span>{isArabic ? "الأولوية الصحية" : "Health priority"}</span>
+                    <strong>{priorityOrganDisplay}</strong>
+                  </div>
+
+                  <div className="healthPlanPrintOnlyBox">
+                    <span>{isArabic ? "جاهزية الخطة" : "Plan readiness"}</span>
+                    <strong>{planReadinessScore}%</strong>
+                  </div>
+
+                  <div className="healthPlanPrintOnlyBox">
+                    <span>{isArabic ? "مستوى المتابعة" : "Follow-up level"}</span>
+                    <strong>{planIntensity}</strong>
+                  </div>
+
+                  <div className="healthPlanPrintOnlyBox">
+                    <span>{isArabic ? "إيقاع المتابعة" : "Follow-up rhythm"}</span>
+                    <strong>{followUpRhythm}</strong>
+                  </div>
+
+                  <div className="healthPlanPrintOnlyBox">
+                    <span>{isArabic ? "المهام المكتملة" : "Completed tasks"}</span>
+                    <strong>
+                      {completedTaskCount}/{totalTasks}
+                    </strong>
+                  </div>
+
+                  <div className="healthPlanPrintOnlyBox">
+                    <span>{isArabic ? "مستوى الخطورة" : "Risk level"}</span>
+                    <strong>{riskLevelDisplay}</strong>
+                  </div>
+                </div>
+
+                <div className="healthPlanPrintOnlySection">
+                  <h2>{isArabic ? "الخطوة التالية" : "Next best action"}</h2>
+                  <p>{nextBestAction.description}</p>
+                </div>
+
+                <div className="healthPlanPrintOnlySection">
+                  <h2>{isArabic ? "مهام المتابعة" : "Action tasks"}</h2>
+                  <ul>
+                    {planTasks.slice(0, 8).map((task) => (
+                      <li key={task}>{task}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="healthPlanPrintOnlySection">
+                  <h2>{isArabic ? "خطة 7 أيام" : "7-Day plan"}</h2>
+                  <ul>
+                    {sevenDayPlan.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="healthPlanPrintOnlySection">
+                  <h2>{isArabic ? "خريطة 30 يوم" : "30-Day roadmap"}</h2>
+                  <ul>
+                    {thirtyDayRoadmap.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="healthPlanPrintOnlySection">
+                  <h2>{isArabic ? "استراتيجية 90 يوم" : "90-Day strategy"}</h2>
+                  <ul>
+                    {ninetyDayStrategy.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="healthPlanPrintOnlySection">
+                  <h2>{isArabic ? "أسئلة للطبيب" : "Doctor discussion guide"}</h2>
+                  <ul>
+                    {doctorDiscussionQuestions.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                <p className="healthPlanPrintOnlyNote">
+                  {isArabic
+                    ? "تنبيه: هذه الخطة تعليمية وتنظيمية ولا تستبدل تقييم الطبيب أو العلاج الطبي. راجع مقدم رعاية صحية عند وجود أعراض مقلقة أو نتائج غير طبيعية."
+                    : "Note: This plan is educational and organizational. It does not replace medical evaluation or treatment. Consult a licensed healthcare professional for concerning symptoms or abnormal results."}
+                </p>
+              </div>
             </section>
 
             <section className="healthPlanBottomNav">
