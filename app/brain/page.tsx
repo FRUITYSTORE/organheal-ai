@@ -1,7 +1,8 @@
 ﻿"use client";
 
 import PageBackActions from "../components/PageBackActions";
-import { useEffect, useState } from "react";
+import { type CSSProperties, useEffect, useState } from "react";
+import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 
 type Language = "en" | "ar";
@@ -76,6 +77,13 @@ export default function BrainPage() {
     }
 
     return fallback;
+  }
+
+  function getToneFromLevel(level: string) {
+    if (level === "Good Brain Health Pattern") return "good";
+    if (level === "Moderate Brain Wellness Risk") return "moderate";
+    if (level === "Higher Brain Wellness Risk") return "risk";
+    return "neutral";
   }
 
   async function saveAssessment(score: number, level: string, message: string) {
@@ -178,113 +186,429 @@ export default function BrainPage() {
     await saveAssessment(score, level, message);
   }
 
+  const brainSignalCount = [
+    sleep === "Poor",
+    stress === "Moderate" || stress === "High",
+    memory === "Yes",
+    headache === "Yes",
+    activity === "Poor",
+  ].filter(Boolean).length;
+
+  const scoreRingStyle = {
+    "--score": result ? Math.max(0, Math.min(100, result.score)) : 0,
+  } as CSSProperties;
+
+  const resultTone = result ? getToneFromLevel(result.level) : "neutral";
+
   return (
-    <main className="assistantPage" dir={isArabic ? "rtl" : "ltr"}>
-      <div className="assistantContainer">
+    <main className="ohPageShell" dir={isArabic ? "rtl" : "ltr"}>
+      <div className="ohContainer ohStack large" style={{ padding: "28px 0 56px" }}>
         <PageBackActions />
 
-        <div className="assistantHeader">
-          <p className="assistantBadge">
-            {text("BRAIN HEALTH ASSESSMENT", "تقييم صحة الدماغ")}
-          </p>
-          <h1>{text("Brain Health Assessment", "تقييم صحة الدماغ")}</h1>
-          <p>
-            {text(
-              "Evaluate brain wellness factors including sleep, stress, memory, headaches, and activity level.",
-              "قيّم عوامل صحة الدماغ مثل النوم، التوتر، الذاكرة، الصداع، ومستوى النشاط."
-            )}
-          </p>
-        </div>
+        <section className="ohHero">
+          <div className="ohHeroGrid">
+            <div>
+              <p className="ohEyebrow">
+                {text("Brain Wellness Assessment Experience", "تجربة تقييم صحة الدماغ")}
+              </p>
 
-        <div className="chatWindow">
-          <div className="assessmentForm">
-            <div className="formGroup">
-              <label>{text("Sleep Quality", "جودة النوم")}</label>
-              <select
-                value={sleep}
-                onChange={(event) => setSleep(event.target.value)}
-              >
-                <option value="Good">{text("Good", "جيد")}</option>
-                <option value="Moderate">{text("Moderate", "متوسط")}</option>
-                <option value="Poor">{text("Poor", "ضعيف")}</option>
-              </select>
-            </div>
+              <h1 className="ohTitle">
+                {text("Brain Health Assessment", "تقييم صحة الدماغ")}
+              </h1>
 
-            <div className="formGroup">
-              <label>{text("Stress Level", "مستوى التوتر")}</label>
-              <select
-                value={stress}
-                onChange={(event) => setStress(event.target.value)}
-              >
-                <option value="Low">{text("Low", "منخفض")}</option>
-                <option value="Moderate">{text("Moderate", "متوسط")}</option>
-                <option value="High">{text("High", "مرتفع")}</option>
-              </select>
-            </div>
-
-            <div className="formGroup">
-              <label>
+              <p className="ohLead">
                 {text(
-                  "Memory or concentration problems?",
-                  "هل توجد مشاكل في الذاكرة أو التركيز؟"
+                  "Evaluate brain wellness factors including sleep quality, stress level, memory or concentration concerns, frequent headaches, and physical activity.",
+                  "قيّم عوامل صحة الدماغ مثل جودة النوم، مستوى التوتر، مشاكل الذاكرة أو التركيز، الصداع المتكرر، والنشاط البدني."
                 )}
-              </label>
-              <select
-                value={memory}
-                onChange={(event) => setMemory(event.target.value)}
-              >
-                <option value="No">{text("No", "لا")}</option>
-                <option value="Yes">{text("Yes", "نعم")}</option>
-              </select>
+              </p>
+
+              <div className="ohButtonRow" style={{ marginTop: "24px" }}>
+                <a href="#brain-assessment-form" className="primaryBtn">
+                  {text("Start Brain Assessment", "ابدأ تقييم الدماغ")}
+                </a>
+
+                <Link href="/assessment" className="secondaryBtn">
+                  {text("All Assessments", "كل التقييمات")}
+                </Link>
+              </div>
             </div>
 
-            <div className="formGroup">
-              <label>{text("Frequent headaches?", "هل يوجد صداع متكرر؟")}</label>
-              <select
-                value={headache}
-                onChange={(event) => setHeadache(event.target.value)}
-              >
-                <option value="No">{text("No", "لا")}</option>
-                <option value="Yes">{text("Yes", "نعم")}</option>
-              </select>
+            <div className="ohCard">
+              <div className="ohCardHeader">
+                <div>
+                  <p className="ohMetricLabel">
+                    {text("Score Model", "نظام المؤشر")}
+                  </p>
+                  <h2 className="ohCardTitle" style={{ marginTop: "8px" }}>
+                    {text("Brain wellness pattern score", "مؤشر نمط صحة الدماغ")}
+                  </h2>
+                </div>
+
+                <span className="ohStatusBadge neutral">
+                  {text("Educational", "تعليمي")}
+                </span>
+              </div>
+
+              <div className="ohMetricGrid" style={{ gridTemplateColumns: "1fr 1fr" }}>
+                <article className="ohMetricCard">
+                  <span className="ohMetricLabel">
+                    {text("Inputs", "المدخلات")}
+                  </span>
+                  <span className="ohMetricValue">5</span>
+                  <span className="ohMetricHint">
+                    {text("brain wellness signals", "إشارات صحة الدماغ")}
+                  </span>
+                </article>
+
+                <article className="ohMetricCard">
+                  <span className="ohMetricLabel">
+                    {text("Result", "النتيجة")}
+                  </span>
+                  <span className="ohMetricValue">/100</span>
+                  <span className="ohMetricHint">
+                    {text("saved to history", "تُحفظ في التاريخ")}
+                  </span>
+                </article>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="ohMetricGrid">
+          <article className="ohMetricCard">
+            <span className="ohMetricLabel">
+              {text("Sleep Quality", "جودة النوم")}
+            </span>
+            <span className="ohMetricValue">
+              {sleep === "Good" ? "✓" : sleep === "Moderate" ? "~" : "!"}
+            </span>
+            <span className="ohMetricHint">
+              {sleep === "Good"
+                ? text("Good sleep selected", "تم اختيار نوم جيد")
+                : sleep === "Moderate"
+                ? text("Moderate sleep selected", "تم اختيار نوم متوسط")
+                : text("Poor sleep signal", "إشارة نوم ضعيف")}
+            </span>
+          </article>
+
+          <article className="ohMetricCard">
+            <span className="ohMetricLabel">
+              {text("Stress Level", "مستوى التوتر")}
+            </span>
+            <span className="ohMetricValue">
+              {stress === "Low" ? "✓" : stress === "Moderate" ? "~" : "!"}
+            </span>
+            <span className="ohMetricHint">
+              {stress === "Low"
+                ? text("Low stress selected", "تم اختيار توتر منخفض")
+                : stress === "Moderate"
+                ? text("Moderate stress signal", "إشارة توتر متوسط")
+                : text("High stress signal", "إشارة توتر مرتفع")}
+            </span>
+          </article>
+
+          <article className="ohMetricCard">
+            <span className="ohMetricLabel">
+              {text("Risk Signals", "إشارات الخطورة")}
+            </span>
+            <span className="ohMetricValue">{brainSignalCount}</span>
+            <span className="ohMetricHint">
+              {text("currently selected", "محددة حاليًا")}
+            </span>
+          </article>
+
+          <article className="ohMetricCard">
+            <span className="ohMetricLabel">
+              {text("Brain Score", "مؤشر الدماغ")}
+            </span>
+            <span className="ohMetricValue">{result ? result.score : "—"}</span>
+            <span className="ohMetricHint">
+              {result
+                ? `${localizeLevel(result.level)} · ${result.score}/100`
+                : text("Calculate to view result", "احسب لعرض النتيجة")}
+            </span>
+          </article>
+        </section>
+
+        <section className="ohGrid cols2" id="brain-assessment-form">
+          <article className="ohCard">
+            <div className="ohCardHeader">
+              <div>
+                <p className="ohMetricLabel">
+                  {text("Assessment Form", "نموذج التقييم")}
+                </p>
+
+                <h2 className="ohCardTitle">
+                  {text("Enter your brain wellness inputs", "أدخل بيانات صحة الدماغ")}
+                </h2>
+
+                <p className="ohCardText">
+                  {text(
+                    "Choose the answers that best describe your current sleep, stress, memory, headache, and activity pattern.",
+                    "اختر الإجابات التي تصف بشكل أفضل نومك، توترك، ذاكرتك، الصداع، ونمط نشاطك الحالي."
+                  )}
+                </p>
+              </div>
             </div>
 
-            <div className="formGroup">
-              <label>{text("Physical Activity", "النشاط البدني")}</label>
-              <select
-                value={activity}
-                onChange={(event) => setActivity(event.target.value)}
+            <div className="ohStack">
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))",
+                  gap: "16px",
+                }}
               >
-                <option value="Good">{text("Good", "جيد")}</option>
-                <option value="Moderate">{text("Moderate", "متوسط")}</option>
-                <option value="Poor">{text("Poor", "ضعيف")}</option>
-              </select>
+                <div className="formGroup">
+                  <label>{text("Sleep Quality", "جودة النوم")}</label>
+                  <select
+                    value={sleep}
+                    onChange={(event) => setSleep(event.target.value)}
+                  >
+                    <option value="Good">{text("Good", "جيد")}</option>
+                    <option value="Moderate">{text("Moderate", "متوسط")}</option>
+                    <option value="Poor">{text("Poor", "ضعيف")}</option>
+                  </select>
+                </div>
+
+                <div className="formGroup">
+                  <label>{text("Stress Level", "مستوى التوتر")}</label>
+                  <select
+                    value={stress}
+                    onChange={(event) => setStress(event.target.value)}
+                  >
+                    <option value="Low">{text("Low", "منخفض")}</option>
+                    <option value="Moderate">{text("Moderate", "متوسط")}</option>
+                    <option value="High">{text("High", "مرتفع")}</option>
+                  </select>
+                </div>
+
+                <div className="formGroup">
+                  <label>
+                    {text(
+                      "Memory or concentration problems?",
+                      "هل توجد مشاكل في الذاكرة أو التركيز؟"
+                    )}
+                  </label>
+                  <select
+                    value={memory}
+                    onChange={(event) => setMemory(event.target.value)}
+                  >
+                    <option value="No">{text("No", "لا")}</option>
+                    <option value="Yes">{text("Yes", "نعم")}</option>
+                  </select>
+                </div>
+
+                <div className="formGroup">
+                  <label>{text("Frequent headaches?", "هل يوجد صداع متكرر؟")}</label>
+                  <select
+                    value={headache}
+                    onChange={(event) => setHeadache(event.target.value)}
+                  >
+                    <option value="No">{text("No", "لا")}</option>
+                    <option value="Yes">{text("Yes", "نعم")}</option>
+                  </select>
+                </div>
+
+                <div className="formGroup">
+                  <label>{text("Physical Activity", "النشاط البدني")}</label>
+                  <select
+                    value={activity}
+                    onChange={(event) => setActivity(event.target.value)}
+                  >
+                    <option value="Good">{text("Good", "جيد")}</option>
+                    <option value="Moderate">{text("Moderate", "متوسط")}</option>
+                    <option value="Poor">{text("Poor", "ضعيف")}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="ohButtonRow">
+                <button className="primaryBtn" onClick={calculateBrainScore}>
+                  {text("Calculate Brain Score", "احسب مؤشر الدماغ")}
+                </button>
+
+                <Link href="/history" className="secondaryBtn">
+                  {text("View Progress Timeline", "عرض مسار التقدم")}
+                </Link>
+              </div>
+
+              {saveMessage && (
+                <div className="ohTrustNotice">
+                  <span aria-hidden="true">ℹ️</span>
+                  <div>{saveMessage}</div>
+                </div>
+              )}
+            </div>
+          </article>
+
+          <article className="ohCard">
+            <div className="ohCardHeader">
+              <div>
+                <p className="ohMetricLabel">
+                  {text("Result Preview", "معاينة النتيجة")}
+                </p>
+
+                <h2 className="ohCardTitle">
+                  {result
+                    ? localizeLevel(result.level)
+                    : text("Complete the form to calculate", "أكمل النموذج لحساب النتيجة")}
+                </h2>
+              </div>
+
+              <span className={`ohStatusBadge ${resultTone}`}>
+                {result ? `${result.score}/100` : text("Pending", "بانتظار")}
+              </span>
             </div>
 
-            <button className="primaryBtn" onClick={calculateBrainScore}>
-              {text("Calculate Brain Score", "احسب مؤشر الدماغ")}
-            </button>
+            <div
+              style={{
+                display: "grid",
+                placeItems: "center",
+                margin: "22px 0",
+              }}
+            >
+              <div className="ohScoreRing" style={scoreRingStyle}>
+                <div>
+                  <strong>{result ? result.score : 0}</strong>
+                  <span>{text("brain", "الدماغ")}</span>
+                </div>
+              </div>
+            </div>
 
-            {saveMessage && <p>{saveMessage}</p>}
+            {result ? (
+              <div className="ohStack">
+                <p className="ohCardText">
+                  {localizeMessage(result.level, result.message)}
+                </p>
+
+                <div className="ohButtonRow">
+                  <Link href="/history" className="primaryBtn">
+                    {text("View Progress Timeline", "عرض مسار التقدم")}
+                  </Link>
+
+                  <Link href="/health-plan" className="secondaryBtn">
+                    {text("Open Health Plan", "فتح الخطة الصحية")}
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <p className="ohCardText">
+                {text(
+                  "Your result will appear here as a clear score, brain wellness pattern, and educational next step.",
+                  "ستظهر نتيجتك هنا كمؤشر واضح، نمط لصحة الدماغ، وخطوة تعليمية تالية."
+                )}
+              </p>
+            )}
+          </article>
+        </section>
+
+        <section className="ohCard">
+          <div className="ohCardHeader">
+            <div>
+              <p className="ohMetricLabel">
+                {text("How this assessment works", "كيف يعمل هذا التقييم")}
+              </p>
+
+              <h2 className="ohCardTitle">
+                {text("Brain wellness scoring made clear", "حساب صحة الدماغ بوضوح")}
+              </h2>
+
+              <p className="ohCardText">
+                {text(
+                  "The tool subtracts risk points based on poor sleep, stress level, memory or concentration concerns, frequent headaches, and poor activity. A higher score means a healthier educational pattern.",
+                  "تقوم الأداة بخصم نقاط خطورة بناءً على ضعف النوم، مستوى التوتر، مشاكل الذاكرة أو التركيز، الصداع المتكرر، وضعف النشاط. كلما كان المؤشر أعلى كان النمط التعليمي أكثر صحة."
+                )}
+              </p>
+            </div>
           </div>
 
-          {result && (
-            <div className="resultBox">
-              <p className="sectionLabel">
-                {text("Brain Health Score", "مؤشر صحة الدماغ")}
-              </p>
-              <h2>{result.score}/100</h2>
-              <h3>{localizeLevel(result.level)}</h3>
-              <p>{localizeMessage(result.level, result.message)}</p>
-
-              <a href="/history">
-                <button className="secondaryBtn">
-                  {text("View Progress Timeline", "عرض مسار التقدم")}
-                </button>
-              </a>
+          <div className="ohGrid cols3">
+            <div className="ohMetricCard">
+              <span className="ohMetricLabel">
+                {text("Healthier Pattern", "نمط صحي أفضل")}
+              </span>
+              <span className="ohMetricValue">75+</span>
+              <span className="ohMetricHint">
+                {text("Sleep, stress, and activity balance", "توازن النوم والتوتر والنشاط")}
+              </span>
             </div>
-          )}
-        </div>
+
+            <div className="ohMetricCard">
+              <span className="ohMetricLabel">
+                {text("Moderate Risk Pattern", "نمط خطورة متوسطة")}
+              </span>
+              <span className="ohMetricValue">45-74</span>
+              <span className="ohMetricHint">
+                {text("Review wellness factors", "راجع عوامل العافية")}
+              </span>
+            </div>
+
+            <div className="ohMetricCard">
+              <span className="ohMetricLabel">
+                {text("Higher Risk Pattern", "نمط خطورة أعلى")}
+              </span>
+              <span className="ohMetricValue">&lt;45</span>
+              <span className="ohMetricHint">
+                {text("Seek medical evaluation if persistent", "اطلب تقييمًا طبيًا إذا استمرت الأعراض")}
+              </span>
+            </div>
+          </div>
+        </section>
+
+        <section className="ohTrustNotice">
+          <span aria-hidden="true">🛡️</span>
+          <div>
+            <strong>
+              {text("Medical safety reminder", "تذكير السلامة الطبية")}
+            </strong>
+            <br />
+            {text(
+              "This brain wellness assessment is educational only. It does not diagnose neurological or mental health conditions. Seek urgent care for sudden weakness, facial droop, speech difficulty, severe sudden headache, confusion, seizure, or loss of consciousness.",
+              "تقييم صحة الدماغ هذا تعليمي فقط. لا يشخّص أمراض الأعصاب أو الصحة النفسية. اطلب رعاية عاجلة عند حدوث ضعف مفاجئ، ميلان بالوجه، صعوبة كلام، صداع شديد مفاجئ، تشوش، تشنج، أو فقدان وعي."
+            )}
+          </div>
+        </section>
+
+        <section className="ohCard">
+          <div className="ohCardHeader">
+            <div>
+              <p className="ohMetricLabel">
+                {text("Continue your journey", "تابع رحلتك")}
+              </p>
+
+              <h2 className="ohCardTitle">
+                {text("Connect this result to your health plan", "اربط هذه النتيجة بخطتك الصحية")}
+              </h2>
+
+              <p className="ohCardText">
+                {text(
+                  "After saving your brain assessment, continue to your timeline, upload reports, or open Health Intelligence for a broader view.",
+                  "بعد حفظ تقييم الدماغ، تابع إلى مسار التقدم، ارفع التقارير، أو افتح مركز الذكاء الصحي للحصول على رؤية أوسع."
+                )}
+              </p>
+            </div>
+          </div>
+
+          <div className="ohButtonRow">
+            <Link href="/assessment" className="secondaryBtn">
+              {text("All Assessments", "كل التقييمات")}
+            </Link>
+
+            <Link href="/history" className="primaryBtn">
+              {text("Progress Timeline", "مسار التقدم")}
+            </Link>
+
+            <Link href="/lab-upload" className="secondaryBtn">
+              {text("Upload Report", "رفع تقرير")}
+            </Link>
+
+            <Link href="/intelligence" className="secondaryBtn">
+              {text("Open Intelligence", "فتح مركز الذكاء")}
+            </Link>
+          </div>
+        </section>
       </div>
     </main>
   );
