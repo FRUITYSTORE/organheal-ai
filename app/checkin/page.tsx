@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 import PageBackActions from "../components/PageBackActions";
-import { useEffect, useMemo, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 
@@ -45,6 +45,30 @@ function getStoredLanguage(): Language {
   return savedLanguage.toLowerCase().startsWith("ar") ? "ar" : "en";
 }
 
+function getTodayIsoRange() {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+
+  const end = new Date(start);
+  end.setDate(end.getDate() + 1);
+
+  return {
+    startIso: start.toISOString(),
+    endIso: end.toISOString(),
+  };
+}
+
+function formatDate(value: string, isArabic: boolean) {
+  try {
+    return new Date(value).toLocaleString(isArabic ? "ar-AE" : "en-US", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+  } catch {
+    return value;
+  }
+}
+
 function localizeMood(value: string | null | undefined, isArabic: boolean) {
   if (!isArabic) return value || "Not recorded";
 
@@ -52,17 +76,27 @@ function localizeMood(value: string | null | undefined, isArabic: boolean) {
   return option?.ar || "غير مسجل";
 }
 
+function getRangeText(value: number, isArabic: boolean) {
+  if (value <= 1) return isArabic ? "منخفض جدًا" : "Very low";
+  if (value === 2) return isArabic ? "منخفض" : "Low";
+  if (value === 3) return isArabic ? "متوسط" : "Moderate";
+  if (value === 4) return isArabic ? "جيد" : "Good";
+  return isArabic ? "ممتاز" : "Excellent";
+}
+
+function getStressRangeText(value: number, isArabic: boolean) {
+  if (value <= 1) return isArabic ? "منخفض جدًا" : "Very low";
+  if (value === 2) return isArabic ? "منخفض" : "Low";
+  if (value === 3) return isArabic ? "متوسط" : "Moderate";
+  if (value === 4) return isArabic ? "مرتفع" : "High";
+  return isArabic ? "مرتفع جدًا" : "Very high";
+}
+
 function getScoreStatus(score: number, isArabic: boolean) {
   if (score >= 80) return isArabic ? "قوي" : "Strong";
   if (score >= 60) return isArabic ? "مستقر" : "Stable";
   if (score >= 40) return isArabic ? "يحتاج انتباه" : "Needs Attention";
   return isArabic ? "يحتاج تعافي" : "Recovery Needed";
-}
-
-function getScoreClass(score: number) {
-  if (score >= 80) return "goodScore";
-  if (score >= 60) return "moderateScore";
-  return "riskScore";
 }
 
 function getScoreGuidance(score: number, isArabic: boolean) {
@@ -85,45 +119,21 @@ function getScoreGuidance(score: number, isArabic: boolean) {
   }
 
   return isArabic
-    ? "اليوم يحتاج رعاية أكثر. ركز على الراحة، الترطيب، وتواصل مع مقدم رعاية صحية إذا توجد أعراض مقلقة."
+    ? "اليوم يحتاج رعاية أكثر. ركز على الراحة والترطيب، واطلب رعاية طبية إذا ظهرت أعراض مقلقة."
     : "Today needs more recovery support. Focus on rest and hydration, and seek medical care for concerning symptoms.";
 }
 
-function getRangeText(value: number, isArabic: boolean) {
-  if (value <= 1) return isArabic ? "منخفض جدًا" : "Very low";
-  if (value === 2) return isArabic ? "منخفض" : "Low";
-  if (value === 3) return isArabic ? "متوسط" : "Moderate";
-  if (value === 4) return isArabic ? "جيد" : "Good";
-  return isArabic ? "ممتاز" : "Excellent";
-}
-
-
-function getTodayIsoRange() {
-  const start = new Date();
-  start.setHours(0, 0, 0, 0);
-
-  const end = new Date(start);
-  end.setDate(end.getDate() + 1);
-
-  return {
-    startIso: start.toISOString(),
-    endIso: end.toISOString(),
-  };
-}
-
-function formatDate(value: string, isArabic: boolean) {
-  try {
-    return new Date(value).toLocaleString(isArabic ? "ar" : "en", {
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
-  } catch {
-    return value;
-  }
+function getTone(score: number) {
+  if (score >= 80) return "good";
+  if (score >= 60) return "moderate";
+  if (score >= 40) return "moderate";
+  return "risk";
 }
 
 export default function CheckInPage() {
   const [language, setLanguage] = useState<Language>("en");
+  const isArabic = language === "ar";
+
   const [mood, setMood] = useState("Good");
   const [energyLevel, setEnergyLevel] = useState(3);
   const [stressLevel, setStressLevel] = useState(3);
@@ -141,27 +151,32 @@ export default function CheckInPage() {
 
   useEffect(() => {
     function syncLanguage() {
-      setLanguage(getStoredLanguage());
+      const selectedLanguage = getStoredLanguage();
+
+      setLanguage(selectedLanguage);
+      document.documentElement.lang = selectedLanguage;
+      document.documentElement.dir = selectedLanguage === "ar" ? "rtl" : "ltr";
     }
 
     syncLanguage();
 
     window.addEventListener("storage", syncLanguage);
-    window.addEventListener("focus", syncLanguage);
-    window.addEventListener("click", syncLanguage);
+    window.addEventListener("organheal-language-change", syncLanguage);
 
     return () => {
       window.removeEventListener("storage", syncLanguage);
-      window.removeEventListener("focus", syncLanguage);
-      window.removeEventListener("click", syncLanguage);
+      window.removeEventListener("organheal-language-change", syncLanguage);
     };
   }, []);
 
   useEffect(() => {
     loadCheckInHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const isArabic = language === "ar";
+  function text(en: string, ar: string) {
+    return isArabic ? ar : en;
+  }
 
   function calculateWellnessScore() {
     return Math.round(
@@ -195,11 +210,7 @@ export default function CheckInPage() {
       .limit(7);
 
     if (error) {
-      setMessage(
-        isArabic
-          ? "خطأ في قاعدة البيانات: " + error.message
-          : "Database error: " + error.message
-      );
+      setMessage(text("Database error: ", "خطأ في قاعدة البيانات: ") + error.message);
       setLoading(false);
       return;
     }
@@ -225,21 +236,18 @@ export default function CheckInPage() {
 
     setMessage(
       savedToday
-        ? isArabic
-          ? "جاري تحديث التحديث الصحي لهذا اليوم..."
-          : "Updating today check-in..."
-        : isArabic
-        ? "جاري حفظ التحديث الصحي..."
-        : "Saving daily check-in..."
+        ? text("Updating today check-in...", "جاري تحديث Check-In لهذا اليوم...")
+        : text("Saving daily check-in...", "جاري حفظ التحديث الصحي...")
     );
 
     const { data, error: userError } = await supabase.auth.getUser();
 
     if (userError || !data.user) {
       setMessage(
-        isArabic
-          ? "يرجى تسجيل الدخول لحفظ التحديث الصحي."
-          : "Please login to save your daily check-in."
+        text(
+          "Please login to save your daily check-in.",
+          "يرجى تسجيل الدخول لحفظ التحديث الصحي."
+        )
       );
       setSaving(false);
       return;
@@ -273,23 +281,21 @@ export default function CheckInPage() {
         });
 
     if (error) {
-      setMessage(
-        isArabic
-          ? "خطأ في قاعدة البيانات: " + error.message
-          : "Database error: " + error.message
-      );
+      setMessage(text("Database error: ", "خطأ في قاعدة البيانات: ") + error.message);
       setSaving(false);
       return;
     }
 
     setMessage(
       savedToday
-        ? isArabic
-          ? "تم تحديث Check-In اليوم بنجاح. النتيجة: " + wellnessScore + "/100"
-          : "Today check-in updated successfully. Wellness Score: " + wellnessScore + "/100"
-        : isArabic
-        ? "تم حفظ التحديث الصحي بنجاح. النتيجة: " + wellnessScore + "/100"
-        : "Check-in saved successfully. Wellness Score: " + wellnessScore + "/100"
+        ? text(
+            `Today check-in updated successfully. Wellness Score: ${wellnessScore}/100`,
+            `تم تحديث Check-In اليوم بنجاح. النتيجة: ${wellnessScore}/100`
+          )
+        : text(
+            `Check-in saved successfully. Wellness Score: ${wellnessScore}/100`,
+            `تم حفظ التحديث الصحي بنجاح. النتيجة: ${wellnessScore}/100`
+          )
     );
 
     setSavedToday(true);
@@ -301,6 +307,11 @@ export default function CheckInPage() {
   const wellnessScore = calculateWellnessScore();
   const scoreStatus = getScoreStatus(wellnessScore, isArabic);
   const scoreGuidance = getScoreGuidance(wellnessScore, isArabic);
+  const scoreTone = getTone(wellnessScore);
+
+  const scoreRingStyle = {
+    "--score": Math.max(0, Math.min(100, wellnessScore)),
+  } as CSSProperties;
 
   const averageRecentScore = useMemo(() => {
     if (recentCheckIns.length === 0) return null;
@@ -311,30 +322,29 @@ export default function CheckInPage() {
     );
   }, [recentCheckIns]);
 
-  const trendText = useMemo(() => {
-    if (recentCheckIns.length < 2) {
-      return isArabic ? "بانتظار نمط أوضح" : "Waiting for clearer pattern";
-    }
-
-    const latest = recentCheckIns[0].wellness_score;
-    const previous = recentCheckIns[1].wellness_score;
-
-    if (latest > previous) return isArabic ? "تحسن عن آخر تحديث" : "Improved since last check-in";
-    if (latest < previous) return isArabic ? "انخفاض عن آخر تحديث" : "Lower than last check-in";
-
-    return isArabic ? "مستقر مقارنة بآخر تحديث" : "Stable compared with last check-in";
-  }, [recentCheckIns, isArabic]);
-
-
   const recentScores = recentCheckIns.map((item) => item.wellness_score);
   const highestRecentScore =
     recentScores.length > 0 ? Math.max(...recentScores) : null;
   const lowestRecentScore =
     recentScores.length > 0 ? Math.min(...recentScores) : null;
 
+  const trendText = useMemo(() => {
+    if (recentCheckIns.length < 2) {
+      return text("Waiting for clearer pattern", "بانتظار نمط أوضح");
+    }
+
+    const latest = recentCheckIns[0].wellness_score;
+    const previous = recentCheckIns[1].wellness_score;
+
+    if (latest > previous) return text("Improved since last check-in", "تحسن عن آخر تحديث");
+    if (latest < previous) return text("Lower than last check-in", "انخفاض عن آخر تحديث");
+
+    return text("Stable compared with last check-in", "مستقر مقارنة بآخر تحديث");
+  }, [recentCheckIns, isArabic]);
+
   const repeatedMood = useMemo(() => {
     if (recentCheckIns.length === 0) {
-      return isArabic ? "غير متاح" : "Not available";
+      return text("Not available", "غير متاح");
     }
 
     const counts = new Map<string, number>();
@@ -352,212 +362,103 @@ export default function CheckInPage() {
 
   const consistencyText =
     recentCheckIns.length >= 5
-      ? isArabic
-        ? "متابعة قوية"
-        : "Strong consistency"
+      ? text("Strong consistency", "متابعة قوية")
       : recentCheckIns.length >= 3
-      ? isArabic
-        ? "متابعة جيدة"
-        : "Good consistency"
+      ? text("Good consistency", "متابعة جيدة")
       : recentCheckIns.length >= 1
-      ? isArabic
-        ? "بداية المتابعة"
-        : "Starting consistency"
-      : isArabic
-      ? "لم تبدأ بعد"
-      : "Not started yet";
+      ? text("Starting consistency", "بداية المتابعة")
+      : text("Not started yet", "لم تبدأ بعد");
 
-  const improvementFocusItems = [
+  const focusItems = [
     stressLevel >= 4
-      ? isArabic
-        ? "خفف الضغط اليوم: خذ راحة قصيرة، تنفس ببطء، وتجنب إضافة مهام كثيرة."
-        : "Reduce stress today: take a short break, breathe slowly, and avoid adding too many tasks."
+      ? text(
+          "Reduce stress today: take a short break, breathe slowly, and avoid adding too many tasks.",
+          "خفف الضغط اليوم: خذ راحة قصيرة، تنفس ببطء، وتجنب إضافة مهام كثيرة."
+        )
       : null,
     sleepQuality <= 2
-      ? isArabic
-        ? "النوم يحتاج دعم: حاول تثبيت وقت النوم وتقليل الشاشة قبل النوم."
-        : "Sleep needs support: keep a stable bedtime and reduce screen time before sleep."
+      ? text(
+          "Sleep needs support: keep a stable bedtime and reduce screen time before sleep.",
+          "النوم يحتاج دعمًا: حاول تثبيت وقت النوم وتقليل الشاشة قبل النوم."
+        )
       : null,
     hydration <= 2
-      ? isArabic
-        ? "الترطيب منخفض: ابدأ بكوب ماء الآن ووزع الشرب خلال اليوم."
-        : "Hydration is low: start with one glass of water and spread intake through the day."
+      ? text(
+          "Hydration is low: start with one glass of water and spread intake through the day.",
+          "الترطيب منخفض: ابدأ بكوب ماء الآن ووزع الشرب خلال اليوم."
+        )
       : null,
     energyLevel <= 2
-      ? isArabic
-        ? "الطاقة منخفضة: اختر نشاطًا خفيفًا وركز على الراحة والتغذية."
-        : "Energy is low: choose light activity and focus on rest and nutrition."
+      ? text(
+          "Energy is low: choose light activity and focus on rest and nutrition.",
+          "الطاقة منخفضة: اختر نشاطًا خفيفًا وركز على الراحة والتغذية."
+        )
       : null,
     physicalActivity <= 2
-      ? isArabic
-        ? "النشاط منخفض: جرّب مشي خفيف 10 دقائق إذا كان مناسبًا لحالتك."
-        : "Activity is low: try a light 10-minute walk if appropriate for your condition."
+      ? text(
+          "Activity is low: try a light 10-minute walk if appropriate for your condition.",
+          "النشاط منخفض: جرّب مشيًا خفيفًا 10 دقائق إذا كان مناسبًا لحالتك."
+        )
       : null,
   ].filter(Boolean) as string[];
 
   const todaysPrimaryFocus =
-    improvementFocusItems[0] ||
-    (isArabic
-      ? "الوضع اليوم مستقر. حافظ على العادات الجيدة وكرر التحديث لاحقًا."
-      : "Today looks stable. Keep your good habits and check in again later.");
-
-  const weeklyPatternCards = [
-    {
-      label: isArabic ? "متوسط آخر التحديثات" : "Recent average",
-      value: averageRecentScore === null ? "--" : averageRecentScore + "/100",
-      note: isArabic ? "يعكس الاتجاه العام مؤخرًا" : "Reflects your recent pattern",
-    },
-    {
-      label: isArabic ? "أعلى نتيجة" : "Highest score",
-      value: highestRecentScore === null ? "--" : highestRecentScore + "/100",
-      note: isArabic ? "أفضل نقطة خلال الفترة" : "Best point in this period",
-    },
-    {
-      label: isArabic ? "أقل نتيجة" : "Lowest score",
-      value: lowestRecentScore === null ? "--" : lowestRecentScore + "/100",
-      note: isArabic ? "نقطة تحتاج فهم السبب" : "A point worth understanding",
-    },
-    {
-      label: isArabic ? "المزاج الأكثر تكرارًا" : "Most common mood",
-      value: repeatedMood,
-      note: isArabic ? "يساعد على فهم الحالة العامة" : "Helps understand your baseline",
-    },
-    {
-      label: isArabic ? "الاستمرارية" : "Consistency",
-      value: consistencyText,
-      note: isArabic
-        ? recentCheckIns.length + " من آخر 7 تحديثات"
-        : recentCheckIns.length + " of last 7 check-ins",
-    },
-    {
-      label: isArabic ? "الاتجاه" : "Trend",
-      value: trendText,
-      note: isArabic ? "مقارنة بآخر تحديث محفوظ" : "Compared with the latest saved check-in",
-    },
-  ];
-
-
-  const healthPlanImpactLevel =
-    wellnessScore >= 80
-      ? isArabic
-        ? "يدعم الخطة الوقائية"
-        : "Supports preventive plan"
-      : wellnessScore >= 60
-      ? isArabic
-        ? "يحافظ على خطة متابعة مستقرة"
-        : "Keeps a stable follow-up plan"
-      : wellnessScore >= 40
-      ? isArabic
-        ? "يحتاج تركيزًا إضافيًا في الخطة"
-        : "Needs extra focus in the plan"
-      : isArabic
-      ? "يحتاج خطة تعافٍ ومراجعة قريبة"
-      : "Needs recovery support and closer review";
-
-  const healthPlanImpactDescription =
-    wellnessScore >= 80
-      ? isArabic
-        ? "نتيجة اليوم جيدة وتساعد OrganHeal على إبقاء خطة المتابعة في المسار الوقائي."
-        : "Today's score is strong and helps OrganHeal keep your follow-up plan in a preventive track."
-      : wellnessScore >= 60
-      ? isArabic
-        ? "نتيجة اليوم مستقرة. الخطة ستستفيد من الاستمرار في التحديثات ومراقبة أي تغير."
-        : "Today's score is stable. The plan benefits from continued check-ins and watching for changes."
-      : wellnessScore >= 40
-      ? isArabic
-        ? "نتيجة اليوم تشير إلى أن النوم أو الضغط أو الطاقة قد تحتاج اهتمامًا ضمن خطة الأسبوع."
-        : "Today's score suggests sleep, stress, or energy may need attention in this week's plan."
-      : isArabic
-      ? "نتيجة اليوم منخفضة. ركز على الراحة والترطيب، وراجع الطبيب عند وجود أعراض مقلقة."
-      : "Today's score is low. Focus on rest and hydration, and seek care for concerning symptoms.";
-
-  const planSignalCards = [
-    {
-      label: isArabic ? "تأثير اليوم على الخطة" : "Plan impact today",
-      value: healthPlanImpactLevel,
-      note: healthPlanImpactDescription,
-    },
-    {
-      label: isArabic ? "العامل الأهم اليوم" : "Main factor today",
-      value:
-        stressLevel >= 4
-          ? isArabic
-            ? "الضغط النفسي"
-            : "Stress"
-          : sleepQuality <= 2
-          ? isArabic
-            ? "النوم"
-            : "Sleep"
-          : energyLevel <= 2
-          ? isArabic
-            ? "الطاقة"
-            : "Energy"
-          : hydration <= 2
-          ? isArabic
-            ? "الترطيب"
-            : "Hydration"
-          : physicalActivity <= 2
-          ? isArabic
-            ? "النشاط"
-            : "Activity"
-          : isArabic
-          ? "الحالة العامة مستقرة"
-          : "Overall status is stable",
-      note:
-        stressLevel >= 4
-          ? isArabic
-            ? "ابدأ بتقليل الضغط قبل إضافة مهام صحية جديدة."
-            : "Start by reducing stress before adding new health tasks."
-          : sleepQuality <= 2
-          ? isArabic
-            ? "تحسين النوم قد يرفع نتيجة المتابعة خلال أيام."
-            : "Improving sleep may raise your follow-up score within days."
-          : energyLevel <= 2
-          ? isArabic
-            ? "انخفاض الطاقة يحتاج راحة وتغذية ومتابعة."
-            : "Low energy needs rest, nutrition, and monitoring."
-          : hydration <= 2
-          ? isArabic
-            ? "الترطيب خطوة سهلة وسريعة لتحسين اليوم."
-            : "Hydration is an easy quick win for today."
-          : physicalActivity <= 2
-          ? isArabic
-            ? "نشاط خفيف قد يساعد إذا كان مناسبًا لحالتك."
-            : "Light activity may help if appropriate for your condition."
-          : isArabic
-          ? "استمر بنفس النمط وراقب التغيرات."
-          : "Continue the same pattern and monitor changes.",
-    },
-    {
-      label: isArabic ? "ما الذي يجب فتحه بعد الحفظ؟" : "What to open after saving?",
-      value:
-        wellnessScore < 60
-          ? isArabic
-            ? "خطة المتابعة"
-            : "Health Plan"
-          : isArabic
-          ? "التاريخ الصحي"
-          : "Health History",
-      note:
-        wellnessScore < 60
-          ? isArabic
-            ? "راجع مهام الأسبوع لأنها قد تحتاج تعديل حسب حالتك اليوم."
-            : "Review weekly tasks because they may need adjustment based on today."
-          : isArabic
-          ? "قارن اتجاهك مع التحديثات السابقة."
-          : "Compare your trend with previous check-ins.",
-    },
-  ];
+    focusItems[0] ||
+    text(
+      "Today looks stable. Keep your good habits and check in again later.",
+      "الوضع اليوم مستقر. حافظ على العادات الجيدة وكرر التحديث لاحقًا."
+    );
 
   const nextAfterSaveHref = wellnessScore < 60 ? "/health-plan" : "/history";
   const nextAfterSaveLabel =
     wellnessScore < 60
-      ? isArabic
-        ? "فتح خطة المتابعة"
-        : "Open Health Plan"
-      : isArabic
-      ? "فتح التاريخ الصحي"
-      : "Open Health History";
+      ? text("Open Health Plan", "فتح خطة المتابعة")
+      : text("Open Health History", "فتح التاريخ الصحي");
+
+  const planImpact =
+    wellnessScore >= 80
+      ? text("Supports preventive plan", "يدعم الخطة الوقائية")
+      : wellnessScore >= 60
+      ? text("Keeps a stable follow-up plan", "يحافظ على خطة متابعة مستقرة")
+      : wellnessScore >= 40
+      ? text("Needs extra focus in the plan", "يحتاج تركيزًا إضافيًا في الخطة")
+      : text("Needs recovery support and closer review", "يحتاج دعم تعافٍ ومراجعة أقرب");
+
+  const weeklyPatternCards = [
+    {
+      label: text("Recent average", "متوسط آخر التحديثات"),
+      value: averageRecentScore === null ? "—" : `${averageRecentScore}/100`,
+      note: text("Reflects your recent pattern", "يعكس الاتجاه العام مؤخرًا"),
+    },
+    {
+      label: text("Highest score", "أعلى نتيجة"),
+      value: highestRecentScore === null ? "—" : `${highestRecentScore}/100`,
+      note: text("Best point in this period", "أفضل نقطة خلال الفترة"),
+    },
+    {
+      label: text("Lowest score", "أقل نتيجة"),
+      value: lowestRecentScore === null ? "—" : `${lowestRecentScore}/100`,
+      note: text("A point worth understanding", "نقطة تحتاج فهم السبب"),
+    },
+    {
+      label: text("Most common mood", "المزاج الأكثر تكرارًا"),
+      value: repeatedMood,
+      note: text("Helps understand your baseline", "يساعد على فهم الحالة العامة"),
+    },
+    {
+      label: text("Consistency", "الاستمرارية"),
+      value: consistencyText,
+      note: text(
+        `${recentCheckIns.length} of last 7 check-ins`,
+        `${recentCheckIns.length} من آخر 7 تحديثات`
+      ),
+    },
+    {
+      label: text("Trend", "الاتجاه"),
+      value: trendText,
+      note: text("Compared with the latest saved check-in", "مقارنة بآخر تحديث محفوظ"),
+    },
+  ];
 
   function RangeControl({
     label,
@@ -571,15 +472,7 @@ export default function CheckInPage() {
     reverseMeaning?: boolean;
   }) {
     const displayText = reverseMeaning
-      ? value <= 1
-        ? isArabic
-          ? "منخفض"
-          : "Low"
-        : value >= 5
-        ? isArabic
-          ? "مرتفع"
-          : "High"
-        : getRangeText(value, isArabic)
+      ? getStressRangeText(value, isArabic)
       : getRangeText(value, isArabic);
 
     return (
@@ -594,922 +487,491 @@ export default function CheckInPage() {
           max="5"
           value={value}
           onChange={(event) => onChange(Number(event.target.value))}
+          style={{ width: "100%", accentColor: "var(--oh-primary)" }}
         />
       </div>
     );
   }
 
   return (
-    <main
-      className="assistantPage checkinReadablePage"
-      dir={isArabic ? "rtl" : "ltr"}
-      lang={isArabic ? "ar" : "en"}
-    >
-      <div className="assistantContainer">
-        <style>{`
-          .checkinHeroGrid {
-            display: grid;
-            grid-template-columns: minmax(0, 1.2fr) minmax(260px, 0.8fr);
-            gap: 18px;
-            margin-bottom: 22px;
-          }
-
-          .checkinScoreCard {
-            text-align: center;
-          }
-
-          .checkinScoreCard h2 {
-            font-size: clamp(2.8rem, 7vw, 5rem);
-            margin: 10px 0;
-          }
-
-          .checkinStatusPill {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 999px;
-            padding: 8px 12px;
-            background: rgba(20, 184, 166, 0.12);
-            border: 1px solid rgba(20, 184, 166, 0.24);
-            margin-bottom: 12px;
-            font-weight: 800;
-          }
-
-          .checkinInsightGrid {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 14px;
-            margin-top: 18px;
-          }
-
-          .checkinInsightGrid article,
-          .checkinMiniCard {
-            border: 1px solid rgba(148, 163, 184, 0.22);
-            border-radius: 18px;
-            padding: 16px;
-            background: rgba(255, 255, 255, 0.78);
-          }
-
-          .checkinInsightGrid span,
-          .checkinMiniCard span {
-            display: block;
-            font-size: 0.78rem;
-            opacity: 0.7;
-            margin-bottom: 6px;
-          }
-
-          .checkinInsightGrid strong,
-          .checkinMiniCard strong {
-            display: block;
-            font-size: 1.05rem;
-            line-height: 1.45;
-          }
-
-          .checkinActionRow {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 16px;
-            justify-content: center;
-          }
-
-          .checkinFormGrid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 16px;
-          }
-
-          .checkinTextarea {
-            min-height: 110px;
-            resize: vertical;
-          }
-
-          .checkinRecentList {
-            display: grid;
-            gap: 12px;
-            margin-top: 16px;
-          }
-
-          .checkinRecentItem {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 14px;
-            padding: 14px;
-            border-radius: 16px;
-            border: 1px solid rgba(148, 163, 184, 0.22);
-            background: rgba(255, 255, 255, 0.72);
-          }
-
-          .checkinRecentItem p {
-            margin: 4px 0 0;
-            opacity: 0.75;
-          }
-
-          .assistantPage[dir="rtl"] .checkinRecentItem {
-            text-align: right;
-          }
-
-          @media (max-width: 900px) {
-            .checkinHeroGrid,
-            .checkinInsightGrid,
-            .checkinFormGrid {
-              grid-template-columns: 1fr;
-            }
-          }
-        `}</style>
-
-        
-        <style>{`
-          /* ORGANHEAL_CHECKIN_READABILITY_POLISH */
-          .checkinReadablePage {
-            min-height: 100vh;
-            background:
-              radial-gradient(circle at top left, rgba(34, 211, 238, 0.22), transparent 34%),
-              linear-gradient(180deg, #ecfeff 0%, #f8fafc 45%, #ffffff 100%) !important;
-            color: #0f172a !important;
-          }
-
-          .checkinReadablePage .assistantContainer {
-            max-width: 1120px;
-            padding-top: 28px;
-            padding-bottom: 56px;
-          }
-
-          .checkinReadablePage .assistantHeader {
-            background: rgba(255, 255, 255, 0.88);
-            border: 1px solid rgba(148, 163, 184, 0.22);
-            border-radius: 28px;
-            padding: 28px;
-            margin-bottom: 24px;
-            box-shadow: 0 22px 55px rgba(15, 23, 42, 0.08);
-            color: #0f172a !important;
-          }
-
-          .checkinReadablePage[dir="rtl"] .assistantHeader {
-            text-align: right;
-          }
-
-          .checkinReadablePage .assistantHeader h1 {
-            color: #0f172a !important;
-            font-size: clamp(2.1rem, 5vw, 4rem);
-            line-height: 1.15;
-            margin: 10px 0 12px;
-          }
-
-          .checkinReadablePage .assistantHeader p {
-            color: #475569 !important;
-            font-size: 1rem;
-            line-height: 1.85;
-          }
-
-          .checkinReadablePage .assistantBadge,
-          .checkinReadablePage .sectionLabel {
-            color: #0891b2 !important;
-            font-weight: 900;
-            letter-spacing: 0.08em;
-          }
-
-          .checkinReadablePage[dir="rtl"] .assistantBadge,
-          .checkinReadablePage[dir="rtl"] .sectionLabel {
-            letter-spacing: normal;
-          }
-
-          .checkinReadablePage .chatWindow {
-            display: grid;
-            gap: 22px;
-          }
-
-          .checkinReadablePage .resultBox,
-          .checkinReadablePage .assessmentForm {
-            background: rgba(255, 255, 255, 0.94) !important;
-            color: #0f172a !important;
-            border: 1px solid rgba(148, 163, 184, 0.24) !important;
-            box-shadow: 0 24px 65px rgba(15, 23, 42, 0.08);
-          }
-
-          .checkinReadablePage .resultBox h2,
-          .checkinReadablePage .resultBox h3,
-          .checkinReadablePage .resultBox strong,
-          .checkinReadablePage .resultBox p,
-          .checkinReadablePage .assessmentForm label {
-            color: #0f172a !important;
-          }
-
-          .checkinReadablePage .resultBox p,
-          .checkinReadablePage .assessmentForm label {
-            font-size: 0.98rem;
-            line-height: 1.8;
-          }
-
-          .checkinReadablePage .goodScore {
-            color: #0891b2 !important;
-          }
-
-          .checkinReadablePage .moderateScore {
-            color: #0f766e !important;
-          }
-
-          .checkinReadablePage .riskScore {
-            color: #b45309 !important;
-          }
-
-          .checkinReadablePage .checkinHeroGrid {
-            align-items: stretch;
-          }
-
-          .checkinReadablePage .checkinScoreCard {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            min-height: 330px;
-          }
-
-          .checkinReadablePage .checkinScoreCard h2 {
-            color: #0891b2 !important;
-            text-shadow: none !important;
-          }
-
-          .checkinReadablePage .checkinStatusPill {
-            background: #ccfbf1 !important;
-            color: #0f766e !important;
-            border: 1px solid #99f6e4 !important;
-          }
-
-          .checkinReadablePage .checkinInsightGrid article,
-          .checkinReadablePage .checkinMiniCard,
-          .checkinReadablePage .checkinRecentItem {
-            background: #f8fafc !important;
-            color: #0f172a !important;
-            border: 1px solid #e2e8f0 !important;
-          }
-
-          .checkinReadablePage .checkinInsightGrid span,
-          .checkinReadablePage .checkinMiniCard span,
-          .checkinReadablePage .checkinRecentItem p {
-            color: #64748b !important;
-            opacity: 1 !important;
-          }
-
-          .checkinReadablePage .checkinInsightGrid strong,
-          .checkinReadablePage .checkinMiniCard strong,
-          .checkinReadablePage .checkinRecentItem strong {
-            color: #0f172a !important;
-          }
-
-          .checkinReadablePage .assessmentForm {
-            padding: 26px !important;
-            border-radius: 28px !important;
-          }
-
-          .checkinReadablePage .formGroup {
-            margin-bottom: 18px;
-          }
-
-          .checkinReadablePage select,
-          .checkinReadablePage textarea,
-          .checkinReadablePage input:not([type="range"]) {
-            background: #ffffff !important;
-            color: #0f172a !important;
-            border: 1px solid #cbd5e1 !important;
-            border-radius: 14px !important;
-            padding: 12px 14px !important;
-            width: 100%;
-          }
-
-          .checkinReadablePage textarea::placeholder {
-            color: #94a3b8 !important;
-          }
-
-          .checkinReadablePage input[type="range"] {
-            width: 100%;
-            accent-color: #0891b2;
-          }
-
-          .checkinReadablePage .primaryBtn,
-          .checkinReadablePage .secondaryBtn {
-            border-radius: 999px !important;
-            font-weight: 900 !important;
-          }
-
-          .checkinReadablePage .primaryBtn {
-            background: linear-gradient(135deg, #06b6d4, #14b8a6) !important;
-            color: #ffffff !important;
-            border: 0 !important;
-            box-shadow: 0 18px 38px rgba(20, 184, 166, 0.28);
-          }
-
-          .checkinReadablePage .secondaryBtn {
-            background: #ffffff !important;
-            color: #0f766e !important;
-            border: 1px solid #99f6e4 !important;
-          }
-
-          .checkinReadablePage .checkinActionRow {
-            justify-content: center;
-          }
-
-          .checkinReadablePage[dir="rtl"] .checkinActionRow {
-            direction: rtl;
-          }
-
-          @media (max-width: 900px) {
-            .checkinReadablePage .assistantContainer {
-              padding-inline: 14px;
-            }
-
-            .checkinReadablePage .assistantHeader,
-            .checkinReadablePage .resultBox,
-            .checkinReadablePage .assessmentForm {
-              border-radius: 22px;
-              padding: 20px !important;
-            }
-
-            .checkinReadablePage .checkinScoreCard {
-              min-height: auto;
-            }
-          }
-        `}</style>
-
-
-        
-        <style>{`
-          /* ORGANHEAL_CHECKIN_WEEKLY_INSIGHTS_STEP2 */
-          .checkinSectionHeader {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 16px;
-            margin-bottom: 18px;
-          }
-
-          .checkinSectionHeader h2 {
-            margin: 6px 0 8px;
-          }
-
-          .checkinWeeklyGrid {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 14px;
-            margin-top: 16px;
-          }
-
-          .checkinWeeklyGrid article {
-            background: #f8fafc !important;
-            border: 1px solid #e2e8f0 !important;
-            border-radius: 18px;
-            padding: 16px;
-          }
-
-          .checkinWeeklyGrid span {
-            display: block;
-            font-size: 0.78rem;
-            color: #64748b !important;
-            margin-bottom: 6px;
-            font-weight: 700;
-          }
-
-          .checkinWeeklyGrid strong {
-            display: block;
-            color: #0f172a !important;
-            font-size: 1.05rem;
-            line-height: 1.45;
-          }
-
-          .checkinWeeklyGrid p {
-            color: #64748b !important;
-            margin-top: 8px;
-            margin-bottom: 0;
-            line-height: 1.65;
-          }
-
-          .checkinFocusBox {
-            margin-top: 18px;
-            border: 1px solid rgba(20, 184, 166, 0.28);
-            background: rgba(240, 253, 250, 0.9);
-            border-radius: 20px;
-            padding: 18px;
-          }
-
-          .checkinFocusBox strong {
-            display: block;
-            color: #0f766e !important;
-            font-size: 1.1rem;
-            margin-bottom: 8px;
-          }
-
-          .checkinFocusBox p {
-            color: #0f172a !important;
-            line-height: 1.8;
-            margin-bottom: 0;
-          }
-
-          .checkinFocusBox ul {
-            margin-top: 12px;
-            margin-bottom: 0;
-            padding-inline-start: 22px;
-          }
-
-          .checkinFocusBox li {
-            color: #0f172a !important;
-            line-height: 1.8;
-            margin-bottom: 6px;
-          }
-
-          .checkinReadablePage[dir="rtl"] .checkinSectionHeader,
-          .checkinReadablePage[dir="rtl"] .checkinFocusBox {
-            text-align: right;
-          }
-
-          @media (max-width: 900px) {
-            .checkinSectionHeader {
-              display: block;
-            }
-
-            .checkinWeeklyGrid {
-              grid-template-columns: 1fr;
-            }
-          }
-        `}</style>
-
-
-        
-        <style>{`
-          /* ORGANHEAL_CHECKIN_UPDATE_TODAY_STEP3 */
-          .checkinTodayUpdateNotice {
-            margin-top: 14px;
-            border: 1px solid rgba(20, 184, 166, 0.28);
-            background: rgba(240, 253, 250, 0.92);
-            color: #0f172a;
-            border-radius: 16px;
-            padding: 14px 16px;
-            line-height: 1.75;
-          }
-
-          .checkinTodayUpdateNotice strong {
-            color: #0f766e !important;
-          }
-        `}</style>
-
-
-        
-        <style>{`
-          /* ORGANHEAL_CHECKIN_HEALTH_PLAN_CONNECTION_STEP4 */
-          .checkinPlanConnection {
-            border: 1px solid rgba(20, 184, 166, 0.28) !important;
-            background:
-              linear-gradient(135deg, rgba(240, 253, 250, 0.96), rgba(255, 255, 255, 0.96)) !important;
-          }
-
-          .checkinPlanConnectionGrid {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 14px;
-            margin-top: 16px;
-          }
-
-          .checkinPlanConnectionGrid article {
-            background: #ffffff !important;
-            border: 1px solid #ccfbf1 !important;
-            border-radius: 18px;
-            padding: 16px;
-          }
-
-          .checkinPlanConnectionGrid span {
-            display: block;
-            color: #0f766e !important;
-            font-size: 0.78rem;
-            font-weight: 900;
-            margin-bottom: 8px;
-          }
-
-          .checkinPlanConnectionGrid strong {
-            display: block;
-            color: #0f172a !important;
-            font-size: 1.08rem;
-            line-height: 1.45;
-          }
-
-          .checkinPlanConnectionGrid p {
-            color: #475569 !important;
-            line-height: 1.75;
-            margin-top: 8px;
-            margin-bottom: 0;
-          }
-
-          .checkinPlanConnectionActions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 18px;
-          }
-
-          .checkinReadablePage[dir="rtl"] .checkinPlanConnection,
-          .checkinReadablePage[dir="rtl"] .checkinPlanConnectionActions {
-            text-align: right;
-            direction: rtl;
-          }
-
-          @media (max-width: 900px) {
-            .checkinPlanConnectionGrid {
-              grid-template-columns: 1fr;
-            }
-          }
-        `}</style>
-
-
+    <main className="ohPageShell" dir={isArabic ? "rtl" : "ltr"} lang={isArabic ? "ar" : "en"}>
+      <div className="ohContainer ohStack large" style={{ padding: "28px 0 56px" }}>
         <PageBackActions />
 
-        <div className="assistantHeader">
-          <p className="assistantBadge">
-            {isArabic ? "التحديث الصحي اليومي" : "DAILY HEALTH CHECK-IN"}
-          </p>
-
-          <h1>
-            {isArabic ? "كيف تشعر اليوم؟" : "How Are You Feeling Today?"}
-          </h1>
-
-          <p>
-            {isArabic
-              ? "تحديث سريع للنوم، الضغط النفسي، الترطيب، الطاقة، النشاط، والمزاج حتى تبقى خطة المتابعة واقعية ومتصلة بحالتك."
-              : "Track sleep, stress, hydration, energy, activity, and mood so your dashboard, profile, and follow-up plan stay realistic."}
-          </p>
-        </div>
-
-        <div className="chatWindow">
-          {loading && (
-            <div className="resultBox">
-              <p className="sectionLabel">
-                {isArabic ? "تحميل التحديثات" : "Loading Check-In"}
-              </p>
-              <h2>
-                {isArabic
-                  ? "جاري تحضير متتبع الحالة اليومية..."
-                  : "Preparing your wellness tracker..."}
-              </h2>
-            </div>
-          )}
-
-          {!loading && (
-            <>
-              <section className="checkinHeroGrid">
-                <div className="resultBox checkinScoreCard">
-                  <p className="sectionLabel">
-                    {isArabic ? "معاينة نتيجة اليوم" : "Today Wellness Preview"}
+        {loading ? (
+          <section className="ohHero">
+            <p className="ohEyebrow">
+              {text("Loading Check-In", "تحميل Check-In")}
+            </p>
+            <h1 className="ohTitle">
+              {text("Preparing your daily wellness view...", "جاري تحضير متابعة العافية اليومية...")}
+            </h1>
+            <p className="ohLead">
+              {text(
+                "OrganHeal is loading your recent wellness signals and check-in pattern.",
+                "يقوم OrganHeal بتحميل إشارات العافية الأخيرة ونمط المتابعة."
+              )}
+            </p>
+          </section>
+        ) : (
+          <>
+            <section className="ohHero">
+              <div className="ohHeroGrid">
+                <div>
+                  <p className="ohEyebrow">
+                    {text("Daily Wellness Command Check-In", "مركز التحديث الصحي اليومي")}
                   </p>
 
-                  <h2 className={getScoreClass(wellnessScore)}>
-                    {wellnessScore}/100
-                  </h2>
+                  <h1 className="ohTitle">
+                    {text("How are you today?", "كيف حالك اليوم؟")}
+                  </h1>
 
-                  <div className="checkinStatusPill">{scoreStatus}</div>
-
-                  <p
-                    style={{
-                      opacity: 0.84,
-                      lineHeight: 1.8,
-                      maxWidth: "720px",
-                      margin: "0 auto",
-                    }}
-                  >
-                    {scoreGuidance}
+                  <p className="ohLead">
+                    {text(
+                      "Track mood, energy, stress, sleep, hydration, and activity. OrganHeal turns these daily signals into a clear wellness score and follow-up direction.",
+                      "تابع المزاج، الطاقة، التوتر، النوم، الترطيب، والنشاط. يحوّل OrganHeal هذه الإشارات اليومية إلى مؤشر عافية واضح واتجاه متابعة."
+                    )}
                   </p>
 
-                  <div className="checkinActionRow">
-                    <Link href="/health-plan" className="secondaryBtn">
-                      {isArabic ? "خطة المتابعة" : "Health Plan"}
-                    </Link>
+                  <div className="ohButtonRow" style={{ marginTop: "24px" }}>
+                    <a href="#daily-checkin-form" className="primaryBtn">
+                      {savedToday
+                        ? text("Update Today", "تحديث اليوم")
+                        : text("Start Check-In", "ابدأ Check-In")}
+                    </a>
 
                     <Link href="/history" className="secondaryBtn">
-                      {isArabic ? "التاريخ الصحي" : "Health History"}
+                      {text("View History", "عرض التاريخ")}
                     </Link>
                   </div>
                 </div>
 
-                <div className="resultBox">
-                  <p className="sectionLabel">
-                    {isArabic ? "حالة اليوم" : "Today status"}
-                  </p>
+                <div className="ohCard">
+                  <div className="ohCardHeader">
+                    <div>
+                      <p className="ohMetricLabel">
+                        {text("Live Wellness Score", "مؤشر العافية الحالي")}
+                      </p>
+                      <h2 className="ohCardTitle" style={{ marginTop: "8px" }}>
+                        {scoreStatus}
+                      </h2>
+                    </div>
 
-                  <h2>{savedToday ? (isArabic ? "تم الحفظ اليوم" : "Saved today") : isArabic ? "جاهز للحفظ" : "Ready to save"}</h2>
-
-                  <div className="checkinInsightGrid" style={{ gridTemplateColumns: "1fr" }}>
-                    <article>
-                      <span>{isArabic ? "متوسط آخر التحديثات" : "Recent average"}</span>
-                      <strong>{averageRecentScore === null ? "--" : averageRecentScore + "/100"}</strong>
-                    </article>
-
-                    <article>
-                      <span>{isArabic ? "الاتجاه" : "Trend"}</span>
-                      <strong>{trendText}</strong>
-                    </article>
-
-                    <article>
-                      <span>{isArabic ? "عدد التحديثات" : "Saved check-ins"}</span>
-                      <strong>{recentCheckIns.length}</strong>
-                    </article>
-                  </div>
-                </div>
-              </section>
-
-
-              <div className="resultBox checkinWeeklyInsights">
-                <div className="checkinSectionHeader">
-                  <div>
-                    <p className="sectionLabel">
-                      {isArabic ? "تحليل الأسبوع" : "Weekly wellness pattern"}
-                    </p>
-
-                    <h2>
-                      {isArabic
-                        ? "افهم اتجاهك الصحي بدل قراءة رقم واحد"
-                        : "Understand your pattern beyond one score"}
-                    </h2>
-
-                    <p>
-                      {isArabic
-                        ? "يعتمد هذا الملخص على آخر التحديثات المحفوظة ليساعدك على فهم الاتجاه والاستمرارية."
-                        : "This summary uses your latest saved check-ins to help you understand trend and consistency."}
-                    </p>
+                    <span className={`ohStatusBadge ${scoreTone}`}>
+                      {wellnessScore}/100
+                    </span>
                   </div>
 
-                  <Link href="/health-plan" className="secondaryBtn">
-                    {isArabic ? "ربطها بالخطة" : "Connect to plan"}
-                  </Link>
-                </div>
+                  <div
+                    style={{
+                      display: "grid",
+                      placeItems: "center",
+                      margin: "20px 0",
+                    }}
+                  >
+                    <div className="ohScoreRing" style={scoreRingStyle}>
+                      <div>
+                        <strong>{wellnessScore}</strong>
+                        <span>{text("wellness", "العافية")}</span>
+                      </div>
+                    </div>
+                  </div>
 
-                <div className="checkinWeeklyGrid">
-                  {weeklyPatternCards.map((item) => (
-                    <article key={item.label}>
-                      <span>{item.label}</span>
-                      <strong>{item.value}</strong>
-                      <p>{item.note}</p>
-                    </article>
-                  ))}
-                </div>
-
-                <div className="checkinFocusBox">
-                  <strong>{isArabic ? "تركيز اليوم" : "Today focus"}</strong>
-                  <p>{todaysPrimaryFocus}</p>
-
-                  {improvementFocusItems.length > 1 && (
-                    <ul>
-                      {improvementFocusItems.slice(1, 4).map((item) => (
-                        <li key={item}>{item}</li>
-                      ))}
-                    </ul>
-                  )}
+                  <p className="ohCardText">{scoreGuidance}</p>
                 </div>
               </div>
+            </section>
 
-              {latestCheckIn && (
-                <div className="resultBox">
-                  <p className="sectionLabel">
-                    {isArabic ? "آخر تحديث محفوظ" : "Latest Saved Check-In"}
+            <section className="ohMetricGrid">
+              <article className="ohMetricCard">
+                <span className="ohMetricLabel">
+                  {text("Energy", "الطاقة")}
+                </span>
+                <span className="ohMetricValue">{energyLevel}/5</span>
+                <span className="ohMetricHint">
+                  {getRangeText(energyLevel, isArabic)}
+                </span>
+              </article>
+
+              <article className="ohMetricCard">
+                <span className="ohMetricLabel">
+                  {text("Stress", "التوتر")}
+                </span>
+                <span className="ohMetricValue">{stressLevel}/5</span>
+                <span className="ohMetricHint">
+                  {getStressRangeText(stressLevel, isArabic)}
+                </span>
+              </article>
+
+              <article className="ohMetricCard">
+                <span className="ohMetricLabel">
+                  {text("Sleep", "النوم")}
+                </span>
+                <span className="ohMetricValue">{sleepQuality}/5</span>
+                <span className="ohMetricHint">
+                  {getRangeText(sleepQuality, isArabic)}
+                </span>
+              </article>
+
+              <article className="ohMetricCard">
+                <span className="ohMetricLabel">
+                  {text("Hydration", "الترطيب")}
+                </span>
+                <span className="ohMetricValue">{hydration}/5</span>
+                <span className="ohMetricHint">
+                  {getRangeText(hydration, isArabic)}
+                </span>
+              </article>
+            </section>
+
+            <section className="ohActionPanel">
+              <div className="ohCardHeader" style={{ marginBottom: 0 }}>
+                <div>
+                  <p className="ohMetricLabel">
+                    {text("Today's Primary Focus", "تركيز اليوم الأساسي")}
                   </p>
 
-                  <h2 className={getScoreClass(latestCheckIn.wellness_score)}>
-                    {latestCheckIn.wellness_score}/100
+                  <h2 className="ohCardTitle" style={{ fontSize: "1.55rem" }}>
+                    {planImpact}
                   </h2>
 
-                  <p>
-                    {localizeMood(latestCheckIn.mood, isArabic)} ·{" "}
-                    {formatDate(latestCheckIn.created_at, isArabic)}
-                  </p>
+                  <p className="ohCardText">{todaysPrimaryFocus}</p>
+                </div>
 
-                  <div className="checkinInsightGrid">
-                    <article>
-                      <span>{isArabic ? "الطاقة" : "Energy"}</span>
-                      <strong>{latestCheckIn.energy_level}/5</strong>
-                    </article>
+                <Link href={nextAfterSaveHref} className="primaryBtn">
+                  {nextAfterSaveLabel}
+                </Link>
+              </div>
+            </section>
 
-                    <article>
-                      <span>{isArabic ? "الضغط النفسي" : "Stress"}</span>
-                      <strong>{latestCheckIn.stress_level}/5</strong>
-                    </article>
+            <section className="ohGrid cols2" id="daily-checkin-form">
+              <article className="ohCard">
+                <div className="ohCardHeader">
+                  <div>
+                    <p className="ohMetricLabel">
+                      {text("Daily Check-In Form", "نموذج التحديث اليومي")}
+                    </p>
 
-                    <article>
-                      <span>{isArabic ? "النوم" : "Sleep"}</span>
-                      <strong>{latestCheckIn.sleep_quality}/5</strong>
-                    </article>
+                    <h2 className="ohCardTitle">
+                      {text("Update today's wellness signals", "حدّث إشارات العافية اليوم")}
+                    </h2>
 
-                    <article>
-                      <span>{isArabic ? "الترطيب" : "Hydration"}</span>
-                      <strong>{latestCheckIn.hydration}/5</strong>
-                    </article>
-
-                    <article>
-                      <span>{isArabic ? "النشاط" : "Activity"}</span>
-                      <strong>{latestCheckIn.physical_activity}/5</strong>
-                    </article>
-
-                    <article>
-                      <span>{isArabic ? "المزاج" : "Mood"}</span>
-                      <strong>{localizeMood(latestCheckIn.mood, isArabic)}</strong>
-                    </article>
+                    <p className="ohCardText">
+                      {text(
+                        "Move each slider from 1 to 5. For stress, higher means more stress.",
+                        "حرّك كل مؤشر من 1 إلى 5. بالنسبة للتوتر، الرقم الأعلى يعني توترًا أعلى."
+                      )}
+                    </p>
                   </div>
-                </div>
-              )}
 
-
-              <div className="resultBox checkinPlanConnection">
-                <p className="sectionLabel">
-                  {isArabic ? "ربط التحديث بالخطة" : "Check-In to Health Plan"}
-                </p>
-
-                <h2>
-                  {isArabic
-                    ? "كيف يؤثر تحديث اليوم على خطة المتابعة؟"
-                    : "How today check-in affects your follow-up plan"}
-                </h2>
-
-                <p style={{ lineHeight: 1.85, color: "#475569" }}>
-                  {isArabic
-                    ? "كل تحديث صحي يساعد OrganHeal على جعل خطة المتابعة أكثر واقعية، خصوصًا عندما تتغير الطاقة أو النوم أو الضغط النفسي."
-                    : "Each check-in helps OrganHeal keep your follow-up plan realistic, especially when energy, sleep, or stress changes."}
-                </p>
-
-                <div className="checkinPlanConnectionGrid">
-                  {planSignalCards.map((item) => (
-                    <article key={item.label}>
-                      <span>{item.label}</span>
-                      <strong>{item.value}</strong>
-                      <p>{item.note}</p>
-                    </article>
-                  ))}
+                  <span className={`ohStatusBadge ${savedToday ? "good" : "neutral"}`}>
+                    {savedToday ? text("Saved today", "محفوظ اليوم") : text("Not saved", "غير محفوظ")}
+                  </span>
                 </div>
 
-                <div className="checkinPlanConnectionActions">
+                <div className="ohStack">
+                  <div className="formGroup">
+                    <label>{text("Mood", "المزاج")}</label>
+                    <select
+                      value={mood}
+                      onChange={(event) => setMood(event.target.value)}
+                    >
+                      {moodOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {isArabic ? option.ar : option.en}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                      gap: "16px",
+                    }}
+                  >
+                    <RangeControl
+                      label={text("Energy Level", "مستوى الطاقة")}
+                      value={energyLevel}
+                      onChange={setEnergyLevel}
+                    />
+
+                    <RangeControl
+                      label={text("Stress Level", "مستوى التوتر")}
+                      value={stressLevel}
+                      onChange={setStressLevel}
+                      reverseMeaning
+                    />
+
+                    <RangeControl
+                      label={text("Sleep Quality", "جودة النوم")}
+                      value={sleepQuality}
+                      onChange={setSleepQuality}
+                    />
+
+                    <RangeControl
+                      label={text("Hydration", "الترطيب")}
+                      value={hydration}
+                      onChange={setHydration}
+                    />
+
+                    <RangeControl
+                      label={text("Physical Activity", "النشاط البدني")}
+                      value={physicalActivity}
+                      onChange={setPhysicalActivity}
+                    />
+                  </div>
+
+                  <div className="formGroup">
+                    <label>{text("Notes", "ملاحظات")}</label>
+                    <textarea
+                      value={notes}
+                      onChange={(event) => setNotes(event.target.value)}
+                      placeholder={text(
+                        "Optional: What affected your day?",
+                        "اختياري: ما الذي أثّر على يومك؟"
+                      )}
+                      style={{
+                        minHeight: "110px",
+                        resize: "vertical",
+                      }}
+                    />
+                  </div>
+
+                  <div className="ohButtonRow">
+                    <button
+                      className="primaryBtn"
+                      onClick={saveCheckIn}
+                      disabled={saving}
+                    >
+                      {saving
+                        ? text("Saving...", "جاري الحفظ...")
+                        : savedToday
+                        ? text("Update Today's Check-In", "تحديث Check-In اليوم")
+                        : text("Save Daily Check-In", "حفظ Check-In اليوم")}
+                    </button>
+
+                    <Link href="/history" className="secondaryBtn">
+                      {text("View History", "عرض التاريخ")}
+                    </Link>
+                  </div>
+
+                  {message && (
+                    <div className="ohTrustNotice">
+                      <span aria-hidden="true">ℹ️</span>
+                      <div>{message}</div>
+                    </div>
+                  )}
+                </div>
+              </article>
+
+              <article className="ohCard">
+                <div className="ohCardHeader">
+                  <div>
+                    <p className="ohMetricLabel">
+                      {text("After Saving", "بعد الحفظ")}
+                    </p>
+
+                    <h2 className="ohCardTitle">
+                      {text("What should you do next?", "ما الخطوة التالية؟")}
+                    </h2>
+                  </div>
+
+                  <span className={`ohStatusBadge ${scoreTone}`}>
+                    {scoreStatus}
+                  </span>
+                </div>
+
+                <div className="ohStack">
+                  <div className="ohMetricCard">
+                    <span className="ohMetricLabel">
+                      {text("Plan Impact Today", "تأثير اليوم على الخطة")}
+                    </span>
+                    <span className="ohMetricValue" style={{ fontSize: "1.25rem" }}>
+                      {planImpact}
+                    </span>
+                    <span className="ohMetricHint">{scoreGuidance}</span>
+                  </div>
+
+                  <div className="ohMetricCard">
+                    <span className="ohMetricLabel">
+                      {text("Main Factor Today", "العامل الأهم اليوم")}
+                    </span>
+                    <span className="ohMetricValue" style={{ fontSize: "1.25rem" }}>
+                      {stressLevel >= 4
+                        ? text("Stress", "التوتر")
+                        : sleepQuality <= 2
+                        ? text("Sleep", "النوم")
+                        : energyLevel <= 2
+                        ? text("Energy", "الطاقة")
+                        : hydration <= 2
+                        ? text("Hydration", "الترطيب")
+                        : physicalActivity <= 2
+                        ? text("Activity", "النشاط")
+                        : text("Stable pattern", "نمط مستقر")}
+                    </span>
+                    <span className="ohMetricHint">{todaysPrimaryFocus}</span>
+                  </div>
+
                   <Link href={nextAfterSaveHref} className="primaryBtn">
                     {nextAfterSaveLabel}
                   </Link>
-
-                  <Link href="/health-plan" className="secondaryBtn">
-                    {isArabic ? "خطة المتابعة" : "Health Plan"}
-                  </Link>
-
-                  <Link href="/dashboard" className="secondaryBtn">
-                    {isArabic ? "لوحة التحكم" : "Dashboard"}
-                  </Link>
                 </div>
-              </div>
+              </article>
+            </section>
 
-              <div className="assessmentForm">
-                <div className="formGroup">
-                  <label>{isArabic ? "المزاج" : "Mood"}</label>
-                  <select value={mood} onChange={(event) => setMood(event.target.value)}>
-                    {moodOptions.map((item) => (
-                      <option key={item.value} value={item.value}>
-                        {isArabic ? item.ar : item.en}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="checkinFormGrid">
-                  <RangeControl
-                    label={isArabic ? "مستوى الطاقة" : "Energy Level"}
-                    value={energyLevel}
-                    onChange={setEnergyLevel}
-                  />
-
-                  <RangeControl
-                    label={isArabic ? "مستوى الضغط النفسي" : "Stress Level"}
-                    value={stressLevel}
-                    onChange={setStressLevel}
-                    reverseMeaning
-                  />
-
-                  <RangeControl
-                    label={isArabic ? "جودة النوم" : "Sleep Quality"}
-                    value={sleepQuality}
-                    onChange={setSleepQuality}
-                  />
-
-                  <RangeControl
-                    label={isArabic ? "الترطيب" : "Hydration"}
-                    value={hydration}
-                    onChange={setHydration}
-                  />
-
-                  <RangeControl
-                    label={isArabic ? "النشاط البدني" : "Physical Activity"}
-                    value={physicalActivity}
-                    onChange={setPhysicalActivity}
-                  />
-                </div>
-
-                <div className="formGroup">
-                  <label>
-                    {isArabic ? "ملاحظات اختيارية" : "Optional notes"}
-                  </label>
-
-                  <textarea
-                    className="checkinTextarea"
-                    value={notes}
-                    onChange={(event) => setNotes(event.target.value)}
-                    placeholder={
-                      isArabic
-                        ? "مثال: نوم قليل، صداع، ضغط عالي، نشاط ممتاز..."
-                        : "Example: poor sleep, headache, high stress, strong activity..."
-                    }
-                  />
-                </div>
-
-                <button
-                  className="primaryBtn"
-                  onClick={saveCheckIn}
-                  disabled={saving}
-                >
-                  {saving
-                    ? isArabic
-                      ? "جاري الحفظ..."
-                      : "Saving..."
-                    : savedToday
-                    ? isArabic
-                      ? "تحديث Check-In اليوم"
-                      : "Save Another Check-In Today"
-                    : isArabic
-                    ? "حفظ التحديث الصحي"
-                    : "Save Daily Check-In"}
-                </button>
-
-                {message && (
-                  <div className="resultBox" style={{ marginTop: "18px" }}>
-                    <p>{message}</p>
-                  </div>
-                )}
-              </div>
-
-              <div className="resultBox">
-                <p className="sectionLabel">
-                  {isArabic ? "نمط آخر التحديثات" : "Recent Check-In Pattern"}
-                </p>
-
-                <h2>
-                  {recentCheckIns.length}{" "}
-                  {isArabic ? "تحديثات محفوظة حديثًا" : "recent saved check-ins"}
-                </h2>
-
-                {recentCheckIns.length === 0 ? (
-                  <p>
-                    {isArabic
-                      ? "احفظ أول تحديث صحي حتى يبدأ OrganHeal ببناء نمط المتابعة."
-                      : "Save your first daily check-in to start building a wellness pattern."}
+            <section className="ohCard">
+              <div className="ohCardHeader">
+                <div>
+                  <p className="ohMetricLabel">
+                    {text("Recent Wellness Pattern", "نمط العافية الأخير")}
                   </p>
-                ) : (
-                  <div className="checkinRecentList">
-                    {recentCheckIns.slice(0, 5).map((item, index) => (
-                      <div
-                        className="checkinRecentItem"
-                        key={item.created_at + "-" + index}
-                      >
-                        <div>
-                          <strong>
-                            {item.wellness_score}/100 · {localizeMood(item.mood, isArabic)}
-                          </strong>
-                          <p>{formatDate(item.created_at, isArabic)}</p>
-                        </div>
 
-                        <span className={getScoreClass(item.wellness_score)}>
-                          {getScoreStatus(item.wellness_score, isArabic)}
-                        </span>
+                  <h2 className="ohCardTitle">
+                    {text("Last 7 check-ins", "آخر 7 تحديثات")}
+                  </h2>
+
+                  <p className="ohCardText">
+                    {text(
+                      "These cards summarize your recent trend and help identify what needs attention.",
+                      "هذه البطاقات تلخص اتجاهك الأخير وتساعد على تحديد ما يحتاج انتباهًا."
+                    )}
+                  </p>
+                </div>
+
+                <span className="ohStatusBadge neutral">
+                  {recentCheckIns.length}/7
+                </span>
+              </div>
+
+              <div className="ohGrid cols3">
+                {weeklyPatternCards.map((card) => (
+                  <article className="ohMetricCard" key={card.label}>
+                    <span className="ohMetricLabel">{card.label}</span>
+                    <span className="ohMetricValue" style={{ fontSize: "1.35rem" }}>
+                      {card.value}
+                    </span>
+                    <span className="ohMetricHint">{card.note}</span>
+                  </article>
+                ))}
+              </div>
+            </section>
+
+            <section className="ohCard">
+              <div className="ohCardHeader">
+                <div>
+                  <p className="ohMetricLabel">
+                    {text("Recent Check-Ins", "آخر التحديثات")}
+                  </p>
+
+                  <h2 className="ohCardTitle">
+                    {latestCheckIn
+                      ? text("Your latest saved wellness records", "آخر سجلات العافية المحفوظة")
+                      : text("No saved check-ins yet", "لا توجد تحديثات محفوظة بعد")}
+                  </h2>
+                </div>
+
+                <Link href="/history" className="secondaryBtn">
+                  {text("Open Full Timeline", "فتح المسار الكامل")}
+                </Link>
+              </div>
+
+              {recentCheckIns.length === 0 ? (
+                <div className="ohEmptyState">
+                  <h2>{text("Start your first check-in", "ابدأ أول Check-In")}</h2>
+                  <p>
+                    {text(
+                      "Save today's wellness signals to begin building your personal pattern.",
+                      "احفظ إشارات العافية اليوم لتبدأ بناء نمطك الشخصي."
+                    )}
+                  </p>
+                </div>
+              ) : (
+                <div className="ohTimeline">
+                  {recentCheckIns.map((item) => (
+                    <div className="ohTimelineItem" key={item.created_at}>
+                      <span className="ohTimelineDot" />
+
+                      <div>
+                        <p className="ohTimelineTitle">
+                          {localizeMood(item.mood, isArabic)} · {item.wellness_score}/100
+                        </p>
+
+                        <p className="ohTimelineMeta">
+                          {text("Energy", "الطاقة")} {item.energy_level}/5 ·{" "}
+                          {text("Stress", "التوتر")} {item.stress_level}/5 ·{" "}
+                          {text("Sleep", "النوم")} {item.sleep_quality}/5
+                        </p>
+
+                        <p className="ohTimelineMeta">
+                          {formatDate(item.created_at, isArabic)}
+                        </p>
                       </div>
-                    ))}
-                  </div>
+
+                      <span className={`ohStatusBadge ${getTone(item.wellness_score)}`}>
+                        {getScoreStatus(item.wellness_score, isArabic)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            <section className="ohTrustNotice">
+              <span aria-hidden="true">🛡️</span>
+              <div>
+                <strong>
+                  {text("Medical safety reminder", "تذكير السلامة الطبية")}
+                </strong>
+                <br />
+                {text(
+                  "Daily check-ins help organize wellness patterns for education and follow-up preparation. They do not diagnose disease or replace urgent care. Seek medical help for severe symptoms, chest pain, shortness of breath, fainting, confusion, or thoughts of self-harm.",
+                  "تساعد تحديثات Check-In على تنظيم نمط العافية للتعليم والتحضير للمتابعة. لا تشخّص المرض ولا تستبدل الرعاية العاجلة. اطلب مساعدة طبية عند وجود أعراض شديدة، ألم صدر، ضيق نفس، إغماء، تشوش، أو أفكار لإيذاء النفس."
                 )}
               </div>
+            </section>
 
-              <div className="resultBox">
-                <p className="sectionLabel">
-                  {isArabic ? "رحلة التحديث الصحي" : "Check-In Journey"}
-                </p>
+            <section className="ohCard">
+              <div className="ohCardHeader">
+                <div>
+                  <p className="ohMetricLabel">
+                    {text("Continue your journey", "تابع رحلتك")}
+                  </p>
 
-                <h2>
-                  {isArabic
-                    ? "اجعل خطة المتابعة أكثر واقعية"
-                    : "Keep your health plan realistic"}
-                </h2>
+                  <h2 className="ohCardTitle">
+                    {text("Connect check-ins to your health plan", "اربط Check-Ins بخطتك الصحية")}
+                  </h2>
 
-                <p style={{ lineHeight: 1.8, opacity: 0.84 }}>
-                  {isArabic
-                    ? "التحديثات الصحية تساعد OrganHeal على ربط حالتك اليومية بلوحة التحكم، الملف الصحي، مركز الذكاء، وخطة المتابعة."
-                    : "Your daily check-ins help OrganHeal connect your current wellness status with your dashboard, profile, intelligence, and follow-up plan."}
-                </p>
-
-                <div className="checkinActionRow">
-                  <Link href="/dashboard" className="secondaryBtn">
-                    {isArabic ? "لوحة التحكم" : "Dashboard"}
-                  </Link>
-
-                  <Link href="/health-plan" className="primaryBtn">
-                    {isArabic ? "فتح خطة المتابعة" : "Open Health Plan"}
-                  </Link>
+                  <p className="ohCardText">
+                    {text(
+                      "After saving your daily check-in, compare your trend, open the health plan, or connect your pattern with reports and intelligence.",
+                      "بعد حفظ Check-In اليومي، قارن الاتجاه، افتح الخطة الصحية، أو اربط نمطك بالتقارير والذكاء الصحي."
+                    )}
+                  </p>
                 </div>
               </div>
-            </>
-          )}
-        </div>
+
+              <div className="ohButtonRow">
+                <Link href="/history" className="primaryBtn">
+                  {text("Progress Timeline", "مسار التقدم")}
+                </Link>
+
+                <Link href="/health-plan" className="secondaryBtn">
+                  {text("Health Plan", "الخطة الصحية")}
+                </Link>
+
+                <Link href="/profile" className="secondaryBtn">
+                  {text("Profile", "الملف الشخصي")}
+                </Link>
+
+                <Link href="/intelligence" className="secondaryBtn">
+                  {text("Intelligence", "مركز الذكاء")}
+                </Link>
+              </div>
+            </section>
+          </>
+        )}
       </div>
     </main>
   );
