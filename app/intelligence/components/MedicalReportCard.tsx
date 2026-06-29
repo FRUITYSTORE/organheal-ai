@@ -1,4 +1,6 @@
-import type { ReactNode } from "react";
+﻿"use client";
+
+import { ReactNode, useEffect, useState } from "react";
 
 type MedicalReportCardProps = {
   fileName: string;
@@ -15,12 +17,53 @@ type MedicalReportCardProps = {
   children?: ReactNode;
 };
 
+type Language = "en" | "ar";
+
+function getStoredLanguage(): Language {
+  if (typeof window === "undefined") return "en";
+
+  const savedLanguage =
+    localStorage.getItem("organheal-language") ||
+    localStorage.getItem("organhealLanguage") ||
+    localStorage.getItem("organheal_language") ||
+    localStorage.getItem("language") ||
+    "";
+
+  return savedLanguage.toLowerCase().startsWith("ar") ? "ar" : "en";
+}
+
+function translateStatus(status: string, isArabic: boolean) {
+  if (!isArabic) return status;
+
+  const normalized = String(status || "").toLowerCase();
+
+  if (normalized.includes("completed")) return "مكتمل";
+  if (normalized.includes("pending")) return "قيد الانتظار";
+  if (normalized.includes("processing")) return "قيد المعالجة";
+  if (normalized.includes("failed")) return "فشل الاستخراج";
+
+  return status || "قيد المراجعة";
+}
+
+function translateReportType(type: string, isArabic: boolean) {
+  if (!isArabic) return type;
+
+  const normalized = String(type || "").toLowerCase();
+
+  if (normalized.includes("lab")) return "تقرير مختبر";
+  if (normalized.includes("radiology")) return "تقرير أشعة";
+  if (normalized.includes("discharge")) return "ملخص خروج";
+  if (normalized.includes("prescription")) return "وصفة طبية";
+
+  return "تقرير طبي";
+}
+
 export default function MedicalReportCard({
   fileName,
   reportTypeLabel,
   uploadedAtText,
   extractionStatus,
-    isGenerated,
+  isGenerated,
   isExpanded,
   canOpen,
   onOpen,
@@ -29,37 +72,62 @@ export default function MedicalReportCard({
   onHideGenerated,
   children,
 }: MedicalReportCardProps) {
+  const [language, setLanguage] = useState<Language>("en");
+
+  useEffect(() => {
+    function syncLanguage() {
+      setLanguage(getStoredLanguage());
+    }
+
+    syncLanguage();
+
+    window.addEventListener("storage", syncLanguage);
+    window.addEventListener("focus", syncLanguage);
+
+    return () => {
+      window.removeEventListener("storage", syncLanguage);
+      window.removeEventListener("focus", syncLanguage);
+    };
+  }, []);
+
+  const isArabic = language === "ar";
+
   return (
-    <div
-      style={{
-        padding: "14px 16px",
-        borderRadius: "16px",
-        background: "rgba(15,23,42,0.75)",
-        border: "1px solid rgba(34,211,238,0.18)",
-        textAlign: "left",
-      }}
-    >
+    <div className="intelligenceReportCard" dir={isArabic ? "rtl" : "ltr"}>
       <div
         style={{
-          display: "grid",
-          gridTemplateColumns: "1fr auto",
-          gap: "12px",
-          alignItems: "center",
+          display: "flex",
+          justifyContent: "space-between",
+          gap: "16px",
+          flexWrap: "wrap",
+          alignItems: "flex-start",
         }}
       >
-        <div>
-          <h3 style={{ marginBottom: "6px" }}>📄 {fileName}</h3>
-
-          <p style={{ margin: 0 }}>
-            {reportTypeLabel} • {uploadedAtText}
+        <div style={{ textAlign: isArabic ? "right" : "left" }}>
+          <p className="sectionLabel">
+            {translateReportType(reportTypeLabel, isArabic)}
           </p>
 
-          <p style={{ marginTop: "6px" }}>
-            Extraction: {extractionStatus}
+          <h3 style={{ marginTop: "6px" }}>{fileName}</h3>
+
+          <p style={{ marginTop: "8px", color: "#64748b" }}>
+            {isArabic ? "تاريخ الرفع: " : "Uploaded: "}
+            {uploadedAtText}
+          </p>
+
+          <p style={{ marginTop: "8px", color: "#64748b" }}>
+            {isArabic ? "حالة الاستخراج: " : "Extraction Status: "}
+            {translateStatus(extractionStatus, isArabic)}
           </p>
 
           <p style={{ marginTop: "8px", fontWeight: 800 }}>
-            {isGenerated ? "Intelligence Generated" : "Ready for Interpretation"}
+            {isGenerated
+              ? isArabic
+                ? "تم توليد الذكاء"
+                : "Intelligence Generated"
+              : isArabic
+              ? "جاهز للتفسير"
+              : "Ready for Interpretation"}
           </p>
         </div>
 
@@ -68,16 +136,16 @@ export default function MedicalReportCard({
             display: "flex",
             gap: "10px",
             flexWrap: "wrap",
-            justifyContent: "flex-end",
+            justifyContent: isArabic ? "flex-start" : "flex-end",
           }}
         >
           {canOpen && (
             <button className="secondaryBtn" onClick={onOpen}>
-              Open
+              {isArabic ? "فتح التقرير" : "Open"}
             </button>
           )}
 
-                              <button
+          <button
             className="primaryBtn"
             onClick={
               isGenerated
@@ -89,8 +157,14 @@ export default function MedicalReportCard({
           >
             {isGenerated
               ? isExpanded
-                ? "Hide Result"
+                ? isArabic
+                  ? "إخفاء النتيجة"
+                  : "Hide Result"
+                : isArabic
+                ? "عرض النتيجة"
                 : "View Result"
+              : isArabic
+              ? "توليد الذكاء"
               : "Generate"}
           </button>
         </div>
