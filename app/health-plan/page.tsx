@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import PageBackActions from "../components/PageBackActions";
 import { supabase } from "@/lib/supabase";
 
@@ -93,6 +93,57 @@ const organTaskPlans: Record<string, string[]> = {
   ],
 };
 
+const arabicOrganTaskPlans: Record<string, string[]> = {
+  Heart: [
+    "قياس ضغط الدم ثلاث مرات على الأقل هذا الأسبوع.",
+    "تقليل الملح والأطعمة المصنعة خلال الأيام القادمة.",
+    "المشي 20 دقيقة في 4 أيام على الأقل هذا الأسبوع.",
+    "مراجعة أي ألم صدر، ضيق نفس، خفقان، أو تعب غير معتاد.",
+    "تجهيز نتائج الدهون، الضغط، أو فحوصات القلب السابقة للمقارنة.",
+  ],
+  Liver: [
+    "تقليل الأطعمة الدهنية والمقلية خلال هذا الأسبوع.",
+    "تجنب الكحول والمكملات غير الضرورية.",
+    "متابعة التعب، ألم البطن، اصفرار العينين، أو تغير لون البول.",
+    "شرب كمية كافية من الماء حسب حالتك الصحية.",
+    "تجهيز تقارير الكبد السابقة للمقارنة مع الطبيب.",
+  ],
+  Lung: [
+    "متابعة السعال، ضيق التنفس، وتحمل النشاط اليومي.",
+    "تجنب الدخان، الغبار، والروائح القوية.",
+    "المشي الخفيف أو تمارين التنفس إذا كانت مناسبة لك.",
+    "تسجيل أي صفير أو ضيق نفس أو أعراض ليلية.",
+    "تجهيز أي أشعة أو فحوصات تنفس سابقة للمراجعة.",
+  ],
+  Kidney: [
+    "شرب الماء بانتظام إذا لم يمنعك الطبيب من ذلك.",
+    "متابعة ضغط الدم هذا الأسبوع.",
+    "تجنب استخدام مسكنات الألم بكثرة بدون استشارة طبية.",
+    "مراجعة أي تورم، تغير في البول، أو تعب غير مفسر.",
+    "تجهيز فحوصات الكرياتينين، اليوريا، والأملاح للمقارنة.",
+  ],
+  Metabolic: [
+    "تقليل المشروبات السكرية والكربوهيدرات المكررة.",
+    "المشي أو الحركة 20 دقيقة في 4 أيام على الأقل.",
+    "متابعة الوزن أو محيط الخصر مرة أسبوعيًا.",
+    "مراجعة فحوصات السكر، الدهون، HbA1c إذا كانت متوفرة.",
+    "اختيار وجبة واحدة يوميًا تكون صحية أكثر من المعتاد.",
+  ],
+  Brain: [
+    "متابعة جودة النوم، الصداع، التركيز، ومستوى التوتر.",
+    "تقليل استخدام الشاشات قبل النوم خلال هذا الأسبوع.",
+    "ممارسة تنفس هادئ أو استرخاء قصير يوميًا.",
+    "مراجعة أي دوخة، ضعف، تنميل، أو أعراض عصبية مقلقة.",
+    "تجهيز أي تقارير أو ملاحظات مرتبطة بالنوم أو الصداع أو التركيز.",
+  ],
+  General: [
+    "إكمال تحديث صحي واحد هذا الأسبوع.",
+    "مراجعة آخر تقرير طبي والذكاء الصحي الناتج عنه.",
+    "اختيار عادة صحية واحدة واقعية للأيام السبعة القادمة.",
+    "إعادة تقييم الأولوية الصحية بعد 4 أسابيع.",
+  ],
+};
+
 const organAssessmentLinks: Record<string, string> = {
   Heart: "/heart",
   Kidney: "/kidney",
@@ -103,6 +154,18 @@ const organAssessmentLinks: Record<string, string> = {
   General: "/assessment",
 };
 
+function getStoredLanguage(): Language {
+  if (typeof window === "undefined") return "en";
+
+  const savedLanguage =
+    localStorage.getItem("organheal-language") ||
+    localStorage.getItem("organhealLanguage") ||
+    localStorage.getItem("organheal_language") ||
+    localStorage.getItem("language") ||
+    "";
+
+  return savedLanguage.toLowerCase().startsWith("ar") ? "ar" : "en";
+}
 
 function localizeHealthPlanValue(
   value: string | null | undefined,
@@ -165,7 +228,11 @@ function localizeHealthPlanValue(
     return "دعم صحة الكلى عبر الترطيب ومتابعة ضغط الدم والفحوصات ذات العلاقة.";
   }
 
-  if (lower.includes("metabolic") || lower.includes("glucose") || lower.includes("cholesterol")) {
+  if (
+    lower.includes("metabolic") ||
+    lower.includes("glucose") ||
+    lower.includes("cholesterol")
+  ) {
     return "متابعة مؤشرات الأيض مثل السكر والدهون والنشاط الغذائي.";
   }
 
@@ -175,50 +242,6 @@ function localizeHealthPlanValue(
 
   return clean;
 }
-
-const arabicOrganTaskPlans: Record<string, string[]> = {
-  Heart: [
-    "قياس ضغط الدم ثلاث مرات على الأقل هذا الأسبوع.",
-    "تقليل الملح والأطعمة المصنعة خلال الأيام القادمة.",
-    "المشي 20 دقيقة في 4 أيام على الأقل هذا الأسبوع.",
-    "مراجعة أي ألم صدر، ضيق نفس، خفقان، أو تعب غير معتاد.",
-    "تجهيز نتائج الدهون، الضغط، أو فحوصات القلب السابقة للمقارنة.",
-  ],
-  Liver: [
-    "تقليل الأطعمة الدهنية والمقلية خلال هذا الأسبوع.",
-    "تجنب الكحول والمكملات غير الضرورية.",
-    "متابعة التعب، ألم البطن، اصفرار العينين، أو تغير لون البول.",
-    "شرب كمية كافية من الماء حسب حالتك الصحية.",
-    "تجهيز تقارير الكبد السابقة للمقارنة مع الطبيب.",
-  ],
-  Lung: [
-    "متابعة السعال، ضيق التنفس، وتحمل النشاط اليومي.",
-    "تجنب الدخان، الغبار، والروائح القوية.",
-    "المشي الخفيف أو تمارين التنفس إذا كانت مناسبة لك.",
-    "تسجيل أي صفير أو ضيق نفس أو أعراض ليلية.",
-    "تجهيز أي أشعة أو فحوصات تنفس سابقة للمراجعة.",
-  ],
-  Kidney: [
-    "شرب الماء بانتظام إذا لم يمنعك الطبيب من ذلك.",
-    "متابعة ضغط الدم هذا الأسبوع.",
-    "تجنب استخدام مسكنات الألم بكثرة بدون استشارة طبية.",
-    "مراجعة أي تورم، تغير في البول، أو تعب غير مفسر.",
-    "تجهيز فحوصات الكرياتينين، اليوريا، والأملاح للمقارنة.",
-  ],
-  Metabolic: [
-    "تقليل المشروبات السكرية والكربوهيدرات المكررة.",
-    "المشي أو الحركة 20 دقيقة في 4 أيام على الأقل.",
-    "متابعة الوزن أو محيط الخصر مرة أسبوعيًا.",
-    "مراجعة فحوصات السكر، الدهون، HbA1c إذا كانت متوفرة.",
-    "اختيار وجبة واحدة يوميًا تكون صحية أكثر من المعتاد.",
-  ],
-  General: [
-    "إكمال تحديث صحي واحد هذا الأسبوع.",
-    "مراجعة آخر تقرير طبي والذكاء الصحي الناتج عنه.",
-    "اختيار عادة صحية واحدة واقعية للأيام السبعة القادمة.",
-    "إعادة تقييم الأولوية الصحية بعد 4 أسابيع.",
-  ],
-};
 
 function getLocalizedOrganTasks(priorityOrgan: string, isArabic: boolean) {
   if (!isArabic) return organTaskPlans[priorityOrgan] || organTaskPlans.General;
@@ -239,26 +262,34 @@ export default function HealthPlanPage() {
   const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
   const [completedTasks, setCompletedTasks] = useState<string[]>([]);
 
+  const isArabic = language === "ar";
 
+  function text(en: string, ar: string) {
+    return isArabic ? ar : en;
+  }
 
   useEffect(() => {
-    const savedLanguage =
-      (localStorage.getItem("organheal-language") as Language) || "en";
+    function syncLanguage() {
+      const selectedLanguage = getStoredLanguage();
 
-    setLanguage(savedLanguage);
+      setLanguage(selectedLanguage);
+      document.documentElement.lang = selectedLanguage;
+      document.documentElement.dir = selectedLanguage === "ar" ? "rtl" : "ltr";
+    }
 
-    const interval = setInterval(() => {
-      const currentLanguage =
-        (localStorage.getItem("organheal-language") as Language) || "en";
-      setLanguage(currentLanguage);
-    }, 300);
-
+    syncLanguage();
     fetchHealthPlanData();
 
-    return () => clearInterval(interval);
+    window.addEventListener("storage", syncLanguage);
+    window.addEventListener("organheal-language-change", syncLanguage);
+
+    return () => {
+      window.removeEventListener("storage", syncLanguage);
+      window.removeEventListener("organheal-language-change", syncLanguage);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const isArabic = language === "ar";
   const priorityOrgan = priorityAssessment?.organ_name || "General";
   const priorityScore =
     typeof priorityAssessment?.score === "number"
@@ -297,287 +328,313 @@ export default function HealthPlanPage() {
     hasHistory,
   ].filter(Boolean).length * 20;
 
+  const planReadinessTone =
+    planReadinessScore >= 80
+      ? "good"
+      : planReadinessScore >= 40
+      ? "moderate"
+      : "risk";
+
   const planIntensity =
     priorityScore === null
-      ? isArabic
-        ? "بانتظار التقييم"
-        : "Waiting for assessment"
+      ? text("Waiting for assessment", "بانتظار التقييم")
       : priorityScore < 50
-      ? isArabic
-        ? "متابعة عالية"
-        : "High follow-up"
+      ? text("High follow-up", "متابعة عالية")
       : priorityScore < 80
-      ? isArabic
-        ? "متابعة متوسطة"
-        : "Moderate follow-up"
-      : isArabic
-      ? "متابعة وقائية"
-      : "Preventive follow-up";
+      ? text("Moderate follow-up", "متابعة متوسطة")
+      : text("Preventive follow-up", "متابعة وقائية");
 
   const latestCheckInText = latestCheckIn
-    ? `${new Date(latestCheckIn.created_at).toLocaleDateString()} - ${
-        latestCheckIn.wellness_score ?? "N/A"
-      }/100 - ${latestCheckIn.mood || "Mood not recorded"}`
-    : isArabic
-    ? "لا يوجد تحديث صحي بعد"
-    : "No check-in yet";
+    ? `${new Date(latestCheckIn.created_at).toLocaleDateString(
+        isArabic ? "ar-AE" : "en-US"
+      )} - ${latestCheckIn.wellness_score ?? "N/A"}/100 - ${
+        latestCheckIn.mood || text("Mood not recorded", "المزاج غير مسجل")
+      }`
+    : text("No check-in yet", "لا يوجد تحديث صحي بعد");
 
   const followUpRhythm =
     priorityScore === null
-      ? isArabic
-        ? "ابدأ بتقييم صحي"
-        : "Start with an assessment"
+      ? text("Start with an assessment", "ابدأ بتقييم صحي")
       : priorityScore < 50
-      ? isArabic
-        ? "متابعة أسبوعية مقترحة"
-        : "Weekly follow-up recommended"
+      ? text("Weekly follow-up recommended", "متابعة أسبوعية مقترحة")
       : priorityScore < 80
-      ? isArabic
-        ? "تحديث صحي مرتين إلى ثلاث مرات أسبوعيًا"
-        : "Check in 2 to 3 times per week"
-      : isArabic
-      ? "متابعة وقائية أسبوعية"
-      : "Weekly preventive check-in";
-
+      ? text("Check in 2 to 3 times per week", "تحديث صحي مرتين إلى ثلاث مرات أسبوعيًا")
+      : text("Weekly preventive check-in", "متابعة وقائية أسبوعية");
 
   const readinessItems = [
     {
-      label: isArabic ? "التقييم الصحي" : "Health assessment",
+      label: text("Health assessment", "التقييم الصحي"),
       ready: hasAssessment,
-      note: isArabic
-        ? "يحدد أولوية الخطة الأساسية."
-        : "Defines the core priority for the plan.",
+      note: text(
+        "Defines the core priority for the plan.",
+        "يحدد أولوية الخطة الأساسية."
+      ),
     },
     {
-      label: isArabic ? "التقارير الطبية" : "Medical reports",
+      label: text("Medical reports", "التقارير الطبية"),
       ready: hasReports,
-      note: isArabic
-        ? "تضيف بيانات سريرية أقوى للخطة."
-        : "Adds stronger clinical context.",
+      note: text(
+        "Adds stronger clinical context.",
+        "تضيف بيانات سريرية أقوى للخطة."
+      ),
     },
     {
-      label: isArabic ? "الذكاء الصحي" : "Generated intelligence",
+      label: text("Generated intelligence", "الذكاء الصحي"),
       ready: hasGeneratedIntelligence,
-      note: isArabic
-        ? "يحوّل البيانات إلى ملخصات قابلة للتنفيذ."
-        : "Turns data into actionable summaries.",
+      note: text(
+        "Turns data into actionable summaries.",
+        "يحوّل البيانات إلى ملخصات قابلة للتنفيذ."
+      ),
     },
     {
-      label: isArabic ? "التحديث الصحي" : "Wellness check-in",
+      label: text("Wellness check-in", "التحديث الصحي"),
       ready: hasCheckIn,
-      note: isArabic
-        ? "يعكس الحالة اليومية والأعراض والعادات."
-        : "Reflects daily symptoms, habits, and wellbeing.",
+      note: text(
+        "Reflects daily symptoms, habits, and wellbeing.",
+        "يعكس الحالة اليومية والأعراض والعادات."
+      ),
     },
     {
-      label: isArabic ? "التاريخ الصحي" : "Health history",
+      label: text("Health history", "التاريخ الصحي"),
       ready: hasHistory,
-      note: isArabic
-        ? "يساعد على مقارنة التقدم عبر الزمن."
-        : "Helps compare progress over time.",
+      note: text(
+        "Helps compare progress over time.",
+        "يساعد على مقارنة التقدم عبر الزمن."
+      ),
     },
   ];
 
   const weeklyFocusTitle =
     priorityScore === null
-      ? isArabic
-        ? "ابدأ ببناء البيانات الأساسية"
-        : "Start by building your baseline"
+      ? text("Start by building your baseline", "ابدأ ببناء البيانات الأساسية")
       : priorityScore < 50
-      ? isArabic
-        ? "متابعة قريبة ومنظمة هذا الأسبوع"
-        : "Close and structured follow-up this week"
+      ? text(
+          "Close and structured follow-up this week",
+          "متابعة قريبة ومنظمة هذا الأسبوع"
+        )
       : priorityScore < 80
-      ? isArabic
-        ? "تحسين ثابت بخطوات واقعية"
-        : "Steady improvement with realistic steps"
-      : isArabic
-      ? "حافظ على المتابعة الوقائية"
-      : "Maintain preventive follow-up";
+      ? text(
+          "Steady improvement with realistic steps",
+          "تحسين ثابت بخطوات واقعية"
+        )
+      : text("Maintain preventive follow-up", "حافظ على المتابعة الوقائية");
 
   const weeklyFocusDescription =
     priorityScore === null
-      ? isArabic
-        ? "أكمل تقييمًا واحدًا وارفع تقريرًا إن وجد حتى تصبح الخطة أكثر دقة."
-        : "Complete one assessment and upload a report if available to make the plan more accurate."
+      ? text(
+          "Complete one assessment and upload a report if available to make the plan more accurate.",
+          "أكمل تقييمًا واحدًا وارفع تقريرًا إن وجد حتى تصبح الخطة أكثر دقة."
+        )
       : priorityScore < 50
-      ? isArabic
-        ? "ركز على تنفيذ مهام بسيطة، متابعة الأعراض، وتجهيز الأسئلة للطبيب."
-        : "Focus on simple tasks, symptom tracking, and preparing questions for your doctor."
+      ? text(
+          "Focus on simple tasks, symptom tracking, and preparing questions for your doctor.",
+          "ركز على تنفيذ مهام بسيطة، متابعة الأعراض، وتجهيز الأسئلة للطبيب."
+        )
       : priorityScore < 80
-      ? isArabic
-        ? "استمر بالتحديثات الصحية ومراجعة التقارير لتحديد أي نمط متكرر."
-        : "Keep check-ins updated and review reports to identify recurring patterns."
-      : isArabic
-      ? "استمر بخطوات وقائية صغيرة وراجع الخطة أسبوعيًا."
-      : "Continue small preventive actions and review the plan weekly.";
+      ? text(
+          "Keep check-ins updated and review reports to identify recurring patterns.",
+          "استمر بالتحديثات الصحية ومراجعة التقارير لتحديد أي نمط متكرر."
+        )
+      : text(
+          "Continue small preventive actions and review the plan weekly.",
+          "استمر بخطوات وقائية صغيرة وراجع الخطة أسبوعيًا."
+        );
 
   const clinicalFollowUpCards = [
     {
-      title: isArabic ? "هذا الأسبوع" : "This week",
+      title: text("This week", "هذا الأسبوع"),
       value: followUpRhythm,
-      note: isArabic
-        ? "إيقاع المتابعة المقترح حسب البيانات المتوفرة."
-        : "Suggested follow-up rhythm based on available data.",
+      note: text(
+        "Suggested follow-up rhythm based on available data.",
+        "إيقاع المتابعة المقترح حسب البيانات المتوفرة."
+      ),
     },
     {
-      title: isArabic ? "أولوية الخطة" : "Plan priority",
+      title: text("Plan priority", "أولوية الخطة"),
       value: priorityOrganDisplay,
-      note: isArabic
-        ? "المنطقة الصحية التي تحتاج أكبر اهتمام حاليًا."
-        : "The health area that currently needs the most attention.",
+      note: text(
+        "The health area that currently needs the most attention.",
+        "المنطقة الصحية التي تحتاج أكبر اهتمام حاليًا."
+      ),
     },
     {
-      title: isArabic ? "مستوى المتابعة" : "Follow-up level",
+      title: text("Follow-up level", "مستوى المتابعة"),
       value: planIntensity,
-      note: isArabic
-        ? "مؤشر عملي لقوة المتابعة المطلوبة."
-        : "A practical indicator of required follow-up intensity.",
+      note: text(
+        "A practical indicator of required follow-up intensity.",
+        "مؤشر عملي لقوة المتابعة المطلوبة."
+      ),
     },
   ];
 
   const nextBestAction = !hasAssessment
     ? {
-        label: isArabic ? "ابدأ بالتقييم" : "Start your assessment",
-        description: isArabic
-          ? "أكمل تقييمًا واحدًا على الأقل حتى يحدد OrganHeal أولوية الخطة."
-          : "Complete at least one assessment so OrganHeal can identify the priority area for your plan.",
+        label: text("Start your assessment", "ابدأ بالتقييم"),
+        description: text(
+          "Complete at least one assessment so OrganHeal can identify the priority area for your plan.",
+          "أكمل تقييمًا واحدًا على الأقل حتى يحدد OrganHeal أولوية الخطة."
+        ),
         href: "/assessment",
-        button: isArabic ? "ابدأ التقييم" : "Start Assessment",
+        button: text("Start Assessment", "ابدأ التقييم"),
       }
     : !hasReports
     ? {
-        label: isArabic ? "أضف تقريرًا طبيًا" : "Add a medical report",
-        description: isArabic
-          ? "ارفع تقرير مختبر أو أشعة أو ملخص طبي حتى تصبح الخطة مبنية على بيانات أكثر."
-          : "Upload a lab, radiology, or clinical report so your plan can use more health data.",
+        label: text("Add a medical report", "أضف تقريرًا طبيًا"),
+        description: text(
+          "Upload a lab, radiology, or clinical report so your plan can use more health data.",
+          "ارفع تقرير مختبر أو أشعة أو ملخص طبي حتى تصبح الخطة مبنية على بيانات أكثر."
+        ),
         href: "/lab-upload",
-        button: isArabic ? "رفع تقرير" : "Upload Report",
+        button: text("Upload Report", "رفع تقرير"),
       }
     : !hasGeneratedIntelligence
     ? {
-        label: isArabic ? "ولّد الذكاء الصحي" : "Generate health intelligence",
-        description: isArabic
-          ? "لديك تقارير محفوظة. افتح مركز الذكاء لتوليد ملخص المريض وملخص الطبيب."
-          : "You have saved reports. Open Intelligence Center to generate a patient summary and doctor-ready brief.",
+        label: text("Generate health intelligence", "ولّد الذكاء الصحي"),
+        description: text(
+          "You have saved reports. Open Intelligence Center to generate a patient summary and doctor-ready brief.",
+          "لديك تقارير محفوظة. افتح مركز الذكاء لتوليد ملخص المريض وملخص الطبيب."
+        ),
         href: "/intelligence",
-        button: isArabic ? "مركز الذكاء" : "Intelligence Center",
+        button: text("Intelligence Center", "مركز الذكاء"),
       }
     : !hasCheckIn
     ? {
-        label: isArabic ? "أكمل Check-In اليوم" : "Complete today check-in",
-        description: isArabic
-          ? "أضف تحديث النوم، الضغط النفسي، النشاط، الطاقة، والمزاج حتى تصبح الخطة أكثر شخصية."
-          : "Add sleep, stress, activity, energy, and mood updates so the plan becomes more personal.",
+        label: text("Complete today check-in", "أكمل Check-In اليوم"),
+        description: text(
+          "Add sleep, stress, activity, energy, and mood updates so the plan becomes more personal.",
+          "أضف تحديث النوم، الضغط النفسي، النشاط، الطاقة، والمزاج حتى تصبح الخطة أكثر شخصية."
+        ),
         href: "/checkin",
-        button: isArabic ? "افتح Check-In" : "Open Check-In",
+        button: text("Open Check-In", "افتح Check-In"),
       }
     : {
-        label: isArabic ? "تابع خطة الأسبوع" : "Continue this week plan",
-        description: isArabic
-          ? "الخطة فعالة الآن. أكمل المهام، وراجع التقارير، وحدث Check-In بشكل منتظم."
-          : "Your plan is active. Complete tasks, review reports, and keep check-ins updated.",
+        label: text("Continue this week plan", "تابع خطة الأسبوع"),
+        description: text(
+          "Your plan is active. Complete tasks, review reports, and keep check-ins updated.",
+          "الخطة فعالة الآن. أكمل المهام، وراجع التقارير، وحدث Check-In بشكل منتظم."
+        ),
         href: "#action-tasks-section",
-        button: isArabic ? "متابعة المهام" : "Continue Tasks",
+        button: text("Continue Tasks", "متابعة المهام"),
       };
 
   const baseTasks = getLocalizedOrganTasks(priorityOrgan, isArabic);
 
   const dynamicTasks = [
     !hasGeneratedIntelligence && hasReports
-      ? isArabic
-        ? "ولّد الذكاء الصحي لأحدث تقرير محفوظ."
-        : "Generate intelligence for the latest saved report."
+      ? text(
+          "Generate intelligence for the latest saved report.",
+          "ولّد الذكاء الصحي لأحدث تقرير محفوظ."
+        )
       : null,
     hasGeneratedIntelligence
-      ? isArabic
-        ? "راجع ملخص المريض وملخص الطبيب من مركز الذكاء."
-        : "Review the patient summary and doctor-ready brief in Intelligence Center."
+      ? text(
+          "Review the patient summary and doctor-ready brief in Intelligence Center.",
+          "راجع ملخص المريض وملخص الطبيب من مركز الذكاء."
+        )
       : null,
     !hasCheckIn
-      ? isArabic
-        ? "أكمل التحديث الصحي هذا الأسبوع."
-        : "Complete a wellness check-in this week."
+      ? text(
+          "Complete a wellness check-in this week.",
+          "أكمل التحديث الصحي هذا الأسبوع."
+        )
       : null,
     completedExtractionCount > 0
-      ? isArabic
-        ? "راجع التقارير التي اكتمل استخراجها واربطها بالخطة."
-        : "Review extracted reports and connect them to this plan."
+      ? text(
+          "Review extracted reports and connect them to this plan.",
+          "راجع التقارير التي اكتمل استخراجها واربطها بالخطة."
+        )
       : null,
     hasHistory
-      ? isArabic
-        ? "راجع التاريخ الصحي لمقارنة التقدم السابق."
-        : "Review Health History to compare previous progress."
+      ? text(
+          "Review Health History to compare previous progress.",
+          "راجع التاريخ الصحي لمقارنة التقدم السابق."
+        )
       : null,
   ].filter(Boolean) as string[];
 
   const planTasks = [...dynamicTasks, ...baseTasks].slice(0, 8);
 
   const sevenDayPlan = [
-    isArabic
-      ? "اليوم 1: راجع الأولوية الصحية والخطوة التالية."
-      : "Day 1: Review your priority area and next best action.",
-    isArabic
-      ? "اليوم 2: أكمل Check-In وحدد أهم عرض أو عادة تحتاج متابعة."
-      : "Day 2: Complete a check-in and identify the main symptom or habit to track.",
-    isArabic
-      ? "اليوم 3: راجع آخر تقرير أو ولّد الذكاء الصحي إن لم يكن موجودًا."
-      : "Day 3: Review the latest report or generate intelligence if missing.",
-    isArabic
-      ? "اليوم 4: نفذ مهمة واحدة من قائمة الخطة."
-      : "Day 4: Complete one action task from the plan.",
-    isArabic
-      ? "اليوم 5: راجع مؤشرات التحسن أو التراجع."
-      : "Day 5: Review improvement or worsening signals.",
-    isArabic
-      ? "اليوم 6: جهز أسئلة للطبيب إذا توجد نتائج مقلقة."
-      : "Day 6: Prepare doctor questions if there are concerning results.",
-    isArabic
-      ? "اليوم 7: راجع التقدم وحدد الأسبوع القادم."
-      : "Day 7: Review progress and decide next week focus.",
+    text(
+      "Day 1: Review your priority area and next best action.",
+      "اليوم 1: راجع الأولوية الصحية والخطوة التالية."
+    ),
+    text(
+      "Day 2: Complete a check-in and identify the main symptom or habit to track.",
+      "اليوم 2: أكمل Check-In وحدد أهم عرض أو عادة تحتاج متابعة."
+    ),
+    text(
+      "Day 3: Review the latest report or generate intelligence if missing.",
+      "اليوم 3: راجع آخر تقرير أو ولّد الذكاء الصحي إن لم يكن موجودًا."
+    ),
+    text(
+      "Day 4: Complete one action task from the plan.",
+      "اليوم 4: نفذ مهمة واحدة من قائمة الخطة."
+    ),
+    text(
+      "Day 5: Review improvement or worsening signals.",
+      "اليوم 5: راجع مؤشرات التحسن أو التراجع."
+    ),
+    text(
+      "Day 6: Prepare doctor questions if there are concerning results.",
+      "اليوم 6: جهز أسئلة للطبيب إذا توجد نتائج مقلقة."
+    ),
+    text(
+      "Day 7: Review progress and decide next week focus.",
+      "اليوم 7: راجع التقدم وحدد الأسبوع القادم."
+    ),
   ];
 
   const thirtyDayRoadmap = [
-    isArabic
-      ? "الأسبوع 1: تثبيت البيانات الأساسية والتقارير."
-      : "Week 1: Build your baseline from assessments and reports.",
-    isArabic
-      ? "الأسبوع 2: متابعة Check-Ins وتنفيذ المهام الواقعية."
-      : "Week 2: Track check-ins and complete realistic actions.",
-    isArabic
-      ? "الأسبوع 3: مراجعة الأنماط من التقارير والذكاء الصحي."
-      : "Week 3: Review patterns from reports and generated intelligence.",
-    isArabic
-      ? "الأسبوع 4: إعادة تقييم الأولوية ومقارنة Health History."
-      : "Week 4: Repeat the priority assessment and compare Health History.",
+    text(
+      "Week 1: Build your baseline from assessments and reports.",
+      "الأسبوع 1: تثبيت البيانات الأساسية والتقارير."
+    ),
+    text(
+      "Week 2: Track check-ins and complete realistic actions.",
+      "الأسبوع 2: متابعة Check-Ins وتنفيذ المهام الواقعية."
+    ),
+    text(
+      "Week 3: Review patterns from reports and generated intelligence.",
+      "الأسبوع 3: مراجعة الأنماط من التقارير والذكاء الصحي."
+    ),
+    text(
+      "Week 4: Repeat the priority assessment and compare Health History.",
+      "الأسبوع 4: إعادة تقييم الأولوية ومقارنة Health History."
+    ),
   ];
 
-
   const ninetyDayStrategy = [
-    isArabic
-      ? "الشهر 1: بناء خط أساس واضح من التقييمات، التقارير، والتحديثات الصحية."
-      : "Month 1: Build a clear baseline from assessments, reports, and check-ins.",
-    isArabic
-      ? "الشهر 2: متابعة الاتجاهات وتعديل العادات بناءً على النتائج."
-      : "Month 2: Track patterns and adjust habits based on your results.",
-    isArabic
-      ? "الشهر 3: إعادة تقييم الأولوية ومقارنة التحسن مع البيانات السابقة."
-      : "Month 3: Reassess your priority area and compare progress with past data.",
+    text(
+      "Month 1: Build a clear baseline from assessments, reports, and check-ins.",
+      "الشهر 1: بناء خط أساس واضح من التقييمات، التقارير، والتحديثات الصحية."
+    ),
+    text(
+      "Month 2: Track patterns and adjust habits based on your results.",
+      "الشهر 2: متابعة الاتجاهات وتعديل العادات بناءً على النتائج."
+    ),
+    text(
+      "Month 3: Reassess your priority area and compare progress with past data.",
+      "الشهر 3: إعادة تقييم الأولوية ومقارنة التحسن مع البيانات السابقة."
+    ),
   ];
 
   const doctorDiscussionQuestions = [
     isArabic
       ? `هل تحتاج أولوية ${priorityOrganDisplay} إلى فحوصات إضافية أو متابعة قريبة؟`
       : `Does my ${priorityOrgan} priority need additional tests or closer follow-up?`,
-    isArabic
-      ? "هل توجد نتائج في التقارير تحتاج تفسيرًا أو مقارنة بنتائج سابقة؟"
-      : "Are there any report findings that need interpretation or comparison with previous results?",
-    isArabic
-      ? "ما أهم تغيير واقعي أبدأ به خلال الأسبوع القادم؟"
-      : "What is the most realistic change I should start this week?",
-    isArabic
-      ? "متى يجب إعادة الفحوصات أو التقييم؟"
-      : "When should I repeat labs or reassess this area?",
+    text(
+      "Are there any report findings that need interpretation or comparison with previous results?",
+      "هل توجد نتائج في التقارير تحتاج تفسيرًا أو مقارنة بنتائج سابقة؟"
+    ),
+    text(
+      "What is the most realistic change I should start this week?",
+      "ما أهم تغيير واقعي أبدأ به خلال الأسبوع القادم؟"
+    ),
+    text(
+      "When should I repeat labs or reassess this area?",
+      "متى يجب إعادة الفحوصات أو التقييم؟"
+    ),
   ];
 
   const activeCompletedTasks = completedTasks.filter((task) =>
@@ -593,77 +650,62 @@ export default function HealthPlanPage() {
 
   const nextIncompleteTask =
     planTasks.find((task) => !completedTasks.includes(task)) ||
-    (isArabic ? "كل مهام هذا الأسبوع مكتملة." : "All tasks for this week are completed.");
+    text("All tasks for this week are completed.", "كل مهام هذا الأسبوع مكتملة.");
 
   const progressMomentum =
     taskProgress === 0
-      ? isArabic
-        ? "ابدأ بخطوة واحدة"
-        : "Start with one step"
+      ? text("Start with one step", "ابدأ بخطوة واحدة")
       : taskProgress < 40
-      ? isArabic
-        ? "بداية جيدة"
-        : "Good start"
+      ? text("Good start", "بداية جيدة")
       : taskProgress < 80
-      ? isArabic
-        ? "تقدم واضح"
-        : "Clear progress"
+      ? text("Clear progress", "تقدم واضح")
       : taskProgress < 100
-      ? isArabic
-        ? "قريب من الإكمال"
-        : "Almost complete"
-      : isArabic
-      ? "مكتمل هذا الأسبوع"
-      : "Completed this week";
+      ? text("Almost complete", "قريب من الإكمال")
+      : text("Completed this week", "مكتمل هذا الأسبوع");
 
   const progressMomentumDescription =
     taskProgress === 0
-      ? isArabic
-        ? "اختر أسهل مهمة وابدأ بها اليوم. الهدف هو الاستمرارية وليس الكمال."
-        : "Choose the easiest task and start today. The goal is consistency, not perfection."
+      ? text(
+          "Choose the easiest task and start today. The goal is consistency, not perfection.",
+          "اختر أسهل مهمة وابدأ بها اليوم. الهدف هو الاستمرارية وليس الكمال."
+        )
       : taskProgress < 40
-      ? isArabic
-        ? "استمر بخطوات بسيطة. إنجاز مهمتين أو ثلاث يكفي لبناء عادة."
-        : "Keep taking small steps. Completing two or three tasks can build momentum."
+      ? text(
+          "Keep taking small steps. Completing two or three tasks can build momentum.",
+          "استمر بخطوات بسيطة. إنجاز مهمتين أو ثلاث يكفي لبناء عادة."
+        )
       : taskProgress < 80
-      ? isArabic
-        ? "أنت تبني متابعة جيدة. ركز الآن على المهمة التالية الأكثر واقعية."
-        : "You are building good follow-up. Focus on the next most realistic task."
+      ? text(
+          "You are building good follow-up. Focus on the next most realistic task.",
+          "أنت تبني متابعة جيدة. ركز الآن على المهمة التالية الأكثر واقعية."
+        )
       : taskProgress < 100
-      ? isArabic
-        ? "بقي القليل. راجع المهام المتبقية واختر واحدة سهلة اليوم."
-        : "Almost there. Review the remaining tasks and choose one easy action today."
-      : isArabic
-      ? "رائع. راجع التقدم وحدد هدف الأسبوع القادم."
-      : "Great. Review your progress and decide next week focus.";
+      ? text(
+          "Almost there. Review the remaining tasks and choose one easy action today.",
+          "بقي القليل. راجع المهام المتبقية واختر واحدة سهلة اليوم."
+        )
+      : text(
+          "Great. Review your progress and decide next week focus.",
+          "رائع. راجع التقدم وحدد هدف الأسبوع القادم."
+        );
 
   const progressInsightCards = [
     {
-      label: isArabic ? "التقدم" : "Progress",
+      label: text("Progress", "التقدم"),
       value: `${taskProgress}%`,
       note: progressMomentum,
     },
     {
-      label: isArabic ? "المتبقي" : "Remaining",
+      label: text("Remaining", "المتبقي"),
       value: String(remainingTaskCount),
-      note: isArabic ? "مهام تحتاج متابعة" : "tasks need follow-up",
+      note: text("tasks need follow-up", "مهام تحتاج متابعة"),
     },
     {
-      label: isArabic ? "المهمة التالية" : "Next task",
+      label: text("Next task", "المهمة التالية"),
       value: nextIncompleteTask,
-      note: isArabic ? "ابدأ بها أولًا" : "start here first",
+      note: text("start here first", "ابدأ بها أولًا"),
     },
   ];
-
-  function resetWeeklyTasks() {
-    setCompletedTasks([]);
-
-    try {
-      localStorage.removeItem(taskStorageKey);
-    } catch {
-      // Keep UI stable if localStorage is unavailable.
-    }
-  }
 
   useEffect(() => {
     try {
@@ -681,11 +723,7 @@ export default function HealthPlanPage() {
     const { data: userData, error: userError } = await supabase.auth.getUser();
 
     if (userError || !userData.user) {
-      setMessage(
-        isArabic
-          ? "يرجى تسجيل الدخول لعرض خطة المتابعة."
-          : "Please login to view your follow-up plan."
-      );
+      setMessage("Please login to view your follow-up plan.");
       setLoading(false);
       return;
     }
@@ -766,971 +804,580 @@ export default function HealthPlanPage() {
       : [...completedTasks, task];
 
     setCompletedTasks(nextTasks);
-    localStorage.setItem(taskStorageKey, JSON.stringify(nextTasks));
+
+    try {
+      localStorage.setItem(taskStorageKey, JSON.stringify(nextTasks));
+    } catch {
+      // Keep UI stable if localStorage is unavailable.
+    }
+  }
+
+  function resetWeeklyTasks() {
+    setCompletedTasks([]);
+
+    try {
+      localStorage.removeItem(taskStorageKey);
+    } catch {
+      // Keep UI stable if localStorage is unavailable.
+    }
   }
 
   return (
-    <main className="healthPlanIntelligencePage" dir={isArabic ? "rtl" : "ltr"}>
-      <div className="healthPlanShell">
+    <main className="ohPageShell" dir={isArabic ? "rtl" : "ltr"} lang={isArabic ? "ar" : "en"}>
+      <style>{`
+        .healthPlanProgressBar {
+          height: 12px;
+          border-radius: 999px;
+          background: rgba(148, 163, 184, 0.22);
+          overflow: hidden;
+          margin: 14px 0 18px;
+        }
 
-        <style>{`
-          .healthPlanIntelligencePage {
-            --hp-card-border: rgba(148, 163, 184, 0.24);
-            --hp-card-bg: rgba(255, 255, 255, 0.86);
-            --hp-soft-bg: rgba(248, 250, 252, 0.88);
+        .healthPlanProgressBar div {
+          height: 100%;
+          border-radius: inherit;
+          background: linear-gradient(135deg, var(--oh-primary), var(--oh-info));
+          transition: width 0.25s ease;
+        }
+
+        .healthPlanTaskList {
+          display: grid;
+          gap: 12px;
+        }
+
+        .healthPlanTaskItem {
+          display: grid;
+          grid-template-columns: auto auto 1fr auto;
+          align-items: center;
+          gap: 12px;
+          padding: 14px;
+          border: 1px solid var(--oh-border);
+          border-radius: 18px;
+          background: var(--oh-card-soft);
+          cursor: pointer;
+        }
+
+        .healthPlanTaskItem.completed {
+          border-color: rgba(34, 197, 94, 0.35);
+          background: rgba(240, 253, 244, 0.92);
+        }
+
+        .healthPlanTaskItem input {
+          width: 18px;
+          height: 18px;
+          accent-color: var(--oh-primary);
+        }
+
+        .healthPlanTaskItem small {
+          color: var(--oh-muted);
+          font-weight: 800;
+        }
+
+        .healthPlanTaskItemNumber {
+          width: 30px;
+          height: 30px;
+          border-radius: 999px;
+          display: inline-grid;
+          place-items: center;
+          border: 1px solid var(--oh-border);
+          background: #ffffff;
+          font-size: 0.82rem;
+          font-weight: 900;
+          color: var(--oh-text);
+        }
+
+        .healthPlanPrintOnly {
+          display: none;
+        }
+
+        @media (max-width: 700px) {
+          .healthPlanTaskItem {
+            grid-template-columns: auto auto 1fr;
           }
 
-          .healthPlanIntelligencePage[dir="rtl"] {
-            text-align: right;
+          .healthPlanTaskItem small {
+            grid-column: 3;
+          }
+        }
+
+        @media print {
+          @page {
+            size: A4;
+            margin: 14mm 12mm;
           }
 
-          .healthPlanCommandCenter {
-            display: grid;
-            grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
-            gap: 18px;
-            margin: 22px 0;
+          body * {
+            visibility: hidden !important;
           }
 
-          .healthPlanCommandMain,
-          .healthPlanReadinessCard,
-          .healthPlanClinicalCard {
-            border: 1px solid var(--hp-card-border);
-            background: var(--hp-card-bg);
-            border-radius: 24px;
-            padding: 22px;
-            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
-            backdrop-filter: blur(12px);
+          .healthPlanPrintOnly,
+          .healthPlanPrintOnly * {
+            visibility: visible !important;
           }
 
-          .healthPlanCommandMain h2,
-          .healthPlanReadinessCard h2,
-          .healthPlanClinicalCard h2 {
-            margin: 8px 0 10px;
-            line-height: 1.25;
+          .healthPlanPrintOnly {
+            display: block !important;
+            position: absolute !important;
+            inset: 0 auto auto 0 !important;
+            width: 100% !important;
+            background: #ffffff !important;
+            color: #111827 !important;
+            font-family: Tahoma, Arial, sans-serif !important;
+            line-height: 1.7 !important;
           }
 
-          .healthPlanCommandMain p,
-          .healthPlanReadinessCard p,
-          .healthPlanClinicalCard p {
-            line-height: 1.75;
+          .healthPlanPrintOnly[dir="rtl"],
+          .healthPlanPrintOnly[dir="rtl"] * {
+            direction: rtl !important;
+            text-align: right !important;
+            letter-spacing: normal !important;
+            unicode-bidi: isolate !important;
           }
 
-          .healthPlanCommandStats {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 12px;
-            margin-top: 18px;
+          .healthPlanNoPrint {
+            display: none !important;
           }
 
-          .healthPlanCommandStats div {
-            border: 1px solid var(--hp-card-border);
-            background: var(--hp-soft-bg);
-            border-radius: 18px;
-            padding: 14px;
+          .healthPlanPrintHeader {
+            border-bottom: 2px solid #0f172a !important;
+            padding-bottom: 12px !important;
+            margin-bottom: 18px !important;
           }
 
-          .healthPlanCommandStats span,
-          .healthPlanReadinessItem span,
-          .healthPlanClinicalGrid span {
-            display: block;
-            font-size: 0.78rem;
-            opacity: 0.72;
-            margin-bottom: 6px;
+          .healthPlanPrintHeader p {
+            margin: 0 0 6px !important;
+            font-size: 11px !important;
+            color: #475569 !important;
           }
 
-          .healthPlanCommandStats strong,
-          .healthPlanClinicalGrid strong {
-            display: block;
-            font-size: 1.05rem;
-            line-height: 1.4;
-          }
-
-          .healthPlanReadinessList {
-            display: grid;
-            gap: 10px;
-            margin-top: 14px;
-          }
-
-          .healthPlanReadinessItem {
-            display: grid;
-            grid-template-columns: auto 1fr;
-            gap: 12px;
-            align-items: start;
-            border: 1px solid var(--hp-card-border);
-            background: var(--hp-soft-bg);
-            border-radius: 16px;
-            padding: 12px;
-          }
-
-          .healthPlanIntelligencePage[dir="rtl"] .healthPlanReadinessItem {
-            grid-template-columns: 1fr auto;
-          }
-
-          .healthPlanReadinessDot {
-            width: 28px;
-            height: 28px;
-            border-radius: 999px;
-            display: grid;
-            place-items: center;
-            font-size: 0.8rem;
-            font-weight: 800;
-            border: 1px solid var(--hp-card-border);
-            background: white;
-          }
-
-          .healthPlanReadinessItem.ready .healthPlanReadinessDot {
-            background: #dcfce7;
-            color: #166534;
-            border-color: #bbf7d0;
-          }
-
-          .healthPlanReadinessItem.pending .healthPlanReadinessDot {
-            background: #fff7ed;
-            color: #9a3412;
-            border-color: #fed7aa;
-          }
-
-          .healthPlanClinicalGrid {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 14px;
-            margin-top: 14px;
-          }
-
-          .healthPlanClinicalGrid article {
-            border: 1px solid var(--hp-card-border);
-            background: var(--hp-soft-bg);
-            border-radius: 18px;
-            padding: 16px;
-          }
-
-          .healthPlanRoadmap > div,
-          .healthPlanTaskItem,
-          .healthPlanMetricsGrid article,
-          .healthPlanCard,
-          .healthPlanPanel {
-            transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-          }
-
-          .healthPlanRoadmap > div:hover,
-          .healthPlanTaskItem:hover,
-          .healthPlanMetricsGrid article:hover,
-          .healthPlanCard:hover,
-          .healthPlanPanel:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
-          }
-
-          .healthPlanIntelligencePage[dir="rtl"] .healthPlanRoadmap div,
-          .healthPlanIntelligencePage[dir="rtl"] .healthPlanTaskItem,
-          .healthPlanIntelligencePage[dir="rtl"] .healthPlanInfoList div {
-            text-align: right;
-          }
-
-          @media (max-width: 900px) {
-            .healthPlanCommandCenter,
-            .healthPlanClinicalGrid {
-              grid-template-columns: 1fr;
-            }
-
-            .healthPlanCommandStats {
-              grid-template-columns: 1fr;
-            }
-          }
-        `}</style>
-
-
-        <style>{`
-          .healthPlanPrintToolbar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 14px;
-          }
-
-          .healthPlanPrintButton {
-            border: 0;
-            cursor: pointer;
-            font: inherit;
-            white-space: nowrap;
-          }
-
-          .healthPlanPrintSection {
-            border: 1px solid rgba(15, 23, 42, 0.08);
-            background:
-              linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(240, 253, 250, 0.9));
+          .healthPlanPrintHeader h1 {
+            margin: 0 !important;
+            font-size: 28px !important;
+            line-height: 1.35 !important;
+            color: #0f172a !important;
           }
 
           .healthPlanPrintGrid {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 14px;
-            margin-top: 18px;
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 10px !important;
+            margin-bottom: 16px !important;
           }
 
-          .healthPlanPrintGrid article {
-            border: 1px solid rgba(148, 163, 184, 0.24);
-            background: rgba(255, 255, 255, 0.82);
-            border-radius: 18px;
-            padding: 16px;
+          .healthPlanPrintBox {
+            border: 1px solid #d1d5db !important;
+            border-radius: 10px !important;
+            padding: 10px 12px !important;
+            background: #f8fafc !important;
+            break-inside: avoid !important;
           }
 
-          .healthPlanPrintGrid span {
-            display: block;
-            font-size: 0.78rem;
-            opacity: 0.7;
-            margin-bottom: 6px;
+          .healthPlanPrintBox span {
+            display: block !important;
+            font-size: 11px !important;
+            color: #64748b !important;
+            margin-bottom: 4px !important;
           }
 
-          .healthPlanPrintGrid strong {
-            display: block;
-            font-size: 1rem;
-            line-height: 1.45;
+          .healthPlanPrintBox strong {
+            display: block !important;
+            font-size: 14px !important;
+            color: #0f172a !important;
+            line-height: 1.5 !important;
+          }
+
+          .healthPlanPrintSection {
+            margin-top: 16px !important;
+            padding-top: 10px !important;
+            border-top: 1px solid #e5e7eb !important;
+            break-inside: avoid !important;
+          }
+
+          .healthPlanPrintSection h2 {
+            margin: 0 0 8px !important;
+            font-size: 18px !important;
+            color: #0f172a !important;
+          }
+
+          .healthPlanPrintSection ul {
+            margin: 0 !important;
+            padding-inline-start: 20px !important;
+          }
+
+          .healthPlanPrintSection li {
+            margin-bottom: 6px !important;
+            break-inside: avoid !important;
+            color: #111827 !important;
           }
 
           .healthPlanPrintNote {
-            margin-top: 16px;
-            padding: 14px 16px;
-            border-radius: 16px;
-            background: rgba(15, 23, 42, 0.04);
-            line-height: 1.75;
+            margin-top: 18px !important;
+            padding: 10px 12px !important;
+            border: 1px solid #d1d5db !important;
+            border-radius: 10px !important;
+            background: #f9fafb !important;
+            font-size: 12px !important;
+            color: #374151 !important;
           }
+        }
+      `}</style>
 
-          @media (max-width: 900px) {
-            .healthPlanPrintGrid {
-              grid-template-columns: 1fr;
-            }
-          }
-
-          @media print {
-            @page {
-              size: A4;
-              margin: 14mm 12mm;
-            }
-
-            body {
-              background: #ffffff !important;
-              color: #0f172a !important;
-              -webkit-print-color-adjust: exact !important;
-              print-color-adjust: exact !important;
-            }
-
-            nav,
-            header,
-            footer,
-            .healthPlanNoPrint,
-            .healthPlanPrintButton,
-            .healthPlanBottomNav,
-            .pageBackActions {
-              display: none !important;
-            }
-
-            .healthPlanIntelligencePage {
-              background: #ffffff !important;
-              padding: 0 !important;
-              margin: 0 !important;
-            }
-
-            .healthPlanShell {
-              width: 100% !important;
-              max-width: 100% !important;
-              padding: 0 !important;
-              margin: 0 !important;
-            }
-
-            .healthPlanHero,
-            .healthPlanCommandCenter,
-            .healthPlanClinicalCard,
-            .healthPlanMetricsGrid,
-            .healthPlanGrid,
-            .healthPlanPanel,
-            .healthPlanCard,
-            .healthPlanPrintSection {
-              box-shadow: none !important;
-              break-inside: avoid !important;
-              page-break-inside: avoid !important;
-              margin-bottom: 12mm !important;
-            }
-
-            .healthPlanPanel,
-            .healthPlanCard,
-            .healthPlanCommandMain,
-            .healthPlanReadinessCard,
-            .healthPlanClinicalCard,
-            .healthPlanPrintSection {
-              border: 1px solid #d1d5db !important;
-              background: #ffffff !important;
-            }
-
-            .healthPlanRoadmap > div,
-            .healthPlanTaskItem,
-            .healthPlanReadinessItem,
-            .healthPlanPrintGrid article {
-              break-inside: avoid !important;
-              page-break-inside: avoid !important;
-            }
-
-            h1,
-            h2,
-            h3 {
-              break-after: avoid !important;
-              page-break-after: avoid !important;
-              line-height: 1.35 !important;
-            }
-
-            p,
-            li,
-            strong,
-            span {
-              orphans: 3 !important;
-              widows: 3 !important;
-            }
-
-            .healthPlanRoadmap,
-            .healthPlanPrintGrid,
-            .healthPlanClinicalGrid,
-            .healthPlanCommandStats {
-              gap: 8px !important;
-            }
-          }
-        `}</style>
-
-
-        <style>{`
-          /* ORGANHEAL_SAFE_PRINT_EXPORT_PATCH */
-          .healthPlanPrintOnly {
-            display: none;
-          }
-
-          @media print {
-            @page {
-              size: A4;
-              margin: 14mm 12mm;
-            }
-
-            html,
-            body {
-              background: #ffffff !important;
-              color: #111827 !important;
-              -webkit-print-color-adjust: exact !important;
-              print-color-adjust: exact !important;
-            }
-
-            body * {
-              visibility: hidden !important;
-            }
-
-            .healthPlanPrintOnly,
-            .healthPlanPrintOnly * {
-              visibility: visible !important;
-            }
-
-            .healthPlanPrintOnly {
-              display: block !important;
-              position: absolute !important;
-              left: 0 !important;
-              top: 0 !important;
-              width: 100% !important;
-              max-width: 100% !important;
-              margin: 0 !important;
-              padding: 0 !important;
-              background: #ffffff !important;
-              color: #111827 !important;
-              font-family: Tahoma, Arial, sans-serif !important;
-              line-height: 1.7 !important;
-            }
-
-            .healthPlanPrintOnly[dir="rtl"],
-            .healthPlanPrintOnly[dir="rtl"] * {
-              direction: rtl !important;
-              text-align: right !important;
-              letter-spacing: normal !important;
-              word-spacing: normal !important;
-              text-transform: none !important;
-              unicode-bidi: isolate !important;
-            }
-
-            .healthPlanPrintPage {
-              width: 100% !important;
-              max-width: 100% !important;
-              box-sizing: border-box !important;
-              background: #ffffff !important;
-              color: #111827 !important;
-            }
-
-            .healthPlanPrintOnlyHeader {
-              border-bottom: 2px solid #0f172a !important;
-              padding-bottom: 12px !important;
-              margin-bottom: 18px !important;
-              break-inside: avoid !important;
-              page-break-inside: avoid !important;
-            }
-
-            .healthPlanPrintOnlyHeader p {
-              margin: 0 0 6px !important;
-              font-size: 11px !important;
-              color: #475569 !important;
-            }
-
-            .healthPlanPrintOnlyHeader h1 {
-              margin: 0 !important;
-              font-size: 28px !important;
-              line-height: 1.35 !important;
-              color: #0f172a !important;
-              break-after: avoid !important;
-              page-break-after: avoid !important;
-            }
-
-            .healthPlanPrintOnlyGrid {
-              display: grid !important;
-              grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-              gap: 10px !important;
-              margin-bottom: 16px !important;
-              break-inside: avoid !important;
-              page-break-inside: avoid !important;
-            }
-
-            .healthPlanPrintOnlyBox {
-              border: 1px solid #d1d5db !important;
-              border-radius: 10px !important;
-              padding: 10px 12px !important;
-              background: #f8fafc !important;
-              break-inside: avoid !important;
-              page-break-inside: avoid !important;
-            }
-
-            .healthPlanPrintOnlyBox span {
-              display: block !important;
-              font-size: 11px !important;
-              color: #64748b !important;
-              margin-bottom: 4px !important;
-            }
-
-            .healthPlanPrintOnlyBox strong {
-              display: block !important;
-              font-size: 14px !important;
-              color: #0f172a !important;
-              line-height: 1.5 !important;
-            }
-
-            .healthPlanPrintOnlySection {
-              margin-top: 16px !important;
-              padding-top: 10px !important;
-              border-top: 1px solid #e5e7eb !important;
-              break-inside: avoid !important;
-              page-break-inside: avoid !important;
-            }
-
-            .healthPlanPrintOnlySection h2 {
-              margin: 0 0 8px !important;
-              font-size: 18px !important;
-              line-height: 1.35 !important;
-              color: #0f172a !important;
-              break-after: avoid !important;
-              page-break-after: avoid !important;
-            }
-
-            .healthPlanPrintOnlySection ul {
-              margin: 0 !important;
-              padding-inline-start: 20px !important;
-            }
-
-            .healthPlanPrintOnlySection li {
-              margin-bottom: 6px !important;
-              break-inside: avoid !important;
-              page-break-inside: avoid !important;
-              color: #111827 !important;
-            }
-
-            .healthPlanPrintOnlyNote {
-              margin-top: 18px !important;
-              padding: 10px 12px !important;
-              border: 1px solid #d1d5db !important;
-              border-radius: 10px !important;
-              background: #f9fafb !important;
-              font-size: 12px !important;
-              color: #374151 !important;
-              break-inside: avoid !important;
-              page-break-inside: avoid !important;
-            }
-
-            h1,
-            h2,
-            h3,
-            p,
-            li,
-            strong,
-            span {
-              orphans: 3 !important;
-              widows: 3 !important;
-            }
-          }
-        `}</style>
-
-
-        <style>{`
-          /* ORGANHEAL_PRINT_NO_BLANK_PAGES_FIX */
-          @media print {
-            html,
-            body {
-              width: 100% !important;
-              min-height: 0 !important;
-              height: auto !important;
-              overflow: visible !important;
-              background: #ffffff !important;
-            }
-
-            .healthPlanIntelligencePage {
-              display: block !important;
-              width: 100% !important;
-              min-height: 0 !important;
-              height: auto !important;
-              padding: 0 !important;
-              margin: 0 !important;
-              background: #ffffff !important;
-            }
-
-            .healthPlanShell {
-              display: block !important;
-              width: 100% !important;
-              max-width: 100% !important;
-              min-height: 0 !important;
-              height: auto !important;
-              padding: 0 !important;
-              margin: 0 !important;
-              background: #ffffff !important;
-            }
-
-            .healthPlanShell > :not(.healthPlanPrintOnly) {
-              display: none !important;
-            }
-
-            .healthPlanPrintOnly {
-              display: block !important;
-              visibility: visible !important;
-              position: static !important;
-              width: 100% !important;
-              max-width: 100% !important;
-              min-height: 0 !important;
-              height: auto !important;
-              margin: 0 !important;
-              padding: 0 !important;
-              overflow: visible !important;
-              background: #ffffff !important;
-            }
-
-            .healthPlanPrintPage {
-              display: block !important;
-              width: 100% !important;
-              max-width: 100% !important;
-              min-height: 0 !important;
-              height: auto !important;
-              margin: 0 !important;
-              padding: 0 !important;
-              overflow: visible !important;
-              background: #ffffff !important;
-              page-break-after: auto !important;
-              break-after: auto !important;
-            }
-
-            .healthPlanPrintOnly::after,
-            .healthPlanPrintPage::after {
-              display: none !important;
-              content: none !important;
-            }
-
-            .healthPlanBottomNav,
-            .healthPlanNoPrint {
-              display: none !important;
-            }
-          }
-        `}</style>
-
-
-        <style>{`
-          /* ORGANHEAL_HEALTH_PLAN_PROGRESS_STEP4 */
-          .healthPlanProgressSummary {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 14px;
-            margin: 18px 0;
-          }
-
-          .healthPlanProgressSummary article {
-            border: 1px solid rgba(148, 163, 184, 0.24);
-            background: rgba(255, 255, 255, 0.84);
-            border-radius: 18px;
-            padding: 16px;
-            min-height: 118px;
-          }
-
-          .healthPlanProgressSummary span {
-            display: block;
-            font-size: 0.78rem;
-            opacity: 0.72;
-            margin-bottom: 8px;
-          }
-
-          .healthPlanProgressSummary strong {
-            display: block;
-            font-size: 1.1rem;
-            line-height: 1.45;
-            word-break: normal;
-            overflow-wrap: break-word;
-          }
-
-          .healthPlanProgressSummary p {
-            margin-top: 8px;
-            line-height: 1.65;
-          }
-
-          .healthPlanProgressMessage {
-            border: 1px solid rgba(20, 184, 166, 0.22);
-            background: rgba(240, 253, 250, 0.78);
-            border-radius: 18px;
-            padding: 16px;
-            margin: 16px 0;
-            line-height: 1.8;
-          }
-
-          .healthPlanTaskToolbar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            align-items: center;
-            justify-content: space-between;
-            margin-top: 14px;
-          }
-
-          .healthPlanResetButton {
-            border: 1px solid rgba(148, 163, 184, 0.32);
-            background: rgba(255, 255, 255, 0.72);
-            color: inherit;
-            border-radius: 999px;
-            padding: 10px 14px;
-            cursor: pointer;
-            font: inherit;
-            transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
-          }
-
-          .healthPlanResetButton:hover {
-            transform: translateY(-1px);
-            border-color: rgba(20, 184, 166, 0.55);
-            background: rgba(240, 253, 250, 0.9);
-          }
-
-          .healthPlanTaskItemNumber {
-            width: 28px;
-            height: 28px;
-            border-radius: 999px;
-            display: inline-grid;
-            place-items: center;
-            border: 1px solid rgba(148, 163, 184, 0.32);
-            font-size: 0.8rem;
-            font-weight: 800;
-            margin-inline-end: 8px;
-            flex: 0 0 auto;
-          }
-
-          .healthPlanTaskItem.completed .healthPlanTaskItemNumber {
-            background: rgba(34, 197, 94, 0.16);
-            border-color: rgba(34, 197, 94, 0.35);
-          }
-
-          @media (max-width: 900px) {
-            .healthPlanProgressSummary {
-              grid-template-columns: 1fr;
-            }
-          }
-
-          @media print {
-            .healthPlanProgressSummary,
-            .healthPlanProgressMessage,
-            .healthPlanTaskToolbar {
-              break-inside: avoid !important;
-              page-break-inside: avoid !important;
-            }
-
-            .healthPlanResetButton {
-              display: none !important;
-            }
-          }
-        `}</style>
-
+      <div className="ohContainer ohStack large" style={{ padding: "28px 0 56px" }}>
         <PageBackActions />
 
-        <section className="healthPlanHero">
-          <div>
-            <p className="launchEyebrow">
-              {isArabic ? "خطة المتابعة الذكية" : "Personal Follow-Up Intelligence"}
-            </p>
+        <section className="ohHero">
+          <div className="ohHeroGrid">
+            <div>
+              <p className="ohEyebrow">
+                {text("Personal Follow-Up Intelligence", "خطة المتابعة الذكية")}
+              </p>
 
-            <h1>
-              {isArabic
-                ? `خطة ${priorityOrganDisplay} الشخصية`
-                : `${priorityOrgan} Personal Health Plan`}
-            </h1>
+              <h1 className="ohTitle">
+                {isArabic
+                  ? `خطة ${priorityOrganDisplay} الشخصية`
+                  : `${priorityOrgan} Personal Health Plan`}
+              </h1>
 
-            <p>
-              {isArabic
-                ? "خطة متابعة تجمع التقييمات، التقارير، الذكاء الصحي، Check-Ins، والتاريخ الصحي لتوجيه الخطوة التالية."
-                : "A follow-up plan that connects assessments, reports, generated intelligence, check-ins, and health history into a clear next step."}
-            </p>
-          </div>
+              <p className="ohLead">
+                {text(
+                  "A follow-up plan that connects assessments, reports, generated intelligence, check-ins, and health history into a clear next step.",
+                  "خطة متابعة تجمع التقييمات، التقارير، الذكاء الصحي، Check-Ins، والتاريخ الصحي لتوجيه الخطوة التالية."
+                )}
+              </p>
 
-          <div className="healthPlanHeroCard">
-            <span>{isArabic ? "جاهزية الخطة" : "Plan readiness"}</span>
-            <strong>{planReadinessScore}%</strong>
-            <p>
-              {isArabic
-                ? "كلما أضفت بيانات أكثر أصبحت الخطة أكثر شخصية."
-                : "The more data you add, the more personalized this plan becomes."}
-            </p>
+              <div className="ohButtonRow" style={{ marginTop: "24px" }}>
+                <Link href={nextBestAction.href} className="primaryBtn">
+                  {nextBestAction.button}
+                </Link>
 
-            <div className="healthPlanPrintToolbar healthPlanNoPrint">
-              <Link href={nextBestAction.href} className="launchPrimary">
-                {nextBestAction.button}
-              </Link>
+                <button
+                  type="button"
+                  className="secondaryBtn healthPlanNoPrint"
+                  onClick={() => window.print()}
+                >
+                  {text("Print / Save PDF", "طباعة / حفظ PDF")}
+                </button>
 
-              <button
-                type="button"
-                className="launchSecondary healthPlanPrintButton healthPlanHeroPrintButton"
-                onClick={() => window.print()}
-              >
-                {isArabic ? "طباعة / حفظ PDF" : "Print / Save PDF"}
-              </button>
+                <Link href="/intelligence" className="secondaryBtn">
+                  {text("Intelligence", "الذكاء")}
+                </Link>
+              </div>
+            </div>
+
+            <div className="ohCard">
+              <div className="ohCardHeader">
+                <div>
+                  <p className="ohMetricLabel">
+                    {text("Plan Readiness", "جاهزية الخطة")}
+                  </p>
+
+                  <h2 className="ohCardTitle" style={{ marginTop: "8px" }}>
+                    {planReadinessScore}%
+                  </h2>
+                </div>
+
+                <span className={`ohStatusBadge ${planReadinessTone}`}>
+                  {planIntensity}
+                </span>
+              </div>
+
+              <p className="ohCardText">
+                {text(
+                  "The more data you add, the more personalized this plan becomes.",
+                  "كلما أضفت بيانات أكثر أصبحت الخطة أكثر شخصية."
+                )}
+              </p>
+
+              <div className="ohDivider" />
+
+              <p className="ohMetricLabel">
+                {text("Priority", "الأولوية")}
+              </p>
+              <p className="ohMetricValue" style={{ fontSize: "1.55rem" }}>
+                {priorityOrganDisplay}
+              </p>
             </div>
           </div>
         </section>
 
         {loading ? (
-          <section className="healthPlanPanel">
-            <p className="launchEyebrow">
-              {isArabic ? "تحميل الخطة" : "Loading plan"}
+          <section className="ohCard">
+            <p className="ohEyebrow">
+              {text("Loading Plan", "تحميل الخطة")}
             </p>
-            <h2>
-              {isArabic
-                ? "جاري تحضير خطة المتابعة..."
-                : "Preparing your personalized follow-up plan..."}
+            <h2 className="ohCardTitle">
+              {text(
+                "Preparing your personalized follow-up plan...",
+                "جاري تحضير خطة المتابعة..."
+              )}
             </h2>
           </section>
         ) : message ? (
-          <section className="healthPlanPanel">
-            <p className="launchEyebrow">
-              {isArabic ? "الخطة غير جاهزة" : "Plan not ready"}
+          <section className="ohCard">
+            <p className="ohEyebrow">
+              {text("Plan Not Ready", "الخطة غير جاهزة")}
             </p>
-            <h2>{message}</h2>
-            <Link href="/login" className="launchPrimary">
-              {isArabic ? "تسجيل الدخول" : "Login"}
+            <h2 className="ohCardTitle">
+              {isArabic ? "يرجى تسجيل الدخول لعرض خطة المتابعة." : message}
+            </h2>
+            <Link href="/login" className="primaryBtn">
+              {text("Login", "تسجيل الدخول")}
             </Link>
           </section>
         ) : (
           <>
+            <section className="ohMetricGrid">
+              <article className="ohMetricCard">
+                <span className="ohMetricLabel">
+                  {text("Priority", "الأولوية")}
+                </span>
+                <span className="ohMetricValue">{priorityOrganDisplay}</span>
+                <span className="ohMetricHint">
+                  {priorityScore !== null
+                    ? `${priorityScore}/100`
+                    : text("No assessment", "لا يوجد تقييم")}
+                </span>
+              </article>
 
-            <section className="healthPlanCommandCenter">
-              <div className="healthPlanCommandMain">
-                <p className="launchEyebrow">
-                  {isArabic ? "مركز قيادة الخطة" : "Plan command center"}
-                </p>
+              <article className="ohMetricCard">
+                <span className="ohMetricLabel">
+                  {text("Reports", "التقارير")}
+                </span>
+                <span className="ohMetricValue">{uploadedReports.length}</span>
+                <span className="ohMetricHint">
+                  {completedExtractionCount} {text("extracted", "استخراج مكتمل")}
+                </span>
+              </article>
 
-                <h2>{weeklyFocusTitle}</h2>
+              <article className="ohMetricCard">
+                <span className="ohMetricLabel">
+                  {text("Intelligence", "الذكاء")}
+                </span>
+                <span className="ohMetricValue">{generatedCount}</span>
+                <span className="ohMetricHint">
+                  {hasGeneratedIntelligence
+                    ? text("saved results", "نتائج محفوظة")
+                    : text("needs generation", "بحاجة توليد")}
+                </span>
+              </article>
 
-                <p>{weeklyFocusDescription}</p>
+              <article className="ohMetricCard">
+                <span className="ohMetricLabel">
+                  {text("Check-In", "التحديث الصحي")}
+                </span>
+                <span className="ohMetricValue">
+                  {latestCheckIn?.wellness_score
+                    ? `${latestCheckIn.wellness_score}/100`
+                    : "—"}
+                </span>
+                <span className="ohMetricHint">
+                  {latestCheckIn?.mood || text("Not available", "غير متاح")}
+                </span>
+              </article>
+            </section>
 
-                <div className="healthPlanCommandStats">
-                  <div>
-                    <span>{isArabic ? "جاهزية الخطة" : "Plan readiness"}</span>
-                    <strong>{planReadinessScore}%</strong>
-                  </div>
+            <section className="ohActionPanel">
+              <div className="ohCardHeader" style={{ marginBottom: 0 }}>
+                <div>
+                  <p className="ohMetricLabel">
+                    {text("Next Best Action", "الخطوة التالية")}
+                  </p>
 
-                  <div>
-                    <span>{isArabic ? "المهام المكتملة" : "Completed tasks"}</span>
-                    <strong>
-                      {completedTaskCount}/{totalTasks}
-                    </strong>
-                  </div>
+                  <h2 className="ohCardTitle" style={{ fontSize: "1.55rem" }}>
+                    {nextBestAction.label}
+                  </h2>
 
-                  <div>
-                    <span>{isArabic ? "التقدم الحالي" : "Current progress"}</span>
-                    <strong>{taskProgress}%</strong>
-                  </div>
+                  <p className="ohCardText">{nextBestAction.description}</p>
                 </div>
-              </div>
 
-              <div className="healthPlanReadinessCard">
-                <p className="launchEyebrow">
-                  {isArabic ? "قائمة الجاهزية" : "Readiness checklist"}
-                </p>
-
-                <h2>
-                  {isArabic
-                    ? "ما الذي يجعل الخطة أذكى؟"
-                    : "What makes this plan smarter?"}
-                </h2>
-
-                <div className="healthPlanReadinessList">
-                  {readinessItems.map((item) => (
-                    <div
-                      key={item.label}
-                      className={`healthPlanReadinessItem ${
-                        item.ready ? "ready" : "pending"
-                      }`}
-                    >
-                      {isArabic ? (
-                        <>
-                          <div>
-                            <strong>{item.label}</strong>
-                            <span>{item.note}</span>
-                          </div>
-                          <div className="healthPlanReadinessDot">
-                            {item.ready ? "✓" : "!"}
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <div className="healthPlanReadinessDot">
-                            {item.ready ? "✓" : "!"}
-                          </div>
-                          <div>
-                            <strong>{item.label}</strong>
-                            <span>{item.note}</span>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                <Link href={nextBestAction.href} className="primaryBtn">
+                  {nextBestAction.button}
+                </Link>
               </div>
             </section>
 
-            <section className="healthPlanClinicalCard">
-              <p className="launchEyebrow">
-                {isArabic ? "إيقاع المتابعة السريرية" : "Clinical follow-up rhythm"}
-              </p>
+            <section className="ohGrid cols2">
+              <article className="ohCard">
+                <div className="ohCardHeader">
+                  <div>
+                    <p className="ohMetricLabel">
+                      {text("Plan Command Center", "مركز قيادة الخطة")}
+                    </p>
 
-              <h2>
-                {isArabic
-                  ? "خطة عملية حسب أولوية المستخدم"
-                  : "A practical plan based on the user priority"}
-              </h2>
+                    <h2 className="ohCardTitle">{weeklyFocusTitle}</h2>
 
-              <div className="healthPlanClinicalGrid">
+                    <p className="ohCardText">{weeklyFocusDescription}</p>
+                  </div>
+
+                  <span className={`ohStatusBadge ${planReadinessTone}`}>
+                    {planReadinessScore}%
+                  </span>
+                </div>
+
+                <div className="ohGrid cols3" style={{ gap: "12px" }}>
+                  <article className="ohMetricCard">
+                    <span className="ohMetricLabel">
+                      {text("Plan readiness", "جاهزية الخطة")}
+                    </span>
+                    <span className="ohMetricValue">{planReadinessScore}%</span>
+                  </article>
+
+                  <article className="ohMetricCard">
+                    <span className="ohMetricLabel">
+                      {text("Completed tasks", "المهام المكتملة")}
+                    </span>
+                    <span className="ohMetricValue">
+                      {completedTaskCount}/{totalTasks}
+                    </span>
+                  </article>
+
+                  <article className="ohMetricCard">
+                    <span className="ohMetricLabel">
+                      {text("Current progress", "التقدم الحالي")}
+                    </span>
+                    <span className="ohMetricValue">{taskProgress}%</span>
+                  </article>
+                </div>
+              </article>
+
+              <article className="ohCard">
+                <div className="ohCardHeader">
+                  <div>
+                    <p className="ohMetricLabel">
+                      {text("Readiness Checklist", "قائمة الجاهزية")}
+                    </p>
+
+                    <h2 className="ohCardTitle">
+                      {text(
+                        "What makes this plan smarter?",
+                        "ما الذي يجعل الخطة أذكى؟"
+                      )}
+                    </h2>
+                  </div>
+                </div>
+
+                <div className="ohTimeline">
+                  {readinessItems.map((item) => (
+                    <div className="ohTimelineItem" key={item.label}>
+                      <span className="ohTimelineDot" />
+                      <div>
+                        <p className="ohTimelineTitle">{item.label}</p>
+                        <p className="ohTimelineMeta">{item.note}</p>
+                      </div>
+                      <span className={`ohStatusBadge ${item.ready ? "good" : "moderate"}`}>
+                        {item.ready ? text("Ready", "جاهز") : text("Pending", "بانتظار")}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </article>
+            </section>
+
+            <section className="ohCard">
+              <div className="ohCardHeader">
+                <div>
+                  <p className="ohMetricLabel">
+                    {text("Clinical Follow-Up Rhythm", "إيقاع المتابعة السريرية")}
+                  </p>
+
+                  <h2 className="ohCardTitle">
+                    {text(
+                      "A practical plan based on the user priority",
+                      "خطة عملية حسب أولوية المستخدم"
+                    )}
+                  </h2>
+                </div>
+              </div>
+
+              <div className="ohGrid cols3">
                 {clinicalFollowUpCards.map((item) => (
-                  <article key={item.title}>
-                    <span>{item.title}</span>
-                    <strong>{item.value}</strong>
-                    <p>{item.note}</p>
+                  <article className="ohMetricCard" key={item.title}>
+                    <span className="ohMetricLabel">{item.title}</span>
+                    <span className="ohMetricValue" style={{ fontSize: "1.25rem" }}>
+                      {item.value}
+                    </span>
+                    <span className="ohMetricHint">{item.note}</span>
                   </article>
                 ))}
               </div>
             </section>
 
-            <section className="healthPlanMetricsGrid">
-              <article>
-                <span>{isArabic ? "الأولوية" : "Priority"}</span>
-                <strong>{priorityOrganDisplay}</strong>
-                <p>
-                  {priorityScore !== null
-                    ? `${priorityScore}/100`
-                    : isArabic
-                    ? "لا يوجد تقييم"
-                    : "No assessment"}
+            <section className="ohGrid cols2">
+              <article className="ohCard">
+                <p className="ohMetricLabel">
+                  {text("Plan Summary", "ملخص الخطة")}
                 </p>
-              </article>
+                <h2 className="ohCardTitle">{planIntensity}</h2>
 
-              <article>
-                <span>{isArabic ? "التقارير" : "Reports"}</span>
-                <strong>{uploadedReports.length}</strong>
-                <p>
-                  {completedExtractionCount}{" "}
-                  {isArabic ? "استخراج مكتمل" : "extracted"}
-                </p>
-              </article>
-
-              <article>
-                <span>{isArabic ? "الذكاء" : "Intelligence"}</span>
-                <strong>{generatedCount}</strong>
-                <p>
-                  {hasGeneratedIntelligence
-                    ? isArabic
-                      ? "نتائج محفوظة"
-                      : "saved results"
-                    : isArabic
-                    ? "بحاجة توليد"
-                    : "needs generation"}
-                </p>
-              </article>
-
-              <article>
-                <span>{isArabic ? "التحديث الصحي" : "Check-In"}</span>
-                <strong>
-                  {latestCheckIn?.wellness_score
-                    ? `${latestCheckIn.wellness_score}/100`
-                    : "--"}
-                </strong>
-                <p>{latestCheckIn?.mood || (isArabic ? "غير متاح" : "Not available")}</p>
-              </article>
-            </section>
-
-            <section className="healthPlanPanel healthPlanNextPanel">
-              <div>
-                <p className="launchEyebrow">
-                  {isArabic ? "الخطوة التالية" : "Next best action"}
-                </p>
-                <h2>{nextBestAction.label}</h2>
-                <p>{nextBestAction.description}</p>
-              </div>
-
-              <Link href={nextBestAction.href} className="launchPrimary">
-                {nextBestAction.button}
-              </Link>
-            </section>
-
-            <section className="healthPlanGrid">
-              <article className="healthPlanCard">
-                <p className="launchEyebrow">
-                  {isArabic ? "ملخص الخطة" : "Plan summary"}
-                </p>
-                <h2>{planIntensity}</h2>
-
-                <div className="healthPlanInfoList">
-                  <div>
-                    <span>{isArabic ? "آخر Check-In" : "Latest check-in"}</span>
-                    <strong>{latestCheckInText}</strong>
+                <div className="ohTimeline">
+                  <div className="ohTimelineItem">
+                    <span className="ohTimelineDot" />
+                    <div>
+                      <p className="ohTimelineTitle">
+                        {text("Latest Check-In", "آخر Check-In")}
+                      </p>
+                      <p className="ohTimelineMeta">{latestCheckInText}</p>
+                    </div>
                   </div>
 
-                  <div>
-                    <span>{isArabic ? "إيقاع المتابعة" : "Follow-up rhythm"}</span>
-                    <strong>{followUpRhythm}</strong>
+                  <div className="ohTimelineItem">
+                    <span className="ohTimelineDot" />
+                    <div>
+                      <p className="ohTimelineTitle">
+                        {text("Follow-up Rhythm", "إيقاع المتابعة")}
+                      </p>
+                      <p className="ohTimelineMeta">{followUpRhythm}</p>
+                    </div>
                   </div>
 
-                  <div>
-                    <span>{isArabic ? "مستوى الخطورة" : "Risk level"}</span>
-                    <strong>{localizeHealthPlanValue(riskLevelDisplay, isArabic)}</strong>
+                  <div className="ohTimelineItem">
+                    <span className="ohTimelineDot" />
+                    <div>
+                      <p className="ohTimelineTitle">
+                        {text("Risk Level", "مستوى الخطورة")}
+                      </p>
+                      <p className="ohTimelineMeta">{riskLevelDisplay}</p>
+                    </div>
                   </div>
 
-                  <div>
-                    <span>{isArabic ? "التاريخ الصحي" : "Health History"}</span>
-                    <strong>{historyItems.length}</strong>
+                  <div className="ohTimelineItem">
+                    <span className="ohTimelineDot" />
+                    <div>
+                      <p className="ohTimelineTitle">
+                        {text("Health History", "التاريخ الصحي")}
+                      </p>
+                      <p className="ohTimelineMeta">{historyItems.length}</p>
+                    </div>
                   </div>
                 </div>
               </article>
 
-              <article className="healthPlanCard">
-                <p className="launchEyebrow">
-                  {isArabic ? "التقارير والذكاء" : "Reports and intelligence"}
-                </p>
-                <h2>
-                  {hasGeneratedIntelligence
-                    ? isArabic
-                      ? "الذكاء الصحي محفوظ"
-                      : "Generated intelligence is saved"
-                    : isArabic
-                    ? "الذكاء الصحي غير مكتمل"
-                    : "Generated intelligence is incomplete"}
-                </h2>
+              <article className="ohCard">
+                <div className="ohCardHeader">
+                  <div>
+                    <p className="ohMetricLabel">
+                      {text("Reports and Intelligence", "التقارير والذكاء")}
+                    </p>
 
-                <p>
+                    <h2 className="ohCardTitle">
+                      {hasGeneratedIntelligence
+                        ? text(
+                            "Generated intelligence is saved",
+                            "الذكاء الصحي محفوظ"
+                          )
+                        : text(
+                            "Generated intelligence is incomplete",
+                            "الذكاء الصحي غير مكتمل"
+                          )}
+                    </h2>
+                  </div>
+
+                  <span className={`ohStatusBadge ${hasGeneratedIntelligence ? "good" : "moderate"}`}>
+                    {generatedCount}
+                  </span>
+                </div>
+
+                <p className="ohCardText">
                   {isArabic
                     ? localizeHealthPlanValue(
                         latestInsight?.next_best_action ||
@@ -1743,133 +1390,74 @@ export default function HealthPlanPage() {
                       "Upload a report or generate health intelligence to improve this plan."}
                 </p>
 
-                <div className="healthPlanActionRow">
-                  <Link href="/reports" className="launchSecondary">
-                    {isArabic ? "التقارير" : "Reports"}
+                <div className="ohButtonRow">
+                  <Link href="/reports" className="secondaryBtn">
+                    {text("Reports", "التقارير")}
                   </Link>
-                  <Link href="/intelligence" className="launchPrimary">
-                    {isArabic ? "مركز الذكاء" : "Intelligence"}
+                  <Link href="/intelligence" className="primaryBtn">
+                    {text("Intelligence", "مركز الذكاء")}
                   </Link>
                 </div>
 
                 {latestGenerated?.updated_at && (
-                  <small>
-                    {isArabic ? "آخر توليد: " : "Latest generated: "}
-                    {new Date(latestGenerated.updated_at).toLocaleString()}
-                  </small>
+                  <p className="ohMetricHint" style={{ marginTop: "14px" }}>
+                    {text("Latest generated: ", "آخر توليد: ")}
+                    {new Date(latestGenerated.updated_at).toLocaleString(
+                      isArabic ? "ar-AE" : "en-US"
+                    )}
+                  </p>
                 )}
               </article>
             </section>
 
-            <section className="healthPlanPanel">
-              <p className="launchEyebrow">
-                {isArabic ? "خطة 7 أيام" : "7-Day follow-up plan"}
-              </p>
-
-              <h2>
-                {isArabic
-                  ? "ابدأ بخطوات صغيرة قابلة للتنفيذ"
-                  : "Start with small, realistic actions"}
-              </h2>
-
-              <div className="healthPlanRoadmap">
-                {sevenDayPlan.map((item, index) => (
-                  <div key={item}>
-                    <span>{index + 1}</span>
-                    <p>{item}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section className="healthPlanPanel">
-              <p className="launchEyebrow">
-                {isArabic ? "خريطة 30 يوم" : "30-Day improvement roadmap"}
-              </p>
-
-              <h2>
-                {isArabic
-                  ? "من البيانات إلى المتابعة"
-                  : "From data to follow-up"}
-              </h2>
-
-              <div className="healthPlanRoadmap month">
-                {thirtyDayRoadmap.map((item, index) => (
-                  <div key={item}>
-                    <span>{index + 1}</span>
-                    <p>{item}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-
-            <section className="healthPlanPanel">
-              <p className="launchEyebrow">
-                {isArabic ? "استراتيجية 90 يوم" : "90-Day health strategy"}
-              </p>
-
-              <h2>
-                {isArabic
-                  ? "من المتابعة إلى التحسن المستمر"
-                  : "From follow-up to sustained improvement"}
-              </h2>
-
-              <div className="healthPlanRoadmap month">
-                {ninetyDayStrategy.map((item, index) => (
-                  <div key={item}>
-                    <span>{index + 1}</span>
-                    <p>{item}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section className="healthPlanPanel">
-              <p className="launchEyebrow">
-                {isArabic ? "أسئلة للطبيب" : "Doctor discussion guide"}
-              </p>
-
-              <h2>
-                {isArabic
-                  ? "حوّل الخطة إلى حوار طبي واضح"
-                  : "Turn your plan into a clear medical conversation"}
-              </h2>
-
-              <div className="healthPlanRoadmap">
-                {doctorDiscussionQuestions.map((item, index) => (
-                  <div key={item}>
-                    <span>{index + 1}</span>
-                    <p>{item}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section className="healthPlanPanel" id="action-tasks-section">
-              <div className="healthPlanSectionHeader">
+            <section className="ohCard" id="action-tasks-section">
+              <div className="ohCardHeader">
                 <div>
-                  <p className="launchEyebrow">
-                    {isArabic ? "مهام المتابعة" : "Action tasks"}
+                  <p className="ohMetricLabel">
+                    {text("Action Tasks", "مهام المتابعة")}
                   </p>
 
-                  <h2>
-                    {completedTaskCount} {isArabic ? "من" : "of"} {totalTasks}{" "}
-                    {isArabic ? "مكتملة" : "completed"}
+                  <h2 className="ohCardTitle">
+                    {completedTaskCount} {text("of", "من")} {totalTasks}{" "}
+                    {text("completed", "مكتملة")}
                   </h2>
 
-                  <p>
-                    {isArabic
-                      ? "اختر مهام بسيطة. يتم حفظ التقدم على نفس الجهاز."
-                      : "Choose simple tasks. Progress is saved on this device."}
+                  <p className="ohCardText">
+                    {text(
+                      "Choose simple tasks. Progress is saved on this device.",
+                      "اختر مهام بسيطة. يتم حفظ التقدم على نفس الجهاز."
+                    )}
                   </p>
                 </div>
 
-                <strong>{taskProgress}%</strong>
+                <span className={`ohStatusBadge ${taskProgress >= 80 ? "good" : taskProgress >= 40 ? "moderate" : "neutral"}`}>
+                  {taskProgress}%
+                </span>
               </div>
 
               <div className="healthPlanProgressBar">
                 <div style={{ width: `${taskProgress}%` }} />
+              </div>
+
+              <div className="ohGrid cols3" style={{ marginBottom: "18px" }}>
+                {progressInsightCards.map((card) => (
+                  <article className="ohMetricCard" key={card.label}>
+                    <span className="ohMetricLabel">{card.label}</span>
+                    <span className="ohMetricValue" style={{ fontSize: "1.2rem" }}>
+                      {card.value}
+                    </span>
+                    <span className="ohMetricHint">{card.note}</span>
+                  </article>
+                ))}
+              </div>
+
+              <div className="ohTrustNotice" style={{ marginBottom: "16px" }}>
+                <span aria-hidden="true">✅</span>
+                <div>
+                  <strong>{progressMomentum}</strong>
+                  <br />
+                  {progressMomentumDescription}
+                </div>
               </div>
 
               <div className="healthPlanTaskList">
@@ -1893,94 +1481,185 @@ export default function HealthPlanPage() {
                         onChange={() => toggleTask(task)}
                       />
                       <span>{task}</span>
-                      <small>{isCompleted ? "Done" : "To do"}</small>
+                      <small>{isCompleted ? text("Done", "تم") : text("To do", "للعمل")}</small>
                     </label>
                   );
                 })}
               </div>
+
+              <div className="ohButtonRow" style={{ marginTop: "16px" }}>
+                <button type="button" className="secondaryBtn" onClick={resetWeeklyTasks}>
+                  {text("Reset Weekly Tasks", "إعادة ضبط مهام الأسبوع")}
+                </button>
+
+                <Link
+                  href={organAssessmentLinks[priorityOrgan] || "/assessment"}
+                  className="secondaryBtn"
+                >
+                  {text("Reassess Priority", "إعادة تقييم الأولوية")}
+                </Link>
+              </div>
             </section>
 
+            <section className="ohGrid cols2">
+              <article className="ohCard">
+                <p className="ohMetricLabel">
+                  {text("7-Day Follow-Up Plan", "خطة 7 أيام")}
+                </p>
+                <h2 className="ohCardTitle">
+                  {text(
+                    "Start with small, realistic actions",
+                    "ابدأ بخطوات صغيرة قابلة للتنفيذ"
+                  )}
+                </h2>
 
-            <section className="healthPlanPanel healthPlanPrintSection">
-              <div className="healthPlanSectionHeader">
+                <div className="ohTimeline">
+                  {sevenDayPlan.map((item) => (
+                    <div className="ohTimelineItem" key={item}>
+                      <span className="ohTimelineDot" />
+                      <p className="ohTimelineTitle">{item}</p>
+                    </div>
+                  ))}
+                </div>
+              </article>
+
+              <article className="ohCard">
+                <p className="ohMetricLabel">
+                  {text("30-Day Improvement Roadmap", "خريطة 30 يوم")}
+                </p>
+                <h2 className="ohCardTitle">
+                  {text("From data to follow-up", "من البيانات إلى المتابعة")}
+                </h2>
+
+                <div className="ohTimeline">
+                  {thirtyDayRoadmap.map((item) => (
+                    <div className="ohTimelineItem" key={item}>
+                      <span className="ohTimelineDot" />
+                      <p className="ohTimelineTitle">{item}</p>
+                    </div>
+                  ))}
+                </div>
+              </article>
+            </section>
+
+            <section className="ohGrid cols2">
+              <article className="ohCard">
+                <p className="ohMetricLabel">
+                  {text("90-Day Health Strategy", "استراتيجية 90 يوم")}
+                </p>
+                <h2 className="ohCardTitle">
+                  {text(
+                    "From follow-up to sustained improvement",
+                    "من المتابعة إلى التحسن المستمر"
+                  )}
+                </h2>
+
+                <div className="ohTimeline">
+                  {ninetyDayStrategy.map((item) => (
+                    <div className="ohTimelineItem" key={item}>
+                      <span className="ohTimelineDot" />
+                      <p className="ohTimelineTitle">{item}</p>
+                    </div>
+                  ))}
+                </div>
+              </article>
+
+              <article className="ohCard">
+                <p className="ohMetricLabel">
+                  {text("Doctor Discussion Guide", "أسئلة للطبيب")}
+                </p>
+                <h2 className="ohCardTitle">
+                  {text(
+                    "Turn your plan into a clear medical conversation",
+                    "حوّل الخطة إلى حوار طبي واضح"
+                  )}
+                </h2>
+
+                <div className="ohTimeline">
+                  {doctorDiscussionQuestions.map((item) => (
+                    <div className="ohTimelineItem" key={item}>
+                      <span className="ohTimelineDot" />
+                      <p className="ohTimelineTitle">{item}</p>
+                    </div>
+                  ))}
+                </div>
+              </article>
+            </section>
+
+            <section className="ohCard">
+              <div className="ohCardHeader">
                 <div>
-                  <p className="launchEyebrow">
-                    {isArabic ? "نسخة قابلة للطباعة" : "Printable plan summary"}
+                  <p className="ohMetricLabel">
+                    {text("Printable Plan Summary", "نسخة قابلة للطباعة")}
                   </p>
 
-                  <h2>
-                    {isArabic
-                      ? "ملخص عملي للخطة الصحية"
-                      : "Practical health plan summary"}
+                  <h2 className="ohCardTitle">
+                    {text(
+                      "Practical health plan summary",
+                      "ملخص عملي للخطة الصحية"
+                    )}
                   </h2>
 
-                  <p>
-                    {isArabic
-                      ? "استخدم هذه النسخة للمراجعة الشخصية أو لمناقشتها مع الطبيب. يمكن طباعتها أو حفظها كملف PDF من المتصفح."
-                      : "Use this summary for personal review or to discuss with your doctor. You can print it or save it as a PDF from the browser."}
+                  <p className="ohCardText">
+                    {text(
+                      "Use this summary for personal review or to discuss with your doctor. You can print it or save it as a PDF from the browser.",
+                      "استخدم هذه النسخة للمراجعة الشخصية أو لمناقشتها مع الطبيب. يمكن طباعتها أو حفظها كملف PDF من المتصفح."
+                    )}
                   </p>
                 </div>
 
                 <button
                   type="button"
-                  className="launchPrimary healthPlanPrintButton healthPlanNoPrint"
+                  className="primaryBtn healthPlanNoPrint"
                   onClick={() => window.print()}
                 >
-                  {isArabic ? "طباعة الخطة" : "Print plan"}
+                  {text("Print Plan", "طباعة الخطة")}
                 </button>
               </div>
 
-              <div className="healthPlanPrintGrid">
-                <article>
-                  <span>{isArabic ? "الأولوية الصحية" : "Health priority"}</span>
-                  <strong>{priorityOrganDisplay}</strong>
+              <div className="ohMetricGrid">
+                <article className="ohMetricCard">
+                  <span className="ohMetricLabel">
+                    {text("Health Priority", "الأولوية الصحية")}
+                  </span>
+                  <span className="ohMetricValue">{priorityOrganDisplay}</span>
                 </article>
 
-                <article>
-                  <span>{isArabic ? "جاهزية الخطة" : "Plan readiness"}</span>
-                  <strong>{planReadinessScore}%</strong>
+                <article className="ohMetricCard">
+                  <span className="ohMetricLabel">
+                    {text("Plan Readiness", "جاهزية الخطة")}
+                  </span>
+                  <span className="ohMetricValue">{planReadinessScore}%</span>
                 </article>
 
-                <article>
-                  <span>{isArabic ? "مستوى المتابعة" : "Follow-up level"}</span>
-                  <strong>{planIntensity}</strong>
+                <article className="ohMetricCard">
+                  <span className="ohMetricLabel">
+                    {text("Follow-up Level", "مستوى المتابعة")}
+                  </span>
+                  <span className="ohMetricValue" style={{ fontSize: "1.2rem" }}>
+                    {planIntensity}
+                  </span>
                 </article>
 
-                <article>
-                  <span>{isArabic ? "إيقاع المتابعة" : "Follow-up rhythm"}</span>
-                  <strong>{followUpRhythm}</strong>
-                </article>
-
-                <article>
-                  <span>{isArabic ? "المهام المكتملة" : "Completed tasks"}</span>
-                  <strong>
-                    {completedTaskCount}/{totalTasks}
-                  </strong>
-                </article>
-
-                <article>
-                  <span>{isArabic ? "مستوى الخطورة" : "Risk level"}</span>
-                  <strong>{riskLevelDisplay}</strong>
+                <article className="ohMetricCard">
+                  <span className="ohMetricLabel">
+                    {text("Risk Level", "مستوى الخطورة")}
+                  </span>
+                  <span className="ohMetricValue" style={{ fontSize: "1.2rem" }}>
+                    {riskLevelDisplay}
+                  </span>
                 </article>
               </div>
-
-              <p className="healthPlanPrintNote">
-                {isArabic
-                  ? "تنبيه: هذه الخطة تعليمية وتنظيمية ولا تستبدل تقييم الطبيب أو العلاج الطبي. راجع مقدم رعاية صحية عند وجود أعراض مقلقة أو نتائج غير طبيعية."
-                  : "Note: This plan is educational and organizational. It does not replace medical evaluation or treatment. Consult a licensed healthcare professional for concerning symptoms or abnormal results."}
-              </p>
             </section>
 
-
-            {/* ORGANHEAL_PRINT_ONLY_SECTION */}
             <section
               className="healthPlanPrintOnly"
               dir={isArabic ? "rtl" : "ltr"}
               lang={isArabic ? "ar" : "en"}
               aria-hidden="true"
             >
-              <div className="healthPlanPrintPage">
-                <div className="healthPlanPrintOnlyHeader">
+              <div>
+                <div className="healthPlanPrintHeader">
                   <p>OrganHeal AI</p>
                   <h1>
                     {isArabic
@@ -1988,135 +1667,146 @@ export default function HealthPlanPage() {
                       : `${priorityOrgan} Personal Health Plan`}
                   </h1>
                   <p>
-                    {isArabic
-                      ? "نسخة منظمة للطباعة أو الحفظ كملف PDF"
-                      : "Printable plan summary for review or PDF saving"}
+                    {text(
+                      "Printable plan summary for review or PDF saving",
+                      "نسخة منظمة للطباعة أو الحفظ كملف PDF"
+                    )}
                   </p>
                 </div>
 
-                <div className="healthPlanPrintOnlyGrid">
-                  <div className="healthPlanPrintOnlyBox">
-                    <span>{isArabic ? "الأولوية الصحية" : "Health priority"}</span>
+                <div className="healthPlanPrintGrid">
+                  <div className="healthPlanPrintBox">
+                    <span>{text("Health priority", "الأولوية الصحية")}</span>
                     <strong>{priorityOrganDisplay}</strong>
                   </div>
 
-                  <div className="healthPlanPrintOnlyBox">
-                    <span>{isArabic ? "جاهزية الخطة" : "Plan readiness"}</span>
+                  <div className="healthPlanPrintBox">
+                    <span>{text("Plan readiness", "جاهزية الخطة")}</span>
                     <strong>{planReadinessScore}%</strong>
                   </div>
 
-                  <div className="healthPlanPrintOnlyBox">
-                    <span>{isArabic ? "مستوى المتابعة" : "Follow-up level"}</span>
+                  <div className="healthPlanPrintBox">
+                    <span>{text("Follow-up level", "مستوى المتابعة")}</span>
                     <strong>{planIntensity}</strong>
                   </div>
 
-                  <div className="healthPlanPrintOnlyBox">
-                    <span>{isArabic ? "إيقاع المتابعة" : "Follow-up rhythm"}</span>
+                  <div className="healthPlanPrintBox">
+                    <span>{text("Follow-up rhythm", "إيقاع المتابعة")}</span>
                     <strong>{followUpRhythm}</strong>
                   </div>
 
-                  <div className="healthPlanPrintOnlyBox">
-                    <span>{isArabic ? "المهام المكتملة" : "Completed tasks"}</span>
+                  <div className="healthPlanPrintBox">
+                    <span>{text("Completed tasks", "المهام المكتملة")}</span>
                     <strong>
                       {completedTaskCount}/{totalTasks}
                     </strong>
                   </div>
 
-                  <div className="healthPlanPrintOnlyBox">
-                    <span>{isArabic ? "مستوى الخطورة" : "Risk level"}</span>
+                  <div className="healthPlanPrintBox">
+                    <span>{text("Risk level", "مستوى الخطورة")}</span>
                     <strong>{riskLevelDisplay}</strong>
                   </div>
                 </div>
 
-                <div className="healthPlanPrintOnlySection">
-                  <h2>{isArabic ? "الخطوة التالية" : "Next best action"}</h2>
-                  <p>{nextBestAction.description}</p>
-                </div>
+                {[
+                  {
+                    title: text("Next best action", "الخطوة التالية"),
+                    items: [nextBestAction.description],
+                  },
+                  {
+                    title: text("Action tasks", "مهام المتابعة"),
+                    items: planTasks.slice(0, 8),
+                  },
+                  {
+                    title: text("7-Day plan", "خطة 7 أيام"),
+                    items: sevenDayPlan,
+                  },
+                  {
+                    title: text("30-Day roadmap", "خريطة 30 يوم"),
+                    items: thirtyDayRoadmap,
+                  },
+                  {
+                    title: text("90-Day strategy", "استراتيجية 90 يوم"),
+                    items: ninetyDayStrategy,
+                  },
+                  {
+                    title: text("Doctor discussion guide", "أسئلة للطبيب"),
+                    items: doctorDiscussionQuestions,
+                  },
+                ].map((section) => (
+                  <div className="healthPlanPrintSection" key={section.title}>
+                    <h2>{section.title}</h2>
+                    <ul>
+                      {section.items.map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
 
-                <div className="healthPlanPrintOnlySection">
-                  <h2>{isArabic ? "مهام المتابعة" : "Action tasks"}</h2>
-                  <ul>
-                    {planTasks.slice(0, 8).map((task) => (
-                      <li key={task}>{task}</li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="healthPlanPrintOnlySection">
-                  <h2>{isArabic ? "خطة 7 أيام" : "7-Day plan"}</h2>
-                  <ul>
-                    {sevenDayPlan.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="healthPlanPrintOnlySection">
-                  <h2>{isArabic ? "خريطة 30 يوم" : "30-Day roadmap"}</h2>
-                  <ul>
-                    {thirtyDayRoadmap.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="healthPlanPrintOnlySection">
-                  <h2>{isArabic ? "استراتيجية 90 يوم" : "90-Day strategy"}</h2>
-                  <ul>
-                    {ninetyDayStrategy.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="healthPlanPrintOnlySection">
-                  <h2>{isArabic ? "أسئلة للطبيب" : "Doctor discussion guide"}</h2>
-                  <ul>
-                    {doctorDiscussionQuestions.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                </div>
-
-                <p className="healthPlanPrintOnlyNote">
-                  {isArabic
-                    ? "تنبيه: هذه الخطة تعليمية وتنظيمية ولا تستبدل تقييم الطبيب أو العلاج الطبي. راجع مقدم رعاية صحية عند وجود أعراض مقلقة أو نتائج غير طبيعية."
-                    : "Note: This plan is educational and organizational. It does not replace medical evaluation or treatment. Consult a licensed healthcare professional for concerning symptoms or abnormal results."}
+                <p className="healthPlanPrintNote">
+                  {text(
+                    "Note: This plan is educational and organizational. It does not replace medical evaluation or treatment. Consult a licensed healthcare professional for concerning symptoms or abnormal results.",
+                    "تنبيه: هذه الخطة تعليمية وتنظيمية ولا تستبدل تقييم الطبيب أو العلاج الطبي. راجع مقدم رعاية صحية عند وجود أعراض مقلقة أو نتائج غير طبيعية."
+                  )}
                 </p>
               </div>
             </section>
 
-            <section className="healthPlanBottomNav">
+            <section className="ohTrustNotice">
+              <span aria-hidden="true">🛡️</span>
               <div>
-                <p className="launchEyebrow">
-                  {isArabic ? "استمرار الرحلة" : "Continue the journey"}
-                </p>
+                <strong>
+                  {text("Medical safety reminder", "تذكير السلامة الطبية")}
+                </strong>
+                <br />
+                {text(
+                  "This plan is educational and organizational. It does not diagnose disease, prescribe treatment, or replace medical care. Seek urgent care for severe symptoms or emergency warning signs.",
+                  "هذه الخطة تعليمية وتنظيمية. لا تشخص المرض ولا تصف العلاج ولا تستبدل الرعاية الطبية. اطلب رعاية عاجلة عند وجود أعراض شديدة أو علامات طارئة."
+                )}
+              </div>
+            </section>
 
-                <h2>
-                  {isArabic
-                    ? "راجع، حدّث، وكرر"
-                    : "Review, update, and reassess"}
-                </h2>
+            <section className="ohCard">
+              <div className="ohCardHeader">
+                <div>
+                  <p className="ohMetricLabel">
+                    {text("Continue the Journey", "استمرار الرحلة")}
+                  </p>
 
-                <p>
-                  {pendingExtractionCount > 0
-                    ? isArabic
-                      ? "يوجد تقارير بانتظار الاستخراج. شغّل الاستخراج أو افتح مركز الذكاء."
-                      : "Some reports are pending extraction. Run extraction or open Intelligence Center."
-                    : isArabic
-                    ? "استمر في تحديث Check-Ins ومراجعة Health History."
-                    : "Keep updating check-ins and reviewing Health History."}
-                </p>
+                  <h2 className="ohCardTitle">
+                    {text("Review, update, and reassess", "راجع، حدّث، وكرر")}
+                  </h2>
+
+                  <p className="ohCardText">
+                    {pendingExtractionCount > 0
+                      ? text(
+                          "Some reports are pending extraction. Run extraction or open Intelligence Center.",
+                          "يوجد تقارير بانتظار الاستخراج. شغّل الاستخراج أو افتح مركز الذكاء."
+                        )
+                      : text(
+                          "Keep updating check-ins and reviewing Health History.",
+                          "استمر في تحديث Check-Ins ومراجعة Health History."
+                        )}
+                  </p>
+                </div>
               </div>
 
-              <div className="healthPlanActionRow">
-                <Link href="/checkin">{isArabic ? "التحديث الصحي" : "Check-In"}</Link>
-                <Link href="/history">{isArabic ? "التاريخ" : "History"}</Link>
-                <Link href="/doctor-portal">
-                  {isArabic ? "بوابة الطبيب" : "Doctor Portal"}
+              <div className="ohButtonRow">
+                <Link href="/checkin" className="primaryBtn">
+                  {text("Check-In", "التحديث الصحي")}
                 </Link>
-                <Link href="/dashboard">
-                  {isArabic ? "لوحة التحكم" : "Dashboard"}
+
+                <Link href="/history" className="secondaryBtn">
+                  {text("History", "التاريخ")}
+                </Link>
+
+                <Link href="/doctor-portal" className="secondaryBtn">
+                  {text("Doctor Portal", "بوابة الطبيب")}
+                </Link>
+
+                <Link href="/dashboard" className="secondaryBtn">
+                  {text("Dashboard", "لوحة التحكم")}
                 </Link>
               </div>
             </section>
