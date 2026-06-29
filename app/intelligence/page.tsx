@@ -1,4 +1,6 @@
 ﻿"use client";
+
+import Link from "next/link";
 import { buildActionPlan } from "../../lib/actionPlanEngine";
 import { buildHealthStory } from "../../lib/healthStoryEngine";
 import { buildHistoricalLabTrends } from "../../lib/historicalLabTrendEngine";
@@ -43,8 +45,6 @@ import PersonalHealthStrategyCard from "./components/PersonalHealthStrategyCard"
 import DoctorBriefReportCard from "./components/DoctorBriefReportCard";
 import PatientReportPdfCard from "./components/PatientReportPdfCard";
 
-
-
 type Assessment = {
   organ_name: string;
   score: number;
@@ -57,8 +57,8 @@ type DailyCheckIn = {
   created_at: string;
 };
 
-
 type HealthEngine = ReturnType<typeof buildHealthIntelligence>;
+
 type GeneratedIntelligenceResult = {
   strategy: any;
   unifiedHealth: any;
@@ -101,7 +101,6 @@ type HealthInsight = {
 
 const REPORTS_PAGE_SIZE = 5;
 
-
 type IntelligenceUiLanguage = "en" | "ar";
 
 function getIntelligenceStoredLanguage(): IntelligenceUiLanguage {
@@ -118,74 +117,77 @@ function getIntelligenceStoredLanguage(): IntelligenceUiLanguage {
 }
 
 export default function IntelligencePage() {
-
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [uiLanguage, setUiLanguage] =
     useState<IntelligenceUiLanguage>("en");
   const isArabicUi = uiLanguage === "ar";
+
   const [healthEngine, setHealthEngine] = useState<HealthEngine | null>(null);
-
-
-   const [healthInsights, setHealthInsights] = useState<HealthInsight[]>([]);
+  const [healthInsights, setHealthInsights] = useState<HealthInsight[]>([]);
   const [assessmentData, setAssessmentData] = useState<Assessment[]>([]);
   const [dailyCheckIn, setDailyCheckIn] = useState<DailyCheckIn | null>(null);
-    const [generatedResult, setGeneratedResult] =
+  const [generatedResult, setGeneratedResult] =
     useState<GeneratedIntelligenceResult | null>(null);
-      const [activeGeneratedInsightId, setActiveGeneratedInsightId] =
+  const [activeGeneratedInsightId, setActiveGeneratedInsightId] =
     useState<number | null>(null);
   const [expandedReportId, setExpandedReportId] = useState<number | null>(null);
   const [visibleReportsCount, setVisibleReportsCount] =
     useState(REPORTS_PAGE_SIZE);
-  
+
   useEffect(() => {
     loadIntelligence();
   }, []);
 
   useEffect(() => {
     function syncUiLanguage() {
-      setUiLanguage(getIntelligenceStoredLanguage());
-    }
+      const selectedLanguage = getIntelligenceStoredLanguage();
 
-    function syncUiLanguageAfterClick() {
-      setTimeout(syncUiLanguage, 50);
+      setUiLanguage(selectedLanguage);
+      document.documentElement.lang = selectedLanguage;
+      document.documentElement.dir = selectedLanguage === "ar" ? "rtl" : "ltr";
     }
 
     syncUiLanguage();
 
     window.addEventListener("storage", syncUiLanguage);
-    window.addEventListener("focus", syncUiLanguage);
-    document.addEventListener("click", syncUiLanguageAfterClick);
+    window.addEventListener("organheal-language-change", syncUiLanguage);
 
     return () => {
       window.removeEventListener("storage", syncUiLanguage);
-      window.removeEventListener("focus", syncUiLanguage);
-      document.removeEventListener("click", syncUiLanguageAfterClick);
+      window.removeEventListener("organheal-language-change", syncUiLanguage);
     };
   }, []);
+
+  function text(en: string, ar: string) {
+    return isArabicUi ? ar : en;
+  }
 
   async function loadIntelligence() {
     setLoading(true);
     setMessage("");
 
-const { data: userData, error: userError } = await supabase.auth.getUser();
+    const currentLanguage = getIntelligenceStoredLanguage();
+    const currentIsArabic = currentLanguage === "ar";
 
-if (userError || !userData.user) {
-  window.location.href = "/login";
-  return;
-}
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+
+    if (userError || !userData.user) {
+      window.location.href = "/login";
+      return;
+    }
 
     const userId = userData.user.id;
 
-const { data: checkInData } = await supabase
-  .from("daily_checkins")
-  .select("mood, wellness_score, created_at")
-  .eq("user_id", userId)
-  .order("created_at", { ascending: false })
-  .limit(1)
-  .maybeSingle();
+    const { data: checkInData } = await supabase
+      .from("daily_checkins")
+      .select("mood, wellness_score, created_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-setDailyCheckIn(checkInData || null);
+    setDailyCheckIn(checkInData || null);
 
     const { data: assessments, error: assessmentError } = await supabase
       .from("organ_assessments")
@@ -209,7 +211,6 @@ setDailyCheckIn(checkInData || null);
         dailyCheckIn: null,
         isArabic: false,
       });
-      
 
       setHealthEngine(intelligence);
     }
@@ -221,7 +222,11 @@ setDailyCheckIn(checkInData || null);
       .order("created_at", { ascending: false });
 
     if (insightsError) {
-      setMessage("Could not load medical report intelligence.");
+      setMessage(
+        currentIsArabic
+          ? "تعذر تحميل ذكاء التقارير الطبية."
+          : "Could not load medical report intelligence."
+      );
       setLoading(false);
       return;
     }
@@ -269,37 +274,40 @@ setDailyCheckIn(checkInData || null);
 
     setHealthInsights(mergedInsights);
 
-setGeneratedResult(null);
-setActiveGeneratedInsightId(null);
-setExpandedReportId(null);
-setVisibleReportsCount(REPORTS_PAGE_SIZE);
+    setGeneratedResult(null);
+    setActiveGeneratedInsightId(null);
+    setExpandedReportId(null);
+    setVisibleReportsCount(REPORTS_PAGE_SIZE);
 
-const generatedInsightIds = mergedInsights.map((item) => item.id);
+    const generatedInsightIds = mergedInsights.map((item) => item.id);
 
-if (generatedInsightIds.length > 0) {
-  const { data: savedGeneratedResult, error: savedGeneratedResultError } =
-    await supabase
-      .from("generated_intelligence_results")
-      .select("insight_id, result, updated_at")
-      .eq("user_id", userId)
-      .in("insight_id", generatedInsightIds)
-      .order("updated_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    if (generatedInsightIds.length > 0) {
+      const { data: savedGeneratedResult, error: savedGeneratedResultError } =
+        await supabase
+          .from("generated_intelligence_results")
+          .select("insight_id, result, updated_at")
+          .eq("user_id", userId)
+          .in("insight_id", generatedInsightIds)
+          .order("updated_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
 
-  if (!savedGeneratedResultError && savedGeneratedResult?.result) {
-    setGeneratedResult(
-      savedGeneratedResult.result as GeneratedIntelligenceResult
-    );
-    setActiveGeneratedInsightId(savedGeneratedResult.insight_id);
-  }
-}
+      if (!savedGeneratedResultError && savedGeneratedResult?.result) {
+        setGeneratedResult(
+          savedGeneratedResult.result as GeneratedIntelligenceResult
+        );
+        setActiveGeneratedInsightId(savedGeneratedResult.insight_id);
+      }
+    }
 
-if (assessmentData.length === 0 && mergedInsights.length === 0) {
-  setMessage(
-    "Complete your first organ assessment or upload a medical report to unlock intelligence."
-  );
-}
+    if (assessmentData.length === 0 && mergedInsights.length === 0) {
+      setMessage(
+        currentIsArabic
+          ? "أكمل أول تقييم عضو أو ارفع تقريرًا طبيًا لتفعيل الذكاء الصحي."
+          : "Complete your first organ assessment or upload a medical report to unlock intelligence."
+      );
+    }
+
     setLoading(false);
   }
 
@@ -317,268 +325,276 @@ if (assessmentData.length === 0 && mergedInsights.length === 0) {
 
     window.open(data.signedUrl, "_blank");
   }
-async function openSavedGeneratedResult(insightId: number) {
-  const { data: userData } = await supabase.auth.getUser();
 
-  if (!userData.user) {
-    alert("User session expired. Please log in again.");
-    return;
-  }
+  async function openSavedGeneratedResult(insightId: number) {
+    const { data: userData } = await supabase.auth.getUser();
 
-  const { data: savedGeneratedResult, error } = await supabase
-    .from("generated_intelligence_results")
-    .select("result")
-    .eq("user_id", userData.user.id)
-    .eq("insight_id", insightId)
-    .maybeSingle();
-
-  if (error) {
-    alert("Could not load saved intelligence result: " + error.message);
-    return;
-  }
-
-  if (!savedGeneratedResult?.result) {
-    const shouldRegenerate = window.confirm(
-      "No saved intelligence result was found for this report. Generate it now?"
-    );
-
-    if (shouldRegenerate) {
-      await generateReportIntelligence(insightId);
-    }
-
-    return;
-  }
-
-   setGeneratedResult(
-    savedGeneratedResult.result as GeneratedIntelligenceResult
-  );
-  setActiveGeneratedInsightId(insightId);
-  setExpandedReportId(insightId);
-}
- async function generateReportIntelligence(insightId: number) {
-  const selectedInsight = healthInsights.find((item) => item.id === insightId);
-
-if (!selectedInsight) return;
-
-setActiveGeneratedInsightId(null);
-setGeneratedResult(null);
-
-let extractedText: string | null = null;
-
-  if (selectedInsight.report_id && selectedInsight.file_path) {
-  try {
-    const { data: sessionData, error: sessionError } =
-      await supabase.auth.getSession();
-
-    if (sessionError || !sessionData.session?.access_token) {
-      alert("Your session expired. Please login again.");
-      window.location.href = "/login";
+    if (!userData.user) {
+      alert("User session expired. Please log in again.");
       return;
     }
 
-    const extractionResponse = await fetch("/api/extract-pdf", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${sessionData.session.access_token}`,
-      },
-      body: JSON.stringify({
-        reportId: selectedInsight.report_id,
-        filePath: selectedInsight.file_path,
-        fileName: selectedInsight.file_name,
-      }),
-    });
+    const { data: savedGeneratedResult, error } = await supabase
+      .from("generated_intelligence_results")
+      .select("result")
+      .eq("user_id", userData.user.id)
+      .eq("insight_id", insightId)
+      .maybeSingle();
 
-      const extractionResult = await extractionResponse.json();
+    if (error) {
+      alert("Could not load saved intelligence result: " + error.message);
+      return;
+    }
 
-      if (!extractionResponse.ok || !extractionResult.success) {
-        alert(extractionResult.error || "PDF extraction failed.");
-        return;
+    if (!savedGeneratedResult?.result) {
+      const shouldRegenerate = window.confirm(
+        text(
+          "No saved intelligence result was found for this report. Generate it now?",
+          "لم يتم العثور على نتيجة ذكاء محفوظة لهذا التقرير. هل تريد توليدها الآن؟"
+        )
+      );
+
+      if (shouldRegenerate) {
+        await generateReportIntelligence(insightId);
       }
 
-      extractedText = extractionResult.text || null;
-    } catch (error) {
-      console.error("Extraction failed", error);
-      alert("Extraction failed.");
       return;
     }
+
+    setGeneratedResult(
+      savedGeneratedResult.result as GeneratedIntelligenceResult
+    );
+    setActiveGeneratedInsightId(insightId);
+    setExpandedReportId(insightId);
   }
 
-  if (!extractedText && selectedInsight.report_id) {
-    const { data: reportData } = await supabase
-      .from("uploaded_lab_files")
-      .select("extracted_text")
-      .eq("id", selectedInsight.report_id)
-      .single();
+  async function generateReportIntelligence(insightId: number) {
+    const selectedInsight = healthInsights.find((item) => item.id === insightId);
 
-    extractedText = reportData?.extracted_text || null;
-  }
+    if (!selectedInsight) return;
 
-  if (!extractedText || extractedText.length < 30) {
-    alert("No readable report text was extracted yet.");
-    return;
-  }
+    setActiveGeneratedInsightId(null);
+    setGeneratedResult(null);
 
-  const detectedMarkers = detectLabMarkers(extractedText);
-const { data: userData } = await supabase.auth.getUser();
+    let extractedText: string | null = null;
 
-if (!userData.user) {
-  alert("User session expired. Please log in again.");
-  return;
-}
+    if (selectedInsight.report_id && selectedInsight.file_path) {
+      try {
+        const { data: sessionData, error: sessionError } =
+          await supabase.auth.getSession();
 
-if (selectedInsight.report_id) {
-  const markerRows = detectedMarkers
-    .filter((marker) => marker.value !== null)
-    .map((marker) => ({
-      user_id: userData.user.id,
-      report_id: selectedInsight.report_id,
-      marker_name: marker.marker,
-      marker_value: marker.value,
-      marker_unit: marker.unit,
-    }));
+        if (sessionError || !sessionData.session?.access_token) {
+          alert("Your session expired. Please login again.");
+          window.location.href = "/login";
+          return;
+        }
 
-  if (markerRows.length > 0) {
-    await supabase.from("medical_report_markers").insert(markerRows);
-  }
-}
-  const markerSummary = buildLabMarkerSummary(detectedMarkers);
-
-  let historicalMarkerRows: any[] = [];
-
-const { data: userDataForHistory } = await supabase.auth.getUser();
-
-if (userDataForHistory.user) {
-  const { data } = await supabase
-    .from("medical_report_markers")
-    .select("marker_name, marker_value, created_at")
-    .eq("user_id", userDataForHistory.user.id)
-    .order("created_at", { ascending: true });
-
-  historicalMarkerRows = data || [];
-}
-
-const labTrends = buildHistoricalLabTrends(
-  historicalMarkerRows
-    .filter((row) => row.marker_value !== null)
-    .map((row) => ({
-      marker: row.marker_name,
-      value: Number(row.marker_value),
-      date: row.created_at,
-    }))
-);
-
-  const radiologyFindings = detectRadiologyFindings(extractedText);
-  const radiologySummary = buildRadiologySummary(radiologyFindings);
-  const isRadiologyReport = selectedInsight.report_type === "radiology";
-
-  const clinicalPatterns = detectClinicalPatterns(detectedMarkers);
-  const healthStrategy = buildHealthStrategy(detectedMarkers);
-
-  const unifiedHealth = buildUnifiedHealthIntelligence({
-    detectedMarkers,
-    healthStrategy,
-  });
-
-  const digitalTwin = buildPatientDigitalTwin({
-    markers: detectedMarkers,
-    radiologyFindings,
-  });
-
-  const crossSource = buildCrossSourceIntelligence({
-    detectedMarkers,
-    assessments: assessmentData,
-    dailyCheckIn,
-  });
-
-  const timeline = buildHealthTimeline([
-    ...assessmentData.map((item) => ({
-      source: "assessment" as const,
-      label: item.organ_name,
-      score: item.score,
-      date: item.created_at,
-    })),
-
-    ...(dailyCheckIn
-      ? [
-          {
-            source: "checkin" as const,
-            label: "Daily Check-In",
-            score: dailyCheckIn.wellness_score || 0,
-            date: dailyCheckIn.created_at,
+        const extractionResponse = await fetch("/api/extract-pdf", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${sessionData.session.access_token}`,
           },
-        ]
-      : []),
-  ]);
+          body: JSON.stringify({
+            reportId: selectedInsight.report_id,
+            filePath: selectedInsight.file_path,
+            fileName: selectedInsight.file_name,
+          }),
+        });
 
-  const longitudinalRisk = buildLongitudinalRisk(timeline);
-  const forecast = buildForecast(detectedMarkers, crossSource.confidenceScore);
+        const extractionResult = await extractionResponse.json();
 
-  const healthStory = buildHealthStory({
-    timeline,
-    longitudinalRisk,
-    forecast,
-    crossSource,
-    digitalTwin,
-  });
-const actionPlan = buildActionPlan({
-  digitalTwin,
-  forecast,
-  longitudinalRisk,
-  crossSource,
-});
-const executiveSummary = {
-  currentScore: forecast.currentScore,
-  trend: timeline.trendDirection,
-  forecastScore: forecast.forecastScore,
-  confidenceLevel: crossSource.confidenceLevel,
-  confidenceScore: crossSource.confidenceScore,
-  prioritySystem: digitalTwin.primarySystem,
-  nextBestAction: unifiedHealth.nextBestAction,
-};
+        if (!extractionResponse.ok || !extractionResult.success) {
+          alert(extractionResult.error || "PDF extraction failed.");
+          return;
+        }
 
- const generatedResultPayload: GeneratedIntelligenceResult = {
-  strategy: healthStrategy,
-  unifiedHealth,
-  digitalTwin,
-  crossSource,
-  timeline,
-  longitudinalRisk,
-  forecast,
-  healthStory,
-  actionPlan,
-  executiveSummary,
-  labTrends,
-};
+        extractedText = extractionResult.text || null;
+      } catch (error) {
+        console.error("Extraction failed", error);
+        alert("Extraction failed.");
+        return;
+      }
+    }
 
-setGeneratedResult(generatedResultPayload);
-setActiveGeneratedInsightId(insightId);
-setExpandedReportId(insightId);
+    if (!extractedText && selectedInsight.report_id) {
+      const { data: reportData } = await supabase
+        .from("uploaded_lab_files")
+        .select("extracted_text")
+        .eq("id", selectedInsight.report_id)
+        .single();
 
-  const intelligence = {
-    ...generateIntelligenceFromText(extractedText, selectedInsight.report_type),
-    ai_status: "Generated",
-    summary: isRadiologyReport ? radiologySummary.summary : markerSummary.summary,
-    key_findings: isRadiologyReport
-      ? radiologySummary.riskSignals
-      : markerSummary.keyFindings,
-    risk_signals:
-      clinicalPatterns.length > 0
+      extractedText = reportData?.extracted_text || null;
+    }
+
+    if (!extractedText || extractedText.length < 30) {
+      alert("No readable report text was extracted yet.");
+      return;
+    }
+
+    const detectedMarkers = detectLabMarkers(extractedText);
+    const { data: userData } = await supabase.auth.getUser();
+
+    if (!userData.user) {
+      alert("User session expired. Please log in again.");
+      return;
+    }
+
+    if (selectedInsight.report_id) {
+      const markerRows = detectedMarkers
+        .filter((marker) => marker.value !== null)
+        .map((marker) => ({
+          user_id: userData.user.id,
+          report_id: selectedInsight.report_id,
+          marker_name: marker.marker,
+          marker_value: marker.value,
+          marker_unit: marker.unit,
+        }));
+
+      if (markerRows.length > 0) {
+        await supabase.from("medical_report_markers").insert(markerRows);
+      }
+    }
+
+    const markerSummary = buildLabMarkerSummary(detectedMarkers);
+
+    let historicalMarkerRows: any[] = [];
+
+    const { data: userDataForHistory } = await supabase.auth.getUser();
+
+    if (userDataForHistory.user) {
+      const { data } = await supabase
+        .from("medical_report_markers")
+        .select("marker_name, marker_value, created_at")
+        .eq("user_id", userDataForHistory.user.id)
+        .order("created_at", { ascending: true });
+
+      historicalMarkerRows = data || [];
+    }
+
+    const labTrends = buildHistoricalLabTrends(
+      historicalMarkerRows
+        .filter((row) => row.marker_value !== null)
+        .map((row) => ({
+          marker: row.marker_name,
+          value: Number(row.marker_value),
+          date: row.created_at,
+        }))
+    );
+
+    const radiologyFindings = detectRadiologyFindings(extractedText);
+    const radiologySummary = buildRadiologySummary(radiologyFindings);
+    const isRadiologyReport = selectedInsight.report_type === "radiology";
+
+    const clinicalPatterns = detectClinicalPatterns(detectedMarkers);
+    const healthStrategy = buildHealthStrategy(detectedMarkers);
+
+    const unifiedHealth = buildUnifiedHealthIntelligence({
+      detectedMarkers,
+      healthStrategy,
+    });
+
+    const digitalTwin = buildPatientDigitalTwin({
+      markers: detectedMarkers,
+      radiologyFindings,
+    });
+
+    const crossSource = buildCrossSourceIntelligence({
+      detectedMarkers,
+      assessments: assessmentData,
+      dailyCheckIn,
+    });
+
+    const timeline = buildHealthTimeline([
+      ...assessmentData.map((item) => ({
+        source: "assessment" as const,
+        label: item.organ_name,
+        score: item.score,
+        date: item.created_at,
+      })),
+
+      ...(dailyCheckIn
+        ? [
+            {
+              source: "checkin" as const,
+              label: "Daily Check-In",
+              score: dailyCheckIn.wellness_score || 0,
+              date: dailyCheckIn.created_at,
+            },
+          ]
+        : []),
+    ]);
+
+    const longitudinalRisk = buildLongitudinalRisk(timeline);
+    const forecast = buildForecast(detectedMarkers, crossSource.confidenceScore);
+
+    const healthStory = buildHealthStory({
+      timeline,
+      longitudinalRisk,
+      forecast,
+      crossSource,
+      digitalTwin,
+    });
+
+    const actionPlan = buildActionPlan({
+      digitalTwin,
+      forecast,
+      longitudinalRisk,
+      crossSource,
+    });
+
+    const executiveSummary = {
+      currentScore: forecast.currentScore,
+      trend: timeline.trendDirection,
+      forecastScore: forecast.forecastScore,
+      confidenceLevel: crossSource.confidenceLevel,
+      confidenceScore: crossSource.confidenceScore,
+      prioritySystem: digitalTwin.primarySystem,
+      nextBestAction: unifiedHealth.nextBestAction,
+    };
+
+    const generatedResultPayload: GeneratedIntelligenceResult = {
+      strategy: healthStrategy,
+      unifiedHealth,
+      digitalTwin,
+      crossSource,
+      timeline,
+      longitudinalRisk,
+      forecast,
+      healthStory,
+      actionPlan,
+      executiveSummary,
+      labTrends,
+    };
+
+    setGeneratedResult(generatedResultPayload);
+    setActiveGeneratedInsightId(insightId);
+    setExpandedReportId(insightId);
+
+    const intelligence = {
+      ...generateIntelligenceFromText(extractedText, selectedInsight.report_type),
+      ai_status: "Generated",
+      summary: isRadiologyReport ? radiologySummary.summary : markerSummary.summary,
+      key_findings: isRadiologyReport
+        ? radiologySummary.riskSignals
+        : markerSummary.keyFindings,
+      risk_signals:
+        clinicalPatterns.length > 0
+          ? clinicalPatterns
+              .map(
+                (pattern) =>
+                  `${pattern.title} (${pattern.severity}): ${pattern.summary}`
+              )
+              .join("\n")
+          : markerSummary.riskSignals,
+      recommendations: isRadiologyReport
+        ? radiologySummary.recommendations
+        : clinicalPatterns.length > 0
         ? clinicalPatterns
-            .map(
-              (pattern) =>
-                `${pattern.title} (${pattern.severity}): ${pattern.summary}`
-            )
+            .map((pattern) => `${pattern.title}: ${pattern.suggestedFocus}`)
             .join("\n")
-        : markerSummary.riskSignals,
-    recommendations: isRadiologyReport
-      ? radiologySummary.recommendations
-      : clinicalPatterns.length > 0
-      ? clinicalPatterns
-          .map((pattern) => `${pattern.title}: ${pattern.suggestedFocus}`)
-          .join("\n")
-      : markerSummary.recommendations,
-    doctor_brief: `Detected lab markers:
+        : markerSummary.recommendations,
+      doctor_brief: `Detected lab markers:
 ${markerSummary.keyFindings}
 
 Unified Health Intelligence:
@@ -591,379 +607,582 @@ Next Best Action:
 ${unifiedHealth.nextBestAction}
 
 Clinical note: This is an educational interpretation and should be reviewed by a licensed healthcare professional.`,
-  };
+    };
 
-  const { error } = await supabase
-  .from("health_insights")
-  .update(intelligence)
-  .eq("id", insightId);
+    const { error } = await supabase
+      .from("health_insights")
+      .update(intelligence)
+      .eq("id", insightId);
 
-if (error) {
-  alert("Could not generate intelligence: " + error.message);
-  return;
-}
-
-const { error: saveGeneratedResultError } = await supabase
-  .from("generated_intelligence_results")
-  .upsert(
-    {
-      user_id: userData.user.id,
-      insight_id: insightId,
-      report_id: selectedInsight.report_id,
-      result: generatedResultPayload,
-      updated_at: new Date().toISOString(),
-    },
-    {
-      onConflict: "user_id,insight_id",
+    if (error) {
+      alert("Could not generate intelligence: " + error.message);
+      return;
     }
-  );
 
-if (saveGeneratedResultError) {
-  alert(
-    "Generated intelligence was created, but could not be saved: " +
-      saveGeneratedResultError.message
-  );
-  return;
-}
+    const { error: saveGeneratedResultError } = await supabase
+      .from("generated_intelligence_results")
+      .upsert(
+        {
+          user_id: userData.user.id,
+          insight_id: insightId,
+          report_id: selectedInsight.report_id,
+          result: generatedResultPayload,
+          updated_at: new Date().toISOString(),
+        },
+        {
+          onConflict: "user_id,insight_id",
+        }
+      );
 
-  setHealthInsights((currentInsights) =>
-    currentInsights.map((item) =>
-      item.id === insightId
-        ? {
-            ...item,
-            ...intelligence,
-            extraction_status: "Completed",
-            extracted_text: extractedText,
-            extracted_at: new Date().toISOString(),
-          }
-        : item
-    )
-  );
-}
+    if (saveGeneratedResultError) {
+      alert(
+        "Generated intelligence was created, but could not be saved: " +
+          saveGeneratedResultError.message
+      );
+      return;
+    }
+
+    setHealthInsights((currentInsights) =>
+      currentInsights.map((item) =>
+        item.id === insightId
+          ? {
+              ...item,
+              ...intelligence,
+              extraction_status: "Completed",
+              extracted_text: extractedText,
+              extracted_at: new Date().toISOString(),
+            }
+          : item
+      )
+    );
+  }
+
   function getReportTypeLabel(type: string | null) {
-    if (type === "lab") return "Laboratory Report";
-    if (type === "radiology") return "Radiology Report";
-    if (type === "discharge") return "Discharge Summary";
-    return "Medical Report";
+    if (type === "lab") return text("Laboratory Report", "تقرير مختبر");
+    if (type === "radiology") return text("Radiology Report", "تقرير أشعة");
+    if (type === "discharge") return text("Discharge Summary", "ملخص خروج");
+    if (type === "clinical") return text("Clinical Report", "تقرير سريري");
+    if (type === "prescription") return text("Prescription", "وصفة طبية");
+    return text("Medical Report", "تقرير طبي");
+  }
+
+  function formatDate(value: string | null | undefined) {
+    if (!value) return text("Not available", "غير متاح");
+
+    return new Date(value).toLocaleString(isArabicUi ? "ar-AE" : "en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   }
 
   const visibleHealthInsights = healthInsights.slice(0, visibleReportsCount);
 
-const totalReportInsights = healthInsights.length;
-const generatedReportsCount = healthInsights.filter(
-  (item) => item.ai_status === "Generated"
-).length;
-const pendingReportsCount = Math.max(totalReportInsights - generatedReportsCount, 0);
-const hasOpenGeneratedResult = Boolean(generatedResult && activeGeneratedInsightId);
+  const totalReportInsights = healthInsights.length;
+  const generatedReportsCount = healthInsights.filter(
+    (item) => item.ai_status === "Generated"
+  ).length;
+  const pendingReportsCount = Math.max(totalReportInsights - generatedReportsCount, 0);
+  const completedExtractionCount = healthInsights.filter(
+    (item) => item.extraction_status === "Completed"
+  ).length;
+  const hasOpenGeneratedResult = Boolean(generatedResult && activeGeneratedInsightId);
 
-const activeGeneratedReport = activeGeneratedInsightId
-  ? healthInsights.find((item) => item.id === activeGeneratedInsightId)
-  : null;
+  const intelligenceNextStep =
+    totalReportInsights === 0
+      ? {
+          label: text("START HERE", "ابدأ هنا"),
+          title: text("Upload a medical report first", "ارفع تقريرًا طبيًا أولًا"),
+          description: text(
+            "Add a lab report, radiology report, discharge summary, prescription, or medical document before generating intelligence.",
+            "أضف تقرير مختبر، تقرير أشعة، ملخص خروج، وصفة، أو مستند طبي قبل توليد الذكاء."
+          ),
+          href: "/lab-upload",
+          buttonText: text("Upload Report", "رفع تقرير"),
+        }
+      : hasOpenGeneratedResult
+      ? {
+          label: text("RESULT READY", "النتيجة جاهزة"),
+          title: text("Review your generated intelligence", "راجع الذكاء المولّد"),
+          description: text(
+            "Your patient-friendly report and doctor-ready brief are available below. The next best step is to continue to your Health Plan.",
+            "ملخص المريض والملخص الجاهز للطبيب متاحان أدناه. الخطوة التالية هي المتابعة إلى خطة الصحة."
+          ),
+          href: "/health-plan",
+          buttonText: text("Open Health Plan", "افتح خطة الصحة"),
+        }
+      : generatedReportsCount > 0
+      ? {
+          label: text("SAVED RESULTS", "نتائج محفوظة"),
+          title: text("Open a saved intelligence result", "افتح نتيجة ذكاء محفوظة"),
+          description: text(
+            "Some reports already have generated intelligence. Open a saved result or generate intelligence for another report.",
+            "بعض التقارير لديها ذكاء مولّد مسبقًا. افتح نتيجة محفوظة أو ولّد ذكاء لتقرير آخر."
+          ),
+          href: "/reports",
+          buttonText: text("Reports Library", "مكتبة التقارير"),
+        }
+      : {
+          label: text("READY TO GENERATE", "جاهز للتوليد"),
+          title: text("Generate intelligence for your report", "ولّد الذكاء لهذا التقرير"),
+          description: text(
+            "Choose a report below and press Generate to create a patient-friendly summary, doctor-ready brief, and follow-up direction.",
+            "اختر تقريرًا بالأسفل واضغط توليد الذكاء لإنشاء ملخص للمريض وملخص جاهز للطبيب واتجاه متابعة."
+          ),
+          href: "#report-intelligence-list",
+          buttonText: text("Go to Reports", "اذهب إلى التقارير"),
+        };
 
-const intelligenceNextStep =
-  totalReportInsights === 0
-    ? {
-        label: "START HERE",
-        title: "Upload a medical report first",
-        description:
-          "Add a lab report, radiology report, discharge summary, prescription, or medical document before generating intelligence.",
-        href: "/lab-upload",
-        buttonText: "Upload Report",
-      }
-    : hasOpenGeneratedResult
-    ? {
-        label: isArabicUi ? "\u0627\u0644\u0646\u062a\u064a\u062c\u0629 \u062c\u0627\u0647\u0632\u0629" : "RESULT READY",
-        title: isArabicUi ? "\u0631\u0627\u062c\u0639 \u0627\u0644\u0630\u0643\u0627\u0621 \u0627\u0644\u0645\u0648\u0644\u062f" : "Review your generated intelligence",
-        description:
-          isArabicUi ? "\u0645\u0644\u062e\u0635 \u0627\u0644\u0645\u0631\u064a\u0636 \u0648\u0627\u0644\u0645\u0644\u062e\u0635 \u0627\u0644\u062c\u0627\u0647\u0632 \u0644\u0644\u0637\u0628\u064a\u0628 \u0645\u062a\u0627\u062d\u0627\u0646 \u0623\u062f\u0646\u0627\u0647. \u0627\u0644\u062e\u0637\u0648\u0629 \u0627\u0644\u062a\u0627\u0644\u064a\u0629 \u0647\u064a \u0627\u0644\u0645\u062a\u0627\u0628\u0639\u0629 \u0625\u0644\u0649 \u062e\u0637\u0629 \u0627\u0644\u0635\u062d\u0629." : "Your patient-friendly report and doctor-ready brief are available below. The next best step is to continue to your Health Plan.",
-        href: "/health-plan",
-        buttonText: isArabicUi ? "\u0627\u0641\u062a\u062d \u062e\u0637\u0629 \u0627\u0644\u0635\u062d\u0629" : "Open Health Plan",
-      }
-    : generatedReportsCount > 0
-    ? {
-        label: isArabicUi ? "\u0646\u062a\u0627\u0626\u062c \u0645\u062d\u0641\u0648\u0638\u0629" : "SAVED RESULTS",
-        title: isArabicUi ? "\u0627\u0641\u062a\u062d \u0646\u062a\u064a\u062c\u0629 \u0630\u0643\u0627\u0621 \u0645\u062d\u0641\u0648\u0638\u0629" : "Open a saved intelligence result",
-        description:
-          isArabicUi ? "\u0628\u0639\u0636 \u0627\u0644\u062a\u0642\u0627\u0631\u064a\u0631 \u0644\u062f\u064a\u0647\u0627 \u0630\u0643\u0627\u0621 \u0645\u0648\u0644\u062f \u0645\u0633\u0628\u0642\u064b\u0627. \u0627\u0641\u062a\u062d \u0646\u062a\u064a\u062c\u0629 \u0645\u062d\u0641\u0648\u0638\u0629 \u0623\u0648 \u0648\u0644\u062f \u0630\u0643\u0627\u0621 \u0644\u062a\u0642\u0631\u064a\u0631 \u0622\u062e\u0631." : "Some reports already have generated intelligence. Open a saved result or generate intelligence for another report.",
-        href: "/reports",
-        buttonText: isArabicUi ? "\u0645\u0643\u062a\u0628\u0629 \u0627\u0644\u062a\u0642\u0627\u0631\u064a\u0631" : "Reports Library",
-      }
-    : {
-        label: isArabicUi ? "\u062c\u0627\u0647\u0632 \u0644\u0644\u062a\u0648\u0644\u064a\u062f" : "READY TO GENERATE",
-        title: isArabicUi ? "\u0648\u0644\u062f \u0627\u0644\u0630\u0643\u0627\u0621 \u0644\u0647\u0630\u0627 \u0627\u0644\u062a\u0642\u0631\u064a\u0631" : "Generate intelligence for your report",
-        description:
-          isArabicUi ? "\u0627\u062e\u062a\u0631 \u062a\u0642\u0631\u064a\u0631\u064b\u0627 \u0628\u0627\u0644\u0623\u0633\u0641\u0644 \u0648\u0627\u0636\u063a\u0637 \u062a\u0648\u0644\u064a\u062f \u0627\u0644\u0630\u0643\u0627\u0621 \u0644\u0625\u0646\u0634\u0627\u0621 \u0645\u0644\u062e\u0635 \u0644\u0644\u0645\u0631\u064a\u0636 \u0648\u0645\u0644\u062e\u0635 \u062c\u0627\u0647\u0632 \u0644\u0644\u0637\u0628\u064a\u0628 \u0648\u0627\u062a\u062c\u0627\u0647 \u0645\u062a\u0627\u0628\u0639\u0629." : "Choose a report below and press Generate to create a patient-friendly summary, doctor-ready brief, and follow-up direction.",
-        href: "#report-intelligence-list",
-        buttonText: isArabicUi ? "\u0627\u0630\u0647\u0628 \u0625\u0644\u0649 \u0627\u0644\u062a\u0642\u0627\u0631\u064a\u0631" : "Go to Reports",
-      };
   const hasOlderReports = healthInsights.length > visibleReportsCount;
   const canShowLessReports = visibleReportsCount > REPORTS_PAGE_SIZE;
 
   return (
-    <main className="intelligenceConversionPage">
-      <div className="intelligenceConversionContainer">
+    <main
+      className="ohPageShell"
+      dir={isArabicUi ? "rtl" : "ltr"}
+      lang={isArabicUi ? "ar" : "en"}
+    >
+      <div className="ohContainer ohStack large" style={{ padding: "28px 0 56px" }}>
         <PageBackActions />
 
-        <section
-          className="assistantHeader"
-          dir={isArabicUi ? "rtl" : "ltr"}
-          lang={isArabicUi ? "ar" : "en"}
-        >
-          <p className="assistantBadge">
-            {isArabicUi ? "\u0645\u0631\u0643\u0632 \u0627\u0644\u0630\u0643\u0627\u0621 \u0641\u064a OrganHeal" : "ORGANHEAL INTELLIGENCE CENTER"}
-          </p>
+        <section className="ohHero">
+          <div className="ohHeroGrid">
+            <div>
+              <p className="ohEyebrow">
+                {text("OrganHeal Intelligence Center", "مركز الذكاء في OrganHeal")}
+              </p>
 
-          <h1>
-            {isArabicUi ? "\u0645\u0631\u0643\u0632 \u0627\u0644\u0630\u0643\u0627\u0621 \u0627\u0644\u0635\u062d\u064a" : "Health Intelligence Center"}
-          </h1>
+              <h1 className="ohTitle">
+                {text("Health Intelligence Center", "مركز الذكاء الصحي")}
+              </h1>
 
-          <p>
-            {isArabicUi
-              ? "\u0635\u0641\u062d\u0629 \u0645\u0631\u0643\u0632\u0629 \u0644\u0645\u0644\u0641\u0643 \u0627\u0644\u0635\u062d\u064a \u0648\u062a\u0642\u0627\u0631\u064a\u0631\u0643 \u0627\u0644\u0637\u0628\u064a\u0629 \u0648\u0627\u0644\u0645\u0644\u062e\u0635\u0627\u062a \u0627\u0644\u062c\u0627\u0647\u0632\u0629 \u0644\u0644\u0637\u0628\u064a\u0628."
-              : "A focused view for your health profile, medical reports, top opportunities, and doctor-ready intelligence."}
-          </p>
+              <p className="ohLead">
+                {text(
+                  "A focused view for your health profile, medical reports, top opportunities, and doctor-ready intelligence.",
+                  "صفحة مركزة لملفك الصحي، تقاريرك الطبية، أهم الفرص الصحية، والملخصات الجاهزة للطبيب."
+                )}
+              </p>
+
+              <div className="ohButtonRow" style={{ marginTop: "24px" }}>
+                <Link href="/lab-upload" className="primaryBtn">
+                  {text("Upload Report", "رفع تقرير")}
+                </Link>
+
+                <Link href="/reports" className="secondaryBtn">
+                  {text("Reports Library", "مكتبة التقارير")}
+                </Link>
+
+                <Link href="/health-plan" className="secondaryBtn">
+                  {text("Health Plan", "خطة الصحة")}
+                </Link>
+              </div>
+            </div>
+
+            <div className="ohCard">
+              <div className="ohCardHeader">
+                <div>
+                  <p className="ohMetricLabel">{intelligenceNextStep.label}</p>
+
+                  <h2 className="ohCardTitle" style={{ marginTop: "8px" }}>
+                    {intelligenceNextStep.title}
+                  </h2>
+                </div>
+
+                <span className="ohStatusBadge neutral">
+                  {totalReportInsights} {text("reports", "تقارير")}
+                </span>
+              </div>
+
+              <p className="ohCardText">{intelligenceNextStep.description}</p>
+
+              <div className="ohDivider" />
+
+              <Link href={intelligenceNextStep.href} className="primaryBtn">
+                {intelligenceNextStep.buttonText}
+              </Link>
+            </div>
+          </div>
         </section>
 
-        <section className="chatWindow">
-          {loading && (
-            <div className="resultBox">
-              <p className="sectionLabel">LOADING INTELLIGENCE</p>
-              <h2>Preparing your health intelligence...</h2>
+        <section className="ohMetricGrid">
+          <article className="ohMetricCard">
+            <span className="ohMetricLabel">
+              {text("Report Insights", "ذكاء التقارير")}
+            </span>
+            <span className="ohMetricValue">{totalReportInsights}</span>
+            <span className="ohMetricHint">
+              {text("available report records", "سجلات تقارير متاحة")}
+            </span>
+          </article>
+
+          <article className="ohMetricCard">
+            <span className="ohMetricLabel">
+              {text("Generated", "مولّد")}
+            </span>
+            <span className="ohMetricValue">{generatedReportsCount}</span>
+            <span className="ohMetricHint">
+              {text("ready for review", "جاهز للمراجعة")}
+            </span>
+          </article>
+
+          <article className="ohMetricCard">
+            <span className="ohMetricLabel">
+              {text("Pending", "بانتظار")}
+            </span>
+            <span className="ohMetricValue">{pendingReportsCount}</span>
+            <span className="ohMetricHint">
+              {text("need generation", "تحتاج توليد")}
+            </span>
+          </article>
+
+          <article className="ohMetricCard">
+            <span className="ohMetricLabel">
+              {text("Extraction Completed", "استخراج مكتمل")}
+            </span>
+            <span className="ohMetricValue">{completedExtractionCount}</span>
+            <span className="ohMetricHint">
+              {text("ready for intelligence", "جاهز للذكاء")}
+            </span>
+          </article>
+        </section>
+
+        {loading && (
+          <section className="ohCard">
+            <p className="ohEyebrow">
+              {text("Loading Intelligence", "تحميل الذكاء")}
+            </p>
+
+            <h2 className="ohCardTitle">
+              {text(
+                "Preparing your health intelligence...",
+                "جاري تحضير الذكاء الصحي..."
+              )}
+            </h2>
+
+            <p className="ohCardText">
+              {text(
+                "OrganHeal is loading your assessments, check-ins, reports, and saved intelligence results.",
+                "يقوم OrganHeal بتحميل التقييمات، Check-Ins، التقارير، ونتائج الذكاء المحفوظة."
+              )}
+            </p>
+          </section>
+        )}
+
+        {!loading && message && !healthEngine && healthInsights.length === 0 && (
+          <section className="ohEmptyState">
+            <h2>{text("Not enough data yet", "لا توجد بيانات كافية بعد")}</h2>
+            <p>{message}</p>
+
+            <div className="ohButtonRow" style={{ justifyContent: "center" }}>
+              <Link href="/assessment" className="primaryBtn">
+                {text("Start Assessment", "ابدأ تقييم")}
+              </Link>
+
+              <Link href="/lab-upload" className="secondaryBtn">
+                {text("Upload Report", "رفع تقرير")}
+              </Link>
             </div>
-          )}
+          </section>
+        )}
 
-          {!loading && message && !healthEngine && healthInsights.length === 0 && (
-            <div className="resultBox">
-              <p className="sectionLabel">INTELLIGENCE STATUS</p>
-              <h2>Not enough data yet</h2>
-              <p>{message}</p>
+        {!loading && healthEngine && (
+          <section className="ohStack">
+            <HealthPassportCard
+              healthProfile={healthEngine.healthProfile}
+              overallScore={healthEngine.overallScore}
+              healthAgeStatus={healthEngine.healthAgeStatus}
+              priorityOrgan={healthEngine.priorityOrgan}
+              potentialScore={healthEngine.potentialScore}
+            />
+
+            <TopOpportunitiesCard
+              strongestOrgan={healthEngine.strongestOrgan}
+              riskPattern={healthEngine.riskPattern}
+              potentialGain={healthEngine.potentialGain}
+              opportunities={healthEngine.opportunities.slice(0, 3)}
+            />
+
+            <DoctorReadySummaryCard
+              overallScore={healthEngine.overallScore}
+              priorityOrgan={healthEngine.priorityOrgan}
+              riskPattern={healthEngine.riskPattern}
+              opportunityTitle={healthEngine.opportunityTitle}
+              bestNextAction={healthEngine.bestNextAction}
+            />
+          </section>
+        )}
+
+        {!loading && (
+          <section className="ohCard" id="report-intelligence-list">
+            <div className="ohCardHeader">
+              <div>
+                <p className="ohMetricLabel">
+                  {text("Report Intelligence", "ذكاء التقارير")}
+                </p>
+
+                <h2 className="ohCardTitle">
+                  {text(
+                    "Generate or review report intelligence",
+                    "ولّد أو راجع ذكاء التقارير"
+                  )}
+                </h2>
+
+                <p className="ohCardText">
+                  {text(
+                    "Open a medical report, generate intelligence, or review saved patient and doctor-ready summaries.",
+                    "افتح تقريرًا طبيًا، ولّد الذكاء، أو راجع ملخصات المريض والملخصات الجاهزة للطبيب."
+                  )}
+                </p>
+              </div>
+
+              <span className="ohStatusBadge neutral">
+                {visibleHealthInsights.length}/{healthInsights.length}
+              </span>
             </div>
-          )}
 
-          {!loading && healthEngine && (
-  <HealthPassportCard
-    healthProfile={healthEngine.healthProfile}
-    overallScore={healthEngine.overallScore}
-    healthAgeStatus={healthEngine.healthAgeStatus}
-    priorityOrgan={healthEngine.priorityOrgan}
-    potentialScore={healthEngine.potentialScore}
-  />
-)}
+            <MedicalReportList hasReports={healthInsights.length > 0}>
+              {visibleHealthInsights.map((item) => {
+                const isGenerated =
+                  item.ai_status === "Generated" &&
+                  item.extraction_status === "Completed";
 
-{!loading && healthEngine && (
-  <TopOpportunitiesCard
-    strongestOrgan={healthEngine.strongestOrgan}
-    riskPattern={healthEngine.riskPattern}
-    potentialGain={healthEngine.potentialGain}
-    opportunities={healthEngine.opportunities.slice(0, 3)}
-  />
-)}
+                const isActiveGeneratedReport = activeGeneratedInsightId === item.id;
+                const isExpandedReport = expandedReportId === item.id;
 
-{!loading && healthEngine && (
-  <DoctorReadySummaryCard
-    overallScore={healthEngine.overallScore}
-    priorityOrgan={healthEngine.priorityOrgan}
-    riskPattern={healthEngine.riskPattern}
-    opportunityTitle={healthEngine.opportunityTitle}
-    bestNextAction={healthEngine.bestNextAction}
-  />
-)}
+                return (
+                  <MedicalReportCard
+                    key={item.id}
+                    fileName={item.file_name || "Medical report"}
+                    reportTypeLabel={getReportTypeLabel(item.report_type)}
+                    uploadedAtText={formatDate(item.uploaded_at || item.created_at)}
+                    extractionStatus={item.extraction_status || "Pending"}
+                    isGenerated={isGenerated}
+                    isExpanded={isExpandedReport}
+                    canOpen={Boolean(item.file_path)}
+                    onOpen={() => openMedicalReport(item.file_path)}
+                    onGenerate={() => {
+                      generateReportIntelligence(item.id);
+                    }}
+                    onViewGenerated={() => openSavedGeneratedResult(item.id)}
+                    onHideGenerated={() => {
+                      setExpandedReportId(null);
 
-          {!loading && (
-  <MedicalReportList hasReports={healthInsights.length > 0}>
-    {visibleHealthInsights.map((item) => {
-      const isGenerated =
-  item.ai_status === "Generated" &&
-  item.extraction_status === "Completed";
+                      if (activeGeneratedInsightId === item.id) {
+                        setGeneratedResult(null);
+                        setActiveGeneratedInsightId(null);
+                      }
+                    }}
+                  >
+                    {isExpandedReport && (
+                      <>
+                        {isActiveGeneratedReport && generatedResult && (
+                          <>
+                            <PatientReportPdfCard
+                              fileName={item.file_name || "Medical report"}
+                              uploadedAtText={formatDate(item.uploaded_at || item.created_at)}
+                              summary={item.summary}
+                              keyFindings={item.key_findings}
+                              riskSignals={item.risk_signals}
+                              recommendations={item.recommendations}
+                              healthStory={generatedResult.healthStory}
+                              executiveSummary={generatedResult.executiveSummary}
+                            />
 
-const isActiveGeneratedReport = activeGeneratedInsightId === item.id;
-const isExpandedReport = expandedReportId === item.id;
+                            <DoctorBriefReportCard
+                              fileName={item.file_name || "Medical report"}
+                              reportTypeLabel={getReportTypeLabel(item.report_type)}
+                              uploadedAtText={formatDate(item.uploaded_at || item.created_at)}
+                              summary={item.summary}
+                              keyFindings={item.key_findings}
+                              riskSignals={item.risk_signals}
+                              recommendations={item.recommendations}
+                              doctorBrief={item.doctor_brief}
+                              executiveSummary={generatedResult.executiveSummary}
+                            />
 
-return (
-  <MedicalReportCard
-          key={item.id}
-          fileName={item.file_name || "Medical report"}
-          reportTypeLabel={getReportTypeLabel(item.report_type)}
-          uploadedAtText={new Date(
-            item.uploaded_at || item.created_at
-          ).toLocaleString()}
-          extractionStatus={item.extraction_status || "Pending"}
-          isGenerated={isGenerated}
-isExpanded={isExpandedReport}
-canOpen={Boolean(item.file_path)}
-onOpen={() => openMedicalReport(item.file_path)}
-onGenerate={() => {
-  generateReportIntelligence(item.id);
-}}
-onViewGenerated={() => openSavedGeneratedResult(item.id)}
-onHideGenerated={() => {
-  setExpandedReportId(null);
+                            <GeneratedReportDetailsCard
+                              medicalCategory={item.medical_category}
+                              summary={item.summary}
+                              keyFindings={item.key_findings}
+                              riskSignals={item.risk_signals}
+                              recommendations={item.recommendations}
+                              doctorBrief={item.doctor_brief}
+                            />
 
-  if (activeGeneratedInsightId === item.id) {
-    setGeneratedResult(null);
-    setActiveGeneratedInsightId(null);
-  }
-}}
-        >
-          {isExpandedReport && (
-  <>
-    {isActiveGeneratedReport && generatedResult && (
-      <>
-        <PatientReportPdfCard
-          fileName={item.file_name || "Medical report"}
-          uploadedAtText={new Date(
-            item.uploaded_at || item.created_at
-          ).toLocaleString()}
-          summary={item.summary}
-          keyFindings={item.key_findings}
-          riskSignals={item.risk_signals}
-          recommendations={item.recommendations}
-          healthStory={generatedResult.healthStory}
-          executiveSummary={generatedResult.executiveSummary}
-        />
+                            {generatedResult.executiveSummary && (
+                              <ExecutiveSummaryCard summary={generatedResult.executiveSummary} />
+                            )}
 
-        <DoctorBriefReportCard
-          fileName={item.file_name || "Medical report"}
-          reportTypeLabel={getReportTypeLabel(item.report_type)}
-          uploadedAtText={new Date(
-            item.uploaded_at || item.created_at
-          ).toLocaleString()}
-          summary={item.summary}
-          keyFindings={item.key_findings}
-          riskSignals={item.risk_signals}
-          recommendations={item.recommendations}
-          doctorBrief={item.doctor_brief}
-          executiveSummary={generatedResult.executiveSummary}
-        />
+                            {generatedResult.healthStory && (
+                              <HealthStoryCard story={generatedResult.healthStory} />
+                            )}
 
-        <GeneratedReportDetailsCard
-          medicalCategory={item.medical_category}
-          summary={item.summary}
-          keyFindings={item.key_findings}
-          riskSignals={item.risk_signals}
-          recommendations={item.recommendations}
-          doctorBrief={item.doctor_brief}
-        />
+                            {generatedResult.strategy && (
+                              <PersonalHealthStrategyCard strategy={generatedResult.strategy} />
+                            )}
 
-        {generatedResult.executiveSummary && (
-          <ExecutiveSummaryCard summary={generatedResult.executiveSummary} />
+                            {generatedResult.actionPlan && (
+                              <ActionPlanCard actionPlan={generatedResult.actionPlan} />
+                            )}
+
+                            {generatedResult.unifiedHealth && (
+                              <UnifiedHealthCard unifiedHealth={generatedResult.unifiedHealth} />
+                            )}
+
+                            <TimelineCard timeline={generatedResult.timeline} />
+                            <LabTrendsCard labTrends={generatedResult.labTrends} />
+
+                            <LongitudinalRiskCard
+                              longitudinalRisk={generatedResult.longitudinalRisk}
+                            />
+
+                            <CrossSourceCard crossSource={generatedResult.crossSource} />
+
+                            <DigitalTwinCard digitalTwin={generatedResult.digitalTwin} />
+
+                            <ForecastCard forecast={generatedResult.forecast} />
+
+                            <div className="ohCard">
+                              <div className="ohCardHeader">
+                                <div>
+                                  <p className="ohMetricLabel">
+                                    {text("Next Step", "الخطوة التالية")}
+                                  </p>
+
+                                  <h2 className="ohCardTitle">
+                                    {text(
+                                      "Continue your health journey",
+                                      "تابع رحلتك الصحية"
+                                    )}
+                                  </h2>
+
+                                  <p className="ohCardText">
+                                    {text(
+                                      "Your report intelligence is now available. You can return to your reports library, continue your follow-up plan, or go back to your dashboard overview.",
+                                      "أصبح ذكاء التقرير متاحًا الآن. يمكنك العودة إلى مكتبة التقارير، متابعة خطة الصحة، أو الرجوع إلى لوحة التحكم."
+                                    )}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="ohButtonRow">
+                                <Link href="/reports" className="secondaryBtn">
+                                  {text("Reports Library", "مكتبة التقارير")}
+                                </Link>
+
+                                <Link href="/health-plan" className="primaryBtn">
+                                  {text("Open Health Plan", "افتح خطة الصحة")}
+                                </Link>
+
+                                <Link href="/dashboard" className="secondaryBtn">
+                                  {text("Dashboard", "لوحة التحكم")}
+                                </Link>
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </>
+                    )}
+                  </MedicalReportCard>
+                );
+              })}
+            </MedicalReportList>
+
+            {healthInsights.length > REPORTS_PAGE_SIZE && (
+              <div
+                className="ohButtonRow"
+                style={{
+                  justifyContent: "center",
+                  marginTop: "18px",
+                }}
+              >
+                {hasOlderReports && (
+                  <button
+                    className="secondaryBtn"
+                    onClick={() =>
+                      setVisibleReportsCount((currentCount) =>
+                        Math.min(currentCount + REPORTS_PAGE_SIZE, healthInsights.length)
+                      )
+                    }
+                  >
+                    {text("Show Older Reports", "عرض تقارير أقدم")}
+                  </button>
+                )}
+
+                {canShowLessReports && (
+                  <button
+                    className="secondaryBtn"
+                    onClick={() => {
+                      setVisibleReportsCount(REPORTS_PAGE_SIZE);
+                      setExpandedReportId(null);
+                      setGeneratedResult(null);
+                      setActiveGeneratedInsightId(null);
+                    }}
+                  >
+                    {text("Show Less", "عرض أقل")}
+                  </button>
+                )}
+              </div>
+            )}
+          </section>
         )}
-        {generatedResult.healthStory && (
-          <HealthStoryCard story={generatedResult.healthStory} />
-        )}
 
-        
-
-
-        {generatedResult.strategy && (
-          <PersonalHealthStrategyCard strategy={generatedResult.strategy} />
-        )}
-{generatedResult.actionPlan && (
-          <ActionPlanCard actionPlan={generatedResult.actionPlan} />
-        )}
-
-        {generatedResult.unifiedHealth && (
-          <UnifiedHealthCard unifiedHealth={generatedResult.unifiedHealth} />
-        )}
-
-        <TimelineCard timeline={generatedResult.timeline} />
-        <LabTrendsCard labTrends={generatedResult.labTrends} />
-
-        
-
-
-        <LongitudinalRiskCard
-          longitudinalRisk={generatedResult.longitudinalRisk}
-        />
-<CrossSourceCard crossSource={generatedResult.crossSource} />
-
-        <DigitalTwinCard digitalTwin={generatedResult.digitalTwin} />
-
-        <ForecastCard forecast={generatedResult.forecast} />
-                <div className="resultBox">
-          <p className="sectionLabel">{isArabicUi ? "\u0627\u0644\u062e\u0637\u0648\u0629 \u0627\u0644\u062a\u0627\u0644\u064a\u0629" : "NEXT STEP"}</p>
-
-          <h2>{isArabicUi ? "\u062a\u0627\u0628\u0639 \u0631\u062d\u0644\u062a\u0643 \u0627\u0644\u0635\u062d\u064a\u0629" : "Continue your health journey"}</h2>
-
-          <p
-            style={{
-              opacity: 0.82,
-              lineHeight: 1.7,
-              maxWidth: "760px",
-              margin: "0 auto 22px",
-            }}
-          >
-            {isArabicUi ? "\u0623\u0635\u0628\u062d \u0630\u0643\u0627\u0621 \u0627\u0644\u062a\u0642\u0631\u064a\u0631 \u0645\u062a\u0627\u062d\u064b\u0627 \u0627\u0644\u0622\u0646. \u064a\u0645\u0643\u0646\u0643 \u0627\u0644\u0639\u0648\u062f\u0629 \u0625\u0644\u0649 \u0645\u0643\u062a\u0628\u0629 \u0627\u0644\u062a\u0642\u0627\u0631\u064a\u0631\u060c \u0645\u062a\u0627\u0628\u0639\u0629 \u062e\u0637\u0629 \u0627\u0644\u0635\u062d\u0629\u060c \u0623\u0648 \u0627\u0644\u0631\u062c\u0648\u0639 \u0625\u0644\u0649 \u0644\u0648\u062d\u0629 \u0627\u0644\u062a\u062d\u0643\u0645." : "Your report intelligence is now available. You can return to your reports library, continue your follow-up plan, or go back to your dashboard overview."}
-          </p>
-
-          <div
-            style={{
-              display: "flex",
-              gap: "12px",
-              flexWrap: "wrap",
-              justifyContent: "center",
-            }}
-          >
-            <a href="/reports">
-              <button className="secondaryBtn">{isArabicUi ? "\u0645\u0643\u062a\u0628\u0629 \u0627\u0644\u062a\u0642\u0627\u0631\u064a\u0631" : "Reports Library"}</button>
-            </a>
-
-            <a href="/health-plan">
-              <button className="primaryBtn">{isArabicUi ? "\u0627\u0641\u062a\u062d \u062e\u0637\u0629 \u0627\u0644\u0635\u062d\u0629" : "Open Health Plan"}</button>
-            </a>
-
-            <a href="/dashboard">
-              <button className="secondaryBtn">{isArabicUi ? "\u0644\u0648\u062d\u0629 \u0627\u0644\u062a\u062d\u0643\u0645" : "Dashboard"}</button>
-            </a>
+        <section className="ohTrustNotice">
+          <span aria-hidden="true">🛡️</span>
+          <div>
+            <strong>
+              {text("Medical safety reminder", "تذكير السلامة الطبية")}
+            </strong>
+            <br />
+            {text(
+              "Health intelligence is an educational interpretation of your assessments, check-ins, and uploaded reports. It does not replace diagnosis, treatment, emergency care, or a licensed clinician.",
+              "الذكاء الصحي هو تفسير تعليمي للتقييمات، Check-Ins، والتقارير المرفوعة. لا يستبدل التشخيص أو العلاج أو الرعاية الطارئة أو الطبيب المختص."
+            )}
           </div>
-        </div>
-      </>
-    )}
-  </>
-)}
-        </MedicalReportCard>
-      );
-    })}
-  </MedicalReportList>
-)}
-{healthInsights.length > REPORTS_PAGE_SIZE && (
-  <div
-    style={{
-      display: "flex",
-      gap: "10px",
-      justifyContent: "center",
-      flexWrap: "wrap",
-      marginTop: "16px",
-    }}
-  >
-    {hasOlderReports && (
-      <button
-        className="secondaryBtn"
-        onClick={() =>
-          setVisibleReportsCount((currentCount) =>
-            Math.min(currentCount + REPORTS_PAGE_SIZE, healthInsights.length)
-          )
-        }
-      >
-        Show Older Reports
-      </button>
-    )}
+        </section>
 
-    {canShowLessReports && (
-      <button
-  className="secondaryBtn"
-  onClick={() => {
-    setVisibleReportsCount(REPORTS_PAGE_SIZE);
-    setExpandedReportId(null);
-    setGeneratedResult(null);
-    setActiveGeneratedInsightId(null);
-  }}
->
-  {isArabicUi ? "\u0639\u0631\u0636 \u0623\u0642\u0644" : "Show Less"}
-</button>
-    )}
-  </div>
-)}
+        <section className="ohCard">
+          <div className="ohCardHeader">
+            <div>
+              <p className="ohMetricLabel">
+                {text("Continue your journey", "تابع رحلتك")}
+              </p>
+
+              <h2 className="ohCardTitle">
+                {text(
+                  "Move from intelligence to action",
+                  "انتقل من الذكاء إلى التنفيذ"
+                )}
+              </h2>
+
+              <p className="ohCardText">
+                {text(
+                  "After reviewing intelligence, continue to your health plan, reports library, or dashboard command center.",
+                  "بعد مراجعة الذكاء، تابع إلى الخطة الصحية، مكتبة التقارير، أو مركز لوحة التحكم."
+                )}
+              </p>
+            </div>
+          </div>
+
+          <div className="ohButtonRow">
+            <Link href="/health-plan" className="primaryBtn">
+              {text("Health Plan", "الخطة الصحية")}
+            </Link>
+
+            <Link href="/reports" className="secondaryBtn">
+              {text("Reports", "التقارير")}
+            </Link>
+
+            <Link href="/lab-upload" className="secondaryBtn">
+              {text("Upload Report", "رفع تقرير")}
+            </Link>
+
+            <Link href="/dashboard" className="secondaryBtn">
+              {text("Dashboard", "لوحة التحكم")}
+            </Link>
+          </div>
         </section>
       </div>
     </main>
