@@ -321,7 +321,7 @@ export default function DashboardPage() {
       label: isArabic ? "?????????" : "Assessments",
       value: String(assessments.length),
       detail: latestAssessment
-        ? `${localizeOrganName(latestAssessment.organ_name, isArabic)} · ${
+        ? `${localizeOrganName(latestAssessment.organ_name, isArabic)} Â· ${
             latestAssessment.score
           }/100`
         : isArabic
@@ -358,7 +358,7 @@ export default function DashboardPage() {
       label: isArabic ? "??????? ?????" : "Check-In",
       value: dailyCheckIn ? `${dailyCheckIn.wellness_score}/100` : "N/A",
       detail: dailyCheckIn
-        ? `${localizeMood(dailyCheckIn.mood, isArabic)} · ${formatDate(
+        ? `${localizeMood(dailyCheckIn.mood, isArabic)} Â· ${formatDate(
             dailyCheckIn.created_at,
             isArabic
           )}`
