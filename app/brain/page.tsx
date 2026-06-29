@@ -1,9 +1,21 @@
-"use client";
+﻿"use client";
+
 import PageBackActions from "../components/PageBackActions";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 
+type Language = "en" | "ar";
+
+type BrainResult = {
+  score: number;
+  level: string;
+  message: string;
+};
+
 export default function BrainPage() {
+  const [language, setLanguage] = useState<Language>("en");
+  const isArabic = language === "ar";
+
   const [sleep, setSleep] = useState("Good");
   const [stress, setStress] = useState("Low");
   const [memory, setMemory] = useState("No");
@@ -11,26 +23,82 @@ export default function BrainPage() {
   const [activity, setActivity] = useState("Good");
   const [saveMessage, setSaveMessage] = useState("");
 
-  const [result, setResult] = useState<null | {
-    score: number;
-    level: string;
-    message: string;
-  }>(null);
+  const [result, setResult] = useState<null | BrainResult>(null);
+
+  useEffect(() => {
+    function syncLanguage() {
+      const savedLanguage =
+        (localStorage.getItem("organheal-language") as Language | null) || "en";
+
+      setLanguage(savedLanguage);
+      document.documentElement.lang = savedLanguage;
+      document.documentElement.dir = savedLanguage === "ar" ? "rtl" : "ltr";
+    }
+
+    syncLanguage();
+
+    window.addEventListener("storage", syncLanguage);
+    window.addEventListener("organheal-language-change", syncLanguage);
+
+    return () => {
+      window.removeEventListener("storage", syncLanguage);
+      window.removeEventListener("organheal-language-change", syncLanguage);
+    };
+  }, []);
+
+  function text(en: string, ar: string) {
+    return isArabic ? ar : en;
+  }
+
+  function localizeLevel(level: string) {
+    if (!isArabic) return level;
+
+    if (level === "Good Brain Health Pattern") return "نمط صحي جيد للدماغ";
+    if (level === "Moderate Brain Wellness Risk") return "خطورة متوسطة لصحة الدماغ";
+    if (level === "Higher Brain Wellness Risk") return "خطورة أعلى لصحة الدماغ";
+
+    return level;
+  }
+
+  function localizeMessage(level: string, fallback: string) {
+    if (!isArabic) return fallback;
+
+    if (level === "Good Brain Health Pattern") {
+      return "تشير إجاباتك إلى نمط صحي أفضل لصحة الدماغ بشكل عام. استمر بالنوم الجيد، التحكم بالتوتر، النشاط البدني، والمتابعة عند ظهور أعراض.";
+    }
+
+    if (level === "Moderate Brain Wellness Risk") {
+      return "تشير إجاباتك إلى وجود بعض عوامل الخطورة المرتبطة بصحة الدماغ مثل النوم، التوتر، الصداع، أو التركيز والذاكرة. يُفضّل تحسين نمط الحياة وطلب نصيحة مختص إذا استمرت الأعراض.";
+    }
+
+    if (level === "Higher Brain Wellness Risk") {
+      return "تشير إجاباتك إلى وجود عدة عوامل خطورة مرتبطة بصحة الدماغ. هذه الأداة لا تشخّص المرض، لكن يُنصح بالتقييم الطبي إذا كانت الأعراض مستمرة أو تزداد.";
+    }
+
+    return fallback;
+  }
 
   async function saveAssessment(score: number, level: string, message: string) {
-    setSaveMessage("Saving brain assessment...");
+    setSaveMessage(text("Saving brain assessment...", "جاري حفظ تقييم الدماغ..."));
 
     const { data, error: userError } = await supabase.auth.getUser();
 
     if (userError) {
-      setSaveMessage("Auth error: " + userError.message);
+      setSaveMessage(
+        text("Auth error: ", "خطأ في تسجيل الدخول: ") + userError.message
+      );
       return;
     }
 
     const user = data.user;
 
     if (!user) {
-      setSaveMessage("Please login to save your assessment.");
+      setSaveMessage(
+        text(
+          "Please login to save your assessment.",
+          "يرجى تسجيل الدخول لحفظ التقييم."
+        )
+      );
       return;
     }
 
@@ -50,7 +118,9 @@ export default function BrainPage() {
       );
 
     if (upsertError) {
-      setSaveMessage("Database error: " + upsertError.message);
+      setSaveMessage(
+        text("Database error: ", "خطأ في قاعدة البيانات: ") + upsertError.message
+      );
       return;
     }
 
@@ -63,11 +133,15 @@ export default function BrainPage() {
     });
 
     if (historyError) {
-      setSaveMessage("History error: " + historyError.message);
+      setSaveMessage(
+        text("History error: ", "خطأ في التاريخ الصحي: ") + historyError.message
+      );
       return;
     }
 
-    setSaveMessage("Brain assessment saved successfully.");
+    setSaveMessage(
+      text("Brain assessment saved successfully.", "تم حفظ تقييم الدماغ بنجاح.")
+    );
   }
 
   async function calculateBrainScore() {
@@ -105,80 +179,90 @@ export default function BrainPage() {
   }
 
   return (
-    <main className="assistantPage">
+    <main className="assistantPage" dir={isArabic ? "rtl" : "ltr"}>
       <div className="assistantContainer">
         <PageBackActions />
+
         <div className="assistantHeader">
-          <p className="assistantBadge">BRAIN HEALTH ASSESSMENT</p>
-          <h1>Brain Health Assessment</h1>
+          <p className="assistantBadge">
+            {text("BRAIN HEALTH ASSESSMENT", "تقييم صحة الدماغ")}
+          </p>
+          <h1>{text("Brain Health Assessment", "تقييم صحة الدماغ")}</h1>
           <p>
-            Evaluate brain wellness factors including sleep, stress, memory,
-            headaches, and activity level.
+            {text(
+              "Evaluate brain wellness factors including sleep, stress, memory, headaches, and activity level.",
+              "قيّم عوامل صحة الدماغ مثل النوم، التوتر، الذاكرة، الصداع، ومستوى النشاط."
+            )}
           </p>
         </div>
 
         <div className="chatWindow">
           <div className="assessmentForm">
             <div className="formGroup">
-              <label>Sleep Quality</label>
+              <label>{text("Sleep Quality", "جودة النوم")}</label>
               <select
                 value={sleep}
                 onChange={(event) => setSleep(event.target.value)}
               >
-                <option>Good</option>
-                <option>Moderate</option>
-                <option>Poor</option>
+                <option value="Good">{text("Good", "جيد")}</option>
+                <option value="Moderate">{text("Moderate", "متوسط")}</option>
+                <option value="Poor">{text("Poor", "ضعيف")}</option>
               </select>
             </div>
 
             <div className="formGroup">
-              <label>Stress Level</label>
+              <label>{text("Stress Level", "مستوى التوتر")}</label>
               <select
                 value={stress}
                 onChange={(event) => setStress(event.target.value)}
               >
-                <option>Low</option>
-                <option>Moderate</option>
-                <option>High</option>
+                <option value="Low">{text("Low", "منخفض")}</option>
+                <option value="Moderate">{text("Moderate", "متوسط")}</option>
+                <option value="High">{text("High", "مرتفع")}</option>
               </select>
             </div>
 
             <div className="formGroup">
-              <label>Memory or concentration problems?</label>
+              <label>
+                {text(
+                  "Memory or concentration problems?",
+                  "هل توجد مشاكل في الذاكرة أو التركيز؟"
+                )}
+              </label>
               <select
                 value={memory}
                 onChange={(event) => setMemory(event.target.value)}
               >
-                <option>No</option>
-                <option>Yes</option>
+                <option value="No">{text("No", "لا")}</option>
+                <option value="Yes">{text("Yes", "نعم")}</option>
               </select>
             </div>
 
             <div className="formGroup">
-              <label>Frequent headaches?</label>
+              <label>{text("Frequent headaches?", "هل يوجد صداع متكرر؟")}</label>
               <select
                 value={headache}
                 onChange={(event) => setHeadache(event.target.value)}
               >
-                <option>No</option>
-                <option>Yes</option>
+                <option value="No">{text("No", "لا")}</option>
+                <option value="Yes">{text("Yes", "نعم")}</option>
               </select>
             </div>
 
             <div className="formGroup">
-              <label>Physical Activity</label>
+              <label>{text("Physical Activity", "النشاط البدني")}</label>
               <select
                 value={activity}
                 onChange={(event) => setActivity(event.target.value)}
               >
-                <option>Good</option>
-                <option>Moderate</option>
-                <option>Poor</option>
+                <option value="Good">{text("Good", "جيد")}</option>
+                <option value="Moderate">{text("Moderate", "متوسط")}</option>
+                <option value="Poor">{text("Poor", "ضعيف")}</option>
               </select>
             </div>
 
             <button className="primaryBtn" onClick={calculateBrainScore}>
-              Calculate Brain Score
+              {text("Calculate Brain Score", "احسب مؤشر الدماغ")}
             </button>
 
             {saveMessage && <p>{saveMessage}</p>}
@@ -186,13 +270,17 @@ export default function BrainPage() {
 
           {result && (
             <div className="resultBox">
-              <p className="sectionLabel">Brain Health Score</p>
+              <p className="sectionLabel">
+                {text("Brain Health Score", "مؤشر صحة الدماغ")}
+              </p>
               <h2>{result.score}/100</h2>
-              <h3>{result.level}</h3>
-              <p>{result.message}</p>
+              <h3>{localizeLevel(result.level)}</h3>
+              <p>{localizeMessage(result.level, result.message)}</p>
 
               <a href="/history">
-                <button className="secondaryBtn">View Progress Timeline</button>
+                <button className="secondaryBtn">
+                  {text("View Progress Timeline", "عرض مسار التقدم")}
+                </button>
               </a>
             </div>
           )}
