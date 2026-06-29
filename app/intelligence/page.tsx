@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { buildActionPlan } from "../../lib/actionPlanEngine";
 import { buildHealthStory } from "../../lib/healthStoryEngine";
 import { buildHistoricalLabTrends } from "../../lib/historicalLabTrendEngine";
@@ -848,16 +848,17 @@ onHideGenerated={() => {
         {generatedResult.executiveSummary && (
           <ExecutiveSummaryCard summary={generatedResult.executiveSummary} />
         )}
-
-        {generatedResult.strategy && (
-          <PersonalHealthStrategyCard strategy={generatedResult.strategy} />
-        )}
-
         {generatedResult.healthStory && (
           <HealthStoryCard story={generatedResult.healthStory} />
         )}
 
-        {generatedResult.actionPlan && (
+        
+
+
+        {generatedResult.strategy && (
+          <PersonalHealthStrategyCard strategy={generatedResult.strategy} />
+        )}
+{generatedResult.actionPlan && (
           <ActionPlanCard actionPlan={generatedResult.actionPlan} />
         )}
 
@@ -866,14 +867,15 @@ onHideGenerated={() => {
         )}
 
         <TimelineCard timeline={generatedResult.timeline} />
+        <LabTrendsCard labTrends={generatedResult.labTrends} />
+
+        
+
 
         <LongitudinalRiskCard
           longitudinalRisk={generatedResult.longitudinalRisk}
         />
-
-        <LabTrendsCard labTrends={generatedResult.labTrends} />
-
-        <CrossSourceCard crossSource={generatedResult.crossSource} />
+<CrossSourceCard crossSource={generatedResult.crossSource} />
 
         <DigitalTwinCard digitalTwin={generatedResult.digitalTwin} />
 
