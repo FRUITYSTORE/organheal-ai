@@ -285,6 +285,117 @@ export default function CheckInPage() {
     return isArabic ? "مستقر مقارنة بآخر تحديث" : "Stable compared with last check-in";
   }, [recentCheckIns, isArabic]);
 
+
+  const recentScores = recentCheckIns.map((item) => item.wellness_score);
+  const highestRecentScore =
+    recentScores.length > 0 ? Math.max(...recentScores) : null;
+  const lowestRecentScore =
+    recentScores.length > 0 ? Math.min(...recentScores) : null;
+
+  const repeatedMood = useMemo(() => {
+    if (recentCheckIns.length === 0) {
+      return isArabic ? "غير متاح" : "Not available";
+    }
+
+    const counts = new Map<string, number>();
+
+    recentCheckIns.forEach((item) => {
+      counts.set(item.mood, (counts.get(item.mood) || 0) + 1);
+    });
+
+    const topMood = Array.from(counts.entries()).sort(
+      (a, b) => b[1] - a[1]
+    )[0]?.[0];
+
+    return localizeMood(topMood, isArabic);
+  }, [recentCheckIns, isArabic]);
+
+  const consistencyText =
+    recentCheckIns.length >= 5
+      ? isArabic
+        ? "متابعة قوية"
+        : "Strong consistency"
+      : recentCheckIns.length >= 3
+      ? isArabic
+        ? "متابعة جيدة"
+        : "Good consistency"
+      : recentCheckIns.length >= 1
+      ? isArabic
+        ? "بداية المتابعة"
+        : "Starting consistency"
+      : isArabic
+      ? "لم تبدأ بعد"
+      : "Not started yet";
+
+  const improvementFocusItems = [
+    stressLevel >= 4
+      ? isArabic
+        ? "خفف الضغط اليوم: خذ راحة قصيرة، تنفس ببطء، وتجنب إضافة مهام كثيرة."
+        : "Reduce stress today: take a short break, breathe slowly, and avoid adding too many tasks."
+      : null,
+    sleepQuality <= 2
+      ? isArabic
+        ? "النوم يحتاج دعم: حاول تثبيت وقت النوم وتقليل الشاشة قبل النوم."
+        : "Sleep needs support: keep a stable bedtime and reduce screen time before sleep."
+      : null,
+    hydration <= 2
+      ? isArabic
+        ? "الترطيب منخفض: ابدأ بكوب ماء الآن ووزع الشرب خلال اليوم."
+        : "Hydration is low: start with one glass of water and spread intake through the day."
+      : null,
+    energyLevel <= 2
+      ? isArabic
+        ? "الطاقة منخفضة: اختر نشاطًا خفيفًا وركز على الراحة والتغذية."
+        : "Energy is low: choose light activity and focus on rest and nutrition."
+      : null,
+    physicalActivity <= 2
+      ? isArabic
+        ? "النشاط منخفض: جرّب مشي خفيف 10 دقائق إذا كان مناسبًا لحالتك."
+        : "Activity is low: try a light 10-minute walk if appropriate for your condition."
+      : null,
+  ].filter(Boolean) as string[];
+
+  const todaysPrimaryFocus =
+    improvementFocusItems[0] ||
+    (isArabic
+      ? "الوضع اليوم مستقر. حافظ على العادات الجيدة وكرر التحديث لاحقًا."
+      : "Today looks stable. Keep your good habits and check in again later.");
+
+  const weeklyPatternCards = [
+    {
+      label: isArabic ? "متوسط آخر التحديثات" : "Recent average",
+      value: averageRecentScore === null ? "--" : averageRecentScore + "/100",
+      note: isArabic ? "يعكس الاتجاه العام مؤخرًا" : "Reflects your recent pattern",
+    },
+    {
+      label: isArabic ? "أعلى نتيجة" : "Highest score",
+      value: highestRecentScore === null ? "--" : highestRecentScore + "/100",
+      note: isArabic ? "أفضل نقطة خلال الفترة" : "Best point in this period",
+    },
+    {
+      label: isArabic ? "أقل نتيجة" : "Lowest score",
+      value: lowestRecentScore === null ? "--" : lowestRecentScore + "/100",
+      note: isArabic ? "نقطة تحتاج فهم السبب" : "A point worth understanding",
+    },
+    {
+      label: isArabic ? "المزاج الأكثر تكرارًا" : "Most common mood",
+      value: repeatedMood,
+      note: isArabic ? "يساعد على فهم الحالة العامة" : "Helps understand your baseline",
+    },
+    {
+      label: isArabic ? "الاستمرارية" : "Consistency",
+      value: consistencyText,
+      note: isArabic
+        ? recentCheckIns.length + " من آخر 7 تحديثات"
+        : recentCheckIns.length + " of last 7 check-ins",
+    },
+    {
+      label: isArabic ? "الاتجاه" : "Trend",
+      value: trendText,
+      note: isArabic ? "مقارنة بآخر تحديث محفوظ" : "Compared with the latest saved check-in",
+    },
+  ];
+
   function RangeControl({
     label,
     value,
@@ -658,6 +769,107 @@ export default function CheckInPage() {
         `}</style>
 
 
+        
+        <style>{`
+          /* ORGANHEAL_CHECKIN_WEEKLY_INSIGHTS_STEP2 */
+          .checkinSectionHeader {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 18px;
+          }
+
+          .checkinSectionHeader h2 {
+            margin: 6px 0 8px;
+          }
+
+          .checkinWeeklyGrid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+            margin-top: 16px;
+          }
+
+          .checkinWeeklyGrid article {
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 18px;
+            padding: 16px;
+          }
+
+          .checkinWeeklyGrid span {
+            display: block;
+            font-size: 0.78rem;
+            color: #64748b !important;
+            margin-bottom: 6px;
+            font-weight: 700;
+          }
+
+          .checkinWeeklyGrid strong {
+            display: block;
+            color: #0f172a !important;
+            font-size: 1.05rem;
+            line-height: 1.45;
+          }
+
+          .checkinWeeklyGrid p {
+            color: #64748b !important;
+            margin-top: 8px;
+            margin-bottom: 0;
+            line-height: 1.65;
+          }
+
+          .checkinFocusBox {
+            margin-top: 18px;
+            border: 1px solid rgba(20, 184, 166, 0.28);
+            background: rgba(240, 253, 250, 0.9);
+            border-radius: 20px;
+            padding: 18px;
+          }
+
+          .checkinFocusBox strong {
+            display: block;
+            color: #0f766e !important;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+          }
+
+          .checkinFocusBox p {
+            color: #0f172a !important;
+            line-height: 1.8;
+            margin-bottom: 0;
+          }
+
+          .checkinFocusBox ul {
+            margin-top: 12px;
+            margin-bottom: 0;
+            padding-inline-start: 22px;
+          }
+
+          .checkinFocusBox li {
+            color: #0f172a !important;
+            line-height: 1.8;
+            margin-bottom: 6px;
+          }
+
+          .checkinReadablePage[dir="rtl"] .checkinSectionHeader,
+          .checkinReadablePage[dir="rtl"] .checkinFocusBox {
+            text-align: right;
+          }
+
+          @media (max-width: 900px) {
+            .checkinSectionHeader {
+              display: block;
+            }
+
+            .checkinWeeklyGrid {
+              grid-template-columns: 1fr;
+            }
+          }
+        `}</style>
+
+
         <PageBackActions />
 
         <div className="assistantHeader">
@@ -751,6 +963,56 @@ export default function CheckInPage() {
                   </div>
                 </div>
               </section>
+
+
+              <div className="resultBox checkinWeeklyInsights">
+                <div className="checkinSectionHeader">
+                  <div>
+                    <p className="sectionLabel">
+                      {isArabic ? "تحليل الأسبوع" : "Weekly wellness pattern"}
+                    </p>
+
+                    <h2>
+                      {isArabic
+                        ? "افهم اتجاهك الصحي بدل قراءة رقم واحد"
+                        : "Understand your pattern beyond one score"}
+                    </h2>
+
+                    <p>
+                      {isArabic
+                        ? "يعتمد هذا الملخص على آخر التحديثات المحفوظة ليساعدك على فهم الاتجاه والاستمرارية."
+                        : "This summary uses your latest saved check-ins to help you understand trend and consistency."}
+                    </p>
+                  </div>
+
+                  <Link href="/health-plan" className="secondaryBtn">
+                    {isArabic ? "ربطها بالخطة" : "Connect to plan"}
+                  </Link>
+                </div>
+
+                <div className="checkinWeeklyGrid">
+                  {weeklyPatternCards.map((item) => (
+                    <article key={item.label}>
+                      <span>{item.label}</span>
+                      <strong>{item.value}</strong>
+                      <p>{item.note}</p>
+                    </article>
+                  ))}
+                </div>
+
+                <div className="checkinFocusBox">
+                  <strong>{isArabic ? "تركيز اليوم" : "Today focus"}</strong>
+                  <p>{todaysPrimaryFocus}</p>
+
+                  {improvementFocusItems.length > 1 && (
+                    <ul>
+                      {improvementFocusItems.slice(1, 4).map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
 
               {latestCheckIn && (
                 <div className="resultBox">
