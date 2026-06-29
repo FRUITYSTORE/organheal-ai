@@ -102,6 +102,154 @@ function EnglishParagraph({ children }: { children: React.ReactNode }) {
   );
 }
 
+
+function applyProfessionalPdfLayout(reportElement: HTMLElement, isArabic: boolean) {
+  const style = document.createElement("style");
+
+  style.textContent = `
+    /* ORGANHEAL_ARABIC_PDF_PAGEBREAK_PATCH */
+    .organhealPdfPage {
+      box-sizing: border-box !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      padding: 18px 18px !important;
+      overflow: visible !important;
+    }
+
+    .organhealPdfPage,
+    .organhealPdfPage * {
+      box-sizing: border-box !important;
+      max-width: 100% !important;
+      overflow-wrap: break-word !important;
+      word-break: normal !important;
+    }
+
+    .organhealPdfPage[lang="ar"],
+    .organhealPdfPage[lang="ar"] * {
+      direction: rtl !important;
+      text-align: right !important;
+      font-family: Tahoma, Arial, sans-serif !important;
+      letter-spacing: normal !important;
+      word-spacing: normal !important;
+      text-transform: none !important;
+      unicode-bidi: isolate !important;
+    }
+
+    .organhealPdfPage h1,
+    .organhealPdfPage h2,
+    .organhealPdfPage h3 {
+      break-after: avoid !important;
+      page-break-after: avoid !important;
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
+      margin-top: 18px !important;
+      margin-bottom: 10px !important;
+      line-height: 1.35 !important;
+    }
+
+    .organhealPdfPage p,
+    .organhealPdfPage li,
+    .organhealPdfPage strong {
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
+      orphans: 3 !important;
+      widows: 3 !important;
+    }
+
+    .organhealPdfPage div {
+      orphans: 3 !important;
+      widows: 3 !important;
+    }
+
+    .organhealPdfKeepTogether {
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
+      break-before: auto !important;
+      page-break-before: auto !important;
+      break-after: auto !important;
+      page-break-after: auto !important;
+    }
+
+    .organhealPdfSection {
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
+      margin-bottom: 16px !important;
+      padding-bottom: 6px !important;
+    }
+
+    .organhealPdfSoftSection {
+      break-inside: auto !important;
+      page-break-inside: auto !important;
+      margin-bottom: 18px !important;
+    }
+  `;
+
+  reportElement.prepend(style);
+
+  reportElement.classList.add("organhealPdfPage");
+
+  reportElement.style.boxSizing = "border-box";
+  reportElement.style.width = "100%";
+  reportElement.style.maxWidth = "100%";
+  reportElement.style.padding = "22px 24px";
+  reportElement.style.overflow = "visible";
+  reportElement.style.direction = isArabic ? "rtl" : "ltr";
+  reportElement.style.textAlign = isArabic ? "right" : "left";
+  reportElement.style.fontFamily = isArabic
+    ? "Tahoma, Arial, sans-serif"
+    : "Arial, sans-serif";
+
+  reportElement.querySelectorAll("h1, h2, h3").forEach((element) => {
+    const htmlElement = element as HTMLElement;
+
+    htmlElement.style.breakAfter = "avoid";
+    htmlElement.style.pageBreakAfter = "avoid";
+    htmlElement.style.breakInside = "avoid";
+    htmlElement.style.pageBreakInside = "avoid";
+    htmlElement.style.marginTop = "18px";
+    htmlElement.style.marginBottom = "10px";
+    htmlElement.style.lineHeight = "1.35";
+    htmlElement.style.letterSpacing = "normal";
+    htmlElement.style.wordSpacing = "normal";
+    htmlElement.style.textTransform = "none";
+    htmlElement.classList.add("organhealPdfKeepTogether");
+  });
+
+  reportElement.querySelectorAll("p, li").forEach((element) => {
+    const htmlElement = element as HTMLElement;
+
+    htmlElement.style.breakInside = "avoid";
+    htmlElement.style.pageBreakInside = "avoid";
+    htmlElement.style.orphans = "3";
+    htmlElement.style.widows = "3";
+    htmlElement.style.lineHeight = "1.85";
+    htmlElement.style.letterSpacing = "normal";
+    htmlElement.style.wordSpacing = "normal";
+    htmlElement.style.textTransform = "none";
+  });
+
+  reportElement.querySelectorAll("h3").forEach((heading) => {
+    const nextElement = heading.nextElementSibling as HTMLElement | null;
+
+    if (nextElement) {
+      nextElement.style.breakBefore = "avoid";
+      nextElement.style.pageBreakBefore = "avoid";
+    }
+  });
+
+  reportElement.querySelectorAll("div").forEach((element) => {
+    const htmlElement = element as HTMLElement;
+
+    const textLength = (htmlElement.textContent || "").trim().length;
+
+    if (textLength > 0 && textLength < 900) {
+      htmlElement.classList.add("organhealPdfSection");
+    } else {
+      htmlElement.classList.add("organhealPdfSoftSection");
+    }
+  });
+}
+
 export default function DoctorBriefReportCard({
   fileName,
   reportTypeLabel,
@@ -190,7 +338,7 @@ export default function DoctorBriefReportCard({
 
     reportElement.style.background = "#ffffff";
     reportElement.style.color = "#111827";
-    reportElement.style.padding = "24px";
+    reportElement.style.padding = "22px 24px";
     reportElement.style.border = "none";
     reportElement.style.boxShadow = "none";
     reportElement.style.direction = isArabic ? "rtl" : "ltr";
@@ -208,11 +356,25 @@ export default function DoctorBriefReportCard({
       htmlElement.style.fontVariant = "normal";
     });
 
+    applyProfessionalPdfLayout(reportElement, isArabic);
+
     const safeFileName = fileName.replace(/[^a-z0-9]/gi, "-").toLowerCase();
 
     await html2pdf()
       .set({
-        margin: [10, 10, 10, 10],
+        pagebreak: {
+          mode: ["css", "legacy"],
+          avoid: [
+            "h1",
+            "h2",
+            "h3",
+            "p",
+            "li",
+            ".organhealPdfKeepTogether",
+            ".organhealPdfSection"
+          ],
+        },
+        margin: [16, 18, 16, 18],
         filename: `OrganHeal-Doctor-Brief-${safeFileName}.pdf`,
         image: { type: "jpeg", quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true },
@@ -225,6 +387,22 @@ export default function DoctorBriefReportCard({
   return (
     <>
       <style>{`
+        .arabicPdfSafeMargins {
+          box-sizing: border-box !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          padding-left: 34px !important;
+          padding-right: 34px !important;
+          overflow: hidden !important;
+        }
+
+        .arabicPdfSafeMargins * {
+          box-sizing: border-box !important;
+          max-width: 100% !important;
+          overflow-wrap: break-word !important;
+          word-break: normal !important;
+        }
+
         .patientReportPdfArea[lang="ar"],
         .patientReportPdfArea[lang="ar"] *,
         .doctorBriefReportArea[lang="ar"],
@@ -252,7 +430,7 @@ export default function DoctorBriefReportCard({
       `}</style>
 
     <div ref={printRef}
-      className="resultBox doctorBriefReportArea"
+      className="resultBox doctorBriefReportArea arabicPdfSafeMargins organhealPdfPage"
       dir={isArabic ? "rtl" : "ltr"}
       lang={isArabic ? "ar" : "en"}
       style={{
