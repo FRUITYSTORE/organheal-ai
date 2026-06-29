@@ -1,10 +1,12 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import PageBackActions from "../components/PageBackActions";
 import { supabase } from "@/lib/supabase";
 
 type Language = "en" | "ar";
+type ReportFilter = "all" | "saved" | "needs-generation" | "completed-extraction";
 
 type UploadedReport = {
   id: number;
@@ -53,29 +55,41 @@ const REPORTS_LOAD_STEP = 5;
 
 export default function ReportsPage() {
   const [language, setLanguage] = useState<Language>("en");
+  const isArabic = language === "ar";
+
   const [reports, setReports] = useState<ReportLibraryItem[]>([]);
   const [visibleReportsCount, setVisibleReportsCount] = useState(REPORTS_INITIAL_LIMIT);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [reportFilter, setReportFilter] = useState<ReportFilter>("all");
 
   useEffect(() => {
-    const savedLanguage =
-      (localStorage.getItem("organheal-language") as Language) || "en";
+    function syncLanguage() {
+      const savedLanguage =
+        (localStorage.getItem("organheal-language") as Language | null) || "en";
 
-    setLanguage(savedLanguage);
+      setLanguage(savedLanguage);
+      document.documentElement.lang = savedLanguage;
+      document.documentElement.dir = savedLanguage === "ar" ? "rtl" : "ltr";
+    }
 
-    const interval = setInterval(() => {
-      const currentLanguage =
-        (localStorage.getItem("organheal-language") as Language) || "en";
-      setLanguage(currentLanguage);
-    }, 300);
-
+    syncLanguage();
     fetchReports();
 
-    return () => clearInterval(interval);
+    window.addEventListener("storage", syncLanguage);
+    window.addEventListener("organheal-language-change", syncLanguage);
+
+    return () => {
+      window.removeEventListener("storage", syncLanguage);
+      window.removeEventListener("organheal-language-change", syncLanguage);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const isArabic = language === "ar";
+  function text(en: string, ar: string) {
+    return isArabic ? ar : en;
+  }
 
   async function fetchReports() {
     setLoading(true);
@@ -173,22 +187,24 @@ export default function ReportsPage() {
   async function openMedicalReport(filePath: string | null) {
     if (!filePath) {
       alert(
-        isArabic
-          ? "لا يوجد مسار ملف محفوظ لهذا التقرير."
-          : "No saved file path was found for this report."
+        text(
+          "No saved file path was found for this report.",
+          "لا يوجد مسار ملف محفوظ لهذا التقرير."
+        )
       );
       return;
     }
 
     const { data, error } = await supabase.storage
       .from("lab-reports")
-      .createSignedUrl(filePath, 60);
+      .createSignedUrl(filePath, 60 * 60);
 
     if (error) {
       alert(
-        isArabic
-          ? "تعذر فتح التقرير الآن."
-          : "Unable to open the report right now."
+        text(
+          "Unable to open the report right now.",
+          "تعذر فتح التقرير الآن."
+        )
       );
       return;
     }
@@ -197,17 +213,25 @@ export default function ReportsPage() {
   }
 
   function formatDate(value: string | null) {
-    if (!value) return isArabic ? "غير متاح" : "Not available";
-    return new Date(value).toLocaleString();
+    if (!value) return text("Not available", "غير متاح");
+
+    return new Date(value).toLocaleString(isArabic ? "ar-AE" : "en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   }
 
   function getReportTypeLabel(type: string | null) {
-    if (!type) return isArabic ? "تقرير طبي" : "Medical report";
+    if (!type) return text("Medical report", "تقرير طبي");
 
-    if (type === "lab") return isArabic ? "مختبر" : "Laboratory";
-    if (type === "radiology") return isArabic ? "أشعة" : "Radiology";
-    if (type === "clinical") return isArabic ? "تقرير سريري" : "Clinical";
-    if (type === "prescription") return isArabic ? "وصفة طبية" : "Prescription";
+    if (type === "lab") return text("Laboratory", "مختبر");
+    if (type === "radiology") return text("Radiology", "أشعة");
+    if (type === "clinical") return text("Clinical", "تقرير سريري");
+    if (type === "prescription") return text("Prescription", "وصفة طبية");
+    if (type === "medical") return text("General Medical", "تقرير طبي عام");
 
     return type;
   }
@@ -215,58 +239,88 @@ export default function ReportsPage() {
   function getExtractionLabel(status: string | null) {
     const cleanStatus = status || "Pending";
 
-    if (isArabic) {
-      if (cleanStatus === "Completed") return "الاستخراج مكتمل";
-      if (cleanStatus === "Processing") return "جاري الاستخراج";
-      if (cleanStatus === "Failed") return "فشل الاستخراج";
-      return "بانتظار الاستخراج";
+    if (cleanStatus === "Completed") {
+      return text("Extraction completed", "الاستخراج مكتمل");
     }
 
-    if (cleanStatus === "Completed") return "Extraction completed";
-    if (cleanStatus === "Processing") return "Extraction processing";
-    if (cleanStatus === "Failed") return "Extraction failed";
-    return "Extraction pending";
+    if (cleanStatus === "Processing") {
+      return text("Extraction processing", "جاري الاستخراج");
+    }
+
+    if (cleanStatus === "Failed") {
+      return text("Extraction failed", "فشل الاستخراج");
+    }
+
+    return text("Extraction pending", "بانتظار الاستخراج");
+  }
+
+  function getExtractionTone(status: string | null) {
+    const cleanStatus = status || "Pending";
+
+    if (cleanStatus === "Completed") return "good";
+    if (cleanStatus === "Processing") return "moderate";
+    if (cleanStatus === "Failed") return "risk";
+    return "neutral";
+  }
+
+  function getRiskTone(riskLevel: string | null) {
+    const cleanLevel = (riskLevel || "").toLowerCase();
+
+    if (cleanLevel.includes("high") || cleanLevel.includes("risk")) return "risk";
+    if (cleanLevel.includes("moderate") || cleanLevel.includes("medium")) return "moderate";
+    if (cleanLevel.includes("low") || cleanLevel.includes("normal")) return "good";
+
+    return "neutral";
   }
 
   function getReportDecision(report: ReportLibraryItem) {
     if (report.hasSavedIntelligence) {
       return {
-        label: isArabic ? "ذكاء محفوظ" : "Saved intelligence",
-        title: isArabic
-          ? "نتيجة الذكاء الصحي محفوظة"
-          : "Health intelligence is saved",
-        description: isArabic
-          ? "يمكنك فتح مركز الذكاء لمراجعة الملخصات، أو الانتقال إلى خطة المتابعة."
-          : "Open Intelligence Center to review summaries, or continue to your follow-up plan.",
+        label: text("Saved intelligence", "ذكاء محفوظ"),
+        title: text(
+          "Health intelligence is saved",
+          "نتيجة الذكاء الصحي محفوظة"
+        ),
+        description: text(
+          "Open Intelligence Center to review summaries, or continue to your follow-up plan.",
+          "يمكنك فتح مركز الذكاء لمراجعة الملخصات، أو الانتقال إلى خطة المتابعة."
+        ),
         href: "/intelligence",
-        buttonText: isArabic ? "افتح النتيجة" : "Open Result",
+        buttonText: text("Open Result", "فتح النتيجة"),
+        tone: "good",
       };
     }
 
     if (report.insightId) {
       return {
-        label: isArabic ? "جاهز للتوليد" : "Ready to generate",
-        title: isArabic
-          ? "هذا التقرير يحتاج توليد الذكاء"
-          : "This report needs intelligence generation",
-        description: isArabic
-          ? "افتح مركز الذكاء واضغط Generate لتحويل التقرير إلى ملخصات وخطة متابعة."
-          : "Open Intelligence Center and press Generate to turn this report into summaries and follow-up steps.",
+        label: text("Ready to generate", "جاهز للتوليد"),
+        title: text(
+          "This report needs intelligence generation",
+          "هذا التقرير يحتاج توليد الذكاء"
+        ),
+        description: text(
+          "Open Intelligence Center and press Generate to turn this report into summaries and follow-up steps.",
+          "افتح مركز الذكاء واضغط Generate لتحويل التقرير إلى ملخصات وخطوات متابعة."
+        ),
         href: "/intelligence",
-        buttonText: isArabic ? "ولّد في مركز الذكاء" : "Generate in Intelligence",
+        buttonText: text("Generate in Intelligence", "ولّد في مركز الذكاء"),
+        tone: "moderate",
       };
     }
 
     return {
-      label: isArabic ? "تم الحفظ" : "Saved",
-      title: isArabic
-        ? "التقرير محفوظ ويحتاج متابعة"
-        : "The report is saved and needs follow-up",
-      description: isArabic
-        ? "افتح مركز الذكاء أو ارفع تقريرًا آخر إذا لم يظهر بعد."
-        : "Open Intelligence Center or upload another report if it does not appear yet.",
+      label: text("Saved", "تم الحفظ"),
+      title: text(
+        "The report is saved and needs follow-up",
+        "التقرير محفوظ ويحتاج متابعة"
+      ),
+      description: text(
+        "Open Intelligence Center or upload another report if it does not appear yet.",
+        "افتح مركز الذكاء أو ارفع تقريرًا آخر إذا لم يظهر بعد."
+      ),
       href: "/intelligence",
-      buttonText: isArabic ? "افتح مركز الذكاء" : "Open Intelligence",
+      buttonText: text("Open Intelligence", "فتح مركز الذكاء"),
+      tone: "neutral",
     };
   }
 
@@ -286,340 +340,523 @@ export default function ReportsPage() {
     };
   }, [reports]);
 
-  const visibleReports = reports.slice(0, visibleReportsCount);
-  const hiddenReportsCount = Math.max(reports.length - visibleReportsCount, 0);
+  const filteredReports = reports.filter((report) => {
+    const matchesSearch = report.fileName
+      .toLowerCase()
+      .includes(searchTerm.trim().toLowerCase());
+
+    const matchesFilter =
+      reportFilter === "all" ||
+      (reportFilter === "saved" && report.hasSavedIntelligence) ||
+      (reportFilter === "needs-generation" && !report.hasSavedIntelligence) ||
+      (reportFilter === "completed-extraction" &&
+        report.extractionStatus === "Completed");
+
+    return matchesSearch && matchesFilter;
+  });
+
+  const visibleReports = filteredReports.slice(0, visibleReportsCount);
+  const hiddenReportsCount = Math.max(filteredReports.length - visibleReportsCount, 0);
   const canShowMoreReports = hiddenReportsCount > 0;
   const canShowLessReports = visibleReportsCount > REPORTS_INITIAL_LIMIT;
 
   const primaryNextStep =
     reports.length === 0
       ? {
-          label: isArabic ? "ابدأ هنا" : "Start here",
-          title: isArabic
-            ? "ارفع أول تقرير طبي"
-            : "Upload your first medical report",
-          description: isArabic
-            ? "بعد رفع التقرير، سيظهر هنا ويمكنك المتابعة إلى مركز الذكاء."
-            : "After uploading a report, it will appear here and you can continue to Intelligence Center.",
+          label: text("Start here", "ابدأ هنا"),
+          title: text(
+            "Upload your first medical report",
+            "ارفع أول تقرير طبي"
+          ),
+          description: text(
+            "After uploading a report, it will appear here and you can continue to Intelligence Center.",
+            "بعد رفع التقرير، سيظهر هنا ويمكنك المتابعة إلى مركز الذكاء."
+          ),
           href: "/lab-upload",
-          buttonText: isArabic ? "ارفع تقريرًا" : "Upload Report",
+          buttonText: text("Upload Report", "رفع تقرير"),
         }
       : stats.saved > 0
       ? {
-          label: isArabic ? "الخطوة التالية" : "Next step",
-          title: isArabic ? "راجع خطة المتابعة" : "Review your follow-up plan",
-          description: isArabic
-            ? "لديك نتائج ذكاء محفوظة. استخدمها للانتقال إلى خطة المتابعة."
-            : "You have saved intelligence results. Use them to continue into your follow-up plan.",
+          label: text("Next step", "الخطوة التالية"),
+          title: text(
+            "Review your follow-up plan",
+            "راجع خطة المتابعة"
+          ),
+          description: text(
+            "You have saved intelligence results. Use them to continue into your follow-up plan.",
+            "لديك نتائج ذكاء محفوظة. استخدمها للانتقال إلى خطة المتابعة."
+          ),
           href: "/health-plan",
-          buttonText: isArabic ? "افتح خطة الصحة" : "Open Health Plan",
+          buttonText: text("Open Health Plan", "فتح خطة الصحة"),
         }
       : {
-          label: isArabic ? "الخطوة التالية" : "Next step",
-          title: isArabic
-            ? "ولّد الذكاء الصحي للتقارير"
-            : "Generate intelligence for your reports",
-          description: isArabic
-            ? "لديك تقارير محفوظة، والآن تحتاج إلى فتح مركز الذكاء لتوليد الملخصات."
-            : "You have saved reports. Now open Intelligence Center to generate summaries.",
+          label: text("Next step", "الخطوة التالية"),
+          title: text(
+            "Generate intelligence for your reports",
+            "ولّد الذكاء الصحي للتقارير"
+          ),
+          description: text(
+            "You have saved reports. Now open Intelligence Center to generate summaries.",
+            "لديك تقارير محفوظة. افتح مركز الذكاء الآن لتوليد الملخصات."
+          ),
           href: "/intelligence",
-          buttonText: isArabic ? "افتح مركز الذكاء" : "Open Intelligence",
+          buttonText: text("Open Intelligence", "فتح مركز الذكاء"),
         };
 
   return (
-    <main className="reportsConversionPage" dir={isArabic ? "rtl" : "ltr"}>
-      <section className="reportsHero">
-        <div>
-          <p className="launchEyebrow">
-            {isArabic ? "مكتبة التقارير" : "Reports Library"}
-          </p>
+    <main className="ohPageShell" dir={isArabic ? "rtl" : "ltr"}>
+      <div className="ohContainer ohStack large" style={{ padding: "28px 0 56px" }}>
+        <PageBackActions />
 
-          <h1>
-            {isArabic
-              ? "تابع تقاريرك الطبية ونتائج الذكاء"
-              : "Track your medical reports and intelligence results"}
-          </h1>
+        <section className="ohHero">
+          <div className="ohHeroGrid">
+            <div>
+              <p className="ohEyebrow">
+                {text("Reports Library Command Center", "مركز مكتبة التقارير")}
+              </p>
 
-          <p>
-            {isArabic
-              ? "هذه الصفحة توضّح هل التقرير محفوظ، هل يحتاج توليد ذكاء صحي، وهل توجد نتيجة محفوظة يمكن استخدامها في خطة المتابعة."
-              : "This page shows whether a report is saved, whether it needs health intelligence generation, and whether a saved result can be used for your follow-up plan."}
-          </p>
-        </div>
+              <h1 className="ohTitle">
+                {text(
+                  "Track your medical reports and intelligence results",
+                  "تابع تقاريرك الطبية ونتائج الذكاء"
+                )}
+              </h1>
 
-        <div className="reportsHeroCard">
-          <span>{primaryNextStep.label}</span>
-          <h2>{primaryNextStep.title}</h2>
-          <p>{primaryNextStep.description}</p>
-          <Link href={primaryNextStep.href} className="launchPrimary">
-            {primaryNextStep.buttonText}
-          </Link>
-        </div>
-      </section>
+              <p className="ohLead">
+                {text(
+                  "This page shows whether a report is saved, whether it needs health intelligence generation, and whether a saved result can be used for your follow-up plan.",
+                  "توضح هذه الصفحة هل التقرير محفوظ، وهل يحتاج توليد ذكاء صحي، وهل توجد نتيجة محفوظة يمكن استخدامها في خطة المتابعة."
+                )}
+              </p>
 
-      <section className="reportsStatsGrid">
-        <article>
-          <span>{isArabic ? "كل التقارير" : "Total reports"}</span>
-          <strong>{stats.total}</strong>
-          <p>{isArabic ? "تقارير محفوظة في حسابك" : "Reports saved in your account"}</p>
-        </article>
+              <div className="ohButtonRow" style={{ marginTop: "24px" }}>
+                <Link href="/lab-upload" className="primaryBtn">
+                  {text("Upload Report", "رفع تقرير")}
+                </Link>
 
-        <article>
-          <span>{isArabic ? "ذكاء محفوظ" : "Saved intelligence"}</span>
-          <strong>{stats.saved}</strong>
-          <p>{isArabic ? "نتائج جاهزة للمراجعة" : "Results ready for review"}</p>
-        </article>
+                <Link href="/intelligence" className="secondaryBtn">
+                  {text("Intelligence Center", "مركز الذكاء")}
+                </Link>
 
-        <article>
-          <span>{isArabic ? "تحتاج توليد" : "Need generation"}</span>
-          <strong>{stats.needsGeneration}</strong>
-          <p>{isArabic ? "تقارير تحتاج Generate" : "Reports that need Generate"}</p>
-        </article>
-
-        <article>
-          <span>{isArabic ? "استخراج مكتمل" : "Extraction completed"}</span>
-          <strong>{stats.completedExtraction}</strong>
-          <p>{isArabic ? "تقارير جاهزة للتحليل" : "Reports ready for analysis"}</p>
-        </article>
-      </section>
-
-      {loading && (
-        <section className="reportsPanel">
-          <p className="launchEyebrow">{isArabic ? "تحميل" : "Loading"}</p>
-          <h2>
-            {isArabic
-              ? "جاري تحميل مكتبة التقارير..."
-              : "Loading your reports library..."}
-          </h2>
-        </section>
-      )}
-
-      {!loading && message && (
-        <section className="reportsPanel">
-          <p className="launchEyebrow">{isArabic ? "تنبيه" : "Notice"}</p>
-          <h2>
-            {isArabic ? "تعذر تحميل التقارير" : "Could not load reports"}
-          </h2>
-          <p>{message}</p>
-        </section>
-      )}
-
-      {!loading && !message && reports.length === 0 && (
-        <section className="reportsEmptyState">
-          <p className="launchEyebrow">
-            {isArabic ? "لا توجد تقارير بعد" : "No reports yet"}
-          </p>
-
-          <h2>
-            {isArabic
-              ? "ارفع تقريرًا طبيًا لتبدأ رحلة الذكاء الصحي"
-              : "Upload a medical report to start health intelligence"}
-          </h2>
-
-          <p>
-            {isArabic
-              ? "بعد الرفع، سيظهر التقرير هنا، ثم تستطيع الانتقال إلى مركز الذكاء لتوليد ملخص للمريض وملخص جاهز للطبيب."
-              : "After upload, the report will appear here, then you can move to Intelligence Center to generate a patient-friendly summary and doctor-ready brief."}
-          </p>
-
-          <div className="reportsActionRow">
-            <Link href="/lab-upload" className="launchPrimary">
-              {isArabic ? "ارفع تقريرًا طبيًا" : "Upload Medical Report"}
-            </Link>
-
-            <Link href="/dashboard" className="launchSecondary">
-              {isArabic ? "لوحة التحكم" : "Dashboard"}
-            </Link>
-          </div>
-          {reports.length > REPORTS_INITIAL_LIMIT && (
-            <div className="reportsShowToggle">
-              {canShowMoreReports && (
-                <button
-                  type="button"
-                  className="launchSecondary"
-                  onClick={() =>
-                    setVisibleReportsCount((current) =>
-                      Math.min(current + REPORTS_LOAD_STEP, reports.length)
-                    )
-                  }
-                >
-                  {isArabic
-                    ? `عرض المزيد (${Math.min(REPORTS_LOAD_STEP, hiddenReportsCount)})`
-                    : `Show More (${Math.min(REPORTS_LOAD_STEP, hiddenReportsCount)})`}
-                </button>
-              )}
-
-              {canShowLessReports && (
-                <button
-                  type="button"
-                  className="launchSecondary"
-                  onClick={() => setVisibleReportsCount(REPORTS_INITIAL_LIMIT)}
-                >
-                  {isArabic ? "عرض أقل" : "Show Less"}
-                </button>
-              )}
+                <Link href="/health-plan" className="secondaryBtn">
+                  {text("Health Plan", "الخطة الصحية")}
+                </Link>
+              </div>
             </div>
-          )}
+
+            <div className="ohCard">
+              <div className="ohCardHeader">
+                <div>
+                  <p className="ohMetricLabel">{primaryNextStep.label}</p>
+                  <h2 className="ohCardTitle" style={{ marginTop: "8px" }}>
+                    {primaryNextStep.title}
+                  </h2>
+                </div>
+
+                <span className="ohStatusBadge neutral">
+                  {stats.total} {text("reports", "تقارير")}
+                </span>
+              </div>
+
+              <p className="ohCardText">{primaryNextStep.description}</p>
+
+              <div className="ohDivider" />
+
+              <Link href={primaryNextStep.href} className="primaryBtn">
+                {primaryNextStep.buttonText}
+              </Link>
+            </div>
+          </div>
         </section>
-      )}
 
-      {!loading && !message && reports.length > 0 && (
-        <section className="reportsListSection">
-          <div className="reportsSectionHeader">
-            <p className="launchEyebrow">
-              {isArabic ? "التقارير المحفوظة" : "Saved reports"}
+        <section className="ohMetricGrid">
+          <article className="ohMetricCard">
+            <span className="ohMetricLabel">
+              {text("Total Reports", "كل التقارير")}
+            </span>
+            <span className="ohMetricValue">{stats.total}</span>
+            <span className="ohMetricHint">
+              {text("Reports saved in your account", "تقارير محفوظة في حسابك")}
+            </span>
+          </article>
+
+          <article className="ohMetricCard">
+            <span className="ohMetricLabel">
+              {text("Saved Intelligence", "ذكاء محفوظ")}
+            </span>
+            <span className="ohMetricValue">{stats.saved}</span>
+            <span className="ohMetricHint">
+              {text("Results ready for review", "نتائج جاهزة للمراجعة")}
+            </span>
+          </article>
+
+          <article className="ohMetricCard">
+            <span className="ohMetricLabel">
+              {text("Need Generation", "تحتاج توليد")}
+            </span>
+            <span className="ohMetricValue">{stats.needsGeneration}</span>
+            <span className="ohMetricHint">
+              {text("Reports that need Generate", "تقارير تحتاج Generate")}
+            </span>
+          </article>
+
+          <article className="ohMetricCard">
+            <span className="ohMetricLabel">
+              {text("Extraction Completed", "استخراج مكتمل")}
+            </span>
+            <span className="ohMetricValue">{stats.completedExtraction}</span>
+            <span className="ohMetricHint">
+              {text("Reports ready for analysis", "تقارير جاهزة للتحليل")}
+            </span>
+          </article>
+        </section>
+
+        {loading && (
+          <section className="ohCard">
+            <p className="ohEyebrow">{text("Loading", "تحميل")}</p>
+            <h2 className="ohCardTitle">
+              {text("Loading your reports library...", "جاري تحميل مكتبة التقارير...")}
+            </h2>
+            <p className="ohCardText">
+              {text(
+                "OrganHeal is preparing your saved medical reports and intelligence status.",
+                "يقوم OrganHeal بتحضير التقارير الطبية المحفوظة وحالة الذكاء."
+              )}
             </p>
+          </section>
+        )}
 
+        {!loading && message && (
+          <section className="ohCard">
+            <p className="ohEyebrow">{text("Notice", "تنبيه")}</p>
+            <h2 className="ohCardTitle">
+              {text("Could not load reports", "تعذر تحميل التقارير")}
+            </h2>
+            <p className="ohCardText">{message}</p>
+          </section>
+        )}
+
+        {!loading && !message && reports.length === 0 && (
+          <section className="ohEmptyState">
             <h2>
-              {isArabic
-                ? "كل تقرير يجب أن يقود إلى خطوة واضحة"
-                : "Every report should lead to a clear next step"}
+              {text(
+                "Upload a medical report to start health intelligence",
+                "ارفع تقريرًا طبيًا لتبدأ رحلة الذكاء الصحي"
+              )}
             </h2>
 
             <p>
-              {isArabic
-                ? "افتح التقرير الأصلي، أو انتقل إلى مركز الذكاء لتوليد/مراجعة النتيجة، ثم استخدم الخطة الصحية للمتابعة."
-                : "Open the original report, continue to Intelligence Center to generate or review results, then use Health Plan for follow-up."}
+              {text(
+                "After upload, the report will appear here, then you can move to Intelligence Center to generate a patient-friendly summary and doctor-ready brief.",
+                "بعد الرفع، سيظهر التقرير هنا، ثم تستطيع الانتقال إلى مركز الذكاء لتوليد ملخص للمريض وملخص جاهز للطبيب."
+              )}
             </p>
-          </div>
 
-          <div className="reportsCardGrid">
-            {visibleReports.map((report) => {
-              const decision = getReportDecision(report);
+            <div className="ohButtonRow" style={{ justifyContent: "center" }}>
+              <Link href="/lab-upload" className="primaryBtn">
+                {text("Upload Medical Report", "رفع تقرير طبي")}
+              </Link>
 
-              return (
-                <article className="reportConversionCard" key={report.reportId}>
-                  <div className="reportCardTop">
-                    <span>{decision.label}</span>
-                    <strong>{getReportTypeLabel(report.reportType)}</strong>
-                  </div>
+              <Link href="/dashboard" className="secondaryBtn">
+                {text("Dashboard", "لوحة التحكم")}
+              </Link>
+            </div>
+          </section>
+        )}
 
-                  <h3>{report.fileName}</h3>
+        {!loading && !message && reports.length > 0 && (
+          <section className="ohCard">
+            <div className="ohCardHeader">
+              <div>
+                <p className="ohMetricLabel">
+                  {text("Saved Reports", "التقارير المحفوظة")}
+                </p>
 
-                  <div className="reportMetaGrid">
-                    <div>
-                      <span>{isArabic ? "تاريخ الرفع" : "Uploaded"}</span>
-                      <strong>{formatDate(report.uploadedAt)}</strong>
-                    </div>
-
-                    <div>
-                      <span>{isArabic ? "الاستخراج" : "Extraction"}</span>
-                      <strong>{getExtractionLabel(report.extractionStatus)}</strong>
-                    </div>
-
-                    <div>
-                      <span>{isArabic ? "حالة الذكاء" : "Intelligence"}</span>
-                      <strong>
-                        {report.hasSavedIntelligence
-                          ? isArabic
-                            ? "محفوظ"
-                            : "Saved"
-                          : report.aiStatus || (isArabic ? "بانتظار" : "Pending")}
-                      </strong>
-                    </div>
-                  </div>
-
-                  <div className="reportDecisionBox">
-                    <h4>{decision.title}</h4>
-                    <p>{decision.description}</p>
-                  </div>
-
-                  {report.summary && (
-                    <p className="reportSummary">
-                      {report.summary.length > 220
-                        ? report.summary.slice(0, 220) + "..."
-                        : report.summary}
-                    </p>
+                <h2 className="ohCardTitle">
+                  {text(
+                    "Every report should lead to a clear next step",
+                    "كل تقرير يجب أن يقود إلى خطوة واضحة"
                   )}
+                </h2>
 
-                  {report.nextBestAction && (
-                    <p className="reportNextText">
-                      <strong>{isArabic ? "الخطوة التالية:" : "Next:"}</strong>{" "}
-                      {report.nextBestAction}
-                    </p>
+                <p className="ohCardText">
+                  {text(
+                    "Open the original report, continue to Intelligence Center to generate or review results, then use Health Plan for follow-up.",
+                    "افتح التقرير الأصلي، أو انتقل إلى مركز الذكاء لتوليد أو مراجعة النتيجة، ثم استخدم الخطة الصحية للمتابعة."
                   )}
+                </p>
+              </div>
 
-                  <div className="reportsActionRow">
-                    <button
-                      type="button"
-                      className="launchSecondary reportButton"
-                      onClick={() => openMedicalReport(report.filePath)}
-                      disabled={!report.filePath}
-                    >
-                      {isArabic ? "فتح التقرير" : "Open Report"}
-                    </button>
+              <span className="ohStatusBadge neutral">
+                {filteredReports.length} {text("shown", "ظاهر")}
+              </span>
+            </div>
 
-                    <Link href={decision.href} className="launchPrimary">
-                      {decision.buttonText}
-                    </Link>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "minmax(0, 1fr) minmax(200px, 280px)",
+                gap: "12px",
+                marginBottom: "18px",
+              }}
+            >
+              <input
+                type="text"
+                placeholder={text("Search by file name", "ابحث باسم الملف")}
+                value={searchTerm}
+                onChange={(event) => {
+                  setSearchTerm(event.target.value);
+                  setVisibleReportsCount(REPORTS_INITIAL_LIMIT);
+                }}
+              />
 
-                    {report.hasSavedIntelligence && (
-                      <Link href="/health-plan" className="launchSecondary">
-                        {isArabic ? "خطة الصحة" : "Health Plan"}
-                      </Link>
+              <select
+                value={reportFilter}
+                onChange={(event) => {
+                  setReportFilter(event.target.value as ReportFilter);
+                  setVisibleReportsCount(REPORTS_INITIAL_LIMIT);
+                }}
+              >
+                <option value="all">{text("All reports", "كل التقارير")}</option>
+                <option value="saved">{text("Saved intelligence", "ذكاء محفوظ")}</option>
+                <option value="needs-generation">
+                  {text("Needs generation", "تحتاج توليد")}
+                </option>
+                <option value="completed-extraction">
+                  {text("Completed extraction", "استخراج مكتمل")}
+                </option>
+              </select>
+            </div>
+
+            {filteredReports.length === 0 ? (
+              <div className="ohEmptyState">
+                <h2>{text("No matching reports", "لا توجد تقارير مطابقة")}</h2>
+                <p>
+                  {text(
+                    "Try changing the search term or selected filter.",
+                    "جرّب تغيير البحث أو الفلتر المحدد."
+                  )}
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="ohGrid cols2">
+                  {visibleReports.map((report) => {
+                    const decision = getReportDecision(report);
+
+                    return (
+                      <article className="ohCard" key={report.reportId}>
+                        <div className="ohCardHeader">
+                          <div>
+                            <p className="ohMetricLabel">
+                              {getReportTypeLabel(report.reportType)}
+                            </p>
+
+                            <h3 className="ohCardTitle">{report.fileName}</h3>
+                          </div>
+
+                          <span className={`ohStatusBadge ${decision.tone}`}>
+                            {decision.label}
+                          </span>
+                        </div>
+
+                        <div className="ohGrid cols2" style={{ gap: "12px" }}>
+                          <div className="ohMetricCard">
+                            <span className="ohMetricLabel">
+                              {text("Uploaded", "تاريخ الرفع")}
+                            </span>
+                            <span className="ohMetricValue" style={{ fontSize: "1.05rem" }}>
+                              {formatDate(report.uploadedAt)}
+                            </span>
+                          </div>
+
+                          <div className="ohMetricCard">
+                            <span className="ohMetricLabel">
+                              {text("Extraction", "الاستخراج")}
+                            </span>
+                            <span className="ohMetricValue" style={{ fontSize: "1.05rem" }}>
+                              {getExtractionLabel(report.extractionStatus)}
+                            </span>
+                            <span className={`ohStatusBadge ${getExtractionTone(report.extractionStatus)}`}>
+                              {report.extractionStatus || "Pending"}
+                            </span>
+                          </div>
+
+                          <div className="ohMetricCard">
+                            <span className="ohMetricLabel">
+                              {text("Intelligence", "حالة الذكاء")}
+                            </span>
+                            <span className="ohMetricValue" style={{ fontSize: "1.05rem" }}>
+                              {report.hasSavedIntelligence
+                                ? text("Saved", "محفوظ")
+                                : report.aiStatus || text("Pending", "بانتظار")}
+                            </span>
+                            <span className="ohMetricHint">
+                              {report.savedUpdatedAt
+                                ? `${text("Updated", "آخر تحديث")}: ${formatDate(report.savedUpdatedAt)}`
+                                : text("No saved generation yet", "لا يوجد توليد محفوظ بعد")}
+                            </span>
+                          </div>
+
+                          <div className="ohMetricCard">
+                            <span className="ohMetricLabel">
+                              {text("Risk Signal", "إشارة الخطورة")}
+                            </span>
+                            <span className="ohMetricValue" style={{ fontSize: "1.05rem" }}>
+                              {report.riskLevel || text("Pending", "بانتظار")}
+                            </span>
+                            <span className={`ohStatusBadge ${getRiskTone(report.riskLevel)}`}>
+                              {report.riskLevel || text("Neutral", "محايد")}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="ohActionPanel">
+                          <p className="ohMetricLabel">{decision.title}</p>
+                          <p className="ohCardText">{decision.description}</p>
+                        </div>
+
+                        {report.summary && (
+                          <p className="ohCardText">
+                            {report.summary.length > 220
+                              ? report.summary.slice(0, 220) + "..."
+                              : report.summary}
+                          </p>
+                        )}
+
+                        {report.nextBestAction && (
+                          <div className="ohTrustNotice">
+                            <span aria-hidden="true">➡️</span>
+                            <div>
+                              <strong>{text("Next:", "الخطوة التالية:")}</strong>{" "}
+                              {report.nextBestAction}
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="ohButtonRow">
+                          <button
+                            type="button"
+                            className="secondaryBtn"
+                            onClick={() => openMedicalReport(report.filePath)}
+                            disabled={!report.filePath}
+                          >
+                            {text("Open Report", "فتح التقرير")}
+                          </button>
+
+                          <Link href={decision.href} className="primaryBtn">
+                            {decision.buttonText}
+                          </Link>
+
+                          {report.hasSavedIntelligence && (
+                            <Link href="/health-plan" className="secondaryBtn">
+                              {text("Health Plan", "خطة الصحة")}
+                            </Link>
+                          )}
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+
+                {filteredReports.length > REPORTS_INITIAL_LIMIT && (
+                  <div
+                    className="ohButtonRow"
+                    style={{ justifyContent: "center", marginTop: "22px" }}
+                  >
+                    {canShowMoreReports && (
+                      <button
+                        type="button"
+                        className="secondaryBtn"
+                        onClick={() =>
+                          setVisibleReportsCount((current) =>
+                            Math.min(current + REPORTS_LOAD_STEP, filteredReports.length)
+                          )
+                        }
+                      >
+                        {text(
+                          `Show More (${Math.min(REPORTS_LOAD_STEP, hiddenReportsCount)})`,
+                          `عرض المزيد (${Math.min(REPORTS_LOAD_STEP, hiddenReportsCount)})`
+                        )}
+                      </button>
+                    )}
+
+                    {canShowLessReports && (
+                      <button
+                        type="button"
+                        className="secondaryBtn"
+                        onClick={() => setVisibleReportsCount(REPORTS_INITIAL_LIMIT)}
+                      >
+                        {text("Show Less", "عرض أقل")}
+                      </button>
                     )}
                   </div>
-                </article>
-              );
-            })}
+                )}
+              </>
+            )}
+          </section>
+        )}
+
+        <section className="ohTrustNotice">
+          <span aria-hidden="true">🛡️</span>
+          <div>
+            <strong>
+              {text("Privacy and medical safety reminder", "تذكير الخصوصية والسلامة الطبية")}
+            </strong>
+            <br />
+            {text(
+              "Reports Library organizes your uploaded medical documents and intelligence status. It does not replace diagnosis, treatment, emergency care, or a licensed clinician.",
+              "مكتبة التقارير تنظم مستنداتك الطبية المرفوعة وحالة الذكاء الصحي. لا تستبدل التشخيص أو العلاج أو الرعاية الطارئة أو الطبيب المختص."
+            )}
           </div>
-          {reports.length > REPORTS_INITIAL_LIMIT && (
-            <div className="reportsShowToggle">
-              {canShowMoreReports && (
-                <button
-                  type="button"
-                  className="launchSecondary"
-                  onClick={() =>
-                    setVisibleReportsCount((current) =>
-                      Math.min(current + REPORTS_LOAD_STEP, reports.length)
-                    )
-                  }
-                >
-                  {isArabic
-                    ? `عرض المزيد (${Math.min(REPORTS_LOAD_STEP, hiddenReportsCount)})`
-                    : `Show More (${Math.min(REPORTS_LOAD_STEP, hiddenReportsCount)})`}
-                </button>
-              )}
-
-              {canShowLessReports && (
-                <button
-                  type="button"
-                  className="launchSecondary"
-                  onClick={() => setVisibleReportsCount(REPORTS_INITIAL_LIMIT)}
-                >
-                  {isArabic ? "عرض أقل" : "Show Less"}
-                </button>
-              )}
-            </div>
-          )}
         </section>
-      )}
 
-      <section className="reportsBottomNav">
-        <div>
-          <p className="launchEyebrow">
-            {isArabic ? "المسار الكامل" : "Full path"}
-          </p>
-          <h2>
-            {isArabic
-              ? "من رفع التقرير إلى خطة المتابعة"
-              : "From report upload to follow-up plan"}
-          </h2>
-          <p>
-            {isArabic
-              ? "ارفع التقرير، افتح مركز الذكاء، راجع الملخصات، ثم انتقل إلى خطة المتابعة."
-              : "Upload the report, open Intelligence Center, review summaries, then continue to your follow-up plan."}
-          </p>
-        </div>
+        <section className="ohCard">
+          <div className="ohCardHeader">
+            <div>
+              <p className="ohMetricLabel">
+                {text("Full Path", "المسار الكامل")}
+              </p>
 
-        <div className="reportsBottomLinks">
-          <Link href="/lab-upload">{isArabic ? "رفع تقرير" : "Upload"}</Link>
-          <Link href="/intelligence">{isArabic ? "الذكاء" : "Intelligence"}</Link>
-          <Link href="/health-plan">{isArabic ? "الخطة" : "Health Plan"}</Link>
-          <Link href="/doctor-portal">{isArabic ? "بوابة الطبيب" : "Doctor Portal"}</Link>
-          <Link href="/dashboard">{isArabic ? "لوحة التحكم" : "Dashboard"}</Link>
-        </div>
-      </section>
+              <h2 className="ohCardTitle">
+                {text(
+                  "From report upload to follow-up plan",
+                  "من رفع التقرير إلى خطة المتابعة"
+                )}
+              </h2>
+
+              <p className="ohCardText">
+                {text(
+                  "Upload the report, open Intelligence Center, review summaries, then continue to your follow-up plan.",
+                  "ارفع التقرير، افتح مركز الذكاء، راجع الملخصات، ثم انتقل إلى خطة المتابعة."
+                )}
+              </p>
+            </div>
+          </div>
+
+          <div className="ohButtonRow">
+            <Link href="/lab-upload" className="secondaryBtn">
+              {text("Upload", "رفع تقرير")}
+            </Link>
+
+            <Link href="/intelligence" className="primaryBtn">
+              {text("Intelligence", "الذكاء")}
+            </Link>
+
+            <Link href="/health-plan" className="secondaryBtn">
+              {text("Health Plan", "الخطة")}
+            </Link>
+
+            <Link href="/doctor-portal" className="secondaryBtn">
+              {text("Doctor Portal", "بوابة الطبيب")}
+            </Link>
+
+            <Link href="/dashboard" className="secondaryBtn">
+              {text("Dashboard", "لوحة التحكم")}
+            </Link>
+          </div>
+        </section>
+      </div>
     </main>
   );
 }
