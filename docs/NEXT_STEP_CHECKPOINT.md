@@ -240,3 +240,24 @@ Next safe step:
 Do not add new Dashboard sections.
 Do not add random features.
 Keep changes scoped and build after each change.
+
+---
+
+## Health Plan Connection QA Stable Update
+
+Current stable point:
+
+- Health Plan connection QA completed.
+- /health-plan correctly reads assessments, reports, generated intelligence, check-ins, and health history.
+- Health Plan detects whether generated intelligence exists using generated_intelligence_results.
+- If reports exist but generated intelligence is missing, the next best action points to /intelligence.
+- If generated intelligence exists, Health Plan reflects it in readiness, metrics, and reports/intelligence sections.
+- Health Plan includes direct links to Reports and Intelligence Center.
+- No code change was required.
+- Dashboard was not modified.
+- Intelligence Center remains stable.
+
+Next safe step:
+
+- Move to Reports / Lab Upload connection QA,
+- or update project context and keep Health Plan marked as stable.
