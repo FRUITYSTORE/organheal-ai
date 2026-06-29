@@ -323,7 +323,91 @@ export default function Home() {
   ];
 
   return (
-    <main className="ohPageShell" dir={isArabic ? "rtl" : "ltr"} lang={isArabic ? "ar" : "en"}>
+    <main className="ohPageShell publicHomePage" dir={isArabic ? "rtl" : "ltr"} lang={isArabic ? "ar" : "en"}>
+      <style>{`
+        /* ORGANHEAL_PUBLIC_HOME_POLISH */
+        .publicHomePage a {
+          color: inherit;
+          text-decoration: none;
+        }
+
+        .publicHomePage .ohHeroGrid {
+          grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.75fr);
+          align-items: center;
+        }
+
+        .publicHomePage .ohHero input {
+          width: 100%;
+          min-height: 46px;
+          border: 1px solid rgba(148, 163, 184, 0.34);
+          border-radius: 14px;
+          padding: 12px 14px;
+          background: rgba(255, 255, 255, 0.92);
+          color: var(--oh-text);
+          font: inherit;
+          outline: none;
+        }
+
+        .publicHomePage .ohHero input:focus {
+          border-color: rgba(20, 184, 166, 0.65);
+          box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.12);
+        }
+
+        .publicHomePage .ohCard,
+        .publicHomePage .ohMetricCard {
+          overflow: hidden;
+        }
+
+        .publicHomePage a.ohCard,
+        .publicHomePage a.ohMetricCard {
+          color: inherit;
+          text-decoration: none;
+          transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+        }
+
+        .publicHomePage a.ohCard:hover,
+        .publicHomePage a.ohMetricCard:hover {
+          transform: translateY(-3px);
+          border-color: rgba(20, 184, 166, 0.32);
+          box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+        }
+
+        .publicHomePage .primaryBtn,
+        .publicHomePage .secondaryBtn {
+          text-decoration: none;
+          white-space: nowrap;
+        }
+
+        .publicHomePage .ohButtonRow {
+          align-items: center;
+        }
+
+        .publicHomePage .ohMetricCard span:first-child {
+          line-height: 1;
+        }
+
+        @media (max-width: 980px) {
+          .publicHomePage .ohHeroGrid {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        @media (max-width: 640px) {
+          .publicHomePage .ohTitle {
+            font-size: clamp(2.1rem, 12vw, 3.1rem);
+          }
+
+          .publicHomePage .ohButtonRow {
+            width: 100%;
+          }
+
+          .publicHomePage .primaryBtn,
+          .publicHomePage .secondaryBtn {
+            width: 100%;
+            justify-content: center;
+          }
+        }
+      `}</style>
       <div className="ohContainer ohStack large" style={{ padding: "32px 0 64px" }}>
         <section className="ohHero">
           <div className="ohHeroGrid">
@@ -796,3 +880,4 @@ export default function Home() {
     </main>
   );
 }
+
