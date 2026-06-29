@@ -332,6 +332,103 @@ export default function HealthPlanPage() {
       ? "متابعة وقائية أسبوعية"
       : "Weekly preventive check-in";
 
+
+  const readinessItems = [
+    {
+      label: isArabic ? "التقييم الصحي" : "Health assessment",
+      ready: hasAssessment,
+      note: isArabic
+        ? "يحدد أولوية الخطة الأساسية."
+        : "Defines the core priority for the plan.",
+    },
+    {
+      label: isArabic ? "التقارير الطبية" : "Medical reports",
+      ready: hasReports,
+      note: isArabic
+        ? "تضيف بيانات سريرية أقوى للخطة."
+        : "Adds stronger clinical context.",
+    },
+    {
+      label: isArabic ? "الذكاء الصحي" : "Generated intelligence",
+      ready: hasGeneratedIntelligence,
+      note: isArabic
+        ? "يحوّل البيانات إلى ملخصات قابلة للتنفيذ."
+        : "Turns data into actionable summaries.",
+    },
+    {
+      label: isArabic ? "التحديث الصحي" : "Wellness check-in",
+      ready: hasCheckIn,
+      note: isArabic
+        ? "يعكس الحالة اليومية والأعراض والعادات."
+        : "Reflects daily symptoms, habits, and wellbeing.",
+    },
+    {
+      label: isArabic ? "التاريخ الصحي" : "Health history",
+      ready: hasHistory,
+      note: isArabic
+        ? "يساعد على مقارنة التقدم عبر الزمن."
+        : "Helps compare progress over time.",
+    },
+  ];
+
+  const weeklyFocusTitle =
+    priorityScore === null
+      ? isArabic
+        ? "ابدأ ببناء البيانات الأساسية"
+        : "Start by building your baseline"
+      : priorityScore < 50
+      ? isArabic
+        ? "متابعة قريبة ومنظمة هذا الأسبوع"
+        : "Close and structured follow-up this week"
+      : priorityScore < 80
+      ? isArabic
+        ? "تحسين ثابت بخطوات واقعية"
+        : "Steady improvement with realistic steps"
+      : isArabic
+      ? "حافظ على المتابعة الوقائية"
+      : "Maintain preventive follow-up";
+
+  const weeklyFocusDescription =
+    priorityScore === null
+      ? isArabic
+        ? "أكمل تقييمًا واحدًا وارفع تقريرًا إن وجد حتى تصبح الخطة أكثر دقة."
+        : "Complete one assessment and upload a report if available to make the plan more accurate."
+      : priorityScore < 50
+      ? isArabic
+        ? "ركز على تنفيذ مهام بسيطة، متابعة الأعراض، وتجهيز الأسئلة للطبيب."
+        : "Focus on simple tasks, symptom tracking, and preparing questions for your doctor."
+      : priorityScore < 80
+      ? isArabic
+        ? "استمر بالتحديثات الصحية ومراجعة التقارير لتحديد أي نمط متكرر."
+        : "Keep check-ins updated and review reports to identify recurring patterns."
+      : isArabic
+      ? "استمر بخطوات وقائية صغيرة وراجع الخطة أسبوعيًا."
+      : "Continue small preventive actions and review the plan weekly.";
+
+  const clinicalFollowUpCards = [
+    {
+      title: isArabic ? "هذا الأسبوع" : "This week",
+      value: followUpRhythm,
+      note: isArabic
+        ? "إيقاع المتابعة المقترح حسب البيانات المتوفرة."
+        : "Suggested follow-up rhythm based on available data.",
+    },
+    {
+      title: isArabic ? "أولوية الخطة" : "Plan priority",
+      value: priorityOrganDisplay,
+      note: isArabic
+        ? "المنطقة الصحية التي تحتاج أكبر اهتمام حاليًا."
+        : "The health area that currently needs the most attention.",
+    },
+    {
+      title: isArabic ? "مستوى المتابعة" : "Follow-up level",
+      value: planIntensity,
+      note: isArabic
+        ? "مؤشر عملي لقوة المتابعة المطلوبة."
+        : "A practical indicator of required follow-up intensity.",
+    },
+  ];
+
   const nextBestAction = !hasAssessment
     ? {
         label: isArabic ? "ابدأ بالتقييم" : "Start your assessment",
@@ -588,6 +685,173 @@ export default function HealthPlanPage() {
   return (
     <main className="healthPlanIntelligencePage" dir={isArabic ? "rtl" : "ltr"}>
       <div className="healthPlanShell">
+
+        <style>{`
+          .healthPlanIntelligencePage {
+            --hp-card-border: rgba(148, 163, 184, 0.24);
+            --hp-card-bg: rgba(255, 255, 255, 0.86);
+            --hp-soft-bg: rgba(248, 250, 252, 0.88);
+          }
+
+          .healthPlanIntelligencePage[dir="rtl"] {
+            text-align: right;
+          }
+
+          .healthPlanCommandCenter {
+            display: grid;
+            grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+            gap: 18px;
+            margin: 22px 0;
+          }
+
+          .healthPlanCommandMain,
+          .healthPlanReadinessCard,
+          .healthPlanClinicalCard {
+            border: 1px solid var(--hp-card-border);
+            background: var(--hp-card-bg);
+            border-radius: 24px;
+            padding: 22px;
+            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+            backdrop-filter: blur(12px);
+          }
+
+          .healthPlanCommandMain h2,
+          .healthPlanReadinessCard h2,
+          .healthPlanClinicalCard h2 {
+            margin: 8px 0 10px;
+            line-height: 1.25;
+          }
+
+          .healthPlanCommandMain p,
+          .healthPlanReadinessCard p,
+          .healthPlanClinicalCard p {
+            line-height: 1.75;
+          }
+
+          .healthPlanCommandStats {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 18px;
+          }
+
+          .healthPlanCommandStats div {
+            border: 1px solid var(--hp-card-border);
+            background: var(--hp-soft-bg);
+            border-radius: 18px;
+            padding: 14px;
+          }
+
+          .healthPlanCommandStats span,
+          .healthPlanReadinessItem span,
+          .healthPlanClinicalGrid span {
+            display: block;
+            font-size: 0.78rem;
+            opacity: 0.72;
+            margin-bottom: 6px;
+          }
+
+          .healthPlanCommandStats strong,
+          .healthPlanClinicalGrid strong {
+            display: block;
+            font-size: 1.05rem;
+            line-height: 1.4;
+          }
+
+          .healthPlanReadinessList {
+            display: grid;
+            gap: 10px;
+            margin-top: 14px;
+          }
+
+          .healthPlanReadinessItem {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 12px;
+            align-items: start;
+            border: 1px solid var(--hp-card-border);
+            background: var(--hp-soft-bg);
+            border-radius: 16px;
+            padding: 12px;
+          }
+
+          .healthPlanIntelligencePage[dir="rtl"] .healthPlanReadinessItem {
+            grid-template-columns: 1fr auto;
+          }
+
+          .healthPlanReadinessDot {
+            width: 28px;
+            height: 28px;
+            border-radius: 999px;
+            display: grid;
+            place-items: center;
+            font-size: 0.8rem;
+            font-weight: 800;
+            border: 1px solid var(--hp-card-border);
+            background: white;
+          }
+
+          .healthPlanReadinessItem.ready .healthPlanReadinessDot {
+            background: #dcfce7;
+            color: #166534;
+            border-color: #bbf7d0;
+          }
+
+          .healthPlanReadinessItem.pending .healthPlanReadinessDot {
+            background: #fff7ed;
+            color: #9a3412;
+            border-color: #fed7aa;
+          }
+
+          .healthPlanClinicalGrid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+            margin-top: 14px;
+          }
+
+          .healthPlanClinicalGrid article {
+            border: 1px solid var(--hp-card-border);
+            background: var(--hp-soft-bg);
+            border-radius: 18px;
+            padding: 16px;
+          }
+
+          .healthPlanRoadmap > div,
+          .healthPlanTaskItem,
+          .healthPlanMetricsGrid article,
+          .healthPlanCard,
+          .healthPlanPanel {
+            transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+          }
+
+          .healthPlanRoadmap > div:hover,
+          .healthPlanTaskItem:hover,
+          .healthPlanMetricsGrid article:hover,
+          .healthPlanCard:hover,
+          .healthPlanPanel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+          }
+
+          .healthPlanIntelligencePage[dir="rtl"] .healthPlanRoadmap div,
+          .healthPlanIntelligencePage[dir="rtl"] .healthPlanTaskItem,
+          .healthPlanIntelligencePage[dir="rtl"] .healthPlanInfoList div {
+            text-align: right;
+          }
+
+          @media (max-width: 900px) {
+            .healthPlanCommandCenter,
+            .healthPlanClinicalGrid {
+              grid-template-columns: 1fr;
+            }
+
+            .healthPlanCommandStats {
+              grid-template-columns: 1fr;
+            }
+          }
+        `}</style>
+
         <PageBackActions />
 
         <section className="healthPlanHero">
@@ -647,6 +911,105 @@ export default function HealthPlanPage() {
           </section>
         ) : (
           <>
+
+            <section className="healthPlanCommandCenter">
+              <div className="healthPlanCommandMain">
+                <p className="launchEyebrow">
+                  {isArabic ? "مركز قيادة الخطة" : "Plan command center"}
+                </p>
+
+                <h2>{weeklyFocusTitle}</h2>
+
+                <p>{weeklyFocusDescription}</p>
+
+                <div className="healthPlanCommandStats">
+                  <div>
+                    <span>{isArabic ? "جاهزية الخطة" : "Plan readiness"}</span>
+                    <strong>{planReadinessScore}%</strong>
+                  </div>
+
+                  <div>
+                    <span>{isArabic ? "المهام المكتملة" : "Completed tasks"}</span>
+                    <strong>
+                      {completedTaskCount}/{totalTasks}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>{isArabic ? "التقدم الحالي" : "Current progress"}</span>
+                    <strong>{taskProgress}%</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div className="healthPlanReadinessCard">
+                <p className="launchEyebrow">
+                  {isArabic ? "قائمة الجاهزية" : "Readiness checklist"}
+                </p>
+
+                <h2>
+                  {isArabic
+                    ? "ما الذي يجعل الخطة أذكى؟"
+                    : "What makes this plan smarter?"}
+                </h2>
+
+                <div className="healthPlanReadinessList">
+                  {readinessItems.map((item) => (
+                    <div
+                      key={item.label}
+                      className={`healthPlanReadinessItem ${
+                        item.ready ? "ready" : "pending"
+                      }`}
+                    >
+                      {isArabic ? (
+                        <>
+                          <div>
+                            <strong>{item.label}</strong>
+                            <span>{item.note}</span>
+                          </div>
+                          <div className="healthPlanReadinessDot">
+                            {item.ready ? "✓" : "!"}
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="healthPlanReadinessDot">
+                            {item.ready ? "✓" : "!"}
+                          </div>
+                          <div>
+                            <strong>{item.label}</strong>
+                            <span>{item.note}</span>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+
+            <section className="healthPlanClinicalCard">
+              <p className="launchEyebrow">
+                {isArabic ? "إيقاع المتابعة السريرية" : "Clinical follow-up rhythm"}
+              </p>
+
+              <h2>
+                {isArabic
+                  ? "خطة عملية حسب أولوية المستخدم"
+                  : "A practical plan based on the user priority"}
+              </h2>
+
+              <div className="healthPlanClinicalGrid">
+                {clinicalFollowUpCards.map((item) => (
+                  <article key={item.title}>
+                    <span>{item.title}</span>
+                    <strong>{item.value}</strong>
+                    <p>{item.note}</p>
+                  </article>
+                ))}
+              </div>
+            </section>
+
             <section className="healthPlanMetricsGrid">
               <article>
                 <span>{isArabic ? "الأولوية" : "Priority"}</span>
