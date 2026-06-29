@@ -1,9 +1,11 @@
-"use client";
+﻿"use client";
 
 import PageBackActions from "../components/PageBackActions";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
+
+type Language = "en" | "ar";
 
 type Assessment = {
   organ_name: string;
@@ -41,6 +43,9 @@ type SavedIntelligence = {
 };
 
 export default function ProfilePage() {
+  const [language, setLanguage] = useState<Language>("en");
+  const isArabic = language === "ar";
+
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [memberSince, setMemberSince] = useState("");
@@ -57,12 +62,62 @@ export default function ProfilePage() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
+    function syncLanguage() {
+      const savedLanguage =
+        (localStorage.getItem("organheal-language") as Language | null) || "en";
+
+      setLanguage(savedLanguage);
+      document.documentElement.lang = savedLanguage;
+      document.documentElement.dir = savedLanguage === "ar" ? "rtl" : "ltr";
+    }
+
+    syncLanguage();
     fetchProfileData();
+
+    window.addEventListener("storage", syncLanguage);
+    window.addEventListener("organheal-language-change", syncLanguage);
+
+    return () => {
+      window.removeEventListener("storage", syncLanguage);
+      window.removeEventListener("organheal-language-change", syncLanguage);
+    };
   }, []);
+
+  function getCurrentLanguage() {
+    return (localStorage.getItem("organheal-language") as Language | null) || "en";
+  }
+
+  function formatDate(value: string | null | undefined) {
+    if (!value) {
+      return isArabic ? "غير متاح" : "Not available";
+    }
+
+    return new Date(value).toLocaleDateString(isArabic ? "ar-AE" : "en-US");
+  }
+
+  function localizeOrganName(value: string | null | undefined) {
+    if (!value) return isArabic ? "غير متاح" : "N/A";
+    if (!isArabic) return value;
+
+    const normalized = value.toLowerCase();
+
+    if (normalized.includes("heart")) return "القلب";
+    if (normalized.includes("liver")) return "الكبد";
+    if (normalized.includes("kidney")) return "الكلى";
+    if (normalized.includes("lung")) return "الرئة";
+    if (normalized.includes("brain")) return "الدماغ";
+    if (normalized.includes("metabolic")) return "الأيض";
+    if (normalized.includes("general")) return "الصحة العامة";
+
+    return value;
+  }
 
   async function fetchProfileData() {
     setLoading(true);
     setMessage("");
+
+    const currentLanguage = getCurrentLanguage();
+    const currentIsArabic = currentLanguage === "ar";
 
     const { data: userData, error: userError } = await supabase.auth.getUser();
 
@@ -82,10 +137,14 @@ export default function ProfilePage() {
     const profile = profileData as Profile | null;
 
     setEmail(profile?.email || user.email || "");
-    setUsername(profile?.username || "User");
+    setUsername(profile?.username || (currentIsArabic ? "مستخدم" : "User"));
     setMemberSince(
       profile?.created_at
-        ? new Date(profile.created_at).toLocaleDateString()
+        ? new Date(profile.created_at).toLocaleDateString(
+            currentIsArabic ? "ar-AE" : "en-US"
+          )
+        : currentIsArabic
+        ? "حديثًا"
         : "Recently"
     );
 
@@ -96,7 +155,11 @@ export default function ProfilePage() {
       .order("created_at", { ascending: false });
 
     if (organError) {
-      setMessage("Database error: " + organError.message);
+      setMessage(
+        currentIsArabic
+          ? "حدث خطأ في قاعدة البيانات: " + organError.message
+          : "Database error: " + organError.message
+      );
       setLoading(false);
       return;
     }
@@ -110,7 +173,11 @@ export default function ProfilePage() {
       .single();
 
     if (checkInError && checkInError.code !== "PGRST116") {
-      setMessage("Database error: " + checkInError.message);
+      setMessage(
+        currentIsArabic
+          ? "حدث خطأ في قاعدة البيانات: " + checkInError.message
+          : "Database error: " + checkInError.message
+      );
       setLoading(false);
       return;
     }
@@ -161,9 +228,7 @@ export default function ProfilePage() {
   ).length;
 
   const latestReportDate =
-    uploadedReports.length > 0
-      ? new Date(uploadedReports[0].created_at).toLocaleDateString()
-      : "";
+    uploadedReports.length > 0 ? formatDate(uploadedReports[0].created_at) : "";
 
   const latestAssessment = assessments[0] || null;
 
@@ -189,9 +254,9 @@ export default function ProfilePage() {
       : 0;
 
   function getStatus(score: number) {
-    if (score >= 80) return "Good";
-    if (score >= 50) return "Moderate";
-    return "High Risk";
+    if (score >= 80) return isArabic ? "جيد" : "Good";
+    if (score >= 50) return isArabic ? "متوسط" : "Moderate";
+    return isArabic ? "مرتفع الخطورة" : "High Risk";
   }
 
   function getScoreClass(score: number) {
@@ -208,75 +273,113 @@ export default function ProfilePage() {
   if (savedIntelligence.length > 0) completion += 25;
 
   const healthProfileStatus =
-    completion === 0 ? "Not Started" : completion < 75 ? "Building" : "Active";
+    completion === 0
+      ? isArabic
+        ? "لم يبدأ"
+        : "Not Started"
+      : completion < 75
+      ? isArabic
+        ? "قيد البناء"
+        : "Building"
+      : isArabic
+      ? "نشط"
+      : "Active";
 
   const recommendedAction =
     assessments.length === 0
       ? {
-          label: "Start your first health assessment",
-          description:
-            "Complete one organ assessment so OrganHeal can begin building your saved health identity.",
+          label: isArabic
+            ? "ابدأ أول تقييم صحي"
+            : "Start your first health assessment",
+          description: isArabic
+            ? "أكمل تقييمًا واحدًا حتى يبدأ OrganHeal ببناء هويتك الصحية المحفوظة."
+            : "Complete one organ assessment so OrganHeal can begin building your saved health identity.",
           href: "/assessment",
-          buttonText: "Start Assessment",
+          buttonText: isArabic ? "ابدأ التقييم" : "Start Assessment",
         }
       : uploadedReportsCount === 0
       ? {
-          label: "Upload your first medical report",
-          description:
-            "Add a lab report, radiology report, or medical document to strengthen your health profile.",
+          label: isArabic
+            ? "ارفع أول تقرير طبي"
+            : "Upload your first medical report",
+          description: isArabic
+            ? "أضف تقرير مختبر أو أشعة أو مستندًا طبيًا لتقوية ملفك الصحي."
+            : "Add a lab report, radiology report, or medical document to strengthen your health profile.",
           href: "/lab-upload",
-          buttonText: "Upload Report",
+          buttonText: isArabic ? "رفع تقرير" : "Upload Report",
         }
       : savedIntelligence.length === 0
       ? {
-          label: "Generate saved health intelligence",
-          description:
-            "Open Intelligence Center to generate and save insights from your reports.",
+          label: isArabic
+            ? "ولّد الذكاء الصحي المحفوظ"
+            : "Generate saved health intelligence",
+          description: isArabic
+            ? "افتح مركز الذكاء لتوليد وحفظ ملخصات ذكية من تقاريرك."
+            : "Open Intelligence Center to generate and save insights from your reports.",
           href: "/intelligence",
-          buttonText: "Open Intelligence",
+          buttonText: isArabic ? "افتح مركز الذكاء" : "Open Intelligence",
         }
       : !dailyCheckIn
       ? {
-          label: "Complete your first wellness check-in",
-          description:
-            "Add your latest sleep, mood, stress, hydration, energy, and activity status.",
+          label: isArabic
+            ? "أكمل أول تحديث صحي"
+            : "Complete your first wellness check-in",
+          description: isArabic
+            ? "أضف آخر حالة للنوم، المزاج، الضغط، الترطيب، الطاقة، والنشاط."
+            : "Add your latest sleep, mood, stress, hydration, energy, and activity status.",
           href: "/checkin",
-          buttonText: "Open Check-In",
+          buttonText: isArabic ? "افتح Check-In" : "Open Check-In",
         }
       : {
-          label: "Continue your follow-up plan",
-          description:
-            "Your profile is active. Review your health plan, action tasks, and follow-up rhythm.",
+          label: isArabic
+            ? "تابع خطة المتابعة الصحية"
+            : "Continue your follow-up plan",
+          description: isArabic
+            ? "ملفك الصحي نشط الآن. راجع الخطة الصحية، المهام، وإيقاع المتابعة."
+            : "Your profile is active. Review your health plan, action tasks, and follow-up rhythm.",
           href: "/health-plan",
-          buttonText: "Open Health Plan",
+          buttonText: isArabic ? "افتح الخطة الصحية" : "Open Health Plan",
         };
 
   return (
-    <main className="assistantPage">
+    <main className="assistantPage" dir={isArabic ? "rtl" : "ltr"}>
       <div className="assistantContainer">
         <PageBackActions />
 
         <div className="assistantHeader">
-          <p className="assistantBadge">USER PROFILE</p>
-          <h1>Your OrganHeal Profile</h1>
+          <p className="assistantBadge">
+            {isArabic ? "الملف الشخصي" : "USER PROFILE"}
+          </p>
+          <h1>{isArabic ? "ملفك في OrganHeal" : "Your OrganHeal Profile"}</h1>
           <p>
-            Your saved health identity, account summary, health data progress,
-            reports, intelligence, and recommended next step.
+            {isArabic
+              ? "هويتك الصحية المحفوظة، ملخص الحساب، تقدم البيانات الصحية، التقارير، الذكاء الصحي، والخطوة التالية المقترحة."
+              : "Your saved health identity, account summary, health data progress, reports, intelligence, and recommended next step."}
           </p>
         </div>
 
         <div className="chatWindow">
           {loading && (
             <div className="resultBox">
-              <p className="sectionLabel">Loading Profile</p>
-              <h2>Preparing your health identity...</h2>
+              <p className="sectionLabel">
+                {isArabic ? "تحميل الملف" : "Loading Profile"}
+              </p>
+              <h2>
+                {isArabic
+                  ? "جاري تحضير هويتك الصحية..."
+                  : "Preparing your health identity..."}
+              </h2>
             </div>
           )}
 
           {!loading && message && (
             <div className="resultBox">
-              <p className="sectionLabel">Profile Notice</p>
-              <h2>Could not load profile</h2>
+              <p className="sectionLabel">
+                {isArabic ? "تنبيه الملف" : "Profile Notice"}
+              </p>
+              <h2>
+                {isArabic ? "تعذر تحميل الملف" : "Could not load profile"}
+              </h2>
               <p>{message}</p>
             </div>
           )}
@@ -285,11 +388,20 @@ export default function ProfilePage() {
             <>
               <div className="healthIdentityHero">
                 <div>
-                  <p className="sectionLabel">Health Identity</p>
+                  <p className="sectionLabel">
+                    {isArabic ? "الهوية الصحية" : "Health Identity"}
+                  </p>
                   <h2>{username}</h2>
                   <p>{email}</p>
-                  <p>Member since: {memberSince}</p>
-                  <p>Health Profile Completion: {completion}%</p>
+                  <p>
+                    {isArabic ? "عضو منذ: " : "Member since: "}
+                    {memberSince}
+                  </p>
+                  <p>
+                    {isArabic
+                      ? `اكتمال الملف الصحي: ${completion}%`
+                      : `Health Profile Completion: ${completion}%`}
+                  </p>
                 </div>
 
                 <div className="healthIdentityStatus">
@@ -306,7 +418,9 @@ export default function ProfilePage() {
                   border: "1px solid rgba(34,211,238,0.22)",
                 }}
               >
-                <p className="sectionLabel">Recommended Next Step</p>
+                <p className="sectionLabel">
+                  {isArabic ? "الخطوة التالية المقترحة" : "Recommended Next Step"}
+                </p>
 
                 <h2>{recommendedAction.label}</h2>
 
@@ -327,64 +441,100 @@ export default function ProfilePage() {
 
               <div className="assessmentForm">
                 <div className="resultBox">
-                  <p className="sectionLabel">Overall Health Score</p>
+                  <p className="sectionLabel">
+                    {isArabic ? "المؤشر الصحي العام" : "Overall Health Score"}
+                  </p>
                   <h2 className={getScoreClass(overallScore)}>
                     {overallScore}/100
                   </h2>
                   <h3>
-                    {scoreInputs.length > 0 ? getStatus(overallScore) : "No Data Yet"}
+                    {scoreInputs.length > 0
+                      ? getStatus(overallScore)
+                      : isArabic
+                      ? "لا توجد بيانات بعد"
+                      : "No Data Yet"}
                   </h3>
                 </div>
 
                 <div className="resultBox">
-                  <p className="sectionLabel">Saved Organ Assessments</p>
+                  <p className="sectionLabel">
+                    {isArabic
+                      ? "تقييمات الأعضاء المحفوظة"
+                      : "Saved Organ Assessments"}
+                  </p>
                   <h2>{assessments.length}</h2>
-                  <p>Total saved organ modules.</p>
-                </div>
-
-                <div className="resultBox">
-                  <p className="sectionLabel">Uploaded Reports</p>
-                  <h2>{uploadedReportsCount}</h2>
                   <p>
-                    {processedReports} processed · {pendingReports} pending
+                    {isArabic
+                      ? "إجمالي وحدات تقييم الأعضاء المحفوظة."
+                      : "Total saved organ modules."}
                   </p>
                 </div>
 
                 <div className="resultBox">
-                  <p className="sectionLabel">Saved Intelligence</p>
-                  <h2>{savedIntelligence.length}</h2>
-                  <p>Saved intelligence results connected to your reports.</p>
+                  <p className="sectionLabel">
+                    {isArabic ? "التقارير المرفوعة" : "Uploaded Reports"}
+                  </p>
+                  <h2>{uploadedReportsCount}</h2>
+                  <p>
+                    {isArabic
+                      ? `${processedReports} مكتمل · ${pendingReports} قيد الانتظار`
+                      : `${processedReports} processed · ${pendingReports} pending`}
+                  </p>
                 </div>
 
                 <div className="resultBox">
-                  <p className="sectionLabel">Latest Check-In</p>
+                  <p className="sectionLabel">
+                    {isArabic ? "الذكاء الصحي المحفوظ" : "Saved Intelligence"}
+                  </p>
+                  <h2>{savedIntelligence.length}</h2>
+                  <p>
+                    {isArabic
+                      ? "نتائج ذكاء صحي محفوظة ومرتبطة بتقاريرك."
+                      : "Saved intelligence results connected to your reports."}
+                  </p>
+                </div>
+
+                <div className="resultBox">
+                  <p className="sectionLabel">
+                    {isArabic ? "آخر Check-In" : "Latest Check-In"}
+                  </p>
                   <h2>
                     {dailyCheckIn ? `${dailyCheckIn.wellness_score}/100` : "N/A"}
                   </h2>
                   <p>
                     {dailyCheckIn
-                      ? `${dailyCheckIn.mood} · ${new Date(
-                          dailyCheckIn.created_at
-                        ).toLocaleDateString()}`
+                      ? `${dailyCheckIn.mood} · ${formatDate(dailyCheckIn.created_at)}`
+                      : isArabic
+                      ? "لا يوجد تحديث صحي بعد"
                       : "No wellness check-in yet"}
                   </p>
                 </div>
 
                 <div className="resultBox">
-                  <p className="sectionLabel">Priority Organ</p>
-                  <h2>{priorityAssessment?.organ_name || "N/A"}</h2>
+                  <p className="sectionLabel">
+                    {isArabic ? "العضو ذو الأولوية" : "Priority Organ"}
+                  </p>
+                  <h2>{localizeOrganName(priorityAssessment?.organ_name)}</h2>
                   <p>
                     {priorityAssessment
-                      ? `Lowest current score: ${priorityAssessment.score}/100`
+                      ? isArabic
+                        ? `أقل مؤشر حالي: ${priorityAssessment.score}/100`
+                        : `Lowest current score: ${priorityAssessment.score}/100`
+                      : isArabic
+                      ? "أكمل التقييمات لتحديد العضو الذي يحتاج أولوية."
                       : "Complete assessments to identify your priority organ."}
                   </p>
                 </div>
               </div>
 
               <div className="resultBox">
-                <p className="sectionLabel">Saved Data Summary</p>
+                <p className="sectionLabel">
+                  {isArabic ? "ملخص البيانات المحفوظة" : "Saved Data Summary"}
+                </p>
 
-                <h2>{completion}% Complete</h2>
+                <h2>
+                  {isArabic ? `${completion}% مكتمل` : `${completion}% Complete`}
+                </h2>
 
                 <p
                   style={{
@@ -393,8 +543,9 @@ export default function ProfilePage() {
                     marginBottom: "18px",
                   }}
                 >
-                  This summary shows the main data currently connected to your
-                  OrganHeal profile.
+                  {isArabic
+                    ? "هذا الملخص يوضح أهم البيانات المرتبطة حاليًا بملفك في OrganHeal."
+                    : "This summary shows the main data currently connected to your OrganHeal profile."}
                 </p>
 
                 <div
@@ -405,45 +556,59 @@ export default function ProfilePage() {
                   }}
                 >
                   <div>
-                    <strong>Assessments</strong>
+                    <strong>{isArabic ? "التقييمات" : "Assessments"}</strong>
                     <p>{assessments.length}</p>
                   </div>
 
                   <div>
-                    <strong>Reports</strong>
+                    <strong>{isArabic ? "التقارير" : "Reports"}</strong>
                     <p>{uploadedReportsCount}</p>
                   </div>
 
                   <div>
-                    <strong>Saved Intelligence</strong>
+                    <strong>
+                      {isArabic ? "الذكاء المحفوظ" : "Saved Intelligence"}
+                    </strong>
                     <p>{savedIntelligence.length}</p>
                   </div>
 
                   <div>
                     <strong>Check-In</strong>
-                    <p>{dailyCheckIn ? "Active" : "Not started"}</p>
+                    <p>
+                      {dailyCheckIn
+                        ? isArabic
+                          ? "نشط"
+                          : "Active"
+                        : isArabic
+                        ? "لم يبدأ"
+                        : "Not started"}
+                    </p>
                   </div>
                 </div>
               </div>
 
               <div className="resultBox">
-                <p className="sectionLabel">Health Journey Timeline</p>
+                <p className="sectionLabel">
+                  {isArabic ? "مسار الرحلة الصحية" : "Health Journey Timeline"}
+                </p>
 
                 <div className="healthTimeline">
                   <div className="timelineItem active">
-                    <strong>Account Created</strong>
+                    <strong>{isArabic ? "تم إنشاء الحساب" : "Account Created"}</strong>
                     <span>{memberSince}</span>
                   </div>
 
                   <div
                     className={firstAssessment ? "timelineItem active" : "timelineItem"}
                   >
-                    <strong>First Assessment</strong>
+                    <strong>{isArabic ? "أول تقييم" : "First Assessment"}</strong>
                     <span>
                       {firstAssessment
-                        ? `${firstAssessment.organ_name} · ${new Date(
+                        ? `${localizeOrganName(firstAssessment.organ_name)} · ${formatDate(
                             firstAssessment.created_at
-                          ).toLocaleDateString()}`
+                          )}`
+                        : isArabic
+                        ? "لم يبدأ بعد"
                         : "Not started yet"}
                     </span>
                   </div>
@@ -451,10 +616,12 @@ export default function ProfilePage() {
                   <div
                     className={latestAssessment ? "timelineItem active" : "timelineItem"}
                   >
-                    <strong>Latest Assessment</strong>
+                    <strong>{isArabic ? "آخر تقييم" : "Latest Assessment"}</strong>
                     <span>
                       {latestAssessment
-                        ? `${latestAssessment.organ_name} · ${latestAssessment.score}/100`
+                        ? `${localizeOrganName(latestAssessment.organ_name)} · ${latestAssessment.score}/100`
+                        : isArabic
+                        ? "لا يوجد تقييم حديث"
                         : "No latest assessment"}
                     </span>
                   </div>
@@ -464,10 +631,16 @@ export default function ProfilePage() {
                       uploadedReportsCount > 0 ? "timelineItem active" : "timelineItem"
                     }
                   >
-                    <strong>Medical Reports Uploaded</strong>
+                    <strong>
+                      {isArabic ? "تم رفع التقارير الطبية" : "Medical Reports Uploaded"}
+                    </strong>
                     <span>
                       {uploadedReportsCount > 0
-                        ? `${uploadedReportsCount} report(s) · Latest: ${latestReportDate}`
+                        ? isArabic
+                          ? `${uploadedReportsCount} تقرير · آخر تقرير: ${latestReportDate}`
+                          : `${uploadedReportsCount} report(s) · Latest: ${latestReportDate}`
+                        : isArabic
+                        ? "لا توجد تقارير مرفوعة بعد"
                         : "No reports uploaded yet"}
                     </span>
                   </div>
@@ -479,10 +652,18 @@ export default function ProfilePage() {
                         : "timelineItem"
                     }
                   >
-                    <strong>Health Intelligence Saved</strong>
+                    <strong>
+                      {isArabic
+                        ? "تم حفظ الذكاء الصحي"
+                        : "Health Intelligence Saved"}
+                    </strong>
                     <span>
                       {savedIntelligence.length > 0
-                        ? `${savedIntelligence.length} saved result(s)`
+                        ? isArabic
+                          ? `${savedIntelligence.length} نتيجة محفوظة`
+                          : `${savedIntelligence.length} saved result(s)`
+                        : isArabic
+                        ? "لا يوجد ذكاء صحي محفوظ بعد"
                         : "No saved intelligence yet"}
                     </span>
                   </div>
@@ -492,6 +673,8 @@ export default function ProfilePage() {
                     <span>
                       {dailyCheckIn
                         ? `${dailyCheckIn.wellness_score}/100 · ${dailyCheckIn.mood}`
+                        : isArabic
+                        ? "لا يوجد Check-In بعد"
                         : "No check-in yet"}
                     </span>
                   </div>
@@ -499,9 +682,15 @@ export default function ProfilePage() {
               </div>
 
               <div className="resultBox">
-                <p className="sectionLabel">Profile Journey</p>
+                <p className="sectionLabel">
+                  {isArabic ? "رحلة الملف" : "Profile Journey"}
+                </p>
 
-                <h2>Continue from your saved identity</h2>
+                <h2>
+                  {isArabic
+                    ? "تابع من هويتك الصحية المحفوظة"
+                    : "Continue from your saved identity"}
+                </h2>
 
                 <p
                   style={{
@@ -511,8 +700,9 @@ export default function ProfilePage() {
                     margin: "0 auto 22px",
                   }}
                 >
-                  Your profile connects your account, assessments, reports,
-                  intelligence results, check-ins, and follow-up plan.
+                  {isArabic
+                    ? "ملفك يربط الحساب، التقييمات، التقارير، نتائج الذكاء الصحي، Check-Ins، وخطة المتابعة في مكان واحد."
+                    : "Your profile connects your account, assessments, reports, intelligence results, check-ins, and follow-up plan."}
                 </p>
 
                 <div
@@ -524,19 +714,19 @@ export default function ProfilePage() {
                   }}
                 >
                   <Link href="/dashboard" className="secondaryBtn">
-                    Dashboard
+                    {isArabic ? "لوحة التحكم" : "Dashboard"}
                   </Link>
 
                   <Link href="/reports" className="secondaryBtn">
-                    Reports
+                    {isArabic ? "التقارير" : "Reports"}
                   </Link>
 
                   <Link href="/intelligence" className="primaryBtn">
-                    Intelligence
+                    {isArabic ? "مركز الذكاء" : "Intelligence"}
                   </Link>
 
                   <Link href="/health-plan" className="secondaryBtn">
-                    Health Plan
+                    {isArabic ? "الخطة الصحية" : "Health Plan"}
                   </Link>
 
                   <Link href="/checkin" className="secondaryBtn">
