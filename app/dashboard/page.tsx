@@ -321,7 +321,7 @@ export default function DashboardPage() {
       label: isArabic ? "?????????" : "Assessments",
       value: String(assessments.length),
       detail: latestAssessment
-        ? `${localizeOrganName(latestAssessment.organ_name, isArabic)} · ${
+        ? `${localizeOrganName(latestAssessment.organ_name, isArabic)} Â· ${
             latestAssessment.score
           }/100`
         : isArabic
@@ -358,7 +358,7 @@ export default function DashboardPage() {
       label: isArabic ? "??????? ?????" : "Check-In",
       value: dailyCheckIn ? `${dailyCheckIn.wellness_score}/100` : "N/A",
       detail: dailyCheckIn
-        ? `${localizeMood(dailyCheckIn.mood, isArabic)} · ${formatDate(
+        ? `${localizeMood(dailyCheckIn.mood, isArabic)} Â· ${formatDate(
             dailyCheckIn.created_at,
             isArabic
           )}`
@@ -1232,6 +1232,90 @@ export default function DashboardPage() {
 
         <div className="mt-5 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-slate-700 ring-1 ring-slate-200">
           {item.signal}
+        </div>
+      </div>
+    ))}
+  </div>
+</section>
+
+<section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+    <div>
+      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
+        Priority Action Queue
+      </p>
+      <h2 className="mt-2 text-2xl font-bold text-slate-950">
+        What Needs Attention Next
+      </h2>
+      <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+        A focused queue that helps the user understand which actions should be
+        completed first to improve the quality of their health intelligence.
+      </p>
+    </div>
+
+    <div className="rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600">
+      Next Best Actions
+    </div>
+  </div>
+
+  <div className="mt-6 space-y-4">
+    {[
+      {
+        priority: "High",
+        title: "Complete today health check-in",
+        detail:
+          "Update symptoms, sleep, energy, hydration, and pain signals to keep the dashboard current.",
+        reason: "Improves daily intelligence accuracy",
+      },
+      {
+        priority: "High",
+        title: "Add latest lab values",
+        detail:
+          "Recent lab results make lab intelligence, risk patterns, and the doctor brief more useful.",
+        reason: "Strengthens clinical interpretation",
+      },
+      {
+        priority: "Medium",
+        title: "Review organ risk pattern",
+        detail:
+          "Check which organ system needs the most attention based on assessment and saved health data.",
+        reason: "Supports early risk awareness",
+      },
+      {
+        priority: "Medium",
+        title: "Prepare doctor brief",
+        detail:
+          "Generate a clean summary that organizes the most important information before a visit.",
+        reason: "Improves medical communication",
+      },
+    ].map((action, index) => (
+      <div
+        key={action.title}
+        className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-5 sm:flex-row sm:items-start sm:justify-between"
+      >
+        <div className="flex gap-4">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-sm font-bold text-slate-700 ring-1 ring-slate-200">
+            {index + 1}
+          </div>
+
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-base font-bold text-slate-950">
+                {action.title}
+              </h3>
+              <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600 ring-1 ring-slate-200">
+                {action.priority}
+              </span>
+            </div>
+
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              {action.detail}
+            </p>
+          </div>
+        </div>
+
+        <div className="rounded-xl bg-white px-4 py-3 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 sm:min-w-56">
+          {action.reason}
         </div>
       </div>
     ))}
