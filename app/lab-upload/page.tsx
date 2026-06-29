@@ -1,8 +1,9 @@
-"use client";
+﻿"use client";
 
 import type { ChangeEvent, DragEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import PageBackActions from "../components/PageBackActions";
 import { supabase } from "@/lib/supabase";
 
 type Language = "en" | "ar";
@@ -29,6 +30,8 @@ const MAX_FILE_SIZE_MB = 20;
 
 export default function LabUploadPage() {
   const [language, setLanguage] = useState<Language>("en");
+  const isArabic = language === "ar";
+
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [latestUploadedFileName, setLatestUploadedFileName] = useState("");
@@ -41,26 +44,38 @@ export default function LabUploadPage() {
   const [reportType, setReportType] = useState<ReportType>("lab");
 
   useEffect(() => {
-    const savedLanguage =
-      (localStorage.getItem("organheal-language") as Language) || "en";
+    function syncLanguage() {
+      const savedLanguage =
+        (localStorage.getItem("organheal-language") as Language | null) || "en";
 
-    setLanguage(savedLanguage);
+      setLanguage(savedLanguage);
+      document.documentElement.lang = savedLanguage;
+      document.documentElement.dir = savedLanguage === "ar" ? "rtl" : "ltr";
+    }
 
-    const interval = setInterval(() => {
-      const currentLanguage =
-        (localStorage.getItem("organheal-language") as Language) || "en";
-      setLanguage(currentLanguage);
-    }, 300);
-
+    syncLanguage();
     fetchUploadedFiles();
     loadPendingHeroFile();
 
-    return () => clearInterval(interval);
+    window.addEventListener("storage", syncLanguage);
+    window.addEventListener("organheal-language-change", syncLanguage);
+
+    return () => {
+      window.removeEventListener("storage", syncLanguage);
+      window.removeEventListener("organheal-language-change", syncLanguage);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const isArabic = language === "ar";
+  function text(en: string, ar: string) {
+    return isArabic ? ar : en;
+  }
 
   function loadPendingHeroFile() {
+    const currentLanguage =
+      (localStorage.getItem("organheal-language") as Language | null) || "en";
+    const currentIsArabic = currentLanguage === "ar";
+
     const uploadedFileName = sessionStorage.getItem(
       "organheal-latest-uploaded-lab-file"
     );
@@ -68,7 +83,9 @@ export default function LabUploadPage() {
     if (uploadedFileName) {
       setLatestUploadedFileName(uploadedFileName);
       setMessage(
-        `Your file "${uploadedFileName}" was selected from the homepage. Upload it here to save it securely and continue to extraction or intelligence review.`
+        currentIsArabic
+          ? `تم اختيار الملف "${uploadedFileName}" من الصفحة الرئيسية. ارفعه هنا لحفظه بأمان والمتابعة إلى الاستخراج أو الذكاء الصحي.`
+          : `Your file "${uploadedFileName}" was selected from the homepage. Upload it here to save it securely and continue to extraction or intelligence review.`
       );
       sessionStorage.removeItem("organheal-latest-uploaded-lab-file");
       return;
@@ -79,7 +96,9 @@ export default function LabUploadPage() {
     if (savedFileName) {
       setLatestUploadedFileName(savedFileName);
       setMessage(
-        `You selected "${savedFileName}" from the homepage. Please upload it here to continue.`
+        currentIsArabic
+          ? `تم اختيار "${savedFileName}" من الصفحة الرئيسية. يرجى رفعه هنا للمتابعة.`
+          : `You selected "${savedFileName}" from the homepage. Please upload it here to continue.`
       );
       sessionStorage.removeItem("organheal-pending-lab-file");
     }
@@ -168,10 +187,15 @@ export default function LabUploadPage() {
 
     if (rejectedFiles.length > 0) {
       setMessage(
-        `Some files were not added: ${rejectedFiles.join(", ")}. Supported files: PDF, PNG, JPG, JPEG.`
+        text(
+          `Some files were not added: ${rejectedFiles.join(", ")}. Supported files: PDF, PNG, JPG, JPEG.`,
+          `لم تتم إضافة بعض الملفات: ${rejectedFiles.join(", ")}. الملفات المدعومة: PDF, PNG, JPG, JPEG.`
+        )
       );
+      setUploadStep("error");
     } else if (combinedFiles.length > 0) {
       setMessage("");
+      setUploadStep("idle");
     }
   }
 
@@ -193,19 +217,23 @@ export default function LabUploadPage() {
   async function uploadFile() {
     if (selectedFiles.length === 0) {
       setMessage(
-        isArabic
-          ? "يرجى اختيار ملف PDF أو صورة أولًا."
-          : "Please select at least one PDF or image first."
+        text(
+          "Please select at least one PDF or image first.",
+          "يرجى اختيار ملف PDF أو صورة واحدة على الأقل أولًا."
+        )
       );
+      setUploadStep("error");
       return;
     }
 
     if (selectedFiles.length > MAX_FILES) {
       setMessage(
-        isArabic
-          ? `يمكنك رفع ${MAX_FILES} ملفات كحد أقصى في كل مرة.`
-          : `You can upload up to ${MAX_FILES} files at a time.`
+        text(
+          `You can upload up to ${MAX_FILES} files at a time.`,
+          `يمكنك رفع ${MAX_FILES} ملفات كحد أقصى في كل مرة.`
+        )
       );
+      setUploadStep("error");
       return;
     }
 
@@ -217,9 +245,10 @@ export default function LabUploadPage() {
 
     if (userError || !userData.user) {
       setMessage(
-        isArabic
-          ? "يرجى تسجيل الدخول أو إنشاء حساب لرفع التقارير."
-          : "Please login or sign up to upload medical reports."
+        text(
+          "Please login or sign up to upload medical reports.",
+          "يرجى تسجيل الدخول أو إنشاء حساب لرفع التقارير الطبية."
+        )
       );
       setUploading(false);
       setUploadStep("error");
@@ -322,7 +351,10 @@ export default function LabUploadPage() {
     setUploading(false);
     setUploadStep("saved");
     setMessage(
-      `${uploadedCount} report(s) uploaded successfully. You can run extraction now, open Reports Library, or continue to Intelligence Center.`
+      text(
+        `${uploadedCount} report(s) uploaded successfully. You can run extraction now, open Reports Library, or continue to Intelligence Center.`,
+        `تم رفع ${uploadedCount} تقرير بنجاح. يمكنك تشغيل الاستخراج الآن، فتح مكتبة التقارير، أو المتابعة إلى مركز الذكاء.`
+      )
     );
 
     await fetchUploadedFiles();
@@ -338,9 +370,10 @@ export default function LabUploadPage() {
 
     if (!accessToken) {
       setMessage(
-        isArabic
-          ? "انتهت الجلسة. يرجى تسجيل الدخول مرة أخرى."
-          : "Session expired. Please login again."
+        text(
+          "Session expired. Please login again.",
+          "انتهت الجلسة. يرجى تسجيل الدخول مرة أخرى."
+        )
       );
       setExtractingReportId(null);
       setUploadStep("error");
@@ -370,9 +403,10 @@ export default function LabUploadPage() {
     }
 
     setMessage(
-      isArabic
-        ? "تم استخراج نص التقرير بنجاح. يمكنك الآن فتح مركز الذكاء."
-        : "Report text extracted successfully. You can now open Intelligence Center."
+      text(
+        "Report text extracted successfully. You can now open Intelligence Center.",
+        "تم استخراج نص التقرير بنجاح. يمكنك الآن فتح مركز الذكاء."
+      )
     );
     setExtractingReportId(null);
     setUploadStep("saved");
@@ -380,7 +414,9 @@ export default function LabUploadPage() {
   }
 
   async function deleteFile(file: UploadedFile) {
-    const confirmDelete = window.confirm(`Delete "${file.file_name}"?`);
+    const confirmDelete = window.confirm(
+      text(`Delete "${file.file_name}"?`, `هل تريد حذف "${file.file_name}"؟`)
+    );
 
     if (!confirmDelete) return;
 
@@ -390,6 +426,7 @@ export default function LabUploadPage() {
 
     if (storageError) {
       setMessage("Storage delete error: " + storageError.message);
+      setUploadStep("error");
       return;
     }
 
@@ -402,10 +439,17 @@ export default function LabUploadPage() {
 
     if (databaseError) {
       setMessage("Database delete error: " + databaseError.message);
+      setUploadStep("error");
       return;
     }
 
-    setMessage(`"${file.file_name}" deleted successfully.`);
+    setMessage(
+      text(
+        `"${file.file_name}" deleted successfully.`,
+        `تم حذف "${file.file_name}" بنجاح.`
+      )
+    );
+    setUploadStep("saved");
     await fetchUploadedFiles();
   }
 
@@ -416,6 +460,7 @@ export default function LabUploadPage() {
 
     if (error) {
       setMessage("File open error: " + error.message);
+      setUploadStep("error");
       return;
     }
 
@@ -438,6 +483,15 @@ export default function LabUploadPage() {
     return "Pending";
   }
 
+  function getExtractionTone(status: string | null) {
+    const cleanStatus = status || "Pending";
+
+    if (cleanStatus === "Completed") return "good";
+    if (cleanStatus === "Processing") return "moderate";
+    if (cleanStatus === "Failed") return "risk";
+    return "neutral";
+  }
+
   function getReportTypeLabel(type: string | null | undefined) {
     if (isArabic) {
       if (type === "lab") return "مختبر";
@@ -455,8 +509,15 @@ export default function LabUploadPage() {
   }
 
   function formatDate(value: string | null) {
-    if (!value) return isArabic ? "غير متاح" : "Not available";
-    return new Date(value).toLocaleString();
+    if (!value) return text("Not available", "غير متاح");
+
+    return new Date(value).toLocaleString(isArabic ? "ar-AE" : "en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   }
 
   const filteredFiles = uploadedFiles.filter((file) => {
@@ -505,243 +566,409 @@ export default function LabUploadPage() {
     uploadStep === "saved" || uploadedFiles.length > 0 || latestUploadedFileName;
 
   return (
-    <main className="labUploadConversionPage" dir={isArabic ? "rtl" : "ltr"}>
-      <section className="labUploadHero">
-        <div>
-          <p className="launchEyebrow">
-            {isArabic ? "رفع التقارير الطبية" : "Medical Report Upload"}
-          </p>
+    <main className="ohPageShell" dir={isArabic ? "rtl" : "ltr"}>
+      <div className="ohContainer ohStack large" style={{ padding: "28px 0 56px" }}>
+        <PageBackActions />
 
-          <h1>
-            {isArabic
-              ? "ارفع تقريرك الطبي وابدأ الذكاء الصحي"
-              : "Upload your medical report and start health intelligence"}
-          </h1>
+        <section className="ohHero">
+          <div className="ohHeroGrid">
+            <div>
+              <p className="ohEyebrow">
+                {text("Medical Report Upload Command Center", "مركز رفع التقارير الطبية")}
+              </p>
 
-          <p>
-            {isArabic
-              ? "ارفع تقارير المختبر، الأشعة، ملخصات الخروج، الوصفات، أو المستندات الطبية. بعد الحفظ يمكنك تشغيل الاستخراج أو الانتقال إلى مركز الذكاء."
-              : "Upload lab reports, radiology reports, discharge summaries, prescriptions, or medical documents. After saving, you can run extraction or continue to Intelligence Center."}
-          </p>
-        </div>
+              <h1 className="ohTitle">
+                {text(
+                  "Upload your medical report and start health intelligence",
+                  "ارفع تقريرك الطبي وابدأ الذكاء الصحي"
+                )}
+              </h1>
 
-        <div className="labUploadHeroCard">
-          <span>{isArabic ? "الخطوة التالية" : "Next step"}</span>
-          <h2>
-            {stats.total === 0
-              ? isArabic
-                ? "ارفع أول تقرير"
-                : "Upload your first report"
-              : isArabic
-              ? "افتح مركز الذكاء"
-              : "Open Intelligence Center"}
-          </h2>
-          <p>
-            {stats.total === 0
-              ? isArabic
-                ? "بعد الرفع، سيظهر التقرير في مكتبة التقارير ومركز الذكاء."
-                : "After upload, the report will appear in Reports Library and Intelligence Center."
-              : isArabic
-              ? "لديك تقارير محفوظة. الخطوة التالية هي توليد أو مراجعة الذكاء الصحي."
-              : "You have saved reports. The next step is to generate or review health intelligence."}
-          </p>
+              <p className="ohLead">
+                {text(
+                  "Upload lab reports, radiology reports, discharge summaries, prescriptions, or medical documents. After saving, you can run extraction or continue to Intelligence Center.",
+                  "ارفع تقارير المختبر، الأشعة، ملخصات الخروج، الوصفات، أو المستندات الطبية. بعد الحفظ يمكنك تشغيل الاستخراج أو الانتقال إلى مركز الذكاء."
+                )}
+              </p>
 
-          <Link
-            href={stats.total === 0 ? "/reports" : "/intelligence"}
-            className="launchPrimary"
-          >
-            {stats.total === 0
-              ? isArabic
-                ? "مكتبة التقارير"
-                : "Reports Library"
-              : isArabic
-              ? "مركز الذكاء"
-              : "Intelligence Center"}
-          </Link>
-        </div>
-      </section>
+              <div className="ohButtonRow" style={{ marginTop: "24px" }}>
+                <a href="#medical-upload-panel" className="primaryBtn">
+                  {text("Upload Report", "رفع تقرير")}
+                </a>
 
-      <section className="labUploadStatsGrid">
-        <article>
-          <span>{isArabic ? "كل التقارير" : "Total reports"}</span>
-          <strong>{stats.total}</strong>
-          <p>{isArabic ? "محفوظة في حسابك" : "Saved in your account"}</p>
-        </article>
+                <Link href="/reports" className="secondaryBtn">
+                  {text("Reports Library", "مكتبة التقارير")}
+                </Link>
 
-        <article>
-          <span>{isArabic ? "استخراج مكتمل" : "Extraction completed"}</span>
-          <strong>{stats.completed}</strong>
-          <p>{isArabic ? "جاهزة للذكاء" : "Ready for intelligence"}</p>
-        </article>
+                <Link href="/intelligence" className="secondaryBtn">
+                  {text("Intelligence Center", "مركز الذكاء")}
+                </Link>
+              </div>
+            </div>
 
-        <article>
-          <span>{isArabic ? "بانتظار" : "Pending"}</span>
-          <strong>{stats.pending + stats.processing}</strong>
-          <p>{isArabic ? "تحتاج تشغيل أو انتظار" : "Need extraction or review"}</p>
-        </article>
+            <div className="ohCard">
+              <div className="ohCardHeader">
+                <div>
+                  <p className="ohMetricLabel">
+                    {text("Next Best Step", "الخطوة التالية الأفضل")}
+                  </p>
+                  <h2 className="ohCardTitle" style={{ marginTop: "8px" }}>
+                    {stats.total === 0
+                      ? text("Upload your first report", "ارفع أول تقرير")
+                      : text("Open Intelligence Center", "افتح مركز الذكاء")}
+                  </h2>
+                </div>
 
-        <article>
-          <span>{isArabic ? "فشل" : "Failed"}</span>
-          <strong>{stats.failed}</strong>
-          <p>{isArabic ? "يمكن إعادة المحاولة" : "Can be retried"}</p>
-        </article>
-      </section>
+                <span className="ohStatusBadge neutral">
+                  {stats.total} {text("saved", "محفوظ")}
+                </span>
+              </div>
 
-      <section className="labUploadPanel">
-        <div className="labUploadPanelHeader">
-          <p className="launchEyebrow">
-            {isArabic ? "ارفع ملفًا" : "Upload file"}
-          </p>
+              <p className="ohCardText">
+                {stats.total === 0
+                  ? text(
+                      "After upload, the report will appear in Reports Library and Intelligence Center.",
+                      "بعد الرفع، سيظهر التقرير في مكتبة التقارير ومركز الذكاء."
+                    )
+                  : text(
+                      "You have saved reports. The next step is to generate or review health intelligence.",
+                      "لديك تقارير محفوظة. الخطوة التالية هي توليد أو مراجعة الذكاء الصحي."
+                    )}
+              </p>
 
-          <h2>
-            {isArabic
-              ? "اسحب التقرير أو اختره من جهازك"
-              : "Drop your report or choose it from your device"}
-          </h2>
+              <div className="ohDivider" />
 
-          <p>
-            {isArabic
-              ? "يدعم PDF و PNG و JPG و JPEG. يمكنك رفع حتى 10 ملفات في كل مرة."
-              : "Supports PDF, PNG, JPG, and JPEG. You can upload up to 10 files at a time."}
-          </p>
-        </div>
+              <Link
+                href={stats.total === 0 ? "/reports" : "/intelligence"}
+                className="primaryBtn"
+              >
+                {stats.total === 0
+                  ? text("Reports Library", "مكتبة التقارير")
+                  : text("Intelligence Center", "مركز الذكاء")}
+              </Link>
+            </div>
+          </div>
+        </section>
 
-        <div className="labUploadControls">
-          <label>
-            <span>{isArabic ? "نوع التقرير" : "Report type"}</span>
-            <select
-              value={reportType}
-              onChange={(event) => setReportType(event.target.value as ReportType)}
-            >
-              <option value="lab">{isArabic ? "مختبر" : "Laboratory"}</option>
-              <option value="radiology">{isArabic ? "أشعة" : "Radiology"}</option>
-              <option value="clinical">
-                {isArabic ? "تقرير سريري" : "Clinical Summary"}
-              </option>
-              <option value="prescription">
-                {isArabic ? "وصفة طبية" : "Prescription"}
-              </option>
-              <option value="medical">
-                {isArabic ? "تقرير طبي عام" : "General Medical"}
-              </option>
-            </select>
-          </label>
-        </div>
+        <section className="ohMetricGrid">
+          <article className="ohMetricCard">
+            <span className="ohMetricLabel">
+              {text("Total Reports", "كل التقارير")}
+            </span>
+            <span className="ohMetricValue">{stats.total}</span>
+            <span className="ohMetricHint">
+              {text("Saved in your account", "محفوظة في حسابك")}
+            </span>
+          </article>
 
-        <label
-          className="labUploadDropZone"
-          onDragOver={(event) => event.preventDefault()}
-          onDrop={handleDrop}
-        >
-          <input
-            type="file"
-            multiple
-            accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg"
-            onChange={handleFileInput}
-          />
+          <article className="ohMetricCard">
+            <span className="ohMetricLabel">
+              {text("Extraction Completed", "استخراج مكتمل")}
+            </span>
+            <span className="ohMetricValue">{stats.completed}</span>
+            <span className="ohMetricHint">
+              {text("Ready for intelligence", "جاهزة للذكاء")}
+            </span>
+          </article>
 
-          <div className="labDropIcon">PDF</div>
+          <article className="ohMetricCard">
+            <span className="ohMetricLabel">
+              {text("Pending / Processing", "بانتظار / جاري")}
+            </span>
+            <span className="ohMetricValue">{stats.pending + stats.processing}</span>
+            <span className="ohMetricHint">
+              {text("Need extraction or review", "تحتاج استخراجًا أو مراجعة")}
+            </span>
+          </article>
 
-          <strong>
-            {selectedFiles.length > 0
-              ? `${selectedFiles.length} file${selectedFiles.length > 1 ? "s" : ""} selected`
-              : latestUploadedFileName
-              ? latestUploadedFileName
-              : isArabic
-              ? "اسحب حتى 10 ملفات أو اضغط للاختيار"
-              : "Drop up to 10 files or click to upload"}
-          </strong>
+          <article className="ohMetricCard">
+            <span className="ohMetricLabel">
+              {text("Failed", "فشل")}
+            </span>
+            <span className="ohMetricValue">{stats.failed}</span>
+            <span className="ohMetricHint">
+              {text("Can be retried", "يمكن إعادة المحاولة")}
+            </span>
+          </article>
+        </section>
 
-          <span>
-            {selectedFiles.length > 0
-              ? selectedFiles.map((file) => file.name).join(", ")
-              : isArabic
-              ? "PDF, PNG, JPG, JPEG"
-              : "PDF, PNG, JPG, JPEG supported"}
-          </span>
-        </label>
+        <section className="ohGrid cols2" id="medical-upload-panel">
+          <article className="ohCard">
+            <div className="ohCardHeader">
+              <div>
+                <p className="ohMetricLabel">
+                  {text("Upload File", "رفع ملف")}
+                </p>
 
-        {selectedFiles.length > 0 && (
-          <div className="labSelectedFiles">
-            {selectedFiles.map((file, index) => (
-              <div key={`${file.name}-${index}`}>
-                <span>{file.name}</span>
-                <button type="button" onClick={() => removeSelectedFile(index)}>
-                  {isArabic ? "إزالة" : "Remove"}
+                <h2 className="ohCardTitle">
+                  {text(
+                    "Drop your report or choose it from your device",
+                    "اسحب التقرير أو اختره من جهازك"
+                  )}
+                </h2>
+
+                <p className="ohCardText">
+                  {text(
+                    `Supports PDF, PNG, JPG, and JPEG. You can upload up to ${MAX_FILES} files at a time. Maximum file size is ${MAX_FILE_SIZE_MB} MB.`,
+                    `يدعم PDF و PNG و JPG و JPEG. يمكنك رفع حتى ${MAX_FILES} ملفات في كل مرة. الحد الأقصى لحجم الملف ${MAX_FILE_SIZE_MB} MB.`
+                  )}
+                </p>
+              </div>
+
+              <span className={`ohStatusBadge ${uploadStep === "error" ? "risk" : "neutral"}`}>
+                {uploadStep === "uploading"
+                  ? text("Uploading", "جاري الرفع")
+                  : uploadStep === "extracting"
+                  ? text("Extracting", "جاري الاستخراج")
+                  : uploadStep === "saved"
+                  ? text("Saved", "محفوظ")
+                  : uploadStep === "error"
+                  ? text("Needs Attention", "يحتاج انتباه")
+                  : text("Ready", "جاهز")}
+              </span>
+            </div>
+
+            <div className="ohStack">
+              <div className="formGroup">
+                <label>{text("Report Type", "نوع التقرير")}</label>
+                <select
+                  value={reportType}
+                  onChange={(event) => setReportType(event.target.value as ReportType)}
+                >
+                  <option value="lab">{text("Laboratory", "مختبر")}</option>
+                  <option value="radiology">{text("Radiology", "أشعة")}</option>
+                  <option value="clinical">
+                    {text("Clinical Summary", "تقرير سريري")}
+                  </option>
+                  <option value="prescription">
+                    {text("Prescription", "وصفة طبية")}
+                  </option>
+                  <option value="medical">
+                    {text("General Medical", "تقرير طبي عام")}
+                  </option>
+                </select>
+              </div>
+
+              <label
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={handleDrop}
+                style={{
+                  display: "grid",
+                  placeItems: "center",
+                  gap: "12px",
+                  minHeight: "240px",
+                  border: "2px dashed var(--oh-border-strong)",
+                  borderRadius: "24px",
+                  background:
+                    "linear-gradient(180deg, rgba(15,118,110,0.06), rgba(37,99,235,0.04))",
+                  cursor: "pointer",
+                  padding: "24px",
+                  textAlign: "center",
+                }}
+              >
+                <input
+                  type="file"
+                  multiple
+                  accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg"
+                  onChange={handleFileInput}
+                  style={{ display: "none" }}
+                />
+
+                <span
+                  style={{
+                    width: "72px",
+                    height: "72px",
+                    borderRadius: "22px",
+                    display: "grid",
+                    placeItems: "center",
+                    background: "var(--oh-primary-soft)",
+                    color: "var(--oh-primary-dark)",
+                    fontWeight: 900,
+                    border: "1px solid rgba(15, 118, 110, 0.16)",
+                  }}
+                >
+                  PDF
+                </span>
+
+                <strong>
+                  {selectedFiles.length > 0
+                    ? `${selectedFiles.length} file${selectedFiles.length > 1 ? "s" : ""} selected`
+                    : latestUploadedFileName
+                    ? latestUploadedFileName
+                    : text(
+                        "Drop up to 10 files or click to upload",
+                        "اسحب حتى 10 ملفات أو اضغط للاختيار"
+                      )}
+                </strong>
+
+                <span className="ohCardText">
+                  {selectedFiles.length > 0
+                    ? selectedFiles.map((file) => file.name).join(", ")
+                    : text("PDF, PNG, JPG, JPEG supported", "يدعم PDF, PNG, JPG, JPEG")}
+                </span>
+              </label>
+
+              {selectedFiles.length > 0 && (
+                <div className="ohTimeline">
+                  {selectedFiles.map((file, index) => (
+                    <div className="ohTimelineItem" key={`${file.name}-${index}`}>
+                      <span className="ohTimelineDot" />
+
+                      <div>
+                        <p className="ohTimelineTitle">{file.name}</p>
+                        <p className="ohTimelineMeta">
+                          {(file.size / (1024 * 1024)).toFixed(2)} MB
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        className="secondaryBtn"
+                        onClick={() => removeSelectedFile(index)}
+                      >
+                        {text("Remove", "إزالة")}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="ohButtonRow">
+                <button
+                  type="button"
+                  className="primaryBtn"
+                  onClick={uploadFile}
+                  disabled={uploading}
+                >
+                  {uploading ? text("Saving...", "جاري الحفظ...") : text("Save Report", "حفظ التقرير")}
                 </button>
-              </div>
-            ))}
-          </div>
-        )}
 
-        <div className="labUploadActions">
-          <button
-            type="button"
-            className="launchPrimary labUploadButton"
-            onClick={uploadFile}
-            disabled={uploading}
+                <Link href="/reports" className="secondaryBtn">
+                  {text("Reports Library", "مكتبة التقارير")}
+                </Link>
+
+                <Link href="/intelligence" className="secondaryBtn">
+                  {text("Intelligence Center", "مركز الذكاء")}
+                </Link>
+              </div>
+
+              {message && (
+                <div className="ohTrustNotice">
+                  <span aria-hidden="true">
+                    {uploadStep === "error" ? "⚠️" : "ℹ️"}
+                  </span>
+                  <div>
+                    <strong>
+                      {uploadStep === "error"
+                        ? text("Upload notice", "تنبيه الرفع")
+                        : text("Upload status", "حالة الرفع")}
+                    </strong>
+                    <br />
+                    {message}
+
+                    {canShowNextStep && (
+                      <div className="ohButtonRow" style={{ marginTop: "14px" }}>
+                        <Link href="/reports" className="primaryBtn">
+                          {text("Open Reports Library", "فتح مكتبة التقارير")}
+                        </Link>
+
+                        <Link href="/intelligence" className="secondaryBtn">
+                          {text("Open Intelligence", "فتح مركز الذكاء")}
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </article>
+
+          <article className="ohCard">
+            <div className="ohCardHeader">
+              <div>
+                <p className="ohMetricLabel">
+                  {text("What can you upload?", "ماذا يمكنك رفعه؟")}
+                </p>
+
+                <h2 className="ohCardTitle">
+                  {text("Supported medical documents", "المستندات الطبية المدعومة")}
+                </h2>
+              </div>
+
+              <span className="ohStatusBadge neutral">
+                PDF / Image
+              </span>
+            </div>
+
+            <div className="ohTimeline">
+              {[
+                {
+                  title: text("Laboratory results", "نتائج المختبر"),
+                  meta: text("CBC, lipids, kidney, liver, glucose, hormones.", "CBC، الدهون، الكلى، الكبد، السكر، الهرمونات."),
+                },
+                {
+                  title: text("Radiology reports", "تقارير الأشعة"),
+                  meta: text("X-ray, ultrasound, CT, MRI written reports.", "الأشعة السينية، السونار، CT، MRI المكتوبة."),
+                },
+                {
+                  title: text("Clinical summaries", "الملخصات السريرية"),
+                  meta: text("Discharge summaries, visit notes, referrals.", "ملخصات الخروج، ملاحظات الزيارة، التحويلات."),
+                },
+                {
+                  title: text("Prescriptions", "الوصفات الطبية"),
+                  meta: text("Medication lists and treatment plans.", "قوائم الأدوية وخطط العلاج."),
+                },
+              ].map((item) => (
+                <div className="ohTimelineItem" key={item.title}>
+                  <span className="ohTimelineDot" />
+                  <div>
+                    <p className="ohTimelineTitle">{item.title}</p>
+                    <p className="ohTimelineMeta">{item.meta}</p>
+                  </div>
+                  <span className="ohStatusBadge good">
+                    {text("OK", "مناسب")}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </article>
+        </section>
+
+        <section className="ohCard">
+          <div className="ohCardHeader">
+            <div>
+              <p className="ohMetricLabel">
+                {text("Recent Reports", "التقارير الأخيرة")}
+              </p>
+
+              <h2 className="ohCardTitle">
+                {text("Track saving and extraction status", "تابع حالة الحفظ والاستخراج")}
+              </h2>
+
+              <p className="ohCardText">
+                {text(
+                  "You can open the original file, run extraction, or continue to Intelligence Center.",
+                  "يمكنك فتح الملف الأصلي، تشغيل الاستخراج، أو الانتقال إلى مركز الذكاء."
+                )}
+              </p>
+            </div>
+
+            <span className="ohStatusBadge neutral">
+              {filteredFiles.length} {text("shown", "ظاهر")}
+            </span>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "minmax(0, 1fr) minmax(180px, 260px)",
+              gap: "12px",
+              marginBottom: "18px",
+            }}
           >
-            {uploading
-              ? isArabic
-                ? "جاري الحفظ..."
-                : "Saving..."
-              : isArabic
-              ? "حفظ التقرير"
-              : "Save Report"}
-          </button>
-
-          <Link href="/reports" className="launchSecondary">
-            {isArabic ? "مكتبة التقارير" : "Reports Library"}
-          </Link>
-
-          <Link href="/intelligence" className="launchSecondary">
-            {isArabic ? "مركز الذكاء" : "Intelligence Center"}
-          </Link>
-        </div>
-
-        {message && (
-          <div className={`labUploadMessage ${uploadStep === "error" ? "error" : "success"}`}>
-            <p>{message}</p>
-
-            {canShowNextStep && (
-              <div className="labUploadMessageActions">
-                <Link href="/reports" className="launchPrimary">
-                  {isArabic ? "افتح مكتبة التقارير" : "Open Reports Library"}
-                </Link>
-
-                <Link href="/intelligence" className="launchSecondary">
-                  {isArabic ? "افتح مركز الذكاء" : "Open Intelligence"}
-                </Link>
-              </div>
-            )}
-          </div>
-        )}
-      </section>
-
-      <section className="labUploadReportsSection">
-        <div className="labUploadReportsHeader">
-          <div>
-            <p className="launchEyebrow">
-              {isArabic ? "التقارير الأخيرة" : "Recent reports"}
-            </p>
-
-            <h2>
-              {isArabic
-                ? "تابع حالة الحفظ والاستخراج"
-                : "Track saving and extraction status"}
-            </h2>
-
-            <p>
-              {isArabic
-                ? "يمكنك فتح الملف الأصلي، تشغيل الاستخراج، أو الانتقال إلى مركز الذكاء."
-                : "You can open the original file, run extraction, or continue to Intelligence Center."}
-            </p>
-          </div>
-
-          <div className="labUploadFilters">
             <input
               type="text"
-              placeholder={isArabic ? "ابحث باسم الملف" : "Search by file name"}
+              placeholder={text("Search by file name", "ابحث باسم الملف")}
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
             />
@@ -750,142 +977,182 @@ export default function LabUploadPage() {
               value={reportFilter}
               onChange={(event) => setReportFilter(event.target.value as ReportFilter)}
             >
-              <option value="all">{isArabic ? "الكل" : "All"}</option>
-              <option value="pending">{isArabic ? "بانتظار" : "Pending"}</option>
+              <option value="all">{text("All", "الكل")}</option>
+              <option value="pending">{text("Pending", "بانتظار")}</option>
               <option value="processing">
-                {isArabic ? "جاري الاستخراج" : "Processing"}
+                {text("Processing", "جاري الاستخراج")}
               </option>
               <option value="completed">
-                {isArabic ? "مكتمل" : "Completed"}
+                {text("Completed", "مكتمل")}
               </option>
-              <option value="failed">{isArabic ? "فشل" : "Failed"}</option>
+              <option value="failed">{text("Failed", "فشل")}</option>
             </select>
           </div>
-        </div>
 
-        {uploadedFiles.length === 0 ? (
-          <div className="labUploadEmpty">
-            <h3>
-              {isArabic
-                ? "لا توجد تقارير محفوظة بعد"
-                : "No saved reports yet"}
-            </h3>
-            <p>
-              {isArabic
-                ? "ارفع أول تقرير طبي حتى يظهر هنا."
-                : "Upload your first medical report so it appears here."}
-            </p>
-          </div>
-        ) : latestFiles.length === 0 ? (
-          <div className="labUploadEmpty">
-            <h3>{isArabic ? "لا توجد نتائج مطابقة" : "No matching results"}</h3>
-            <p>
-              {isArabic
-                ? "غيّر البحث أو الفلتر الحالي."
-                : "Change the search term or current filter."}
-            </p>
-          </div>
-        ) : (
-          <div className="labUploadReportGrid">
-            {latestFiles.map((file) => (
-              <article className="labUploadReportCard" key={file.id}>
-                <div className="labReportTop">
-                  <span>{getReportTypeLabel(file.report_type)}</span>
-                  <strong>{getExtractionLabel(file.extraction_status)}</strong>
-                </div>
+          {uploadedFiles.length === 0 ? (
+            <div className="ohEmptyState">
+              <h2>{text("No saved reports yet", "لا توجد تقارير محفوظة بعد")}</h2>
+              <p>
+                {text(
+                  "Upload your first medical report so it appears here.",
+                  "ارفع أول تقرير طبي حتى يظهر هنا."
+                )}
+              </p>
+            </div>
+          ) : latestFiles.length === 0 ? (
+            <div className="ohEmptyState">
+              <h2>{text("No matching results", "لا توجد نتائج مطابقة")}</h2>
+              <p>
+                {text(
+                  "Change the search term or current filter.",
+                  "غيّر البحث أو الفلتر الحالي."
+                )}
+              </p>
+            </div>
+          ) : (
+            <div className="ohGrid cols2">
+              {latestFiles.map((file) => (
+                <article className="ohCard" key={file.id}>
+                  <div className="ohCardHeader">
+                    <div>
+                      <p className="ohMetricLabel">
+                        {getReportTypeLabel(file.report_type)}
+                      </p>
 
-                <h3>{file.file_name}</h3>
+                      <h3 className="ohCardTitle">{file.file_name}</h3>
+                    </div>
 
-                <div className="labReportMeta">
-                  <div>
-                    <span>{isArabic ? "تاريخ الرفع" : "Uploaded"}</span>
-                    <strong>{formatDate(file.created_at)}</strong>
+                    <span className={`ohStatusBadge ${getExtractionTone(file.extraction_status)}`}>
+                      {getExtractionLabel(file.extraction_status)}
+                    </span>
                   </div>
 
-                  <div>
-                    <span>{isArabic ? "تاريخ الاستخراج" : "Extracted"}</span>
-                    <strong>{formatDate(file.extracted_at)}</strong>
+                  <div className="ohGrid cols2" style={{ gap: "12px" }}>
+                    <div className="ohMetricCard">
+                      <span className="ohMetricLabel">
+                        {text("Uploaded", "تاريخ الرفع")}
+                      </span>
+                      <span className="ohMetricValue" style={{ fontSize: "1.05rem" }}>
+                        {formatDate(file.created_at)}
+                      </span>
+                    </div>
+
+                    <div className="ohMetricCard">
+                      <span className="ohMetricLabel">
+                        {text("Extracted", "تاريخ الاستخراج")}
+                      </span>
+                      <span className="ohMetricValue" style={{ fontSize: "1.05rem" }}>
+                        {formatDate(file.extracted_at)}
+                      </span>
+                    </div>
                   </div>
-                </div>
 
-                <p>
-                  {file.extraction_status === "Completed"
-                    ? isArabic
-                      ? "تم استخراج النص. يمكنك فتح مركز الذكاء لتوليد الملخص."
-                      : "Text extraction is completed. Open Intelligence Center to generate summaries."
-                    : isArabic
-                    ? "التقرير محفوظ. يمكنك تشغيل الاستخراج أو الانتقال لمركز الذكاء."
-                    : "The report is saved. You can run extraction or continue to Intelligence Center."}
-                </p>
+                  <p className="ohCardText">
+                    {file.extraction_status === "Completed"
+                      ? text(
+                          "Text extraction is completed. Open Intelligence Center to generate summaries.",
+                          "تم استخراج النص. يمكنك فتح مركز الذكاء لتوليد الملخص."
+                        )
+                      : text(
+                          "The report is saved. You can run extraction or continue to Intelligence Center.",
+                          "التقرير محفوظ. يمكنك تشغيل الاستخراج أو الانتقال إلى مركز الذكاء."
+                        )}
+                  </p>
 
-                <div className="labReportActions">
-                  <button
-                    type="button"
-                    className="launchSecondary labUploadButton"
-                    onClick={() => openFile(file.file_path)}
-                  >
-                    {isArabic ? "فتح الملف" : "Open File"}
-                  </button>
+                  <div className="ohButtonRow">
+                    <button
+                      type="button"
+                      className="secondaryBtn"
+                      onClick={() => openFile(file.file_path)}
+                    >
+                      {text("Open File", "فتح الملف")}
+                    </button>
 
-                  <button
-                    type="button"
-                    className="launchSecondary labUploadButton"
-                    onClick={() => runExtraction(file)}
-                    disabled={extractingReportId === file.id}
-                  >
-                    {extractingReportId === file.id
-                      ? isArabic
-                        ? "جاري الاستخراج..."
-                        : "Extracting..."
-                      : isArabic
-                      ? "تشغيل الاستخراج"
-                      : "Run Extraction"}
-                  </button>
+                    <button
+                      type="button"
+                      className="secondaryBtn"
+                      onClick={() => runExtraction(file)}
+                      disabled={extractingReportId === file.id}
+                    >
+                      {extractingReportId === file.id
+                        ? text("Extracting...", "جاري الاستخراج...")
+                        : text("Run Extraction", "تشغيل الاستخراج")}
+                    </button>
 
-                  <Link href="/intelligence" className="launchPrimary">
-                    {isArabic ? "مركز الذكاء" : "Intelligence"}
-                  </Link>
+                    <Link href="/intelligence" className="primaryBtn">
+                      {text("Intelligence", "مركز الذكاء")}
+                    </Link>
 
-                  <button
-                    type="button"
-                    className="launchSecondary labUploadButton"
-                    onClick={() => deleteFile(file)}
-                  >
-                    {isArabic ? "حذف" : "Delete"}
-                  </button>
-                </div>
-              </article>
-            ))}
+                    <button
+                      type="button"
+                      className="secondaryBtn"
+                      onClick={() => deleteFile(file)}
+                    >
+                      {text("Delete", "حذف")}
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className="ohTrustNotice">
+          <span aria-hidden="true">🛡️</span>
+          <div>
+            <strong>
+              {text("Privacy and medical safety reminder", "تذكير الخصوصية والسلامة الطبية")}
+            </strong>
+            <br />
+            {text(
+              "Uploaded reports are used to organize your health information and prepare educational summaries. OrganHeal does not replace diagnosis, treatment, emergency care, or a licensed clinician.",
+              "تُستخدم التقارير المرفوعة لتنظيم معلوماتك الصحية وتحضير ملخصات تعليمية. لا يستبدل OrganHeal التشخيص أو العلاج أو الرعاية الطارئة أو الطبيب المختص."
+            )}
           </div>
-        )}
-      </section>
+        </section>
 
-      <section className="labUploadBottomNav">
-        <div>
-          <p className="launchEyebrow">
-            {isArabic ? "المسار الصحيح" : "Recommended path"}
-          </p>
+        <section className="ohCard">
+          <div className="ohCardHeader">
+            <div>
+              <p className="ohMetricLabel">
+                {text("Recommended Path", "المسار المقترح")}
+              </p>
 
-          <h2>
-            {isArabic
-              ? "من الرفع إلى الذكاء الصحي"
-              : "From upload to health intelligence"}
-          </h2>
+              <h2 className="ohCardTitle">
+                {text(
+                  "From upload to health intelligence",
+                  "من الرفع إلى الذكاء الصحي"
+                )}
+              </h2>
 
-          <p>
-            {isArabic
-              ? "احفظ التقرير، شغّل الاستخراج عند الحاجة، افتح مركز الذكاء، ثم انتقل إلى خطة المتابعة."
-              : "Save the report, run extraction when needed, open Intelligence Center, then continue to your follow-up plan."}
-          </p>
-        </div>
+              <p className="ohCardText">
+                {text(
+                  "Save the report, run extraction when needed, open Intelligence Center, then continue to your follow-up plan.",
+                  "احفظ التقرير، شغّل الاستخراج عند الحاجة، افتح مركز الذكاء، ثم انتقل إلى خطة المتابعة."
+                )}
+              </p>
+            </div>
+          </div>
 
-        <div className="labUploadBottomLinks">
-          <Link href="/reports">{isArabic ? "التقارير" : "Reports"}</Link>
-          <Link href="/intelligence">{isArabic ? "الذكاء" : "Intelligence"}</Link>
-          <Link href="/health-plan">{isArabic ? "الخطة" : "Health Plan"}</Link>
-          <Link href="/dashboard">{isArabic ? "لوحة التحكم" : "Dashboard"}</Link>
-        </div>
-      </section>
+          <div className="ohButtonRow">
+            <Link href="/reports" className="secondaryBtn">
+              {text("Reports", "التقارير")}
+            </Link>
+
+            <Link href="/intelligence" className="primaryBtn">
+              {text("Intelligence", "الذكاء")}
+            </Link>
+
+            <Link href="/health-plan" className="secondaryBtn">
+              {text("Health Plan", "الخطة")}
+            </Link>
+
+            <Link href="/dashboard" className="secondaryBtn">
+              {text("Dashboard", "لوحة التحكم")}
+            </Link>
+          </div>
+        </section>
+      </div>
     </main>
   );
 }
