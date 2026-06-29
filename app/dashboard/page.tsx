@@ -321,7 +321,7 @@ export default function DashboardPage() {
       label: isArabic ? "?????????" : "Assessments",
       value: String(assessments.length),
       detail: latestAssessment
-        ? `${localizeOrganName(latestAssessment.organ_name, isArabic)} Ã‚Â· ${
+        ? `${localizeOrganName(latestAssessment.organ_name, isArabic)} Ãƒâ€šÃ‚Â· ${
             latestAssessment.score
           }/100`
         : isArabic
@@ -358,7 +358,7 @@ export default function DashboardPage() {
       label: isArabic ? "??????? ?????" : "Check-In",
       value: dailyCheckIn ? `${dailyCheckIn.wellness_score}/100` : "N/A",
       detail: dailyCheckIn
-        ? `${localizeMood(dailyCheckIn.mood, isArabic)} Ã‚Â· ${formatDate(
+        ? `${localizeMood(dailyCheckIn.mood, isArabic)} Ãƒâ€šÃ‚Â· ${formatDate(
             dailyCheckIn.created_at,
             isArabic
           )}`
@@ -1399,6 +1399,78 @@ export default function DashboardPage() {
         Ready for guided recommendations
       </div>
     </div>
+  </div>
+</section>
+
+<section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+    <div>
+      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
+        Quick Access Actions
+      </p>
+      <h2 className="mt-2 text-2xl font-bold text-slate-950">
+        Continue Your Health Journey
+      </h2>
+      <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+        Direct access to the most important OrganHeal areas so users can update
+        their data, review insights, and move toward a clearer health plan.
+      </p>
+    </div>
+
+    <div className="rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600">
+      Action Navigation
+    </div>
+  </div>
+
+  <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+    {[
+      {
+        title: "Daily Check-in",
+        description:
+          "Update daily symptoms, sleep, hydration, energy, pain, and lifestyle signals.",
+        href: "/checkin",
+        action: "Open check-in",
+      },
+      {
+        title: "Lab Analyzer",
+        description:
+          "Review lab values and convert numbers into clearer health intelligence.",
+        href: "/lab-analyzer",
+        action: "Analyze labs",
+      },
+      {
+        title: "Health Plan",
+        description:
+          "View guided recommendations based on saved health signals and priorities.",
+        href: "/health-plan",
+        action: "View plan",
+      },
+      {
+        title: "Organ Report",
+        description:
+          "Open a focused organ-health summary that can support better understanding.",
+        href: "/organ-report",
+        action: "Open report",
+      },
+    ].map((item) => (
+      <a
+        key={item.title}
+        href={item.href}
+        className="group rounded-2xl border border-slate-200 bg-slate-50 p-5 transition hover:-translate-y-0.5 hover:bg-white hover:shadow-sm"
+      >
+        <h3 className="text-base font-bold text-slate-950">
+          {item.title}
+        </h3>
+
+        <p className="mt-3 text-sm leading-6 text-slate-600">
+          {item.description}
+        </p>
+
+        <div className="mt-5 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 group-hover:text-slate-950">
+          {item.action}
+        </div>
+      </a>
+    ))}
   </div>
 </section>
 </main>
