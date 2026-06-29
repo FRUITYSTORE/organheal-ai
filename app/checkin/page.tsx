@@ -436,6 +436,129 @@ export default function CheckInPage() {
     },
   ];
 
+
+  const healthPlanImpactLevel =
+    wellnessScore >= 80
+      ? isArabic
+        ? "يدعم الخطة الوقائية"
+        : "Supports preventive plan"
+      : wellnessScore >= 60
+      ? isArabic
+        ? "يحافظ على خطة متابعة مستقرة"
+        : "Keeps a stable follow-up plan"
+      : wellnessScore >= 40
+      ? isArabic
+        ? "يحتاج تركيزًا إضافيًا في الخطة"
+        : "Needs extra focus in the plan"
+      : isArabic
+      ? "يحتاج خطة تعافٍ ومراجعة قريبة"
+      : "Needs recovery support and closer review";
+
+  const healthPlanImpactDescription =
+    wellnessScore >= 80
+      ? isArabic
+        ? "نتيجة اليوم جيدة وتساعد OrganHeal على إبقاء خطة المتابعة في المسار الوقائي."
+        : "Today's score is strong and helps OrganHeal keep your follow-up plan in a preventive track."
+      : wellnessScore >= 60
+      ? isArabic
+        ? "نتيجة اليوم مستقرة. الخطة ستستفيد من الاستمرار في التحديثات ومراقبة أي تغير."
+        : "Today's score is stable. The plan benefits from continued check-ins and watching for changes."
+      : wellnessScore >= 40
+      ? isArabic
+        ? "نتيجة اليوم تشير إلى أن النوم أو الضغط أو الطاقة قد تحتاج اهتمامًا ضمن خطة الأسبوع."
+        : "Today's score suggests sleep, stress, or energy may need attention in this week's plan."
+      : isArabic
+      ? "نتيجة اليوم منخفضة. ركز على الراحة والترطيب، وراجع الطبيب عند وجود أعراض مقلقة."
+      : "Today's score is low. Focus on rest and hydration, and seek care for concerning symptoms.";
+
+  const planSignalCards = [
+    {
+      label: isArabic ? "تأثير اليوم على الخطة" : "Plan impact today",
+      value: healthPlanImpactLevel,
+      note: healthPlanImpactDescription,
+    },
+    {
+      label: isArabic ? "العامل الأهم اليوم" : "Main factor today",
+      value:
+        stressLevel >= 4
+          ? isArabic
+            ? "الضغط النفسي"
+            : "Stress"
+          : sleepQuality <= 2
+          ? isArabic
+            ? "النوم"
+            : "Sleep"
+          : energyLevel <= 2
+          ? isArabic
+            ? "الطاقة"
+            : "Energy"
+          : hydration <= 2
+          ? isArabic
+            ? "الترطيب"
+            : "Hydration"
+          : physicalActivity <= 2
+          ? isArabic
+            ? "النشاط"
+            : "Activity"
+          : isArabic
+          ? "الحالة العامة مستقرة"
+          : "Overall status is stable",
+      note:
+        stressLevel >= 4
+          ? isArabic
+            ? "ابدأ بتقليل الضغط قبل إضافة مهام صحية جديدة."
+            : "Start by reducing stress before adding new health tasks."
+          : sleepQuality <= 2
+          ? isArabic
+            ? "تحسين النوم قد يرفع نتيجة المتابعة خلال أيام."
+            : "Improving sleep may raise your follow-up score within days."
+          : energyLevel <= 2
+          ? isArabic
+            ? "انخفاض الطاقة يحتاج راحة وتغذية ومتابعة."
+            : "Low energy needs rest, nutrition, and monitoring."
+          : hydration <= 2
+          ? isArabic
+            ? "الترطيب خطوة سهلة وسريعة لتحسين اليوم."
+            : "Hydration is an easy quick win for today."
+          : physicalActivity <= 2
+          ? isArabic
+            ? "نشاط خفيف قد يساعد إذا كان مناسبًا لحالتك."
+            : "Light activity may help if appropriate for your condition."
+          : isArabic
+          ? "استمر بنفس النمط وراقب التغيرات."
+          : "Continue the same pattern and monitor changes.",
+    },
+    {
+      label: isArabic ? "ما الذي يجب فتحه بعد الحفظ؟" : "What to open after saving?",
+      value:
+        wellnessScore < 60
+          ? isArabic
+            ? "خطة المتابعة"
+            : "Health Plan"
+          : isArabic
+          ? "التاريخ الصحي"
+          : "Health History",
+      note:
+        wellnessScore < 60
+          ? isArabic
+            ? "راجع مهام الأسبوع لأنها قد تحتاج تعديل حسب حالتك اليوم."
+            : "Review weekly tasks because they may need adjustment based on today."
+          : isArabic
+          ? "قارن اتجاهك مع التحديثات السابقة."
+          : "Compare your trend with previous check-ins.",
+    },
+  ];
+
+  const nextAfterSaveHref = wellnessScore < 60 ? "/health-plan" : "/history";
+  const nextAfterSaveLabel =
+    wellnessScore < 60
+      ? isArabic
+        ? "فتح خطة المتابعة"
+        : "Open Health Plan"
+      : isArabic
+      ? "فتح التاريخ الصحي"
+      : "Open Health History";
+
   function RangeControl({
     label,
     value,
@@ -929,6 +1052,72 @@ export default function CheckInPage() {
         `}</style>
 
 
+        
+        <style>{`
+          /* ORGANHEAL_CHECKIN_HEALTH_PLAN_CONNECTION_STEP4 */
+          .checkinPlanConnection {
+            border: 1px solid rgba(20, 184, 166, 0.28) !important;
+            background:
+              linear-gradient(135deg, rgba(240, 253, 250, 0.96), rgba(255, 255, 255, 0.96)) !important;
+          }
+
+          .checkinPlanConnectionGrid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+            margin-top: 16px;
+          }
+
+          .checkinPlanConnectionGrid article {
+            background: #ffffff !important;
+            border: 1px solid #ccfbf1 !important;
+            border-radius: 18px;
+            padding: 16px;
+          }
+
+          .checkinPlanConnectionGrid span {
+            display: block;
+            color: #0f766e !important;
+            font-size: 0.78rem;
+            font-weight: 900;
+            margin-bottom: 8px;
+          }
+
+          .checkinPlanConnectionGrid strong {
+            display: block;
+            color: #0f172a !important;
+            font-size: 1.08rem;
+            line-height: 1.45;
+          }
+
+          .checkinPlanConnectionGrid p {
+            color: #475569 !important;
+            line-height: 1.75;
+            margin-top: 8px;
+            margin-bottom: 0;
+          }
+
+          .checkinPlanConnectionActions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 18px;
+          }
+
+          .checkinReadablePage[dir="rtl"] .checkinPlanConnection,
+          .checkinReadablePage[dir="rtl"] .checkinPlanConnectionActions {
+            text-align: right;
+            direction: rtl;
+          }
+
+          @media (max-width: 900px) {
+            .checkinPlanConnectionGrid {
+              grid-template-columns: 1fr;
+            }
+          }
+        `}</style>
+
+
         <PageBackActions />
 
         <div className="assistantHeader">
@@ -1121,6 +1310,49 @@ export default function CheckInPage() {
                   </div>
                 </div>
               )}
+
+
+              <div className="resultBox checkinPlanConnection">
+                <p className="sectionLabel">
+                  {isArabic ? "ربط التحديث بالخطة" : "Check-In to Health Plan"}
+                </p>
+
+                <h2>
+                  {isArabic
+                    ? "كيف يؤثر تحديث اليوم على خطة المتابعة؟"
+                    : "How today check-in affects your follow-up plan"}
+                </h2>
+
+                <p style={{ lineHeight: 1.85, color: "#475569" }}>
+                  {isArabic
+                    ? "كل تحديث صحي يساعد OrganHeal على جعل خطة المتابعة أكثر واقعية، خصوصًا عندما تتغير الطاقة أو النوم أو الضغط النفسي."
+                    : "Each check-in helps OrganHeal keep your follow-up plan realistic, especially when energy, sleep, or stress changes."}
+                </p>
+
+                <div className="checkinPlanConnectionGrid">
+                  {planSignalCards.map((item) => (
+                    <article key={item.label}>
+                      <span>{item.label}</span>
+                      <strong>{item.value}</strong>
+                      <p>{item.note}</p>
+                    </article>
+                  ))}
+                </div>
+
+                <div className="checkinPlanConnectionActions">
+                  <Link href={nextAfterSaveHref} className="primaryBtn">
+                    {nextAfterSaveLabel}
+                  </Link>
+
+                  <Link href="/health-plan" className="secondaryBtn">
+                    {isArabic ? "خطة المتابعة" : "Health Plan"}
+                  </Link>
+
+                  <Link href="/dashboard" className="secondaryBtn">
+                    {isArabic ? "لوحة التحكم" : "Dashboard"}
+                  </Link>
+                </div>
+              </div>
 
               <div className="assessmentForm">
                 <div className="formGroup">
