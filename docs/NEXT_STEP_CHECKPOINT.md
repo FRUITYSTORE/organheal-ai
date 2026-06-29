@@ -198,3 +198,45 @@ git push
 
 git status
 
+
+---
+
+## Intelligence Center Stable QA Update
+
+Current stable point:
+
+- Intelligence Center QA completed.
+- Show Less JSX issue was fixed.
+- Duplicate GeneratedReportDetailsCard display was removed from app/intelligence/page.tsx.
+- Intelligence result cards were reordered for a clearer journey.
+- Current expanded report journey order:
+  - PatientReportPdfCard
+  - DoctorBriefReportCard
+  - ExecutiveSummaryCard
+  - HealthStoryCard
+  - PersonalHealthStrategyCard
+  - ActionPlanCard
+  - UnifiedHealthCard
+  - TimelineCard
+  - LabTrendsCard
+  - LongitudinalRiskCard
+  - CrossSourceCard
+  - DigitalTwinCard
+  - ForecastCard
+  - Next Step block
+
+Build status:
+
+- npm run build succeeded after the changes.
+- Browser QA passed for /intelligence.
+- Dashboard was not changed.
+- No rejected Dashboard sections were re-added.
+
+Next safe step:
+
+- Either mark Intelligence Center as stable and move to Health Plan connection QA,
+- or inspect /health-plan to confirm the Intelligence Center to Health Plan journey is clear.
+
+Do not add new Dashboard sections.
+Do not add random features.
+Keep changes scoped and build after each change.

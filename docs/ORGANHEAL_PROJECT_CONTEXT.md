@@ -318,3 +318,41 @@ The system should connect:
 
 The user experience should feel like a guided journey, not a collection of disconnected pages.
 
+
+---
+
+## Intelligence Center Latest Stable State
+
+The Intelligence Center has completed a QA and polish pass.
+
+Stable improvements completed:
+
+- Fixed the Show Less button JSX structure.
+- Removed duplicated GeneratedReportDetailsCard rendering from the expanded report result view.
+- Reordered generated intelligence result cards into a clearer user journey.
+- Kept PatientReportPdfCard and DoctorBriefReportCard as the two main report outputs.
+- Preserved deeper intelligence cards after the patient and doctor summaries.
+- Confirmed /intelligence visual QA passed.
+- Dashboard was not modified.
+
+Current Intelligence result flow:
+
+1. Patient-friendly PDF report
+2. Doctor-ready brief
+3. Executive summary
+4. Health story
+5. Personal health strategy
+6. Action plan
+7. Unified health intelligence
+8. Timeline
+9. Lab trends
+10. Longitudinal risk
+11. Cross-source intelligence
+12. Digital twin
+13. Forecast
+14. Next step toward Reports, Health Plan, or Dashboard
+
+Next logical work:
+
+- Health Plan connection QA
+- Confirm that the Intelligence Center to Health Plan journey is clear and not duplicated.
