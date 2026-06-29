@@ -857,6 +857,162 @@ export default function HealthPlanPage() {
           }
         `}</style>
 
+
+        <style>{`
+          .healthPlanPrintToolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 14px;
+          }
+
+          .healthPlanPrintButton {
+            border: 0;
+            cursor: pointer;
+            font: inherit;
+            white-space: nowrap;
+          }
+
+          .healthPlanPrintSection {
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            background:
+              linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(240, 253, 250, 0.9));
+          }
+
+          .healthPlanPrintGrid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+            margin-top: 18px;
+          }
+
+          .healthPlanPrintGrid article {
+            border: 1px solid rgba(148, 163, 184, 0.24);
+            background: rgba(255, 255, 255, 0.82);
+            border-radius: 18px;
+            padding: 16px;
+          }
+
+          .healthPlanPrintGrid span {
+            display: block;
+            font-size: 0.78rem;
+            opacity: 0.7;
+            margin-bottom: 6px;
+          }
+
+          .healthPlanPrintGrid strong {
+            display: block;
+            font-size: 1rem;
+            line-height: 1.45;
+          }
+
+          .healthPlanPrintNote {
+            margin-top: 16px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            background: rgba(15, 23, 42, 0.04);
+            line-height: 1.75;
+          }
+
+          @media (max-width: 900px) {
+            .healthPlanPrintGrid {
+              grid-template-columns: 1fr;
+            }
+          }
+
+          @media print {
+            @page {
+              size: A4;
+              margin: 14mm 12mm;
+            }
+
+            body {
+              background: #ffffff !important;
+              color: #0f172a !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+
+            nav,
+            header,
+            footer,
+            .healthPlanNoPrint,
+            .healthPlanPrintButton,
+            .healthPlanBottomNav,
+            .pageBackActions {
+              display: none !important;
+            }
+
+            .healthPlanIntelligencePage {
+              background: #ffffff !important;
+              padding: 0 !important;
+              margin: 0 !important;
+            }
+
+            .healthPlanShell {
+              width: 100% !important;
+              max-width: 100% !important;
+              padding: 0 !important;
+              margin: 0 !important;
+            }
+
+            .healthPlanHero,
+            .healthPlanCommandCenter,
+            .healthPlanClinicalCard,
+            .healthPlanMetricsGrid,
+            .healthPlanGrid,
+            .healthPlanPanel,
+            .healthPlanCard,
+            .healthPlanPrintSection {
+              box-shadow: none !important;
+              break-inside: avoid !important;
+              page-break-inside: avoid !important;
+              margin-bottom: 12mm !important;
+            }
+
+            .healthPlanPanel,
+            .healthPlanCard,
+            .healthPlanCommandMain,
+            .healthPlanReadinessCard,
+            .healthPlanClinicalCard,
+            .healthPlanPrintSection {
+              border: 1px solid #d1d5db !important;
+              background: #ffffff !important;
+            }
+
+            .healthPlanRoadmap > div,
+            .healthPlanTaskItem,
+            .healthPlanReadinessItem,
+            .healthPlanPrintGrid article {
+              break-inside: avoid !important;
+              page-break-inside: avoid !important;
+            }
+
+            h1,
+            h2,
+            h3 {
+              break-after: avoid !important;
+              page-break-after: avoid !important;
+              line-height: 1.35 !important;
+            }
+
+            p,
+            li,
+            strong,
+            span {
+              orphans: 3 !important;
+              widows: 3 !important;
+            }
+
+            .healthPlanRoadmap,
+            .healthPlanPrintGrid,
+            .healthPlanClinicalGrid,
+            .healthPlanCommandStats {
+              gap: 8px !important;
+            }
+          }
+        `}</style>
+
         <PageBackActions />
 
         <section className="healthPlanHero">
@@ -887,9 +1043,19 @@ export default function HealthPlanPage() {
                 : "The more data you add, the more personalized this plan becomes."}
             </p>
 
-            <Link href={nextBestAction.href} className="launchPrimary">
-              {nextBestAction.button}
-            </Link>
+            <div className="healthPlanPrintToolbar healthPlanNoPrint">
+              <Link href={nextBestAction.href} className="launchPrimary">
+                {nextBestAction.button}
+              </Link>
+
+              <button
+                type="button"
+                className="launchSecondary healthPlanPrintButton healthPlanHeroPrintButton"
+                onClick={() => window.print()}
+              >
+                {isArabic ? "طباعة / حفظ PDF" : "Print / Save PDF"}
+              </button>
+            </div>
           </div>
         </section>
 
@@ -1284,6 +1450,77 @@ export default function HealthPlanPage() {
                   );
                 })}
               </div>
+            </section>
+
+
+            <section className="healthPlanPanel healthPlanPrintSection">
+              <div className="healthPlanSectionHeader">
+                <div>
+                  <p className="launchEyebrow">
+                    {isArabic ? "نسخة قابلة للطباعة" : "Printable plan summary"}
+                  </p>
+
+                  <h2>
+                    {isArabic
+                      ? "ملخص عملي للخطة الصحية"
+                      : "Practical health plan summary"}
+                  </h2>
+
+                  <p>
+                    {isArabic
+                      ? "استخدم هذه النسخة للمراجعة الشخصية أو لمناقشتها مع الطبيب. يمكن طباعتها أو حفظها كملف PDF من المتصفح."
+                      : "Use this summary for personal review or to discuss with your doctor. You can print it or save it as a PDF from the browser."}
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  className="launchPrimary healthPlanPrintButton healthPlanNoPrint"
+                  onClick={() => window.print()}
+                >
+                  {isArabic ? "طباعة الخطة" : "Print plan"}
+                </button>
+              </div>
+
+              <div className="healthPlanPrintGrid">
+                <article>
+                  <span>{isArabic ? "الأولوية الصحية" : "Health priority"}</span>
+                  <strong>{priorityOrganDisplay}</strong>
+                </article>
+
+                <article>
+                  <span>{isArabic ? "جاهزية الخطة" : "Plan readiness"}</span>
+                  <strong>{planReadinessScore}%</strong>
+                </article>
+
+                <article>
+                  <span>{isArabic ? "مستوى المتابعة" : "Follow-up level"}</span>
+                  <strong>{planIntensity}</strong>
+                </article>
+
+                <article>
+                  <span>{isArabic ? "إيقاع المتابعة" : "Follow-up rhythm"}</span>
+                  <strong>{followUpRhythm}</strong>
+                </article>
+
+                <article>
+                  <span>{isArabic ? "المهام المكتملة" : "Completed tasks"}</span>
+                  <strong>
+                    {completedTaskCount}/{totalTasks}
+                  </strong>
+                </article>
+
+                <article>
+                  <span>{isArabic ? "مستوى الخطورة" : "Risk level"}</span>
+                  <strong>{riskLevelDisplay}</strong>
+                </article>
+              </div>
+
+              <p className="healthPlanPrintNote">
+                {isArabic
+                  ? "تنبيه: هذه الخطة تعليمية وتنظيمية ولا تستبدل تقييم الطبيب أو العلاج الطبي. راجع مقدم رعاية صحية عند وجود أعراض مقلقة أو نتائج غير طبيعية."
+                  : "Note: This plan is educational and organizational. It does not replace medical evaluation or treatment. Consult a licensed healthcare professional for concerning symptoms or abnormal results."}
+              </p>
             </section>
 
             <section className="healthPlanBottomNav">
