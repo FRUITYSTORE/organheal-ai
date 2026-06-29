@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import PageBackActions from "../components/PageBackActions";
-import { useEffect, useState } from "react";
+import { type CSSProperties, useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 
@@ -48,7 +48,7 @@ export default function ProfilePage() {
 
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
-  const [memberSince, setMemberSince] = useState("");
+  const [memberSince, setMemberSince] = useState<string | null>(null);
 
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [dailyCheckIn, setDailyCheckIn] = useState<DailyCheckIn | null>(null);
@@ -87,16 +87,24 @@ export default function ProfilePage() {
     return (localStorage.getItem("organheal-language") as Language | null) || "en";
   }
 
+  function text(en: string, ar: string) {
+    return isArabic ? ar : en;
+  }
+
   function formatDate(value: string | null | undefined) {
     if (!value) {
-      return isArabic ? "غير متاح" : "Not available";
+      return text("Not available", "غير متاح");
     }
 
-    return new Date(value).toLocaleDateString(isArabic ? "ar-AE" : "en-US");
+    return new Date(value).toLocaleDateString(isArabic ? "ar-AE" : "en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   }
 
   function localizeOrganName(value: string | null | undefined) {
-    if (!value) return isArabic ? "غير متاح" : "N/A";
+    if (!value) return text("N/A", "غير متاح");
     if (!isArabic) return value;
 
     const normalized = value.toLowerCase();
@@ -137,16 +145,8 @@ export default function ProfilePage() {
     const profile = profileData as Profile | null;
 
     setEmail(profile?.email || user.email || "");
-    setUsername(profile?.username || (currentIsArabic ? "مستخدم" : "User"));
-    setMemberSince(
-      profile?.created_at
-        ? new Date(profile.created_at).toLocaleDateString(
-            currentIsArabic ? "ar-AE" : "en-US"
-          )
-        : currentIsArabic
-        ? "حديثًا"
-        : "Recently"
-    );
+    setUsername(profile?.username || "");
+    setMemberSince(profile?.created_at || null);
 
     const { data: organData, error: organError } = await supabase
       .from("organ_assessments")
@@ -217,6 +217,9 @@ export default function ProfilePage() {
     setLoading(false);
   }
 
+  const displayName = username || email || text("User", "مستخدم");
+  const memberSinceLabel = memberSince ? formatDate(memberSince) : text("Recently", "حديثًا");
+
   const uploadedReportsCount = uploadedReports.length;
 
   const processedReports = uploadedReports.filter(
@@ -248,21 +251,24 @@ export default function ProfilePage() {
   const overallScore =
     scoreInputs.length > 0
       ? Math.round(
-          scoreInputs.reduce((sum, score) => sum + score, 0) /
-            scoreInputs.length
+          scoreInputs.reduce((sum, score) => sum + score, 0) / scoreInputs.length
         )
       : 0;
 
+  const generatedInsightCount = healthInsights.filter(
+    (item) => item.ai_status === "Generated"
+  ).length;
+
   function getStatus(score: number) {
-    if (score >= 80) return isArabic ? "جيد" : "Good";
-    if (score >= 50) return isArabic ? "متوسط" : "Moderate";
-    return isArabic ? "مرتفع الخطورة" : "High Risk";
+    if (score >= 80) return text("Good", "جيد");
+    if (score >= 50) return text("Moderate", "متوسط");
+    return text("High Risk", "مرتفع الخطورة");
   }
 
-  function getScoreClass(score: number) {
-    if (score >= 80) return "goodScore";
-    if (score >= 50) return "moderateScore";
-    return "riskScore";
+  function getTone(score: number) {
+    if (score >= 80) return "good";
+    if (score >= 50) return "moderate";
+    return "risk";
   }
 
   let completion = 0;
@@ -274,469 +280,528 @@ export default function ProfilePage() {
 
   const healthProfileStatus =
     completion === 0
-      ? isArabic
-        ? "لم يبدأ"
-        : "Not Started"
+      ? text("Not Started", "لم يبدأ")
       : completion < 75
-      ? isArabic
-        ? "قيد البناء"
-        : "Building"
-      : isArabic
-      ? "نشط"
-      : "Active";
+      ? text("Building", "قيد البناء")
+      : text("Active", "نشط");
+
+  const completionTone =
+    completion >= 75 ? "good" : completion >= 30 ? "moderate" : "neutral";
 
   const recommendedAction =
     assessments.length === 0
       ? {
-          label: isArabic
-            ? "ابدأ أول تقييم صحي"
-            : "Start your first health assessment",
-          description: isArabic
-            ? "أكمل تقييمًا واحدًا حتى يبدأ OrganHeal ببناء هويتك الصحية المحفوظة."
-            : "Complete one organ assessment so OrganHeal can begin building your saved health identity.",
+          label: text("Start your first health assessment", "ابدأ أول تقييم صحي"),
+          description: text(
+            "Complete one organ assessment so OrganHeal can begin building your saved health identity.",
+            "أكمل تقييمًا واحدًا حتى يبدأ OrganHeal ببناء هويتك الصحية المحفوظة."
+          ),
           href: "/assessment",
-          buttonText: isArabic ? "ابدأ التقييم" : "Start Assessment",
+          buttonText: text("Start Assessment", "ابدأ التقييم"),
         }
       : uploadedReportsCount === 0
       ? {
-          label: isArabic
-            ? "ارفع أول تقرير طبي"
-            : "Upload your first medical report",
-          description: isArabic
-            ? "أضف تقرير مختبر أو أشعة أو مستندًا طبيًا لتقوية ملفك الصحي."
-            : "Add a lab report, radiology report, or medical document to strengthen your health profile.",
+          label: text("Upload your first medical report", "ارفع أول تقرير طبي"),
+          description: text(
+            "Add a lab report, radiology report, or medical document to strengthen your health profile.",
+            "أضف تقرير مختبر أو أشعة أو مستندًا طبيًا لتقوية ملفك الصحي."
+          ),
           href: "/lab-upload",
-          buttonText: isArabic ? "رفع تقرير" : "Upload Report",
+          buttonText: text("Upload Report", "رفع تقرير"),
         }
       : savedIntelligence.length === 0
       ? {
-          label: isArabic
-            ? "ولّد الذكاء الصحي المحفوظ"
-            : "Generate saved health intelligence",
-          description: isArabic
-            ? "افتح مركز الذكاء لتوليد وحفظ ملخصات ذكية من تقاريرك."
-            : "Open Intelligence Center to generate and save insights from your reports.",
+          label: text(
+            "Generate saved health intelligence",
+            "ولّد الذكاء الصحي المحفوظ"
+          ),
+          description: text(
+            "Open Intelligence Center to generate and save insights from your reports.",
+            "افتح مركز الذكاء لتوليد وحفظ ملخصات ذكية من تقاريرك."
+          ),
           href: "/intelligence",
-          buttonText: isArabic ? "افتح مركز الذكاء" : "Open Intelligence",
+          buttonText: text("Open Intelligence", "افتح مركز الذكاء"),
         }
       : !dailyCheckIn
       ? {
-          label: isArabic
-            ? "أكمل أول تحديث صحي"
-            : "Complete your first wellness check-in",
-          description: isArabic
-            ? "أضف آخر حالة للنوم، المزاج، الضغط، الترطيب، الطاقة، والنشاط."
-            : "Add your latest sleep, mood, stress, hydration, energy, and activity status.",
+          label: text(
+            "Complete your first wellness check-in",
+            "أكمل أول تحديث صحي"
+          ),
+          description: text(
+            "Add your latest sleep, mood, stress, hydration, energy, and activity status.",
+            "أضف آخر حالة للنوم، المزاج، الضغط، الترطيب، الطاقة، والنشاط."
+          ),
           href: "/checkin",
-          buttonText: isArabic ? "افتح Check-In" : "Open Check-In",
+          buttonText: text("Open Check-In", "افتح Check-In"),
         }
       : {
-          label: isArabic
-            ? "تابع خطة المتابعة الصحية"
-            : "Continue your follow-up plan",
-          description: isArabic
-            ? "ملفك الصحي نشط الآن. راجع الخطة الصحية، المهام، وإيقاع المتابعة."
-            : "Your profile is active. Review your health plan, action tasks, and follow-up rhythm.",
+          label: text("Continue your follow-up plan", "تابع خطة المتابعة الصحية"),
+          description: text(
+            "Your profile is active. Review your health plan, action tasks, and follow-up rhythm.",
+            "ملفك الصحي نشط الآن. راجع الخطة الصحية، المهام، وإيقاع المتابعة."
+          ),
           href: "/health-plan",
-          buttonText: isArabic ? "افتح الخطة الصحية" : "Open Health Plan",
+          buttonText: text("Open Health Plan", "افتح الخطة الصحية"),
         };
 
+  const scoreRingStyle = {
+    "--score": Math.max(0, Math.min(100, completion)),
+  } as CSSProperties;
+
+  const healthScoreRingStyle = {
+    "--score": Math.max(0, Math.min(100, overallScore)),
+  } as CSSProperties;
+
   return (
-    <main className="assistantPage" dir={isArabic ? "rtl" : "ltr"}>
-      <div className="assistantContainer">
+    <main className="ohPageShell" dir={isArabic ? "rtl" : "ltr"}>
+      <div className="ohContainer ohStack large" style={{ padding: "28px 0 56px" }}>
         <PageBackActions />
 
-        <div className="assistantHeader">
-          <p className="assistantBadge">
-            {isArabic ? "الملف الشخصي" : "USER PROFILE"}
-          </p>
-          <h1>{isArabic ? "ملفك في OrganHeal" : "Your OrganHeal Profile"}</h1>
-          <p>
-            {isArabic
-              ? "هويتك الصحية المحفوظة، ملخص الحساب، تقدم البيانات الصحية، التقارير، الذكاء الصحي، والخطوة التالية المقترحة."
-              : "Your saved health identity, account summary, health data progress, reports, intelligence, and recommended next step."}
-          </p>
-        </div>
+        {loading && (
+          <section className="ohHero">
+            <p className="ohEyebrow">
+              {text("Loading Profile", "تحميل الملف")}
+            </p>
+            <h1 className="ohTitle">
+              {text(
+                "Preparing your health identity...",
+                "جاري تحضير هويتك الصحية..."
+              )}
+            </h1>
+            <p className="ohLead">
+              {text(
+                "OrganHeal is connecting your profile, assessments, reports, check-ins, and saved intelligence.",
+                "يقوم OrganHeal بربط ملفك، التقييمات، التقارير، Check-Ins، والذكاء الصحي المحفوظ."
+              )}
+            </p>
+          </section>
+        )}
 
-        <div className="chatWindow">
-          {loading && (
-            <div className="resultBox">
-              <p className="sectionLabel">
-                {isArabic ? "تحميل الملف" : "Loading Profile"}
-              </p>
-              <h2>
-                {isArabic
-                  ? "جاري تحضير هويتك الصحية..."
-                  : "Preparing your health identity..."}
-              </h2>
-            </div>
-          )}
+        {!loading && message && (
+          <section className="ohEmptyState">
+            <h2>{text("Could not load profile", "تعذر تحميل الملف")}</h2>
+            <p>{message}</p>
+          </section>
+        )}
 
-          {!loading && message && (
-            <div className="resultBox">
-              <p className="sectionLabel">
-                {isArabic ? "تنبيه الملف" : "Profile Notice"}
-              </p>
-              <h2>
-                {isArabic ? "تعذر تحميل الملف" : "Could not load profile"}
-              </h2>
-              <p>{message}</p>
-            </div>
-          )}
-
-          {!loading && !message && (
-            <>
-              <div className="healthIdentityHero">
+        {!loading && !message && (
+          <>
+            <section className="ohHero">
+              <div className="ohHeroGrid">
                 <div>
-                  <p className="sectionLabel">
-                    {isArabic ? "الهوية الصحية" : "Health Identity"}
+                  <p className="ohEyebrow">
+                    {text("Health Profile Command Center", "مركز قيادة الملف الصحي")}
                   </p>
-                  <h2>{username}</h2>
-                  <p>{email}</p>
-                  <p>
-                    {isArabic ? "عضو منذ: " : "Member since: "}
-                    {memberSince}
+
+                  <h1 className="ohTitle">
+                    {text("Your OrganHeal Profile", "ملفك في OrganHeal")}
+                  </h1>
+
+                  <p className="ohLead">
+                    {text(
+                      "A clear view of your saved health identity, assessments, reports, intelligence, check-ins, and the next best action.",
+                      "نظرة واضحة على هويتك الصحية المحفوظة، التقييمات، التقارير، الذكاء الصحي، Check-Ins، والخطوة التالية الأفضل."
+                    )}
                   </p>
-                  <p>
-                    {isArabic
-                      ? `اكتمال الملف الصحي: ${completion}%`
-                      : `Health Profile Completion: ${completion}%`}
-                  </p>
+
+                  <div className="ohButtonRow" style={{ marginTop: "24px" }}>
+                    <Link href={recommendedAction.href} className="primaryBtn">
+                      {recommendedAction.buttonText}
+                    </Link>
+
+                    <Link href="/dashboard" className="secondaryBtn">
+                      {text("Open Dashboard", "فتح لوحة التحكم")}
+                    </Link>
+                  </div>
                 </div>
 
-                <div className="healthIdentityStatus">
-                  <span>{completion}%</span>
-                  <p>{healthProfileStatus}</p>
+                <div className="ohCard">
+                  <div className="ohCardHeader">
+                    <div>
+                      <p className="ohMetricLabel">
+                        {text("Saved Identity", "الهوية المحفوظة")}
+                      </p>
+                      <h2 className="ohCardTitle" style={{ marginTop: "8px" }}>
+                        {displayName}
+                      </h2>
+                      <p className="ohCardText">{email}</p>
+                    </div>
+
+                    <span className={`ohStatusBadge ${completionTone}`}>
+                      {healthProfileStatus}
+                    </span>
+                  </div>
+
+                  <div
+                    style={{
+                      display: "grid",
+                      placeItems: "center",
+                      margin: "18px 0",
+                    }}
+                  >
+                    <div className="ohScoreRing" style={scoreRingStyle}>
+                      <div>
+                        <strong>{completion}</strong>
+                        <span>{text("% complete", "% مكتمل")}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="ohDivider" />
+
+                  <p className="ohCardText">
+                    <strong>{text("Member since:", "عضو منذ:")}</strong>{" "}
+                    {memberSinceLabel}
+                  </p>
                 </div>
               </div>
+            </section>
 
-              <div
-                className="resultBox"
-                style={{
-                  marginTop: "18px",
-                  marginBottom: "20px",
-                  border: "1px solid rgba(34,211,238,0.22)",
-                }}
-              >
-                <p className="sectionLabel">
-                  {isArabic ? "الخطوة التالية المقترحة" : "Recommended Next Step"}
-                </p>
-
-                <h2>{recommendedAction.label}</h2>
-
-                <p
-                  style={{
-                    opacity: 0.82,
-                    lineHeight: 1.7,
-                    marginBottom: "18px",
-                  }}
-                >
-                  {recommendedAction.description}
-                </p>
+            <section className="ohActionPanel">
+              <div className="ohCardHeader" style={{ marginBottom: 0 }}>
+                <div>
+                  <p className="ohMetricLabel">
+                    {text("Recommended Next Step", "الخطوة التالية المقترحة")}
+                  </p>
+                  <h2 className="ohCardTitle" style={{ fontSize: "1.55rem" }}>
+                    {recommendedAction.label}
+                  </h2>
+                  <p className="ohCardText">{recommendedAction.description}</p>
+                </div>
 
                 <Link href={recommendedAction.href} className="primaryBtn">
                   {recommendedAction.buttonText}
                 </Link>
               </div>
+            </section>
 
-              <div className="assessmentForm">
-                <div className="resultBox">
-                  <p className="sectionLabel">
-                    {isArabic ? "المؤشر الصحي العام" : "Overall Health Score"}
-                  </p>
-                  <h2 className={getScoreClass(overallScore)}>
-                    {overallScore}/100
-                  </h2>
-                  <h3>
-                    {scoreInputs.length > 0
-                      ? getStatus(overallScore)
-                      : isArabic
-                      ? "لا توجد بيانات بعد"
-                      : "No Data Yet"}
-                  </h3>
-                </div>
+            <section className="ohMetricGrid">
+              <article className="ohMetricCard">
+                <span className="ohMetricLabel">
+                  {text("Overall Health Score", "المؤشر الصحي العام")}
+                </span>
+                <span className="ohMetricValue">
+                  {scoreInputs.length > 0 ? overallScore : "—"}
+                </span>
+                <span className="ohMetricHint">
+                  {scoreInputs.length > 0
+                    ? `${getStatus(overallScore)} · ${overallScore}/100`
+                    : text("No Data Yet", "لا توجد بيانات بعد")}
+                </span>
+              </article>
 
-                <div className="resultBox">
-                  <p className="sectionLabel">
-                    {isArabic
-                      ? "تقييمات الأعضاء المحفوظة"
-                      : "Saved Organ Assessments"}
-                  </p>
-                  <h2>{assessments.length}</h2>
-                  <p>
-                    {isArabic
-                      ? "إجمالي وحدات تقييم الأعضاء المحفوظة."
-                      : "Total saved organ modules."}
-                  </p>
-                </div>
+              <article className="ohMetricCard">
+                <span className="ohMetricLabel">
+                  {text("Assessments", "التقييمات")}
+                </span>
+                <span className="ohMetricValue">{assessments.length}</span>
+                <span className="ohMetricHint">
+                  {text("Saved organ modules", "وحدات تقييم أعضاء محفوظة")}
+                </span>
+              </article>
 
-                <div className="resultBox">
-                  <p className="sectionLabel">
-                    {isArabic ? "التقارير المرفوعة" : "Uploaded Reports"}
-                  </p>
-                  <h2>{uploadedReportsCount}</h2>
-                  <p>
-                    {isArabic
-                      ? `${processedReports} مكتمل · ${pendingReports} قيد الانتظار`
-                      : `${processedReports} processed · ${pendingReports} pending`}
-                  </p>
-                </div>
-
-                <div className="resultBox">
-                  <p className="sectionLabel">
-                    {isArabic ? "الذكاء الصحي المحفوظ" : "Saved Intelligence"}
-                  </p>
-                  <h2>{savedIntelligence.length}</h2>
-                  <p>
-                    {isArabic
-                      ? "نتائج ذكاء صحي محفوظة ومرتبطة بتقاريرك."
-                      : "Saved intelligence results connected to your reports."}
-                  </p>
-                </div>
-
-                <div className="resultBox">
-                  <p className="sectionLabel">
-                    {isArabic ? "آخر Check-In" : "Latest Check-In"}
-                  </p>
-                  <h2>
-                    {dailyCheckIn ? `${dailyCheckIn.wellness_score}/100` : "N/A"}
-                  </h2>
-                  <p>
-                    {dailyCheckIn
-                      ? `${dailyCheckIn.mood} · ${formatDate(dailyCheckIn.created_at)}`
-                      : isArabic
-                      ? "لا يوجد تحديث صحي بعد"
-                      : "No wellness check-in yet"}
-                  </p>
-                </div>
-
-                <div className="resultBox">
-                  <p className="sectionLabel">
-                    {isArabic ? "العضو ذو الأولوية" : "Priority Organ"}
-                  </p>
-                  <h2>{localizeOrganName(priorityAssessment?.organ_name)}</h2>
-                  <p>
-                    {priorityAssessment
-                      ? isArabic
-                        ? `أقل مؤشر حالي: ${priorityAssessment.score}/100`
-                        : `Lowest current score: ${priorityAssessment.score}/100`
-                      : isArabic
-                      ? "أكمل التقييمات لتحديد العضو الذي يحتاج أولوية."
-                      : "Complete assessments to identify your priority organ."}
-                  </p>
-                </div>
-              </div>
-
-              <div className="resultBox">
-                <p className="sectionLabel">
-                  {isArabic ? "ملخص البيانات المحفوظة" : "Saved Data Summary"}
-                </p>
-
-                <h2>
-                  {isArabic ? `${completion}% مكتمل` : `${completion}% Complete`}
-                </h2>
-
-                <p
-                  style={{
-                    opacity: 0.82,
-                    lineHeight: 1.7,
-                    marginBottom: "18px",
-                  }}
-                >
+              <article className="ohMetricCard">
+                <span className="ohMetricLabel">
+                  {text("Reports", "التقارير")}
+                </span>
+                <span className="ohMetricValue">{uploadedReportsCount}</span>
+                <span className="ohMetricHint">
                   {isArabic
-                    ? "هذا الملخص يوضح أهم البيانات المرتبطة حاليًا بملفك في OrganHeal."
-                    : "This summary shows the main data currently connected to your OrganHeal profile."}
-                </p>
+                    ? `${processedReports} مكتمل · ${pendingReports} قيد الانتظار`
+                    : `${processedReports} processed · ${pendingReports} pending`}
+                </span>
+              </article>
+
+              <article className="ohMetricCard">
+                <span className="ohMetricLabel">Check-In</span>
+                <span className="ohMetricValue">
+                  {dailyCheckIn ? dailyCheckIn.wellness_score : "—"}
+                </span>
+                <span className="ohMetricHint">
+                  {dailyCheckIn
+                    ? `${dailyCheckIn.mood} · ${formatDate(dailyCheckIn.created_at)}`
+                    : text("Not started yet", "لم يبدأ بعد")}
+                </span>
+              </article>
+            </section>
+
+            <section className="ohGrid cols2">
+              <article className="ohCard">
+                <div className="ohCardHeader">
+                  <div>
+                    <p className="ohMetricLabel">
+                      {text("Profile Readiness", "جاهزية الملف الصحي")}
+                    </p>
+                    <h2 className="ohCardTitle">
+                      {text("Data connected to your health journey", "بيانات مرتبطة برحلتك الصحية")}
+                    </h2>
+                  </div>
+
+                  <span className={`ohStatusBadge ${completionTone}`}>
+                    {completion}%
+                  </span>
+                </div>
 
                 <div
                   style={{
                     display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
-                    gap: "14px",
+                    gridTemplateColumns: "140px 1fr",
+                    gap: "22px",
+                    alignItems: "center",
                   }}
                 >
-                  <div>
-                    <strong>{isArabic ? "التقييمات" : "Assessments"}</strong>
-                    <p>{assessments.length}</p>
+                  <div className="ohScoreRing" style={healthScoreRingStyle}>
+                    <div>
+                      <strong>{scoreInputs.length > 0 ? overallScore : 0}</strong>
+                      <span>{text("health", "صحي")}</span>
+                    </div>
                   </div>
 
-                  <div>
-                    <strong>{isArabic ? "التقارير" : "Reports"}</strong>
-                    <p>{uploadedReportsCount}</p>
-                  </div>
+                  <div className="ohStack">
+                    <div>
+                      <strong>{text("Priority organ", "العضو ذو الأولوية")}</strong>
+                      <p className="ohCardText">
+                        {priorityAssessment
+                          ? `${localizeOrganName(priorityAssessment.organ_name)} · ${priorityAssessment.score}/100`
+                          : text(
+                              "Complete assessments to identify your priority organ.",
+                              "أكمل التقييمات لتحديد العضو الذي يحتاج أولوية."
+                            )}
+                      </p>
+                    </div>
 
-                  <div>
-                    <strong>
-                      {isArabic ? "الذكاء المحفوظ" : "Saved Intelligence"}
-                    </strong>
-                    <p>{savedIntelligence.length}</p>
-                  </div>
-
-                  <div>
-                    <strong>Check-In</strong>
-                    <p>
-                      {dailyCheckIn
-                        ? isArabic
-                          ? "نشط"
-                          : "Active"
-                        : isArabic
-                        ? "لم يبدأ"
-                        : "Not started"}
-                    </p>
+                    <div>
+                      <strong>{text("Saved intelligence", "الذكاء الصحي المحفوظ")}</strong>
+                      <p className="ohCardText">
+                        {isArabic
+                          ? `${savedIntelligence.length} نتيجة محفوظة · ${generatedInsightCount} نتيجة مولدة`
+                          : `${savedIntelligence.length} saved · ${generatedInsightCount} generated`}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </article>
 
-              <div className="resultBox">
-                <p className="sectionLabel">
-                  {isArabic ? "مسار الرحلة الصحية" : "Health Journey Timeline"}
-                </p>
-
-                <div className="healthTimeline">
-                  <div className="timelineItem active">
-                    <strong>{isArabic ? "تم إنشاء الحساب" : "Account Created"}</strong>
-                    <span>{memberSince}</span>
+              <article className="ohCard">
+                <div className="ohCardHeader">
+                  <div>
+                    <p className="ohMetricLabel">
+                      {text("Account Summary", "ملخص الحساب")}
+                    </p>
+                    <h2 className="ohCardTitle">{displayName}</h2>
                   </div>
 
-                  <div
-                    className={firstAssessment ? "timelineItem active" : "timelineItem"}
-                  >
-                    <strong>{isArabic ? "أول تقييم" : "First Assessment"}</strong>
-                    <span>
+                  <span className="ohStatusBadge neutral">
+                    {text("Protected", "محمي")}
+                  </span>
+                </div>
+
+                <div className="ohStack">
+                  <p className="ohCardText">
+                    <strong>{text("Email:", "البريد الإلكتروني:")}</strong>{" "}
+                    {email || text("Not available", "غير متاح")}
+                  </p>
+
+                  <p className="ohCardText">
+                    <strong>{text("Member since:", "عضو منذ:")}</strong>{" "}
+                    {memberSinceLabel}
+                  </p>
+
+                  <p className="ohCardText">
+                    <strong>{text("Latest report:", "آخر تقرير:")}</strong>{" "}
+                    {latestReportDate || text("No reports uploaded yet", "لا توجد تقارير مرفوعة بعد")}
+                  </p>
+                </div>
+              </article>
+            </section>
+
+            <section className="ohCard">
+              <div className="ohCardHeader">
+                <div>
+                  <p className="ohMetricLabel">
+                    {text("Health Journey Timeline", "مسار الرحلة الصحية")}
+                  </p>
+                  <h2 className="ohCardTitle">
+                    {text("Your progress in one connected view", "تقدمك في عرض واحد مترابط")}
+                  </h2>
+                </div>
+
+                <Link href="/history" className="secondaryBtn">
+                  {text("View Full Timeline", "عرض المسار الكامل")}
+                </Link>
+              </div>
+
+              <div className="ohTimeline">
+                <div className="ohTimelineItem">
+                  <span className="ohTimelineDot" />
+                  <div>
+                    <p className="ohTimelineTitle">
+                      {text("Account Created", "تم إنشاء الحساب")}
+                    </p>
+                    <p className="ohTimelineMeta">{memberSinceLabel}</p>
+                  </div>
+                  <span className="ohStatusBadge good">
+                    {text("Done", "تم")}
+                  </span>
+                </div>
+
+                <div className="ohTimelineItem">
+                  <span className="ohTimelineDot" />
+                  <div>
+                    <p className="ohTimelineTitle">
+                      {text("First Assessment", "أول تقييم")}
+                    </p>
+                    <p className="ohTimelineMeta">
                       {firstAssessment
                         ? `${localizeOrganName(firstAssessment.organ_name)} · ${formatDate(
                             firstAssessment.created_at
                           )}`
-                        : isArabic
-                        ? "لم يبدأ بعد"
-                        : "Not started yet"}
-                    </span>
+                        : text("Not started yet", "لم يبدأ بعد")}
+                    </p>
                   </div>
+                  <Link href="/assessment" className="secondaryBtn">
+                    {firstAssessment ? text("Update", "تحديث") : text("Start", "ابدأ")}
+                  </Link>
+                </div>
 
-                  <div
-                    className={latestAssessment ? "timelineItem active" : "timelineItem"}
-                  >
-                    <strong>{isArabic ? "آخر تقييم" : "Latest Assessment"}</strong>
-                    <span>
+                <div className="ohTimelineItem">
+                  <span className="ohTimelineDot" />
+                  <div>
+                    <p className="ohTimelineTitle">
+                      {text("Latest Assessment", "آخر تقييم")}
+                    </p>
+                    <p className="ohTimelineMeta">
                       {latestAssessment
                         ? `${localizeOrganName(latestAssessment.organ_name)} · ${latestAssessment.score}/100`
-                        : isArabic
-                        ? "لا يوجد تقييم حديث"
-                        : "No latest assessment"}
-                    </span>
+                        : text("No latest assessment", "لا يوجد تقييم حديث")}
+                    </p>
                   </div>
-
-                  <div
-                    className={
-                      uploadedReportsCount > 0 ? "timelineItem active" : "timelineItem"
-                    }
+                  <span
+                    className={`ohStatusBadge ${
+                      latestAssessment ? getTone(latestAssessment.score) : "neutral"
+                    }`}
                   >
-                    <strong>
-                      {isArabic ? "تم رفع التقارير الطبية" : "Medical Reports Uploaded"}
-                    </strong>
-                    <span>
+                    {latestAssessment
+                      ? getStatus(latestAssessment.score)
+                      : text("Pending", "بانتظار")}
+                  </span>
+                </div>
+
+                <div className="ohTimelineItem">
+                  <span className="ohTimelineDot" />
+                  <div>
+                    <p className="ohTimelineTitle">
+                      {text("Medical Reports Uploaded", "تم رفع التقارير الطبية")}
+                    </p>
+                    <p className="ohTimelineMeta">
                       {uploadedReportsCount > 0
                         ? isArabic
                           ? `${uploadedReportsCount} تقرير · آخر تقرير: ${latestReportDate}`
                           : `${uploadedReportsCount} report(s) · Latest: ${latestReportDate}`
-                        : isArabic
-                        ? "لا توجد تقارير مرفوعة بعد"
-                        : "No reports uploaded yet"}
-                    </span>
+                        : text("No reports uploaded yet", "لا توجد تقارير مرفوعة بعد")}
+                    </p>
                   </div>
+                  <Link href="/lab-upload" className="secondaryBtn">
+                    {uploadedReportsCount > 0 ? text("Add", "إضافة") : text("Upload", "رفع")}
+                  </Link>
+                </div>
 
-                  <div
-                    className={
-                      savedIntelligence.length > 0
-                        ? "timelineItem active"
-                        : "timelineItem"
-                    }
-                  >
-                    <strong>
-                      {isArabic
-                        ? "تم حفظ الذكاء الصحي"
-                        : "Health Intelligence Saved"}
-                    </strong>
-                    <span>
+                <div className="ohTimelineItem">
+                  <span className="ohTimelineDot" />
+                  <div>
+                    <p className="ohTimelineTitle">
+                      {text("Health Intelligence Saved", "تم حفظ الذكاء الصحي")}
+                    </p>
+                    <p className="ohTimelineMeta">
                       {savedIntelligence.length > 0
                         ? isArabic
                           ? `${savedIntelligence.length} نتيجة محفوظة`
                           : `${savedIntelligence.length} saved result(s)`
-                        : isArabic
-                        ? "لا يوجد ذكاء صحي محفوظ بعد"
-                        : "No saved intelligence yet"}
-                    </span>
+                        : text("No saved intelligence yet", "لا يوجد ذكاء صحي محفوظ بعد")}
+                    </p>
                   </div>
+                  <Link href="/intelligence" className="secondaryBtn">
+                    {text("Open", "فتح")}
+                  </Link>
+                </div>
 
-                  <div className={dailyCheckIn ? "timelineItem active" : "timelineItem"}>
-                    <strong>Wellness Check-In</strong>
-                    <span>
+                <div className="ohTimelineItem">
+                  <span className="ohTimelineDot" />
+                  <div>
+                    <p className="ohTimelineTitle">Wellness Check-In</p>
+                    <p className="ohTimelineMeta">
                       {dailyCheckIn
                         ? `${dailyCheckIn.wellness_score}/100 · ${dailyCheckIn.mood}`
-                        : isArabic
-                        ? "لا يوجد Check-In بعد"
-                        : "No check-in yet"}
-                    </span>
+                        : text("No check-in yet", "لا يوجد Check-In بعد")}
+                    </p>
                   </div>
-                </div>
-              </div>
-
-              <div className="resultBox">
-                <p className="sectionLabel">
-                  {isArabic ? "رحلة الملف" : "Profile Journey"}
-                </p>
-
-                <h2>
-                  {isArabic
-                    ? "تابع من هويتك الصحية المحفوظة"
-                    : "Continue from your saved identity"}
-                </h2>
-
-                <p
-                  style={{
-                    opacity: 0.82,
-                    lineHeight: 1.7,
-                    maxWidth: "760px",
-                    margin: "0 auto 22px",
-                  }}
-                >
-                  {isArabic
-                    ? "ملفك يربط الحساب، التقييمات، التقارير، نتائج الذكاء الصحي، Check-Ins، وخطة المتابعة في مكان واحد."
-                    : "Your profile connects your account, assessments, reports, intelligence results, check-ins, and follow-up plan."}
-                </p>
-
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "12px",
-                    justifyContent: "center",
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <Link href="/dashboard" className="secondaryBtn">
-                    {isArabic ? "لوحة التحكم" : "Dashboard"}
-                  </Link>
-
-                  <Link href="/reports" className="secondaryBtn">
-                    {isArabic ? "التقارير" : "Reports"}
-                  </Link>
-
-                  <Link href="/intelligence" className="primaryBtn">
-                    {isArabic ? "مركز الذكاء" : "Intelligence"}
-                  </Link>
-
-                  <Link href="/health-plan" className="secondaryBtn">
-                    {isArabic ? "الخطة الصحية" : "Health Plan"}
-                  </Link>
-
                   <Link href="/checkin" className="secondaryBtn">
-                    Check-In
+                    {dailyCheckIn ? text("Update", "تحديث") : text("Start", "ابدأ")}
                   </Link>
                 </div>
               </div>
-            </>
-          )}
-        </div>
+            </section>
+
+            <section className="ohTrustNotice">
+              <span aria-hidden="true">🛡️</span>
+              <div>
+                <strong>
+                  {text("Medical safety reminder", "تذكير السلامة الطبية")}
+                </strong>
+                <br />
+                {text(
+                  "OrganHeal organizes health information for education and preparation. It does not replace diagnosis, treatment, emergency care, or a licensed clinician.",
+                  "يقوم OrganHeal بتنظيم المعلومات الصحية للتعليم والتحضير. لا يستبدل التشخيص أو العلاج أو الرعاية الطارئة أو الطبيب المختص."
+                )}
+              </div>
+            </section>
+
+            <section className="ohCard">
+              <div className="ohCardHeader">
+                <div>
+                  <p className="ohMetricLabel">
+                    {text("Profile Journey", "رحلة الملف")}
+                  </p>
+                  <h2 className="ohCardTitle">
+                    {text(
+                      "Continue from your saved identity",
+                      "تابع من هويتك الصحية المحفوظة"
+                    )}
+                  </h2>
+                  <p className="ohCardText">
+                    {text(
+                      "Your profile connects your account, assessments, reports, intelligence results, check-ins, and follow-up plan.",
+                      "ملفك يربط الحساب، التقييمات، التقارير، نتائج الذكاء الصحي، Check-Ins، وخطة المتابعة في مكان واحد."
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              <div className="ohButtonRow">
+                <Link href="/dashboard" className="secondaryBtn">
+                  {text("Dashboard", "لوحة التحكم")}
+                </Link>
+
+                <Link href="/reports" className="secondaryBtn">
+                  {text("Reports", "التقارير")}
+                </Link>
+
+                <Link href="/intelligence" className="primaryBtn">
+                  {text("Intelligence", "مركز الذكاء")}
+                </Link>
+
+                <Link href="/health-plan" className="secondaryBtn">
+                  {text("Health Plan", "الخطة الصحية")}
+                </Link>
+
+                <Link href="/checkin" className="secondaryBtn">
+                  Check-In
+                </Link>
+              </div>
+            </section>
+          </>
+        )}
       </div>
     </main>
   );
