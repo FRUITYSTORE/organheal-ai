@@ -321,7 +321,7 @@ export default function DashboardPage() {
       label: isArabic ? "?????????" : "Assessments",
       value: String(assessments.length),
       detail: latestAssessment
-        ? `${localizeOrganName(latestAssessment.organ_name, isArabic)} ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· ${
+        ? `${localizeOrganName(latestAssessment.organ_name, isArabic)} ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· ${
             latestAssessment.score
           }/100`
         : isArabic
@@ -358,7 +358,7 @@ export default function DashboardPage() {
       label: isArabic ? "??????? ?????" : "Check-In",
       value: dailyCheckIn ? `${dailyCheckIn.wellness_score}/100` : "N/A",
       detail: dailyCheckIn
-        ? `${localizeMood(dailyCheckIn.mood, isArabic)} ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· ${formatDate(
+        ? `${localizeMood(dailyCheckIn.mood, isArabic)} ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· ${formatDate(
             dailyCheckIn.created_at,
             isArabic
           )}`
@@ -1726,6 +1726,92 @@ export default function DashboardPage() {
       >
         Privacy policy
       </a>
+    </div>
+  </div>
+</section>
+
+<section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+    <div>
+      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
+        Weekly Review Focus
+      </p>
+      <h2 className="mt-2 text-2xl font-bold text-slate-950">
+        What to Review This Week
+      </h2>
+      <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+        A weekly reflection layer that helps users keep their health information
+        organized, updated, and ready for better long-term guidance.
+      </p>
+    </div>
+
+    <div className="rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600">
+      Weekly Loop
+    </div>
+  </div>
+
+  <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+    {[
+      {
+        title: "What changed?",
+        detail:
+          "Review new symptoms, lifestyle changes, medication updates, or unusual patterns from the week.",
+        action: "Capture changes",
+      },
+      {
+        title: "What improved?",
+        detail:
+          "Identify better sleep, energy, hydration, activity, or symptom control when available.",
+        action: "Track progress",
+      },
+      {
+        title: "What needs attention?",
+        detail:
+          "Highlight repeated symptoms, missed check-ins, outdated labs, or unanswered health questions.",
+        action: "Prioritize next steps",
+      },
+      {
+        title: "What should be discussed?",
+        detail:
+          "Prepare focused notes that may help during a doctor visit or follow-up conversation.",
+        action: "Prepare discussion",
+      },
+    ].map((item) => (
+      <div
+        key={item.title}
+        className="rounded-2xl border border-slate-200 bg-slate-50 p-5"
+      >
+        <h3 className="text-base font-bold text-slate-950">
+          {item.title}
+        </h3>
+
+        <p className="mt-3 text-sm leading-6 text-slate-600">
+          {item.detail}
+        </p>
+
+        <div className="mt-5 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-slate-700 ring-1 ring-slate-200">
+          {item.action}
+        </div>
+      </div>
+    ))}
+  </div>
+
+  <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <div>
+        <h3 className="text-base font-bold text-slate-950">
+          Why this matters
+        </h3>
+        <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+          OrganHeal becomes more useful when users return regularly, update
+          their health signals, and compare changes over time instead of relying
+          on one-time information.
+        </p>
+      </div>
+
+      <div className="rounded-2xl bg-white px-5 py-4 text-sm font-semibold text-slate-700 ring-1 ring-slate-200">
+        Review once per week
+      </div>
     </div>
   </div>
 </section>
