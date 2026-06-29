@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import PageBackActions from "../components/PageBackActions";
-import { useEffect, useMemo, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 
@@ -105,12 +105,19 @@ export default function HistoryPage() {
   }
 
   function formatDateTime(value: string | null | undefined) {
-    if (!value) return isArabic ? "غير متاح" : "Not available";
-    return new Date(value).toLocaleString(isArabic ? "ar-AE" : "en-US");
+    if (!value) return text("Not available", "غير متاح");
+
+    return new Date(value).toLocaleString(isArabic ? "ar-AE" : "en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   }
 
   function localizeModuleName(value: string | null | undefined) {
-    if (!value) return isArabic ? "غير متاح" : "N/A";
+    if (!value) return text("N/A", "غير متاح");
     if (!isArabic) return value;
 
     const normalized = value.toLowerCase();
@@ -126,7 +133,7 @@ export default function HistoryPage() {
   }
 
   function localizeStatus(value: string | null | undefined) {
-    if (!value) return isArabic ? "تم حفظ التقييم" : "Assessment saved";
+    if (!value) return text("Assessment saved", "تم حفظ التقييم");
     if (!isArabic) return value;
 
     if (value === "Low Risk") return "خطورة منخفضة";
@@ -169,6 +176,14 @@ export default function HistoryPage() {
     if (value === "Intelligence") return "ذكاء صحي";
 
     return value;
+  }
+
+  function getTimelineIcon(value: TimelineItem["type"]) {
+    if (value === "Assessment") return "🧭";
+    if (value === "Check-In") return "✅";
+    if (value === "Report") return "📄";
+    if (value === "Intelligence") return "🧠";
+    return "•";
   }
 
   async function fetchHistory() {
@@ -261,17 +276,17 @@ export default function HistoryPage() {
     setLoading(false);
   }
 
-  function getScoreClass(score: number) {
-    if (score >= 80) return "goodScore";
-    if (score >= 60) return "moderateScore";
-    return "riskScore";
-  }
-
   function getScoreStatus(score: number) {
     if (score >= 80) return text("Strong", "قوي");
     if (score >= 60) return text("Stable", "مستقر");
     if (score >= 40) return text("Needs Attention", "يحتاج انتباه");
     return text("Recovery Needed", "يحتاج تعافي");
+  }
+
+  function getTone(score: number) {
+    if (score >= 80) return "good";
+    if (score >= 60) return "moderate";
+    return "risk";
   }
 
   const allScores = [
@@ -315,7 +330,7 @@ export default function HistoryPage() {
         description: isArabic
           ? "أكمل تقييمين على الأقل لمقارنة التقدم مع الوقت."
           : "Complete at least two assessments to compare progress over time.",
-        className: "",
+        tone: "neutral",
       };
     }
 
@@ -330,7 +345,7 @@ export default function HistoryPage() {
         description: isArabic
           ? `${moduleName} تحسن بمقدار ${difference} نقطة مقارنة بالسجل السابق.`
           : `${latest.module_name} improved by ${difference} points compared with the previous record.`,
-        className: "goodScore",
+        tone: "good",
       };
     }
 
@@ -344,7 +359,7 @@ export default function HistoryPage() {
           : `${latest.module_name} declined by ${Math.abs(
               difference
             )} points. Review your follow-up plan and reassess after 4 weeks.`,
-        className: "riskScore",
+        tone: "risk",
       };
     }
 
@@ -353,7 +368,7 @@ export default function HistoryPage() {
       description: isArabic
         ? "آخر مؤشر تقييم لديك مستقر مقارنة بالسجل السابق."
         : "Your latest assessment score is stable compared with the previous record.",
-      className: "moderateScore",
+      tone: "moderate",
     };
   }, [history, isArabic]);
 
@@ -364,7 +379,7 @@ export default function HistoryPage() {
         description: isArabic
           ? "أكمل Check-In مرتين على الأقل لمقارنة حركة العافية."
           : "Complete at least two check-ins to compare wellness movement.",
-        className: "",
+        tone: "neutral",
       };
     }
 
@@ -378,7 +393,7 @@ export default function HistoryPage() {
         description: isArabic
           ? `تحسن مؤشر العافية لديك بمقدار ${difference} نقطة مقارنة بآخر Check-In.`
           : `Your wellness score improved by ${difference} points compared with your previous check-in.`,
-        className: "goodScore",
+        tone: "good",
       };
     }
 
@@ -392,7 +407,7 @@ export default function HistoryPage() {
           : `Your wellness score decreased by ${Math.abs(
               difference
             )} points. Focus on sleep, stress, hydration, and recovery today.`,
-        className: "riskScore",
+        tone: "risk",
       };
     }
 
@@ -401,7 +416,7 @@ export default function HistoryPage() {
       description: isArabic
         ? "مؤشر العافية لديك بقي ثابتًا مقارنة بآخر Check-In."
         : "Your wellness score stayed the same compared with your previous check-in.",
-      className: "moderateScore",
+      tone: "moderate",
     };
   }, [dailyCheckIns, isArabic]);
 
@@ -520,185 +535,244 @@ export default function HistoryPage() {
 
   const hasAnyHistory = timelineItems.length > 0;
 
+  const scoreRingStyle = {
+    "--score": Math.max(0, Math.min(100, overallProgressScore)),
+  } as CSSProperties;
+
   return (
-    <main className="assistantPage" dir={isArabic ? "rtl" : "ltr"}>
-      <div className="assistantContainer">
+    <main className="ohPageShell" dir={isArabic ? "rtl" : "ltr"}>
+      <div className="ohContainer ohStack large" style={{ padding: "28px 0 56px" }}>
         <PageBackActions />
 
-        <div className="assistantHeader">
-          <p className="assistantBadge">
-            {text("HEALTH HISTORY", "التاريخ الصحي")}
-          </p>
-          <h1>{text("Progress Timeline", "مسار التقدم")}</h1>
-          <p>
-            {text(
-              "Review your assessments, wellness check-ins, uploaded reports, saved intelligence, trends, and recommended next step.",
-              "راجع التقييمات، Check-Ins، التقارير المرفوعة، الذكاء الصحي المحفوظ، الاتجاهات، والخطوة التالية المقترحة."
-            )}
-          </p>
-        </div>
+        {loading && (
+          <section className="ohHero">
+            <p className="ohEyebrow">
+              {text("Loading History", "تحميل التاريخ الصحي")}
+            </p>
+            <h1 className="ohTitle">
+              {text("Preparing your progress timeline...", "جاري تحضير مسار التقدم...")}
+            </h1>
+            <p className="ohLead">
+              {text(
+                "OrganHeal is connecting assessments, check-ins, reports, and saved intelligence into one timeline.",
+                "يقوم OrganHeal بربط التقييمات، Check-Ins، التقارير، والذكاء الصحي المحفوظ في مسار واحد."
+              )}
+            </p>
+          </section>
+        )}
 
-        <div className="chatWindow">
-          {loading && (
-            <div className="resultBox">
-              <p className="sectionLabel">
-                {text("Loading History", "تحميل التاريخ الصحي")}
-              </p>
-              <h2>
-                {text(
-                  "Preparing your progress timeline...",
-                  "جاري تحضير مسار التقدم..."
-                )}
-              </h2>
-            </div>
-          )}
-
-          {!loading && message && (
-            <div className="resultBox">
-              <p className="sectionLabel">
-                {text("Login Required", "تسجيل الدخول مطلوب")}
-              </p>
-              <h2>{text("Access Protected", "الوصول محمي")}</h2>
-              <p>{message}</p>
-
+        {!loading && message && (
+          <section className="ohEmptyState">
+            <h2>{text("Access Protected", "الوصول محمي")}</h2>
+            <p>{message}</p>
+            <div className="ohButtonRow" style={{ justifyContent: "center", marginTop: "20px" }}>
               <Link href="/login" className="primaryBtn">
                 {text("Login", "تسجيل الدخول")}
               </Link>
             </div>
-          )}
+          </section>
+        )}
 
-          {!loading && !message && (
-            <>
-              <div className="resultBox">
-                <p className="sectionLabel">
-                  {text("Recommended Next Step", "الخطوة التالية المقترحة")}
-                </p>
+        {!loading && !message && (
+          <>
+            <section className="ohHero">
+              <div className="ohHeroGrid">
+                <div>
+                  <p className="ohEyebrow">
+                    {text("Health Journey Command Timeline", "مسار قيادة الرحلة الصحية")}
+                  </p>
 
-                <h2>{recommendedAction.label}</h2>
+                  <h1 className="ohTitle">
+                    {text("Progress Timeline", "مسار التقدم")}
+                  </h1>
 
-                <p
-                  style={{
-                    opacity: 0.82,
-                    lineHeight: 1.7,
-                    marginBottom: "18px",
-                  }}
-                >
-                  {recommendedAction.description}
-                </p>
+                  <p className="ohLead">
+                    {text(
+                      "Review your assessments, wellness check-ins, uploaded reports, saved intelligence, trends, and the next best action in one connected view.",
+                      "راجع التقييمات، Check-Ins، التقارير المرفوعة، الذكاء الصحي المحفوظ، الاتجاهات، والخطوة التالية الأفضل في عرض واحد مترابط."
+                    )}
+                  </p>
+
+                  <div className="ohButtonRow" style={{ marginTop: "24px" }}>
+                    <Link href={recommendedAction.href} className="primaryBtn">
+                      {recommendedAction.buttonText}
+                    </Link>
+
+                    <Link href="/dashboard" className="secondaryBtn">
+                      {text("Open Dashboard", "فتح لوحة التحكم")}
+                    </Link>
+                  </div>
+                </div>
+
+                <div className="ohCard">
+                  <div className="ohCardHeader">
+                    <div>
+                      <p className="ohMetricLabel">
+                        {text("Overall Progress Score", "مؤشر التقدم العام")}
+                      </p>
+                      <h2 className="ohCardTitle" style={{ marginTop: "8px" }}>
+                        {allScores.length > 0
+                          ? getScoreStatus(overallProgressScore)
+                          : text("No Data Yet", "لا توجد بيانات بعد")}
+                      </h2>
+                    </div>
+
+                    <span
+                      className={`ohStatusBadge ${
+                        allScores.length > 0 ? getTone(overallProgressScore) : "neutral"
+                      }`}
+                    >
+                      {allScores.length > 0
+                        ? `${overallProgressScore}/100`
+                        : text("Pending", "بانتظار")}
+                    </span>
+                  </div>
+
+                  <div
+                    style={{
+                      display: "grid",
+                      placeItems: "center",
+                      margin: "18px 0",
+                    }}
+                  >
+                    <div className="ohScoreRing" style={scoreRingStyle}>
+                      <div>
+                        <strong>{allScores.length > 0 ? overallProgressScore : 0}</strong>
+                        <span>{text("progress", "تقدم")}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <p className="ohCardText">
+                    {text(
+                      "This score averages saved assessments and wellness check-ins.",
+                      "هذا المؤشر يحسب متوسط التقييمات المحفوظة و Check-Ins الصحية."
+                    )}
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <section className="ohActionPanel">
+              <div className="ohCardHeader" style={{ marginBottom: 0 }}>
+                <div>
+                  <p className="ohMetricLabel">
+                    {text("Recommended Next Step", "الخطوة التالية المقترحة")}
+                  </p>
+                  <h2 className="ohCardTitle" style={{ fontSize: "1.55rem" }}>
+                    {recommendedAction.label}
+                  </h2>
+                  <p className="ohCardText">{recommendedAction.description}</p>
+                </div>
 
                 <Link href={recommendedAction.href} className="primaryBtn">
                   {recommendedAction.buttonText}
                 </Link>
               </div>
+            </section>
 
-              <div className="assessmentForm">
-                <div className="resultBox">
-                  <p className="sectionLabel">
-                    {text("Overall Progress Score", "مؤشر التقدم العام")}
-                  </p>
-                  <h2 className={getScoreClass(overallProgressScore)}>
-                    {overallProgressScore}/100
-                  </h2>
-                  <h3>
-                    {allScores.length > 0
-                      ? getScoreStatus(overallProgressScore)
-                      : text("No Data Yet", "لا توجد بيانات بعد")}
-                  </h3>
-                </div>
+            <section className="ohMetricGrid">
+              <article className="ohMetricCard">
+                <span className="ohMetricLabel">
+                  {text("Assessments", "التقييمات")}
+                </span>
+                <span className="ohMetricValue">{history.length}</span>
+                <span className="ohMetricHint">
+                  {text("Saved assessment records", "سجلات تقييم محفوظة")}
+                </span>
+              </article>
 
-                <div className="resultBox">
-                  <p className="sectionLabel">{text("Assessments", "التقييمات")}</p>
-                  <h2>{history.length}</h2>
-                  <p>
-                    {text(
-                      "Total saved assessment records.",
-                      "إجمالي سجلات التقييم المحفوظة."
-                    )}
-                  </p>
-                </div>
+              <article className="ohMetricCard">
+                <span className="ohMetricLabel">Check-Ins</span>
+                <span className="ohMetricValue">{dailyCheckIns.length}</span>
+                <span className="ohMetricHint">
+                  {text("Wellness updates saved", "تحديثات عافية محفوظة")}
+                </span>
+              </article>
 
-                <div className="resultBox">
-                  <p className="sectionLabel">Check-Ins</p>
-                  <h2>{dailyCheckIns.length}</h2>
-                  <p>
-                    {text(
-                      "Total wellness check-ins saved.",
-                      "إجمالي Check-Ins الصحية المحفوظة."
-                    )}
-                  </p>
-                </div>
+              <article className="ohMetricCard">
+                <span className="ohMetricLabel">
+                  {text("Reports", "التقارير")}
+                </span>
+                <span className="ohMetricValue">{uploadedReports.length}</span>
+                <span className="ohMetricHint">
+                  {isArabic
+                    ? `${processedReports} مكتمل · ${pendingReports} قيد الانتظار`
+                    : `${processedReports} processed · ${pendingReports} pending`}
+                </span>
+              </article>
 
-                <div className="resultBox">
-                  <p className="sectionLabel">{text("Reports", "التقارير")}</p>
-                  <h2>{uploadedReports.length}</h2>
-                  <p>
-                    {isArabic
-                      ? `${processedReports} مكتمل · ${pendingReports} قيد الانتظار`
-                      : `${processedReports} processed · ${pendingReports} pending`}
-                  </p>
-                </div>
+              <article className="ohMetricCard">
+                <span className="ohMetricLabel">
+                  {text("Saved Intelligence", "الذكاء الصحي المحفوظ")}
+                </span>
+                <span className="ohMetricValue">{savedIntelligence.length}</span>
+                <span className="ohMetricHint">
+                  {text("Connected to your reports", "مرتبط بتقاريرك")}
+                </span>
+              </article>
+            </section>
 
-                <div className="resultBox">
-                  <p className="sectionLabel">
-                    {text("Saved Intelligence", "الذكاء الصحي المحفوظ")}
-                  </p>
-                  <h2>{savedIntelligence.length}</h2>
-                  <p>
-                    {text(
-                      "Saved intelligence results connected to your reports.",
-                      "نتائج ذكاء صحي محفوظة ومرتبطة بتقاريرك."
-                    )}
-                  </p>
-                </div>
-
-                <div className="resultBox">
-                  <p className="sectionLabel">
-                    {text("Priority Focus", "الأولوية الصحية")}
-                  </p>
-                  <h2>{localizeModuleName(priorityAssessment?.module_name)}</h2>
-                  <p>
-                    {priorityAssessment
-                      ? isArabic
-                        ? `أقل مؤشر تقييم: ${priorityAssessment.score}/100`
-                        : `Lowest assessment score: ${priorityAssessment.score}/100`
-                      : text(
-                          "Complete assessments to identify a priority area.",
-                          "أكمل التقييمات لتحديد منطقة الأولوية."
-                        )}
-                  </p>
-                </div>
-              </div>
-
-              <div className="resultBox">
-                <p className="sectionLabel">
-                  {text("Progress Trends", "اتجاهات التقدم")}
-                </p>
-
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-                    gap: "14px",
-                    textAlign: isArabic ? "right" : "left",
-                  }}
-                >
+            <section className="ohGrid cols2">
+              <article className="ohCard">
+                <div className="ohCardHeader">
                   <div>
-                    <strong className={assessmentTrend.className}>
+                    <p className="ohMetricLabel">
+                      {text("Progress Trends", "اتجاهات التقدم")}
+                    </p>
+                    <h2 className="ohCardTitle">
+                      {text("What changed recently?", "ما الذي تغيّر مؤخرًا؟")}
+                    </h2>
+                  </div>
+                </div>
+
+                <div className="ohStack">
+                  <div>
+                    <span className={`ohStatusBadge ${assessmentTrend.tone}`}>
                       {assessmentTrend.label}
-                    </strong>
-                    <p>{assessmentTrend.description}</p>
+                    </span>
+                    <p className="ohCardText">{assessmentTrend.description}</p>
                   </div>
 
                   <div>
-                    <strong className={wellnessTrend.className}>
+                    <span className={`ohStatusBadge ${wellnessTrend.tone}`}>
                       {wellnessTrend.label}
-                    </strong>
-                    <p>{wellnessTrend.description}</p>
+                    </span>
+                    <p className="ohCardText">{wellnessTrend.description}</p>
+                  </div>
+                </div>
+              </article>
+
+              <article className="ohCard">
+                <div className="ohCardHeader">
+                  <div>
+                    <p className="ohMetricLabel">
+                      {text("Priority & Best Records", "الأولوية وأفضل السجلات")}
+                    </p>
+                    <h2 className="ohCardTitle">
+                      {text("Signals from your timeline", "إشارات من مسارك")}
+                    </h2>
+                  </div>
+                </div>
+
+                <div className="ohStack">
+                  <div>
+                    <strong>{text("Priority Focus", "الأولوية الصحية")}</strong>
+                    <p className="ohCardText">
+                      {priorityAssessment
+                        ? isArabic
+                          ? `${localizeModuleName(priorityAssessment.module_name)} · أقل مؤشر: ${priorityAssessment.score}/100`
+                          : `${priorityAssessment.module_name} · Lowest score: ${priorityAssessment.score}/100`
+                        : text(
+                            "Complete assessments to identify a priority area.",
+                            "أكمل التقييمات لتحديد منطقة الأولوية."
+                          )}
+                    </p>
                   </div>
 
                   <div>
                     <strong>{text("Best Assessment", "أفضل تقييم")}</strong>
-                    <p>
+                    <p className="ohCardText">
                       {bestAssessment
                         ? `${localizeModuleName(bestAssessment.module_name)} · ${bestAssessment.score}/100`
                         : text("No assessment yet", "لا يوجد تقييم بعد")}
@@ -707,170 +781,200 @@ export default function HistoryPage() {
 
                   <div>
                     <strong>{text("Latest Check-In", "آخر Check-In")}</strong>
-                    <p>
+                    <p className="ohCardText">
                       {latestCheckIn
                         ? `${latestCheckIn.wellness_score}/100 · ${latestCheckIn.mood}`
                         : text("No check-in yet", "لا يوجد Check-In بعد")}
                     </p>
                   </div>
                 </div>
-              </div>
+              </article>
+            </section>
 
-              <div className="resultBox">
-                <p className="sectionLabel">
-                  {text("Filter Timeline", "تصفية المسار")}
-                </p>
-
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "10px",
-                    flexWrap: "wrap",
-                    justifyContent: "center",
-                  }}
-                >
-                  {filters.map((filter) => (
-                    <button
-                      key={filter.value}
-                      className={
-                        selectedFilter === filter.value ? "primaryBtn" : "secondaryBtn"
-                      }
-                      onClick={() => setSelectedFilter(filter.value)}
-                    >
-                      {filter.label}
-                    </button>
-                  ))}
+            <section className="ohCard">
+              <div className="ohCardHeader">
+                <div>
+                  <p className="ohMetricLabel">
+                    {text("Filter Timeline", "تصفية المسار")}
+                  </p>
+                  <h2 className="ohCardTitle">
+                    {text("Focus your health history", "ركّز التاريخ الصحي")}
+                  </h2>
                 </div>
               </div>
 
-              <div className="resultBox">
-                <p className="sectionLabel">
-                  {text("Progress Timeline", "مسار التقدم")}
-                </p>
+              <div className="ohButtonRow">
+                {filters.map((filter) => (
+                  <button
+                    key={filter.value}
+                    className={
+                      selectedFilter === filter.value ? "primaryBtn" : "secondaryBtn"
+                    }
+                    onClick={() => setSelectedFilter(filter.value)}
+                  >
+                    {filter.label}
+                  </button>
+                ))}
+              </div>
+            </section>
 
-                {!hasAnyHistory ? (
-                  <>
-                    <h2>{text("No saved progress yet", "لا يوجد تقدم محفوظ بعد")}</h2>
-                    <p>
-                      {text(
-                        "Start with an assessment or daily check-in to build your progress timeline.",
-                        "ابدأ بتقييم أو Check-In يومي لبناء مسار التقدم الخاص بك."
-                      )}
-                    </p>
+            <section className="ohCard">
+              <div className="ohCardHeader">
+                <div>
+                  <p className="ohMetricLabel">
+                    {text("Progress Timeline", "مسار التقدم")}
+                  </p>
+                  <h2 className="ohCardTitle">
+                    {text("Every health event in one place", "كل حدث صحي في مكان واحد")}
+                  </h2>
+                </div>
 
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: "12px",
-                        justifyContent: "center",
-                        flexWrap: "wrap",
-                        marginTop: "18px",
-                      }}
-                    >
-                      <Link href="/assessment" className="primaryBtn">
-                        {text("Start Assessment", "ابدأ التقييم")}
-                      </Link>
+                <span className="ohStatusBadge neutral">
+                  {filteredTimeline.length}{" "}
+                  {text("record(s)", "سجل")}
+                </span>
+              </div>
 
-                      <Link href="/checkin" className="secondaryBtn">
-                        {text("Open Check-In", "افتح Check-In")}
-                      </Link>
-                    </div>
-                  </>
-                ) : filteredTimeline.length === 0 ? (
+              {!hasAnyHistory ? (
+                <div className="ohEmptyState">
+                  <h2>{text("No saved progress yet", "لا يوجد تقدم محفوظ بعد")}</h2>
                   <p>
                     {text(
-                      "No records found for this filter.",
+                      "Start with an assessment or daily check-in to build your progress timeline.",
+                      "ابدأ بتقييم أو Check-In يومي لبناء مسار التقدم الخاص بك."
+                    )}
+                  </p>
+
+                  <div className="ohButtonRow" style={{ justifyContent: "center", marginTop: "18px" }}>
+                    <Link href="/assessment" className="primaryBtn">
+                      {text("Start Assessment", "ابدأ التقييم")}
+                    </Link>
+
+                    <Link href="/checkin" className="secondaryBtn">
+                      {text("Open Check-In", "افتح Check-In")}
+                    </Link>
+                  </div>
+                </div>
+              ) : filteredTimeline.length === 0 ? (
+                <div className="ohEmptyState">
+                  <h2>{text("No records found", "لا توجد سجلات")}</h2>
+                  <p>
+                    {text(
+                      "No records were found for this filter.",
                       "لا توجد سجلات لهذا الفلتر."
                     )}
                   </p>
-                ) : (
-                  <div className="healthTimeline">
-                    {filteredTimeline.map((item) => (
-                      <div className="timelineItem active" key={item.id}>
-                        <strong>
-                          {localizeType(item.type)}: {item.title}
-                        </strong>
+                </div>
+              ) : (
+                <div className="ohTimeline">
+                  {filteredTimeline.map((item) => (
+                    <div className="ohTimelineItem" key={item.id}>
+                      <span className="ohTimelineDot" />
 
-                        <span>
+                      <div>
+                        <p className="ohTimelineTitle">
+                          {getTimelineIcon(item.type)} {localizeType(item.type)}:{" "}
+                          {item.title}
+                        </p>
+
+                        <p className="ohTimelineMeta">
                           {item.score !== null && item.score !== undefined
                             ? `${item.score}/100 · `
                             : ""}
                           {item.subtitle}
-                        </span>
+                        </p>
 
-                        <span>{formatDateTime(item.date)}</span>
+                        <p className="ohTimelineMeta">{formatDateTime(item.date)}</p>
+                      </div>
+
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "10px",
+                          alignItems: "center",
+                          flexWrap: "wrap",
+                          justifyContent: isArabic ? "flex-start" : "flex-end",
+                        }}
+                      >
+                        {item.score !== null && item.score !== undefined && (
+                          <span className={`ohStatusBadge ${getTone(item.score)}`}>
+                            {getScoreStatus(item.score)}
+                          </span>
+                        )}
 
                         <Link href={item.href} className="secondaryBtn">
                           {text("Open", "فتح")}
                         </Link>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            <section className="ohTrustNotice">
+              <span aria-hidden="true">🛡️</span>
+              <div>
+                <strong>
+                  {text("Medical safety reminder", "تذكير السلامة الطبية")}
+                </strong>
+                <br />
+                {text(
+                  "This timeline organizes health information for education and follow-up preparation. It does not diagnose disease or replace emergency care or a licensed clinician.",
+                  "هذا المسار ينظم المعلومات الصحية للتعليم والتحضير للمتابعة. لا يشخّص المرض ولا يستبدل الرعاية الطارئة أو الطبيب المختص."
                 )}
               </div>
+            </section>
 
-              <div className="resultBox">
-                <p className="sectionLabel">
-                  {text("History Journey", "رحلة التاريخ الصحي")}
-                </p>
-
-                <h2>
-                  {text(
-                    "Continue from your progress timeline",
-                    "تابع من مسار التقدم الخاص بك"
-                  )}
-                </h2>
-
-                <p
-                  style={{
-                    opacity: 0.82,
-                    lineHeight: 1.7,
-                    maxWidth: "760px",
-                    margin: "0 auto 22px",
-                  }}
-                >
-                  {text(
-                    "Your history connects assessments, wellness check-ins, reports, saved intelligence, and your follow-up plan.",
-                    "يربط تاريخك الصحي بين التقييمات، Check-Ins، التقارير، الذكاء الصحي المحفوظ، وخطة المتابعة."
-                  )}
-                </p>
-
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "12px",
-                    justifyContent: "center",
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <Link href="/dashboard" className="secondaryBtn">
-                    {text("Dashboard", "لوحة التحكم")}
-                  </Link>
-
-                  <Link href="/profile" className="secondaryBtn">
-                    {text("Profile", "الملف الشخصي")}
-                  </Link>
-
-                  <Link href="/checkin" className="secondaryBtn">
-                    Check-In
-                  </Link>
-
-                  <Link href="/reports" className="secondaryBtn">
-                    {text("Reports", "التقارير")}
-                  </Link>
-
-                  <Link href="/intelligence" className="secondaryBtn">
-                    {text("Intelligence", "مركز الذكاء")}
-                  </Link>
-
-                  <Link href="/health-plan" className="primaryBtn">
-                    {text("Health Plan", "الخطة الصحية")}
-                  </Link>
+            <section className="ohCard">
+              <div className="ohCardHeader">
+                <div>
+                  <p className="ohMetricLabel">
+                    {text("History Journey", "رحلة التاريخ الصحي")}
+                  </p>
+                  <h2 className="ohCardTitle">
+                    {text(
+                      "Continue from your progress timeline",
+                      "تابع من مسار التقدم الخاص بك"
+                    )}
+                  </h2>
+                  <p className="ohCardText">
+                    {text(
+                      "Your history connects assessments, wellness check-ins, reports, saved intelligence, and your follow-up plan.",
+                      "يربط تاريخك الصحي بين التقييمات، Check-Ins، التقارير، الذكاء الصحي المحفوظ، وخطة المتابعة."
+                    )}
+                  </p>
                 </div>
               </div>
-            </>
-          )}
-        </div>
+
+              <div className="ohButtonRow">
+                <Link href="/dashboard" className="secondaryBtn">
+                  {text("Dashboard", "لوحة التحكم")}
+                </Link>
+
+                <Link href="/profile" className="secondaryBtn">
+                  {text("Profile", "الملف الشخصي")}
+                </Link>
+
+                <Link href="/checkin" className="secondaryBtn">
+                  Check-In
+                </Link>
+
+                <Link href="/reports" className="secondaryBtn">
+                  {text("Reports", "التقارير")}
+                </Link>
+
+                <Link href="/intelligence" className="secondaryBtn">
+                  {text("Intelligence", "مركز الذكاء")}
+                </Link>
+
+                <Link href="/health-plan" className="primaryBtn">
+                  {text("Health Plan", "الخطة الصحية")}
+                </Link>
+              </div>
+            </section>
+          </>
+        )}
       </div>
     </main>
   );
