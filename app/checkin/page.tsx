@@ -97,6 +97,20 @@ function getRangeText(value: number, isArabic: boolean) {
   return isArabic ? "ممتاز" : "Excellent";
 }
 
+
+function getTodayIsoRange() {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+
+  const end = new Date(start);
+  end.setDate(end.getDate() + 1);
+
+  return {
+    startIso: start.toISOString(),
+    endIso: end.toISOString(),
+  };
+}
+
 function formatDate(value: string, isArabic: boolean) {
   try {
     return new Date(value).toLocaleString(isArabic ? "ar" : "en", {
@@ -208,7 +222,16 @@ export default function CheckInPage() {
 
   async function saveCheckIn() {
     setSaving(true);
-    setMessage(isArabic ? "جاري حفظ التحديث الصحي..." : "Saving daily check-in...");
+
+    setMessage(
+      savedToday
+        ? isArabic
+          ? "جاري تحديث التحديث الصحي لهذا اليوم..."
+          : "Updating today check-in..."
+        : isArabic
+        ? "جاري حفظ التحديث الصحي..."
+        : "Saving daily check-in..."
+    );
 
     const { data, error: userError } = await supabase.auth.getUser();
 
@@ -224,8 +247,7 @@ export default function CheckInPage() {
 
     const wellnessScore = calculateWellnessScore();
 
-    const { error } = await supabase.from("daily_checkins").insert({
-      user_id: data.user.id,
+    const checkInPayload = {
       mood,
       energy_level: energyLevel,
       stress_level: stressLevel,
@@ -233,8 +255,22 @@ export default function CheckInPage() {
       hydration,
       physical_activity: physicalActivity,
       wellness_score: wellnessScore,
-      notes,
-    });
+      notes: notes.trim() ? notes.trim() : null,
+    };
+
+    const { startIso, endIso } = getTodayIsoRange();
+
+    const { error } = savedToday
+      ? await supabase
+          .from("daily_checkins")
+          .update(checkInPayload)
+          .eq("user_id", data.user.id)
+          .gte("created_at", startIso)
+          .lt("created_at", endIso)
+      : await supabase.from("daily_checkins").insert({
+          user_id: data.user.id,
+          ...checkInPayload,
+        });
 
     if (error) {
       setMessage(
@@ -247,7 +283,11 @@ export default function CheckInPage() {
     }
 
     setMessage(
-      isArabic
+      savedToday
+        ? isArabic
+          ? "تم تحديث Check-In اليوم بنجاح. النتيجة: " + wellnessScore + "/100"
+          : "Today check-in updated successfully. Wellness Score: " + wellnessScore + "/100"
+        : isArabic
         ? "تم حفظ التحديث الصحي بنجاح. النتيجة: " + wellnessScore + "/100"
         : "Check-in saved successfully. Wellness Score: " + wellnessScore + "/100"
     );
@@ -870,6 +910,25 @@ export default function CheckInPage() {
         `}</style>
 
 
+        
+        <style>{`
+          /* ORGANHEAL_CHECKIN_UPDATE_TODAY_STEP3 */
+          .checkinTodayUpdateNotice {
+            margin-top: 14px;
+            border: 1px solid rgba(20, 184, 166, 0.28);
+            background: rgba(240, 253, 250, 0.92);
+            color: #0f172a;
+            border-radius: 16px;
+            padding: 14px 16px;
+            line-height: 1.75;
+          }
+
+          .checkinTodayUpdateNotice strong {
+            color: #0f766e !important;
+          }
+        `}</style>
+
+
         <PageBackActions />
 
         <div className="assistantHeader">
@@ -1136,7 +1195,7 @@ export default function CheckInPage() {
                       : "Saving..."
                     : savedToday
                     ? isArabic
-                      ? "حفظ تحديث إضافي اليوم"
+                      ? "تحديث Check-In اليوم"
                       : "Save Another Check-In Today"
                     : isArabic
                     ? "حفظ التحديث الصحي"
