@@ -1,9 +1,21 @@
-"use client";
+﻿"use client";
+
 import PageBackActions from "../components/PageBackActions";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 
+type Language = "en" | "ar";
+
+type LungResult = {
+  score: number;
+  level: string;
+  message: string;
+};
+
 export default function LungPage() {
+  const [language, setLanguage] = useState<Language>("en");
+  const isArabic = language === "ar";
+
   const [smoking, setSmoking] = useState("No");
   const [shortnessOfBreath, setShortnessOfBreath] = useState("No");
   const [chronicCough, setChronicCough] = useState("No");
@@ -11,26 +23,82 @@ export default function LungPage() {
   const [activityLevel, setActivityLevel] = useState("Good");
   const [saveMessage, setSaveMessage] = useState("");
 
-  const [result, setResult] = useState<null | {
-    score: number;
-    level: string;
-    message: string;
-  }>(null);
+  const [result, setResult] = useState<null | LungResult>(null);
+
+  useEffect(() => {
+    function syncLanguage() {
+      const savedLanguage =
+        (localStorage.getItem("organheal-language") as Language | null) || "en";
+
+      setLanguage(savedLanguage);
+      document.documentElement.lang = savedLanguage;
+      document.documentElement.dir = savedLanguage === "ar" ? "rtl" : "ltr";
+    }
+
+    syncLanguage();
+
+    window.addEventListener("storage", syncLanguage);
+    window.addEventListener("organheal-language-change", syncLanguage);
+
+    return () => {
+      window.removeEventListener("storage", syncLanguage);
+      window.removeEventListener("organheal-language-change", syncLanguage);
+    };
+  }, []);
+
+  function text(en: string, ar: string) {
+    return isArabic ? ar : en;
+  }
+
+  function localizeLevel(level: string) {
+    if (!isArabic) return level;
+
+    if (level === "Good Lung Health Pattern") return "نمط صحي جيد للرئة";
+    if (level === "Moderate Respiratory Risk") return "خطورة تنفسية متوسطة";
+    if (level === "Higher Respiratory Risk") return "خطورة تنفسية أعلى";
+
+    return level;
+  }
+
+  function localizeMessage(level: string, fallback: string) {
+    if (!isArabic) return fallback;
+
+    if (level === "Good Lung Health Pattern") {
+      return "تشير إجاباتك إلى نمط تنفسي صحي أفضل بشكل عام. استمر بتجنب التعرض للدخان، المحافظة على النشاط، وطلب الفحص عند ظهور أعراض.";
+    }
+
+    if (level === "Moderate Respiratory Risk") {
+      return "تشير إجاباتك إلى وجود بعض عوامل الخطورة التنفسية. يُفضّل مناقشة أعراض مثل السعال، الصفير، أو ضيق النفس مع مختص صحي.";
+    }
+
+    if (level === "Higher Respiratory Risk") {
+      return "تشير إجاباتك إلى وجود عدة عوامل خطورة تنفسية. هذه الأداة لا تشخّص المرض، لكن يُنصح بالتقييم الطبي إذا كانت الأعراض مستمرة أو تزداد.";
+    }
+
+    return fallback;
+  }
 
   async function saveAssessment(score: number, level: string, message: string) {
-    setSaveMessage("Saving lung assessment...");
+    setSaveMessage(text("Saving lung assessment...", "جاري حفظ تقييم الرئة..."));
 
     const { data, error: userError } = await supabase.auth.getUser();
 
     if (userError) {
-      setSaveMessage("Auth error: " + userError.message);
+      setSaveMessage(
+        text("Auth error: ", "خطأ في تسجيل الدخول: ") + userError.message
+      );
       return;
     }
 
     const user = data.user;
 
     if (!user) {
-      setSaveMessage("Please login to save your assessment.");
+      setSaveMessage(
+        text(
+          "Please login to save your assessment.",
+          "يرجى تسجيل الدخول لحفظ التقييم."
+        )
+      );
       return;
     }
 
@@ -50,7 +118,9 @@ export default function LungPage() {
       );
 
     if (upsertError) {
-      setSaveMessage("Database error: " + upsertError.message);
+      setSaveMessage(
+        text("Database error: ", "خطأ في قاعدة البيانات: ") + upsertError.message
+      );
       return;
     }
 
@@ -63,11 +133,15 @@ export default function LungPage() {
     });
 
     if (historyError) {
-      setSaveMessage("History error: " + historyError.message);
+      setSaveMessage(
+        text("History error: ", "خطأ في التاريخ الصحي: ") + historyError.message
+      );
       return;
     }
 
-    setSaveMessage("Lung assessment saved successfully.");
+    setSaveMessage(
+      text("Lung assessment saved successfully.", "تم حفظ تقييم الرئة بنجاح.")
+    );
   }
 
   async function calculateLungScore() {
@@ -103,83 +177,87 @@ export default function LungPage() {
   }
 
   return (
-    <main className="assistantPage">
+    <main className="assistantPage" dir={isArabic ? "rtl" : "ltr"}>
       <div className="assistantContainer">
         <PageBackActions />
-        <div className="assistantHeader">
-          <p className="assistantBadge">LUNG HEALTH ASSESSMENT</p>
 
-          <h1>Lung Health Assessment</h1>
+        <div className="assistantHeader">
+          <p className="assistantBadge">
+            {text("LUNG HEALTH ASSESSMENT", "تقييم صحة الرئة")}
+          </p>
+
+          <h1>{text("Lung Health Assessment", "تقييم صحة الرئة")}</h1>
 
           <p>
-            Answer a few questions about breathing, symptoms, smoking exposure,
-            and activity level to receive educational respiratory health
-            guidance.
+            {text(
+              "Answer a few questions about breathing, symptoms, smoking exposure, and activity level to receive educational respiratory health guidance.",
+              "أجب عن بعض الأسئلة حول التنفس، الأعراض، التعرض للتدخين، ومستوى النشاط للحصول على إرشاد تعليمي لصحة الجهاز التنفسي."
+            )}
           </p>
         </div>
 
         <div className="chatWindow">
           <div className="assessmentForm">
             <div className="formGroup">
-              <label>Do you Smoke?</label>
+              <label>{text("Do you Smoke?", "هل تدخن؟")}</label>
               <select
                 value={smoking}
                 onChange={(event) => setSmoking(event.target.value)}
               >
-                <option>No</option>
-                <option>Yes</option>
+                <option value="No">{text("No", "لا")}</option>
+                <option value="Yes">{text("Yes", "نعم")}</option>
               </select>
             </div>
 
             <div className="formGroup">
-              <label>Shortness of Breath?</label>
+              <label>{text("Shortness of Breath?", "هل يوجد ضيق في النفس؟")}</label>
               <select
                 value={shortnessOfBreath}
-                onChange={(event) =>
-                  setShortnessOfBreath(event.target.value)
-                }
+                onChange={(event) => setShortnessOfBreath(event.target.value)}
               >
-                <option>No</option>
-                <option>Yes</option>
+                <option value="No">{text("No", "لا")}</option>
+                <option value="Yes">{text("Yes", "نعم")}</option>
               </select>
             </div>
 
             <div className="formGroup">
-              <label>Chronic Cough?</label>
+              <label>{text("Chronic Cough?", "هل يوجد سعال مزمن؟")}</label>
               <select
                 value={chronicCough}
                 onChange={(event) => setChronicCough(event.target.value)}
               >
-                <option>No</option>
-                <option>Yes</option>
+                <option value="No">{text("No", "لا")}</option>
+                <option value="Yes">{text("Yes", "نعم")}</option>
               </select>
             </div>
 
             <div className="formGroup">
-              <label>Asthma or Wheezing History?</label>
+              <label>
+                {text("Asthma or Wheezing History?", "هل لديك تاريخ ربو أو صفير؟")}
+              </label>
               <select
                 value={asthma}
                 onChange={(event) => setAsthma(event.target.value)}
               >
-                <option>No</option>
-                <option>Yes</option>
+                <option value="No">{text("No", "لا")}</option>
+                <option value="Yes">{text("Yes", "نعم")}</option>
               </select>
             </div>
 
             <div className="formGroup">
-              <label>Activity Level</label>
+              <label>{text("Activity Level", "مستوى النشاط")}</label>
               <select
                 value={activityLevel}
                 onChange={(event) => setActivityLevel(event.target.value)}
               >
-                <option>Good</option>
-                <option>Moderate</option>
-                <option>Poor</option>
+                <option value="Good">{text("Good", "جيد")}</option>
+                <option value="Moderate">{text("Moderate", "متوسط")}</option>
+                <option value="Poor">{text("Poor", "ضعيف")}</option>
               </select>
             </div>
 
             <button className="primaryBtn" onClick={calculateLungScore}>
-              Calculate Lung Score
+              {text("Calculate Lung Score", "احسب مؤشر الرئة")}
             </button>
 
             {saveMessage && <p>{saveMessage}</p>}
@@ -187,13 +265,17 @@ export default function LungPage() {
 
           {result && (
             <div className="resultBox">
-              <p className="sectionLabel">Lung Health Score</p>
+              <p className="sectionLabel">
+                {text("Lung Health Score", "مؤشر صحة الرئة")}
+              </p>
               <h2>{result.score}/100</h2>
-              <h3>{result.level}</h3>
-              <p>{result.message}</p>
+              <h3>{localizeLevel(result.level)}</h3>
+              <p>{localizeMessage(result.level, result.message)}</p>
 
               <a href="/history">
-                <button className="secondaryBtn">View Progress Timeline</button>
+                <button className="secondaryBtn">
+                  {text("View Progress Timeline", "عرض مسار التقدم")}
+                </button>
               </a>
             </div>
           )}
