@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -54,17 +54,17 @@ function localizeOrganName(value: string | null | undefined, isArabic: boolean) 
   const clean = (value || "").trim();
 
   const map: Record<string, string> = {
-    Heart: "القلب",
-    Liver: "الكبد",
-    Lung: "الرئة",
-    Kidney: "الكلى",
-    Brain: "الدماغ",
-    Metabolic: "الأيض",
-    General: "الصحة العامة",
-    "General Health": "الصحة العامة",
+    Heart: "?????",
+    Liver: "?????",
+    Lung: "?????",
+    Kidney: "?????",
+    Brain: "??????",
+    Metabolic: "?????",
+    General: "????? ??????",
+    "General Health": "????? ??????",
   };
 
-  return map[clean] || clean || "الصحة العامة";
+  return map[clean] || clean || "????? ??????";
 }
 
 function localizeMood(value: string | null | undefined, isArabic: boolean) {
@@ -73,19 +73,19 @@ function localizeMood(value: string | null | undefined, isArabic: boolean) {
   const clean = (value || "").trim();
 
   const map: Record<string, string> = {
-    Excellent: "ممتاز",
-    Good: "جيد",
-    Average: "متوسط",
-    Poor: "ضعيف",
+    Excellent: "?????",
+    Good: "???",
+    Average: "?????",
+    Poor: "????",
   };
 
-  return map[clean] || "مسجل";
+  return map[clean] || "????";
 }
 
 function getStatus(score: number, isArabic: boolean) {
-  if (score >= 80) return isArabic ? "جيد" : "Good";
-  if (score >= 50) return isArabic ? "متوسط" : "Moderate";
-  return isArabic ? "يحتاج متابعة" : "Needs Follow-Up";
+  if (score >= 80) return isArabic ? "???" : "Good";
+  if (score >= 50) return isArabic ? "?????" : "Moderate";
+  return isArabic ? "????? ??????" : "Needs Follow-Up";
 }
 
 function getScoreClass(score: number) {
@@ -95,7 +95,7 @@ function getScoreClass(score: number) {
 }
 
 function formatDate(value: string | null, isArabic: boolean) {
-  if (!value) return isArabic ? "غير متاح" : "Not available";
+  if (!value) return isArabic ? "??? ????" : "Not available";
 
   try {
     return new Date(value).toLocaleDateString(isArabic ? "ar" : "en", {
@@ -268,102 +268,102 @@ export default function DashboardPage() {
 
   const nextStep: NextStep = !hasAssessments && !hasReports
     ? {
-        tag: isArabic ? "ابدأ هنا" : "Start here",
-        label: isArabic ? "ابدأ بأول تقييم صحي" : "Start your first health assessment",
+        tag: isArabic ? "???? ???" : "Start here",
+        label: isArabic ? "???? ???? ????? ???" : "Start your first health assessment",
         description: isArabic
-          ? "ابدأ بتقييم بسيط لصحة الأعضاء حتى يستطيع OrganHeal بناء أول صورة صحية لك."
+          ? "???? ?????? ???? ???? ??????? ??? ?????? OrganHeal ???? ??? ???? ???? ??."
           : "Start with a simple organ health assessment so OrganHeal can build your first health picture.",
         href: "/assessment",
-        buttonText: isArabic ? "ابدأ التقييم" : "Start Assessment",
+        buttonText: isArabic ? "???? ???????" : "Start Assessment",
       }
     : hasAssessments && !hasReports
     ? {
-        tag: isArabic ? "الخطوة التالية" : "Next step",
-        label: isArabic ? "ارفع أول تقرير طبي" : "Upload your first medical report",
+        tag: isArabic ? "?????? ???????" : "Next step",
+        label: isArabic ? "???? ??? ????? ???" : "Upload your first medical report",
         description: isArabic
-          ? "أضف تقرير مختبر أو تقريرًا طبيًا مكتوبًا حتى تربط التقييمات ببيانات صحية فعلية."
+          ? "??? ????? ????? ?? ??????? ????? ??????? ??? ???? ????????? ??????? ???? ?????."
           : "Add a lab result or written medical report to connect your assessment with real health data.",
         href: "/lab-upload",
-        buttonText: isArabic ? "ارفع تقريرًا" : "Upload Report",
+        buttonText: isArabic ? "???? ???????" : "Upload Report",
       }
     : hasReports && !hasSavedIntelligence
     ? {
-        tag: isArabic ? "جاهز للذكاء" : "Ready for intelligence",
-        label: isArabic ? "ولّد ذكاء التقرير" : "Generate report intelligence",
+        tag: isArabic ? "???? ??????" : "Ready for intelligence",
+        label: isArabic ? "???? ???? ???????" : "Generate report intelligence",
         description: isArabic
-          ? "افتح مركز الذكاء لتحويل تقاريرك إلى ملخص مفهوم للمريض وملخص جاهز للطبيب."
+          ? "???? ???? ?????? ?????? ??????? ??? ???? ????? ?????? ????? ???? ??????."
           : "Open the Intelligence Center to turn your reports into a patient-friendly summary and doctor-ready brief.",
         href: "/intelligence",
-        buttonText: isArabic ? "افتح مركز الذكاء" : "Open Intelligence",
+        buttonText: isArabic ? "???? ???? ??????" : "Open Intelligence",
       }
     : hasSavedIntelligence && !hasCheckIn
     ? {
-        tag: isArabic ? "اجعل المتابعة واقعية" : "Make follow-up realistic",
-        label: isArabic ? "أكمل أول تحديث صحي" : "Complete your first check-in",
+        tag: isArabic ? "???? ???????? ??????" : "Make follow-up realistic",
+        label: isArabic ? "???? ??? ????? ???" : "Complete your first check-in",
         description: isArabic
-          ? "أضف النوم، الضغط النفسي، الطاقة، والمزاج حتى تصبح خطة المتابعة أقرب لحياتك اليومية."
+          ? "??? ?????? ????? ??????? ??????? ??????? ??? ???? ??? ???????? ???? ?????? ???????."
           : "Add sleep, stress, energy, and mood so your follow-up plan becomes closer to your daily life.",
         href: "/checkin",
-        buttonText: isArabic ? "افتح التحديث الصحي" : "Open Check-In",
+        buttonText: isArabic ? "???? ??????? ?????" : "Open Check-In",
       }
     : {
-        tag: isArabic ? "استمر" : "Continue",
-        label: isArabic ? "راجع خطة المتابعة" : "Review your health plan",
+        tag: isArabic ? "?????" : "Continue",
+        label: isArabic ? "???? ??? ????????" : "Review your health plan",
         description: isArabic
-          ? "لديك بيانات كافية لبدء مراجعة الخطة الصحية، المهام، والاتجاهات القادمة."
+          ? "???? ?????? ????? ???? ?????? ????? ??????? ??????? ?????????? ???????."
           : "You have enough data to review your health plan, tasks, and upcoming follow-up direction.",
         href: "/health-plan",
-        buttonText: isArabic ? "افتح خطة المتابعة" : "Open Health Plan",
+        buttonText: isArabic ? "???? ??? ????????" : "Open Health Plan",
       };
 
   const overviewCards = [
     {
-      label: isArabic ? "التقييمات" : "Assessments",
+      label: isArabic ? "?????????" : "Assessments",
       value: String(assessments.length),
       detail: latestAssessment
-        ? `${localizeOrganName(latestAssessment.organ_name, isArabic)} · ${
+        ? `${localizeOrganName(latestAssessment.organ_name, isArabic)} � ${
             latestAssessment.score
           }/100`
         : isArabic
-        ? "لم يبدأ بعد"
+        ? "?? ???? ???"
         : "Not started yet",
       href: "/assessment",
     },
     {
-      label: isArabic ? "التقارير" : "Reports",
+      label: isArabic ? "????????" : "Reports",
       value: String(reportStats.uploadedReports),
       detail: hasReports
         ? isArabic
-          ? "تقارير محفوظة"
+          ? "?????? ??????"
           : "Reports saved"
         : isArabic
-        ? "لا يوجد تقارير بعد"
+        ? "?? ???? ?????? ???"
         : "No reports yet",
       href: "/reports",
     },
     {
-      label: isArabic ? "الذكاء المحفوظ" : "Saved Intelligence",
+      label: isArabic ? "?????? ???????" : "Saved Intelligence",
       value: String(reportStats.savedIntelligence),
       detail: hasSavedIntelligence
-        ? `${isArabic ? "آخر نتيجة" : "Latest"}: ${formatDate(
+        ? `${isArabic ? "??? ?????" : "Latest"}: ${formatDate(
             reportStats.latestIntelligenceDate,
             isArabic
           )}`
         : isArabic
-        ? "لم يتم التوليد بعد"
+        ? "?? ??? ??????? ???"
         : "Not generated yet",
       href: "/intelligence",
     },
     {
-      label: isArabic ? "التحديث الصحي" : "Check-In",
+      label: isArabic ? "??????? ?????" : "Check-In",
       value: dailyCheckIn ? `${dailyCheckIn.wellness_score}/100` : "N/A",
       detail: dailyCheckIn
-        ? `${localizeMood(dailyCheckIn.mood, isArabic)} · ${formatDate(
+        ? `${localizeMood(dailyCheckIn.mood, isArabic)} � ${formatDate(
             dailyCheckIn.created_at,
             isArabic
           )}`
         : isArabic
-        ? "لا يوجد تحديث بعد"
+        ? "?? ???? ????? ???"
         : "No check-in yet",
       href: "/checkin",
     },
@@ -371,34 +371,34 @@ export default function DashboardPage() {
 
   const commandCards = [
     {
-      label: isArabic ? "أولوية اليوم" : "Today priority",
+      label: isArabic ? "?????? ?????" : "Today priority",
       value: currentPriority,
       note: isArabic
-        ? "مبنية على التقييمات والتحديث الصحي."
+        ? "????? ??? ????????? ???????? ?????."
         : "Based on assessments and latest check-in.",
       href: "/health-plan",
     },
     {
-      label: isArabic ? "حالة المتابعة" : "Follow-up status",
+      label: isArabic ? "???? ????????" : "Follow-up status",
       value: hasCheckIn
         ? getStatus(dailyCheckIn?.wellness_score || 0, isArabic)
         : isArabic
-        ? "بحاجة تحديث"
+        ? "????? ?????"
         : "Needs check-in",
       note: hasCheckIn
         ? isArabic
-          ? "آخر تحديث صحي متصل بالخطة."
+          ? "??? ????? ??? ???? ??????."
           : "Latest check-in is connected to your plan."
         : isArabic
-        ? "أكمل تحديثًا صحيًا لجعل الخطة واقعية."
+        ? "???? ??????? ????? ???? ????? ??????."
         : "Complete a check-in to make the plan realistic.",
       href: "/checkin",
     },
     {
-      label: isArabic ? "جاهزية الرحلة" : "Journey readiness",
+      label: isArabic ? "?????? ??????" : "Journey readiness",
       value: `${progressPercent}%`,
       note: isArabic
-        ? `${completedSteps} من 4 عناصر أساسية مكتملة.`
+        ? `${completedSteps} ?? 4 ????? ?????? ??????.`
         : `${completedSteps} of 4 core elements completed.`,
       href: "/dashboard",
     },
@@ -406,23 +406,23 @@ export default function DashboardPage() {
 
   const quickActions = [
     {
-      title: isArabic ? "التقييم الصحي" : "Assessment",
-      text: isArabic ? "تحديث تقييم صحة الأعضاء." : "Update organ health assessment.",
+      title: isArabic ? "??????? ?????" : "Assessment",
+      text: isArabic ? "????? ????? ??? ???????." : "Update organ health assessment.",
       href: "/assessment",
     },
     {
-      title: isArabic ? "التحديث الصحي" : "Check-In",
-      text: isArabic ? "أضف حالة اليوم وخلي الخطة واقعية." : "Add today status and keep your plan realistic.",
+      title: isArabic ? "??????? ?????" : "Check-In",
+      text: isArabic ? "??? ???? ????? ???? ????? ??????." : "Add today status and keep your plan realistic.",
       href: "/checkin",
     },
     {
-      title: isArabic ? "مركز الذكاء" : "Intelligence",
-      text: isArabic ? "راجع ملخص المريض وملخص الطبيب." : "Review patient and doctor-ready summaries.",
+      title: isArabic ? "???? ??????" : "Intelligence",
+      text: isArabic ? "???? ???? ?????? ????? ??????." : "Review patient and doctor-ready summaries.",
       href: "/intelligence",
     },
     {
-      title: isArabic ? "خطة المتابعة" : "Health Plan",
-      text: isArabic ? "راجع المهام وخطة 7/30/90 يوم." : "Review tasks and 7/30/90-day plan.",
+      title: isArabic ? "??? ????????" : "Health Plan",
+      text: isArabic ? "???? ?????? ???? 7/30/90 ???." : "Review tasks and 7/30/90-day plan.",
       href: "/health-plan",
     },
   ];
@@ -919,29 +919,29 @@ export default function DashboardPage() {
         <section className="dashboardCommandHero">
           <div>
             <p className="launchEyebrow">
-              {isArabic ? "مركز قيادة الصحة الشخصية" : "Personal Health Command Center"}
+              {isArabic ? "???? ????? ????? ???????" : "Personal Health Command Center"}
             </p>
 
             <h1>
-              {isArabic ? `مرحبًا، ${username}` : `Welcome, ${username}`}
+              {isArabic ? `??????? ${username}` : `Welcome, ${username}`}
             </h1>
 
             <p>
               {isArabic
-                ? "هذه الصفحة تجمع التقييمات، التحديث الصحي، التقارير، الذكاء الصحي، وخطة المتابعة في مكان واحد لتعرف خطوتك التالية بوضوح."
+                ? "??? ?????? ???? ?????????? ??????? ?????? ????????? ?????? ?????? ???? ???????? ?? ???? ???? ????? ????? ??????? ?????."
                 : "This page connects assessments, check-ins, reports, intelligence, and your follow-up plan in one command center."}
             </p>
           </div>
 
           <div className="dashboardProgressCard">
-            <span>{isArabic ? "جاهزية الرحلة الصحية" : "Health journey readiness"}</span>
+            <span>{isArabic ? "?????? ?????? ??????" : "Health journey readiness"}</span>
             <strong>{progressPercent}%</strong>
             <div>
               <i style={{ width: `${progressPercent}%` }} />
             </div>
             <p>
               {isArabic
-                ? `${completedSteps} من 4 عناصر أساسية مكتملة.`
+                ? `${completedSteps} ?? 4 ????? ?????? ??????.`
                 : `${completedSteps} of 4 core elements completed.`}
             </p>
           </div>
@@ -951,10 +951,10 @@ export default function DashboardPage() {
 
         {loading ? (
           <section className="dashboardCommandPanel">
-            <span>{isArabic ? "تحميل" : "Loading"}</span>
+            <span>{isArabic ? "?????" : "Loading"}</span>
             <h2>
               {isArabic
-                ? "جاري تجهيز لوحة القيادة الصحية..."
+                ? "???? ????? ???? ??????? ??????..."
                 : "Preparing your health command center..."}
             </h2>
           </section>
@@ -974,23 +974,23 @@ export default function DashboardPage() {
             <section className="dashboardJourneyPanel">
               <div className="dashboardJourneyHeader">
                 <div>
-                  <span>{isArabic ? "رحلة OrganHeal" : "OrganHeal Journey"}</span>
+                  <span>{isArabic ? "???? OrganHeal" : "OrganHeal Journey"}</span>
 
                   <h2>
                     {isArabic
-                      ? "أين أنت الآن في رحلتك الصحية؟"
+                      ? "??? ??? ???? ?? ????? ???????"
                       : "Where are you in your health journey?"}
                   </h2>
 
                   <p>
                     {isArabic
-                      ? "كل خطوة تضيف طبقة جديدة من الفهم: التقييم، التقارير، الذكاء، التحديث الصحي، ثم خطة المتابعة."
+                      ? "?? ???? ???? ???? ????? ?? ?????: ???????? ????????? ??????? ??????? ?????? ?? ??? ????????."
                       : "Each step adds a new layer of understanding: assessment, reports, intelligence, check-in, then the follow-up plan."}
                   </p>
                 </div>
 
                 <Link href={nextStep.href} className="dashboardJourneyNext">
-                  {isArabic ? "الخطوة التالية" : "Next step"}: {nextStep.label}
+                  {isArabic ? "?????? ???????" : "Next step"}: {nextStep.label}
                 </Link>
               </div>
 
@@ -998,45 +998,45 @@ export default function DashboardPage() {
                 {[
                     {
                       step: "01",
-                      label: isArabic ? "التقييم الصحي" : "Health Assessment",
+                      label: isArabic ? "??????? ?????" : "Health Assessment",
                       description: isArabic
-                        ? "يبني أول صورة عن صحة الأعضاء."
+                        ? "???? ??? ???? ?? ??? ???????."
                         : "Builds the first picture of organ health.",
                       ready: hasAssessments,
                       href: "/assessment",
                     },
                     {
                       step: "02",
-                      label: isArabic ? "التقارير الطبية" : "Medical Reports",
+                      label: isArabic ? "???????? ??????" : "Medical Reports",
                       description: isArabic
-                        ? "يربط التقييم ببيانات صحية فعلية."
+                        ? "???? ??????? ??????? ???? ?????."
                         : "Connects assessments with real health data.",
                       ready: hasReports,
                       href: "/reports",
                     },
                     {
                       step: "03",
-                      label: isArabic ? "الذكاء الصحي" : "Health Intelligence",
+                      label: isArabic ? "?????? ?????" : "Health Intelligence",
                       description: isArabic
-                        ? "يحوّل التقارير إلى ملخصات قابلة للفهم والمتابعة."
+                        ? "????? ???????? ??? ?????? ????? ????? ?????????."
                         : "Turns reports into understandable follow-up summaries.",
                       ready: hasSavedIntelligence,
                       href: "/intelligence",
                     },
                     {
                       step: "04",
-                      label: isArabic ? "التحديث الصحي" : "Daily Check-In",
+                      label: isArabic ? "??????? ?????" : "Daily Check-In",
                       description: isArabic
-                        ? "يجعل الخطة مرتبطة بالحالة اليومية."
+                        ? "???? ????? ?????? ??????? ???????."
                         : "Keeps the plan connected to daily status.",
                       ready: hasCheckIn,
                       href: "/checkin",
                     },
                     {
                       step: "05",
-                      label: isArabic ? "خطة المتابعة" : "Health Plan",
+                      label: isArabic ? "??? ????????" : "Health Plan",
                       description: isArabic
-                        ? "يجمع كل شيء في خطة عملية قابلة للتنفيذ."
+                        ? "???? ?? ??? ?? ??? ????? ????? ???????."
                         : "Connects everything into an actionable follow-up plan.",
                       ready: hasAssessments || hasReports || hasSavedIntelligence || hasCheckIn,
                       href: "/health-plan",
@@ -1048,7 +1048,7 @@ export default function DashboardPage() {
                     className={`dashboardJourneyStep ${item.ready ? "ready" : "pending"}`}
                   >
                     <div className="dashboardJourneyNumber">
-                      {item.ready ? "✓" : item.step}
+                      {item.ready ? "?" : item.step}
                     </div>
 
                     <strong>{item.label}</strong>
@@ -1057,10 +1057,10 @@ export default function DashboardPage() {
                     <span className="dashboardJourneyStatus">
                       {item.ready
                         ? isArabic
-                          ? "مكتمل"
+                          ? "?????"
                           : "Complete"
                         : isArabic
-                        ? "بانتظار"
+                        ? "???????"
                         : "Pending"}
                     </span>
                   </Link>
@@ -1070,17 +1070,17 @@ export default function DashboardPage() {
 
             <section className="dashboardCommandLayout">
               <div className="dashboardCommandPanel">
-                <span>{isArabic ? "ملخص الذكاء الصحي" : "Health intelligence snapshot"}</span>
+                <span>{isArabic ? "???? ?????? ?????" : "Health intelligence snapshot"}</span>
 
                 <h2>
                   {hasAssessments || hasCheckIn
                     ? `${intelligence.overallScore}/100`
                     : hasReports
                     ? isArabic
-                      ? "التقارير جاهزة"
+                      ? "???????? ?????"
                       : "Reports ready"
                     : isArabic
-                    ? "ابدأ رحلتك الصحية"
+                    ? "???? ????? ??????"
                     : "Start your health journey"}
                 </h2>
 
@@ -1093,14 +1093,14 @@ export default function DashboardPage() {
                 <p>
                   {hasAssessments || hasCheckIn
                     ? isArabic
-                      ? `منطقة الأولوية الحالية: ${currentPriority}.`
+                      ? `????? ???????? ???????: ${currentPriority}.`
                       : `Current priority area: ${currentPriority}.`
                     : hasReports
                     ? isArabic
-                      ? "لديك تقارير محفوظة. الخطوة التالية هي توليد ذكاء التقرير أو إضافة تقييم صحي."
+                      ? "???? ?????? ??????. ?????? ??????? ?? ????? ???? ??????? ?? ????? ????? ???."
                       : "You have saved reports. The next step is to generate report intelligence or add a health assessment."
                     : isArabic
-                    ? "ابدأ بتقييم صحي أو ارفع تقريرًا طبيًا حتى يبدأ OrganHeal ببناء الصورة الصحية."
+                    ? "???? ?????? ??? ?? ???? ??????? ????? ??? ???? OrganHeal ????? ?????? ??????."
                     : "Start with an assessment or upload a report so OrganHeal can build your health picture."}
                 </p>
 
@@ -1116,11 +1116,11 @@ export default function DashboardPage() {
 
                 <div className="dashboardActionRow">
                   <Link href="/intelligence" className="dashboardPrimaryAction">
-                    {isArabic ? "مركز الذكاء" : "Intelligence Center"}
+                    {isArabic ? "???? ??????" : "Intelligence Center"}
                   </Link>
 
                   <Link href="/health-plan" className="dashboardSecondaryAction">
-                    {isArabic ? "خطة المتابعة" : "Health Plan"}
+                    {isArabic ? "??? ????????" : "Health Plan"}
                   </Link>
                 </div>
               </div>
@@ -1149,15 +1149,15 @@ export default function DashboardPage() {
 
             {!hasAnyData && (
               <section className="dashboardCommandPanel" style={{ marginTop: "20px" }}>
-                <span>{isArabic ? "بداية جديدة" : "Fresh start"}</span>
+                <span>{isArabic ? "????? ?????" : "Fresh start"}</span>
                 <h2>
                   {isArabic
-                    ? "ابدأ بثلاث خطوات بسيطة"
+                    ? "???? ????? ????? ?????"
                     : "Start with three simple steps"}
                 </h2>
                 <p>
                   {isArabic
-                    ? "ابدأ بتقييم صحي، ارفع تقريرًا إن وجد، ثم استخدم مركز الذكاء لتكوين ملخص واضح."
+                    ? "???? ?????? ???? ???? ??????? ?? ???? ?? ?????? ???? ?????? ?????? ???? ????."
                     : "Start with an assessment, upload a report if available, then use Intelligence Center to create a clear summary."}
                 </p>
               </section>
@@ -1165,6 +1165,79 @@ export default function DashboardPage() {
           </>
         )}
       </div>
-    </main>
+    
+<section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+    <div>
+      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
+        Activity Snapshot
+      </p>
+      <h2 className="mt-2 text-2xl font-bold text-slate-950">
+        Last Updated Signals
+      </h2>
+      <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+        A simple operational view showing which health intelligence areas have
+        recent activity and which areas still need user input.
+      </p>
+    </div>
+
+    <div className="rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600">
+      Command Center View
+    </div>
+  </div>
+
+  <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+    {[
+      {
+        title: "Assessment",
+        status: "Active",
+        detail: "Latest organ-health assessment is available.",
+        signal: "Recently updated",
+      },
+      {
+        title: "Lab Intelligence",
+        status: "Waiting",
+        detail: "Lab interpretation will improve once new values are added.",
+        signal: "Needs new data",
+      },
+      {
+        title: "Daily Check-in",
+        status: "Pending",
+        detail: "Daily symptoms, energy, sleep, and hydration are not updated yet.",
+        signal: "Not checked today",
+      },
+      {
+        title: "Doctor Brief",
+        status: "Ready",
+        detail: "Clinical summary can be prepared from saved intelligence data.",
+        signal: "Available on request",
+      },
+    ].map((item) => (
+      <div
+        key={item.title}
+        className="rounded-2xl border border-slate-200 bg-slate-50 p-5"
+      >
+        <div className="flex items-center justify-between gap-3">
+          <h3 className="text-base font-bold text-slate-950">
+            {item.title}
+          </h3>
+          <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600 ring-1 ring-slate-200">
+            {item.status}
+          </span>
+        </div>
+
+        <p className="mt-4 text-sm leading-6 text-slate-600">
+          {item.detail}
+        </p>
+
+        <div className="mt-5 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-slate-700 ring-1 ring-slate-200">
+          {item.signal}
+        </div>
+      </div>
+    ))}
+  </div>
+</section>
+</main>
   );
 }
+
