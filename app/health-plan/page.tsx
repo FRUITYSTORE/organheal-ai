@@ -128,6 +128,11 @@ function localizeHealthPlanValue(
     Low: "منخفض",
     Normal: "طبيعي",
     "Not available": "غير متاح",
+    Good: "جيد",
+    Fair: "متوسط",
+    Poor: "ضعيف",
+    Excellent: "ممتاز",
+    Stable: "مستقر",
 
     "High Risk": "خطورة مرتفعة",
     "Moderate Risk": "خطورة متوسطة",
@@ -1091,7 +1096,7 @@ export default function HealthPlanPage() {
 
                   <div>
                     <span>{isArabic ? "مستوى الخطورة" : "Risk level"}</span>
-                    <strong>{riskLevelDisplay}</strong>
+                    <strong>{localizeHealthPlanValue(riskLevelDisplay, isArabic)}</strong>
                   </div>
 
                   <div>
