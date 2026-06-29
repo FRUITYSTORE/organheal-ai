@@ -239,6 +239,8 @@ export default function HealthPlanPage() {
   const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
   const [completedTasks, setCompletedTasks] = useState<string[]>([]);
 
+
+
   useEffect(() => {
     const savedLanguage =
       (localStorage.getItem("organheal-language") as Language) || "en";
@@ -582,6 +584,82 @@ export default function HealthPlanPage() {
   const totalTasks = planTasks.length;
   const taskProgress =
     totalTasks > 0 ? Math.round((completedTaskCount / totalTasks) * 100) : 0;
+
+  const remainingTaskCount = Math.max(totalTasks - completedTaskCount, 0);
+
+  const nextIncompleteTask =
+    planTasks.find((task) => !completedTasks.includes(task)) ||
+    (isArabic ? "كل مهام هذا الأسبوع مكتملة." : "All tasks for this week are completed.");
+
+  const progressMomentum =
+    taskProgress === 0
+      ? isArabic
+        ? "ابدأ بخطوة واحدة"
+        : "Start with one step"
+      : taskProgress < 40
+      ? isArabic
+        ? "بداية جيدة"
+        : "Good start"
+      : taskProgress < 80
+      ? isArabic
+        ? "تقدم واضح"
+        : "Clear progress"
+      : taskProgress < 100
+      ? isArabic
+        ? "قريب من الإكمال"
+        : "Almost complete"
+      : isArabic
+      ? "مكتمل هذا الأسبوع"
+      : "Completed this week";
+
+  const progressMomentumDescription =
+    taskProgress === 0
+      ? isArabic
+        ? "اختر أسهل مهمة وابدأ بها اليوم. الهدف هو الاستمرارية وليس الكمال."
+        : "Choose the easiest task and start today. The goal is consistency, not perfection."
+      : taskProgress < 40
+      ? isArabic
+        ? "استمر بخطوات بسيطة. إنجاز مهمتين أو ثلاث يكفي لبناء عادة."
+        : "Keep taking small steps. Completing two or three tasks can build momentum."
+      : taskProgress < 80
+      ? isArabic
+        ? "أنت تبني متابعة جيدة. ركز الآن على المهمة التالية الأكثر واقعية."
+        : "You are building good follow-up. Focus on the next most realistic task."
+      : taskProgress < 100
+      ? isArabic
+        ? "بقي القليل. راجع المهام المتبقية واختر واحدة سهلة اليوم."
+        : "Almost there. Review the remaining tasks and choose one easy action today."
+      : isArabic
+      ? "رائع. راجع التقدم وحدد هدف الأسبوع القادم."
+      : "Great. Review your progress and decide next week focus.";
+
+  const progressInsightCards = [
+    {
+      label: isArabic ? "التقدم" : "Progress",
+      value: `${taskProgress}%`,
+      note: progressMomentum,
+    },
+    {
+      label: isArabic ? "المتبقي" : "Remaining",
+      value: String(remainingTaskCount),
+      note: isArabic ? "مهام تحتاج متابعة" : "tasks need follow-up",
+    },
+    {
+      label: isArabic ? "المهمة التالية" : "Next task",
+      value: nextIncompleteTask,
+      note: isArabic ? "ابدأ بها أولًا" : "start here first",
+    },
+  ];
+
+  function resetWeeklyTasks() {
+    setCompletedTasks([]);
+
+    try {
+      localStorage.removeItem(taskStorageKey);
+    } catch {
+      // Keep UI stable if localStorage is unavailable.
+    }
+  }
 
   useEffect(() => {
     try {
@@ -1264,6 +1342,117 @@ export default function HealthPlanPage() {
           }
         `}</style>
 
+
+        <style>{`
+          /* ORGANHEAL_HEALTH_PLAN_PROGRESS_STEP4 */
+          .healthPlanProgressSummary {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+            margin: 18px 0;
+          }
+
+          .healthPlanProgressSummary article {
+            border: 1px solid rgba(148, 163, 184, 0.24);
+            background: rgba(255, 255, 255, 0.84);
+            border-radius: 18px;
+            padding: 16px;
+            min-height: 118px;
+          }
+
+          .healthPlanProgressSummary span {
+            display: block;
+            font-size: 0.78rem;
+            opacity: 0.72;
+            margin-bottom: 8px;
+          }
+
+          .healthPlanProgressSummary strong {
+            display: block;
+            font-size: 1.1rem;
+            line-height: 1.45;
+            word-break: normal;
+            overflow-wrap: break-word;
+          }
+
+          .healthPlanProgressSummary p {
+            margin-top: 8px;
+            line-height: 1.65;
+          }
+
+          .healthPlanProgressMessage {
+            border: 1px solid rgba(20, 184, 166, 0.22);
+            background: rgba(240, 253, 250, 0.78);
+            border-radius: 18px;
+            padding: 16px;
+            margin: 16px 0;
+            line-height: 1.8;
+          }
+
+          .healthPlanTaskToolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 14px;
+          }
+
+          .healthPlanResetButton {
+            border: 1px solid rgba(148, 163, 184, 0.32);
+            background: rgba(255, 255, 255, 0.72);
+            color: inherit;
+            border-radius: 999px;
+            padding: 10px 14px;
+            cursor: pointer;
+            font: inherit;
+            transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+          }
+
+          .healthPlanResetButton:hover {
+            transform: translateY(-1px);
+            border-color: rgba(20, 184, 166, 0.55);
+            background: rgba(240, 253, 250, 0.9);
+          }
+
+          .healthPlanTaskItemNumber {
+            width: 28px;
+            height: 28px;
+            border-radius: 999px;
+            display: inline-grid;
+            place-items: center;
+            border: 1px solid rgba(148, 163, 184, 0.32);
+            font-size: 0.8rem;
+            font-weight: 800;
+            margin-inline-end: 8px;
+            flex: 0 0 auto;
+          }
+
+          .healthPlanTaskItem.completed .healthPlanTaskItemNumber {
+            background: rgba(34, 197, 94, 0.16);
+            border-color: rgba(34, 197, 94, 0.35);
+          }
+
+          @media (max-width: 900px) {
+            .healthPlanProgressSummary {
+              grid-template-columns: 1fr;
+            }
+          }
+
+          @media print {
+            .healthPlanProgressSummary,
+            .healthPlanProgressMessage,
+            .healthPlanTaskToolbar {
+              break-inside: avoid !important;
+              page-break-inside: avoid !important;
+            }
+
+            .healthPlanResetButton {
+              display: none !important;
+            }
+          }
+        `}</style>
+
         <PageBackActions />
 
         <section className="healthPlanHero">
@@ -1680,7 +1869,7 @@ export default function HealthPlanPage() {
               </div>
 
               <div className="healthPlanTaskList">
-                {planTasks.map((task) => {
+                {planTasks.map((task, index) => {
                   const isCompleted = completedTasks.includes(task);
 
                   return (
@@ -1690,6 +1879,10 @@ export default function HealthPlanPage() {
                         isCompleted ? "completed" : ""
                       }`}
                     >
+                      <span className="healthPlanTaskItemNumber">
+                        {isCompleted ? "✓" : index + 1}
+                      </span>
+
                       <input
                         type="checkbox"
                         checked={isCompleted}
