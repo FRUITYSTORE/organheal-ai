@@ -1,4 +1,9 @@
+﻿"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
+
+type Language = "en" | "ar";
 
 type LegalSection = {
   title: string;
@@ -20,13 +25,43 @@ export default function LegalPage({
   updated,
   sections,
 }: LegalPageProps) {
+  const [language, setLanguage] = useState<Language>("en");
+  const isArabic = language === "ar";
+
+  useEffect(() => {
+    function syncLanguage() {
+      const savedLanguage =
+        (localStorage.getItem("organheal-language") as Language | null) || "en";
+
+      setLanguage(savedLanguage);
+      document.documentElement.lang = savedLanguage;
+      document.documentElement.dir = savedLanguage === "ar" ? "rtl" : "ltr";
+    }
+
+    syncLanguage();
+
+    window.addEventListener("storage", syncLanguage);
+    window.addEventListener("organheal-language-change", syncLanguage);
+
+    return () => {
+      window.removeEventListener("storage", syncLanguage);
+      window.removeEventListener("organheal-language-change", syncLanguage);
+    };
+  }, []);
+
+  function text(en: string, ar: string) {
+    return isArabic ? ar : en;
+  }
+
   return (
-    <main className="legalPage">
+    <main className="legalPage" dir={isArabic ? "rtl" : "ltr"}>
       <section className="legalHero">
         <p className="assistantBadge">{badge}</p>
         <h1>{title}</h1>
         <p>{intro}</p>
-        <span>Last updated: {updated}</span>
+        <span>
+          {text("Last updated:", "آخر تحديث:")} {updated}
+        </span>
       </section>
 
       <section className="legalContent">
@@ -43,16 +78,20 @@ export default function LegalPage({
         ))}
 
         <div className="legalNotice">
-          <strong>Important:</strong> These pages are general informational templates for OrganHeal AI and should be reviewed by a qualified legal professional before commercial launch.
+          <strong>{text("Important:", "مهم:")}</strong>{" "}
+          {text(
+            "These pages are general informational templates for OrganHeal AI and should be reviewed by a qualified legal professional before commercial launch.",
+            "هذه الصفحات هي نماذج معلوماتية عامة لمنصة OrganHeal AI ويجب مراجعتها من قبل مختص قانوني مؤهل قبل الإطلاق التجاري."
+          )}
         </div>
 
         <div className="legalActions">
           <Link href="/" className="secondaryBtn">
-            Back to Home
+            {text("Back to Home", "العودة للرئيسية")}
           </Link>
 
           <Link href="/contact" className="primaryBtn">
-            Contact OrganHeal
+            {text("Contact OrganHeal", "تواصل مع OrganHeal")}
           </Link>
         </div>
       </section>
