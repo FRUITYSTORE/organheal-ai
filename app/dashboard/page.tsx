@@ -133,8 +133,7 @@ export default function DashboardPage() {
     window.addEventListener("click", syncLanguage);
 
     fetchDashboardData();
-
-    return () => {
+  return () => {
       window.removeEventListener("storage", syncLanguage);
       window.removeEventListener("focus", syncLanguage);
       window.removeEventListener("click", syncLanguage);
@@ -431,6 +430,163 @@ export default function DashboardPage() {
   return (
     <main className="smartDashboardPage dashboardCommandCenterPage" dir={isArabic ? "rtl" : "ltr"} lang={isArabic ? "ar" : "en"}>
       <style>{`
+        /* ORGANHEAL_DASHBOARD_JOURNEY_TIMELINE_STEP3 */
+        .dashboardJourneyPanel {
+          background: rgba(255, 255, 255, 0.94);
+          border: 1px solid rgba(148, 163, 184, 0.22);
+          border-radius: 28px;
+          box-shadow: 0 24px 65px rgba(15, 23, 42, 0.08);
+          padding: 24px;
+          margin-bottom: 22px;
+        }
+
+        .dashboardJourneyHeader {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 16px;
+          margin-bottom: 18px;
+        }
+
+        .dashboardJourneyHeader h2 {
+          color: #0f172a;
+          margin: 8px 0 10px;
+          font-size: clamp(1.7rem, 3vw, 2.5rem);
+        }
+
+        .dashboardJourneyHeader p {
+          color: #475569;
+          line-height: 1.8;
+          margin: 0;
+          max-width: 760px;
+        }
+
+        .dashboardJourneyNext {
+          border: 1px solid #99f6e4;
+          background: #ecfeff;
+          color: #0f766e;
+          border-radius: 999px;
+          padding: 10px 14px;
+          font-weight: 900;
+          white-space: nowrap;
+          text-decoration: none;
+        }
+
+        .dashboardJourneyTimeline {
+          display: grid;
+          grid-template-columns: repeat(5, minmax(0, 1fr));
+          gap: 12px;
+        }
+
+        .dashboardJourneyStep {
+          position: relative;
+          display: block;
+          text-decoration: none;
+          color: inherit;
+          border: 1px solid #e2e8f0;
+          background: #f8fafc;
+          border-radius: 20px;
+          padding: 16px;
+          min-height: 170px;
+          transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+        }
+
+        .dashboardJourneyStep:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+          border-color: #99f6e4;
+        }
+
+        .dashboardJourneyStep.ready {
+          background: linear-gradient(135deg, #ecfeff, #ffffff);
+          border-color: #99f6e4;
+        }
+
+        .dashboardJourneyStep.pending {
+          background: #ffffff;
+          border-color: #e2e8f0;
+        }
+
+        .dashboardJourneyNumber {
+          width: 38px;
+          height: 38px;
+          border-radius: 999px;
+          display: grid;
+          place-items: center;
+          font-weight: 900;
+          background: #ffffff;
+          border: 1px solid #cbd5e1;
+          color: #0f172a;
+          margin-bottom: 12px;
+        }
+
+        .dashboardJourneyStep.ready .dashboardJourneyNumber {
+          background: #ccfbf1;
+          color: #0f766e;
+          border-color: #99f6e4;
+        }
+
+        .dashboardJourneyStep strong {
+          display: block;
+          color: #0f172a;
+          font-size: 1rem;
+          line-height: 1.4;
+          margin-bottom: 8px;
+        }
+
+        .dashboardJourneyStep p {
+          color: #475569;
+          line-height: 1.65;
+          margin: 0;
+          font-size: 0.92rem;
+        }
+
+        .dashboardJourneyStatus {
+          display: inline-flex;
+          margin-top: 12px;
+          border-radius: 999px;
+          padding: 6px 9px;
+          font-size: 0.75rem;
+          font-weight: 900;
+          background: #f1f5f9;
+          color: #475569;
+        }
+
+        .dashboardJourneyStep.ready .dashboardJourneyStatus {
+          background: #dcfce7;
+          color: #166534;
+        }
+
+        .dashboardCommandCenterPage[dir="rtl"] .dashboardJourneyHeader {
+          direction: rtl;
+        }
+
+        @media (max-width: 1100px) {
+          .dashboardJourneyTimeline {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+        }
+
+        @media (max-width: 620px) {
+          .dashboardJourneyHeader {
+            display: block;
+          }
+
+          .dashboardJourneyNext {
+            display: inline-flex;
+            margin-top: 12px;
+          }
+
+          .dashboardJourneyTimeline {
+            grid-template-columns: 1fr;
+          }
+
+          .dashboardJourneyPanel {
+            padding: 20px;
+            border-radius: 22px;
+          }
+        }
+
         /* ORGANHEAL_DASHBOARD_VISUAL_POLISH_STEP2 */
         .dashboardCommandCenterPage .dashboardProgressCard strong {
           color: #ffffff !important;
@@ -812,6 +968,104 @@ export default function DashboardPage() {
                   <p>{card.detail}</p>
                 </Link>
               ))}
+            </section>
+
+
+            <section className="dashboardJourneyPanel">
+              <div className="dashboardJourneyHeader">
+                <div>
+                  <span>{isArabic ? "رحلة OrganHeal" : "OrganHeal Journey"}</span>
+
+                  <h2>
+                    {isArabic
+                      ? "أين أنت الآن في رحلتك الصحية؟"
+                      : "Where are you in your health journey?"}
+                  </h2>
+
+                  <p>
+                    {isArabic
+                      ? "كل خطوة تضيف طبقة جديدة من الفهم: التقييم، التقارير، الذكاء، التحديث الصحي، ثم خطة المتابعة."
+                      : "Each step adds a new layer of understanding: assessment, reports, intelligence, check-in, then the follow-up plan."}
+                  </p>
+                </div>
+
+                <Link href={nextStep.href} className="dashboardJourneyNext">
+                  {isArabic ? "الخطوة التالية" : "Next step"}: {nextStep.label}
+                </Link>
+              </div>
+
+              <div className="dashboardJourneyTimeline">
+                {[
+                    {
+                      step: "01",
+                      label: isArabic ? "التقييم الصحي" : "Health Assessment",
+                      description: isArabic
+                        ? "يبني أول صورة عن صحة الأعضاء."
+                        : "Builds the first picture of organ health.",
+                      ready: hasAssessments,
+                      href: "/assessment",
+                    },
+                    {
+                      step: "02",
+                      label: isArabic ? "التقارير الطبية" : "Medical Reports",
+                      description: isArabic
+                        ? "يربط التقييم ببيانات صحية فعلية."
+                        : "Connects assessments with real health data.",
+                      ready: hasReports,
+                      href: "/reports",
+                    },
+                    {
+                      step: "03",
+                      label: isArabic ? "الذكاء الصحي" : "Health Intelligence",
+                      description: isArabic
+                        ? "يحوّل التقارير إلى ملخصات قابلة للفهم والمتابعة."
+                        : "Turns reports into understandable follow-up summaries.",
+                      ready: hasSavedIntelligence,
+                      href: "/intelligence",
+                    },
+                    {
+                      step: "04",
+                      label: isArabic ? "التحديث الصحي" : "Daily Check-In",
+                      description: isArabic
+                        ? "يجعل الخطة مرتبطة بالحالة اليومية."
+                        : "Keeps the plan connected to daily status.",
+                      ready: hasCheckIn,
+                      href: "/checkin",
+                    },
+                    {
+                      step: "05",
+                      label: isArabic ? "خطة المتابعة" : "Health Plan",
+                      description: isArabic
+                        ? "يجمع كل شيء في خطة عملية قابلة للتنفيذ."
+                        : "Connects everything into an actionable follow-up plan.",
+                      ready: hasAssessments || hasReports || hasSavedIntelligence || hasCheckIn,
+                      href: "/health-plan",
+                    },
+                  ].map((item) => (
+                  <Link
+                    href={item.href}
+                    key={item.step}
+                    className={`dashboardJourneyStep ${item.ready ? "ready" : "pending"}`}
+                  >
+                    <div className="dashboardJourneyNumber">
+                      {item.ready ? "✓" : item.step}
+                    </div>
+
+                    <strong>{item.label}</strong>
+                    <p>{item.description}</p>
+
+                    <span className="dashboardJourneyStatus">
+                      {item.ready
+                        ? isArabic
+                          ? "مكتمل"
+                          : "Complete"
+                        : isArabic
+                        ? "بانتظار"
+                        : "Pending"}
+                    </span>
+                  </Link>
+                ))}
+              </div>
             </section>
 
             <section className="dashboardCommandLayout">
