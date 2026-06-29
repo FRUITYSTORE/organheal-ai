@@ -5491,3 +5491,460 @@ html[dir="rtl"] .homeHeroActions {
   text-align: center;
   font-weight: 800;
 }
+/* === OrganHeal Design System Foundation v1 === */
+
+:root {
+  --oh-bg: #f6f8fb;
+  --oh-surface: #ffffff;
+  --oh-surface-soft: #f9fbfd;
+  --oh-border: rgba(15, 23, 42, 0.08);
+  --oh-border-strong: rgba(15, 23, 42, 0.14);
+  --oh-text: #0f172a;
+  --oh-muted: #64748b;
+  --oh-soft-text: #475569;
+  --oh-primary: #0f766e;
+  --oh-primary-dark: #115e59;
+  --oh-primary-soft: rgba(15, 118, 110, 0.1);
+  --oh-blue: #2563eb;
+  --oh-blue-soft: rgba(37, 99, 235, 0.1);
+  --oh-good: #059669;
+  --oh-good-soft: rgba(5, 150, 105, 0.1);
+  --oh-warning: #d97706;
+  --oh-warning-soft: rgba(217, 119, 6, 0.12);
+  --oh-risk: #dc2626;
+  --oh-risk-soft: rgba(220, 38, 38, 0.1);
+  --oh-shadow-sm: 0 10px 30px rgba(15, 23, 42, 0.06);
+  --oh-shadow-md: 0 18px 55px rgba(15, 23, 42, 0.1);
+  --oh-radius-sm: 14px;
+  --oh-radius-md: 20px;
+  --oh-radius-lg: 28px;
+  --oh-max-width: 1180px;
+}
+
+.ohPageShell {
+  width: 100%;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(15, 118, 110, 0.08), transparent 34%),
+    radial-gradient(circle at top right, rgba(37, 99, 235, 0.07), transparent 30%),
+    var(--oh-bg);
+  color: var(--oh-text);
+}
+
+.ohContainer {
+  width: min(var(--oh-max-width), calc(100% - 32px));
+  margin: 0 auto;
+}
+
+.ohHero {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--oh-border);
+  border-radius: var(--oh-radius-lg);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.92)),
+    radial-gradient(circle at 15% 20%, rgba(15, 118, 110, 0.12), transparent 30%);
+  box-shadow: var(--oh-shadow-md);
+  padding: clamp(28px, 5vw, 56px);
+}
+
+.ohHeroGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
+  gap: clamp(22px, 4vw, 42px);
+  align-items: center;
+}
+
+.ohEyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  border: 1px solid rgba(15, 118, 110, 0.16);
+  border-radius: 999px;
+  background: var(--oh-primary-soft);
+  color: var(--oh-primary-dark);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 8px 12px;
+  margin-bottom: 16px;
+}
+
+.ohTitle {
+  margin: 0;
+  color: var(--oh-text);
+  font-size: clamp(2rem, 5vw, 4.25rem);
+  line-height: 0.98;
+  letter-spacing: -0.055em;
+  font-weight: 900;
+}
+
+.ohLead {
+  color: var(--oh-soft-text);
+  font-size: clamp(1rem, 2vw, 1.18rem);
+  line-height: 1.8;
+  max-width: 760px;
+  margin: 18px 0 0;
+}
+
+.ohGrid {
+  display: grid;
+  gap: 18px;
+}
+
+.ohGrid.cols2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ohGrid.cols3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.ohGrid.cols4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.ohCard {
+  border: 1px solid var(--oh-border);
+  border-radius: var(--oh-radius-md);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--oh-shadow-sm);
+  padding: 22px;
+}
+
+.ohCardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.ohCardTitle {
+  margin: 0;
+  color: var(--oh-text);
+  font-size: 1.05rem;
+  line-height: 1.35;
+  font-weight: 850;
+}
+
+.ohCardText {
+  margin: 8px 0 0;
+  color: var(--oh-muted);
+  line-height: 1.75;
+  font-size: 0.96rem;
+}
+
+.ohMetricGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.ohMetricCard {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--oh-border);
+  border-radius: var(--oh-radius-md);
+  background: linear-gradient(180deg, #ffffff, #f8fafc);
+  padding: 20px;
+  box-shadow: var(--oh-shadow-sm);
+}
+
+.ohMetricCard::after {
+  content: "";
+  position: absolute;
+  inset: auto -40px -55px auto;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: rgba(15, 118, 110, 0.08);
+}
+
+.ohMetricLabel {
+  display: block;
+  color: var(--oh-muted);
+  font-size: 0.82rem;
+  font-weight: 750;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.ohMetricValue {
+  display: block;
+  margin-top: 10px;
+  color: var(--oh-text);
+  font-size: clamp(1.65rem, 4vw, 2.45rem);
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+}
+
+.ohMetricHint {
+  display: block;
+  margin-top: 10px;
+  color: var(--oh-soft-text);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.ohStatusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 7px 11px;
+  font-size: 0.78rem;
+  font-weight: 850;
+  line-height: 1;
+}
+
+.ohStatusBadge.good {
+  color: var(--oh-good);
+  background: var(--oh-good-soft);
+  border: 1px solid rgba(5, 150, 105, 0.16);
+}
+
+.ohStatusBadge.moderate {
+  color: var(--oh-warning);
+  background: var(--oh-warning-soft);
+  border: 1px solid rgba(217, 119, 6, 0.18);
+}
+
+.ohStatusBadge.risk {
+  color: var(--oh-risk);
+  background: var(--oh-risk-soft);
+  border: 1px solid rgba(220, 38, 38, 0.16);
+}
+
+.ohStatusBadge.neutral {
+  color: var(--oh-blue);
+  background: var(--oh-blue-soft);
+  border: 1px solid rgba(37, 99, 235, 0.16);
+}
+
+.ohScoreRing {
+  --score: 0;
+  width: 132px;
+  height: 132px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, #ffffff 58%, transparent 60%),
+    conic-gradient(var(--oh-primary) calc(var(--score) * 1%), rgba(15, 23, 42, 0.08) 0);
+  box-shadow: inset 0 0 0 1px var(--oh-border), var(--oh-shadow-sm);
+}
+
+.ohScoreRing strong {
+  color: var(--oh-text);
+  font-size: 1.9rem;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.ohScoreRing span {
+  display: block;
+  margin-top: 4px;
+  color: var(--oh-muted);
+  font-size: 0.76rem;
+  font-weight: 750;
+  text-align: center;
+}
+
+.ohActionPanel {
+  border: 1px solid rgba(15, 118, 110, 0.14);
+  border-radius: var(--oh-radius-lg);
+  background:
+    linear-gradient(135deg, rgba(15, 118, 110, 0.09), rgba(37, 99, 235, 0.07)),
+    #ffffff;
+  padding: clamp(22px, 4vw, 34px);
+  box-shadow: var(--oh-shadow-sm);
+}
+
+.ohButtonRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.ohTimeline {
+  display: grid;
+  gap: 12px;
+}
+
+.ohTimelineItem {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 14px;
+  align-items: center;
+  border: 1px solid var(--oh-border);
+  border-radius: 18px;
+  background: #ffffff;
+  padding: 16px;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.045);
+}
+
+.ohTimelineDot {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--oh-primary);
+  box-shadow: 0 0 0 5px var(--oh-primary-soft);
+}
+
+.ohTimelineTitle {
+  margin: 0;
+  color: var(--oh-text);
+  font-size: 0.98rem;
+  font-weight: 850;
+}
+
+.ohTimelineMeta {
+  margin-top: 4px;
+  color: var(--oh-muted);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.ohEmptyState {
+  border: 1px dashed var(--oh-border-strong);
+  border-radius: var(--oh-radius-lg);
+  background: rgba(255, 255, 255, 0.74);
+  padding: clamp(24px, 4vw, 42px);
+  text-align: center;
+}
+
+.ohEmptyState h2 {
+  margin: 0;
+  color: var(--oh-text);
+  font-size: clamp(1.35rem, 3vw, 2rem);
+  letter-spacing: -0.03em;
+}
+
+.ohEmptyState p {
+  max-width: 620px;
+  margin: 12px auto 0;
+  color: var(--oh-muted);
+  line-height: 1.75;
+}
+
+.ohTrustNotice {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  border: 1px solid rgba(37, 99, 235, 0.14);
+  border-radius: 18px;
+  background: rgba(37, 99, 235, 0.06);
+  color: var(--oh-soft-text);
+  padding: 15px 16px;
+  line-height: 1.7;
+  font-size: 0.92rem;
+}
+
+.ohTrustNotice strong {
+  color: var(--oh-text);
+}
+
+.ohDivider {
+  height: 1px;
+  background: var(--oh-border);
+  margin: 18px 0;
+}
+
+.ohStack {
+  display: grid;
+  gap: 18px;
+}
+
+.ohStack.large {
+  gap: 28px;
+}
+
+.ohPageShell[dir="rtl"],
+.ohPageShell[dir="rtl"] .ohCard,
+.ohPageShell[dir="rtl"] .ohActionPanel,
+.ohPageShell[dir="rtl"] .ohEmptyState {
+  text-align: right;
+}
+
+.ohPageShell[dir="rtl"] .ohTimelineItem {
+  grid-template-columns: auto 1fr auto;
+}
+
+@media (max-width: 980px) {
+  .ohHeroGrid,
+  .ohGrid.cols2,
+  .ohGrid.cols3,
+  .ohGrid.cols4,
+  .ohMetricGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 680px) {
+  .ohContainer {
+    width: min(100% - 22px, var(--oh-max-width));
+  }
+
+  .ohHero {
+    padding: 24px;
+    border-radius: 22px;
+  }
+
+  .ohHeroGrid,
+  .ohGrid.cols2,
+  .ohGrid.cols3,
+  .ohGrid.cols4,
+  .ohMetricGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .ohTimelineItem {
+    grid-template-columns: auto 1fr;
+  }
+
+  .ohTimelineItem > :last-child {
+    grid-column: 2;
+  }
+
+  .ohButtonRow {
+    align-items: stretch;
+  }
+
+  .ohButtonRow > * {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ohCard,
+  .ohMetricCard,
+  .ohTimelineItem,
+  .ohActionPanel {
+    transition: none !important;
+  }
+}
+
+@media (hover: hover) {
+  .ohCard:hover,
+  .ohMetricCard:hover,
+  .ohTimelineItem:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--oh-shadow-md);
+    border-color: var(--oh-border-strong);
+  }
+
+  .ohCard,
+  .ohMetricCard,
+  .ohTimelineItem {
+    transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+  }
+}
+
+/* === End OrganHeal Design System Foundation v1 === */
