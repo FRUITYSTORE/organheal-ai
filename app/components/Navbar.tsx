@@ -1,9 +1,11 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import LanguageToggle from "./LanguageToggle";
+
+type Language = "en" | "ar";
 
 function OrganHealLogo() {
   return (
@@ -61,9 +63,46 @@ function OrganHealLogo() {
 
 export default function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [language, setLanguage] = useState<Language>("en");
+
+  const isArabic = language === "ar";
+
+  const labels = {
+    home: isArabic ? "الرئيسية" : "Home",
+    dashboard: isArabic ? "لوحة التحكم" : "Dashboard",
+    reports: isArabic ? "التقارير" : "Reports",
+    intelligence: isArabic ? "مركز الذكاء" : "Intelligence",
+    healthPlan: isArabic ? "الخطة الصحية" : "Health Plan",
+    history: isArabic ? "التاريخ الصحي" : "History",
+    doctorPortal: isArabic ? "بوابة الطبيب" : "Doctor Portal",
+    profile: isArabic ? "الملف الشخصي" : "Profile",
+    createAccount: isArabic ? "إنشاء حساب" : "Create Account",
+    signIn: isArabic ? "تسجيل الدخول" : "Sign In",
+    signOut: isArabic ? "تسجيل الخروج" : "Sign Out",
+    tagline: isArabic ? "ذكاء صحي مدعوم بالذكاء الاصطناعي" : "AI HEALTH INTELLIGENCE",
+  };
 
   useEffect(() => {
     checkUser();
+
+    const savedLanguage =
+      (localStorage.getItem("organheal-language") as Language | null) || "en";
+
+    setLanguage(savedLanguage);
+    document.documentElement.lang = savedLanguage;
+    document.documentElement.dir = savedLanguage === "ar" ? "rtl" : "ltr";
+
+    function syncLanguage() {
+      const currentLanguage =
+        (localStorage.getItem("organheal-language") as Language | null) || "en";
+
+      setLanguage(currentLanguage);
+      document.documentElement.lang = currentLanguage;
+      document.documentElement.dir = currentLanguage === "ar" ? "rtl" : "ltr";
+    }
+
+    window.addEventListener("storage", syncLanguage);
+    window.addEventListener("organheal-language-change", syncLanguage);
 
     const {
       data: { subscription },
@@ -73,6 +112,8 @@ export default function Navbar() {
 
     return () => {
       subscription.unsubscribe();
+      window.removeEventListener("storage", syncLanguage);
+      window.removeEventListener("organheal-language-change", syncLanguage);
     };
   }, []);
 
@@ -88,33 +129,33 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="navbar">
+    <nav className="navbar" dir={isArabic ? "rtl" : "ltr"}>
       <Link href="/" className="logo" aria-label="OrganHeal home">
         <OrganHealLogo />
 
         <div className="logoText">
           <span>OrganHeal</span>
-          <small>AI HEALTH INTELLIGENCE</small>
+          <small>{labels.tagline}</small>
         </div>
       </Link>
 
-                  <div className="navLinks">
-        <Link href="/">Home</Link>
-        <Link href="/dashboard">Dashboard</Link>
-        <Link href="/reports">Reports</Link>
-        <Link href="/intelligence">Intelligence</Link>
+      <div className="navLinks">
+        <Link href="/">{labels.home}</Link>
+        <Link href="/dashboard">{labels.dashboard}</Link>
+        <Link href="/reports">{labels.reports}</Link>
+        <Link href="/intelligence">{labels.intelligence}</Link>
 
         {isLoggedIn ? (
           <>
-            <Link href="/health-plan">Health Plan</Link>
-            <Link href="/history">History</Link>
-            <Link href="/doctor-portal">Doctor Portal</Link>
-            <Link href="/profile">Profile</Link>
+            <Link href="/health-plan">{labels.healthPlan}</Link>
+            <Link href="/history">{labels.history}</Link>
+            <Link href="/doctor-portal">{labels.doctorPortal}</Link>
+            <Link href="/profile">{labels.profile}</Link>
 
             <LanguageToggle />
 
             <button className="navLogoutBtn" onClick={signOut}>
-              Sign Out
+              {labels.signOut}
             </button>
           </>
         ) : (
@@ -122,11 +163,11 @@ export default function Navbar() {
             <LanguageToggle />
 
             <Link href="/signup" className="navPrimaryBtn">
-              Create Account
+              {labels.createAccount}
             </Link>
 
             <Link href="/login" className="navSigninBtn">
-              Sign In
+              {labels.signIn}
             </Link>
           </>
         )}
