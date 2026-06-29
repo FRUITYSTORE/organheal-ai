@@ -1,9 +1,11 @@
-"use client";
+﻿"use client";
 
 import PageBackActions from "../components/PageBackActions";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
+
+type Language = "en" | "ar";
 
 type HealthHistory = {
   id: string;
@@ -57,6 +59,9 @@ type TimelineItem = {
 };
 
 export default function HistoryPage() {
+  const [language, setLanguage] = useState<Language>("en");
+  const isArabic = language === "ar";
+
   const [history, setHistory] = useState<HealthHistory[]>([]);
   const [dailyCheckIns, setDailyCheckIns] = useState<DailyCheckIn[]>([]);
   const [uploadedReports, setUploadedReports] = useState<UploadedReport[]>([]);
@@ -70,17 +75,117 @@ export default function HistoryPage() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
+    function syncLanguage() {
+      const savedLanguage =
+        (localStorage.getItem("organheal-language") as Language | null) || "en";
+
+      setLanguage(savedLanguage);
+      document.documentElement.lang = savedLanguage;
+      document.documentElement.dir = savedLanguage === "ar" ? "rtl" : "ltr";
+    }
+
+    syncLanguage();
     fetchHistory();
+
+    window.addEventListener("storage", syncLanguage);
+    window.addEventListener("organheal-language-change", syncLanguage);
+
+    return () => {
+      window.removeEventListener("storage", syncLanguage);
+      window.removeEventListener("organheal-language-change", syncLanguage);
+    };
   }, []);
+
+  function getCurrentLanguage() {
+    return (localStorage.getItem("organheal-language") as Language | null) || "en";
+  }
+
+  function text(en: string, ar: string) {
+    return isArabic ? ar : en;
+  }
+
+  function formatDateTime(value: string | null | undefined) {
+    if (!value) return isArabic ? "غير متاح" : "Not available";
+    return new Date(value).toLocaleString(isArabic ? "ar-AE" : "en-US");
+  }
+
+  function localizeModuleName(value: string | null | undefined) {
+    if (!value) return isArabic ? "غير متاح" : "N/A";
+    if (!isArabic) return value;
+
+    const normalized = value.toLowerCase();
+
+    if (normalized.includes("heart")) return "القلب";
+    if (normalized.includes("lung")) return "الرئة";
+    if (normalized.includes("kidney")) return "الكلى";
+    if (normalized.includes("liver")) return "الكبد";
+    if (normalized.includes("brain")) return "الدماغ";
+    if (normalized.includes("metabolic")) return "الأيض";
+
+    return value;
+  }
+
+  function localizeStatus(value: string | null | undefined) {
+    if (!value) return isArabic ? "تم حفظ التقييم" : "Assessment saved";
+    if (!isArabic) return value;
+
+    if (value === "Low Risk") return "خطورة منخفضة";
+    if (value === "Moderate Risk") return "خطورة متوسطة";
+    if (value === "High Risk") return "خطورة مرتفعة";
+
+    if (value === "Good Kidney Health Pattern") return "نمط صحي جيد للكلى";
+    if (value === "Moderate Kidney Risk") return "خطورة كلوية متوسطة";
+    if (value === "Higher Kidney Risk") return "خطورة كلوية أعلى";
+
+    if (value === "Good Liver Health Pattern") return "نمط صحي جيد للكبد";
+    if (value === "Moderate Liver Risk") return "خطورة كبدية متوسطة";
+    if (value === "Higher Liver Risk") return "خطورة كبدية أعلى";
+
+    if (value === "Good Metabolic Health Pattern") return "نمط أيضي صحي جيد";
+    if (value === "Moderate Metabolic Risk") return "خطورة أيضية متوسطة";
+    if (value === "Higher Metabolic Risk") return "خطورة أيضية أعلى";
+
+    if (value === "Good Brain Health Pattern") return "نمط صحي جيد للدماغ";
+    if (value === "Moderate Brain Wellness Risk") return "خطورة متوسطة لصحة الدماغ";
+    if (value === "Higher Brain Wellness Risk") return "خطورة أعلى لصحة الدماغ";
+
+    if (value === "Good Lung Health Pattern") return "نمط صحي جيد للرئة";
+    if (value === "Moderate Respiratory Risk") return "خطورة تنفسية متوسطة";
+    if (value === "Higher Respiratory Risk") return "خطورة تنفسية أعلى";
+
+    if (value === "Uploaded") return "تم الرفع";
+    if (value === "Completed") return "مكتمل";
+    if (value === "Generated") return "تم التوليد";
+
+    return value;
+  }
+
+  function localizeType(value: TimelineItem["type"]) {
+    if (!isArabic) return value;
+
+    if (value === "Assessment") return "تقييم";
+    if (value === "Check-In") return "Check-In";
+    if (value === "Report") return "تقرير";
+    if (value === "Intelligence") return "ذكاء صحي";
+
+    return value;
+  }
 
   async function fetchHistory() {
     setLoading(true);
     setMessage("");
 
+    const currentLanguage = getCurrentLanguage();
+    const currentIsArabic = currentLanguage === "ar";
+
     const { data: userData, error: userError } = await supabase.auth.getUser();
 
     if (userError || !userData.user) {
-      setMessage("Please login or sign up to view your health history.");
+      setMessage(
+        currentIsArabic
+          ? "يرجى تسجيل الدخول أو إنشاء حساب لعرض التاريخ الصحي."
+          : "Please login or sign up to view your health history."
+      );
       setLoading(false);
       return;
     }
@@ -94,7 +199,11 @@ export default function HistoryPage() {
       .order("created_at", { ascending: false });
 
     if (historyError) {
-      setMessage("Database error: " + historyError.message);
+      setMessage(
+        currentIsArabic
+          ? "حدث خطأ في قاعدة البيانات: " + historyError.message
+          : "Database error: " + historyError.message
+      );
       setLoading(false);
       return;
     }
@@ -108,7 +217,11 @@ export default function HistoryPage() {
       .order("created_at", { ascending: false });
 
     if (checkInError) {
-      setMessage("Database error: " + checkInError.message);
+      setMessage(
+        currentIsArabic
+          ? "حدث خطأ في قاعدة البيانات: " + checkInError.message
+          : "Database error: " + checkInError.message
+      );
       setLoading(false);
       return;
     }
@@ -155,10 +268,10 @@ export default function HistoryPage() {
   }
 
   function getScoreStatus(score: number) {
-    if (score >= 80) return "Strong";
-    if (score >= 60) return "Stable";
-    if (score >= 40) return "Needs Attention";
-    return "Recovery Needed";
+    if (score >= 80) return text("Strong", "قوي");
+    if (score >= 60) return text("Stable", "مستقر");
+    if (score >= 40) return text("Needs Attention", "يحتاج انتباه");
+    return text("Recovery Needed", "يحتاج تعافي");
   }
 
   const allScores = [
@@ -171,7 +284,6 @@ export default function HistoryPage() {
       ? Math.round(allScores.reduce((sum, score) => sum + score, 0) / allScores.length)
       : 0;
 
-  const latestAssessment = history[0] || null;
   const latestCheckIn = dailyCheckIns[0] || null;
 
   const bestAssessment =
@@ -199,9 +311,10 @@ export default function HistoryPage() {
   const assessmentTrend = useMemo(() => {
     if (history.length < 2) {
       return {
-        label: "Assessment trend not ready",
-        description:
-          "Complete at least two assessments to compare progress over time.",
+        label: isArabic ? "اتجاه التقييم غير جاهز" : "Assessment trend not ready",
+        description: isArabic
+          ? "أكمل تقييمين على الأقل لمقارنة التقدم مع الوقت."
+          : "Complete at least two assessments to compare progress over time.",
         className: "",
       };
     }
@@ -209,39 +322,48 @@ export default function HistoryPage() {
     const latest = history[0];
     const previous = history[1];
     const difference = latest.score - previous.score;
+    const moduleName = localizeModuleName(latest.module_name);
 
     if (difference > 0) {
       return {
-        label: "Assessment progress improving",
-        description: `${latest.module_name} improved by ${difference} points compared with the previous record.`,
+        label: isArabic ? "التقييم يتحسن" : "Assessment progress improving",
+        description: isArabic
+          ? `${moduleName} تحسن بمقدار ${difference} نقطة مقارنة بالسجل السابق.`
+          : `${latest.module_name} improved by ${difference} points compared with the previous record.`,
         className: "goodScore",
       };
     }
 
     if (difference < 0) {
       return {
-        label: "Assessment progress declined",
-        description: `${latest.module_name} declined by ${Math.abs(
-          difference
-        )} points. Review your follow-up plan and reassess after 4 weeks.`,
+        label: isArabic ? "التقييم انخفض" : "Assessment progress declined",
+        description: isArabic
+          ? `${moduleName} انخفض بمقدار ${Math.abs(
+              difference
+            )} نقطة. راجع خطة المتابعة وأعد التقييم بعد 4 أسابيع.`
+          : `${latest.module_name} declined by ${Math.abs(
+              difference
+            )} points. Review your follow-up plan and reassess after 4 weeks.`,
         className: "riskScore",
       };
     }
 
     return {
-      label: "Assessment progress stable",
-      description:
-        "Your latest assessment score is stable compared with the previous record.",
+      label: isArabic ? "التقييم مستقر" : "Assessment progress stable",
+      description: isArabic
+        ? "آخر مؤشر تقييم لديك مستقر مقارنة بالسجل السابق."
+        : "Your latest assessment score is stable compared with the previous record.",
       className: "moderateScore",
     };
-  }, [history]);
+  }, [history, isArabic]);
 
   const wellnessTrend = useMemo(() => {
     if (dailyCheckIns.length < 2) {
       return {
-        label: "Wellness trend not ready",
-        description:
-          "Complete at least two check-ins to compare wellness movement.",
+        label: isArabic ? "اتجاه العافية غير جاهز" : "Wellness trend not ready",
+        description: isArabic
+          ? "أكمل Check-In مرتين على الأقل لمقارنة حركة العافية."
+          : "Complete at least two check-ins to compare wellness movement.",
         className: "",
       };
     }
@@ -252,36 +374,43 @@ export default function HistoryPage() {
 
     if (difference > 0) {
       return {
-        label: "Wellness improving",
-        description: `Your wellness score improved by ${difference} points compared with your previous check-in.`,
+        label: isArabic ? "العافية تتحسن" : "Wellness improving",
+        description: isArabic
+          ? `تحسن مؤشر العافية لديك بمقدار ${difference} نقطة مقارنة بآخر Check-In.`
+          : `Your wellness score improved by ${difference} points compared with your previous check-in.`,
         className: "goodScore",
       };
     }
 
     if (difference < 0) {
       return {
-        label: "Wellness needs attention",
-        description: `Your wellness score decreased by ${Math.abs(
-          difference
-        )} points. Focus on sleep, stress, hydration, and recovery today.`,
+        label: isArabic ? "العافية تحتاج انتباه" : "Wellness needs attention",
+        description: isArabic
+          ? `انخفض مؤشر العافية لديك بمقدار ${Math.abs(
+              difference
+            )} نقطة. ركز اليوم على النوم، التوتر، الترطيب، والتعافي.`
+          : `Your wellness score decreased by ${Math.abs(
+              difference
+            )} points. Focus on sleep, stress, hydration, and recovery today.`,
         className: "riskScore",
       };
     }
 
     return {
-      label: "Wellness stable",
-      description:
-        "Your wellness score stayed the same compared with your previous check-in.",
+      label: isArabic ? "العافية مستقرة" : "Wellness stable",
+      description: isArabic
+        ? "مؤشر العافية لديك بقي ثابتًا مقارنة بآخر Check-In."
+        : "Your wellness score stayed the same compared with your previous check-in.",
       className: "moderateScore",
     };
-  }, [dailyCheckIns]);
+  }, [dailyCheckIns, isArabic]);
 
   const timelineItems: TimelineItem[] = [
     ...history.map((item) => ({
       id: `assessment-${item.id}`,
       type: "Assessment" as const,
-      title: item.module_name,
-      subtitle: item.status || "Assessment saved",
+      title: localizeModuleName(item.module_name),
+      subtitle: localizeStatus(item.status || "Assessment saved"),
       score: item.score,
       date: item.created_at,
       href: "/assessment",
@@ -290,8 +419,12 @@ export default function HistoryPage() {
     ...dailyCheckIns.map((item) => ({
       id: `checkin-${item.id}`,
       type: "Check-In" as const,
-      title: `Wellness Check-In · ${item.mood}`,
-      subtitle: `Energy ${item.energy_level}/5 · Sleep ${item.sleep_quality}/5 · Stress ${item.stress_level}/5`,
+      title: isArabic
+        ? `Check-In صحي · ${item.mood}`
+        : `Wellness Check-In · ${item.mood}`,
+      subtitle: isArabic
+        ? `الطاقة ${item.energy_level}/5 · النوم ${item.sleep_quality}/5 · التوتر ${item.stress_level}/5`
+        : `Energy ${item.energy_level}/5 · Sleep ${item.sleep_quality}/5 · Stress ${item.stress_level}/5`,
       score: item.wellness_score,
       date: item.created_at,
       href: "/checkin",
@@ -300,8 +433,8 @@ export default function HistoryPage() {
     ...uploadedReports.map((item) => ({
       id: `report-${item.id}`,
       type: "Report" as const,
-      title: item.file_name || "Medical report",
-      subtitle: item.extraction_status || "Uploaded",
+      title: item.file_name || text("Medical report", "تقرير طبي"),
+      subtitle: localizeStatus(item.extraction_status || "Uploaded"),
       score: null,
       date: item.created_at,
       href: "/reports",
@@ -310,20 +443,24 @@ export default function HistoryPage() {
     ...generatedInsights.map((item) => ({
       id: `intelligence-${item.id}`,
       type: "Intelligence" as const,
-      title: item.insight_title || "Saved health intelligence",
+      title: item.insight_title || text("Saved health intelligence", "ذكاء صحي محفوظ"),
       subtitle:
         item.ai_status === "Generated"
-          ? "Generated intelligence result"
-          : "Saved intelligence result",
+          ? text("Generated intelligence result", "نتيجة ذكاء صحي مولدة")
+          : text("Saved intelligence result", "نتيجة ذكاء صحي محفوظة"),
       score: null,
       date: item.created_at || new Date().toISOString(),
       href: "/intelligence",
     })),
-  ].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
+  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  const filters = ["All", "Assessment", "Check-In", "Report", "Intelligence"];
+  const filters = [
+    { value: "All", label: text("All", "الكل") },
+    { value: "Assessment", label: text("Assessment", "التقييمات") },
+    { value: "Check-In", label: "Check-In" },
+    { value: "Report", label: text("Report", "التقارير") },
+    { value: "Intelligence", label: text("Intelligence", "الذكاء الصحي") },
+  ];
 
   const filteredTimeline =
     selectedFilter === "All"
@@ -333,76 +470,99 @@ export default function HistoryPage() {
   const recommendedAction =
     history.length === 0
       ? {
-          label: "Start your progress history",
-          description:
+          label: text("Start your progress history", "ابدأ تاريخ التقدم الصحي"),
+          description: text(
             "Complete an assessment so OrganHeal can begin building your progress timeline.",
+            "أكمل تقييمًا حتى يبدأ OrganHeal ببناء مسار تقدمك الصحي."
+          ),
           href: "/assessment",
-          buttonText: "Start Assessment",
+          buttonText: text("Start Assessment", "ابدأ التقييم"),
         }
       : dailyCheckIns.length === 0
       ? {
-          label: "Add wellness tracking",
-          description:
+          label: text("Add wellness tracking", "أضف متابعة العافية"),
+          description: text(
             "Complete a daily check-in so your progress timeline reflects how you feel today.",
+            "أكمل Check-In يومي حتى يعكس مسار التقدم حالتك اليوم."
+          ),
           href: "/checkin",
-          buttonText: "Open Check-In",
+          buttonText: text("Open Check-In", "افتح Check-In"),
         }
       : uploadedReports.length === 0
       ? {
-          label: "Add medical reports",
-          description:
+          label: text("Add medical reports", "أضف تقارير طبية"),
+          description: text(
             "Upload a medical report to connect your progress timeline with report intelligence.",
+            "ارفع تقريرًا طبيًا لربط مسار التقدم بذكاء التقارير."
+          ),
           href: "/lab-upload",
-          buttonText: "Upload Report",
+          buttonText: text("Upload Report", "رفع تقرير"),
         }
       : savedIntelligence.length === 0
       ? {
-          label: "Generate saved intelligence",
-          description:
+          label: text("Generate saved intelligence", "ولّد ذكاء صحي محفوظ"),
+          description: text(
             "Open Intelligence Center to generate and save report-based health intelligence.",
+            "افتح مركز الذكاء لتوليد وحفظ ذكاء صحي مبني على التقارير."
+          ),
           href: "/intelligence",
-          buttonText: "Open Intelligence",
+          buttonText: text("Open Intelligence", "افتح مركز الذكاء"),
         }
       : {
-          label: "Continue your follow-up plan",
-          description:
+          label: text("Continue your follow-up plan", "تابع خطة المتابعة"),
+          description: text(
             "Your history has assessments, check-ins, reports, and saved intelligence. Continue with your health plan.",
+            "يحتوي تاريخك الصحي على تقييمات، Check-Ins، تقارير، وذكاء صحي محفوظ. تابع إلى الخطة الصحية."
+          ),
           href: "/health-plan",
-          buttonText: "Open Health Plan",
+          buttonText: text("Open Health Plan", "افتح الخطة الصحية"),
         };
 
   const hasAnyHistory = timelineItems.length > 0;
 
   return (
-    <main className="assistantPage">
+    <main className="assistantPage" dir={isArabic ? "rtl" : "ltr"}>
       <div className="assistantContainer">
         <PageBackActions />
 
         <div className="assistantHeader">
-          <p className="assistantBadge">HEALTH HISTORY</p>
-          <h1>Progress Timeline</h1>
+          <p className="assistantBadge">
+            {text("HEALTH HISTORY", "التاريخ الصحي")}
+          </p>
+          <h1>{text("Progress Timeline", "مسار التقدم")}</h1>
           <p>
-            Review your assessments, wellness check-ins, uploaded reports, saved
-            intelligence, trends, and recommended next step.
+            {text(
+              "Review your assessments, wellness check-ins, uploaded reports, saved intelligence, trends, and recommended next step.",
+              "راجع التقييمات، Check-Ins، التقارير المرفوعة، الذكاء الصحي المحفوظ، الاتجاهات، والخطوة التالية المقترحة."
+            )}
           </p>
         </div>
 
         <div className="chatWindow">
           {loading && (
             <div className="resultBox">
-              <p className="sectionLabel">Loading History</p>
-              <h2>Preparing your progress timeline...</h2>
+              <p className="sectionLabel">
+                {text("Loading History", "تحميل التاريخ الصحي")}
+              </p>
+              <h2>
+                {text(
+                  "Preparing your progress timeline...",
+                  "جاري تحضير مسار التقدم..."
+                )}
+              </h2>
             </div>
           )}
 
           {!loading && message && (
             <div className="resultBox">
-              <p className="sectionLabel">Login Required</p>
-              <h2>Access Protected</h2>
+              <p className="sectionLabel">
+                {text("Login Required", "تسجيل الدخول مطلوب")}
+              </p>
+              <h2>{text("Access Protected", "الوصول محمي")}</h2>
               <p>{message}</p>
 
               <Link href="/login" className="primaryBtn">
-                Login
+                {text("Login", "تسجيل الدخول")}
               </Link>
             </div>
           )}
@@ -410,7 +570,9 @@ export default function HistoryPage() {
           {!loading && !message && (
             <>
               <div className="resultBox">
-                <p className="sectionLabel">Recommended Next Step</p>
+                <p className="sectionLabel">
+                  {text("Recommended Next Step", "الخطوة التالية المقترحة")}
+                </p>
 
                 <h2>{recommendedAction.label}</h2>
 
@@ -431,63 +593,93 @@ export default function HistoryPage() {
 
               <div className="assessmentForm">
                 <div className="resultBox">
-                  <p className="sectionLabel">Overall Progress Score</p>
+                  <p className="sectionLabel">
+                    {text("Overall Progress Score", "مؤشر التقدم العام")}
+                  </p>
                   <h2 className={getScoreClass(overallProgressScore)}>
                     {overallProgressScore}/100
                   </h2>
                   <h3>
                     {allScores.length > 0
                       ? getScoreStatus(overallProgressScore)
-                      : "No Data Yet"}
+                      : text("No Data Yet", "لا توجد بيانات بعد")}
                   </h3>
                 </div>
 
                 <div className="resultBox">
-                  <p className="sectionLabel">Assessments</p>
+                  <p className="sectionLabel">{text("Assessments", "التقييمات")}</p>
                   <h2>{history.length}</h2>
-                  <p>Total saved assessment records.</p>
+                  <p>
+                    {text(
+                      "Total saved assessment records.",
+                      "إجمالي سجلات التقييم المحفوظة."
+                    )}
+                  </p>
                 </div>
 
                 <div className="resultBox">
                   <p className="sectionLabel">Check-Ins</p>
                   <h2>{dailyCheckIns.length}</h2>
-                  <p>Total wellness check-ins saved.</p>
-                </div>
-
-                <div className="resultBox">
-                  <p className="sectionLabel">Reports</p>
-                  <h2>{uploadedReports.length}</h2>
                   <p>
-                    {processedReports} processed · {pendingReports} pending
+                    {text(
+                      "Total wellness check-ins saved.",
+                      "إجمالي Check-Ins الصحية المحفوظة."
+                    )}
                   </p>
                 </div>
 
                 <div className="resultBox">
-                  <p className="sectionLabel">Saved Intelligence</p>
-                  <h2>{savedIntelligence.length}</h2>
-                  <p>Saved intelligence results connected to your reports.</p>
+                  <p className="sectionLabel">{text("Reports", "التقارير")}</p>
+                  <h2>{uploadedReports.length}</h2>
+                  <p>
+                    {isArabic
+                      ? `${processedReports} مكتمل · ${pendingReports} قيد الانتظار`
+                      : `${processedReports} processed · ${pendingReports} pending`}
+                  </p>
                 </div>
 
                 <div className="resultBox">
-                  <p className="sectionLabel">Priority Focus</p>
-                  <h2>{priorityAssessment?.module_name || "N/A"}</h2>
+                  <p className="sectionLabel">
+                    {text("Saved Intelligence", "الذكاء الصحي المحفوظ")}
+                  </p>
+                  <h2>{savedIntelligence.length}</h2>
+                  <p>
+                    {text(
+                      "Saved intelligence results connected to your reports.",
+                      "نتائج ذكاء صحي محفوظة ومرتبطة بتقاريرك."
+                    )}
+                  </p>
+                </div>
+
+                <div className="resultBox">
+                  <p className="sectionLabel">
+                    {text("Priority Focus", "الأولوية الصحية")}
+                  </p>
+                  <h2>{localizeModuleName(priorityAssessment?.module_name)}</h2>
                   <p>
                     {priorityAssessment
-                      ? `Lowest assessment score: ${priorityAssessment.score}/100`
-                      : "Complete assessments to identify a priority area."}
+                      ? isArabic
+                        ? `أقل مؤشر تقييم: ${priorityAssessment.score}/100`
+                        : `Lowest assessment score: ${priorityAssessment.score}/100`
+                      : text(
+                          "Complete assessments to identify a priority area.",
+                          "أكمل التقييمات لتحديد منطقة الأولوية."
+                        )}
                   </p>
                 </div>
               </div>
 
               <div className="resultBox">
-                <p className="sectionLabel">Progress Trends</p>
+                <p className="sectionLabel">
+                  {text("Progress Trends", "اتجاهات التقدم")}
+                </p>
 
                 <div
                   style={{
                     display: "grid",
                     gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
                     gap: "14px",
-                    textAlign: "left",
+                    textAlign: isArabic ? "right" : "left",
                   }}
                 >
                   <div>
@@ -505,27 +697,29 @@ export default function HistoryPage() {
                   </div>
 
                   <div>
-                    <strong>Best Assessment</strong>
+                    <strong>{text("Best Assessment", "أفضل تقييم")}</strong>
                     <p>
                       {bestAssessment
-                        ? `${bestAssessment.module_name} · ${bestAssessment.score}/100`
-                        : "No assessment yet"}
+                        ? `${localizeModuleName(bestAssessment.module_name)} · ${bestAssessment.score}/100`
+                        : text("No assessment yet", "لا يوجد تقييم بعد")}
                     </p>
                   </div>
 
                   <div>
-                    <strong>Latest Check-In</strong>
+                    <strong>{text("Latest Check-In", "آخر Check-In")}</strong>
                     <p>
                       {latestCheckIn
                         ? `${latestCheckIn.wellness_score}/100 · ${latestCheckIn.mood}`
-                        : "No check-in yet"}
+                        : text("No check-in yet", "لا يوجد Check-In بعد")}
                     </p>
                   </div>
                 </div>
               </div>
 
               <div className="resultBox">
-                <p className="sectionLabel">Filter Timeline</p>
+                <p className="sectionLabel">
+                  {text("Filter Timeline", "تصفية المسار")}
+                </p>
 
                 <div
                   style={{
@@ -537,27 +731,31 @@ export default function HistoryPage() {
                 >
                   {filters.map((filter) => (
                     <button
-                      key={filter}
+                      key={filter.value}
                       className={
-                        selectedFilter === filter ? "primaryBtn" : "secondaryBtn"
+                        selectedFilter === filter.value ? "primaryBtn" : "secondaryBtn"
                       }
-                      onClick={() => setSelectedFilter(filter)}
+                      onClick={() => setSelectedFilter(filter.value)}
                     >
-                      {filter}
+                      {filter.label}
                     </button>
                   ))}
                 </div>
               </div>
 
               <div className="resultBox">
-                <p className="sectionLabel">Progress Timeline</p>
+                <p className="sectionLabel">
+                  {text("Progress Timeline", "مسار التقدم")}
+                </p>
 
                 {!hasAnyHistory ? (
                   <>
-                    <h2>No saved progress yet</h2>
+                    <h2>{text("No saved progress yet", "لا يوجد تقدم محفوظ بعد")}</h2>
                     <p>
-                      Start with an assessment or daily check-in to build your
-                      progress timeline.
+                      {text(
+                        "Start with an assessment or daily check-in to build your progress timeline.",
+                        "ابدأ بتقييم أو Check-In يومي لبناء مسار التقدم الخاص بك."
+                      )}
                     </p>
 
                     <div
@@ -570,22 +768,27 @@ export default function HistoryPage() {
                       }}
                     >
                       <Link href="/assessment" className="primaryBtn">
-                        Start Assessment
+                        {text("Start Assessment", "ابدأ التقييم")}
                       </Link>
 
                       <Link href="/checkin" className="secondaryBtn">
-                        Open Check-In
+                        {text("Open Check-In", "افتح Check-In")}
                       </Link>
                     </div>
                   </>
                 ) : filteredTimeline.length === 0 ? (
-                  <p>No records found for this filter.</p>
+                  <p>
+                    {text(
+                      "No records found for this filter.",
+                      "لا توجد سجلات لهذا الفلتر."
+                    )}
+                  </p>
                 ) : (
                   <div className="healthTimeline">
                     {filteredTimeline.map((item) => (
                       <div className="timelineItem active" key={item.id}>
                         <strong>
-                          {item.type}: {item.title}
+                          {localizeType(item.type)}: {item.title}
                         </strong>
 
                         <span>
@@ -595,10 +798,10 @@ export default function HistoryPage() {
                           {item.subtitle}
                         </span>
 
-                        <span>{new Date(item.date).toLocaleString()}</span>
+                        <span>{formatDateTime(item.date)}</span>
 
                         <Link href={item.href} className="secondaryBtn">
-                          Open
+                          {text("Open", "فتح")}
                         </Link>
                       </div>
                     ))}
@@ -607,9 +810,16 @@ export default function HistoryPage() {
               </div>
 
               <div className="resultBox">
-                <p className="sectionLabel">History Journey</p>
+                <p className="sectionLabel">
+                  {text("History Journey", "رحلة التاريخ الصحي")}
+                </p>
 
-                <h2>Continue from your progress timeline</h2>
+                <h2>
+                  {text(
+                    "Continue from your progress timeline",
+                    "تابع من مسار التقدم الخاص بك"
+                  )}
+                </h2>
 
                 <p
                   style={{
@@ -619,8 +829,10 @@ export default function HistoryPage() {
                     margin: "0 auto 22px",
                   }}
                 >
-                  Your history connects assessments, wellness check-ins,
-                  reports, saved intelligence, and your follow-up plan.
+                  {text(
+                    "Your history connects assessments, wellness check-ins, reports, saved intelligence, and your follow-up plan.",
+                    "يربط تاريخك الصحي بين التقييمات، Check-Ins، التقارير، الذكاء الصحي المحفوظ، وخطة المتابعة."
+                  )}
                 </p>
 
                 <div
@@ -632,11 +844,11 @@ export default function HistoryPage() {
                   }}
                 >
                   <Link href="/dashboard" className="secondaryBtn">
-                    Dashboard
+                    {text("Dashboard", "لوحة التحكم")}
                   </Link>
 
                   <Link href="/profile" className="secondaryBtn">
-                    Profile
+                    {text("Profile", "الملف الشخصي")}
                   </Link>
 
                   <Link href="/checkin" className="secondaryBtn">
@@ -644,15 +856,15 @@ export default function HistoryPage() {
                   </Link>
 
                   <Link href="/reports" className="secondaryBtn">
-                    Reports
+                    {text("Reports", "التقارير")}
                   </Link>
 
                   <Link href="/intelligence" className="secondaryBtn">
-                    Intelligence
+                    {text("Intelligence", "مركز الذكاء")}
                   </Link>
 
                   <Link href="/health-plan" className="primaryBtn">
-                    Health Plan
+                    {text("Health Plan", "الخطة الصحية")}
                   </Link>
                 </div>
               </div>
