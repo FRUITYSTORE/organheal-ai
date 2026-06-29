@@ -431,6 +431,78 @@ export default function DashboardPage() {
   return (
     <main className="smartDashboardPage dashboardCommandCenterPage" dir={isArabic ? "rtl" : "ltr"} lang={isArabic ? "ar" : "en"}>
       <style>{`
+        /* ORGANHEAL_DASHBOARD_VISUAL_POLISH_STEP2 */
+        .dashboardCommandCenterPage .dashboardProgressCard strong {
+          color: #ffffff !important;
+          text-shadow: 0 0 22px rgba(103, 232, 249, 0.35);
+        }
+
+        .dashboardCommandCenterPage .dashboardProgressCard p {
+          color: #cbd5e1 !important;
+          line-height: 1.75;
+        }
+
+        .dashboardCommandCenterPage .dashboardProgressCard span {
+          color: #67e8f9 !important;
+        }
+
+        .dashboardCommandCenterPage .dashboardCommandHero {
+          align-items: stretch;
+        }
+
+        .dashboardCommandCenterPage .dashboardCommandHero > div:first-child {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+        }
+
+        .dashboardCommandCenterPage .dashboardCommandCard,
+        .dashboardCommandCenterPage .dashboardCommandPanel,
+        .dashboardCommandCenterPage .dashboardNextActionPanel {
+          color: #0f172a !important;
+        }
+
+        .dashboardCommandCenterPage .dashboardCommandCard strong,
+        .dashboardCommandCenterPage .dashboardCommandPanel h2,
+        .dashboardCommandCenterPage .dashboardNextActionPanel h2,
+        .dashboardCommandCenterPage .dashboardSignalGrid strong,
+        .dashboardCommandCenterPage .dashboardQuickActionGrid strong {
+          color: #0f172a !important;
+        }
+
+        .dashboardCommandCenterPage .dashboardCommandCard p,
+        .dashboardCommandCenterPage .dashboardCommandPanel p,
+        .dashboardCommandCenterPage .dashboardNextActionPanel p,
+        .dashboardCommandCenterPage .dashboardSignalGrid p,
+        .dashboardCommandCenterPage .dashboardQuickActionGrid p {
+          color: #475569 !important;
+        }
+
+        .dashboardCommandCenterPage .dashboardScore.good {
+          color: #0891b2 !important;
+        }
+
+        .dashboardCommandCenterPage .dashboardScore.moderate {
+          color: #0f766e !important;
+        }
+
+        .dashboardCommandCenterPage .dashboardScore.risk {
+          color: #b45309 !important;
+        }
+
+        .dashboardCommandCenterPage[dir="rtl"] .dashboardActionRow,
+        .dashboardCommandCenterPage[dir="rtl"] .dashboardQuickActionGrid {
+          direction: rtl;
+        }
+
+        .dashboardCommandCenterPage .dashboardCommandCard {
+          min-height: 132px;
+        }
+
+        .dashboardCommandCenterPage .dashboardSignalGrid article {
+          min-height: 138px;
+        }
+
         .dashboardCommandCenterPage {
           min-height: 100vh;
           background:
