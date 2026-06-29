@@ -580,7 +580,11 @@ export default function HealthPlanPage() {
       : "When should I repeat labs or reassess this area?",
   ];
 
-  const completedTaskCount = completedTasks.length;
+  const activeCompletedTasks = completedTasks.filter((task) =>
+    planTasks.includes(task)
+  );
+
+  const completedTaskCount = activeCompletedTasks.length;
   const totalTasks = planTasks.length;
   const taskProgress =
     totalTasks > 0 ? Math.round((completedTaskCount / totalTasks) * 100) : 0;
@@ -1870,7 +1874,7 @@ export default function HealthPlanPage() {
 
               <div className="healthPlanTaskList">
                 {planTasks.map((task, index) => {
-                  const isCompleted = completedTasks.includes(task);
+                  const isCompleted = activeCompletedTasks.includes(task);
 
                   return (
                     <label
