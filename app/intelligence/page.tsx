@@ -949,16 +949,16 @@ onHideGenerated={() => {
 
     {canShowLessReports && (
       <button
-        className="secondaryBtn"
-        onClick={() => {
-          setVisibleReportsCount(REPORTS_PAGE_SIZE);
-          setExpandedReportId(null);
-          setGeneratedResult(null);
-          setActiveGeneratedInsightId(null);
-        }}
-      >
-        {isArabicUi ? "\u0639\u0631\u0636 \u0623\u0642\u0644" : "Show Less"}
-      </button>
+  className="secondaryBtn"
+  onClick={() => {
+    setVisibleReportsCount(REPORTS_PAGE_SIZE);
+    setExpandedReportId(null);
+    setGeneratedResult(null);
+    setActiveGeneratedInsightId(null);
+  }}
+>
+  {isArabicUi ? "\u0639\u0631\u0636 \u0623\u0642\u0644" : "Show Less"}
+</button>
     )}
   </div>
 )}
