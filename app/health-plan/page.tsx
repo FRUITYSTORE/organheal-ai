@@ -103,6 +103,124 @@ const organAssessmentLinks: Record<string, string> = {
   General: "/assessment",
 };
 
+
+function localizeHealthPlanValue(
+  value: string | null | undefined,
+  isArabic: boolean
+) {
+  if (!isArabic) return value || "N/A";
+
+  const clean = (value || "").trim();
+
+  if (!clean) return "غير متاح";
+
+  const exact: Record<string, string> = {
+    Heart: "القلب",
+    Liver: "الكبد",
+    Lung: "الرئة",
+    Kidney: "الكلى",
+    Metabolic: "الأيض",
+    Brain: "الدماغ",
+    General: "عام",
+
+    High: "مرتفع",
+    Moderate: "متوسط",
+    Low: "منخفض",
+    Normal: "طبيعي",
+    "Not available": "غير متاح",
+
+    "High Risk": "خطورة مرتفعة",
+    "Moderate Risk": "خطورة متوسطة",
+    "Low Risk": "خطورة منخفضة",
+
+    "Health History": "التاريخ الصحي",
+    "Doctor Brief": "ملخص الطبيب",
+    "Intelligence Center": "مركز الذكاء",
+    "Generated intelligence is saved": "الذكاء الصحي محفوظ",
+    "Generated intelligence is incomplete": "الذكاء الصحي غير مكتمل",
+  };
+
+  if (exact[clean]) return exact[clean];
+
+  const lower = clean.toLowerCase();
+
+  if (lower.includes("blood pressure")) {
+    return "متابعة ضغط الدم وتقليل العوامل التي قد تزيد إجهاد القلب.";
+  }
+
+  if (lower.includes("liver")) {
+    return "دعم صحة الكبد من خلال التغذية، تقليل العوامل المرهقة، ومراجعة الفحوصات عند الحاجة.";
+  }
+
+  if (lower.includes("lung") || lower.includes("breathing")) {
+    return "دعم صحة الرئة عبر تقليل المهيجات ومراقبة التنفس والسعال وتحمل النشاط.";
+  }
+
+  if (lower.includes("kidney")) {
+    return "دعم صحة الكلى عبر الترطيب ومتابعة ضغط الدم والفحوصات ذات العلاقة.";
+  }
+
+  if (lower.includes("metabolic") || lower.includes("glucose") || lower.includes("cholesterol")) {
+    return "متابعة مؤشرات الأيض مثل السكر والدهون والنشاط الغذائي.";
+  }
+
+  if (lower.includes("review") && lower.includes("doctor")) {
+    return "راجع النتائج والخطة مع الطبيب عند وجود أعراض أو نتائج تحتاج متابعة.";
+  }
+
+  return clean;
+}
+
+const arabicOrganTaskPlans: Record<string, string[]> = {
+  Heart: [
+    "قياس ضغط الدم ثلاث مرات على الأقل هذا الأسبوع.",
+    "تقليل الملح والأطعمة المصنعة خلال الأيام القادمة.",
+    "المشي 20 دقيقة في 4 أيام على الأقل هذا الأسبوع.",
+    "مراجعة أي ألم صدر، ضيق نفس، خفقان، أو تعب غير معتاد.",
+    "تجهيز نتائج الدهون، الضغط، أو فحوصات القلب السابقة للمقارنة.",
+  ],
+  Liver: [
+    "تقليل الأطعمة الدهنية والمقلية خلال هذا الأسبوع.",
+    "تجنب الكحول والمكملات غير الضرورية.",
+    "متابعة التعب، ألم البطن، اصفرار العينين، أو تغير لون البول.",
+    "شرب كمية كافية من الماء حسب حالتك الصحية.",
+    "تجهيز تقارير الكبد السابقة للمقارنة مع الطبيب.",
+  ],
+  Lung: [
+    "متابعة السعال، ضيق التنفس، وتحمل النشاط اليومي.",
+    "تجنب الدخان، الغبار، والروائح القوية.",
+    "المشي الخفيف أو تمارين التنفس إذا كانت مناسبة لك.",
+    "تسجيل أي صفير أو ضيق نفس أو أعراض ليلية.",
+    "تجهيز أي أشعة أو فحوصات تنفس سابقة للمراجعة.",
+  ],
+  Kidney: [
+    "شرب الماء بانتظام إذا لم يمنعك الطبيب من ذلك.",
+    "متابعة ضغط الدم هذا الأسبوع.",
+    "تجنب استخدام مسكنات الألم بكثرة بدون استشارة طبية.",
+    "مراجعة أي تورم، تغير في البول، أو تعب غير مفسر.",
+    "تجهيز فحوصات الكرياتينين، اليوريا، والأملاح للمقارنة.",
+  ],
+  Metabolic: [
+    "تقليل المشروبات السكرية والكربوهيدرات المكررة.",
+    "المشي أو الحركة 20 دقيقة في 4 أيام على الأقل.",
+    "متابعة الوزن أو محيط الخصر مرة أسبوعيًا.",
+    "مراجعة فحوصات السكر، الدهون، HbA1c إذا كانت متوفرة.",
+    "اختيار وجبة واحدة يوميًا تكون صحية أكثر من المعتاد.",
+  ],
+  General: [
+    "إكمال تحديث صحي واحد هذا الأسبوع.",
+    "مراجعة آخر تقرير طبي والذكاء الصحي الناتج عنه.",
+    "اختيار عادة صحية واحدة واقعية للأيام السبعة القادمة.",
+    "إعادة تقييم الأولوية الصحية بعد 4 أسابيع.",
+  ],
+};
+
+function getLocalizedOrganTasks(priorityOrgan: string, isArabic: boolean) {
+  if (!isArabic) return organTaskPlans[priorityOrgan] || organTaskPlans.General;
+
+  return arabicOrganTaskPlans[priorityOrgan] || arabicOrganTaskPlans.General;
+}
+
 export default function HealthPlanPage() {
   const [language, setLanguage] = useState<Language>("en");
   const [loading, setLoading] = useState(true);
@@ -140,6 +258,8 @@ export default function HealthPlanPage() {
       ? priorityAssessment.score
       : null;
   const riskLevel = priorityAssessment?.risk_level || "Not available";
+  const priorityOrganDisplay = localizeHealthPlanValue(priorityOrgan, isArabic);
+  const riskLevelDisplay = localizeHealthPlanValue(riskLevel, isArabic);
 
   const taskStorageKey = `organheal-health-plan-tasks-${priorityOrgan}`;
 
@@ -192,7 +312,7 @@ export default function HealthPlanPage() {
         latestCheckIn.wellness_score ?? "N/A"
       }/100 - ${latestCheckIn.mood || "Mood not recorded"}`
     : isArabic
-    ? "لا يوجد Check-In بعد"
+    ? "لا يوجد تحديث صحي بعد"
     : "No check-in yet";
 
   const followUpRhythm =
@@ -206,7 +326,7 @@ export default function HealthPlanPage() {
         : "Weekly follow-up recommended"
       : priorityScore < 80
       ? isArabic
-        ? "Check-In مرتين إلى ثلاث مرات أسبوعيًا"
+        ? "تحديث صحي مرتين إلى ثلاث مرات أسبوعيًا"
         : "Check in 2 to 3 times per week"
       : isArabic
       ? "متابعة وقائية أسبوعية"
@@ -234,7 +354,7 @@ export default function HealthPlanPage() {
     ? {
         label: isArabic ? "ولّد الذكاء الصحي" : "Generate health intelligence",
         description: isArabic
-          ? "لديك تقارير محفوظة. افتح مركز الذكاء لتوليد ملخص المريض وDoctor Brief."
+          ? "لديك تقارير محفوظة. افتح مركز الذكاء لتوليد ملخص المريض وملخص الطبيب."
           : "You have saved reports. Open Intelligence Center to generate a patient summary and doctor-ready brief.",
         href: "/intelligence",
         button: isArabic ? "مركز الذكاء" : "Intelligence Center",
@@ -257,7 +377,7 @@ export default function HealthPlanPage() {
         button: isArabic ? "متابعة المهام" : "Continue Tasks",
       };
 
-  const baseTasks = organTaskPlans[priorityOrgan] || organTaskPlans.General;
+  const baseTasks = getLocalizedOrganTasks(priorityOrgan, isArabic);
 
   const dynamicTasks = [
     !hasGeneratedIntelligence && hasReports
@@ -267,12 +387,12 @@ export default function HealthPlanPage() {
       : null,
     hasGeneratedIntelligence
       ? isArabic
-        ? "راجع ملخص المريض وDoctor Brief من مركز الذكاء."
+        ? "راجع ملخص المريض وملخص الطبيب من مركز الذكاء."
         : "Review the patient summary and doctor-ready brief in Intelligence Center."
       : null,
     !hasCheckIn
       ? isArabic
-        ? "أكمل Wellness Check-In هذا الأسبوع."
+        ? "أكمل التحديث الصحي هذا الأسبوع."
         : "Complete a wellness check-in this week."
       : null,
     completedExtractionCount > 0
@@ -282,7 +402,7 @@ export default function HealthPlanPage() {
       : null,
     hasHistory
       ? isArabic
-        ? "راجع Health History لمقارنة التقدم السابق."
+        ? "راجع التاريخ الصحي لمقارنة التقدم السابق."
         : "Review Health History to compare previous progress."
       : null,
   ].filter(Boolean) as string[];
@@ -326,6 +446,34 @@ export default function HealthPlanPage() {
     isArabic
       ? "الأسبوع 4: إعادة تقييم الأولوية ومقارنة Health History."
       : "Week 4: Repeat the priority assessment and compare Health History.",
+  ];
+
+
+  const ninetyDayStrategy = [
+    isArabic
+      ? "الشهر 1: بناء خط أساس واضح من التقييمات، التقارير، والتحديثات الصحية."
+      : "Month 1: Build a clear baseline from assessments, reports, and check-ins.",
+    isArabic
+      ? "الشهر 2: متابعة الاتجاهات وتعديل العادات بناءً على النتائج."
+      : "Month 2: Track patterns and adjust habits based on your results.",
+    isArabic
+      ? "الشهر 3: إعادة تقييم الأولوية ومقارنة التحسن مع البيانات السابقة."
+      : "Month 3: Reassess your priority area and compare progress with past data.",
+  ];
+
+  const doctorDiscussionQuestions = [
+    isArabic
+      ? `هل تحتاج أولوية ${priorityOrganDisplay} إلى فحوصات إضافية أو متابعة قريبة؟`
+      : `Does my ${priorityOrgan} priority need additional tests or closer follow-up?`,
+    isArabic
+      ? "هل توجد نتائج في التقارير تحتاج تفسيرًا أو مقارنة بنتائج سابقة؟"
+      : "Are there any report findings that need interpretation or comparison with previous results?",
+    isArabic
+      ? "ما أهم تغيير واقعي أبدأ به خلال الأسبوع القادم؟"
+      : "What is the most realistic change I should start this week?",
+    isArabic
+      ? "متى يجب إعادة الفحوصات أو التقييم؟"
+      : "When should I repeat labs or reassess this area?",
   ];
 
   const completedTaskCount = completedTasks.length;
@@ -450,7 +598,7 @@ export default function HealthPlanPage() {
 
             <h1>
               {isArabic
-                ? `خطة ${priorityOrgan} الشخصية`
+                ? `خطة ${priorityOrganDisplay} الشخصية`
                 : `${priorityOrgan} Personal Health Plan`}
             </h1>
 
@@ -502,7 +650,7 @@ export default function HealthPlanPage() {
             <section className="healthPlanMetricsGrid">
               <article>
                 <span>{isArabic ? "الأولوية" : "Priority"}</span>
-                <strong>{priorityOrgan}</strong>
+                <strong>{priorityOrganDisplay}</strong>
                 <p>
                   {priorityScore !== null
                     ? `${priorityScore}/100`
@@ -536,7 +684,7 @@ export default function HealthPlanPage() {
               </article>
 
               <article>
-                <span>Check-In</span>
+                <span>{isArabic ? "التحديث الصحي" : "Check-In"}</span>
                 <strong>
                   {latestCheckIn?.wellness_score
                     ? `${latestCheckIn.wellness_score}/100`
@@ -580,11 +728,11 @@ export default function HealthPlanPage() {
 
                   <div>
                     <span>{isArabic ? "مستوى الخطورة" : "Risk level"}</span>
-                    <strong>{riskLevel}</strong>
+                    <strong>{riskLevelDisplay}</strong>
                   </div>
 
                   <div>
-                    <span>{isArabic ? "Health History" : "Health History"}</span>
+                    <span>{isArabic ? "التاريخ الصحي" : "Health History"}</span>
                     <strong>{historyItems.length}</strong>
                   </div>
                 </div>
@@ -605,11 +753,16 @@ export default function HealthPlanPage() {
                 </h2>
 
                 <p>
-                  {latestInsight?.next_best_action ||
-                    latestInsight?.summary ||
-                    (isArabic
-                      ? "ارفع تقريرًا أو ولّد الذكاء الصحي لتحسين الخطة."
-                      : "Upload a report or generate health intelligence to improve this plan.")}
+                  {isArabic
+                    ? localizeHealthPlanValue(
+                        latestInsight?.next_best_action ||
+                          latestInsight?.summary ||
+                          "ارفع تقريرًا أو ولّد الذكاء الصحي لتحسين الخطة.",
+                        true
+                      )
+                    : latestInsight?.next_best_action ||
+                      latestInsight?.summary ||
+                      "Upload a report or generate health intelligence to improve this plan."}
                 </p>
 
                 <div className="healthPlanActionRow">
@@ -664,6 +817,49 @@ export default function HealthPlanPage() {
 
               <div className="healthPlanRoadmap month">
                 {thirtyDayRoadmap.map((item, index) => (
+                  <div key={item}>
+                    <span>{index + 1}</span>
+                    <p>{item}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+
+            <section className="healthPlanPanel">
+              <p className="launchEyebrow">
+                {isArabic ? "استراتيجية 90 يوم" : "90-Day health strategy"}
+              </p>
+
+              <h2>
+                {isArabic
+                  ? "من المتابعة إلى التحسن المستمر"
+                  : "From follow-up to sustained improvement"}
+              </h2>
+
+              <div className="healthPlanRoadmap month">
+                {ninetyDayStrategy.map((item, index) => (
+                  <div key={item}>
+                    <span>{index + 1}</span>
+                    <p>{item}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="healthPlanPanel">
+              <p className="launchEyebrow">
+                {isArabic ? "أسئلة للطبيب" : "Doctor discussion guide"}
+              </p>
+
+              <h2>
+                {isArabic
+                  ? "حوّل الخطة إلى حوار طبي واضح"
+                  : "Turn your plan into a clear medical conversation"}
+              </h2>
+
+              <div className="healthPlanRoadmap">
+                {doctorDiscussionQuestions.map((item, index) => (
                   <div key={item}>
                     <span>{index + 1}</span>
                     <p>{item}</p>
@@ -746,7 +942,7 @@ export default function HealthPlanPage() {
               </div>
 
               <div className="healthPlanActionRow">
-                <Link href="/checkin">{isArabic ? "Check-In" : "Check-In"}</Link>
+                <Link href="/checkin">{isArabic ? "التحديث الصحي" : "Check-In"}</Link>
                 <Link href="/history">{isArabic ? "التاريخ" : "History"}</Link>
                 <Link href="/doctor-portal">
                   {isArabic ? "بوابة الطبيب" : "Doctor Portal"}
