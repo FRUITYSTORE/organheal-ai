@@ -1,9 +1,21 @@
-"use client";
+﻿"use client";
+
 import PageBackActions from "../components/PageBackActions";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 
+type Language = "en" | "ar";
+
+type LiverResult = {
+  score: number;
+  level: string;
+  message: string;
+};
+
 export default function LiverPage() {
+  const [language, setLanguage] = useState<Language>("en");
+  const isArabic = language === "ar";
+
   const [alt, setAlt] = useState("");
   const [ast, setAst] = useState("");
   const [alcohol, setAlcohol] = useState("No");
@@ -11,26 +23,82 @@ export default function LiverPage() {
   const [obesity, setObesity] = useState("No");
   const [saveMessage, setSaveMessage] = useState("");
 
-  const [result, setResult] = useState<null | {
-    score: number;
-    level: string;
-    message: string;
-  }>(null);
+  const [result, setResult] = useState<null | LiverResult>(null);
+
+  useEffect(() => {
+    function syncLanguage() {
+      const savedLanguage =
+        (localStorage.getItem("organheal-language") as Language | null) || "en";
+
+      setLanguage(savedLanguage);
+      document.documentElement.lang = savedLanguage;
+      document.documentElement.dir = savedLanguage === "ar" ? "rtl" : "ltr";
+    }
+
+    syncLanguage();
+
+    window.addEventListener("storage", syncLanguage);
+    window.addEventListener("organheal-language-change", syncLanguage);
+
+    return () => {
+      window.removeEventListener("storage", syncLanguage);
+      window.removeEventListener("organheal-language-change", syncLanguage);
+    };
+  }, []);
+
+  function text(en: string, ar: string) {
+    return isArabic ? ar : en;
+  }
+
+  function localizeLevel(level: string) {
+    if (!isArabic) return level;
+
+    if (level === "Good Liver Health Pattern") return "نمط صحي جيد للكبد";
+    if (level === "Moderate Liver Risk") return "خطورة كبدية متوسطة";
+    if (level === "Higher Liver Risk") return "خطورة كبدية أعلى";
+
+    return level;
+  }
+
+  function localizeMessage(level: string, fallback: string) {
+    if (!isArabic) return fallback;
+
+    if (level === "Good Liver Health Pattern") {
+      return "تشير إجاباتك إلى نمط صحي أفضل للكبد بشكل عام. استمر بالتغذية الصحية، التحكم بالوزن، والفحوصات الوقائية الدورية.";
+    }
+
+    if (level === "Moderate Liver Risk") {
+      return "تشير إجاباتك إلى وجود بعض عوامل الخطورة المرتبطة بالكبد. يُفضّل مناقشة إنزيمات الكبد، احتمالية الكبد الدهني، وعوامل نمط الحياة مع مختص صحي.";
+    }
+
+    if (level === "Higher Liver Risk") {
+      return "تشير إجاباتك إلى وجود عدة عوامل خطورة مرتبطة بالكبد. هذه الأداة لا تشخّص المرض، لكن يُنصح بالتقييم الطبي.";
+    }
+
+    return fallback;
+  }
 
   async function saveAssessment(score: number, level: string, message: string) {
-    setSaveMessage("Saving liver assessment...");
+    setSaveMessage(text("Saving liver assessment...", "جاري حفظ تقييم الكبد..."));
 
     const { data, error: userError } = await supabase.auth.getUser();
 
     if (userError) {
-      setSaveMessage("Auth error: " + userError.message);
+      setSaveMessage(
+        text("Auth error: ", "خطأ في تسجيل الدخول: ") + userError.message
+      );
       return;
     }
 
     const user = data.user;
 
     if (!user) {
-      setSaveMessage("Please login to save your assessment.");
+      setSaveMessage(
+        text(
+          "Please login to save your assessment.",
+          "يرجى تسجيل الدخول لحفظ التقييم."
+        )
+      );
       return;
     }
 
@@ -50,7 +118,9 @@ export default function LiverPage() {
       );
 
     if (upsertError) {
-      setSaveMessage("Database error: " + upsertError.message);
+      setSaveMessage(
+        text("Database error: ", "خطأ في قاعدة البيانات: ") + upsertError.message
+      );
       return;
     }
 
@@ -63,18 +133,27 @@ export default function LiverPage() {
     });
 
     if (historyError) {
-      setSaveMessage("History error: " + historyError.message);
+      setSaveMessage(
+        text("History error: ", "خطأ في التاريخ الصحي: ") + historyError.message
+      );
       return;
     }
 
-    setSaveMessage("Liver assessment saved successfully.");
+    setSaveMessage(
+      text("Liver assessment saved successfully.", "تم حفظ تقييم الكبد بنجاح.")
+    );
   }
 
   async function calculateLiverScore() {
     setSaveMessage("");
 
     if (!alt || !ast) {
-      setSaveMessage("Please complete all required fields.");
+      setSaveMessage(
+        text(
+          "Please complete all required fields.",
+          "يرجى تعبئة جميع الحقول المطلوبة."
+        )
+      );
       return;
     }
 
@@ -82,7 +161,9 @@ export default function LiverPage() {
     const astNumber = Number(ast);
 
     if (altNumber <= 0 || astNumber <= 0) {
-      setSaveMessage("Please enter valid numbers.");
+      setSaveMessage(
+        text("Please enter valid numbers.", "يرجى إدخال أرقام صحيحة.")
+      );
       return;
     }
 
@@ -119,15 +200,20 @@ export default function LiverPage() {
   }
 
   return (
-    <main className="assistantPage">
+    <main className="assistantPage" dir={isArabic ? "rtl" : "ltr"}>
       <div className="assistantContainer">
         <PageBackActions />
+
         <div className="assistantHeader">
-          <p className="assistantBadge">LIVER HEALTH ASSESSMENT</p>
-          <h1>Liver Health Assessment</h1>
+          <p className="assistantBadge">
+            {text("LIVER HEALTH ASSESSMENT", "تقييم صحة الكبد")}
+          </p>
+          <h1>{text("Liver Health Assessment", "تقييم صحة الكبد")}</h1>
           <p>
-            Evaluate liver-related risk factors including liver enzymes, fatty
-            liver history, alcohol exposure, and obesity.
+            {text(
+              "Evaluate liver-related risk factors including liver enzymes, fatty liver history, alcohol exposure, and obesity.",
+              "قيّم عوامل الخطورة المرتبطة بالكبد مثل إنزيمات الكبد، تاريخ الكبد الدهني، التعرض للكحول، والسمنة."
+            )}
           </p>
         </div>
 
@@ -137,7 +223,7 @@ export default function LiverPage() {
               <label>ALT</label>
               <input
                 type="number"
-                placeholder="e.g. 35"
+                placeholder={text("e.g. 35", "مثال: 35")}
                 value={alt}
                 onChange={(event) => setAlt(event.target.value)}
               />
@@ -147,47 +233,47 @@ export default function LiverPage() {
               <label>AST</label>
               <input
                 type="number"
-                placeholder="e.g. 30"
+                placeholder={text("e.g. 30", "مثال: 30")}
                 value={ast}
                 onChange={(event) => setAst(event.target.value)}
               />
             </div>
 
             <div className="formGroup">
-              <label>Alcohol exposure?</label>
+              <label>{text("Alcohol exposure?", "هل يوجد تعرض للكحول؟")}</label>
               <select
                 value={alcohol}
                 onChange={(event) => setAlcohol(event.target.value)}
               >
-                <option>No</option>
-                <option>Yes</option>
+                <option value="No">{text("No", "لا")}</option>
+                <option value="Yes">{text("Yes", "نعم")}</option>
               </select>
             </div>
 
             <div className="formGroup">
-              <label>Known fatty liver?</label>
+              <label>{text("Known fatty liver?", "هل لديك كبد دهني معروف؟")}</label>
               <select
                 value={fattyLiver}
                 onChange={(event) => setFattyLiver(event.target.value)}
               >
-                <option>No</option>
-                <option>Yes</option>
+                <option value="No">{text("No", "لا")}</option>
+                <option value="Yes">{text("Yes", "نعم")}</option>
               </select>
             </div>
 
             <div className="formGroup">
-              <label>Obesity or overweight?</label>
+              <label>{text("Obesity or overweight?", "هل يوجد سمنة أو زيادة وزن؟")}</label>
               <select
                 value={obesity}
                 onChange={(event) => setObesity(event.target.value)}
               >
-                <option>No</option>
-                <option>Yes</option>
+                <option value="No">{text("No", "لا")}</option>
+                <option value="Yes">{text("Yes", "نعم")}</option>
               </select>
             </div>
 
             <button className="primaryBtn" onClick={calculateLiverScore}>
-              Calculate Liver Score
+              {text("Calculate Liver Score", "احسب مؤشر الكبد")}
             </button>
 
             {saveMessage && <p>{saveMessage}</p>}
@@ -195,13 +281,17 @@ export default function LiverPage() {
 
           {result && (
             <div className="resultBox">
-              <p className="sectionLabel">Liver Health Score</p>
+              <p className="sectionLabel">
+                {text("Liver Health Score", "مؤشر صحة الكبد")}
+              </p>
               <h2>{result.score}/100</h2>
-              <h3>{result.level}</h3>
-              <p>{result.message}</p>
+              <h3>{localizeLevel(result.level)}</h3>
+              <p>{localizeMessage(result.level, result.message)}</p>
 
               <a href="/history">
-                <button className="secondaryBtn">View Progress Timeline</button>
+                <button className="secondaryBtn">
+                  {text("View Progress Timeline", "عرض مسار التقدم")}
+                </button>
               </a>
             </div>
           )}
