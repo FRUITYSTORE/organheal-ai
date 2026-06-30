@@ -5,7 +5,7 @@ import Link from "next/link";
 
 type Language = "en" | "ar";
 
-type FeatureAccess = "free" | "plus" | "planned";
+type FeatureAccess = "public-preview" | "account-feature" | "private-workspace";
 
 type PublicFeature = {
   code: string;
@@ -24,28 +24,28 @@ const publicFeatures: PublicFeature[] = [
     title: "Reports Intelligence",
     titleAr: "ذكاء التقارير الطبية",
     shortValue:
-      "Turn written lab and medical reports into clearer patient-friendly understanding.",
+      "Turn lab and medical reports into clearer patient-friendly understanding.",
     shortValueAr:
-      "حوّل تقارير المختبر والتقارير الطبية المكتوبة إلى فهم أوضح للمريض.",
+      "حوّل تقارير المختبر والتقارير الطبية إلى فهم أوضح ومناسب للمريض.",
     preview:
-      "Preview: report type, key markers, abnormal flags, patient summary, and doctor questions.",
+      "Understand report type, key markers, abnormal flags, summary points, and questions to discuss with a clinician.",
     previewAr:
-      "المعاينة: نوع التقرير، المؤشرات المهمة، العلامات غير الطبيعية، ملخص للمريض، وأسئلة للطبيب.",
-    access: "free",
+      "افهم نوع التقرير، المؤشرات المهمة، العلامات غير الطبيعية، نقاط الملخص، والأسئلة التي تناقشها مع الطبيب.",
+    access: "account-feature",
   },
   {
     code: "CENTER",
     title: "Health Intelligence Center",
     titleAr: "مركز الذكاء الصحي",
     shortValue:
-      "Connect assessments, reports, health signals, and summaries into one organized intelligence view.",
+      "Connect assessments, reports, check-ins, and health signals into one organized intelligence view.",
     shortValueAr:
-      "اربط التقييمات، التقارير، المؤشرات الصحية، والملخصات داخل رؤية صحية منظمة.",
+      "اربط التقييمات، التقارير، التحديثات، والمؤشرات الصحية داخل رؤية صحية منظمة.",
     preview:
-      "Preview: current score, priority area, health direction, forecast, and confidence level.",
+      "Review health direction, priority area, saved intelligence, follow-up context, and confidence level.",
     previewAr:
-      "المعاينة: النتيجة الحالية، منطقة الأولوية، الاتجاه الصحي، التوقع، ومستوى الثقة.",
-    access: "plus",
+      "راجع الاتجاه الصحي، منطقة الأولوية، الذكاء المحفوظ، سياق المتابعة، ومستوى الثقة.",
+    access: "private-workspace",
   },
   {
     code: "PLAN",
@@ -56,52 +56,52 @@ const publicFeatures: PublicFeature[] = [
     shortValueAr:
       "حوّل المؤشرات الصحية إلى اتجاه متابعة عملي يمكن مراجعته مع الطبيب.",
     preview:
-      "Preview: this week, this month, next 90 days, follow-up focus, and education needs.",
+      "Organize weekly focus, monthly priorities, education needs, and doctor-review questions.",
     previewAr:
-      "المعاينة: هذا الأسبوع، هذا الشهر، 90 يومًا القادمة، محور المتابعة، والاحتياجات التعليمية.",
-    access: "plus",
+      "نظّم تركيز الأسبوع، أولويات الشهر، الاحتياجات التعليمية، وأسئلة مراجعة الطبيب.",
+    access: "private-workspace",
   },
   {
     code: "BRIEF",
     title: "Doctor-Ready Brief",
     titleAr: "ملخص جاهز للطبيب",
     shortValue:
-      "Prepare a structured summary that helps make doctor appointments more focused and useful.",
+      "Prepare structured summaries that make appointments more focused and useful.",
     shortValueAr:
-      "جهّز ملخصًا منظمًا يساعد أن تكون زيارة الطبيب أوضح وأكثر فائدة.",
+      "جهّز ملخصات منظمة تجعل زيارة الطبيب أكثر تركيزًا وفائدة.",
     preview:
-      "Preview: reason for review, key findings, questions, safety notes, and report context.",
+      "Summarize reason for review, important findings, safety notes, current concerns, and prepared questions.",
     previewAr:
-      "المعاينة: سبب المراجعة، النتائج المهمة، الأسئلة، تنبيهات السلامة، وسياق التقرير.",
-    access: "plus",
+      "لخّص سبب المراجعة، النتائج المهمة، ملاحظات السلامة، المخاوف الحالية، والأسئلة المحضّرة.",
+    access: "account-feature",
   },
   {
     code: "DASH",
-    title: "Health Dashboard",
-    titleAr: "لوحة التحكم الصحية",
+    title: "Health Command Dashboard",
+    titleAr: "لوحة القيادة الصحية",
     shortValue:
-      "See your health direction, next best step, and progress signals without repeating every page.",
+      "See your health direction, saved activity, next best step, and progress signals in one place.",
     shortValueAr:
-      "شاهد اتجاهك الصحي، الخطوة التالية، ومؤشرات التقدم بدون تكرار كل الصفحات.",
+      "شاهد اتجاهك الصحي، النشاط المحفوظ، الخطوة التالية، ومؤشرات التقدم في مكان واحد.",
     preview:
-      "Preview: health direction, next action, journey status, and saved intelligence activity.",
+      "Track assessments, reports, saved intelligence, check-ins, and the current health journey status.",
     previewAr:
-      "المعاينة: الاتجاه الصحي، الإجراء التالي، حالة الرحلة، ونشاط الذكاء الصحي المحفوظ.",
-    access: "free",
+      "تابع التقييمات، التقارير، الذكاء المحفوظ، التحديثات، وحالة الرحلة الصحية الحالية.",
+    access: "account-feature",
   },
   {
     code: "ASK",
-    title: "Ask OrganHeal",
-    titleAr: "اسأل OrganHeal",
+    title: "OrganHeal Assistant",
+    titleAr: "مساعد OrganHeal",
     shortValue:
-      "Ask educational health questions and later connect answers to your own profile and reports.",
+      "Ask educational health questions in a safety-bounded assistant experience.",
     shortValueAr:
-      "اسأل أسئلة صحية تعليمية، ولاحقًا اربط الإجابات بملفك وتقاريرك.",
+      "اطرح أسئلة صحية تعليمية ضمن تجربة مساعد محددة بحدود السلامة.",
     preview:
-      "Preview: simple explanations, doctor-visit questions, lab marker education, and safe guidance.",
+      "Get plain-language explanations, doctor-visit questions, lab marker education, and safe guidance boundaries.",
     previewAr:
-      "المعاينة: شرح مبسط، أسئلة للطبيب، تثقيف حول مؤشرات المختبر، وتوجيه آمن.",
-    access: "planned",
+      "احصل على شرح مبسط، أسئلة للطبيب، تثقيف حول مؤشرات المختبر، وحدود توجيه آمنة.",
+    access: "public-preview",
   },
 ];
 
@@ -133,25 +133,25 @@ function AccessBadge({
   access: FeatureAccess;
   isArabic: boolean;
 }) {
-  if (access === "free") {
+  if (access === "public-preview") {
     return (
       <span className="ohStatusBadge good">
-        {isArabic ? "ضمن الحساب المجاني" : "Free account"}
+        {isArabic ? "معاينة عامة" : "Public preview"}
       </span>
     );
   }
 
-  if (access === "plus") {
+  if (access === "account-feature") {
     return (
-      <span className="ohStatusBadge moderate">
-        {isArabic ? "قيمة Plus لاحقًا" : "Plus value later"}
+      <span className="ohStatusBadge neutral">
+        {isArabic ? "ميزة حساب" : "Account feature"}
       </span>
     );
   }
 
   return (
-    <span className="ohStatusBadge neutral">
-      {isArabic ? "قادم لاحقًا" : "Planned"}
+    <span className="ohStatusBadge moderate">
+      {isArabic ? "مساحة خاصة" : "Private workspace"}
     </span>
   );
 }
@@ -192,27 +192,62 @@ export default function FeaturesPage() {
       lang={isArabic ? "ar" : "en"}
     >
       <style>{`
+        .featureDiscoveryPage,
+        .featureDiscoveryPage * {
+          box-sizing: border-box;
+        }
+
         .featureDiscoveryPage a {
           color: inherit;
           text-decoration: none;
         }
 
-        .featureDiscoveryPage .featureDiscoveryGrid {
+        .featureDiscoveryPage .featureDiscoveryHero {
+          position: relative;
+          overflow: hidden;
+        }
+
+        .featureDiscoveryPage .featureDiscoveryHero::before {
+          content: "";
+          position: absolute;
+          inset: -120px auto auto -120px;
+          width: 320px;
+          height: 320px;
+          border-radius: 999px;
+          background: radial-gradient(circle, rgba(20,184,166,0.16), transparent 68%);
+          pointer-events: none;
+        }
+
+        [dir="rtl"] .featureDiscoveryPage .featureDiscoveryHero::before {
+          inset: -120px -120px auto auto;
+        }
+
+        .featureDiscoveryPage .featureGrid {
           display: grid;
           grid-template-columns: repeat(3, minmax(0, 1fr));
           gap: 18px;
         }
 
-        .featureDiscoveryPage .featureDiscoveryCard {
+        .featureDiscoveryPage .featureCard {
+          position: relative;
           display: flex;
           flex-direction: column;
           gap: 14px;
           min-height: 100%;
+          overflow: hidden;
+          border-top: 5px solid #14b8a6;
+          transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .featureDiscoveryPage .featureCard:hover {
+          transform: translateY(-4px);
+          border-color: rgba(20, 184, 166, 0.48);
+          box-shadow: 0 22px 48px rgba(15, 23, 42, 0.1);
         }
 
         .featureDiscoveryPage .featureDiscoveryCode {
           display: inline-flex;
-          min-width: 64px;
+          min-width: 72px;
           height: 48px;
           padding: 0 10px;
           align-items: center;
@@ -221,7 +256,7 @@ export default function FeaturesPage() {
           background: linear-gradient(135deg, rgba(20, 184, 166, 0.14), rgba(37, 99, 235, 0.1));
           border: 1px solid rgba(20, 184, 166, 0.22);
           color: var(--oh-primary);
-          font-weight: 900;
+          font-weight: 950;
           font-size: 0.68rem;
           letter-spacing: 0.04em;
           white-space: nowrap;
@@ -231,99 +266,164 @@ export default function FeaturesPage() {
           margin-top: auto;
           padding: 14px;
           border-radius: 18px;
-          background: rgba(248, 250, 252, 0.86);
+          background: rgba(248, 250, 252, 0.9);
           border: 1px solid rgba(148, 163, 184, 0.18);
           color: var(--oh-muted);
           font-size: 0.92rem;
           line-height: 1.7;
         }
 
-        .featureDiscoveryPage .accessPath {
+        .featureDiscoveryPage .featureAccessPanel {
+          position: relative;
+          overflow: hidden;
+          border-radius: 28px;
+          background: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(15, 118, 110, 0.92));
+          color: white;
+          padding: 24px;
+          box-shadow: 0 24px 64px rgba(15, 23, 42, 0.14);
+        }
+
+        .featureDiscoveryPage .featureAccessPanel::after {
+          content: "";
+          position: absolute;
+          width: 230px;
+          height: 230px;
+          right: -82px;
+          bottom: -96px;
+          border-radius: 999px;
+          background: radial-gradient(circle, rgba(20, 184, 166, 0.48), transparent 66%);
+          pointer-events: none;
+        }
+
+        [dir="rtl"] .featureDiscoveryPage .featureAccessPanel::after {
+          right: auto;
+          left: -82px;
+        }
+
+        .featureDiscoveryPage .featureAccessPanel * {
+          position: relative;
+          z-index: 1;
+        }
+
+        .featureDiscoveryPage .featureAccessPanel .ohMetricLabel {
+          color: rgba(209, 250, 229, 0.88);
+        }
+
+        .featureDiscoveryPage .featureAccessPanel .ohCardTitle {
+          color: white;
+        }
+
+        .featureDiscoveryPage .featureAccessPanel .ohCardText {
+          color: rgba(226, 232, 240, 0.9);
+        }
+
+        .featureDiscoveryPage .accessSteps {
           display: grid;
           gap: 12px;
           margin-top: 18px;
         }
 
-        .featureDiscoveryPage .accessPathItem {
+        .featureDiscoveryPage .accessStep {
           display: grid;
-          grid-template-columns: 44px 1fr;
+          grid-template-columns: 42px 1fr;
           gap: 12px;
           align-items: flex-start;
-          padding: 14px;
+          padding: 13px;
           border-radius: 18px;
-          background: rgba(248, 250, 252, 0.82);
-          border: 1px solid rgba(148, 163, 184, 0.18);
+          background: rgba(255, 255, 255, 0.09);
+          border: 1px solid rgba(255, 255, 255, 0.12);
         }
 
         .featureDiscoveryPage .accessNumber {
           display: inline-flex;
-          width: 36px;
-          height: 36px;
+          width: 34px;
+          height: 34px;
           align-items: center;
           justify-content: center;
-          border-radius: 14px;
-          background: rgba(20, 184, 166, 0.12);
-          border: 1px solid rgba(20, 184, 166, 0.2);
-          color: var(--oh-primary);
-          font-weight: 900;
+          border-radius: 13px;
+          background: rgba(255, 255, 255, 0.12);
+          color: white;
+          font-weight: 950;
         }
 
-        .featureDiscoveryPage .unlockGrid {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 18px;
+        .featureDiscoveryPage .accessTitle {
+          margin: 0;
+          color: white;
+          font-weight: 950;
         }
 
-        .featureDiscoveryPage .unlockStep {
-          display: grid;
-          grid-template-columns: 54px 1fr;
-          gap: 14px;
+        .featureDiscoveryPage .accessText {
+          margin: 5px 0 0;
+          color: rgba(226, 232, 240, 0.88);
+          line-height: 1.55;
+        }
+
+        .featureDiscoveryPage .featureSafetyStrip {
+          display: flex;
           align-items: flex-start;
-          padding: 18px;
-          border-radius: 22px;
-          background: rgba(255, 255, 255, 0.84);
-          border: 1px solid rgba(148, 163, 184, 0.18);
+          gap: 12px;
+          padding: 14px 16px;
+          border-radius: 20px;
+          border: 1px solid rgba(37, 99, 235, 0.16);
+          border-inline-start: 5px solid #2563eb;
+          background: rgba(239, 246, 255, 0.78);
+          color: var(--oh-muted);
+          line-height: 1.65;
+        }
+
+        .featureDiscoveryPage .featureSafetyStrip strong {
+          color: var(--oh-text);
+        }
+
+        .featureDiscoveryPage .featureSafetyMark {
+          display: inline-flex;
+          width: 34px;
+          height: 34px;
+          flex: 0 0 auto;
+          align-items: center;
+          justify-content: center;
+          border-radius: 999px;
+          background: rgba(37, 99, 235, 0.12);
+          color: #1d4ed8;
+          font-weight: 950;
         }
 
         @media (max-width: 980px) {
-          .featureDiscoveryPage .featureDiscoveryGrid,
-          .featureDiscoveryPage .unlockGrid {
+          .featureDiscoveryPage .featureGrid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
           }
         }
 
         @media (max-width: 640px) {
-          .featureDiscoveryPage .featureDiscoveryGrid,
-          .featureDiscoveryPage .unlockGrid {
+          .featureDiscoveryPage .featureGrid {
             grid-template-columns: 1fr;
           }
 
-          .featureDiscoveryPage .unlockStep,
-          .featureDiscoveryPage .accessPathItem {
+          .featureDiscoveryPage .accessStep {
             grid-template-columns: 1fr;
           }
         }
       `}</style>
 
       <div className="ohContainer ohStack large" style={{ padding: "32px 0 64px" }}>
-        <section className="ohHero">
+        <section className="ohHero featureDiscoveryHero">
           <div className="ohHeroGrid">
             <div>
               <p className="ohEyebrow">
-                {text("Feature Discovery", "اكتشاف الميزات")}
+                {text("OrganHeal Platform Features", "ميزات منصة OrganHeal")}
               </p>
 
               <h1 className="ohTitle">
                 {text(
-                  "Discover what OrganHeal can build for your health journey.",
-                  "اكتشف ما يمكن أن يبنيه OrganHeal لرحلتك الصحية."
+                  "A health intelligence workspace built around your health journey.",
+                  "مساحة ذكاء صحي مبنية حول رحلتك الصحية."
                 )}
               </h1>
 
               <p className="ohLead">
                 {text(
-                  "OrganHeal helps users understand reports, connect health signals, prepare doctor-ready briefs, and follow a clearer health journey. Start by seeing the value, then create an account when you are ready to use the tools.",
-                  "يساعد OrganHeal المستخدمين على فهم التقارير، ربط المؤشرات الصحية، تجهيز ملخصات للطبيب، ومتابعة رحلة صحية أوضح. ابدأ بفهم القيمة، ثم أنشئ حسابًا عندما تكون جاهزًا لاستخدام الأدوات."
+                  "OrganHeal brings reports, assessments, health signals, learning, summaries, and follow-up direction into one clearer experience.",
+                  "يجمع OrganHeal التقارير والتقييمات والمؤشرات الصحية والتعلّم والملخصات واتجاه المتابعة داخل تجربة أوضح."
                 )}
               </p>
 
@@ -332,65 +432,57 @@ export default function FeaturesPage() {
                   {text("Create Free Account", "إنشاء حساب مجاني")}
                 </Link>
 
-                <a href="#feature-discovery" className="secondaryBtn">
-                  {text("Explore Features", "استكشاف الميزات")}
-                </a>
+                <Link href="/library" className="secondaryBtn">
+                  {text("Open Learning Hub", "فتح مركز التعلّم")}
+                </Link>
               </div>
             </div>
 
-            <aside className="ohCard">
-              <div className="ohCardHeader">
-                <div>
-                  <p className="ohMetricLabel">
-                    {text("Value-first model", "نموذج يبدأ بالقيمة")}
-                  </p>
+            <aside className="featureAccessPanel">
+              <p className="ohMetricLabel">
+                {text("How access works", "كيف يعمل الوصول")}
+              </p>
 
-                  <h2 className="ohCardTitle" style={{ marginTop: "8px" }}>
-                    {text(
-                      "Understand the benefit before thinking about payment.",
-                      "افهم الفائدة قبل التفكير بالدفع."
-                    )}
-                  </h2>
-                </div>
-
-                <span className="ohStatusBadge neutral">
-                  {text("Visitor friendly", "مناسب للزائر")}
-                </span>
-              </div>
+              <h2 className="ohCardTitle" style={{ marginTop: "8px" }}>
+                {text(
+                  "Learn publicly. Use privately.",
+                  "تعرّف علنًا. واستخدم داخل مساحتك الخاصة."
+                )}
+              </h2>
 
               <p className="ohCardText">
                 {text(
-                  "Visitors should first understand trust, safety, reports, plans, and health intelligence. Pricing remains available later, after the value becomes clear.",
-                  "يجب أن يفهم الزائر أولًا الثقة، السلامة، التقارير، الخطط، والذكاء الصحي. التسعير يبقى متاحًا لاحقًا بعد أن تصبح القيمة واضحة."
+                  "Visitors can understand the platform value before account access. Personal health work belongs inside the private user workspace.",
+                  "يمكن للزائر فهم قيمة المنصة قبل إنشاء الحساب. العمل الصحي الشخصي يكون داخل مساحة المستخدم الخاصة."
                 )}
               </p>
 
-              <div className="accessPath">
-                <div className="accessPathItem">
+              <div className="accessSteps">
+                <div className="accessStep">
                   <span className="accessNumber">1</span>
                   <div>
-                    <p className="ohTimelineTitle">
-                      {text("Public preview", "معاينة عامة")}
+                    <p className="accessTitle">
+                      {text("Public discovery", "اكتشاف عام")}
                     </p>
-                    <p className="ohTimelineMeta">
+                    <p className="accessText">
                       {text(
-                        "See what OrganHeal can help you understand.",
-                        "شاهد ما يمكن أن يساعدك OrganHeal على فهمه."
+                        "Understand what OrganHeal does and why it matters.",
+                        "افهم ما يقدمه OrganHeal ولماذا هو مهم."
                       )}
                     </p>
                   </div>
                 </div>
 
-                <div className="accessPathItem">
+                <div className="accessStep">
                   <span className="accessNumber">2</span>
                   <div>
-                    <p className="ohTimelineTitle">
-                      {text("Account access", "الوصول بالحساب")}
+                    <p className="accessTitle">
+                      {text("Private workspace", "مساحة خاصة")}
                     </p>
-                    <p className="ohTimelineMeta">
+                    <p className="accessText">
                       {text(
-                        "Use tools, save results, and build your profile.",
-                        "استخدم الأدوات، احفظ النتائج، وابنِ ملفك الصحي."
+                        "Use account-based tools to organize reports, health signals, summaries, and follow-up context.",
+                        "استخدم أدوات الحساب لتنظيم التقارير والمؤشرات والملخصات وسياق المتابعة."
                       )}
                     </p>
                   </div>
@@ -400,32 +492,46 @@ export default function FeaturesPage() {
           </div>
         </section>
 
-        <section id="feature-discovery" className="ohCard">
+        <section className="featureSafetyStrip">
+          <span className="featureSafetyMark">OH</span>
+          <div>
+            <strong>
+              {text("Health intelligence with clinical boundaries", "ذكاء صحي بحدود سريرية واضحة")}
+            </strong>
+            <br />
+            {text(
+              "OrganHeal supports education, organization, and preparation. It does not diagnose, treat, prescribe, or replace licensed medical care.",
+              "يدعم OrganHeal التثقيف والتنظيم والتحضير. لا يقدم تشخيصًا أو علاجًا أو وصفات ولا يستبدل الرعاية الطبية المرخصة."
+            )}
+          </div>
+        </section>
+
+        <section className="ohCard">
           <div className="ohCardHeader">
             <div>
               <p className="ohMetricLabel">
-                {text("Feature discovery", "اكتشاف الميزات")}
+                {text("Feature collection", "مجموعة الميزات")}
               </p>
 
               <h2 className="ohCardTitle">
                 {text(
-                  "A complete health intelligence journey, not separate tools.",
-                  "رحلة ذكاء صحي كاملة، وليست أدوات منفصلة."
+                  "Designed as one connected health intelligence experience.",
+                  "مصممة كتجربة ذكاء صحي واحدة ومترابطة."
                 )}
               </h2>
 
               <p className="ohCardText">
                 {text(
-                  "Each feature has a clear role. The public page explains the value, while account access unlocks real usage.",
-                  "كل ميزة لها دور واضح. الصفحة العامة تشرح القيمة، والحساب يفتح الاستخدام الحقيقي."
+                  "Each feature has a clear role in understanding, organizing, preparing, or following up on health information.",
+                  "كل ميزة لها دور واضح في الفهم أو التنظيم أو التحضير أو المتابعة للمعلومات الصحية."
                 )}
               </p>
             </div>
           </div>
 
-          <div className="featureDiscoveryGrid">
+          <div className="featureGrid">
             {publicFeatures.map((feature) => (
-              <article className="ohCard featureDiscoveryCard" key={feature.code}>
+              <article className="ohCard featureCard" key={feature.code}>
                 <div className="ohCardHeader" style={{ marginBottom: 0 }}>
                   <FeatureCode code={feature.code} />
                   <AccessBadge access={feature.access} isArabic={isArabic} />
@@ -433,7 +539,7 @@ export default function FeaturesPage() {
 
                 <div>
                   <p className="ohMetricLabel">
-                    {text("Feature", "ميزة")}
+                    {text("Platform feature", "ميزة في المنصة")}
                   </p>
 
                   <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
@@ -453,95 +559,24 @@ export default function FeaturesPage() {
           </div>
         </section>
 
-        <section className="ohCard">
-          <div className="ohCardHeader">
-            <div>
-              <p className="ohMetricLabel">
-                {text("Unlock journey", "رحلة فتح الميزات")}
-              </p>
-
-              <h2 className="ohCardTitle">
-                {text(
-                  "The visitor sees the value before becoming a user.",
-                  "الزائر يرى القيمة قبل أن يصبح مستخدمًا."
-                )}
-              </h2>
-
-              <p className="ohCardText">
-                {text(
-                  "This keeps the product attractive without exposing private tools before the right step.",
-                  "هذا يجعل المنتج جذابًا بدون فتح الأدوات الخاصة قبل الخطوة المناسبة."
-                )}
-              </p>
-            </div>
-          </div>
-
-          <div className="unlockGrid">
-            <article className="unlockStep">
-              <FeatureCode code="01" />
-              <div>
-                <p className="ohTimelineTitle">
-                  {text("Visitor preview", "معاينة الزائر")}
-                </p>
-                <p className="ohTimelineMeta">
-                  {text(
-                    "Learn what each OrganHeal feature does and why it matters.",
-                    "يتعرف الزائر على وظيفة كل ميزة ولماذا هي مهمة."
-                  )}
-                </p>
-              </div>
-            </article>
-
-            <article className="unlockStep">
-              <FeatureCode code="02" />
-              <div>
-                <p className="ohTimelineTitle">
-                  {text("Free account access", "الوصول بالحساب المجاني")}
-                </p>
-                <p className="ohTimelineMeta">
-                  {text(
-                    "Start assessments, basic dashboard use, report upload, and education.",
-                    "بدء التقييمات، الاستخدام الأساسي للوحة التحكم، رفع التقارير، والتثقيف."
-                  )}
-                </p>
-              </div>
-            </article>
-
-            <article className="unlockStep">
-              <FeatureCode code="03" />
-              <div>
-                <p className="ohTimelineTitle">
-                  {text("Future Plus value", "قيمة Plus لاحقًا")}
-                </p>
-                <p className="ohTimelineMeta">
-                  {text(
-                    "Unlock saved history, advanced intelligence, PDF summaries, trends, and personal follow-up.",
-                    "فتح التاريخ المحفوظ، الذكاء المتقدم، ملخصات PDF، الاتجاهات، والمتابعة الشخصية."
-                  )}
-                </p>
-              </div>
-            </article>
-          </div>
-        </section>
-
         <section className="ohActionPanel">
           <div className="ohCardHeader" style={{ marginBottom: 0 }}>
             <div>
               <p className="ohMetricLabel">
-                {text("Ready to start with value?", "جاهز أن تبدأ بالقيمة؟")}
+                {text("Start with your private workspace", "ابدأ بمساحتك الصحية الخاصة")}
               </p>
 
               <h2 className="ohCardTitle" style={{ fontSize: "1.7rem" }}>
                 {text(
-                  "Create a free account and build your health intelligence journey.",
-                  "أنشئ حسابًا مجانيًا وابدأ بناء رحلة ذكائك الصحي."
+                  "Create your account and organize your health journey with more clarity.",
+                  "أنشئ حسابك ونظّم رحلتك الصحية بوضوح أكبر."
                 )}
               </h2>
 
               <p className="ohCardText">
                 {text(
-                  "Start with your profile and core tools. Plan comparison remains available when you are ready to evaluate advanced value.",
-                  "ابدأ بملفك والأدوات الأساسية. مقارنة الخطط تبقى متاحة عندما تكون جاهزًا لتقييم القيمة المتقدمة."
+                  "Use OrganHeal to connect learning, reports, assessments, summaries, and follow-up direction inside one health intelligence workspace.",
+                  "استخدم OrganHeal لربط التعلّم والتقارير والتقييمات والملخصات واتجاه المتابعة داخل مساحة ذكاء صحي واحدة."
                 )}
               </p>
             </div>
@@ -551,8 +586,8 @@ export default function FeaturesPage() {
                 {text("Create Free Account", "إنشاء حساب مجاني")}
               </Link>
 
-              <Link href="/pricing" className="secondaryBtn">
-                {text("Compare Plans", "مقارنة الخطط")}
+              <Link href="/login" className="secondaryBtn">
+                {text("Sign In", "تسجيل الدخول")}
               </Link>
             </div>
           </div>
