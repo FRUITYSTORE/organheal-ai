@@ -1,7 +1,8 @@
 ﻿"use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { blogPosts } from "@/lib/blogData";
 
 type Language = "en" | "ar";
 
@@ -99,9 +100,9 @@ const contentLayers: ContentLayer[] = [
     title: "Article Library",
     titleAr: "مكتبة المقالات",
     description:
-      "Short educational articles grouped by organ system, lab marker, report type, and patient need.",
+      "Live educational articles grouped by organ system, lab marker, report topic, and patient learning need.",
     descriptionAr:
-      "مقالات تعليمية قصيرة مرتبة حسب العضو، مؤشر المختبر، نوع التقرير، واحتياج المستخدم.",
+      "مقالات تعليمية جاهزة مرتبة حسب العضو، مؤشر المختبر، موضوع التقرير، واحتياج المستخدم التعليمي.",
     status: "ready",
   },
   {
@@ -119,9 +120,9 @@ const contentLayers: ContentLayer[] = [
     title: "AI-Ready Metadata",
     titleAr: "بيانات جاهزة للذكاء الاصطناعي",
     description:
-      "Every content item should later connect to organ systems, markers, risk topics, language, and audience.",
+      "Content is prepared to later connect with organ systems, markers, risk topics, language, and audience.",
     descriptionAr:
-      "كل محتوى يجب أن يرتبط لاحقًا بالأعضاء، المؤشرات، مواضيع الخطورة، اللغة، والجمهور المستهدف.",
+      "المحتوى مجهز لاحقًا للربط بالأعضاء، المؤشرات، مواضيع الخطورة، اللغة، والجمهور المستهدف.",
     status: "planned",
   },
 ];
@@ -195,6 +196,16 @@ export default function LibraryPage() {
   function text(en: string, ar: string) {
     return isArabic ? ar : en;
   }
+
+  const categoryCount = useMemo(() => {
+    const categories = new Set(blogPosts.map((post) => post.category));
+    return categories.size;
+  }, []);
+
+  const markerCount = useMemo(() => {
+    const markers = new Set(blogPosts.flatMap((post) => post.labMarkers));
+    return markers.size;
+  }, []);
 
   return (
     <main
@@ -328,13 +339,13 @@ export default function LibraryPage() {
               <div className="ohCardHeader">
                 <div>
                   <p className="ohMetricLabel">
-                    {text("Page purpose", "هدف الصفحة")}
+                    {text("Education gateway", "بوابة التثقيف")}
                   </p>
 
                   <h2 className="ohCardTitle" style={{ marginTop: "8px" }}>
                     {text(
-                      "Education only. No duplicated action funnel.",
-                      "تثقيف فقط. بدون تكرار لمسار الأزرار."
+                      "Learn first. Use private tools in their own pages.",
+                      "تعلّم أولًا. واستخدم الأدوات الخاصة في صفحاتها."
                     )}
                   </h2>
                 </div>
@@ -346,8 +357,8 @@ export default function LibraryPage() {
 
               <p className="ohCardText">
                 {text(
-                  "This page should teach and organize content. It should not repeat report upload, assessment, assistant, or intelligence actions already owned by other pages.",
-                  "هذه الصفحة هدفها التعليم وتنظيم المحتوى. لا يجب أن تكرر رفع التقارير أو التقييم أو المساعد أو الذكاء الصحي لأنها مملوكة لصفحات أخرى."
+                  "This page teaches and organizes content. It does not repeat report upload, assessment, assistant, dashboard, or intelligence actions.",
+                  "هذه الصفحة للتعليم وتنظيم المحتوى. لا تكرر رفع التقارير أو التقييم أو المساعد أو لوحة التحكم أو الذكاء الصحي."
                 )}
               </p>
             </aside>
@@ -357,31 +368,31 @@ export default function LibraryPage() {
         <section className="ohMetricGrid">
           <article className="ohMetricCard">
             <span className="ohMetricLabel">
-              {text("Learning pathways", "مسارات تعليمية")}
+              {text("Live articles", "مقالات جاهزة")}
             </span>
-            <span className="ohMetricValue">{educationPathways.length}</span>
+            <span className="ohMetricValue">{blogPosts.length}</span>
             <span className="ohMetricHint">
-              {text("Distinct education areas", "مجالات تثقيف مختلفة")}
+              {text("Structured education content", "محتوى تعليمي منظم")}
             </span>
           </article>
 
           <article className="ohMetricCard">
             <span className="ohMetricLabel">
-              {text("Primary action", "الإجراء الأساسي")}
+              {text("Health areas", "مجالات صحية")}
             </span>
-            <span className="ohMetricValue">1</span>
+            <span className="ohMetricValue">{categoryCount}</span>
             <span className="ohMetricHint">
-              {text("Open articles only", "فتح المقالات فقط")}
+              {text("Connected article categories", "تصنيفات مقالات مرتبطة")}
             </span>
           </article>
 
           <article className="ohMetricCard">
             <span className="ohMetricLabel">
-              {text("Duplication rule", "قاعدة التكرار")}
+              {text("Lab markers", "مؤشرات مختبر")}
             </span>
-            <span className="ohMetricValue">0</span>
+            <span className="ohMetricValue">{markerCount}</span>
             <span className="ohMetricHint">
-              {text("No repeated page funnels", "لا تكرار لمسارات الصفحات")}
+              {text("Prepared for future recommendations", "جاهزة لتوصيات لاحقة")}
             </span>
           </article>
         </section>
@@ -402,8 +413,8 @@ export default function LibraryPage() {
 
               <p className="ohCardText">
                 {text(
-                  "These pathways organize what OrganHeal should teach before future personalization and AI recommendations.",
-                  "هذه المسارات تنظّم ما يجب أن يعلّمه OrganHeal قبل التخصيص وتوصيات الذكاء الاصطناعي لاحقًا."
+                  "These pathways organize what OrganHeal teaches before future personalization and AI recommendations.",
+                  "هذه المسارات تنظّم ما يعلّمه OrganHeal قبل التخصيص وتوصيات الذكاء الاصطناعي لاحقًا."
                 )}
               </p>
             </div>
@@ -456,8 +467,8 @@ export default function LibraryPage() {
 
               <p className="ohCardText">
                 {text(
-                  "The next stage is to separate articles, future videos, and metadata so OrganHeal can later recommend the right learning content for each user.",
-                  "المرحلة القادمة هي فصل المقالات والفيديوهات المستقبلية والبيانات الوصفية حتى يستطيع OrganHeal لاحقًا اقتراح المحتوى المناسب لكل مستخدم."
+                  "Articles are already live. Videos and AI-ready recommendation logic remain planned layers.",
+                  "المقالات جاهزة الآن. الفيديوهات ومنطق التوصيات الذكية تبقى طبقات مخططة لاحقًا."
                 )}
               </p>
             </div>
