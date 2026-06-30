@@ -492,6 +492,12 @@ export default function LibraryPage() {
               </article>
             ))}
           </div>
+
+          <div className="ohButtonRow" style={{ marginTop: "20px" }}>
+            <Link href="/library/videos" className="secondaryBtn">
+              {text("Preview Video Education Roadmap", "معاينة خطة التثقيف بالفيديو")}
+            </Link>
+          </div>
         </section>
 
         <section className="ohGrid cols2">
@@ -539,3 +545,4 @@ export default function LibraryPage() {
     </main>
   );
 }
+
