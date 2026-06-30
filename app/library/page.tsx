@@ -13,19 +13,15 @@ type EducationPathway = {
   descriptionAr: string;
   topics: string[];
   topicsAr: string[];
-  actionLabel: string;
-  actionLabelAr: string;
-  href: string;
 };
 
-type StarterResource = {
+type ContentLayer = {
   code: string;
   title: string;
   titleAr: string;
   description: string;
   descriptionAr: string;
-  href: string;
-  status: "available" | "planned";
+  status: "ready" | "planned";
 };
 
 const educationPathways: EducationPathway[] = [
@@ -34,130 +30,98 @@ const educationPathways: EducationPathway[] = [
     title: "Lab Marker Education",
     titleAr: "تثقيف مؤشرات المختبر",
     description:
-      "Understand common markers such as LDL, HDL, HbA1c, creatinine, eGFR, ALT, AST, vitamin D, and inflammation signals.",
+      "Understand common lab values and what they may mean in a general educational context.",
     descriptionAr:
-      "افهم مؤشرات شائعة مثل LDL، HDL، HbA1c، الكرياتينين، eGFR، ALT، AST، فيتامين D، ومؤشرات الالتهاب.",
+      "فهم مؤشرات المختبر الشائعة وما قد تعنيه ضمن سياق تثقيفي عام.",
     topics: ["LDL / HDL", "HbA1c", "Creatinine", "eGFR", "ALT / AST"],
     topicsAr: ["LDL / HDL", "HbA1c", "الكرياتينين", "eGFR", "ALT / AST"],
-    actionLabel: "Read articles",
-    actionLabelAr: "قراءة المقالات",
-    href: "/blog",
   },
   {
     code: "ORG",
     title: "Organ Health Guides",
     titleAr: "أدلة صحة الأعضاء",
     description:
-      "Learn how heart, kidney, liver, lung, brain, and metabolic health connect to daily habits and medical reports.",
+      "Learn how major organ systems connect with symptoms, habits, and medical reports.",
     descriptionAr:
-      "تعلّم كيف ترتبط صحة القلب، الكلى، الكبد، الرئة، الدماغ، والصحة الأيضية بالعادات اليومية والتقارير الطبية.",
-    topics: ["Heart", "Kidney", "Liver", "Lung", "Metabolic"],
-    topicsAr: ["القلب", "الكلى", "الكبد", "الرئة", "الأيض"],
-    actionLabel: "Start assessment",
-    actionLabelAr: "ابدأ التقييم",
-    href: "/assessment",
+      "تعلّم كيف ترتبط أجهزة الجسم الرئيسية بالأعراض والعادات والتقارير الطبية.",
+    topics: ["Heart", "Kidney", "Liver", "Lung", "Brain"],
+    topicsAr: ["القلب", "الكلى", "الكبد", "الرئة", "الدماغ"],
   },
   {
     code: "REP",
-    title: "Medical Report Understanding",
+    title: "Medical Report Literacy",
     titleAr: "فهم التقارير الطبية",
     description:
-      "Learn how to read written reports, abnormal flags, reference ranges, trends, and what to clarify with your clinician.",
+      "Learn how to read report sections, reference ranges, abnormal flags, and trends.",
     descriptionAr:
-      "تعلّم كيف تقرأ التقارير المكتوبة، العلامات غير الطبيعية، القيم المرجعية، الاتجاهات، وما يجب توضيحه مع الطبيب.",
-    topics: ["Reference ranges", "Abnormal flags", "Trends", "Doctor brief"],
-    topicsAr: ["القيم المرجعية", "العلامات غير الطبيعية", "الاتجاهات", "ملخص الطبيب"],
-    actionLabel: "Upload report",
-    actionLabelAr: "رفع تقرير",
-    href: "/lab-upload",
-  },
-  {
-    code: "VISIT",
-    title: "Doctor Visit Preparation",
-    titleAr: "التحضير لزيارة الطبيب",
-    description:
-      "Prepare questions, organize symptoms, review medications, and bring a clearer summary to your appointment.",
-    descriptionAr:
-      "حضّر الأسئلة، رتّب الأعراض، راجع الأدوية، وخذ ملخصًا أوضح إلى موعدك الطبي.",
-    topics: ["Questions", "Symptoms", "Medication list", "Follow-up"],
-    topicsAr: ["الأسئلة", "الأعراض", "قائمة الأدوية", "المتابعة"],
-    actionLabel: "Open assistant",
-    actionLabelAr: "فتح المساعد",
-    href: "/assistant",
-  },
-  {
-    code: "LIFE",
-    title: "Lifestyle & Prevention",
-    titleAr: "نمط الحياة والوقاية",
-    description:
-      "Learn practical basics about sleep, activity, nutrition, hydration, stress, and preventive habits.",
-    descriptionAr:
-      "تعلّم أساسيات عملية عن النوم، النشاط، التغذية، شرب الماء، التوتر، والعادات الوقائية.",
-    topics: ["Sleep", "Activity", "Nutrition", "Stress", "Hydration"],
-    topicsAr: ["النوم", "النشاط", "التغذية", "التوتر", "شرب الماء"],
-    actionLabel: "Daily check-in",
-    actionLabelAr: "التحديث اليومي",
-    href: "/checkin",
-  },
-  {
-    code: "SAFE",
-    title: "When to Seek Medical Care",
-    titleAr: "متى تطلب الرعاية الطبية",
-    description:
-      "Understand general warning signs and why urgent symptoms should always be assessed by licensed medical professionals.",
-    descriptionAr:
-      "افهم العلامات التحذيرية العامة ولماذا يجب تقييم الأعراض العاجلة دائمًا من قبل مختصين مرخصين.",
-    topics: ["Chest pain", "Severe shortness of breath", "Confusion", "Emergency symptoms"],
-    topicsAr: ["ألم الصدر", "ضيق النفس الشديد", "التشوش", "أعراض الطوارئ"],
-    actionLabel: "Safety notice",
-    actionLabelAr: "تنبيه السلامة",
-    href: "/medical-disclaimer",
-  },
-];
-
-const starterResources: StarterResource[] = [
-  {
-    code: "LDL",
-    title: "What does high LDL cholesterol mean?",
-    titleAr: "ماذا يعني ارتفاع LDL؟",
-    description:
-      "A simple explanation of cholesterol patterns and what to ask your clinician.",
-    descriptionAr:
-      "شرح مبسط لأنماط الكوليسترول وما يمكن مناقشته مع الطبيب.",
-    href: "/blog",
-    status: "available",
-  },
-  {
-    code: "KID",
-    title: "Why kidney markers matter",
-    titleAr: "لماذا مؤشرات الكلى مهمة؟",
-    description:
-      "Learn why creatinine, eGFR, hydration, and blood pressure often connect.",
-    descriptionAr:
-      "تعلّم لماذا ترتبط مؤشرات الكرياتينين وeGFR وشرب الماء وضغط الدم.",
-    href: "/blog",
-    status: "available",
+      "تعلّم كيف تقرأ أقسام التقرير والقيم المرجعية والعلامات غير الطبيعية والاتجاهات.",
+    topics: ["Reference ranges", "Flags", "Trends", "Summary"],
+    topicsAr: ["القيم المرجعية", "العلامات", "الاتجاهات", "الملخص"],
   },
   {
     code: "VIS",
-    title: "How to prepare for a doctor visit",
-    titleAr: "كيف تتحضّر لزيارة الطبيب؟",
+    title: "Doctor Visit Preparation",
+    titleAr: "التحضير لزيارة الطبيب",
     description:
-      "Turn confusing health concerns into a short list of useful questions.",
+      "Learn how to organize concerns and prepare focused questions before a medical visit.",
     descriptionAr:
-      "حوّل المخاوف الصحية المربكة إلى قائمة قصيرة من الأسئلة المفيدة.",
-    href: "/blog",
-    status: "available",
+      "تعلّم كيف ترتب مخاوفك وتحضر أسئلة مركزة قبل زيارة الطبيب.",
+    topics: ["Questions", "Symptoms", "Medication list", "Follow-up"],
+    topicsAr: ["الأسئلة", "الأعراض", "قائمة الأدوية", "المتابعة"],
   },
   {
-    code: "VID",
-    title: "Video education library",
-    titleAr: "مكتبة الفيديوهات التعليمية",
+    code: "LIF",
+    title: "Lifestyle & Prevention",
+    titleAr: "نمط الحياة والوقاية",
     description:
-      "Future short videos will explain reports, lab markers, prevention, and doctor preparation.",
+      "Learn practical basics about sleep, movement, nutrition, hydration, and stress.",
     descriptionAr:
-      "لاحقًا سيتم إضافة فيديوهات قصيرة تشرح التقارير، مؤشرات المختبر، الوقاية، والتحضير للطبيب.",
-    href: "/library",
+      "تعلّم أساسيات عملية عن النوم والحركة والتغذية وشرب الماء والتوتر.",
+    topics: ["Sleep", "Activity", "Nutrition", "Stress", "Hydration"],
+    topicsAr: ["النوم", "النشاط", "التغذية", "التوتر", "شرب الماء"],
+  },
+  {
+    code: "SAF",
+    title: "Safety & When to Seek Care",
+    titleAr: "السلامة ومتى تطلب الرعاية",
+    description:
+      "Understand general warning signs and why urgent symptoms need licensed medical care.",
+    descriptionAr:
+      "افهم العلامات التحذيرية العامة ولماذا تحتاج الأعراض العاجلة إلى رعاية طبية مرخصة.",
+    topics: ["Chest pain", "Severe breathlessness", "Confusion", "Emergency signs"],
+    topicsAr: ["ألم الصدر", "ضيق النفس الشديد", "التشوش", "علامات الطوارئ"],
+  },
+];
+
+const contentLayers: ContentLayer[] = [
+  {
+    code: "01",
+    title: "Article Library",
+    titleAr: "مكتبة المقالات",
+    description:
+      "Short educational articles grouped by organ system, lab marker, report type, and patient need.",
+    descriptionAr:
+      "مقالات تعليمية قصيرة مرتبة حسب العضو، مؤشر المختبر، نوع التقرير، واحتياج المستخدم.",
+    status: "ready",
+  },
+  {
+    code: "02",
+    title: "Video Education",
+    titleAr: "التثقيف بالفيديو",
+    description:
+      "A future video layer for simple explanations of lab markers, reports, prevention, and doctor preparation.",
+    descriptionAr:
+      "طبقة فيديو مستقبلية لشرح مؤشرات المختبر والتقارير والوقاية والتحضير للطبيب.",
+    status: "planned",
+  },
+  {
+    code: "03",
+    title: "AI-Ready Metadata",
+    titleAr: "بيانات جاهزة للذكاء الاصطناعي",
+    description:
+      "Every content item should later connect to organ systems, markers, risk topics, language, and audience.",
+    descriptionAr:
+      "كل محتوى يجب أن يرتبط لاحقًا بالأعضاء، المؤشرات، مواضيع الخطورة، اللغة، والجمهور المستهدف.",
     status: "planned",
   },
 ];
@@ -175,32 +139,30 @@ function getStoredLanguage(): Language {
   return savedLanguage.toLowerCase().startsWith("ar") ? "ar" : "en";
 }
 
-function StatusBadge({
-  status,
-  isArabic,
-}: {
-  status: StarterResource["status"];
-  isArabic: boolean;
-}) {
-  if (status === "available") {
-    return (
-      <span className="ohStatusBadge good">
-        {isArabic ? "متاح" : "Available"}
-      </span>
-    );
-  }
-
+function CodeMark({ label }: { label: string }) {
   return (
-    <span className="ohStatusBadge neutral">
-      {isArabic ? "قادم لاحقًا" : "Planned"}
+    <span className="libraryCodeMark" aria-hidden="true">
+      {label}
     </span>
   );
 }
 
-function IconMark({ label }: { label: string }) {
+function StatusBadge({
+  status,
+  isArabic,
+}: {
+  status: ContentLayer["status"];
+  isArabic: boolean;
+}) {
   return (
-    <span className="libraryIconMark" aria-hidden="true">
-      {label}
+    <span className={`ohStatusBadge ${status === "ready" ? "good" : "neutral"}`}>
+      {status === "ready"
+        ? isArabic
+          ? "جاهز"
+          : "Ready"
+        : isArabic
+          ? "مخطط"
+          : "Planned"}
     </span>
   );
 }
@@ -252,27 +214,13 @@ export default function LibraryPage() {
           gap: 18px;
         }
 
-        .libraryCommandPage .libraryResourceGrid {
+        .libraryCommandPage .libraryLayerGrid {
           display: grid;
-          grid-template-columns: repeat(4, minmax(0, 1fr));
-          gap: 14px;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 18px;
         }
 
-        .libraryCommandPage .libraryPathwayCard {
-          display: flex;
-          flex-direction: column;
-          gap: 14px;
-          min-height: 100%;
-          transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
-        }
-
-        .libraryCommandPage .libraryPathwayCard:hover {
-          transform: translateY(-3px);
-          border-color: rgba(20, 184, 166, 0.34);
-          box-shadow: 0 18px 42px rgba(15, 23, 42, 0.08);
-        }
-
-        .libraryCommandPage .libraryIconMark {
+        .libraryCommandPage .libraryCodeMark {
           display: inline-flex;
           width: 48px;
           height: 48px;
@@ -285,6 +233,13 @@ export default function LibraryPage() {
           font-weight: 900;
           font-size: 0.78rem;
           letter-spacing: 0.04em;
+        }
+
+        .libraryCommandPage .libraryPathwayCard {
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+          min-height: 100%;
         }
 
         .libraryCommandPage .topicRow {
@@ -305,42 +260,36 @@ export default function LibraryPage() {
           font-weight: 800;
         }
 
-        .libraryCommandPage .libraryRoadmap {
+        .libraryCommandPage .libraryPrincipleList {
           display: grid;
           gap: 12px;
           margin-top: 18px;
         }
 
-        .libraryCommandPage .libraryRoadmapItem {
+        .libraryCommandPage .libraryPrincipleItem {
           display: grid;
-          grid-template-columns: 42px 1fr;
+          grid-template-columns: 48px 1fr;
           gap: 12px;
-          align-items: flex-start;
           padding: 14px;
           border-radius: 18px;
           background: rgba(248, 250, 252, 0.82);
           border: 1px solid rgba(148, 163, 184, 0.18);
         }
 
-        @media (max-width: 1100px) {
-          .libraryCommandPage .libraryResourceGrid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-          }
-        }
-
         @media (max-width: 980px) {
-          .libraryCommandPage .libraryPathwayGrid {
+          .libraryCommandPage .libraryPathwayGrid,
+          .libraryCommandPage .libraryLayerGrid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
           }
         }
 
         @media (max-width: 640px) {
           .libraryCommandPage .libraryPathwayGrid,
-          .libraryCommandPage .libraryResourceGrid {
+          .libraryCommandPage .libraryLayerGrid {
             grid-template-columns: 1fr;
           }
 
-          .libraryCommandPage .libraryRoadmapItem {
+          .libraryCommandPage .libraryPrincipleItem {
             grid-template-columns: 1fr;
           }
         }
@@ -351,34 +300,26 @@ export default function LibraryPage() {
           <div className="ohHeroGrid">
             <div>
               <p className="ohEyebrow">
-                {text("OrganHeal Content & Education Engine", "محرك OrganHeal للتثقيف الصحي")}
+                {text("OrganHeal Education Library", "مكتبة OrganHeal التعليمية")}
               </p>
 
               <h1 className="ohTitle">
                 {text(
-                  "Learn, understand, then act with clarity.",
-                  "تعلّم، افهم، ثم تصرّف بوضوح."
+                  "A focused place to understand health information.",
+                  "مكان مركز لفهم المعلومات الصحية."
                 )}
               </h1>
 
               <p className="ohLead">
                 {text(
-                  "A structured education hub for lab markers, organ health, medical reports, doctor visit preparation, prevention, and future video learning.",
-                  "مركز تثقيف منظم لمؤشرات المختبر، صحة الأعضاء، التقارير الطبية، التحضير للطبيب، الوقاية، والفيديوهات التعليمية لاحقًا."
+                  "The library explains lab markers, organ health, medical reports, doctor preparation, prevention, and safety in simple language.",
+                  "تشرح المكتبة مؤشرات المختبر، صحة الأعضاء، التقارير الطبية، التحضير للطبيب، الوقاية، والسلامة بلغة بسيطة."
                 )}
               </p>
 
               <div className="ohButtonRow" style={{ marginTop: "24px" }}>
                 <Link href="/blog" className="primaryBtn">
-                  {text("Read Articles", "قراءة المقالات")}
-                </Link>
-
-                <Link href="/assistant" className="secondaryBtn">
-                  {text("Ask OrganHeal", "اسأل OrganHeal")}
-                </Link>
-
-                <Link href="/lab-upload" className="secondaryBtn">
-                  {text("Upload Report", "رفع تقرير")}
+                  {text("Open Articles", "فتح المقالات")}
                 </Link>
               </div>
             </div>
@@ -387,68 +328,28 @@ export default function LibraryPage() {
               <div className="ohCardHeader">
                 <div>
                   <p className="ohMetricLabel">
-                    {text("Why this library matters", "لماذا هذه المكتبة مهمة؟")}
+                    {text("Page purpose", "هدف الصفحة")}
                   </p>
 
                   <h2 className="ohCardTitle" style={{ marginTop: "8px" }}>
                     {text(
-                      "Education becomes personal when connected to your data.",
-                      "التثقيف يصبح شخصيًا عندما يرتبط ببياناتك."
+                      "Education only. No duplicated action funnel.",
+                      "تثقيف فقط. بدون تكرار لمسار الأزرار."
                     )}
                   </h2>
                 </div>
 
                 <span className="ohStatusBadge good">
-                  {text("Education-first", "تثقيف أولًا")}
+                  {text("Focused", "مركزة")}
                 </span>
               </div>
 
               <p className="ohCardText">
                 {text(
-                  "OrganHeal should not only generate reports. It should teach users what their health signals mean, what to ask next, and how to prepare for better care.",
-                  "OrganHeal لا يجب أن يكتفي بتوليد التقارير. يجب أن يعلّم المستخدم معنى المؤشرات الصحية، ماذا يسأل بعد ذلك، وكيف يستعد لرعاية أفضل."
+                  "This page should teach and organize content. It should not repeat report upload, assessment, assistant, or intelligence actions already owned by other pages.",
+                  "هذه الصفحة هدفها التعليم وتنظيم المحتوى. لا يجب أن تكرر رفع التقارير أو التقييم أو المساعد أو الذكاء الصحي لأنها مملوكة لصفحات أخرى."
                 )}
               </p>
-
-              <div className="ohDivider" />
-
-              <div className="ohTimeline">
-                <div className="ohTimelineItem">
-                  <span className="ohTimelineDot" />
-                  <div>
-                    <p className="ohTimelineTitle">
-                      {text("Learn the basics", "تعلّم الأساسيات")}
-                    </p>
-                    <p className="ohTimelineMeta">
-                      {text("Articles and explainers.", "مقالات وشروحات مبسطة.")}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="ohTimelineItem">
-                  <span className="ohTimelineDot" />
-                  <div>
-                    <p className="ohTimelineTitle">
-                      {text("Connect to your reports", "اربطها بتقاريرك")}
-                    </p>
-                    <p className="ohTimelineMeta">
-                      {text("Reports and intelligence summaries.", "تقارير وملخصات ذكاء صحي.")}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="ohTimelineItem">
-                  <span className="ohTimelineDot" />
-                  <div>
-                    <p className="ohTimelineTitle">
-                      {text("Prepare your next step", "حضّر خطوتك التالية")}
-                    </p>
-                    <p className="ohTimelineMeta">
-                      {text("Doctor questions and follow-up actions.", "أسئلة للطبيب وخطوات متابعة.")}
-                    </p>
-                  </div>
-                </div>
-              </div>
             </aside>
           </div>
         </section>
@@ -460,43 +361,29 @@ export default function LibraryPage() {
             </span>
             <span className="ohMetricValue">{educationPathways.length}</span>
             <span className="ohMetricHint">
-              {text("Core education areas", "مجالات تثقيف أساسية")}
+              {text("Distinct education areas", "مجالات تثقيف مختلفة")}
             </span>
           </article>
 
           <article className="ohMetricCard">
             <span className="ohMetricLabel">
-              {text("Future video learning", "تعليم بالفيديو لاحقًا")}
+              {text("Primary action", "الإجراء الأساسي")}
             </span>
-            <span className="ohMetricValue">V1</span>
+            <span className="ohMetricValue">1</span>
             <span className="ohMetricHint">
-              {text("Structure prepared now", "تم تجهيز الهيكل الآن")}
+              {text("Open articles only", "فتح المقالات فقط")}
             </span>
           </article>
 
           <article className="ohMetricCard">
             <span className="ohMetricLabel">
-              {text("AI readiness", "جاهزية الذكاء")}
+              {text("Duplication rule", "قاعدة التكرار")}
             </span>
-            <span className="ohMetricValue">RAG</span>
+            <span className="ohMetricValue">0</span>
             <span className="ohMetricHint">
-              {text("Content can support future AI answers", "المحتوى سيدعم إجابات AI لاحقًا")}
+              {text("No repeated page funnels", "لا تكرار لمسارات الصفحات")}
             </span>
           </article>
-        </section>
-
-        <section className="ohTrustNotice">
-          <span aria-hidden="true">!</span>
-          <div>
-            <strong>
-              {text("Educational content only", "محتوى تعليمي فقط")}
-            </strong>
-            <br />
-            {text(
-              "OrganHeal provides educational and organizational health information only. It does not diagnose, treat, prescribe, or replace licensed medical care.",
-              "OrganHeal يقدم معلومات صحية تعليمية وتنظيمية فقط. لا يشخّص ولا يعالج ولا يصف علاجًا ولا يستبدل الرعاية الطبية المرخصة."
-            )}
-          </div>
         </section>
 
         <section className="ohCard">
@@ -508,28 +395,24 @@ export default function LibraryPage() {
 
               <h2 className="ohCardTitle">
                 {text(
-                  "Choose how you want to understand your health",
-                  "اختر كيف تريد أن تفهم صحتك"
+                  "Each pathway has a unique learning role.",
+                  "كل مسار له دور تعليمي مختلف."
                 )}
               </h2>
 
               <p className="ohCardText">
                 {text(
-                  "Each pathway is designed to connect education with action: articles, reports, assessments, assistant support, and doctor preparation.",
-                  "كل مسار مصمم لربط التثقيف بالفعل: مقالات، تقارير، تقييمات، دعم المساعد، والتحضير للطبيب."
+                  "These pathways organize what OrganHeal should teach before future personalization and AI recommendations.",
+                  "هذه المسارات تنظّم ما يجب أن يعلّمه OrganHeal قبل التخصيص وتوصيات الذكاء الاصطناعي لاحقًا."
                 )}
               </p>
             </div>
           </div>
 
           <div className="libraryPathwayGrid">
-            {educationPathways.map((section) => (
-              <Link
-                href={section.href}
-                className="ohCard libraryPathwayCard"
-                key={section.title}
-              >
-                <IconMark label={section.code} />
+            {educationPathways.map((pathway) => (
+              <article className="ohCard libraryPathwayCard" key={pathway.code}>
+                <CodeMark label={pathway.code} />
 
                 <div>
                   <p className="ohMetricLabel">
@@ -537,26 +420,22 @@ export default function LibraryPage() {
                   </p>
 
                   <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
-                    {isArabic ? section.titleAr : section.title}
+                    {isArabic ? pathway.titleAr : pathway.title}
                   </h3>
                 </div>
 
                 <p className="ohCardText">
-                  {isArabic ? section.descriptionAr : section.description}
+                  {isArabic ? pathway.descriptionAr : pathway.description}
                 </p>
 
                 <div className="topicRow">
-                  {(isArabic ? section.topicsAr : section.topics).map((topic) => (
+                  {(isArabic ? pathway.topicsAr : pathway.topics).map((topic) => (
                     <span className="topicChip" key={topic}>
                       {topic}
                     </span>
                   ))}
                 </div>
-
-                <span className="ohMetricHint" style={{ fontWeight: 900 }}>
-                  {isArabic ? section.actionLabelAr : section.actionLabel} →
-                </span>
-              </Link>
+              </article>
             ))}
           </div>
         </section>
@@ -565,45 +444,41 @@ export default function LibraryPage() {
           <div className="ohCardHeader">
             <div>
               <p className="ohMetricLabel">
-                {text("Starter resources", "موارد البداية")}
+                {text("Content engine layers", "طبقات محرك المحتوى")}
               </p>
 
               <h2 className="ohCardTitle">
                 {text(
-                  "Build the first content layer before AI personalization",
-                  "ابنِ طبقة المحتوى الأولى قبل تخصيص الذكاء الاصطناعي"
+                  "Build content once, use it across education and future AI.",
+                  "نبني المحتوى مرة واحدة ونستخدمه للتثقيف والذكاء لاحقًا."
                 )}
               </h2>
 
               <p className="ohCardText">
                 {text(
-                  "These resources define the first content categories that will later support article recommendations, video education, and private medical chat.",
-                  "هذه الموارد تحدد أول تصنيفات المحتوى التي ستدعم لاحقًا توصيات المقالات، الفيديوهات التعليمية، والدردشة الطبية الخاصة."
+                  "The next stage is to separate articles, future videos, and metadata so OrganHeal can later recommend the right learning content for each user.",
+                  "المرحلة القادمة هي فصل المقالات والفيديوهات المستقبلية والبيانات الوصفية حتى يستطيع OrganHeal لاحقًا اقتراح المحتوى المناسب لكل مستخدم."
                 )}
               </p>
             </div>
-
-            <Link href="/blog" className="primaryBtn">
-              {text("Open Blog", "فتح المدونة")}
-            </Link>
           </div>
 
-          <div className="libraryResourceGrid">
-            {starterResources.map((resource) => (
-              <Link href={resource.href} className="ohMetricCard" key={resource.title}>
-                <div className="ohCardHeader" style={{ marginBottom: "8px" }}>
-                  <IconMark label={resource.code} />
-                  <StatusBadge status={resource.status} isArabic={isArabic} />
+          <div className="libraryLayerGrid">
+            {contentLayers.map((layer) => (
+              <article className="ohMetricCard" key={layer.code}>
+                <div className="ohCardHeader" style={{ marginBottom: "10px" }}>
+                  <CodeMark label={layer.code} />
+                  <StatusBadge status={layer.status} isArabic={isArabic} />
                 </div>
 
                 <span className="ohMetricLabel">
-                  {isArabic ? resource.titleAr : resource.title}
+                  {isArabic ? layer.titleAr : layer.title}
                 </span>
 
                 <span className="ohMetricHint">
-                  {isArabic ? resource.descriptionAr : resource.description}
+                  {isArabic ? layer.descriptionAr : layer.description}
                 </span>
-              </Link>
+              </article>
             ))}
           </div>
         </section>
@@ -611,94 +486,42 @@ export default function LibraryPage() {
         <section className="ohGrid cols2">
           <article className="ohActionPanel">
             <p className="ohMetricLabel">
-              {text("Next content phase", "مرحلة المحتوى التالية")}
+              {text("Execution rule", "قاعدة التنفيذ")}
             </p>
 
             <h2 className="ohCardTitle">
               {text(
-                "Create dedicated article and video structures.",
-                "إنشاء هيكل مستقل للمقالات والفيديوهات."
+                "The library owns education, not every user action.",
+                "المكتبة مسؤولة عن التثقيف، وليس كل إجراءات المستخدم."
               )}
             </h2>
 
             <p className="ohCardText">
               {text(
-                "The next build should separate articles, videos, categories, and future AI-ready metadata instead of keeping everything inside one page.",
-                "المرحلة القادمة يجب أن تفصل المقالات، الفيديوهات، التصنيفات، وبيانات AI المستقبلية بدل وضع كل شيء داخل صفحة واحدة."
+                "Assessment, report upload, assistant, dashboard, and intelligence should remain in their own pages. This keeps the product clean and prevents repeated funnels.",
+                "التقييم، رفع التقارير، المساعد، لوحة التحكم، والذكاء الصحي يجب أن تبقى في صفحاتها الخاصة. هذا يحافظ على نظافة المنتج ويمنع تكرار المسارات."
               )}
             </p>
-
-            <div className="libraryRoadmap">
-              <div className="libraryRoadmapItem">
-                <IconMark label="01" />
-                <div>
-                  <p className="ohTimelineTitle">
-                    {text("Article detail structure", "هيكل تفاصيل المقالات")}
-                  </p>
-                  <p className="ohTimelineMeta">
-                    {text("Slug, category, organ, lab marker, difficulty, and safety note.", "Slug، تصنيف، عضو، مؤشر مختبر، مستوى صعوبة، وتنبيه سلامة.")}
-                  </p>
-                </div>
-              </div>
-
-              <div className="libraryRoadmapItem">
-                <IconMark label="02" />
-                <div>
-                  <p className="ohTimelineTitle">
-                    {text("Video education structure", "هيكل الفيديوهات التعليمية")}
-                  </p>
-                  <p className="ohTimelineMeta">
-                    {text("Short educational videos grouped by organ, report type, and patient need.", "فيديوهات قصيرة مرتبة حسب العضو، نوع التقرير، واحتياج المريض.")}
-                  </p>
-                </div>
-              </div>
-
-              <div className="libraryRoadmapItem">
-                <IconMark label="03" />
-                <div>
-                  <p className="ohTimelineTitle">
-                    {text("AI recommendation readiness", "جاهزية توصيات AI")}
-                  </p>
-                  <p className="ohTimelineMeta">
-                    {text("Later, AI can suggest education based on user reports and assessments.", "لاحقًا يمكن للذكاء الاصطناعي اقتراح محتوى بناءً على تقارير المستخدم وتقييماته.")}
-                  </p>
-                </div>
-              </div>
-            </div>
           </article>
 
           <article className="ohActionPanel">
             <p className="ohMetricLabel">
-              {text("From learning to action", "من التعلم إلى الفعل")}
+              {text("Medical safety", "السلامة الطبية")}
             </p>
 
             <h2 className="ohCardTitle">
               {text(
-                "Use education to prepare better health decisions.",
-                "استخدم التثقيف لتحضير قرارات صحية أفضل."
+                "Educational content does not replace clinical care.",
+                "المحتوى التعليمي لا يستبدل الرعاية الطبية."
               )}
             </h2>
 
             <p className="ohCardText">
               {text(
-                "After learning the basics, users should move into assessment, report upload, intelligence generation, and doctor preparation.",
-                "بعد فهم الأساسيات، يجب أن ينتقل المستخدم إلى التقييم، رفع التقرير، توليد الذكاء، والتحضير للطبيب."
+                "OrganHeal explains information for learning and preparation only. Urgent symptoms, diagnosis, and treatment decisions must be handled by licensed medical professionals.",
+                "OrganHeal يشرح المعلومات للتعلم والتحضير فقط. الأعراض العاجلة والتشخيص وقرارات العلاج يجب أن تكون من خلال مختصين طبيين مرخصين."
               )}
             </p>
-
-            <div className="ohButtonRow">
-              <Link href="/assessment" className="primaryBtn">
-                {text("Start Assessment", "ابدأ التقييم")}
-              </Link>
-
-              <Link href="/lab-upload" className="secondaryBtn">
-                {text("Upload Report", "رفع تقرير")}
-              </Link>
-
-              <Link href="/assistant" className="secondaryBtn">
-                {text("Ask Assistant", "اسأل المساعد")}
-              </Link>
-            </div>
           </article>
         </section>
       </div>
