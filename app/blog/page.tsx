@@ -54,6 +54,11 @@ export default function BlogPage() {
     };
   }, []);
 
+  useEffect(() => {
+    setSelectedCategory("all");
+    setSelectedMarker("all");
+  }, [language]);
+
   function text(en: string, ar: string) {
     return isArabic ? ar : en;
   }
@@ -139,79 +144,270 @@ export default function BlogPage() {
           text-decoration: none;
         }
 
-        .healthArticlesPage .articleDiscoveryPanel {
-          position: relative;
-          overflow: hidden;
+        .healthArticlesPage .articleCompactHero {
+          padding: 40px;
         }
 
-        .healthArticlesPage .articleDiscoveryPanel::before {
+        .healthArticlesPage .articleCompactHero .ohHeroGrid {
+          grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.55fr);
+          align-items: center;
+        }
+
+        .healthArticlesPage .articleCompactHero .ohTitle {
+          max-width: 820px;
+          font-size: clamp(2.35rem, 4.5vw, 4.35rem);
+          line-height: 0.98;
+        }
+
+        .healthArticlesPage .articleCompactHero .ohLead {
+          max-width: 760px;
+        }
+
+        .healthArticlesPage .articleHeroSummary {
+          position: relative;
+          overflow: hidden;
+          border-radius: 24px;
+          background: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(15, 118, 110, 0.92));
+          color: white;
+          padding: 22px;
+          min-height: 210px;
+          box-shadow: 0 24px 64px rgba(15, 23, 42, 0.14);
+        }
+
+        .healthArticlesPage .articleHeroSummary::after {
           content: "";
           position: absolute;
-          inset: -90px -90px auto auto;
-          width: 240px;
-          height: 240px;
+          width: 210px;
+          height: 210px;
+          right: -72px;
+          bottom: -90px;
           border-radius: 999px;
-          background: radial-gradient(circle, rgba(20, 184, 166, 0.16), transparent 68%);
+          background: radial-gradient(circle, rgba(20, 184, 166, 0.48), transparent 66%);
           pointer-events: none;
         }
 
-        .healthArticlesPage .articleControlGrid {
+        [dir="rtl"] .healthArticlesPage .articleHeroSummary::after {
+          right: auto;
+          left: -72px;
+        }
+
+        .healthArticlesPage .articleHeroSummaryLabel {
           position: relative;
           z-index: 1;
+          margin: 0;
+          color: rgba(209, 250, 229, 0.88);
+          font-size: 0.78rem;
+          font-weight: 900;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+
+        .healthArticlesPage .articleHeroSummaryValue {
+          position: relative;
+          z-index: 1;
+          display: block;
+          margin-top: 14px;
+          font-size: 3.2rem;
+          line-height: 1;
+          font-weight: 950;
+          letter-spacing: -0.08em;
+        }
+
+        .healthArticlesPage .articleHeroSummaryText {
+          position: relative;
+          z-index: 1;
+          margin: 14px 0 0;
+          color: rgba(226, 232, 240, 0.9);
+          line-height: 1.7;
+          font-weight: 650;
+        }
+
+        .healthArticlesPage .articleSearchPanel {
+          position: relative;
+          overflow: hidden;
+          border-radius: 30px;
+          border: 1px solid rgba(15, 118, 110, 0.18);
+          background:
+            radial-gradient(circle at 12% 22%, rgba(20, 184, 166, 0.22), transparent 28%),
+            linear-gradient(135deg, rgba(240, 253, 250, 0.96), rgba(255, 255, 255, 0.96));
+          box-shadow: 0 24px 70px rgba(15, 23, 42, 0.08);
+          padding: 24px;
+        }
+
+        .healthArticlesPage .articleSearchHeader {
+          display: flex;
+          align-items: flex-end;
+          justify-content: space-between;
+          gap: 18px;
+          margin-bottom: 18px;
+        }
+
+        .healthArticlesPage .articleSearchTitle {
+          margin: 0;
+          color: var(--oh-text);
+          font-size: 1.45rem;
+          font-weight: 950;
+          letter-spacing: -0.04em;
+        }
+
+        .healthArticlesPage .articleSearchText {
+          margin: 8px 0 0;
+          color: var(--oh-muted);
+          line-height: 1.7;
+        }
+
+        .healthArticlesPage .articleControlGrid {
           display: grid;
-          grid-template-columns: 1.2fr 0.9fr 0.9fr;
-          gap: 14px;
-          margin-top: 20px;
+          grid-template-columns: minmax(280px, 1.4fr) minmax(180px, 0.7fr) minmax(180px, 0.7fr) auto;
+          gap: 12px;
+          align-items: center;
+        }
+
+        .healthArticlesPage .articleSearchInputWrap {
+          position: relative;
+        }
+
+        .healthArticlesPage .articleSearchIcon {
+          position: absolute;
+          top: 50%;
+          left: 16px;
+          transform: translateY(-50%);
+          display: inline-flex;
+          width: 30px;
+          height: 30px;
+          align-items: center;
+          justify-content: center;
+          border-radius: 999px;
+          background: rgba(20, 184, 166, 0.12);
+          color: #0f766e;
+          font-weight: 950;
+          pointer-events: none;
+        }
+
+        [dir="rtl"] .healthArticlesPage .articleSearchIcon {
+          left: auto;
+          right: 16px;
         }
 
         .healthArticlesPage .articleControl {
           width: 100%;
-          min-height: 48px;
-          border: 1px solid rgba(148, 163, 184, 0.34);
-          border-radius: 14px;
-          padding: 12px 14px;
-          background: rgba(255, 255, 255, 0.95);
+          min-height: 56px;
+          border: 1px solid rgba(15, 118, 110, 0.26);
+          border-radius: 16px;
+          padding: 13px 15px;
+          background: rgba(255, 255, 255, 0.98);
           color: var(--oh-text);
           font: inherit;
-          font-weight: 750;
+          font-weight: 850;
           outline: none;
+          box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+        }
+
+        .healthArticlesPage .articleSearchInput {
+          padding-inline-start: 58px;
+        }
+
+        [dir="rtl"] .healthArticlesPage .articleSearchInput {
+          padding-inline-start: 15px;
+          padding-inline-end: 58px;
         }
 
         .healthArticlesPage .articleControl:focus {
-          border-color: rgba(20, 184, 166, 0.65);
-          box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.12);
+          border-color: rgba(20, 184, 166, 0.78);
+          box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.14);
+        }
+
+        .healthArticlesPage .articleClearButton {
+          min-height: 56px;
+          padding: 0 18px;
+          border-radius: 16px;
+          border: 1px solid rgba(15, 118, 110, 0.26);
+          background: rgba(15, 23, 42, 0.94);
+          color: white;
+          font-weight: 950;
+          cursor: pointer;
+          white-space: nowrap;
+          box-shadow: 0 16px 34px rgba(15, 23, 42, 0.12);
+        }
+
+        .healthArticlesPage .articleClearButton:hover {
+          transform: translateY(-1px);
+        }
+
+        .healthArticlesPage .articleQuickFilterRow {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          margin-top: 16px;
+        }
+
+        .healthArticlesPage .articleQuickFilter {
+          border: 1px solid rgba(15, 118, 110, 0.22);
+          background: rgba(255, 255, 255, 0.84);
+          color: #0f766e;
+          border-radius: 999px;
+          padding: 9px 12px;
+          font-size: 0.84rem;
+          font-weight: 900;
+          cursor: pointer;
+        }
+
+        .healthArticlesPage .articleQuickFilter.active {
+          background: #0f766e;
+          color: white;
+          border-color: #0f766e;
+          box-shadow: 0 12px 26px rgba(15, 118, 110, 0.18);
+        }
+
+        .healthArticlesPage .articleResultsHeader {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+          margin-bottom: 18px;
+        }
+
+        .healthArticlesPage .articleResultsTitle {
+          margin: 0;
+          color: var(--oh-text);
+          font-size: 1.35rem;
+          font-weight: 950;
+          letter-spacing: -0.04em;
         }
 
         .healthArticlesPage .articleGrid {
           display: grid;
           grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 18px;
+          gap: 20px;
         }
 
         .healthArticlesPage .articleCard {
+          position: relative;
           display: flex;
           flex-direction: column;
           gap: 14px;
           min-height: 100%;
+          overflow: hidden;
+          border-top: 5px solid #14b8a6;
           transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
         }
 
         .healthArticlesPage .articleCard:hover {
-          transform: translateY(-3px);
-          border-color: rgba(20, 184, 166, 0.34);
-          box-shadow: 0 18px 42px rgba(15, 23, 42, 0.08);
+          transform: translateY(-4px);
+          border-color: rgba(20, 184, 166, 0.48);
+          box-shadow: 0 22px 48px rgba(15, 23, 42, 0.1);
         }
 
         .healthArticlesPage .articleCategory {
           width: fit-content;
           margin: 0;
-          padding: 7px 10px;
+          padding: 8px 11px;
           border-radius: 999px;
-          background: rgba(20, 184, 166, 0.1);
+          background: rgba(15, 118, 110, 0.12);
           color: #0f766e;
-          font-size: 0.78rem;
-          font-weight: 900;
-          letter-spacing: 0.04em;
+          font-size: 0.76rem;
+          font-weight: 950;
+          letter-spacing: 0.05em;
           text-transform: uppercase;
         }
 
@@ -238,11 +434,11 @@ export default function BlogPage() {
           width: fit-content;
           padding: 6px 9px;
           border-radius: 999px;
-          background: rgba(248, 250, 252, 0.92);
-          border: 1px solid rgba(148, 163, 184, 0.18);
+          background: rgba(248, 250, 252, 0.94);
+          border: 1px solid rgba(148, 163, 184, 0.2);
           color: var(--oh-muted);
           font-size: 0.78rem;
-          font-weight: 800;
+          font-weight: 850;
         }
 
         .healthArticlesPage .articleCardFooter {
@@ -250,19 +446,58 @@ export default function BlogPage() {
           align-items: center;
           justify-content: space-between;
           gap: 12px;
-          padding-top: 12px;
-          border-top: 1px solid rgba(148, 163, 184, 0.22);
+          padding-top: 14px;
+          border-top: 1px solid rgba(148, 163, 184, 0.2);
         }
 
         .healthArticlesPage .articleDate {
           color: var(--oh-muted);
           font-size: 0.88rem;
-          font-weight: 800;
+          font-weight: 850;
         }
 
         .healthArticlesPage .articleReadMore {
-          color: #0f766e;
-          font-weight: 900;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 38px;
+          padding: 0 14px;
+          border-radius: 999px;
+          background: #0f766e;
+          color: white;
+          font-size: 0.9rem;
+          font-weight: 950;
+          box-shadow: 0 12px 24px rgba(15, 118, 110, 0.16);
+        }
+
+        .healthArticlesPage .articleSafetyStrip {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          padding: 14px 16px;
+          border-radius: 20px;
+          border: 1px solid rgba(37, 99, 235, 0.16);
+          border-inline-start: 5px solid #2563eb;
+          background: rgba(239, 246, 255, 0.78);
+          color: var(--oh-muted);
+          line-height: 1.65;
+        }
+
+        .healthArticlesPage .articleSafetyStrip strong {
+          color: var(--oh-text);
+        }
+
+        .healthArticlesPage .articleSafetyMark {
+          display: inline-flex;
+          width: 34px;
+          height: 34px;
+          flex: 0 0 auto;
+          align-items: center;
+          justify-content: center;
+          border-radius: 999px;
+          background: rgba(37, 99, 235, 0.12);
+          color: #1d4ed8;
+          font-weight: 950;
         }
 
         .healthArticlesPage .articleEmptyState {
@@ -270,17 +505,46 @@ export default function BlogPage() {
           padding: 34px;
         }
 
-        @media (max-width: 980px) {
-          .healthArticlesPage .articleGrid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+        @media (max-width: 1080px) {
+          .healthArticlesPage .articleControlGrid {
+            grid-template-columns: 1fr 1fr;
           }
 
-          .healthArticlesPage .articleControlGrid {
+          .healthArticlesPage .articleSearchInputWrap {
+            grid-column: 1 / -1;
+          }
+
+          .healthArticlesPage .articleClearButton {
+            width: 100%;
+          }
+        }
+
+        @media (max-width: 980px) {
+          .healthArticlesPage .articleCompactHero .ohHeroGrid {
             grid-template-columns: 1fr;
+          }
+
+          .healthArticlesPage .articleGrid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
           }
         }
 
         @media (max-width: 640px) {
+          .healthArticlesPage .articleCompactHero {
+            padding: 28px;
+          }
+
+          .healthArticlesPage .articleCompactHero .ohTitle {
+            font-size: clamp(2.1rem, 11vw, 3rem);
+          }
+
+          .healthArticlesPage .articleSearchHeader,
+          .healthArticlesPage .articleResultsHeader {
+            align-items: flex-start;
+            flex-direction: column;
+          }
+
+          .healthArticlesPage .articleControlGrid,
           .healthArticlesPage .articleGrid {
             grid-template-columns: 1fr;
           }
@@ -289,149 +553,196 @@ export default function BlogPage() {
             align-items: flex-start;
             flex-direction: column;
           }
+
+          .healthArticlesPage .articleReadMore {
+            width: 100%;
+          }
         }
       `}</style>
 
       <div className="ohContainer ohStack large" style={{ padding: "32px 0 64px" }}>
-        <section className="ohHero">
+        <section className="ohHero articleCompactHero">
           <div className="ohHeroGrid">
             <div>
               <p className="ohEyebrow">
-                {text("Health Article Collection", "مجموعة المقالات الصحية")}
+                {text("Health Article Library", "مكتبة المقالات الصحية")}
               </p>
 
               <h1 className="ohTitle">
                 {text(
-                  "Find the right health article by topic, marker, or question.",
-                  "اعثر على المقال الصحي المناسب حسب الموضوع أو المؤشر أو السؤال."
+                  "Search health articles with clarity.",
+                  "ابحث في المقالات الصحية بوضوح."
                 )}
               </h1>
 
               <p className="ohLead">
                 {text(
-                  "Browse OrganHeal articles built for patient-friendly understanding of lab markers, organ health, reports, prevention, and safer doctor preparation.",
-                  "تصفح مقالات OrganHeal المصممة لفهم مبسط للمريض حول مؤشرات المختبر، صحة الأعضاء، التقارير، الوقاية، والتحضير الآمن للطبيب."
+                  "Find patient-friendly explanations by health area, lab marker, organ system, or preparation topic.",
+                  "اعثر على شروحات مبسطة حسب المجال الصحي أو مؤشر المختبر أو العضو أو موضوع التحضير."
                 )}
               </p>
 
-              <div className="ohButtonRow" style={{ marginTop: "24px" }}>
-                <Link href="/library" className="primaryBtn">
+              <div className="ohButtonRow" style={{ marginTop: "22px" }}>
+                <Link href="/library" className="secondaryBtn">
                   {text("Back to Health Learning Hub", "العودة إلى مركز التعلّم الصحي")}
                 </Link>
               </div>
             </div>
 
-            <aside className="ohCard articleDiscoveryPanel">
-              <div className="ohCardHeader">
-                <div>
-                  <p className="ohMetricLabel">
-                    {text("Guided article discovery", "اكتشاف المقالات الموجّه")}
-                  </p>
-
-                  <h2 className="ohCardTitle" style={{ marginTop: "8px" }}>
-                    {text(
-                      "Search live educational content.",
-                      "ابحث داخل المحتوى التعليمي المتاح."
-                    )}
-                  </h2>
-                </div>
-
-                <span className="ohStatusBadge good">
-                  {text("Available now", "متاح الآن")}
-                </span>
-              </div>
-
-              <p className="ohCardText">
-                {text(
-                  "Use search and filters to narrow articles by health area or lab marker without leaving the learning experience.",
-                  "استخدم البحث والفلاتر لتحديد المقالات حسب المجال الصحي أو مؤشر المختبر بدون الخروج من تجربة التعلّم."
-                )}
+            <aside className="articleHeroSummary">
+              <p className="articleHeroSummaryLabel">
+                {text("Available collection", "المجموعة المتاحة")}
               </p>
 
-              <div className="articleControlGrid">
-                <input
-                  className="articleControl"
-                  type="search"
-                  value={searchTerm}
-                  onChange={(event) => setSearchTerm(event.target.value)}
-                  placeholder={text(
-                    "Search articles, markers, or topics...",
-                    "ابحث في المقالات أو المؤشرات أو المواضيع..."
-                  )}
-                />
+              <span className="articleHeroSummaryValue">{blogPosts.length}</span>
 
-                <select
-                  className="articleControl"
-                  value={selectedCategory}
-                  onChange={(event) => setSelectedCategory(event.target.value)}
-                  aria-label={text("Filter by health focus", "فلترة حسب المجال الصحي")}
-                >
-                  <option value="all">
-                    {text("All health areas", "كل المجالات الصحية")}
-                  </option>
-
-                  {categoryOptions.map((category) => (
-                    <option value={category} key={category}>
-                      {category}
-                    </option>
-                  ))}
-                </select>
-
-                <select
-                  className="articleControl"
-                  value={selectedMarker}
-                  onChange={(event) => setSelectedMarker(event.target.value)}
-                  aria-label={text("Filter by lab marker", "فلترة حسب مؤشر المختبر")}
-                >
-                  <option value="all">
-                    {text("All lab markers", "كل مؤشرات المختبر")}
-                  </option>
-
-                  {markerOptions.map((marker) => (
-                    <option value={marker} key={marker}>
-                      {marker}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <p className="articleHeroSummaryText">
+                {text(
+                  "Structured articles connected to health areas and lab markers.",
+                  "مقالات منظمة ومرتبطة بالمجالات الصحية ومؤشرات المختبر."
+                )}
+              </p>
             </aside>
+          </div>
+        </section>
+
+        <section className="articleSearchPanel">
+          <div className="articleSearchHeader">
+            <div>
+              <p className="ohMetricLabel">
+                {text("Guided article discovery", "اكتشاف المقالات الموجّه")}
+              </p>
+
+              <h2 className="articleSearchTitle">
+                {text(
+                  "Search by marker, organ system, or health question.",
+                  "ابحث حسب المؤشر أو العضو أو السؤال الصحي."
+                )}
+              </h2>
+
+              <p className="articleSearchText">
+                {text(
+                  "The search area is the main action on this page. Use it to narrow the live article collection quickly.",
+                  "منطقة البحث هي الإجراء الأساسي هنا. استخدمها لتضييق مجموعة المقالات المتاحة بسرعة."
+                )}
+              </p>
+            </div>
+
+            <span className="ohStatusBadge good">
+              {text("Live articles", "مقالات متاحة")}
+            </span>
+          </div>
+
+          <div className="articleControlGrid">
+            <div className="articleSearchInputWrap">
+              <span className="articleSearchIcon">⌕</span>
+              <input
+                className="articleControl articleSearchInput"
+                type="search"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder={text(
+                  "Search LDL, kidney, sleep, blood pressure...",
+                  "ابحث عن LDL، الكلى، النوم، ضغط الدم..."
+                )}
+              />
+            </div>
+
+            <select
+              className="articleControl"
+              value={selectedCategory}
+              onChange={(event) => setSelectedCategory(event.target.value)}
+              aria-label={text("Filter by health area", "فلترة حسب المجال الصحي")}
+            >
+              <option value="all">
+                {text("All health areas", "كل المجالات الصحية")}
+              </option>
+
+              {categoryOptions.map((category) => (
+                <option value={category} key={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
+
+            <select
+              className="articleControl"
+              value={selectedMarker}
+              onChange={(event) => setSelectedMarker(event.target.value)}
+              aria-label={text("Filter by lab marker", "فلترة حسب مؤشر المختبر")}
+            >
+              <option value="all">
+                {text("All lab markers", "كل مؤشرات المختبر")}
+              </option>
+
+              {markerOptions.map((marker) => (
+                <option value={marker} key={marker}>
+                  {marker}
+                </option>
+              ))}
+            </select>
+
+            <button type="button" className="articleClearButton" onClick={resetFilters}>
+              {text("Clear", "مسح")}
+            </button>
+          </div>
+
+          <div className="articleQuickFilterRow">
+            <button
+              type="button"
+              className={`articleQuickFilter ${selectedCategory === "all" ? "active" : ""}`}
+              onClick={() => setSelectedCategory("all")}
+            >
+              {text("All", "الكل")}
+            </button>
+
+            {categoryOptions.map((category) => (
+              <button
+                type="button"
+                className={`articleQuickFilter ${selectedCategory === category ? "active" : ""}`}
+                onClick={() => setSelectedCategory(category)}
+                key={category}
+              >
+                {category}
+              </button>
+            ))}
           </div>
         </section>
 
         <section className="ohMetricGrid">
           <article className="ohMetricCard">
             <span className="ohMetricLabel">
-              {text("Available articles", "المقالات المتاحة")}
+              {text("Article collection", "مجموعة المقالات")}
             </span>
             <span className="ohMetricValue">{blogPosts.length}</span>
             <span className="ohMetricHint">
-              {text("Patient-friendly learning items", "مواد تعليمية مبسطة")}
+              {text("Available learning items", "مواد تعليمية متاحة")}
             </span>
           </article>
 
           <article className="ohMetricCard">
             <span className="ohMetricLabel">
-              {text("Search results", "نتائج البحث")}
+              {text("Current matches", "النتائج الحالية")}
             </span>
             <span className="ohMetricValue">{filteredPosts.length}</span>
             <span className="ohMetricHint">
-              {text("Matching current filters", "مطابقة للفلاتر الحالية")}
+              {text("Based on search and filters", "حسب البحث والفلاتر")}
             </span>
           </article>
 
           <article className="ohMetricCard">
             <span className="ohMetricLabel">
-              {text("Marker filters", "فلاتر المؤشرات")}
+              {text("Lab marker index", "فهرس المؤشرات")}
             </span>
             <span className="ohMetricValue">{markerOptions.length}</span>
             <span className="ohMetricHint">
-              {text("Connected lab markers", "مؤشرات مختبر مرتبطة")}
+              {text("Connected markers", "مؤشرات مرتبطة")}
             </span>
           </article>
         </section>
 
-        <section className="ohTrustNotice">
-          <span aria-hidden="true">OH</span>
+        <section className="articleSafetyStrip">
+          <span className="articleSafetyMark">OH</span>
           <div>
             <strong>
               {text("Educational content only", "محتوى تعليمي فقط")}
@@ -444,74 +755,99 @@ export default function BlogPage() {
           </div>
         </section>
 
-        {filteredPosts.length > 0 ? (
-          <section className="articleGrid">
-            {filteredPosts.map((post) => {
-              const title = getTitle(post);
-              const excerpt = getExcerpt(post);
-              const category = getCategory(post);
-              const organSystem = getOrganSystem(post);
-              const readTime = getReadTime(post);
+        <section>
+          <div className="articleResultsHeader">
+            <div>
+              <p className="ohMetricLabel">
+                {text("Article results", "نتائج المقالات")}
+              </p>
 
-              return (
-                <article key={post.slug} className="ohCard articleCard">
-                  <div className="articleMetaRow">
-                    <p className="articleCategory">{category}</p>
-                    <span className="ohStatusBadge neutral">{readTime}</span>
-                  </div>
-
-                  <h2 className="ohCardTitle">{title}</h2>
-
-                  <p className="ohCardText articleExcerpt">{excerpt}</p>
-
-                  <div className="articleMarkerRow">
-                    <span className="articleMarker">{organSystem}</span>
-
-                    {post.labMarkers.slice(0, 3).map((marker) => (
-                      <span className="articleMarker" key={`${post.slug}-${marker}`}>
-                        {marker}
-                      </span>
-                    ))}
-                  </div>
-
-                  <div className="articleCardFooter">
-                    <span className="articleDate">{post.date}</span>
-
-                    <Link href={`/blog/${post.slug}`} className="articleReadMore">
-                      {text("Read Article", "اقرأ المقال")}
-                    </Link>
-                  </div>
-                </article>
-              );
-            })}
-          </section>
-        ) : (
-          <section className="ohCard articleEmptyState">
-            <p className="ohMetricLabel">
-              {text("No matching articles", "لا توجد مقالات مطابقة")}
-            </p>
-
-            <h2 className="ohCardTitle">
-              {text(
-                "Try adjusting your search or filters.",
-                "جرّب تعديل البحث أو الفلاتر."
-              )}
-            </h2>
-
-            <p className="ohCardText">
-              {text(
-                "The article collection is focused on available educational content. Clear the filters to view all articles.",
-                "مجموعة المقالات تركز على المحتوى التعليمي المتاح. امسح الفلاتر لعرض كل المقالات."
-              )}
-            </p>
-
-            <div className="ohButtonRow" style={{ justifyContent: "center", marginTop: "18px" }}>
-              <button type="button" className="primaryBtn" onClick={resetFilters}>
-                {text("Clear Filters", "مسح الفلاتر")}
-              </button>
+              <h2 className="articleResultsTitle">
+                {text(
+                  `${filteredPosts.length} articles found`,
+                  `تم العثور على ${filteredPosts.length} مقالات`
+                )}
+              </h2>
             </div>
-          </section>
-        )}
+
+            {(searchTerm || selectedCategory !== "all" || selectedMarker !== "all") && (
+              <button type="button" className="articleQuickFilter active" onClick={resetFilters}>
+                {text("Reset all filters", "إعادة ضبط الفلاتر")}
+              </button>
+            )}
+          </div>
+
+          {filteredPosts.length > 0 ? (
+            <div className="articleGrid">
+              {filteredPosts.map((post) => {
+                const title = getTitle(post);
+                const excerpt = getExcerpt(post);
+                const category = getCategory(post);
+                const organSystem = getOrganSystem(post);
+                const readTime = getReadTime(post);
+
+                return (
+                  <article key={post.slug} className="ohCard articleCard">
+                    <div className="articleMetaRow">
+                      <p className="articleCategory">{category}</p>
+                      <span className="ohStatusBadge neutral">{readTime}</span>
+                    </div>
+
+                    <h3 className="ohCardTitle" style={{ fontSize: "1.16rem" }}>
+                      {title}
+                    </h3>
+
+                    <p className="ohCardText articleExcerpt">{excerpt}</p>
+
+                    <div className="articleMarkerRow">
+                      <span className="articleMarker">{organSystem}</span>
+
+                      {post.labMarkers.slice(0, 3).map((marker) => (
+                        <span className="articleMarker" key={`${post.slug}-${marker}`}>
+                          {marker}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div className="articleCardFooter">
+                      <span className="articleDate">{post.date}</span>
+
+                      <Link href={`/blog/${post.slug}`} className="articleReadMore">
+                        {text("Read Article", "اقرأ المقال")}
+                      </Link>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="ohCard articleEmptyState">
+              <p className="ohMetricLabel">
+                {text("No matching articles", "لا توجد مقالات مطابقة")}
+              </p>
+
+              <h2 className="ohCardTitle">
+                {text(
+                  "Try a broader search or clear the filters.",
+                  "جرّب بحثًا أوسع أو امسح الفلاتر."
+                )}
+              </h2>
+
+              <p className="ohCardText">
+                {text(
+                  "The collection only shows available educational content.",
+                  "المجموعة تعرض فقط المحتوى التعليمي المتاح."
+                )}
+              </p>
+
+              <div className="ohButtonRow" style={{ justifyContent: "center", marginTop: "18px" }}>
+                <button type="button" className="primaryBtn" onClick={resetFilters}>
+                  {text("Clear Filters", "مسح الفلاتر")}
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
       </div>
     </main>
   );
