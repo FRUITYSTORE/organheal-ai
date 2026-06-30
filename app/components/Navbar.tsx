@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import LanguageToggle from "./LanguageToggle";
@@ -64,6 +64,8 @@ function OrganHealLogo() {
 export default function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [language, setLanguage] = useState<Language>("en");
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
+  const moreMenuRef = useRef<HTMLDivElement | null>(null);
 
   const isArabic = language === "ar";
 
@@ -121,6 +123,30 @@ export default function Navbar() {
     };
   }, []);
 
+  useEffect(() => {
+    function closeMoreOnOutsideClick(event: MouseEvent) {
+      if (!moreMenuRef.current) return;
+
+      if (!moreMenuRef.current.contains(event.target as Node)) {
+        setIsMoreOpen(false);
+      }
+    }
+
+    function closeMoreOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsMoreOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", closeMoreOnOutsideClick);
+    document.addEventListener("keydown", closeMoreOnEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", closeMoreOnOutsideClick);
+      document.removeEventListener("keydown", closeMoreOnEscape);
+    };
+  }, []);
+
   async function checkUser() {
     const { data } = await supabase.auth.getUser();
     setIsLoggedIn(Boolean(data.user));
@@ -129,7 +155,12 @@ export default function Navbar() {
   async function signOut() {
     await supabase.auth.signOut();
     setIsLoggedIn(false);
+    setIsMoreOpen(false);
     window.location.href = "/";
+  }
+
+  function closeMore() {
+    setIsMoreOpen(false);
   }
 
   return (
@@ -139,19 +170,17 @@ export default function Navbar() {
           position: relative;
         }
 
-        .navMoreMenu summary {
-          list-style: none;
-          cursor: pointer;
-          font-weight: 900;
+        .navMoreTrigger {
+          border: 0;
+          background: transparent;
           color: inherit;
-          user-select: none;
+          cursor: pointer;
+          font: inherit;
+          font-weight: 900;
+          padding: 0;
         }
 
-        .navMoreMenu summary::-webkit-details-marker {
-          display: none;
-        }
-
-        .navMoreMenu summary::after {
+        .navMoreTrigger::after {
           content: "▾";
           margin-inline-start: 6px;
           font-size: 0.72rem;
@@ -163,7 +192,7 @@ export default function Navbar() {
           top: calc(100% + 12px);
           right: 0;
           z-index: 80;
-          min-width: 190px;
+          min-width: 210px;
           display: grid;
           gap: 6px;
           padding: 10px;
@@ -219,15 +248,37 @@ export default function Navbar() {
             <Link href="/health-plan">{labels.healthPlan}</Link>
             <Link href="/library">{labels.education}</Link>
 
-            <details className="navMoreMenu">
-              <summary>{labels.more}</summary>
+            <div className="navMoreMenu" ref={moreMenuRef}>
+              <button
+                type="button"
+                className="navMoreTrigger"
+                aria-expanded={isMoreOpen}
+                aria-haspopup="menu"
+                onClick={() => setIsMoreOpen((current) => !current)}
+              >
+                {labels.more}
+              </button>
 
-              <div className="navMorePanel">
-                <Link href="/history">{labels.history}</Link>
-                <Link href="/doctor-portal">{labels.doctorPortal}</Link>
-                <Link href="/profile">{labels.profile}</Link>
-              </div>
-            </details>
+              {isMoreOpen && (
+                <div className="navMorePanel" role="menu">
+                  <Link href="/" onClick={closeMore}>
+                    {labels.home}
+                  </Link>
+
+                  <Link href="/history" onClick={closeMore}>
+                    {labels.history}
+                  </Link>
+
+                  <Link href="/doctor-portal" onClick={closeMore}>
+                    {labels.doctorPortal}
+                  </Link>
+
+                  <Link href="/profile" onClick={closeMore}>
+                    {labels.profile}
+                  </Link>
+                </div>
+              )}
+            </div>
 
             <LanguageToggle />
 
