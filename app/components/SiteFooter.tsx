@@ -64,7 +64,7 @@ export default function SiteFooter() {
             </Link>
 
             <Link href="/library">
-              {text("Education Library", "مكتبة التثقيف")}
+              {text("Health Learning Hub", "مركز التعلّم الصحي")}
             </Link>
 
             <Link href="/about">
@@ -124,3 +124,4 @@ export default function SiteFooter() {
     </footer>
   );
 }
+

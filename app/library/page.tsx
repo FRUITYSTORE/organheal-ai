@@ -311,13 +311,13 @@ export default function LibraryPage() {
           <div className="ohHeroGrid">
             <div>
               <p className="ohEyebrow">
-                {text("OrganHeal Education Library", "مكتبة OrganHeal التعليمية")}
+                {text("OrganHeal Health Learning Hub", "مركز OrganHeal للتعلّم الصحي")}
               </p>
 
               <h1 className="ohTitle">
                 {text(
-                  "A focused place to understand health information.",
-                  "مكان مركز لفهم المعلومات الصحية."
+                  "A structured health learning hub for articles, visual guides, and safer understanding.",
+                  "مركز تعلّم صحي منظم للمقالات والأدلة المرئية والفهم الآمن."
                 )}
               </h1>
 
@@ -330,7 +330,7 @@ export default function LibraryPage() {
 
               <div className="ohButtonRow" style={{ marginTop: "24px" }}>
                 <Link href="/blog" className="primaryBtn">
-                  {text("Open Articles", "فتح المقالات")}
+                  {text("Read Health Articles", "قراءة المقالات الصحية")}
                 </Link>
 
                 <Link href="/library/videos" className="secondaryBtn">
@@ -343,7 +343,7 @@ export default function LibraryPage() {
               <div className="ohCardHeader">
                 <div>
                   <p className="ohMetricLabel">
-                    {text("Education gateway", "بوابة التثقيف")}
+                    {text("Learning access", "مدخل التعلّم")}
                   </p>
 
                   <h2 className="ohCardTitle" style={{ marginTop: "8px" }}>
@@ -361,8 +361,8 @@ export default function LibraryPage() {
 
               <p className="ohCardText">
                 {text(
-                  "You can reach this library from the main navigation under Education. Articles are available now, while the video education roadmap shows what will be produced later.",
-                  "يمكن الوصول إلى هذه المكتبة من القائمة الرئيسية عبر Education. المقالات متاحة الآن، أما دليل الفيديو فتوضح ما سيتم إنتاجه لاحقًا."
+                  "You can reach this learning hub from the main navigation under Learning Hub. Articles are available now, while the video education roadmap shows what will be produced later.",
+                  "يمكن الوصول إلى هذا المركز من القائمة الرئيسية عبر مركز التعلّم. المقالات متاحة الآن، أما دليل الفيديو فتوضح ما سيتم إنتاجه لاحقًا."
                 )}
               </p>
             </aside>
@@ -559,6 +559,7 @@ export default function LibraryPage() {
     </main>
   );
 }
+
 
 
 

@@ -72,7 +72,7 @@ export default function Navbar() {
   const labels = {
     home: isArabic ? "الرئيسية" : "Home",
     features: isArabic ? "الميزات" : "Features",
-    education: isArabic ? "التثقيف" : "Education",
+    education: isArabic ? "مركز التعلّم" : "Learning Hub",
     about: isArabic ? "عن المنصة" : "About",
     dashboard: isArabic ? "لوحة التحكم" : "Dashboard",
     reports: isArabic ? "التقارير" : "Reports",
@@ -308,3 +308,4 @@ export default function Navbar() {
     </nav>
   );
 }
+
