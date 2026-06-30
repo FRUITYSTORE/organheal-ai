@@ -1,34 +1,26 @@
-import type { MetadataRoute } from "next";
+﻿import type { MetadataRoute } from "next";
 import { blogPosts } from "../lib/blogData";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = "https://www.organheal.com";
 
-  const routes = [
+  const publicRoutes = [
     "",
-    "/about",
-    "/blog",
-    "/pricing",
+    "/features",
     "/library",
-    "/assessment",
-    "/heart",
-    "/brain",
-    "/kidney",
-    "/liver",
-    "/lung",
-    "/metabolic",
+    "/blog",
+    "/about",
+    "/contact",
     "/privacy",
     "/terms",
     "/medical-disclaimer",
-    "/contact",
-    "/onboarding",
   ];
 
-  const staticRoutes = routes.map((route) => ({
+  const staticRoutes = publicRoutes.map((route) => ({
     url: `${baseUrl}${route}`,
     lastModified: new Date(),
     changeFrequency: "weekly" as const,
-    priority: route === "" ? 1 : 0.8,
+    priority: route === "" ? 1 : route === "/features" || route === "/library" ? 0.9 : 0.75,
   }));
 
   const blogRoutes = blogPosts.map((post) => ({
@@ -40,5 +32,3 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   return [...staticRoutes, ...blogRoutes];
 }
-
-
