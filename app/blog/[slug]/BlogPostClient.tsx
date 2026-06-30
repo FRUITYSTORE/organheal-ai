@@ -2,7 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { blogPosts, type BlogPost } from "@/lib/blogData";
+import { blogPosts } from "@/lib/blogData";
+
+type BlogPost = (typeof blogPosts)[number];
 
 type Language = "en" | "ar";
 
@@ -329,3 +331,4 @@ export default function BlogPostClient({ post }: { post: BlogPost }) {
     </main>
   );
 }
+
