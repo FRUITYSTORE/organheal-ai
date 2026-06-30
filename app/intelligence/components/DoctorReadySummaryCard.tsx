@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 
@@ -11,7 +11,6 @@ type DoctorReadySummaryCardProps = {
 };
 
 type Language = "en" | "ar";
-
 
 function getStoredLanguage(): Language {
   if (typeof window === "undefined") return "en";
@@ -48,12 +47,16 @@ function localizeHealthValue(value: string | null | undefined, isArabic: boolean
     "Lung Health": "صحة الرئة",
     "Heart Health": "صحة القلب",
     "Kidney Health": "صحة الكلى",
+    "Brain Health": "صحة الدماغ",
+    "Metabolic Health": "الصحة الأيضية",
 
     "Support Liver Health": "دعم صحة الكبد",
     "Improve Lung Health": "تحسين صحة الرئة",
     "Improve Heart Health": "تحسين صحة القلب",
     "Support Kidney Health": "دعم صحة الكلى",
     "Improve Kidney Health": "تحسين صحة الكلى",
+    "Improve Brain Health": "تحسين صحة الدماغ",
+    "Improve Metabolic Health": "تحسين الصحة الأيضية",
 
     "General Health Monitoring Pattern": "نمط متابعة صحية عامة",
     "Preventive Health Monitoring": "متابعة صحية وقائية",
@@ -71,15 +74,24 @@ function localizeHealthValue(value: string | null | undefined, isArabic: boolean
   const lower = clean.toLowerCase();
 
   if (lower.includes("nutrition") && lower.includes("liver")) {
-    return "ركز على التغذية، ضبط الوزن، وتقليل العوامل التي قد ترهق الكبد.";
+    return "ركّز على التغذية، ضبط الوزن، وتقليل العوامل التي قد ترهق الكبد.";
   }
 
-  if (lower.includes("smoke") || lower.includes("pollution") || lower.includes("cough") || lower.includes("wheezing")) {
-    return "قلل التعرض للدخان أو التلوث، وراقب السعال أو الصفير أو ضيق التنفس.";
+  if (
+    lower.includes("smoke") ||
+    lower.includes("pollution") ||
+    lower.includes("cough") ||
+    lower.includes("wheezing")
+  ) {
+    return "قلّل التعرض للدخان أو التلوث، وراقب السعال أو الصفير أو ضيق التنفس.";
   }
 
-  if (lower.includes("blood pressure") || lower.includes("cholesterol") || lower.includes("regular activity")) {
-    return "ركز على ضغط الدم، الكوليسترول، النشاط المنتظم، والمتابعة الوقائية.";
+  if (
+    lower.includes("blood pressure") ||
+    lower.includes("cholesterol") ||
+    lower.includes("regular activity")
+  ) {
+    return "ركّز على ضغط الدم، الكوليسترول، النشاط المنتظم، والمتابعة الوقائية.";
   }
 
   if (lower.includes("hydration") || lower.includes("kidney")) {
@@ -93,6 +105,11 @@ function localizeHealthValue(value: string | null | undefined, isArabic: boolean
   return clean;
 }
 
+function getScoreTone(score: number) {
+  if (score >= 75) return "good";
+  if (score >= 50) return "moderate";
+  return "risk";
+}
 
 export default function DoctorReadySummaryCard({
   overallScore,
@@ -103,78 +120,150 @@ export default function DoctorReadySummaryCard({
 }: DoctorReadySummaryCardProps) {
   const [language, setLanguage] = useState<Language>("en");
 
+  const isArabic = language === "ar";
+
   useEffect(() => {
     function syncLanguage() {
-      setLanguage(getStoredLanguage());
+      const selectedLanguage = getStoredLanguage();
+
+      setLanguage(selectedLanguage);
+      document.documentElement.lang = selectedLanguage;
+      document.documentElement.dir = selectedLanguage === "ar" ? "rtl" : "ltr";
     }
 
     syncLanguage();
 
     window.addEventListener("storage", syncLanguage);
-    window.addEventListener("focus", syncLanguage);
-    window.addEventListener("click", syncLanguage);
+    window.addEventListener("organheal-language-change", syncLanguage);
 
     return () => {
       window.removeEventListener("storage", syncLanguage);
-      window.removeEventListener("focus", syncLanguage);
-      window.removeEventListener("click", syncLanguage);
+      window.removeEventListener("organheal-language-change", syncLanguage);
     };
   }, []);
 
-  const isArabic = language === "ar";
+  function text(en: string, ar: string) {
+    return isArabic ? ar : en;
+  }
+
+  const scoreTone = getScoreTone(overallScore);
 
   return (
-    <div className="resultBox" dir={isArabic ? "rtl" : "ltr"} lang={isArabic ? "ar" : "en"}>
-      <p className="sectionLabel">
-        {isArabic ? "ملخص جاهز للطبيب" : "🩺 DOCTOR READY SUMMARY"}
+    <section
+      className="ohCard"
+      dir={isArabic ? "rtl" : "ltr"}
+      lang={isArabic ? "ar" : "en"}
+    >
+      <div className="ohCardHeader">
+        <div>
+          <p className="ohMetricLabel">
+            {text("Doctor Ready Summary", "ملخص جاهز للطبيب")}
+          </p>
+
+          <h2 className="ohCardTitle" style={{ marginTop: "8px" }}>
+            {text("Doctor Brief", "ملخص الطبيب")}
+          </h2>
+        </div>
+
+        <span className={`ohStatusBadge ${scoreTone}`}>
+          {overallScore}/100
+        </span>
+      </div>
+
+      <p className="ohCardText">
+        {text(
+          "This brief organizes the most important health intelligence points to support a focused discussion with a licensed healthcare professional.",
+          "هذا الملخص ينظّم أهم نقاط الذكاء الصحي لدعم نقاش واضح ومركز مع مختص صحي مرخص."
+        )}
       </p>
 
-      <h2>{isArabic ? "ملخص الطبيب" : "Doctor Brief"}</h2>
+      <div className="ohMetricGrid" style={{ marginTop: "18px" }}>
+        <article className="ohMetricCard">
+          <span className="ohMetricLabel">
+            {text("Overall Score", "النتيجة العامة")}
+          </span>
+          <span className="ohMetricValue">{overallScore}</span>
+          <span className="ohMetricHint">
+            {text("Out of 100", "من 100")}
+          </span>
+        </article>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-          gap: "16px",
-          marginTop: "20px",
-          textAlign: isArabic ? "right" : "left",
-        }}
-      >
-        <div>
-          <strong>{isArabic ? "النتيجة العامة" : "Overall Score"}</strong>
-          <p>{overallScore}/100</p>
-        </div>
+        <article className="ohMetricCard">
+          <span className="ohMetricLabel">
+            {text("Priority Area", "منطقة الأولوية")}
+          </span>
+          <span className="ohMetricHint">
+            {priorityOrgan
+              ? localizeHealthValue(priorityOrgan, isArabic)
+              : text("N/A", "غير متاح")}
+          </span>
+        </article>
 
-        <div>
-          <strong>{isArabic ? "منطقة الأولوية" : "Priority Area"}</strong>
-          <p>{priorityOrgan ? localizeHealthValue(priorityOrgan, isArabic) : isArabic ? "غير متاح" : "N/A"}</p>
-        </div>
+        <article className="ohMetricCard">
+          <span className="ohMetricLabel">
+            {text("Risk Pattern", "نمط الخطورة")}
+          </span>
+          <span className="ohMetricHint">
+            {localizeHealthValue(riskPattern, isArabic)}
+          </span>
+        </article>
 
-        <div>
-          <strong>{isArabic ? "نمط الخطورة" : "Risk Pattern"}</strong>
-          <p>{localizeHealthValue(riskPattern, isArabic)}</p>
-        </div>
-
-        <div>
-          <strong>{isArabic ? "الفرصة الرئيسية" : "Main Opportunity"}</strong>
-          <p>{localizeHealthValue(opportunityTitle, isArabic)}</p>
-        </div>
+        <article className="ohMetricCard">
+          <span className="ohMetricLabel">
+            {text("Main Opportunity", "الفرصة الرئيسية")}
+          </span>
+          <span className="ohMetricHint">
+            {localizeHealthValue(opportunityTitle, isArabic)}
+          </span>
+        </article>
       </div>
 
-      <div
-        style={{
-          marginTop: "18px",
-          padding: "14px",
-          borderRadius: "14px",
-          background: "rgba(248, 250, 252, 0.85)",
-          textAlign: isArabic ? "right" : "left",
-        }}
-      >
-        <strong>{isArabic ? "أفضل خطوة تالية" : "Best Next Action"}</strong>
-        <p style={{ marginTop: "8px" }}>
+      <div className="ohDivider" />
+
+      <div className="ohTrustNotice">
+        <span aria-hidden="true">🩺</span>
+        <div>
+          <strong>
+            {text("Best Next Action", "أفضل خطوة تالية")}
+          </strong>
+          <br />
           {localizeHealthValue(bestNextAction, isArabic)}
-        </p>
+        </div>
       </div>
-    </div>
+
+      <div className="ohDivider" />
+
+      <div className="ohTimeline">
+        <div className="ohTimelineItem">
+          <span className="ohTimelineDot" />
+          <div>
+            <p className="ohTimelineTitle">
+              {text("Use this as a discussion aid", "استخدمه كأداة للنقاش")}
+            </p>
+            <p className="ohTimelineMeta">
+              {text(
+                "Bring this brief to your clinician to support a clearer conversation.",
+                "اعرض هذا الملخص على المختص الصحي لدعم نقاش أوضح."
+              )}
+            </p>
+          </div>
+        </div>
+
+        <div className="ohTimelineItem">
+          <span className="ohTimelineDot" />
+          <div>
+            <p className="ohTimelineTitle">
+              {text("Not a diagnosis", "ليس تشخيصًا")}
+            </p>
+            <p className="ohTimelineMeta">
+              {text(
+                "OrganHeal organizes educational signals only and does not replace clinical judgment.",
+                "OrganHeal ينظّم المؤشرات التعليمية فقط ولا يستبدل الحكم الطبي السريري."
+              )}
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
