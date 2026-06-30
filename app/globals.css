@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
    Font: Geist Sans via --font-geist-sans (layout.tsx)
    ============================================================ */
 
@@ -321,15 +321,6 @@ button {
   margin: 10px 0 32px;
 }
 
-.sectionLabel {
-  display: inline-block;
-  color: #5eead4;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  font-size: 11px;
-}
-
 .homeModernGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -618,61 +609,9 @@ h1 {
   margin: 12px 0 0;
   letter-spacing: -0.04em;
 }
-
-.featureGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 22px;
-}
-
-.featureCard {
-  padding: 28px;
-  border-radius: 24px;
-  background: rgba(15, 23, 42, 0.8);
-  border: 1px solid rgba(34, 211, 238, 0.18);
-  position: relative;
-  overflow: hidden;
-  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
-}
-
-.featureCard::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at top right, rgba(34, 211, 238, 0.15), transparent 35%);
-  opacity: 0;
-  transition: opacity 0.25s ease;
-}
-
-.featureCard:hover::before { opacity: 1; }
-
-.featureCard:hover {
-  transform: translateY(-5px);
-  border-color: rgba(34, 211, 238, 0.55);
-  box-shadow: 0 16px 40px rgba(34, 211, 238, 0.10);
-}
-
-.featureCard:nth-child(1) { border-color: rgba(239, 68, 68, 0.40); }
-.featureCard:nth-child(2) { border-color: rgba(34, 211, 238, 0.40); }
-.featureCard:nth-child(3) { border-color: rgba(34, 197, 94, 0.40); }
-
 .iconBox {
   font-size: 34px;
   margin-bottom: 18px;
-}
-
-.featureCard h3 {
-  font-size: 20px;
-  margin-bottom: 10px;
-  color: #67e8f9;
-  letter-spacing: -0.02em;
-  font-weight: 800;
-}
-
-.featureCard p {
-  color: #64748b;
-  line-height: 1.7;
-  font-size: 15px;
 }
 
 .reportGrid {
@@ -748,11 +687,6 @@ h1 {
 .reportGrid a:nth-child(7) .reportCard { border-color: rgba(14, 165, 233, 0.40); }
 .reportGrid a:nth-child(8) .reportCard { border-color: rgba(34, 197, 94, 0.40); }
 
-.assistantPage {
-  min-height: 100vh;
-  padding: 24px 20px 60px;
-}
-
 .assistantContainer {
   max-width: 1000px;
   margin: 0 auto;
@@ -823,14 +757,6 @@ h1 {
   background: rgba(34, 211, 238, 0.08);
 }
 
-.chatWindow {
-  background: rgba(15, 23, 42, 0.8);
-  border: 1px solid rgba(34, 211, 238, 0.18);
-  border-radius: 24px;
-  padding: 24px;
-  min-height: 400px;
-}
-
 .message {
   padding: 18px;
   border-radius: 18px;
@@ -885,12 +811,6 @@ h1 {
   padding: 14px 22px;
 }
 
-.assessmentForm {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 22px;
-}
-
 .formGroup {
   display: flex;
   flex-direction: column;
@@ -920,40 +840,6 @@ h1 {
 .formGroup input:focus,
 .formGroup select:focus {
   border-color: rgba(34, 211, 238, 0.55);
-}
-
-.assessmentForm .primaryBtn {
-  margin-top: 10px;
-  width: fit-content;
-}
-
-.resultBox {
-  margin-top: 32px;
-  padding: 32px;
-  border-radius: 22px;
-  background: rgba(8, 47, 73, 0.40);
-  border: 1px solid rgba(34, 211, 238, 0.22);
-  text-align: center;
-  scroll-margin-top: 140px;
-}
-
-.resultBox h2 {
-  font-size: 56px;
-  margin: 8px 0;
-  color: #22d3ee;
-  font-weight: 900;
-  letter-spacing: -0.04em;
-}
-
-.resultBox h3 {
-  font-size: 24px;
-  margin: 8px 0 14px;
-  letter-spacing: -0.02em;
-}
-
-.resultBox p {
-  color: #64748b;
-  line-height: 1.7;
 }
 
 .goodScore     { color: #22c55e; }
@@ -1278,8 +1164,6 @@ html[dir="rtl"] .navLinks {
 }
 
 html[dir="rtl"] .assistantHeader,
-html[dir="rtl"] .resultBox,
-html[dir="rtl"] .featureCard,
 html[dir="rtl"] .reportCard,
 html[dir="rtl"] .aboutCard,
 html[dir="rtl"] .blogCard,
@@ -1307,9 +1191,6 @@ html[dir="rtl"] .homeHeroActions {
   .homeHeroClean h1 {
     font-size: clamp(36px, 9vw, 56px);
   }
-
-  .featureGrid,
-  .assessmentForm,
   .reportGrid,
   .homeModernGrid,
   .aboutGrid,
@@ -2296,33 +2177,7 @@ html[dir="rtl"] .homeHeroActions {
   max-width: 920px;
 }
 
-.healthPlanPage .chatWindow {
-  gap: 16px;
-}
-
-.healthPlanPage .resultBox {
-  padding: 22px;
-  border-radius: 22px;
-}
-
-.healthPlanPage .resultBox h2 {
-  font-size: 24px;
-  line-height: 1.25;
-  margin-bottom: 12px;
-}
-
-.healthPlanPage .resultBox p {
-  font-size: 15px;
-  line-height: 1.65;
-}
-
-.healthPlanPage .sectionLabel {
-  font-size: 12px;
-  letter-spacing: 0.11em;
-  margin-bottom: 10px;
-}
-
-.healthPlanPage .primaryBtn,
+.healthPlanPage .healthPlanPage .healthPlanPage .healthPlanPage .healthPlanPage .healthPlanPage .primaryBtn,
 .healthPlanPage .secondaryBtn {
   min-height: 46px;
   padding: 12px 18px;
@@ -2504,20 +2359,7 @@ html[dir="rtl"] .homeHeroActions {
     line-height: 1.6;
   }
 
-  .healthPlanPage .resultBox {
-    padding: 18px;
-    border-radius: 18px;
-  }
-
-  .healthPlanPage .resultBox h2 {
-    font-size: 21px;
-  }
-
-  .healthPlanPage .resultBox p {
-    font-size: 14px;
-  }
-
-  .healthPlanPage .primaryBtn,
+  .healthPlanPage .healthPlanPage .healthPlanPage .healthPlanPage .primaryBtn,
   .healthPlanPage .secondaryBtn {
     width: 100%;
   }
@@ -2552,12 +2394,7 @@ html[dir="rtl"] .homeHeroActions {
     display: none !important;
   }
 
-  .doctorBriefPrintArea .sectionLabel {
-    color: #111827 !important;
-    opacity: 0.85 !important;
-  }
-
-  .doctorBriefPrintArea p {
+  .doctorBriefPrintArea .doctorBriefPrintArea p {
     font-size: 12px;
     line-height: 1.5;
   }
@@ -2574,14 +2411,6 @@ html[dir="rtl"] .homeHeroActions {
   }
 }
 /* -- Legal Trust Pages ------------------------------------- */
-.legalPage {
-  min-height: 100vh;
-  background:
-    radial-gradient(circle at top left, rgba(34, 211, 238, 0.14), transparent 34%),
-    linear-gradient(135deg, #eefcff 0%, #f8fafc 45%, #ffffff 100%);
-  padding: 48px 20px 80px;
-}
-
 .legalHero {
   max-width: 980px;
   margin: 0 auto 28px;
@@ -2760,10 +2589,6 @@ html[dir="rtl"] .homeHeroActions {
 @media (max-width: 640px) {
   .siteFooterGrid {
     grid-template-columns: 1fr;
-  }
-
-  .legalPage {
-    padding: 28px 14px 60px;
   }
 
   .legalHero,
@@ -4203,11 +4028,7 @@ html[dir="rtl"] .homeHeroActions {
 }
 
 .intelligenceConversionPage .assistantBadge,
-.intelligenceConversionPage .sectionLabel {
-  color: #0e7490;
-}
-
-.intelligenceConversionPage .assistantHeader h1 {
+.intelligenceConversionPage .intelligenceConversionPage .assistantHeader h1 {
   margin: 14px 0 12px;
   color: #061827;
   font-size: clamp(40px, 6vw, 70px);
@@ -4850,7 +4671,7 @@ html[dir="rtl"] .homeHeroActions {
   font-size: 14px;
 }
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ Phase 33 Health Plan Personalization Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Phase 33 Health Plan Personalization ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 .healthPlanIntelligencePage {
   min-height: 100vh;
   padding: 52px 20px 88px;
@@ -5197,7 +5018,7 @@ html[dir="rtl"] .homeHeroActions {
     grid-template-columns: 1fr;
   }
 }
-/* â”€â”€ Phase 34 Pricing Subscription Value Layer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Phase 34 Pricing Subscription Value Layer Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 .pricingValuePage {
   min-height: 100vh;
   padding: 52px 20px 88px;
@@ -5948,3 +5769,5 @@ html[dir="rtl"] .homeHeroActions {
 }
 
 /* === End OrganHeal Design System Foundation v1 === */
+
+
