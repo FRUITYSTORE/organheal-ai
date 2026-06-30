@@ -334,7 +334,7 @@ export default function LibraryPage() {
                 </Link>
 
                 <Link href="/library/videos" className="secondaryBtn">
-                  {text("Video Education Roadmap", "خطة التثقيف بالفيديو")}
+                  {text("Video Guides", "دليل الفيديو")}
                 </Link>
               </div>
             </div>
@@ -362,7 +362,7 @@ export default function LibraryPage() {
               <p className="ohCardText">
                 {text(
                   "You can reach this library from the main navigation under Education. Articles are available now, while the video education roadmap shows what will be produced later.",
-                  "يمكن الوصول إلى هذه المكتبة من القائمة الرئيسية عبر Education. المقالات متاحة الآن، أما خطة التثقيف بالفيديو فتوضح ما سيتم إنتاجه لاحقًا."
+                  "يمكن الوصول إلى هذه المكتبة من القائمة الرئيسية عبر Education. المقالات متاحة الآن، أما دليل الفيديو فتوضح ما سيتم إنتاجه لاحقًا."
                 )}
               </p>
             </aside>
@@ -500,7 +500,7 @@ export default function LibraryPage() {
                     className="secondaryBtn"
                     style={{ marginTop: "14px", width: "100%", justifyContent: "center" }}
                   >
-                    {text("View Roadmap", "عرض الخطة")}
+                    {text("View Video Guides", "عرض دليل الفيديو")}
                   </Link>
                 )}
               </article>
@@ -509,7 +509,7 @@ export default function LibraryPage() {
 
           <div className="ohButtonRow" style={{ marginTop: "20px" }}>
             <Link href="/library/videos" className="secondaryBtn">
-              {text("Preview Video Education Roadmap", "معاينة خطة التثقيف بالفيديو")}
+              {text("Explore Video Guides", "استكشاف دليل الفيديو")}
             </Link>
           </div>
         </section>
@@ -559,5 +559,6 @@ export default function LibraryPage() {
     </main>
   );
 }
+
 
 
