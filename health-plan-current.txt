@@ -1,0 +1,2128 @@
+﻿"use client";
+
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import PageBackActions from "../components/PageBackActions";
+import { supabase } from "@/lib/supabase";
+
+type Language = "en" | "ar";
+
+type PriorityAssessment = {
+  organ_name: string | null;
+  score: number | null;
+  risk_level: string | null;
+};
+
+type DailyCheckIn = {
+  mood: string | null;
+  wellness_score: number | null;
+  created_at: string;
+};
+
+type UploadedReport = {
+  id: number;
+  file_name: string | null;
+  extraction_status: string | null;
+  created_at: string;
+  extracted_at: string | null;
+};
+
+type HealthInsight = {
+  id: number;
+  report_id: number | null;
+  ai_status: string | null;
+  risk_level: string | null;
+  summary: string | null;
+  next_best_action: string | null;
+  created_at: string;
+};
+
+type GeneratedResult = {
+  insight_id: number | null;
+  report_id: number | null;
+  updated_at: string | null;
+};
+
+type HistoryItem = {
+  id: number;
+  created_at: string | null;
+};
+
+const organTaskPlans: Record<string, string[]> = {
+  Heart: [
+    "Check blood pressure at least 3 times this week.",
+    "Reduce salty or heavily processed food for the next 7 days.",
+    "Walk for 20 minutes on at least 4 days this week.",
+    "Review any chest pain, shortness of breath, or palpitation pattern.",
+  ],
+  Kidney: [
+    "Track hydration and urine changes for the next 7 days.",
+    "Review blood pressure and avoid unnecessary NSAID use.",
+    "Prepare latest creatinine, eGFR, and urine results for review.",
+    "Reduce high-salt meals this week.",
+  ],
+  Liver: [
+    "Review liver enzymes and medication or supplement exposure.",
+    "Avoid alcohol and unnecessary supplements.",
+    "Track abdominal discomfort, fatigue, or yellowing symptoms.",
+    "Prepare previous liver-related reports for comparison.",
+  ],
+  Lung: [
+    "Track cough, breathing difficulty, and activity tolerance.",
+    "Avoid smoke, dust, and strong respiratory irritants.",
+    "Record oxygen saturation if clinically relevant and available.",
+    "Review inhaler or respiratory medication adherence if applicable.",
+  ],
+  Brain: [
+    "Track sleep quality, headache pattern, focus, and stress level.",
+    "Reduce late screen exposure for the next 7 days.",
+    "Practice a short breathing or relaxation routine daily.",
+    "Review any dizziness, weakness, or neurological warning symptoms.",
+  ],
+  Metabolic: [
+    "Track weight, waist, or glucose-related changes weekly.",
+    "Reduce sugary drinks and refined carbohydrates.",
+    "Walk or exercise for at least 20 minutes on 4 days this week.",
+    "Prepare lipid, glucose, HbA1c, or metabolic lab reports.",
+  ],
+  General: [
+    "Complete one wellness check-in this week.",
+    "Review your latest reports and generated intelligence.",
+    "Choose one realistic lifestyle action for the next 7 days.",
+    "Repeat your priority assessment after 4 weeks.",
+  ],
+};
+
+const organAssessmentLinks: Record<string, string> = {
+  Heart: "/heart",
+  Kidney: "/kidney",
+  Liver: "/liver",
+  Lung: "/lung",
+  Brain: "/brain",
+  Metabolic: "/metabolic",
+  General: "/assessment",
+};
+
+
+function localizeHealthPlanValue(
+  value: string | null | undefined,
+  isArabic: boolean
+) {
+  if (!isArabic) return value || "N/A";
+
+  const clean = (value || "").trim();
+
+  if (!clean) return "ØºÙŠØ± Ù…ØªØ§Ø­";
+
+  const exact: Record<string, string> = {
+    Heart: "Ø§Ù„Ù‚Ù„Ø¨",
+    Liver: "Ø§Ù„ÙƒØ¨Ø¯",
+    Lung: "Ø§Ù„Ø±Ø¦Ø©",
+    Kidney: "Ø§Ù„ÙƒÙ„Ù‰",
+    Metabolic: "Ø§Ù„Ø£ÙŠØ¶",
+    Brain: "Ø§Ù„Ø¯Ù…Ø§Øº",
+    General: "Ø¹Ø§Ù…",
+
+    High: "Ù…Ø±ØªÙØ¹",
+    Moderate: "Ù…ØªÙˆØ³Ø·",
+    Low: "Ù…Ù†Ø®ÙØ¶",
+    Normal: "Ø·Ø¨ÙŠØ¹ÙŠ",
+    "Not available": "ØºÙŠØ± Ù…ØªØ§Ø­",
+    Good: "Ø¬ÙŠØ¯",
+    Fair: "Ù…ØªÙˆØ³Ø·",
+    Poor: "Ø¶Ø¹ÙŠÙ",
+    Excellent: "Ù…Ù…ØªØ§Ø²",
+    Stable: "Ù…Ø³ØªÙ‚Ø±",
+
+    "High Risk": "Ø®Ø·ÙˆØ±Ø© Ù…Ø±ØªÙØ¹Ø©",
+    "Moderate Risk": "Ø®Ø·ÙˆØ±Ø© Ù…ØªÙˆØ³Ø·Ø©",
+    "Low Risk": "Ø®Ø·ÙˆØ±Ø© Ù…Ù†Ø®ÙØ¶Ø©",
+
+    "Health History": "Ø§Ù„ØªØ§Ø±ÙŠØ® Ø§Ù„ØµØ­ÙŠ",
+    "Doctor Brief": "Ù…Ù„Ø®Øµ Ø§Ù„Ø·Ø¨ÙŠØ¨",
+    "Intelligence Center": "Ù…Ø±ÙƒØ² Ø§Ù„Ø°ÙƒØ§Ø¡",
+    "Generated intelligence is saved": "Ø§Ù„Ø°ÙƒØ§Ø¡ Ø§Ù„ØµØ­ÙŠ Ù…Ø­ÙÙˆØ¸",
+    "Generated intelligence is incomplete": "Ø§Ù„Ø°ÙƒØ§Ø¡ Ø§Ù„ØµØ­ÙŠ ØºÙŠØ± Ù…ÙƒØªÙ…Ù„",
+  };
+
+  if (exact[clean]) return exact[clean];
+
+  const lower = clean.toLowerCase();
+
+  if (lower.includes("blood pressure")) {
+    return "Ù…ØªØ§Ø¨Ø¹Ø© Ø¶ØºØ· Ø§Ù„Ø¯Ù… ÙˆØªÙ‚Ù„ÙŠÙ„ Ø§Ù„Ø¹ÙˆØ§Ù…Ù„ Ø§Ù„ØªÙŠ Ù‚Ø¯ ØªØ²ÙŠØ¯ Ø¥Ø¬Ù‡Ø§Ø¯ Ø§Ù„Ù‚Ù„Ø¨.";
+  }
+
+  if (lower.includes("liver")) {
+    return "Ø¯Ø¹Ù… ØµØ­Ø© Ø§Ù„ÙƒØ¨Ø¯ Ù…Ù† Ø®Ù„Ø§Ù„ Ø§Ù„ØªØºØ°ÙŠØ©ØŒ ØªÙ‚Ù„ÙŠÙ„ Ø§Ù„Ø¹ÙˆØ§Ù…Ù„ Ø§Ù„Ù…Ø±Ù‡Ù‚Ø©ØŒ ÙˆÙ…Ø±Ø§Ø¬Ø¹Ø© Ø§Ù„ÙØ­ÙˆØµØ§Øª Ø¹Ù†Ø¯ Ø§Ù„Ø­Ø§Ø¬Ø©.";
+  }
+
+  if (lower.includes("lung") || lower.includes("breathing")) {
+    return "Ø¯Ø¹Ù… ØµØ­Ø© Ø§Ù„Ø±Ø¦Ø© Ø¹Ø¨Ø± ØªÙ‚Ù„ÙŠÙ„ Ø§Ù„Ù…Ù‡ÙŠØ¬Ø§Øª ÙˆÙ…Ø±Ø§Ù‚Ø¨Ø© Ø§Ù„ØªÙ†ÙØ³ ÙˆØ§Ù„Ø³Ø¹Ø§Ù„ ÙˆØªØ­Ù…Ù„ Ø§Ù„Ù†Ø´Ø§Ø·.";
+  }
+
+  if (lower.includes("kidney")) {
+    return "Ø¯Ø¹Ù… ØµØ­Ø© Ø§Ù„ÙƒÙ„Ù‰ Ø¹Ø¨Ø± Ø§Ù„ØªØ±Ø·ÙŠØ¨ ÙˆÙ…ØªØ§Ø¨Ø¹Ø© Ø¶ØºØ· Ø§Ù„Ø¯Ù… ÙˆØ§Ù„ÙØ­ÙˆØµØ§Øª Ø°Ø§Øª Ø§Ù„Ø¹Ù„Ø§Ù‚Ø©.";
+  }
+
+  if (lower.includes("metabolic") || lower.includes("glucose") || lower.includes("cholesterol")) {
+    return "Ù…ØªØ§Ø¨Ø¹Ø© Ù…Ø¤Ø´Ø±Ø§Øª Ø§Ù„Ø£ÙŠØ¶ Ù…Ø«Ù„ Ø§Ù„Ø³ÙƒØ± ÙˆØ§Ù„Ø¯Ù‡ÙˆÙ† ÙˆØ§Ù„Ù†Ø´Ø§Ø· Ø§Ù„ØºØ°Ø§Ø¦ÙŠ.";
+  }
+
+  if (lower.includes("review") && lower.includes("doctor")) {
+    return "Ø±Ø§Ø¬Ø¹ Ø§Ù„Ù†ØªØ§Ø¦Ø¬ ÙˆØ§Ù„Ø®Ø·Ø© Ù…Ø¹ Ø§Ù„Ø·Ø¨ÙŠØ¨ Ø¹Ù†Ø¯ ÙˆØ¬ÙˆØ¯ Ø£Ø¹Ø±Ø§Ø¶ Ø£Ùˆ Ù†ØªØ§Ø¦Ø¬ ØªØ­ØªØ§Ø¬ Ù…ØªØ§Ø¨Ø¹Ø©.";
+  }
+
+  return clean;
+}
+
+const arabicOrganTaskPlans: Record<string, string[]> = {
+  Heart: [
+    "Ù‚ÙŠØ§Ø³ Ø¶ØºØ· Ø§Ù„Ø¯Ù… Ø«Ù„Ø§Ø« Ù…Ø±Ø§Øª Ø¹Ù„Ù‰ Ø§Ù„Ø£Ù‚Ù„ Ù‡Ø°Ø§ Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹.",
+    "ØªÙ‚Ù„ÙŠÙ„ Ø§Ù„Ù…Ù„Ø­ ÙˆØ§Ù„Ø£Ø·Ø¹Ù…Ø© Ø§Ù„Ù…ØµÙ†Ø¹Ø© Ø®Ù„Ø§Ù„ Ø§Ù„Ø£ÙŠØ§Ù… Ø§Ù„Ù‚Ø§Ø¯Ù…Ø©.",
+    "Ø§Ù„Ù…Ø´ÙŠ 20 Ø¯Ù‚ÙŠÙ‚Ø© ÙÙŠ 4 Ø£ÙŠØ§Ù… Ø¹Ù„Ù‰ Ø§Ù„Ø£Ù‚Ù„ Ù‡Ø°Ø§ Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹.",
+    "Ù…Ø±Ø§Ø¬Ø¹Ø© Ø£ÙŠ Ø£Ù„Ù… ØµØ¯Ø±ØŒ Ø¶ÙŠÙ‚ Ù†ÙØ³ØŒ Ø®ÙÙ‚Ø§Ù†ØŒ Ø£Ùˆ ØªØ¹Ø¨ ØºÙŠØ± Ù…Ø¹ØªØ§Ø¯.",
+    "ØªØ¬Ù‡ÙŠØ² Ù†ØªØ§Ø¦Ø¬ Ø§Ù„Ø¯Ù‡ÙˆÙ†ØŒ Ø§Ù„Ø¶ØºØ·ØŒ Ø£Ùˆ ÙØ­ÙˆØµØ§Øª Ø§Ù„Ù‚Ù„Ø¨ Ø§Ù„Ø³Ø§Ø¨Ù‚Ø© Ù„Ù„Ù…Ù‚Ø§Ø±Ù†Ø©.",
+  ],
+  Liver: [
+    "ØªÙ‚Ù„ÙŠÙ„ Ø§Ù„Ø£Ø·Ø¹Ù…Ø© Ø§Ù„Ø¯Ù‡Ù†ÙŠØ© ÙˆØ§Ù„Ù…Ù‚Ù„ÙŠØ© Ø®Ù„Ø§Ù„ Ù‡Ø°Ø§ Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹.",
+    "ØªØ¬Ù†Ø¨ Ø§Ù„ÙƒØ­ÙˆÙ„ ÙˆØ§Ù„Ù…ÙƒÙ…Ù„Ø§Øª ØºÙŠØ± Ø§Ù„Ø¶Ø±ÙˆØ±ÙŠØ©.",
+    "Ù…ØªØ§Ø¨Ø¹Ø© Ø§Ù„ØªØ¹Ø¨ØŒ Ø£Ù„Ù… Ø§Ù„Ø¨Ø·Ù†ØŒ Ø§ØµÙØ±Ø§Ø± Ø§Ù„Ø¹ÙŠÙ†ÙŠÙ†ØŒ Ø£Ùˆ ØªØºÙŠØ± Ù„ÙˆÙ† Ø§Ù„Ø¨ÙˆÙ„.",
+    "Ø´Ø±Ø¨ ÙƒÙ…ÙŠØ© ÙƒØ§ÙÙŠØ© Ù…Ù† Ø§Ù„Ù…Ø§Ø¡ Ø­Ø³Ø¨ Ø­Ø§Ù„ØªÙƒ Ø§Ù„ØµØ­ÙŠØ©.",
+    "ØªØ¬Ù‡ÙŠØ² ØªÙ‚Ø§Ø±ÙŠØ± Ø§Ù„ÙƒØ¨Ø¯ Ø§Ù„Ø³Ø§Ø¨Ù‚Ø© Ù„Ù„Ù…Ù‚Ø§Ø±Ù†Ø© Ù…Ø¹ Ø§Ù„Ø·Ø¨ÙŠØ¨.",
+  ],
+  Lung: [
+    "Ù…ØªØ§Ø¨Ø¹Ø© Ø§Ù„Ø³Ø¹Ø§Ù„ØŒ Ø¶ÙŠÙ‚ Ø§Ù„ØªÙ†ÙØ³ØŒ ÙˆØªØ­Ù…Ù„ Ø§Ù„Ù†Ø´Ø§Ø· Ø§Ù„ÙŠÙˆÙ…ÙŠ.",
+    "ØªØ¬Ù†Ø¨ Ø§Ù„Ø¯Ø®Ø§Ù†ØŒ Ø§Ù„ØºØ¨Ø§Ø±ØŒ ÙˆØ§Ù„Ø±ÙˆØ§Ø¦Ø­ Ø§Ù„Ù‚ÙˆÙŠØ©.",
+    "Ø§Ù„Ù…Ø´ÙŠ Ø§Ù„Ø®ÙÙŠÙ Ø£Ùˆ ØªÙ…Ø§Ø±ÙŠÙ† Ø§Ù„ØªÙ†ÙØ³ Ø¥Ø°Ø§ ÙƒØ§Ù†Øª Ù…Ù†Ø§Ø³Ø¨Ø© Ù„Ùƒ.",
+    "ØªØ³Ø¬ÙŠÙ„ Ø£ÙŠ ØµÙÙŠØ± Ø£Ùˆ Ø¶ÙŠÙ‚ Ù†ÙØ³ Ø£Ùˆ Ø£Ø¹Ø±Ø§Ø¶ Ù„ÙŠÙ„ÙŠØ©.",
+    "ØªØ¬Ù‡ÙŠØ² Ø£ÙŠ Ø£Ø´Ø¹Ø© Ø£Ùˆ ÙØ­ÙˆØµØ§Øª ØªÙ†ÙØ³ Ø³Ø§Ø¨Ù‚Ø© Ù„Ù„Ù…Ø±Ø§Ø¬Ø¹Ø©.",
+  ],
+  Kidney: [
+    "Ø´Ø±Ø¨ Ø§Ù„Ù…Ø§Ø¡ Ø¨Ø§Ù†ØªØ¸Ø§Ù… Ø¥Ø°Ø§ Ù„Ù… ÙŠÙ…Ù†Ø¹Ùƒ Ø§Ù„Ø·Ø¨ÙŠØ¨ Ù…Ù† Ø°Ù„Ùƒ.",
+    "Ù…ØªØ§Ø¨Ø¹Ø© Ø¶ØºØ· Ø§Ù„Ø¯Ù… Ù‡Ø°Ø§ Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹.",
+    "ØªØ¬Ù†Ø¨ Ø§Ø³ØªØ®Ø¯Ø§Ù… Ù…Ø³ÙƒÙ†Ø§Øª Ø§Ù„Ø£Ù„Ù… Ø¨ÙƒØ«Ø±Ø© Ø¨Ø¯ÙˆÙ† Ø§Ø³ØªØ´Ø§Ø±Ø© Ø·Ø¨ÙŠØ©.",
+    "Ù…Ø±Ø§Ø¬Ø¹Ø© Ø£ÙŠ ØªÙˆØ±Ù…ØŒ ØªØºÙŠØ± ÙÙŠ Ø§Ù„Ø¨ÙˆÙ„ØŒ Ø£Ùˆ ØªØ¹Ø¨ ØºÙŠØ± Ù…ÙØ³Ø±.",
+    "ØªØ¬Ù‡ÙŠØ² ÙØ­ÙˆØµØ§Øª Ø§Ù„ÙƒØ±ÙŠØ§ØªÙŠÙ†ÙŠÙ†ØŒ Ø§Ù„ÙŠÙˆØ±ÙŠØ§ØŒ ÙˆØ§Ù„Ø£Ù…Ù„Ø§Ø­ Ù„Ù„Ù…Ù‚Ø§Ø±Ù†Ø©.",
+  ],
+  Metabolic: [
+    "ØªÙ‚Ù„ÙŠÙ„ Ø§Ù„Ù…Ø´Ø±ÙˆØ¨Ø§Øª Ø§Ù„Ø³ÙƒØ±ÙŠØ© ÙˆØ§Ù„ÙƒØ±Ø¨ÙˆÙ‡ÙŠØ¯Ø±Ø§Øª Ø§Ù„Ù…ÙƒØ±Ø±Ø©.",
+    "Ø§Ù„Ù…Ø´ÙŠ Ø£Ùˆ Ø§Ù„Ø­Ø±ÙƒØ© 20 Ø¯Ù‚ÙŠÙ‚Ø© ÙÙŠ 4 Ø£ÙŠØ§Ù… Ø¹Ù„Ù‰ Ø§Ù„Ø£Ù‚Ù„.",
+    "Ù…ØªØ§Ø¨Ø¹Ø© Ø§Ù„ÙˆØ²Ù† Ø£Ùˆ Ù…Ø­ÙŠØ· Ø§Ù„Ø®ØµØ± Ù…Ø±Ø© Ø£Ø³Ø¨ÙˆØ¹ÙŠÙ‹Ø§.",
+    "Ù…Ø±Ø§Ø¬Ø¹Ø© ÙØ­ÙˆØµØ§Øª Ø§Ù„Ø³ÙƒØ±ØŒ Ø§Ù„Ø¯Ù‡ÙˆÙ†ØŒ HbA1c Ø¥Ø°Ø§ ÙƒØ§Ù†Øª Ù…ØªÙˆÙØ±Ø©.",
+    "Ø§Ø®ØªÙŠØ§Ø± ÙˆØ¬Ø¨Ø© ÙˆØ§Ø­Ø¯Ø© ÙŠÙˆÙ…ÙŠÙ‹Ø§ ØªÙƒÙˆÙ† ØµØ­ÙŠØ© Ø£ÙƒØ«Ø± Ù…Ù† Ø§Ù„Ù…Ø¹ØªØ§Ø¯.",
+  ],
+  General: [
+    "Ø¥ÙƒÙ…Ø§Ù„ ØªØ­Ø¯ÙŠØ« ØµØ­ÙŠ ÙˆØ§Ø­Ø¯ Ù‡Ø°Ø§ Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹.",
+    "Ù…Ø±Ø§Ø¬Ø¹Ø© Ø¢Ø®Ø± ØªÙ‚Ø±ÙŠØ± Ø·Ø¨ÙŠ ÙˆØ§Ù„Ø°ÙƒØ§Ø¡ Ø§Ù„ØµØ­ÙŠ Ø§Ù„Ù†Ø§ØªØ¬ Ø¹Ù†Ù‡.",
+    "Ø§Ø®ØªÙŠØ§Ø± Ø¹Ø§Ø¯Ø© ØµØ­ÙŠØ© ÙˆØ§Ø­Ø¯Ø© ÙˆØ§Ù‚Ø¹ÙŠØ© Ù„Ù„Ø£ÙŠØ§Ù… Ø§Ù„Ø³Ø¨Ø¹Ø© Ø§Ù„Ù‚Ø§Ø¯Ù…Ø©.",
+    "Ø¥Ø¹Ø§Ø¯Ø© ØªÙ‚ÙŠÙŠÙ… Ø§Ù„Ø£ÙˆÙ„ÙˆÙŠØ© Ø§Ù„ØµØ­ÙŠØ© Ø¨Ø¹Ø¯ 4 Ø£Ø³Ø§Ø¨ÙŠØ¹.",
+  ],
+};
+
+function getLocalizedOrganTasks(priorityOrgan: string, isArabic: boolean) {
+  if (!isArabic) return organTaskPlans[priorityOrgan] || organTaskPlans.General;
+
+  return arabicOrganTaskPlans[priorityOrgan] || arabicOrganTaskPlans.General;
+}
+
+export default function HealthPlanPage() {
+  const [language, setLanguage] = useState<Language>("en");
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
+  const [priorityAssessment, setPriorityAssessment] =
+    useState<PriorityAssessment | null>(null);
+  const [latestCheckIn, setLatestCheckIn] = useState<DailyCheckIn | null>(null);
+  const [uploadedReports, setUploadedReports] = useState<UploadedReport[]>([]);
+  const [healthInsights, setHealthInsights] = useState<HealthInsight[]>([]);
+  const [generatedResults, setGeneratedResults] = useState<GeneratedResult[]>([]);
+  const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
+  const [completedTasks, setCompletedTasks] = useState<string[]>([]);
+
+
+
+  useEffect(() => {
+    const savedLanguage =
+      (localStorage.getItem("organheal-language") as Language) || "en";
+
+    setLanguage(savedLanguage);
+
+    const interval = setInterval(() => {
+      const currentLanguage =
+        (localStorage.getItem("organheal-language") as Language) || "en";
+      setLanguage(currentLanguage);
+    }, 300);
+
+    fetchHealthPlanData();
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const isArabic = language === "ar";
+  const priorityOrgan = priorityAssessment?.organ_name || "General";
+  const priorityScore =
+    typeof priorityAssessment?.score === "number"
+      ? priorityAssessment.score
+      : null;
+  const riskLevel = priorityAssessment?.risk_level || "Not available";
+  const priorityOrganDisplay = localizeHealthPlanValue(priorityOrgan, isArabic);
+  const riskLevelDisplay = localizeHealthPlanValue(riskLevel, isArabic);
+
+  const taskStorageKey = `organheal-health-plan-tasks-${priorityOrgan}`;
+
+  const completedExtractionCount = uploadedReports.filter(
+    (report) => report.extraction_status === "Completed"
+  ).length;
+
+  const pendingExtractionCount = uploadedReports.filter(
+    (report) =>
+      !report.extraction_status || report.extraction_status === "Pending"
+  ).length;
+
+  const generatedCount = generatedResults.length;
+  const latestGenerated = generatedResults[0] || null;
+  const latestInsight = healthInsights[0] || null;
+
+  const hasAssessment = Boolean(priorityAssessment);
+  const hasReports = uploadedReports.length > 0;
+  const hasGeneratedIntelligence = generatedCount > 0;
+  const hasCheckIn = Boolean(latestCheckIn);
+  const hasHistory = historyItems.length > 0;
+
+  const planReadinessScore = [
+    hasAssessment,
+    hasReports,
+    hasGeneratedIntelligence,
+    hasCheckIn,
+    hasHistory,
+  ].filter(Boolean).length * 20;
+
+  const planIntensity =
+    priorityScore === null
+      ? isArabic
+        ? "Ø¨Ø§Ù†ØªØ¸Ø§Ø± Ø§Ù„ØªÙ‚ÙŠÙŠÙ…"
+        : "Waiting for assessment"
+      : priorityScore < 50
+      ? isArabic
+        ? "Ù…ØªØ§Ø¨Ø¹Ø© Ø¹Ø§Ù„ÙŠØ©"
+        : "High follow-up"
+      : priorityScore < 80
+      ? isArabic
+        ? "Ù…ØªØ§Ø¨Ø¹Ø© Ù…ØªÙˆØ³Ø·Ø©"
+        : "Moderate follow-up"
+      : isArabic
+      ? "Ù…ØªØ§Ø¨Ø¹Ø© ÙˆÙ‚Ø§Ø¦ÙŠØ©"
+      : "Preventive follow-up";
+
+  const latestCheckInText = latestCheckIn
+    ? `${new Date(latestCheckIn.created_at).toLocaleDateString()} - ${
+        latestCheckIn.wellness_score ?? "N/A"
+      }/100 - ${latestCheckIn.mood || "Mood not recorded"}`
+    : isArabic
+    ? "Ù„Ø§ ÙŠÙˆØ¬Ø¯ ØªØ­Ø¯ÙŠØ« ØµØ­ÙŠ Ø¨Ø¹Ø¯"
+    : "No check-in yet";
+
+  const followUpRhythm =
+    priorityScore === null
+      ? isArabic
+        ? "Ø§Ø¨Ø¯Ø£ Ø¨ØªÙ‚ÙŠÙŠÙ… ØµØ­ÙŠ"
+        : "Start with an assessment"
+      : priorityScore < 50
+      ? isArabic
+        ? "Ù…ØªØ§Ø¨Ø¹Ø© Ø£Ø³Ø¨ÙˆØ¹ÙŠØ© Ù…Ù‚ØªØ±Ø­Ø©"
+        : "Weekly follow-up recommended"
+      : priorityScore < 80
+      ? isArabic
+        ? "ØªØ­Ø¯ÙŠØ« ØµØ­ÙŠ Ù…Ø±ØªÙŠÙ† Ø¥Ù„Ù‰ Ø«Ù„Ø§Ø« Ù…Ø±Ø§Øª Ø£Ø³Ø¨ÙˆØ¹ÙŠÙ‹Ø§"
+        : "Check in 2 to 3 times per week"
+      : isArabic
+      ? "Ù…ØªØ§Ø¨Ø¹Ø© ÙˆÙ‚Ø§Ø¦ÙŠØ© Ø£Ø³Ø¨ÙˆØ¹ÙŠØ©"
+      : "Weekly preventive check-in";
+
+
+  const readinessItems = [
+    {
+      label: isArabic ? "Ø§Ù„ØªÙ‚ÙŠÙŠÙ… Ø§Ù„ØµØ­ÙŠ" : "Health assessment",
+      ready: hasAssessment,
+      note: isArabic
+        ? "ÙŠØ­Ø¯Ø¯ Ø£ÙˆÙ„ÙˆÙŠØ© Ø§Ù„Ø®Ø·Ø© Ø§Ù„Ø£Ø³Ø§Ø³ÙŠØ©."
+        : "Defines the core priority for the plan.",
+    },
+    {
+      label: isArabic ? "Ø§Ù„ØªÙ‚Ø§Ø±ÙŠØ± Ø§Ù„Ø·Ø¨ÙŠØ©" : "Medical reports",
+      ready: hasReports,
+      note: isArabic
+        ? "ØªØ¶ÙŠÙ Ø¨ÙŠØ§Ù†Ø§Øª Ø³Ø±ÙŠØ±ÙŠØ© Ø£Ù‚ÙˆÙ‰ Ù„Ù„Ø®Ø·Ø©."
+        : "Adds stronger clinical context.",
+    },
+    {
+      label: isArabic ? "Ø§Ù„Ø°ÙƒØ§Ø¡ Ø§Ù„ØµØ­ÙŠ" : "Generated intelligence",
+      ready: hasGeneratedIntelligence,
+      note: isArabic
+        ? "ÙŠØ­ÙˆÙ‘Ù„ Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª Ø¥Ù„Ù‰ Ù…Ù„Ø®ØµØ§Øª Ù‚Ø§Ø¨Ù„Ø© Ù„Ù„ØªÙ†ÙÙŠØ°."
+        : "Turns data into actionable summaries.",
+    },
+    {
+      label: isArabic ? "Ø§Ù„ØªØ­Ø¯ÙŠØ« Ø§Ù„ØµØ­ÙŠ" : "Wellness check-in",
+      ready: hasCheckIn,
+      note: isArabic
+        ? "ÙŠØ¹ÙƒØ³ Ø§Ù„Ø­Ø§Ù„Ø© Ø§Ù„ÙŠÙˆÙ…ÙŠØ© ÙˆØ§Ù„Ø£Ø¹Ø±Ø§Ø¶ ÙˆØ§Ù„Ø¹Ø§Ø¯Ø§Øª."
+        : "Reflects daily symptoms, habits, and wellbeing.",
+    },
+    {
+      label: isArabic ? "Ø§Ù„ØªØ§Ø±ÙŠØ® Ø§Ù„ØµØ­ÙŠ" : "Health history",
+      ready: hasHistory,
+      note: isArabic
+        ? "ÙŠØ³Ø§Ø¹Ø¯ Ø¹Ù„Ù‰ Ù…Ù‚Ø§Ø±Ù†Ø© Ø§Ù„ØªÙ‚Ø¯Ù… Ø¹Ø¨Ø± Ø§Ù„Ø²Ù…Ù†."
+        : "Helps compare progress over time.",
+    },
+  ];
+
+  const weeklyFocusTitle =
+    priorityScore === null
+      ? isArabic
+        ? "Ø§Ø¨Ø¯Ø£ Ø¨Ø¨Ù†Ø§Ø¡ Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø£Ø³Ø§Ø³ÙŠØ©"
+        : "Start by building your baseline"
+      : priorityScore < 50
+      ? isArabic
+        ? "Ù…ØªØ§Ø¨Ø¹Ø© Ù‚Ø±ÙŠØ¨Ø© ÙˆÙ…Ù†Ø¸Ù…Ø© Ù‡Ø°Ø§ Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹"
+        : "Close and structured follow-up this week"
+      : priorityScore < 80
+      ? isArabic
+        ? "ØªØ­Ø³ÙŠÙ† Ø«Ø§Ø¨Øª Ø¨Ø®Ø·ÙˆØ§Øª ÙˆØ§Ù‚Ø¹ÙŠØ©"
+        : "Steady improvement with realistic steps"
+      : isArabic
+      ? "Ø­Ø§ÙØ¸ Ø¹Ù„Ù‰ Ø§Ù„Ù…ØªØ§Ø¨Ø¹Ø© Ø§Ù„ÙˆÙ‚Ø§Ø¦ÙŠØ©"
+      : "Maintain preventive follow-up";
+
+  const weeklyFocusDescription =
+    priorityScore === null
+      ? isArabic
+        ? "Ø£ÙƒÙ…Ù„ ØªÙ‚ÙŠÙŠÙ…Ù‹Ø§ ÙˆØ§Ø­Ø¯Ù‹Ø§ ÙˆØ§Ø±ÙØ¹ ØªÙ‚Ø±ÙŠØ±Ù‹Ø§ Ø¥Ù† ÙˆØ¬Ø¯ Ø­ØªÙ‰ ØªØµØ¨Ø­ Ø§Ù„Ø®Ø·Ø© Ø£ÙƒØ«Ø± Ø¯Ù‚Ø©."
+        : "Complete one assessment and upload a report if available to make the plan more accurate."
+      : priorityScore < 50
+      ? isArabic
+        ? "Ø±ÙƒØ² Ø¹Ù„Ù‰ ØªÙ†ÙÙŠØ° Ù…Ù‡Ø§Ù… Ø¨Ø³ÙŠØ·Ø©ØŒ Ù…ØªØ§Ø¨Ø¹Ø© Ø§Ù„Ø£Ø¹Ø±Ø§Ø¶ØŒ ÙˆØªØ¬Ù‡ÙŠØ² Ø§Ù„Ø£Ø³Ø¦Ù„Ø© Ù„Ù„Ø·Ø¨ÙŠØ¨."
+        : "Focus on simple tasks, symptom tracking, and preparing questions for your doctor."
+      : priorityScore < 80
+      ? isArabic
+        ? "Ø§Ø³ØªÙ…Ø± Ø¨Ø§Ù„ØªØ­Ø¯ÙŠØ«Ø§Øª Ø§Ù„ØµØ­ÙŠØ© ÙˆÙ…Ø±Ø§Ø¬Ø¹Ø© Ø§Ù„ØªÙ‚Ø§Ø±ÙŠØ± Ù„ØªØ­Ø¯ÙŠØ¯ Ø£ÙŠ Ù†Ù…Ø· Ù…ØªÙƒØ±Ø±."
+        : "Keep check-ins updated and review reports to identify recurring patterns."
+      : isArabic
+      ? "Ø§Ø³ØªÙ…Ø± Ø¨Ø®Ø·ÙˆØ§Øª ÙˆÙ‚Ø§Ø¦ÙŠØ© ØµØºÙŠØ±Ø© ÙˆØ±Ø§Ø¬Ø¹ Ø§Ù„Ø®Ø·Ø© Ø£Ø³Ø¨ÙˆØ¹ÙŠÙ‹Ø§."
+      : "Continue small preventive actions and review the plan weekly.";
+
+  const clinicalFollowUpCards = [
+    {
+      title: isArabic ? "Ù‡Ø°Ø§ Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹" : "This week",
+      value: followUpRhythm,
+      note: isArabic
+        ? "Ø¥ÙŠÙ‚Ø§Ø¹ Ø§Ù„Ù…ØªØ§Ø¨Ø¹Ø© Ø§Ù„Ù…Ù‚ØªØ±Ø­ Ø­Ø³Ø¨ Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ù…ØªÙˆÙØ±Ø©."
+        : "Suggested follow-up rhythm based on available data.",
+    },
+    {
+      title: isArabic ? "Ø£ÙˆÙ„ÙˆÙŠØ© Ø§Ù„Ø®Ø·Ø©" : "Plan priority",
+      value: priorityOrganDisplay,
+      note: isArabic
+        ? "Ø§Ù„Ù…Ù†Ø·Ù‚Ø© Ø§Ù„ØµØ­ÙŠØ© Ø§Ù„ØªÙŠ ØªØ­ØªØ§Ø¬ Ø£ÙƒØ¨Ø± Ø§Ù‡ØªÙ…Ø§Ù… Ø­Ø§Ù„ÙŠÙ‹Ø§."
+        : "The health area that currently needs the most attention.",
+    },
+    {
+      title: isArabic ? "Ù…Ø³ØªÙˆÙ‰ Ø§Ù„Ù…ØªØ§Ø¨Ø¹Ø©" : "Follow-up level",
+      value: planIntensity,
+      note: isArabic
+        ? "Ù…Ø¤Ø´Ø± Ø¹Ù…Ù„ÙŠ Ù„Ù‚ÙˆØ© Ø§Ù„Ù…ØªØ§Ø¨Ø¹Ø© Ø§Ù„Ù…Ø·Ù„ÙˆØ¨Ø©."
+        : "A practical indicator of required follow-up intensity.",
+    },
+  ];
+
+  const nextBestAction = !hasAssessment
+    ? {
+        label: isArabic ? "Ø§Ø¨Ø¯Ø£ Ø¨Ø§Ù„ØªÙ‚ÙŠÙŠÙ…" : "Start your assessment",
+        description: isArabic
+          ? "Ø£ÙƒÙ…Ù„ ØªÙ‚ÙŠÙŠÙ…Ù‹Ø§ ÙˆØ§Ø­Ø¯Ù‹Ø§ Ø¹Ù„Ù‰ Ø§Ù„Ø£Ù‚Ù„ Ø­ØªÙ‰ ÙŠØ­Ø¯Ø¯ OrganHeal Ø£ÙˆÙ„ÙˆÙŠØ© Ø§Ù„Ø®Ø·Ø©."
+          : "Complete at least one assessment so OrganHeal can identify the priority area for your plan.",
+        href: "/assessment",
+        button: isArabic ? "Ø§Ø¨Ø¯Ø£ Ø§Ù„ØªÙ‚ÙŠÙŠÙ…" : "Start Assessment",
+      }
+    : !hasReports
+    ? {
+        label: isArabic ? "Ø£Ø¶Ù ØªÙ‚Ø±ÙŠØ±Ù‹Ø§ Ø·Ø¨ÙŠÙ‹Ø§" : "Add a medical report",
+        description: isArabic
+          ? "Ø§Ø±ÙØ¹ ØªÙ‚Ø±ÙŠØ± Ù…Ø®ØªØ¨Ø± Ø£Ùˆ Ø£Ø´Ø¹Ø© Ø£Ùˆ Ù…Ù„Ø®Øµ Ø·Ø¨ÙŠ Ø­ØªÙ‰ ØªØµØ¨Ø­ Ø§Ù„Ø®Ø·Ø© Ù…Ø¨Ù†ÙŠØ© Ø¹Ù„Ù‰ Ø¨ÙŠØ§Ù†Ø§Øª Ø£ÙƒØ«Ø±."
+          : "Upload a lab, radiology, or clinical report so your plan can use more health data.",
+        href: "/lab-upload",
+        button: isArabic ? "Ø±ÙØ¹ ØªÙ‚Ø±ÙŠØ±" : "Upload Report",
+      }
+    : !hasGeneratedIntelligence
+    ? {
+        label: isArabic ? "ÙˆÙ„Ù‘Ø¯ Ø§Ù„Ø°ÙƒØ§Ø¡ Ø§Ù„ØµØ­ÙŠ" : "Generate health intelligence",
+        description: isArabic
+          ? "Ù„Ø¯ÙŠÙƒ ØªÙ‚Ø§Ø±ÙŠØ± Ù…Ø­ÙÙˆØ¸Ø©. Ø§ÙØªØ­ Ù…Ø±ÙƒØ² Ø§Ù„Ø°ÙƒØ§Ø¡ Ù„ØªÙˆÙ„ÙŠØ¯ Ù…Ù„Ø®Øµ Ø§Ù„Ù…Ø±ÙŠØ¶ ÙˆÙ…Ù„Ø®Øµ Ø§Ù„Ø·Ø¨ÙŠØ¨."
+          : "You have saved reports. Open Intelligence Center to generate a patient summary and doctor-ready brief.",
+        href: "/intelligence",
+        button: isArabic ? "Ù…Ø±ÙƒØ² Ø§Ù„Ø°ÙƒØ§Ø¡" : "Intelligence Center",
+      }
+    : !hasCheckIn
+    ? {
+        label: isArabic ? "Ø£ÙƒÙ…Ù„ Check-In Ø§Ù„ÙŠÙˆÙ…" : "Complete today check-in",
+        description: isArabic
+          ? "Ø£Ø¶Ù ØªØ­Ø¯ÙŠØ« Ø§Ù„Ù†ÙˆÙ…ØŒ Ø§Ù„Ø¶ØºØ· Ø§Ù„Ù†ÙØ³ÙŠØŒ Ø§Ù„Ù†Ø´Ø§Ø·ØŒ Ø§Ù„Ø·Ø§Ù‚Ø©ØŒ ÙˆØ§Ù„Ù…Ø²Ø§Ø¬ Ø­ØªÙ‰ ØªØµØ¨Ø­ Ø§Ù„Ø®Ø·Ø© Ø£ÙƒØ«Ø± Ø´Ø®ØµÙŠØ©."
+          : "Add sleep, stress, activity, energy, and mood updates so the plan becomes more personal.",
+        href: "/checkin",
+        button: isArabic ? "Ø§ÙØªØ­ Check-In" : "Open Check-In",
+      }
+    : {
+        label: isArabic ? "ØªØ§Ø¨Ø¹ Ø®Ø·Ø© Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹" : "Continue this week plan",
+        description: isArabic
+          ? "Ø§Ù„Ø®Ø·Ø© ÙØ¹Ø§Ù„Ø© Ø§Ù„Ø¢Ù†. Ø£ÙƒÙ…Ù„ Ø§Ù„Ù…Ù‡Ø§Ù…ØŒ ÙˆØ±Ø§Ø¬Ø¹ Ø§Ù„ØªÙ‚Ø§Ø±ÙŠØ±ØŒ ÙˆØ­Ø¯Ø« Check-In Ø¨Ø´ÙƒÙ„ Ù…Ù†ØªØ¸Ù…."
+          : "Your plan is active. Complete tasks, review reports, and keep check-ins updated.",
+        href: "#action-tasks-section",
+        button: isArabic ? "Ù…ØªØ§Ø¨Ø¹Ø© Ø§Ù„Ù…Ù‡Ø§Ù…" : "Continue Tasks",
+      };
+
+  const baseTasks = getLocalizedOrganTasks(priorityOrgan, isArabic);
+
+  const dynamicTasks = [
+    !hasGeneratedIntelligence && hasReports
+      ? isArabic
+        ? "ÙˆÙ„Ù‘Ø¯ Ø§Ù„Ø°ÙƒØ§Ø¡ Ø§Ù„ØµØ­ÙŠ Ù„Ø£Ø­Ø¯Ø« ØªÙ‚Ø±ÙŠØ± Ù…Ø­ÙÙˆØ¸."
+        : "Generate intelligence for the latest saved report."
+      : null,
+    hasGeneratedIntelligence
+      ? isArabic
+        ? "Ø±Ø§Ø¬Ø¹ Ù…Ù„Ø®Øµ Ø§Ù„Ù…Ø±ÙŠØ¶ ÙˆÙ…Ù„Ø®Øµ Ø§Ù„Ø·Ø¨ÙŠØ¨ Ù…Ù† Ù…Ø±ÙƒØ² Ø§Ù„Ø°ÙƒØ§Ø¡."
+        : "Review the patient summary and doctor-ready brief in Intelligence Center."
+      : null,
+    !hasCheckIn
+      ? isArabic
+        ? "Ø£ÙƒÙ…Ù„ Ø§Ù„ØªØ­Ø¯ÙŠØ« Ø§Ù„ØµØ­ÙŠ Ù‡Ø°Ø§ Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹."
+        : "Complete a wellness check-in this week."
+      : null,
+    completedExtractionCount > 0
+      ? isArabic
+        ? "Ø±Ø§Ø¬Ø¹ Ø§Ù„ØªÙ‚Ø§Ø±ÙŠØ± Ø§Ù„ØªÙŠ Ø§ÙƒØªÙ…Ù„ Ø§Ø³ØªØ®Ø±Ø§Ø¬Ù‡Ø§ ÙˆØ§Ø±Ø¨Ø·Ù‡Ø§ Ø¨Ø§Ù„Ø®Ø·Ø©."
+        : "Review extracted reports and connect them to this plan."
+      : null,
+    hasHistory
+      ? isArabic
+        ? "Ø±Ø§Ø¬Ø¹ Ø§Ù„ØªØ§Ø±ÙŠØ® Ø§Ù„ØµØ­ÙŠ Ù„Ù…Ù‚Ø§Ø±Ù†Ø© Ø§Ù„ØªÙ‚Ø¯Ù… Ø§Ù„Ø³Ø§Ø¨Ù‚."
+        : "Review Health History to compare previous progress."
+      : null,
+  ].filter(Boolean) as string[];
+
+  const planTasks = [...dynamicTasks, ...baseTasks].slice(0, 8);
+
+  const sevenDayPlan = [
+    isArabic
+      ? "Ø§Ù„ÙŠÙˆÙ… 1: Ø±Ø§Ø¬Ø¹ Ø§Ù„Ø£ÙˆÙ„ÙˆÙŠØ© Ø§Ù„ØµØ­ÙŠØ© ÙˆØ§Ù„Ø®Ø·ÙˆØ© Ø§Ù„ØªØ§Ù„ÙŠØ©."
+      : "Day 1: Review your priority area and next best action.",
+    isArabic
+      ? "Ø§Ù„ÙŠÙˆÙ… 2: Ø£ÙƒÙ…Ù„ Check-In ÙˆØ­Ø¯Ø¯ Ø£Ù‡Ù… Ø¹Ø±Ø¶ Ø£Ùˆ Ø¹Ø§Ø¯Ø© ØªØ­ØªØ§Ø¬ Ù…ØªØ§Ø¨Ø¹Ø©."
+      : "Day 2: Complete a check-in and identify the main symptom or habit to track.",
+    isArabic
+      ? "Ø§Ù„ÙŠÙˆÙ… 3: Ø±Ø§Ø¬Ø¹ Ø¢Ø®Ø± ØªÙ‚Ø±ÙŠØ± Ø£Ùˆ ÙˆÙ„Ù‘Ø¯ Ø§Ù„Ø°ÙƒØ§Ø¡ Ø§Ù„ØµØ­ÙŠ Ø¥Ù† Ù„Ù… ÙŠÙƒÙ† Ù…ÙˆØ¬ÙˆØ¯Ù‹Ø§."
+      : "Day 3: Review the latest report or generate intelligence if missing.",
+    isArabic
+      ? "Ø§Ù„ÙŠÙˆÙ… 4: Ù†ÙØ° Ù…Ù‡Ù…Ø© ÙˆØ§Ø­Ø¯Ø© Ù…Ù† Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø®Ø·Ø©."
+      : "Day 4: Complete one action task from the plan.",
+    isArabic
+      ? "Ø§Ù„ÙŠÙˆÙ… 5: Ø±Ø§Ø¬Ø¹ Ù…Ø¤Ø´Ø±Ø§Øª Ø§Ù„ØªØ­Ø³Ù† Ø£Ùˆ Ø§Ù„ØªØ±Ø§Ø¬Ø¹."
+      : "Day 5: Review improvement or worsening signals.",
+    isArabic
+      ? "Ø§Ù„ÙŠÙˆÙ… 6: Ø¬Ù‡Ø² Ø£Ø³Ø¦Ù„Ø© Ù„Ù„Ø·Ø¨ÙŠØ¨ Ø¥Ø°Ø§ ØªÙˆØ¬Ø¯ Ù†ØªØ§Ø¦Ø¬ Ù…Ù‚Ù„Ù‚Ø©."
+      : "Day 6: Prepare doctor questions if there are concerning results.",
+    isArabic
+      ? "Ø§Ù„ÙŠÙˆÙ… 7: Ø±Ø§Ø¬Ø¹ Ø§Ù„ØªÙ‚Ø¯Ù… ÙˆØ­Ø¯Ø¯ Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹ Ø§Ù„Ù‚Ø§Ø¯Ù…."
+      : "Day 7: Review progress and decide next week focus.",
+  ];
+
+  const thirtyDayRoadmap = [
+    isArabic
+      ? "Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹ 1: ØªØ«Ø¨ÙŠØª Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø£Ø³Ø§Ø³ÙŠØ© ÙˆØ§Ù„ØªÙ‚Ø§Ø±ÙŠØ±."
+      : "Week 1: Build your baseline from assessments and reports.",
+    isArabic
+      ? "Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹ 2: Ù…ØªØ§Ø¨Ø¹Ø© Check-Ins ÙˆØªÙ†ÙÙŠØ° Ø§Ù„Ù…Ù‡Ø§Ù… Ø§Ù„ÙˆØ§Ù‚Ø¹ÙŠØ©."
+      : "Week 2: Track check-ins and complete realistic actions.",
+    isArabic
+      ? "Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹ 3: Ù…Ø±Ø§Ø¬Ø¹Ø© Ø§Ù„Ø£Ù†Ù…Ø§Ø· Ù…Ù† Ø§Ù„ØªÙ‚Ø§Ø±ÙŠØ± ÙˆØ§Ù„Ø°ÙƒØ§Ø¡ Ø§Ù„ØµØ­ÙŠ."
+      : "Week 3: Review patterns from reports and generated intelligence.",
+    isArabic
+      ? "Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹ 4: Ø¥Ø¹Ø§Ø¯Ø© ØªÙ‚ÙŠÙŠÙ… Ø§Ù„Ø£ÙˆÙ„ÙˆÙŠØ© ÙˆÙ…Ù‚Ø§Ø±Ù†Ø© Health History."
+      : "Week 4: Repeat the priority assessment and compare Health History.",
+  ];
+
+
+  const ninetyDayStrategy = [
+    isArabic
+      ? "Ø§Ù„Ø´Ù‡Ø± 1: Ø¨Ù†Ø§Ø¡ Ø®Ø· Ø£Ø³Ø§Ø³ ÙˆØ§Ø¶Ø­ Ù…Ù† Ø§Ù„ØªÙ‚ÙŠÙŠÙ…Ø§ØªØŒ Ø§Ù„ØªÙ‚Ø§Ø±ÙŠØ±ØŒ ÙˆØ§Ù„ØªØ­Ø¯ÙŠØ«Ø§Øª Ø§Ù„ØµØ­ÙŠØ©."
+      : "Month 1: Build a clear baseline from assessments, reports, and check-ins.",
+    isArabic
+      ? "Ø§Ù„Ø´Ù‡Ø± 2: Ù…ØªØ§Ø¨Ø¹Ø© Ø§Ù„Ø§ØªØ¬Ø§Ù‡Ø§Øª ÙˆØªØ¹Ø¯ÙŠÙ„ Ø§Ù„Ø¹Ø§Ø¯Ø§Øª Ø¨Ù†Ø§Ø¡Ù‹ Ø¹Ù„Ù‰ Ø§Ù„Ù†ØªØ§Ø¦Ø¬."
+      : "Month 2: Track patterns and adjust habits based on your results.",
+    isArabic
+      ? "Ø§Ù„Ø´Ù‡Ø± 3: Ø¥Ø¹Ø§Ø¯Ø© ØªÙ‚ÙŠÙŠÙ… Ø§Ù„Ø£ÙˆÙ„ÙˆÙŠØ© ÙˆÙ…Ù‚Ø§Ø±Ù†Ø© Ø§Ù„ØªØ­Ø³Ù† Ù…Ø¹ Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø³Ø§Ø¨Ù‚Ø©."
+      : "Month 3: Reassess your priority area and compare progress with past data.",
+  ];
+
+  const doctorDiscussionQuestions = [
+    isArabic
+      ? `Ù‡Ù„ ØªØ­ØªØ§Ø¬ Ø£ÙˆÙ„ÙˆÙŠØ© ${priorityOrganDisplay} Ø¥Ù„Ù‰ ÙØ­ÙˆØµØ§Øª Ø¥Ø¶Ø§ÙÙŠØ© Ø£Ùˆ Ù…ØªØ§Ø¨Ø¹Ø© Ù‚Ø±ÙŠØ¨Ø©ØŸ`
+      : `Does my ${priorityOrgan} priority need additional tests or closer follow-up?`,
+    isArabic
+      ? "Ù‡Ù„ ØªÙˆØ¬Ø¯ Ù†ØªØ§Ø¦Ø¬ ÙÙŠ Ø§Ù„ØªÙ‚Ø§Ø±ÙŠØ± ØªØ­ØªØ§Ø¬ ØªÙØ³ÙŠØ±Ù‹Ø§ Ø£Ùˆ Ù…Ù‚Ø§Ø±Ù†Ø© Ø¨Ù†ØªØ§Ø¦Ø¬ Ø³Ø§Ø¨Ù‚Ø©ØŸ"
+      : "Are there any report findings that need interpretation or comparison with previous results?",
+    isArabic
+      ? "Ù…Ø§ Ø£Ù‡Ù… ØªØºÙŠÙŠØ± ÙˆØ§Ù‚Ø¹ÙŠ Ø£Ø¨Ø¯Ø£ Ø¨Ù‡ Ø®Ù„Ø§Ù„ Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹ Ø§Ù„Ù‚Ø§Ø¯Ù…ØŸ"
+      : "What is the most realistic change I should start this week?",
+    isArabic
+      ? "Ù…ØªÙ‰ ÙŠØ¬Ø¨ Ø¥Ø¹Ø§Ø¯Ø© Ø§Ù„ÙØ­ÙˆØµØ§Øª Ø£Ùˆ Ø§Ù„ØªÙ‚ÙŠÙŠÙ…ØŸ"
+      : "When should I repeat labs or reassess this area?",
+  ];
+
+  const activeCompletedTasks = completedTasks.filter((task) =>
+    planTasks.includes(task)
+  );
+
+  const completedTaskCount = activeCompletedTasks.length;
+  const totalTasks = planTasks.length;
+  const taskProgress =
+    totalTasks > 0 ? Math.round((completedTaskCount / totalTasks) * 100) : 0;
+
+  const remainingTaskCount = Math.max(totalTasks - completedTaskCount, 0);
+
+  const nextIncompleteTask =
+    planTasks.find((task) => !completedTasks.includes(task)) ||
+    (isArabic ? "ÙƒÙ„ Ù…Ù‡Ø§Ù… Ù‡Ø°Ø§ Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹ Ù…ÙƒØªÙ…Ù„Ø©." : "All tasks for this week are completed.");
+
+  const progressMomentum =
+    taskProgress === 0
+      ? isArabic
+        ? "Ø§Ø¨Ø¯Ø£ Ø¨Ø®Ø·ÙˆØ© ÙˆØ§Ø­Ø¯Ø©"
+        : "Start with one step"
+      : taskProgress < 40
+      ? isArabic
+        ? "Ø¨Ø¯Ø§ÙŠØ© Ø¬ÙŠØ¯Ø©"
+        : "Good start"
+      : taskProgress < 80
+      ? isArabic
+        ? "ØªÙ‚Ø¯Ù… ÙˆØ§Ø¶Ø­"
+        : "Clear progress"
+      : taskProgress < 100
+      ? isArabic
+        ? "Ù‚Ø±ÙŠØ¨ Ù…Ù† Ø§Ù„Ø¥ÙƒÙ…Ø§Ù„"
+        : "Almost complete"
+      : isArabic
+      ? "Ù…ÙƒØªÙ…Ù„ Ù‡Ø°Ø§ Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹"
+      : "Completed this week";
+
+  const progressMomentumDescription =
+    taskProgress === 0
+      ? isArabic
+        ? "Ø§Ø®ØªØ± Ø£Ø³Ù‡Ù„ Ù…Ù‡Ù…Ø© ÙˆØ§Ø¨Ø¯Ø£ Ø¨Ù‡Ø§ Ø§Ù„ÙŠÙˆÙ…. Ø§Ù„Ù‡Ø¯Ù Ù‡Ùˆ Ø§Ù„Ø§Ø³ØªÙ…Ø±Ø§Ø±ÙŠØ© ÙˆÙ„ÙŠØ³ Ø§Ù„ÙƒÙ…Ø§Ù„."
+        : "Choose the easiest task and start today. The goal is consistency, not perfection."
+      : taskProgress < 40
+      ? isArabic
+        ? "Ø§Ø³ØªÙ…Ø± Ø¨Ø®Ø·ÙˆØ§Øª Ø¨Ø³ÙŠØ·Ø©. Ø¥Ù†Ø¬Ø§Ø² Ù…Ù‡Ù…ØªÙŠÙ† Ø£Ùˆ Ø«Ù„Ø§Ø« ÙŠÙƒÙÙŠ Ù„Ø¨Ù†Ø§Ø¡ Ø¹Ø§Ø¯Ø©."
+        : "Keep taking small steps. Completing two or three tasks can build momentum."
+      : taskProgress < 80
+      ? isArabic
+        ? "Ø£Ù†Øª ØªØ¨Ù†ÙŠ Ù…ØªØ§Ø¨Ø¹Ø© Ø¬ÙŠØ¯Ø©. Ø±ÙƒØ² Ø§Ù„Ø¢Ù† Ø¹Ù„Ù‰ Ø§Ù„Ù…Ù‡Ù…Ø© Ø§Ù„ØªØ§Ù„ÙŠØ© Ø§Ù„Ø£ÙƒØ«Ø± ÙˆØ§Ù‚Ø¹ÙŠØ©."
+        : "You are building good follow-up. Focus on the next most realistic task."
+      : taskProgress < 100
+      ? isArabic
+        ? "Ø¨Ù‚ÙŠ Ø§Ù„Ù‚Ù„ÙŠÙ„. Ø±Ø§Ø¬Ø¹ Ø§Ù„Ù…Ù‡Ø§Ù… Ø§Ù„Ù…ØªØ¨Ù‚ÙŠØ© ÙˆØ§Ø®ØªØ± ÙˆØ§Ø­Ø¯Ø© Ø³Ù‡Ù„Ø© Ø§Ù„ÙŠÙˆÙ…."
+        : "Almost there. Review the remaining tasks and choose one easy action today."
+      : isArabic
+      ? "Ø±Ø§Ø¦Ø¹. Ø±Ø§Ø¬Ø¹ Ø§Ù„ØªÙ‚Ø¯Ù… ÙˆØ­Ø¯Ø¯ Ù‡Ø¯Ù Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹ Ø§Ù„Ù‚Ø§Ø¯Ù…."
+      : "Great. Review your progress and decide next week focus.";
+
+  const progressInsightCards = [
+    {
+      label: isArabic ? "Ø§Ù„ØªÙ‚Ø¯Ù…" : "Progress",
+      value: `${taskProgress}%`,
+      note: progressMomentum,
+    },
+    {
+      label: isArabic ? "Ø§Ù„Ù…ØªØ¨Ù‚ÙŠ" : "Remaining",
+      value: String(remainingTaskCount),
+      note: isArabic ? "Ù…Ù‡Ø§Ù… ØªØ­ØªØ§Ø¬ Ù…ØªØ§Ø¨Ø¹Ø©" : "tasks need follow-up",
+    },
+    {
+      label: isArabic ? "Ø§Ù„Ù…Ù‡Ù…Ø© Ø§Ù„ØªØ§Ù„ÙŠØ©" : "Next task",
+      value: nextIncompleteTask,
+      note: isArabic ? "Ø§Ø¨Ø¯Ø£ Ø¨Ù‡Ø§ Ø£ÙˆÙ„Ù‹Ø§" : "start here first",
+    },
+  ];
+
+  function resetWeeklyTasks() {
+    setCompletedTasks([]);
+
+    try {
+      localStorage.removeItem(taskStorageKey);
+    } catch {
+      // Keep UI stable if localStorage is unavailable.
+    }
+  }
+
+  useEffect(() => {
+    try {
+      const savedTasks = localStorage.getItem(taskStorageKey);
+      setCompletedTasks(savedTasks ? JSON.parse(savedTasks) : []);
+    } catch {
+      setCompletedTasks([]);
+    }
+  }, [taskStorageKey]);
+
+  async function fetchHealthPlanData() {
+    setLoading(true);
+    setMessage("");
+
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+
+    if (userError || !userData.user) {
+      setMessage(
+        isArabic
+          ? "ÙŠØ±Ø¬Ù‰ ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„ Ù„Ø¹Ø±Ø¶ Ø®Ø·Ø© Ø§Ù„Ù…ØªØ§Ø¨Ø¹Ø©."
+          : "Please login to view your follow-up plan."
+      );
+      setLoading(false);
+      return;
+    }
+
+    const userId = userData.user.id;
+
+    const [
+      assessmentResponse,
+      checkInResponse,
+      reportsResponse,
+      insightsResponse,
+      generatedResponse,
+      historyResponse,
+    ] = await Promise.all([
+      supabase
+        .from("organ_assessments")
+        .select("organ_name, score, risk_level")
+        .eq("user_id", userId)
+        .order("score", { ascending: true })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("daily_checkins")
+        .select("mood, wellness_score, created_at")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("uploaded_lab_files")
+        .select("id, file_name, extraction_status, created_at, extracted_at")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(10),
+      supabase
+        .from("health_insights")
+        .select("id, report_id, ai_status, risk_level, summary, next_best_action, created_at")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(10),
+      supabase
+        .from("generated_intelligence_results")
+        .select("insight_id, report_id, updated_at")
+        .eq("user_id", userId)
+        .order("updated_at", { ascending: false })
+        .limit(10),
+      supabase
+        .from("health_history")
+        .select("id, created_at")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(10),
+    ]);
+
+    if (assessmentResponse.error) {
+      setPriorityAssessment(null);
+    } else {
+      setPriorityAssessment(assessmentResponse.data || null);
+    }
+
+    if (checkInResponse.error) {
+      setLatestCheckIn(null);
+    } else {
+      setLatestCheckIn(checkInResponse.data || null);
+    }
+
+    setUploadedReports((reportsResponse.data || []) as UploadedReport[]);
+    setHealthInsights((insightsResponse.data || []) as HealthInsight[]);
+    setGeneratedResults((generatedResponse.data || []) as GeneratedResult[]);
+    setHistoryItems((historyResponse.data || []) as HistoryItem[]);
+
+    setLoading(false);
+  }
+
+  function toggleTask(task: string) {
+    const nextTasks = completedTasks.includes(task)
+      ? completedTasks.filter((item) => item !== task)
+      : [...completedTasks, task];
+
+    setCompletedTasks(nextTasks);
+    localStorage.setItem(taskStorageKey, JSON.stringify(nextTasks));
+  }
+
+  return (
+    <main className="healthPlanIntelligencePage" dir={isArabic ? "rtl" : "ltr"}>
+      <div className="healthPlanShell">
+
+        <style>{`
+          .healthPlanIntelligencePage {
+            --hp-card-border: rgba(148, 163, 184, 0.24);
+            --hp-card-bg: rgba(255, 255, 255, 0.86);
+            --hp-soft-bg: rgba(248, 250, 252, 0.88);
+          }
+
+          .healthPlanIntelligencePage[dir="rtl"] {
+            text-align: right;
+          }
+
+          .healthPlanCommandCenter {
+            display: grid;
+            grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+            gap: 18px;
+            margin: 22px 0;
+          }
+
+          .healthPlanCommandMain,
+          .healthPlanReadinessCard,
+          .healthPlanClinicalCard {
+            border: 1px solid var(--hp-card-border);
+            background: var(--hp-card-bg);
+            border-radius: 24px;
+            padding: 22px;
+            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+            backdrop-filter: blur(12px);
+          }
+
+          .healthPlanCommandMain h2,
+          .healthPlanReadinessCard h2,
+          .healthPlanClinicalCard h2 {
+            margin: 8px 0 10px;
+            line-height: 1.25;
+          }
+
+          .healthPlanCommandMain p,
+          .healthPlanReadinessCard p,
+          .healthPlanClinicalCard p {
+            line-height: 1.75;
+          }
+
+          .healthPlanCommandStats {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 18px;
+          }
+
+          .healthPlanCommandStats div {
+            border: 1px solid var(--hp-card-border);
+            background: var(--hp-soft-bg);
+            border-radius: 18px;
+            padding: 14px;
+          }
+
+          .healthPlanCommandStats span,
+          .healthPlanReadinessItem span,
+          .healthPlanClinicalGrid span {
+            display: block;
+            font-size: 0.78rem;
+            opacity: 0.72;
+            margin-bottom: 6px;
+          }
+
+          .healthPlanCommandStats strong,
+          .healthPlanClinicalGrid strong {
+            display: block;
+            font-size: 1.05rem;
+            line-height: 1.4;
+          }
+
+          .healthPlanReadinessList {
+            display: grid;
+            gap: 10px;
+            margin-top: 14px;
+          }
+
+          .healthPlanReadinessItem {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 12px;
+            align-items: start;
+            border: 1px solid var(--hp-card-border);
+            background: var(--hp-soft-bg);
+            border-radius: 16px;
+            padding: 12px;
+          }
+
+          .healthPlanIntelligencePage[dir="rtl"] .healthPlanReadinessItem {
+            grid-template-columns: 1fr auto;
+          }
+
+          .healthPlanReadinessDot {
+            width: 28px;
+            height: 28px;
+            border-radius: 999px;
+            display: grid;
+            place-items: center;
+            font-size: 0.8rem;
+            font-weight: 800;
+            border: 1px solid var(--hp-card-border);
+            background: white;
+          }
+
+          .healthPlanReadinessItem.ready .healthPlanReadinessDot {
+            background: #dcfce7;
+            color: #166534;
+            border-color: #bbf7d0;
+          }
+
+          .healthPlanReadinessItem.pending .healthPlanReadinessDot {
+            background: #fff7ed;
+            color: #9a3412;
+            border-color: #fed7aa;
+          }
+
+          .healthPlanClinicalGrid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+            margin-top: 14px;
+          }
+
+          .healthPlanClinicalGrid article {
+            border: 1px solid var(--hp-card-border);
+            background: var(--hp-soft-bg);
+            border-radius: 18px;
+            padding: 16px;
+          }
+
+          .healthPlanRoadmap > div,
+          .healthPlanTaskItem,
+          .healthPlanMetricsGrid article,
+          .healthPlanCard,
+          .healthPlanPanel {
+            transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+          }
+
+          .healthPlanRoadmap > div:hover,
+          .healthPlanTaskItem:hover,
+          .healthPlanMetricsGrid article:hover,
+          .healthPlanCard:hover,
+          .healthPlanPanel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+          }
+
+          .healthPlanIntelligencePage[dir="rtl"] .healthPlanRoadmap div,
+          .healthPlanIntelligencePage[dir="rtl"] .healthPlanTaskItem,
+          .healthPlanIntelligencePage[dir="rtl"] .healthPlanInfoList div {
+            text-align: right;
+          }
+
+          @media (max-width: 900px) {
+            .healthPlanCommandCenter,
+            .healthPlanClinicalGrid {
+              grid-template-columns: 1fr;
+            }
+
+            .healthPlanCommandStats {
+              grid-template-columns: 1fr;
+            }
+          }
+        `}</style>
+
+
+        <style>{`
+          .healthPlanPrintToolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 14px;
+          }
+
+          .healthPlanPrintButton {
+            border: 0;
+            cursor: pointer;
+            font: inherit;
+            white-space: nowrap;
+          }
+
+          .healthPlanPrintSection {
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            background:
+              linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(240, 253, 250, 0.9));
+          }
+
+          .healthPlanPrintGrid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+            margin-top: 18px;
+          }
+
+          .healthPlanPrintGrid article {
+            border: 1px solid rgba(148, 163, 184, 0.24);
+            background: rgba(255, 255, 255, 0.82);
+            border-radius: 18px;
+            padding: 16px;
+          }
+
+          .healthPlanPrintGrid span {
+            display: block;
+            font-size: 0.78rem;
+            opacity: 0.7;
+            margin-bottom: 6px;
+          }
+
+          .healthPlanPrintGrid strong {
+            display: block;
+            font-size: 1rem;
+            line-height: 1.45;
+          }
+
+          .healthPlanPrintNote {
+            margin-top: 16px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            background: rgba(15, 23, 42, 0.04);
+            line-height: 1.75;
+          }
+
+          @media (max-width: 900px) {
+            .healthPlanPrintGrid {
+              grid-template-columns: 1fr;
+            }
+          }
+
+          @media print {
+            @page {
+              size: A4;
+              margin: 14mm 12mm;
+            }
+
+            body {
+              background: #ffffff !important;
+              color: #0f172a !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+
+            nav,
+            header,
+            footer,
+            .healthPlanNoPrint,
+            .healthPlanPrintButton,
+            .healthPlanBottomNav,
+            .pageBackActions {
+              display: none !important;
+            }
+
+            .healthPlanIntelligencePage {
+              background: #ffffff !important;
+              padding: 0 !important;
+              margin: 0 !important;
+            }
+
+            .healthPlanShell {
+              width: 100% !important;
+              max-width: 100% !important;
+              padding: 0 !important;
+              margin: 0 !important;
+            }
+
+            .healthPlanHero,
+            .healthPlanCommandCenter,
+            .healthPlanClinicalCard,
+            .healthPlanMetricsGrid,
+            .healthPlanGrid,
+            .healthPlanPanel,
+            .healthPlanCard,
+            .healthPlanPrintSection {
+              box-shadow: none !important;
+              break-inside: avoid !important;
+              page-break-inside: avoid !important;
+              margin-bottom: 12mm !important;
+            }
+
+            .healthPlanPanel,
+            .healthPlanCard,
+            .healthPlanCommandMain,
+            .healthPlanReadinessCard,
+            .healthPlanClinicalCard,
+            .healthPlanPrintSection {
+              border: 1px solid #d1d5db !important;
+              background: #ffffff !important;
+            }
+
+            .healthPlanRoadmap > div,
+            .healthPlanTaskItem,
+            .healthPlanReadinessItem,
+            .healthPlanPrintGrid article {
+              break-inside: avoid !important;
+              page-break-inside: avoid !important;
+            }
+
+            h1,
+            h2,
+            h3 {
+              break-after: avoid !important;
+              page-break-after: avoid !important;
+              line-height: 1.35 !important;
+            }
+
+            p,
+            li,
+            strong,
+            span {
+              orphans: 3 !important;
+              widows: 3 !important;
+            }
+
+            .healthPlanRoadmap,
+            .healthPlanPrintGrid,
+            .healthPlanClinicalGrid,
+            .healthPlanCommandStats {
+              gap: 8px !important;
+            }
+          }
+        `}</style>
+
+
+        <style>{`
+          /* ORGANHEAL_SAFE_PRINT_EXPORT_PATCH */
+          .healthPlanPrintOnly {
+            display: none;
+          }
+
+          @media print {
+            @page {
+              size: A4;
+              margin: 14mm 12mm;
+            }
+
+            html,
+            body {
+              background: #ffffff !important;
+              color: #111827 !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+
+            body * {
+              visibility: hidden !important;
+            }
+
+            .healthPlanPrintOnly,
+            .healthPlanPrintOnly * {
+              visibility: visible !important;
+            }
+
+            .healthPlanPrintOnly {
+              display: block !important;
+              position: absolute !important;
+              left: 0 !important;
+              top: 0 !important;
+              width: 100% !important;
+              max-width: 100% !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              background: #ffffff !important;
+              color: #111827 !important;
+              font-family: Tahoma, Arial, sans-serif !important;
+              line-height: 1.7 !important;
+            }
+
+            .healthPlanPrintOnly[dir="rtl"],
+            .healthPlanPrintOnly[dir="rtl"] * {
+              direction: rtl !important;
+              text-align: right !important;
+              letter-spacing: normal !important;
+              word-spacing: normal !important;
+              text-transform: none !important;
+              unicode-bidi: isolate !important;
+            }
+
+            .healthPlanPrintPage {
+              width: 100% !important;
+              max-width: 100% !important;
+              box-sizing: border-box !important;
+              background: #ffffff !important;
+              color: #111827 !important;
+            }
+
+            .healthPlanPrintOnlyHeader {
+              border-bottom: 2px solid #0f172a !important;
+              padding-bottom: 12px !important;
+              margin-bottom: 18px !important;
+              break-inside: avoid !important;
+              page-break-inside: avoid !important;
+            }
+
+            .healthPlanPrintOnlyHeader p {
+              margin: 0 0 6px !important;
+              font-size: 11px !important;
+              color: #475569 !important;
+            }
+
+            .healthPlanPrintOnlyHeader h1 {
+              margin: 0 !important;
+              font-size: 28px !important;
+              line-height: 1.35 !important;
+              color: #0f172a !important;
+              break-after: avoid !important;
+              page-break-after: avoid !important;
+            }
+
+            .healthPlanPrintOnlyGrid {
+              display: grid !important;
+              grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+              gap: 10px !important;
+              margin-bottom: 16px !important;
+              break-inside: avoid !important;
+              page-break-inside: avoid !important;
+            }
+
+            .healthPlanPrintOnlyBox {
+              border: 1px solid #d1d5db !important;
+              border-radius: 10px !important;
+              padding: 10px 12px !important;
+              background: #f8fafc !important;
+              break-inside: avoid !important;
+              page-break-inside: avoid !important;
+            }
+
+            .healthPlanPrintOnlyBox span {
+              display: block !important;
+              font-size: 11px !important;
+              color: #64748b !important;
+              margin-bottom: 4px !important;
+            }
+
+            .healthPlanPrintOnlyBox strong {
+              display: block !important;
+              font-size: 14px !important;
+              color: #0f172a !important;
+              line-height: 1.5 !important;
+            }
+
+            .healthPlanPrintOnlySection {
+              margin-top: 16px !important;
+              padding-top: 10px !important;
+              border-top: 1px solid #e5e7eb !important;
+              break-inside: avoid !important;
+              page-break-inside: avoid !important;
+            }
+
+            .healthPlanPrintOnlySection h2 {
+              margin: 0 0 8px !important;
+              font-size: 18px !important;
+              line-height: 1.35 !important;
+              color: #0f172a !important;
+              break-after: avoid !important;
+              page-break-after: avoid !important;
+            }
+
+            .healthPlanPrintOnlySection ul {
+              margin: 0 !important;
+              padding-inline-start: 20px !important;
+            }
+
+            .healthPlanPrintOnlySection li {
+              margin-bottom: 6px !important;
+              break-inside: avoid !important;
+              page-break-inside: avoid !important;
+              color: #111827 !important;
+            }
+
+            .healthPlanPrintOnlyNote {
+              margin-top: 18px !important;
+              padding: 10px 12px !important;
+              border: 1px solid #d1d5db !important;
+              border-radius: 10px !important;
+              background: #f9fafb !important;
+              font-size: 12px !important;
+              color: #374151 !important;
+              break-inside: avoid !important;
+              page-break-inside: avoid !important;
+            }
+
+            h1,
+            h2,
+            h3,
+            p,
+            li,
+            strong,
+            span {
+              orphans: 3 !important;
+              widows: 3 !important;
+            }
+          }
+        `}</style>
+
+
+        <style>{`
+          /* ORGANHEAL_PRINT_NO_BLANK_PAGES_FIX */
+          @media print {
+            html,
+            body {
+              width: 100% !important;
+              min-height: 0 !important;
+              height: auto !important;
+              overflow: visible !important;
+              background: #ffffff !important;
+            }
+
+            .healthPlanIntelligencePage {
+              display: block !important;
+              width: 100% !important;
+              min-height: 0 !important;
+              height: auto !important;
+              padding: 0 !important;
+              margin: 0 !important;
+              background: #ffffff !important;
+            }
+
+            .healthPlanShell {
+              display: block !important;
+              width: 100% !important;
+              max-width: 100% !important;
+              min-height: 0 !important;
+              height: auto !important;
+              padding: 0 !important;
+              margin: 0 !important;
+              background: #ffffff !important;
+            }
+
+            .healthPlanShell > :not(.healthPlanPrintOnly) {
+              display: none !important;
+            }
+
+            .healthPlanPrintOnly {
+              display: block !important;
+              visibility: visible !important;
+              position: static !important;
+              width: 100% !important;
+              max-width: 100% !important;
+              min-height: 0 !important;
+              height: auto !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              overflow: visible !important;
+              background: #ffffff !important;
+            }
+
+            .healthPlanPrintPage {
+              display: block !important;
+              width: 100% !important;
+              max-width: 100% !important;
+              min-height: 0 !important;
+              height: auto !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              overflow: visible !important;
+              background: #ffffff !important;
+              page-break-after: auto !important;
+              break-after: auto !important;
+            }
+
+            .healthPlanPrintOnly::after,
+            .healthPlanPrintPage::after {
+              display: none !important;
+              content: none !important;
+            }
+
+            .healthPlanBottomNav,
+            .healthPlanNoPrint {
+              display: none !important;
+            }
+          }
+        `}</style>
+
+
+        <style>{`
+          /* ORGANHEAL_HEALTH_PLAN_PROGRESS_STEP4 */
+          .healthPlanProgressSummary {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+            margin: 18px 0;
+          }
+
+          .healthPlanProgressSummary article {
+            border: 1px solid rgba(148, 163, 184, 0.24);
+            background: rgba(255, 255, 255, 0.84);
+            border-radius: 18px;
+            padding: 16px;
+            min-height: 118px;
+          }
+
+          .healthPlanProgressSummary span {
+            display: block;
+            font-size: 0.78rem;
+            opacity: 0.72;
+            margin-bottom: 8px;
+          }
+
+          .healthPlanProgressSummary strong {
+            display: block;
+            font-size: 1.1rem;
+            line-height: 1.45;
+            word-break: normal;
+            overflow-wrap: break-word;
+          }
+
+          .healthPlanProgressSummary p {
+            margin-top: 8px;
+            line-height: 1.65;
+          }
+
+          .healthPlanProgressMessage {
+            border: 1px solid rgba(20, 184, 166, 0.22);
+            background: rgba(240, 253, 250, 0.78);
+            border-radius: 18px;
+            padding: 16px;
+            margin: 16px 0;
+            line-height: 1.8;
+          }
+
+          .healthPlanTaskToolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 14px;
+          }
+
+          .healthPlanResetButton {
+            border: 1px solid rgba(148, 163, 184, 0.32);
+            background: rgba(255, 255, 255, 0.72);
+            color: inherit;
+            border-radius: 999px;
+            padding: 10px 14px;
+            cursor: pointer;
+            font: inherit;
+            transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+          }
+
+          .healthPlanResetButton:hover {
+            transform: translateY(-1px);
+            border-color: rgba(20, 184, 166, 0.55);
+            background: rgba(240, 253, 250, 0.9);
+          }
+
+          .healthPlanTaskItemNumber {
+            width: 28px;
+            height: 28px;
+            border-radius: 999px;
+            display: inline-grid;
+            place-items: center;
+            border: 1px solid rgba(148, 163, 184, 0.32);
+            font-size: 0.8rem;
+            font-weight: 800;
+            margin-inline-end: 8px;
+            flex: 0 0 auto;
+          }
+
+          .healthPlanTaskItem.completed .healthPlanTaskItemNumber {
+            background: rgba(34, 197, 94, 0.16);
+            border-color: rgba(34, 197, 94, 0.35);
+          }
+
+          @media (max-width: 900px) {
+            .healthPlanProgressSummary {
+              grid-template-columns: 1fr;
+            }
+          }
+
+          @media print {
+            .healthPlanProgressSummary,
+            .healthPlanProgressMessage,
+            .healthPlanTaskToolbar {
+              break-inside: avoid !important;
+              page-break-inside: avoid !important;
+            }
+
+            .healthPlanResetButton {
+              display: none !important;
+            }
+          }
+        `}</style>
+
+        <PageBackActions />
+
+        <section className="healthPlanHero">
+          <div>
+            <p className="launchEyebrow">
+              {isArabic ? "Ø®Ø·Ø© Ø§Ù„Ù…ØªØ§Ø¨Ø¹Ø© Ø§Ù„Ø°ÙƒÙŠØ©" : "Personal Follow-Up Intelligence"}
+            </p>
+
+            <h1>
+              {isArabic
+                ? `Ø®Ø·Ø© ${priorityOrganDisplay} Ø§Ù„Ø´Ø®ØµÙŠØ©`
+                : `${priorityOrgan} Personal Health Plan`}
+            </h1>
+
+            <p>
+              {isArabic
+                ? "Ø®Ø·Ø© Ù…ØªØ§Ø¨Ø¹Ø© ØªØ¬Ù…Ø¹ Ø§Ù„ØªÙ‚ÙŠÙŠÙ…Ø§ØªØŒ Ø§Ù„ØªÙ‚Ø§Ø±ÙŠØ±ØŒ Ø§Ù„Ø°ÙƒØ§Ø¡ Ø§Ù„ØµØ­ÙŠØŒ Check-InsØŒ ÙˆØ§Ù„ØªØ§Ø±ÙŠØ® Ø§Ù„ØµØ­ÙŠ Ù„ØªÙˆØ¬ÙŠÙ‡ Ø§Ù„Ø®Ø·ÙˆØ© Ø§Ù„ØªØ§Ù„ÙŠØ©."
+                : "A follow-up plan that connects assessments, reports, generated intelligence, check-ins, and health history into a clear next step."}
+            </p>
+          </div>
+
+          <div className="healthPlanHeroCard">
+            <span>{isArabic ? "Ø¬Ø§Ù‡Ø²ÙŠØ© Ø§Ù„Ø®Ø·Ø©" : "Plan readiness"}</span>
+            <strong>{planReadinessScore}%</strong>
+            <p>
+              {isArabic
+                ? "ÙƒÙ„Ù…Ø§ Ø£Ø¶ÙØª Ø¨ÙŠØ§Ù†Ø§Øª Ø£ÙƒØ«Ø± Ø£ØµØ¨Ø­Øª Ø§Ù„Ø®Ø·Ø© Ø£ÙƒØ«Ø± Ø´Ø®ØµÙŠØ©."
+                : "The more data you add, the more personalized this plan becomes."}
+            </p>
+
+            <div className="healthPlanPrintToolbar healthPlanNoPrint">
+              <Link href={nextBestAction.href} className="launchPrimary">
+                {nextBestAction.button}
+              </Link>
+
+              <button
+                type="button"
+                className="launchSecondary healthPlanPrintButton healthPlanHeroPrintButton"
+                onClick={() => window.print()}
+              >
+                {isArabic ? "Ø·Ø¨Ø§Ø¹Ø© / Ø­ÙØ¸ PDF" : "Print / Save PDF"}
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {loading ? (
+          <section className="healthPlanPanel">
+            <p className="launchEyebrow">
+              {isArabic ? "ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ø®Ø·Ø©" : "Loading plan"}
+            </p>
+            <h2>
+              {isArabic
+                ? "Ø¬Ø§Ø±ÙŠ ØªØ­Ø¶ÙŠØ± Ø®Ø·Ø© Ø§Ù„Ù…ØªØ§Ø¨Ø¹Ø©..."
+                : "Preparing your personalized follow-up plan..."}
+            </h2>
+          </section>
+        ) : message ? (
+          <section className="healthPlanPanel">
+            <p className="launchEyebrow">
+              {isArabic ? "Ø§Ù„Ø®Ø·Ø© ØºÙŠØ± Ø¬Ø§Ù‡Ø²Ø©" : "Plan not ready"}
+            </p>
+            <h2>{message}</h2>
+            <Link href="/login" className="launchPrimary">
+              {isArabic ? "ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„" : "Login"}
+            </Link>
+          </section>
+        ) : (
+          <>
+
+            <section className="healthPlanCommandCenter">
+              <div className="healthPlanCommandMain">
+                <p className="launchEyebrow">
+                  {isArabic ? "Ù…Ø±ÙƒØ² Ù‚ÙŠØ§Ø¯Ø© Ø§Ù„Ø®Ø·Ø©" : "Plan command center"}
+                </p>
+
+                <h2>{weeklyFocusTitle}</h2>
+
+                <p>{weeklyFocusDescription}</p>
+
+                <div className="healthPlanCommandStats">
+                  <div>
+                    <span>{isArabic ? "Ø¬Ø§Ù‡Ø²ÙŠØ© Ø§Ù„Ø®Ø·Ø©" : "Plan readiness"}</span>
+                    <strong>{planReadinessScore}%</strong>
+                  </div>
+
+                  <div>
+                    <span>{isArabic ? "Ø§Ù„Ù…Ù‡Ø§Ù… Ø§Ù„Ù…ÙƒØªÙ…Ù„Ø©" : "Completed tasks"}</span>
+                    <strong>
+                      {completedTaskCount}/{totalTasks}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>{isArabic ? "Ø§Ù„ØªÙ‚Ø¯Ù… Ø§Ù„Ø­Ø§Ù„ÙŠ" : "Current progress"}</span>
+                    <strong>{taskProgress}%</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div className="healthPlanReadinessCard">
+                <p className="launchEyebrow">
+                  {isArabic ? "Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø¬Ø§Ù‡Ø²ÙŠØ©" : "Readiness checklist"}
+                </p>
+
+                <h2>
+                  {isArabic
+                    ? "Ù…Ø§ Ø§Ù„Ø°ÙŠ ÙŠØ¬Ø¹Ù„ Ø§Ù„Ø®Ø·Ø© Ø£Ø°ÙƒÙ‰ØŸ"
+                    : "What makes this plan smarter?"}
+                </h2>
+
+                <div className="healthPlanReadinessList">
+                  {readinessItems.map((item) => (
+                    <div
+                      key={item.label}
+                      className={`healthPlanReadinessItem ${
+                        item.ready ? "ready" : "pending"
+                      }`}
+                    >
+                      {isArabic ? (
+                        <>
+                          <div>
+                            <strong>{item.label}</strong>
+                            <span>{item.note}</span>
+                          </div>
+                          <div className="healthPlanReadinessDot">
+                            {item.ready ? "âœ“" : "!"}
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="healthPlanReadinessDot">
+                            {item.ready ? "âœ“" : "!"}
+                          </div>
+                          <div>
+                            <strong>{item.label}</strong>
+                            <span>{item.note}</span>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+
+            <section className="healthPlanClinicalCard">
+              <p className="launchEyebrow">
+                {isArabic ? "Ø¥ÙŠÙ‚Ø§Ø¹ Ø§Ù„Ù…ØªØ§Ø¨Ø¹Ø© Ø§Ù„Ø³Ø±ÙŠØ±ÙŠØ©" : "Clinical follow-up rhythm"}
+              </p>
+
+              <h2>
+                {isArabic
+                  ? "Ø®Ø·Ø© Ø¹Ù…Ù„ÙŠØ© Ø­Ø³Ø¨ Ø£ÙˆÙ„ÙˆÙŠØ© Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…"
+                  : "A practical plan based on the user priority"}
+              </h2>
+
+              <div className="healthPlanClinicalGrid">
+                {clinicalFollowUpCards.map((item) => (
+                  <article key={item.title}>
+                    <span>{item.title}</span>
+                    <strong>{item.value}</strong>
+                    <p>{item.note}</p>
+                  </article>
+                ))}
+              </div>
+            </section>
+
+            <section className="healthPlanMetricsGrid">
+              <article>
+                <span>{isArabic ? "Ø§Ù„Ø£ÙˆÙ„ÙˆÙŠØ©" : "Priority"}</span>
+                <strong>{priorityOrganDisplay}</strong>
+                <p>
+                  {priorityScore !== null
+                    ? `${priorityScore}/100`
+                    : isArabic
+                    ? "Ù„Ø§ ÙŠÙˆØ¬Ø¯ ØªÙ‚ÙŠÙŠÙ…"
+                    : "No assessment"}
+                </p>
+              </article>
+
+              <article>
+                <span>{isArabic ? "Ø§Ù„ØªÙ‚Ø§Ø±ÙŠØ±" : "Reports"}</span>
+                <strong>{uploadedReports.length}</strong>
+                <p>
+                  {completedExtractionCount}{" "}
+                  {isArabic ? "Ø§Ø³ØªØ®Ø±Ø§Ø¬ Ù…ÙƒØªÙ…Ù„" : "extracted"}
+                </p>
+              </article>
+
+              <article>
+                <span>{isArabic ? "Ø§Ù„Ø°ÙƒØ§Ø¡" : "Intelligence"}</span>
+                <strong>{generatedCount}</strong>
+                <p>
+                  {hasGeneratedIntelligence
+                    ? isArabic
+                      ? "Ù†ØªØ§Ø¦Ø¬ Ù…Ø­ÙÙˆØ¸Ø©"
+                      : "saved results"
+                    : isArabic
+                    ? "Ø¨Ø­Ø§Ø¬Ø© ØªÙˆÙ„ÙŠØ¯"
+                    : "needs generation"}
+                </p>
+              </article>
+
+              <article>
+                <span>{isArabic ? "Ø§Ù„ØªØ­Ø¯ÙŠØ« Ø§Ù„ØµØ­ÙŠ" : "Check-In"}</span>
+                <strong>
+                  {latestCheckIn?.wellness_score
+                    ? `${latestCheckIn.wellness_score}/100`
+                    : "--"}
+                </strong>
+                <p>{latestCheckIn?.mood || (isArabic ? "ØºÙŠØ± Ù…ØªØ§Ø­" : "Not available")}</p>
+              </article>
+            </section>
+
+            <section className="healthPlanPanel healthPlanNextPanel">
+              <div>
+                <p className="launchEyebrow">
+                  {isArabic ? "Ø§Ù„Ø®Ø·ÙˆØ© Ø§Ù„ØªØ§Ù„ÙŠØ©" : "Next best action"}
+                </p>
+                <h2>{nextBestAction.label}</h2>
+                <p>{nextBestAction.description}</p>
+              </div>
+
+              <Link href={nextBestAction.href} className="launchPrimary">
+                {nextBestAction.button}
+              </Link>
+            </section>
+
+            <section className="healthPlanGrid">
+              <article className="healthPlanCard">
+                <p className="launchEyebrow">
+                  {isArabic ? "Ù…Ù„Ø®Øµ Ø§Ù„Ø®Ø·Ø©" : "Plan summary"}
+                </p>
+                <h2>{planIntensity}</h2>
+
+                <div className="healthPlanInfoList">
+                  <div>
+                    <span>{isArabic ? "Ø¢Ø®Ø± Check-In" : "Latest check-in"}</span>
+                    <strong>{latestCheckInText}</strong>
+                  </div>
+
+                  <div>
+                    <span>{isArabic ? "Ø¥ÙŠÙ‚Ø§Ø¹ Ø§Ù„Ù…ØªØ§Ø¨Ø¹Ø©" : "Follow-up rhythm"}</span>
+                    <strong>{followUpRhythm}</strong>
+                  </div>
+
+                  <div>
+                    <span>{isArabic ? "Ù…Ø³ØªÙˆÙ‰ Ø§Ù„Ø®Ø·ÙˆØ±Ø©" : "Risk level"}</span>
+                    <strong>{localizeHealthPlanValue(riskLevelDisplay, isArabic)}</strong>
+                  </div>
+
+                  <div>
+                    <span>{isArabic ? "Ø§Ù„ØªØ§Ø±ÙŠØ® Ø§Ù„ØµØ­ÙŠ" : "Health History"}</span>
+                    <strong>{historyItems.length}</strong>
+                  </div>
+                </div>
+              </article>
+
+              <article className="healthPlanCard">
+                <p className="launchEyebrow">
+                  {isArabic ? "Ø§Ù„ØªÙ‚Ø§Ø±ÙŠØ± ÙˆØ§Ù„Ø°ÙƒØ§Ø¡" : "Reports and intelligence"}
+                </p>
+                <h2>
+                  {hasGeneratedIntelligence
+                    ? isArabic
+                      ? "Ø§Ù„Ø°ÙƒØ§Ø¡ Ø§Ù„ØµØ­ÙŠ Ù…Ø­ÙÙˆØ¸"
+                      : "Generated intelligence is saved"
+                    : isArabic
+                    ? "Ø§Ù„Ø°ÙƒØ§Ø¡ Ø§Ù„ØµØ­ÙŠ ØºÙŠØ± Ù…ÙƒØªÙ…Ù„"
+                    : "Generated intelligence is incomplete"}
+                </h2>
+
+                <p>
+                  {isArabic
+                    ? localizeHealthPlanValue(
+                        latestInsight?.next_best_action ||
+                          latestInsight?.summary ||
+                          "Ø§Ø±ÙØ¹ ØªÙ‚Ø±ÙŠØ±Ù‹Ø§ Ø£Ùˆ ÙˆÙ„Ù‘Ø¯ Ø§Ù„Ø°ÙƒØ§Ø¡ Ø§Ù„ØµØ­ÙŠ Ù„ØªØ­Ø³ÙŠÙ† Ø§Ù„Ø®Ø·Ø©.",
+                        true
+                      )
+                    : latestInsight?.next_best_action ||
+                      latestInsight?.summary ||
+                      "Upload a report or generate health intelligence to improve this plan."}
+                </p>
+
+                <div className="healthPlanActionRow">
+                  <Link href="/reports" className="launchSecondary">
+                    {isArabic ? "Ø§Ù„ØªÙ‚Ø§Ø±ÙŠØ±" : "Reports"}
+                  </Link>
+                  <Link href="/intelligence" className="launchPrimary">
+                    {isArabic ? "Ù…Ø±ÙƒØ² Ø§Ù„Ø°ÙƒØ§Ø¡" : "Intelligence"}
+                  </Link>
+                </div>
+
+                {latestGenerated?.updated_at && (
+                  <small>
+                    {isArabic ? "Ø¢Ø®Ø± ØªÙˆÙ„ÙŠØ¯: " : "Latest generated: "}
+                    {new Date(latestGenerated.updated_at).toLocaleString()}
+                  </small>
+                )}
+              </article>
+            </section>
+
+            <section className="healthPlanPanel">
+              <p className="launchEyebrow">
+                {isArabic ? "Ø®Ø·Ø© 7 Ø£ÙŠØ§Ù…" : "7-Day follow-up plan"}
+              </p>
+
+              <h2>
+                {isArabic
+                  ? "Ø§Ø¨Ø¯Ø£ Ø¨Ø®Ø·ÙˆØ§Øª ØµØºÙŠØ±Ø© Ù‚Ø§Ø¨Ù„Ø© Ù„Ù„ØªÙ†ÙÙŠØ°"
+                  : "Start with small, realistic actions"}
+              </h2>
+
+              <div className="healthPlanRoadmap">
+                {sevenDayPlan.map((item, index) => (
+                  <div key={item}>
+                    <span>{index + 1}</span>
+                    <p>{item}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="healthPlanPanel">
+              <p className="launchEyebrow">
+                {isArabic ? "Ø®Ø±ÙŠØ·Ø© 30 ÙŠÙˆÙ…" : "30-Day improvement roadmap"}
+              </p>
+
+              <h2>
+                {isArabic
+                  ? "Ù…Ù† Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª Ø¥Ù„Ù‰ Ø§Ù„Ù…ØªØ§Ø¨Ø¹Ø©"
+                  : "From data to follow-up"}
+              </h2>
+
+              <div className="healthPlanRoadmap month">
+                {thirtyDayRoadmap.map((item, index) => (
+                  <div key={item}>
+                    <span>{index + 1}</span>
+                    <p>{item}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+
+            <section className="healthPlanPanel">
+              <p className="launchEyebrow">
+                {isArabic ? "Ø§Ø³ØªØ±Ø§ØªÙŠØ¬ÙŠØ© 90 ÙŠÙˆÙ…" : "90-Day health strategy"}
+              </p>
+
+              <h2>
+                {isArabic
+                  ? "Ù…Ù† Ø§Ù„Ù…ØªØ§Ø¨Ø¹Ø© Ø¥Ù„Ù‰ Ø§Ù„ØªØ­Ø³Ù† Ø§Ù„Ù…Ø³ØªÙ…Ø±"
+                  : "From follow-up to sustained improvement"}
+              </h2>
+
+              <div className="healthPlanRoadmap month">
+                {ninetyDayStrategy.map((item, index) => (
+                  <div key={item}>
+                    <span>{index + 1}</span>
+                    <p>{item}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="healthPlanPanel">
+              <p className="launchEyebrow">
+                {isArabic ? "Ø£Ø³Ø¦Ù„Ø© Ù„Ù„Ø·Ø¨ÙŠØ¨" : "Doctor discussion guide"}
+              </p>
+
+              <h2>
+                {isArabic
+                  ? "Ø­ÙˆÙ‘Ù„ Ø§Ù„Ø®Ø·Ø© Ø¥Ù„Ù‰ Ø­ÙˆØ§Ø± Ø·Ø¨ÙŠ ÙˆØ§Ø¶Ø­"
+                  : "Turn your plan into a clear medical conversation"}
+              </h2>
+
+              <div className="healthPlanRoadmap">
+                {doctorDiscussionQuestions.map((item, index) => (
+                  <div key={item}>
+                    <span>{index + 1}</span>
+                    <p>{item}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="healthPlanPanel" id="action-tasks-section">
+              <div className="healthPlanSectionHeader">
+                <div>
+                  <p className="launchEyebrow">
+                    {isArabic ? "Ù…Ù‡Ø§Ù… Ø§Ù„Ù…ØªØ§Ø¨Ø¹Ø©" : "Action tasks"}
+                  </p>
+
+                  <h2>
+                    {completedTaskCount} {isArabic ? "Ù…Ù†" : "of"} {totalTasks}{" "}
+                    {isArabic ? "Ù…ÙƒØªÙ…Ù„Ø©" : "completed"}
+                  </h2>
+
+                  <p>
+                    {isArabic
+                      ? "Ø§Ø®ØªØ± Ù…Ù‡Ø§Ù… Ø¨Ø³ÙŠØ·Ø©. ÙŠØªÙ… Ø­ÙØ¸ Ø§Ù„ØªÙ‚Ø¯Ù… Ø¹Ù„Ù‰ Ù†ÙØ³ Ø§Ù„Ø¬Ù‡Ø§Ø²."
+                      : "Choose simple tasks. Progress is saved on this device."}
+                  </p>
+                </div>
+
+                <strong>{taskProgress}%</strong>
+              </div>
+
+              <div className="healthPlanProgressBar">
+                <div style={{ width: `${taskProgress}%` }} />
+              </div>
+
+              <div className="healthPlanTaskList">
+                {planTasks.map((task, index) => {
+                  const isCompleted = activeCompletedTasks.includes(task);
+
+                  return (
+                    <label
+                      key={task}
+                      className={`healthPlanTaskItem ${
+                        isCompleted ? "completed" : ""
+                      }`}
+                    >
+                      <span className="healthPlanTaskItemNumber">
+                        {isCompleted ? "âœ“" : index + 1}
+                      </span>
+
+                      <input
+                        type="checkbox"
+                        checked={isCompleted}
+                        onChange={() => toggleTask(task)}
+                      />
+                      <span>{task}</span>
+                      <small>{isCompleted ? "Done" : "To do"}</small>
+                    </label>
+                  );
+                })}
+              </div>
+            </section>
+
+
+            <section className="healthPlanPanel healthPlanPrintSection">
+              <div className="healthPlanSectionHeader">
+                <div>
+                  <p className="launchEyebrow">
+                    {isArabic ? "Ù†Ø³Ø®Ø© Ù‚Ø§Ø¨Ù„Ø© Ù„Ù„Ø·Ø¨Ø§Ø¹Ø©" : "Printable plan summary"}
+                  </p>
+
+                  <h2>
+                    {isArabic
+                      ? "Ù…Ù„Ø®Øµ Ø¹Ù…Ù„ÙŠ Ù„Ù„Ø®Ø·Ø© Ø§Ù„ØµØ­ÙŠØ©"
+                      : "Practical health plan summary"}
+                  </h2>
+
+                  <p>
+                    {isArabic
+                      ? "Ø§Ø³ØªØ®Ø¯Ù… Ù‡Ø°Ù‡ Ø§Ù„Ù†Ø³Ø®Ø© Ù„Ù„Ù…Ø±Ø§Ø¬Ø¹Ø© Ø§Ù„Ø´Ø®ØµÙŠØ© Ø£Ùˆ Ù„Ù…Ù†Ø§Ù‚Ø´ØªÙ‡Ø§ Ù…Ø¹ Ø§Ù„Ø·Ø¨ÙŠØ¨. ÙŠÙ…ÙƒÙ† Ø·Ø¨Ø§Ø¹ØªÙ‡Ø§ Ø£Ùˆ Ø­ÙØ¸Ù‡Ø§ ÙƒÙ…Ù„Ù PDF Ù…Ù† Ø§Ù„Ù…ØªØµÙØ­."
+                      : "Use this summary for personal review or to discuss with your doctor. You can print it or save it as a PDF from the browser."}
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  className="launchPrimary healthPlanPrintButton healthPlanNoPrint"
+                  onClick={() => window.print()}
+                >
+                  {isArabic ? "Ø·Ø¨Ø§Ø¹Ø© Ø§Ù„Ø®Ø·Ø©" : "Print plan"}
+                </button>
+              </div>
+
+              <div className="healthPlanPrintGrid">
+                <article>
+                  <span>{isArabic ? "Ø§Ù„Ø£ÙˆÙ„ÙˆÙŠØ© Ø§Ù„ØµØ­ÙŠØ©" : "Health priority"}</span>
+                  <strong>{priorityOrganDisplay}</strong>
+                </article>
+
+                <article>
+                  <span>{isArabic ? "Ø¬Ø§Ù‡Ø²ÙŠØ© Ø§Ù„Ø®Ø·Ø©" : "Plan readiness"}</span>
+                  <strong>{planReadinessScore}%</strong>
+                </article>
+
+                <article>
+                  <span>{isArabic ? "Ù…Ø³ØªÙˆÙ‰ Ø§Ù„Ù…ØªØ§Ø¨Ø¹Ø©" : "Follow-up level"}</span>
+                  <strong>{planIntensity}</strong>
+                </article>
+
+                <article>
+                  <span>{isArabic ? "Ø¥ÙŠÙ‚Ø§Ø¹ Ø§Ù„Ù…ØªØ§Ø¨Ø¹Ø©" : "Follow-up rhythm"}</span>
+                  <strong>{followUpRhythm}</strong>
+                </article>
+
+                <article>
+                  <span>{isArabic ? "Ø§Ù„Ù…Ù‡Ø§Ù… Ø§Ù„Ù…ÙƒØªÙ…Ù„Ø©" : "Completed tasks"}</span>
+                  <strong>
+                    {completedTaskCount}/{totalTasks}
+                  </strong>
+                </article>
+
+                <article>
+                  <span>{isArabic ? "Ù…Ø³ØªÙˆÙ‰ Ø§Ù„Ø®Ø·ÙˆØ±Ø©" : "Risk level"}</span>
+                  <strong>{riskLevelDisplay}</strong>
+                </article>
+              </div>
+
+              <p className="healthPlanPrintNote">
+                {isArabic
+                  ? "ØªÙ†Ø¨ÙŠÙ‡: Ù‡Ø°Ù‡ Ø§Ù„Ø®Ø·Ø© ØªØ¹Ù„ÙŠÙ…ÙŠØ© ÙˆØªÙ†Ø¸ÙŠÙ…ÙŠØ© ÙˆÙ„Ø§ ØªØ³ØªØ¨Ø¯Ù„ ØªÙ‚ÙŠÙŠÙ… Ø§Ù„Ø·Ø¨ÙŠØ¨ Ø£Ùˆ Ø§Ù„Ø¹Ù„Ø§Ø¬ Ø§Ù„Ø·Ø¨ÙŠ. Ø±Ø§Ø¬Ø¹ Ù…Ù‚Ø¯Ù… Ø±Ø¹Ø§ÙŠØ© ØµØ­ÙŠØ© Ø¹Ù†Ø¯ ÙˆØ¬ÙˆØ¯ Ø£Ø¹Ø±Ø§Ø¶ Ù…Ù‚Ù„Ù‚Ø© Ø£Ùˆ Ù†ØªØ§Ø¦Ø¬ ØºÙŠØ± Ø·Ø¨ÙŠØ¹ÙŠØ©."
+                  : "Note: This plan is educational and organizational. It does not replace medical evaluation or treatment. Consult a licensed healthcare professional for concerning symptoms or abnormal results."}
+              </p>
+            </section>
+
+
+            {/* ORGANHEAL_PRINT_ONLY_SECTION */}
+            <section
+              className="healthPlanPrintOnly"
+              dir={isArabic ? "rtl" : "ltr"}
+              lang={isArabic ? "ar" : "en"}
+              aria-hidden="true"
+            >
+              <div className="healthPlanPrintPage">
+                <div className="healthPlanPrintOnlyHeader">
+                  <p>OrganHeal AI</p>
+                  <h1>
+                    {isArabic
+                      ? `Ø®Ø·Ø© ${priorityOrganDisplay} Ø§Ù„Ø´Ø®ØµÙŠØ©`
+                      : `${priorityOrgan} Personal Health Plan`}
+                  </h1>
+                  <p>
+                    {isArabic
+                      ? "Ù†Ø³Ø®Ø© Ù…Ù†Ø¸Ù…Ø© Ù„Ù„Ø·Ø¨Ø§Ø¹Ø© Ø£Ùˆ Ø§Ù„Ø­ÙØ¸ ÙƒÙ…Ù„Ù PDF"
+                      : "Printable plan summary for review or PDF saving"}
+                  </p>
+                </div>
+
+                <div className="healthPlanPrintOnlyGrid">
+                  <div className="healthPlanPrintOnlyBox">
+                    <span>{isArabic ? "Ø§Ù„Ø£ÙˆÙ„ÙˆÙŠØ© Ø§Ù„ØµØ­ÙŠØ©" : "Health priority"}</span>
+                    <strong>{priorityOrganDisplay}</strong>
+                  </div>
+
+                  <div className="healthPlanPrintOnlyBox">
+                    <span>{isArabic ? "Ø¬Ø§Ù‡Ø²ÙŠØ© Ø§Ù„Ø®Ø·Ø©" : "Plan readiness"}</span>
+                    <strong>{planReadinessScore}%</strong>
+                  </div>
+
+                  <div className="healthPlanPrintOnlyBox">
+                    <span>{isArabic ? "Ù…Ø³ØªÙˆÙ‰ Ø§Ù„Ù…ØªØ§Ø¨Ø¹Ø©" : "Follow-up level"}</span>
+                    <strong>{planIntensity}</strong>
+                  </div>
+
+                  <div className="healthPlanPrintOnlyBox">
+                    <span>{isArabic ? "Ø¥ÙŠÙ‚Ø§Ø¹ Ø§Ù„Ù…ØªØ§Ø¨Ø¹Ø©" : "Follow-up rhythm"}</span>
+                    <strong>{followUpRhythm}</strong>
+                  </div>
+
+                  <div className="healthPlanPrintOnlyBox">
+                    <span>{isArabic ? "Ø§Ù„Ù…Ù‡Ø§Ù… Ø§Ù„Ù…ÙƒØªÙ…Ù„Ø©" : "Completed tasks"}</span>
+                    <strong>
+                      {completedTaskCount}/{totalTasks}
+                    </strong>
+                  </div>
+
+                  <div className="healthPlanPrintOnlyBox">
+                    <span>{isArabic ? "Ù…Ø³ØªÙˆÙ‰ Ø§Ù„Ø®Ø·ÙˆØ±Ø©" : "Risk level"}</span>
+                    <strong>{riskLevelDisplay}</strong>
+                  </div>
+                </div>
+
+                <div className="healthPlanPrintOnlySection">
+                  <h2>{isArabic ? "Ø§Ù„Ø®Ø·ÙˆØ© Ø§Ù„ØªØ§Ù„ÙŠØ©" : "Next best action"}</h2>
+                  <p>{nextBestAction.description}</p>
+                </div>
+
+                <div className="healthPlanPrintOnlySection">
+                  <h2>{isArabic ? "Ù…Ù‡Ø§Ù… Ø§Ù„Ù…ØªØ§Ø¨Ø¹Ø©" : "Action tasks"}</h2>
+                  <ul>
+                    {planTasks.slice(0, 8).map((task) => (
+                      <li key={task}>{task}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="healthPlanPrintOnlySection">
+                  <h2>{isArabic ? "Ø®Ø·Ø© 7 Ø£ÙŠØ§Ù…" : "7-Day plan"}</h2>
+                  <ul>
+                    {sevenDayPlan.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="healthPlanPrintOnlySection">
+                  <h2>{isArabic ? "Ø®Ø±ÙŠØ·Ø© 30 ÙŠÙˆÙ…" : "30-Day roadmap"}</h2>
+                  <ul>
+                    {thirtyDayRoadmap.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="healthPlanPrintOnlySection">
+                  <h2>{isArabic ? "Ø§Ø³ØªØ±Ø§ØªÙŠØ¬ÙŠØ© 90 ÙŠÙˆÙ…" : "90-Day strategy"}</h2>
+                  <ul>
+                    {ninetyDayStrategy.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="healthPlanPrintOnlySection">
+                  <h2>{isArabic ? "Ø£Ø³Ø¦Ù„Ø© Ù„Ù„Ø·Ø¨ÙŠØ¨" : "Doctor discussion guide"}</h2>
+                  <ul>
+                    {doctorDiscussionQuestions.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                <p className="healthPlanPrintOnlyNote">
+                  {isArabic
+                    ? "ØªÙ†Ø¨ÙŠÙ‡: Ù‡Ø°Ù‡ Ø§Ù„Ø®Ø·Ø© ØªØ¹Ù„ÙŠÙ…ÙŠØ© ÙˆØªÙ†Ø¸ÙŠÙ…ÙŠØ© ÙˆÙ„Ø§ ØªØ³ØªØ¨Ø¯Ù„ ØªÙ‚ÙŠÙŠÙ… Ø§Ù„Ø·Ø¨ÙŠØ¨ Ø£Ùˆ Ø§Ù„Ø¹Ù„Ø§Ø¬ Ø§Ù„Ø·Ø¨ÙŠ. Ø±Ø§Ø¬Ø¹ Ù…Ù‚Ø¯Ù… Ø±Ø¹Ø§ÙŠØ© ØµØ­ÙŠØ© Ø¹Ù†Ø¯ ÙˆØ¬ÙˆØ¯ Ø£Ø¹Ø±Ø§Ø¶ Ù…Ù‚Ù„Ù‚Ø© Ø£Ùˆ Ù†ØªØ§Ø¦Ø¬ ØºÙŠØ± Ø·Ø¨ÙŠØ¹ÙŠØ©."
+                    : "Note: This plan is educational and organizational. It does not replace medical evaluation or treatment. Consult a licensed healthcare professional for concerning symptoms or abnormal results."}
+                </p>
+              </div>
+            </section>
+
+            <section className="healthPlanBottomNav">
+              <div>
+                <p className="launchEyebrow">
+                  {isArabic ? "Ø§Ø³ØªÙ…Ø±Ø§Ø± Ø§Ù„Ø±Ø­Ù„Ø©" : "Continue the journey"}
+                </p>
+
+                <h2>
+                  {isArabic
+                    ? "Ø±Ø§Ø¬Ø¹ØŒ Ø­Ø¯Ù‘Ø«ØŒ ÙˆÙƒØ±Ø±"
+                    : "Review, update, and reassess"}
+                </h2>
+
+                <p>
+                  {pendingExtractionCount > 0
+                    ? isArabic
+                      ? "ÙŠÙˆØ¬Ø¯ ØªÙ‚Ø§Ø±ÙŠØ± Ø¨Ø§Ù†ØªØ¸Ø§Ø± Ø§Ù„Ø§Ø³ØªØ®Ø±Ø§Ø¬. Ø´ØºÙ‘Ù„ Ø§Ù„Ø§Ø³ØªØ®Ø±Ø§Ø¬ Ø£Ùˆ Ø§ÙØªØ­ Ù…Ø±ÙƒØ² Ø§Ù„Ø°ÙƒØ§Ø¡."
+                      : "Some reports are pending extraction. Run extraction or open Intelligence Center."
+                    : isArabic
+                    ? "Ø§Ø³ØªÙ…Ø± ÙÙŠ ØªØ­Ø¯ÙŠØ« Check-Ins ÙˆÙ…Ø±Ø§Ø¬Ø¹Ø© Health History."
+                    : "Keep updating check-ins and reviewing Health History."}
+                </p>
+              </div>
+
+              <div className="healthPlanActionRow">
+                <Link href="/checkin">{isArabic ? "Ø§Ù„ØªØ­Ø¯ÙŠØ« Ø§Ù„ØµØ­ÙŠ" : "Check-In"}</Link>
+                <Link href="/history">{isArabic ? "Ø§Ù„ØªØ§Ø±ÙŠØ®" : "History"}</Link>
+                <Link href="/doctor-portal">
+                  {isArabic ? "Ø¨ÙˆØ§Ø¨Ø© Ø§Ù„Ø·Ø¨ÙŠØ¨" : "Doctor Portal"}
+                </Link>
+                <Link href="/dashboard">
+                  {isArabic ? "Ù„ÙˆØ­Ø© Ø§Ù„ØªØ­ÙƒÙ…" : "Dashboard"}
+                </Link>
+              </div>
+            </section>
+          </>
+        )}
+      </div>
+    </main>
+  );
+}
