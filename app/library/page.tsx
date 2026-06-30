@@ -332,6 +332,10 @@ export default function LibraryPage() {
                 <Link href="/blog" className="primaryBtn">
                   {text("Open Articles", "فتح المقالات")}
                 </Link>
+
+                <Link href="/library/videos" className="secondaryBtn">
+                  {text("Video Education Roadmap", "خطة التثقيف بالفيديو")}
+                </Link>
               </div>
             </div>
 
@@ -357,8 +361,8 @@ export default function LibraryPage() {
 
               <p className="ohCardText">
                 {text(
-                  "This page teaches and organizes content. It does not repeat report upload, assessment, assistant, dashboard, or intelligence actions.",
-                  "هذه الصفحة للتعليم وتنظيم المحتوى. لا تكرر رفع التقارير أو التقييم أو المساعد أو لوحة التحكم أو الذكاء الصحي."
+                  "You can reach this library from the main navigation under Education. Articles are available now, while the video education roadmap shows what will be produced later.",
+                  "يمكن الوصول إلى هذه المكتبة من القائمة الرئيسية عبر Education. المقالات متاحة الآن، أما خطة التثقيف بالفيديو فتوضح ما سيتم إنتاجه لاحقًا."
                 )}
               </p>
             </aside>
@@ -489,6 +493,16 @@ export default function LibraryPage() {
                 <span className="ohMetricHint">
                   {isArabic ? layer.descriptionAr : layer.description}
                 </span>
+
+                {layer.code === "02" && (
+                  <Link
+                    href="/library/videos"
+                    className="secondaryBtn"
+                    style={{ marginTop: "14px", width: "100%", justifyContent: "center" }}
+                  >
+                    {text("View Roadmap", "عرض الخطة")}
+                  </Link>
+                )}
               </article>
             ))}
           </div>
@@ -545,4 +559,5 @@ export default function LibraryPage() {
     </main>
   );
 }
+
 
