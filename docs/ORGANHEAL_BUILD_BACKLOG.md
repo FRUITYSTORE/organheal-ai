@@ -31,3 +31,26 @@ Publish gate:
 - Clear clinical safety boundary.
 - Build passes.
 - Route is linked from Learning Hub only after approval.
+
+## Pricing and Subscription Layer
+
+Status: Internal backlog item. Do not expose publicly until pricing, subscription rules, billing, and feature access are ready.
+
+Public exposure rule:
+- Do not show public pricing pages that say "Price to be announced", "payment not active", "future", "later", "planned", or similar.
+- Do not link pricing from Navbar, Footer, Home, Onboarding, or public feature pages until the publish gate is approved.
+- If users visit /pricing directly before launch, redirect them to /features.
+
+Future build requirement:
+- Define Free account limits.
+- Define paid account value clearly.
+- Add billing provider only when ready.
+- Add feature gating only after the feature itself is stable.
+- Use mature names such as Account Options or Membership Plans only after the page is ready.
+
+Publish gate:
+- Payment or account plan logic is ready.
+- No placeholder payment language.
+- No "coming soon" public messaging.
+- Build passes.
+- Public navigation approved.

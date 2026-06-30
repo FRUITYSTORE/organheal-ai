@@ -330,7 +330,7 @@ export default function OnboardingPage() {
 
               <p className="ohCardText">
                 {text(
-                  "The free account helps you try assessments and basic report understanding. Later, Plus can support monthly follow-up, saved results, downloadable summaries, and health planning.",
+                  "Your account helps you start with assessments, basic report understanding, saved context, and a clearer path into your health workspace.",
                   "الحساب المجاني يساعدك على تجربة التقييمات وفهم التقارير بشكل أولي. لاحقًا يمكن تطوير Plus لدعم المتابعة الشهرية، حفظ النتائج، تحميل الملخصات، والخطة الصحية."
                 )}
               </p>
@@ -369,3 +369,4 @@ export default function OnboardingPage() {
     </main>
   );
 }
+

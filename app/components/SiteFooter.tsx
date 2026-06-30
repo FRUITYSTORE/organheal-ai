@@ -87,10 +87,6 @@ export default function SiteFooter() {
             <Link href="/login">
               {text("Sign In", "تسجيل الدخول")}
             </Link>
-
-            <Link href="/pricing">
-              {text("Compare Plans", "مقارنة الخطط")}
-            </Link>
           </nav>
         </div>
 
@@ -124,4 +120,5 @@ export default function SiteFooter() {
     </footer>
   );
 }
+
 
