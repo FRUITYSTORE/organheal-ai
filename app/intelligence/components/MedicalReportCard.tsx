@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 
 type MedicalReportCardProps = {
   fileName: string;
@@ -33,20 +33,23 @@ function getStoredLanguage(): Language {
 }
 
 function translateStatus(status: string, isArabic: boolean) {
-  if (!isArabic) return status;
+  if (!isArabic) return status || "Under review";
 
   const normalized = String(status || "").toLowerCase();
 
   if (normalized.includes("completed")) return "مكتمل";
+  if (normalized.includes("complete")) return "مكتمل";
+  if (normalized.includes("success")) return "مكتمل";
   if (normalized.includes("pending")) return "قيد الانتظار";
   if (normalized.includes("processing")) return "قيد المعالجة";
   if (normalized.includes("failed")) return "فشل الاستخراج";
+  if (normalized.includes("error")) return "حدث خطأ";
 
   return status || "قيد المراجعة";
 }
 
 function translateReportType(type: string, isArabic: boolean) {
-  if (!isArabic) return type;
+  if (!isArabic) return type || "Medical Report";
 
   const normalized = String(type || "").toLowerCase();
 
@@ -56,6 +59,37 @@ function translateReportType(type: string, isArabic: boolean) {
   if (normalized.includes("prescription")) return "وصفة طبية";
 
   return "تقرير طبي";
+}
+
+function getStatusTone(status: string) {
+  const normalized = String(status || "").toLowerCase();
+
+  if (
+    normalized.includes("completed") ||
+    normalized.includes("complete") ||
+    normalized.includes("success") ||
+    normalized.includes("done")
+  ) {
+    return "good";
+  }
+
+  if (
+    normalized.includes("failed") ||
+    normalized.includes("error") ||
+    normalized.includes("rejected")
+  ) {
+    return "risk";
+  }
+
+  if (
+    normalized.includes("pending") ||
+    normalized.includes("processing") ||
+    normalized.includes("extract")
+  ) {
+    return "moderate";
+  }
+
+  return "neutral";
 }
 
 export default function MedicalReportCard({
@@ -74,79 +108,68 @@ export default function MedicalReportCard({
 }: MedicalReportCardProps) {
   const [language, setLanguage] = useState<Language>("en");
 
+  const isArabic = language === "ar";
+  const extractionTone = getStatusTone(extractionStatus);
+  const intelligenceTone = isGenerated ? "good" : "moderate";
+
   useEffect(() => {
     function syncLanguage() {
-      setLanguage(getStoredLanguage());
+      const selectedLanguage = getStoredLanguage();
+
+      setLanguage(selectedLanguage);
+      document.documentElement.lang = selectedLanguage;
+      document.documentElement.dir = selectedLanguage === "ar" ? "rtl" : "ltr";
     }
 
     syncLanguage();
 
     window.addEventListener("storage", syncLanguage);
-    window.addEventListener("focus", syncLanguage);
+    window.addEventListener("organheal-language-change", syncLanguage);
 
     return () => {
       window.removeEventListener("storage", syncLanguage);
-      window.removeEventListener("focus", syncLanguage);
+      window.removeEventListener("organheal-language-change", syncLanguage);
     };
   }, []);
 
-  const isArabic = language === "ar";
+  function text(en: string, ar: string) {
+    return isArabic ? ar : en;
+  }
 
   return (
-    <div className="intelligenceReportCard" dir={isArabic ? "rtl" : "ltr"}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          gap: "16px",
-          flexWrap: "wrap",
-          alignItems: "flex-start",
-        }}
-      >
-        <div style={{ textAlign: isArabic ? "right" : "left" }}>
-          <p className="sectionLabel">
+    <article
+      className="ohCard intelligenceReportCard"
+      dir={isArabic ? "rtl" : "ltr"}
+      lang={isArabic ? "ar" : "en"}
+    >
+      <div className="ohCardHeader">
+        <div>
+          <p className="ohMetricLabel">
             {translateReportType(reportTypeLabel, isArabic)}
           </p>
 
-          <h3 style={{ marginTop: "6px" }}>{fileName}</h3>
+          <h3 className="ohCardTitle" style={{ marginTop: "8px" }}>
+            {fileName}
+          </h3>
 
-          <p style={{ marginTop: "8px", color: "#64748b" }}>
-            {isArabic ? "تاريخ الرفع: " : "Uploaded: "}
-            {uploadedAtText}
-          </p>
-
-          <p style={{ marginTop: "8px", color: "#64748b" }}>
-            {isArabic ? "حالة الاستخراج: " : "Extraction Status: "}
-            {translateStatus(extractionStatus, isArabic)}
-          </p>
-
-          <p style={{ marginTop: "8px", fontWeight: 800 }}>
-            {isGenerated
-              ? isArabic
-                ? "تم توليد الذكاء"
-                : "Intelligence Generated"
-              : isArabic
-              ? "جاهز للتفسير"
-              : "Ready for Interpretation"}
+          <p className="ohCardText" style={{ marginTop: "8px" }}>
+            {text(
+              "Uploaded report ready for extraction review and intelligence generation.",
+              "تقرير مرفوع جاهز لمراجعة الاستخراج وتوليد الذكاء الصحي."
+            )}
           </p>
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            gap: "10px",
-            flexWrap: "wrap",
-            justifyContent: isArabic ? "flex-start" : "flex-end",
-          }}
-        >
+        <div className="ohButtonRow">
           {canOpen && (
-            <button className="secondaryBtn" onClick={onOpen}>
-              {isArabic ? "فتح التقرير" : "Open"}
+            <button className="secondaryBtn" type="button" onClick={onOpen}>
+              {text("Open", "فتح التقرير")}
             </button>
           )}
 
           <button
             className="primaryBtn"
+            type="button"
             onClick={
               isGenerated
                 ? isExpanded
@@ -157,22 +180,48 @@ export default function MedicalReportCard({
           >
             {isGenerated
               ? isExpanded
-                ? isArabic
-                  ? "إخفاء النتيجة"
-                  : "Hide Result"
-                : isArabic
-                ? "عرض النتيجة"
-                : "View Result"
-              : isArabic
-              ? "توليد الذكاء"
-              : "Generate"}
+                ? text("Hide Result", "إخفاء النتيجة")
+                : text("View Result", "عرض النتيجة")
+              : text("Generate", "توليد الذكاء")}
           </button>
         </div>
       </div>
 
+      <div className="ohMetricGrid" style={{ marginTop: "18px" }}>
+        <article className="ohMetricCard">
+          <span className="ohMetricLabel">
+            {text("Uploaded", "تاريخ الرفع")}
+          </span>
+          <span className="ohMetricHint">{uploadedAtText}</span>
+        </article>
+
+        <article className="ohMetricCard">
+          <span className="ohMetricLabel">
+            {text("Extraction Status", "حالة الاستخراج")}
+          </span>
+          <span className={`ohStatusBadge ${extractionTone}`}>
+            {translateStatus(extractionStatus, isArabic)}
+          </span>
+        </article>
+
+        <article className="ohMetricCard">
+          <span className="ohMetricLabel">
+            {text("Intelligence Status", "حالة الذكاء")}
+          </span>
+          <span className={`ohStatusBadge ${intelligenceTone}`}>
+            {isGenerated
+              ? text("Generated", "تم توليد الذكاء")
+              : text("Ready for Interpretation", "جاهز للتفسير")}
+          </span>
+        </article>
+      </div>
+
       {isGenerated && children && (
-        <div style={{ marginTop: "16px" }}>{children}</div>
+        <>
+          <div className="ohDivider" />
+          <div className="ohStack">{children}</div>
+        </>
       )}
-    </div>
+    </article>
   );
 }
