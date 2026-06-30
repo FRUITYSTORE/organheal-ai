@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { blogPosts } from "@/lib/blogData";
 
@@ -47,6 +47,20 @@ export default function BlogPage() {
   function text(en: string, ar: string) {
     return isArabic ? ar : en;
   }
+
+  const categorySummary = useMemo(() => {
+    const categories = new Map<string, number>();
+
+    blogPosts.forEach((post) => {
+      const category = isArabic ? post.categoryAr : post.category;
+      categories.set(category, (categories.get(category) || 0) + 1);
+    });
+
+    return Array.from(categories.entries()).map(([category, count]) => ({
+      category,
+      count,
+    }));
+  }, [isArabic]);
 
   return (
     <main
@@ -97,6 +111,32 @@ export default function BlogPage() {
           flex: 1;
         }
 
+        .blogCommandPage .blogMetaRow {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          align-items: center;
+        }
+
+        .blogCommandPage .blogMarkerRow {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+
+        .blogCommandPage .blogMarker {
+          display: inline-flex;
+          align-items: center;
+          width: fit-content;
+          padding: 6px 9px;
+          border-radius: 999px;
+          background: rgba(248, 250, 252, 0.92);
+          border: 1px solid rgba(148, 163, 184, 0.18);
+          color: var(--oh-muted);
+          font-size: 0.78rem;
+          font-weight: 800;
+        }
+
         .blogCommandPage .blogCardFooter {
           display: flex;
           align-items: center;
@@ -117,14 +157,22 @@ export default function BlogPage() {
           font-weight: 900;
         }
 
+        .blogCommandPage .blogCategoryGrid {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 14px;
+        }
+
         @media (max-width: 980px) {
-          .blogCommandPage .blogGrid {
+          .blogCommandPage .blogGrid,
+          .blogCommandPage .blogCategoryGrid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
           }
         }
 
         @media (max-width: 640px) {
-          .blogCommandPage .blogGrid {
+          .blogCommandPage .blogGrid,
+          .blogCommandPage .blogCategoryGrid {
             grid-template-columns: 1fr;
           }
 
@@ -140,31 +188,23 @@ export default function BlogPage() {
           <div className="ohHeroGrid">
             <div>
               <p className="ohEyebrow">
-                {text("OrganHeal Blog", "مدونة OrganHeal")}
+                {text("OrganHeal Articles", "مقالات OrganHeal")}
               </p>
 
               <h1 className="ohTitle">
-                {text("Health Intelligence Articles", "مقالات الذكاء الصحي")}
+                {text("Health education that prepares better questions.", "تثقيف صحي يساعدك على طرح أسئلة أفضل.")}
               </h1>
 
               <p className="ohLead">
                 {text(
-                  "Learn about organ health, lab results, wellness tracking, prevention, and practical health intelligence through simple educational articles.",
-                  "تعرّف على صحة الأعضاء، نتائج المختبر، متابعة العافية، الوقاية، والذكاء الصحي العملي من خلال مقالات تعليمية مبسطة."
+                  "Read simple educational articles about organ health, lab markers, prevention, and health intelligence. This section is for learning only, not for using private tools.",
+                  "اقرأ مقالات تعليمية مبسطة عن صحة الأعضاء، مؤشرات المختبر، الوقاية، والذكاء الصحي. هذا القسم للتعلم فقط وليس لاستخدام الأدوات الخاصة."
                 )}
               </p>
 
               <div className="ohButtonRow" style={{ marginTop: "24px" }}>
                 <Link href="/library" className="primaryBtn">
-                  {text("Open Library", "فتح المكتبة")}
-                </Link>
-
-                <Link href="/assessment" className="secondaryBtn">
-                  {text("Start Assessment", "ابدأ التقييم")}
-                </Link>
-
-                <Link href="/dashboard" className="secondaryBtn">
-                  {text("Dashboard", "لوحة التحكم")}
+                  {text("Back to Education Library", "العودة إلى مكتبة التثقيف")}
                 </Link>
               </div>
             </div>
@@ -173,26 +213,26 @@ export default function BlogPage() {
               <div className="ohCardHeader">
                 <div>
                   <p className="ohMetricLabel">
-                    {text("Education hub", "مركز التثقيف")}
+                    {text("Content foundation", "أساس المحتوى")}
                   </p>
 
                   <h2 className="ohCardTitle" style={{ marginTop: "8px" }}>
                     {text(
-                      `${blogPosts.length} articles available`,
-                      `${blogPosts.length} مقالات متوفرة`
+                      `${blogPosts.length} educational articles`,
+                      `${blogPosts.length} مقالات تعليمية`
                     )}
                   </h2>
                 </div>
 
                 <span className="ohStatusBadge good">
-                  {text("Educational", "تعليمي")}
+                  {text("Readable", "سهل القراءة")}
                 </span>
               </div>
 
               <p className="ohCardText">
                 {text(
-                  "Use these articles to build health awareness before reviewing your reports, assessments, or doctor questions.",
-                  "استخدم هذه المقالات لبناء وعي صحي قبل مراجعة تقاريرك أو تقييماتك أو أسئلتك للطبيب."
+                  "Each article is structured with category, organ system, lab markers, audience, and reading time so it can support smarter recommendations later.",
+                  "كل مقال منظم حسب التصنيف، الجهاز/العضو، مؤشرات المختبر، الجمهور، ووقت القراءة حتى يدعم توصيات أذكى لاحقًا."
                 )}
               </p>
             </div>
@@ -200,77 +240,84 @@ export default function BlogPage() {
         </section>
 
         <section className="ohTrustNotice">
-          <span aria-hidden="true">🩺</span>
+          <span aria-hidden="true">OH</span>
           <div>
             <strong>
               {text("Educational content only", "محتوى تعليمي فقط")}
             </strong>
             <br />
             {text(
-              "Articles are for general health education and do not replace licensed medical advice, diagnosis, or treatment.",
-              "المقالات للتثقيف الصحي العام ولا تستبدل الاستشارة أو التشخيص أو العلاج من مختص صحي مرخص."
+              "Articles help you understand health topics and prepare better questions. They do not diagnose, treat, prescribe, or replace licensed medical care.",
+              "المقالات تساعدك على فهم المواضيع الصحية وتحضير أسئلة أفضل. لا تقدم تشخيصًا أو علاجًا أو وصفات ولا تستبدل الرعاية الطبية المرخصة."
             )}
           </div>
         </section>
 
-        <section className="blogGrid">
-          {blogPosts.map((post) => (
-            <article key={post.slug} className="ohCard blogCard">
-              <p className="blogCategory">
-                {isArabic ? post.categoryAr : post.category}
+        <section className="ohCard">
+          <div className="ohCardHeader">
+            <div>
+              <p className="ohMetricLabel">
+                {text("Learning topics", "مواضيع التعلّم")}
               </p>
 
               <h2 className="ohCardTitle">
-                {isArabic ? post.titleAr : post.title}
+                {text("Browse by health area", "تصفح حسب المجال الصحي")}
               </h2>
-
-              <p className="ohCardText blogExcerpt">
-                {isArabic ? post.excerptAr : post.excerpt}
-              </p>
-
-              <div className="blogCardFooter">
-                <span className="blogDate">{post.date}</span>
-
-                <Link href={`/blog/${post.slug}`} className="blogReadMore">
-                  {text("Read Article", "اقرأ المقال")}
-                </Link>
-              </div>
-            </article>
-          ))}
-        </section>
-
-        <section className="ohActionPanel">
-          <div className="ohCardHeader" style={{ marginBottom: 0 }}>
-            <div>
-              <p className="ohMetricLabel">
-                {text("From reading to action", "من القراءة إلى التطبيق")}
-              </p>
-
-              <h2 className="ohCardTitle" style={{ fontSize: "1.7rem" }}>
-                {text(
-                  "Turn education into a practical health journey.",
-                  "حوّل التثقيف إلى رحلة صحية عملية."
-                )}
-              </h2>
-
-              <p className="ohCardText">
-                {text(
-                  "After reading, continue with an assessment, upload a report, or use the Health Intelligence Center for clearer next steps.",
-                  "بعد القراءة، أكمل بتقييم صحي، ارفع تقريرًا، أو استخدم مركز الذكاء الصحي للحصول على خطوات أوضح."
-                )}
-              </p>
-            </div>
-
-            <div className="ohButtonRow">
-              <Link href="/lab-upload" className="primaryBtn">
-                {text("Upload Report", "رفع تقرير")}
-              </Link>
-
-              <Link href="/intelligence" className="secondaryBtn">
-                {text("Intelligence Center", "مركز الذكاء")}
-              </Link>
             </div>
           </div>
+
+          <div className="blogCategoryGrid">
+            {categorySummary.map((item) => (
+              <article className="ohMetricCard" key={item.category}>
+                <span className="ohMetricLabel">{item.category}</span>
+                <span className="ohMetricValue">{item.count}</span>
+                <span className="ohMetricHint">
+                  {text("Article available", "مقال متوفر")}
+                </span>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="blogGrid">
+          {blogPosts.map((post) => {
+            const title = isArabic ? post.titleAr : post.title;
+            const excerpt = isArabic ? post.excerptAr : post.excerpt;
+            const category = isArabic ? post.categoryAr : post.category;
+            const organSystem = isArabic ? post.organSystemAr : post.organSystem;
+            const readTime = isArabic ? post.readTimeAr : post.readTime;
+
+            return (
+              <article key={post.slug} className="ohCard blogCard">
+                <div className="blogMetaRow">
+                  <p className="blogCategory">{category}</p>
+                  <span className="ohStatusBadge neutral">{readTime}</span>
+                </div>
+
+                <h2 className="ohCardTitle">{title}</h2>
+
+                <p className="ohCardText blogExcerpt">{excerpt}</p>
+
+                <div className="blogMarkerRow">
+                  <span className="blogMarker">{organSystem}</span>
+
+                  {post.labMarkers.slice(0, 3).map((marker) => (
+                    <span className="blogMarker" key={`${post.slug}-${marker}`}>
+                      {marker}
+                    </span>
+                  ))}
+                </div>
+
+                <div className="blogCardFooter">
+                  <span className="blogDate">{post.date}</span>
+
+                  <Link href={`/blog/${post.slug}`} className="blogReadMore">
+                    {text("Read Article", "اقرأ المقال")}
+                  </Link>
+                </div>
+              </article>
+            );
+          })}
         </section>
       </div>
     </main>

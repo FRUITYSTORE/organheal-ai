@@ -2,10 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { blogPosts } from "@/lib/blogData";
+import { blogPosts, type BlogPost } from "@/lib/blogData";
 
 type Language = "en" | "ar";
-type BlogPost = (typeof blogPosts)[0];
 
 function getStoredLanguage(): Language {
   if (typeof window === "undefined") return "en";
@@ -66,27 +65,18 @@ export default function BlogPostClient({ post }: { post: BlogPost }) {
     return isArabic ? ar : en;
   }
 
-  function getLocalizedField(baseKey: string) {
-    const record = post as BlogPost & Record<string, unknown>;
-    const arabicValue = record[`${baseKey}Ar`];
-    const englishValue = record[baseKey];
-
-    return isArabic ? arabicValue || englishValue : englishValue || arabicValue;
-  }
-
   const title = isArabic ? post.titleAr : post.title;
   const excerpt = isArabic ? post.excerptAr : post.excerpt;
   const category = isArabic ? post.categoryAr : post.category;
+  const organSystem = isArabic ? post.organSystemAr : post.organSystem;
+  const readTime = isArabic ? post.readTimeAr : post.readTime;
+  const articleParagraphs = normalizeContent(isArabic ? post.contentAr : post.content);
 
-  const articleParagraphs = useMemo(() => {
-    const content = getLocalizedField("content");
-    const body = getLocalizedField("body");
-    const paragraphs = normalizeContent(content).length
-      ? normalizeContent(content)
-      : normalizeContent(body);
-
-    return paragraphs.length ? paragraphs : [excerpt];
-  }, [excerpt, isArabic, post]);
+  const relatedPosts = useMemo(() => {
+    return blogPosts
+      .filter((item) => item.slug !== post.slug && item.category === post.category)
+      .slice(0, 3);
+  }, [post.category, post.slug]);
 
   const articleSchema = {
     "@context": "https://schema.org",
@@ -111,6 +101,7 @@ export default function BlogPostClient({ post }: { post: BlogPost }) {
         url: "https://www.organheal.com/icon.svg",
       },
     },
+    keywords: [post.category, post.organSystem, ...post.labMarkers].join(", "),
   };
 
   return (
@@ -162,10 +153,40 @@ export default function BlogPostClient({ post }: { post: BlogPost }) {
           font-weight: 900;
         }
 
+        .blogPostCommandPage .blogMarkerRow {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          margin-top: 18px;
+        }
+
+        .blogPostCommandPage .blogMarker {
+          display: inline-flex;
+          align-items: center;
+          width: fit-content;
+          padding: 7px 10px;
+          border-radius: 999px;
+          background: rgba(248, 250, 252, 0.92);
+          border: 1px solid rgba(148, 163, 184, 0.18);
+          color: var(--oh-muted);
+          font-size: 0.8rem;
+          font-weight: 850;
+        }
+
         .blogPostCommandPage .blogPostRelatedGrid {
           display: grid;
           grid-template-columns: repeat(3, minmax(0, 1fr));
           gap: 14px;
+        }
+
+        .blogPostCommandPage .blogPostRelatedCard {
+          transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .blogPostCommandPage .blogPostRelatedCard:hover {
+          transform: translateY(-3px);
+          border-color: rgba(20, 184, 166, 0.34);
+          box-shadow: 0 18px 42px rgba(15, 23, 42, 0.08);
         }
 
         @media (max-width: 760px) {
@@ -178,7 +199,7 @@ export default function BlogPostClient({ post }: { post: BlogPost }) {
       <div className="ohContainer ohStack large" style={{ padding: "32px 0 64px" }}>
         <div className="blogPostShell ohStack large">
           <Link href="/blog" className="blogPostBack">
-            {text("← Back to Blog", "العودة إلى المدونة →")}
+            {text("← Back to Articles", "العودة إلى المقالات →")}
           </Link>
 
           <section className="ohHero">
@@ -194,23 +215,34 @@ export default function BlogPostClient({ post }: { post: BlogPost }) {
               <div className="blogPostMeta">
                 <span className="ohStatusBadge good">{category}</span>
                 <span className="ohStatusBadge neutral">{post.date}</span>
+                <span className="ohStatusBadge neutral">{readTime}</span>
                 <span className="ohStatusBadge moderate">
                   {text("Educational", "تعليمي")}
                 </span>
+              </div>
+
+              <div className="blogMarkerRow">
+                <span className="blogMarker">{organSystem}</span>
+
+                {post.labMarkers.map((marker) => (
+                  <span className="blogMarker" key={`${post.slug}-${marker}`}>
+                    {marker}
+                  </span>
+                ))}
               </div>
             </div>
           </section>
 
           <section className="ohTrustNotice">
-            <span aria-hidden="true">🩺</span>
+            <span aria-hidden="true">OH</span>
             <div>
               <strong>
                 {text("Educational content only", "محتوى تعليمي فقط")}
               </strong>
               <br />
               {text(
-                "OrganHeal articles are for education only. They do not diagnose, treat, prescribe, or replace licensed medical care.",
-                "مقالات OrganHeal للتثقيف فقط. لا تقدم تشخيصًا أو علاجًا أو وصفات ولا تستبدل الرعاية الطبية المرخصة."
+                "This article helps you understand health topics and prepare better questions. It does not diagnose, treat, prescribe, or replace licensed medical care.",
+                "هذا المقال يساعدك على فهم المواضيع الصحية وتحضير أسئلة أفضل. لا يقدم تشخيصًا أو علاجًا أو وصفات ولا يستبدل الرعاية الطبية المرخصة."
               )}
             </div>
           </section>
@@ -221,77 +253,76 @@ export default function BlogPostClient({ post }: { post: BlogPost }) {
             ))}
           </article>
 
+          {relatedPosts.length > 0 && (
+            <section className="ohCard">
+              <div className="ohCardHeader">
+                <div>
+                  <p className="ohMetricLabel">
+                    {text("Related reading", "قراءات مرتبطة")}
+                  </p>
+
+                  <h2 className="ohCardTitle">
+                    {text("Continue learning in the same area", "تابع التعلم في نفس المجال")}
+                  </h2>
+                </div>
+              </div>
+
+              <div className="blogPostRelatedGrid">
+                {relatedPosts.map((relatedPost) => (
+                  <Link
+                    href={`/blog/${relatedPost.slug}`}
+                    className="ohCard blogPostRelatedCard"
+                    key={relatedPost.slug}
+                  >
+                    <p className="ohMetricLabel">
+                      {isArabic ? relatedPost.categoryAr : relatedPost.category}
+                    </p>
+
+                    <h3 className="ohCardTitle" style={{ fontSize: "1.05rem" }}>
+                      {isArabic ? relatedPost.titleAr : relatedPost.title}
+                    </h3>
+
+                    <p className="ohCardText">
+                      {isArabic ? relatedPost.excerptAr : relatedPost.excerpt}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
           <section className="ohActionPanel">
             <div className="ohCardHeader" style={{ marginBottom: 0 }}>
               <div>
                 <p className="ohMetricLabel">
-                  {text("Next useful step", "الخطوة المفيدة التالية")}
+                  {text("Education library", "مكتبة التثقيف")}
                 </p>
 
                 <h2 className="ohCardTitle" style={{ fontSize: "1.7rem" }}>
                   {text(
-                    "Turn health education into action.",
-                    "حوّل التثقيف الصحي إلى خطوة عملية."
+                    "Learn by topic, not by scattered tools.",
+                    "تعلّم حسب الموضوع، وليس عبر أدوات متفرقة."
                   )}
                 </h2>
 
                 <p className="ohCardText">
                   {text(
-                    "Continue with an assessment, upload a report, or use OrganHeal Intelligence to understand your own health journey.",
-                    "تابع بتقييم صحي، ارفع تقريرًا، أو استخدم ذكاء OrganHeal لفهم رحلتك الصحية الخاصة."
+                    "Return to the education library to continue structured learning across organ health, lab markers, and prevention topics.",
+                    "ارجع إلى مكتبة التثقيف لمتابعة التعلم المنظم حول صحة الأعضاء، مؤشرات المختبر، ومواضيع الوقاية."
                   )}
                 </p>
               </div>
 
               <div className="ohButtonRow">
-                <Link href="/assessment" className="primaryBtn">
-                  {text("Start Assessment", "ابدأ التقييم")}
+                <Link href="/library" className="primaryBtn">
+                  {text("Open Education Library", "فتح مكتبة التثقيف")}
                 </Link>
 
-                <Link href="/lab-upload" className="secondaryBtn">
-                  {text("Upload Report", "رفع تقرير")}
-                </Link>
-
-                <Link href="/medical-disclaimer" className="secondaryBtn">
-                  {text("Medical Disclaimer", "إخلاء المسؤولية")}
+                <Link href="/blog" className="secondaryBtn">
+                  {text("All Articles", "كل المقالات")}
                 </Link>
               </div>
             </div>
-          </section>
-
-          <section className="blogPostRelatedGrid">
-            <Link href="/blog" className="ohCard">
-              <p className="ohMetricLabel">{text("Blog", "المدونة")}</p>
-              <h2 className="ohCardTitle">{text("More Articles", "مقالات أكثر")}</h2>
-              <p className="ohCardText">
-                {text(
-                  "Explore more OrganHeal educational content.",
-                  "استكشف المزيد من محتوى OrganHeal التعليمي."
-                )}
-              </p>
-            </Link>
-
-            <Link href="/library" className="ohCard">
-              <p className="ohMetricLabel">{text("Library", "المكتبة")}</p>
-              <h2 className="ohCardTitle">{text("Health Library", "المكتبة الصحية")}</h2>
-              <p className="ohCardText">
-                {text(
-                  "Use the library to learn by topic.",
-                  "استخدم المكتبة للتعلم حسب الموضوع."
-                )}
-              </p>
-            </Link>
-
-            <Link href="/assistant" className="ohCard">
-              <p className="ohMetricLabel">{text("Assistant", "المساعد")}</p>
-              <h2 className="ohCardTitle">{text("Ask OrganHeal AI", "اسأل OrganHeal AI")}</h2>
-              <p className="ohCardText">
-                {text(
-                  "Ask educational questions about your health journey.",
-                  "اسأل أسئلة تعليمية عن رحلتك الصحية."
-                )}
-              </p>
-            </Link>
           </section>
         </div>
       </div>
