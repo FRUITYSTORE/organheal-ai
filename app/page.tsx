@@ -24,12 +24,6 @@ type InsightCard = {
   description: string;
 };
 
-type ComparisonRow = {
-  feature: string;
-  free: boolean;
-  plus: boolean;
-};
-
 function getStoredLanguage(): Language {
   if (typeof window === "undefined") return "en";
 
@@ -41,17 +35,6 @@ function getStoredLanguage(): Language {
     "";
 
   return savedLanguage.toLowerCase().startsWith("ar") ? "ar" : "en";
-}
-
-function CheckMark({ active }: { active: boolean }) {
-  return (
-    <span
-      className={`homeCheckMark ${active ? "active" : "inactive"}`}
-      aria-label={active ? "Included" : "Not included"}
-    >
-      {active ? "✓" : "—"}
-    </span>
-  );
 }
 
 function IconMark({ label }: { label: string }) {
@@ -152,32 +135,32 @@ export default function Home() {
       label: "AI",
       title: text("Health intelligence, not random advice", "ذكاء صحي وليس نصائح عشوائية"),
       description: text(
-        "OrganHeal organizes health signals, explains them clearly, and prepares you for better medical conversations.",
-        "OrganHeal ينظم المؤشرات الصحية، يشرحها بوضوح، ويحضرّك لنقاش طبي أفضل."
+        "OrganHeal organizes health signals, explains them clearly, and prepares better health conversations.",
+        "OrganHeal ينظم المؤشرات الصحية، يشرحها بوضوح، ويحضرّك لنقاش صحي أفضل."
       ),
     },
     {
       label: "PT",
       title: text("Patient-friendly understanding", "فهم مبسط للمريض"),
       description: text(
-        "Complex reports become simple explanations, next steps, and questions to ask your clinician.",
-        "التقارير المعقدة تتحول إلى شرح مبسط، خطوات تالية، وأسئلة للطبيب."
+        "Complex reports become clearer explanations, learning points, and questions to review with a clinician.",
+        "التقارير المعقدة تتحول إلى شرح أوضح، نقاط تعليمية، وأسئلة لمراجعتها مع المختص."
       ),
     },
     {
       label: "DR",
-      title: text("Doctor-ready summaries", "ملخصات جاهزة للطبيب"),
+      title: text("Doctor-ready preparation", "تحضير جاهز للطبيب"),
       description: text(
-        "Structured briefs help make appointments more focused and useful.",
-        "ملخصات منظمة تساعد أن تكون زيارة الطبيب أكثر وضوحًا وفائدة."
+        "Structured summaries help make appointments more focused and useful.",
+        "ملخصات منظمة تساعد أن تكون زيارة الطبيب أكثر تركيزًا وفائدة."
       ),
     },
     {
       label: "SC",
       title: text("Safety-first health platform", "منصة صحية مبنية على الأمان"),
       description: text(
-        "Educational support only. OrganHeal does not diagnose, treat, or replace licensed medical care.",
-        "دعم تثقيفي فقط. OrganHeal لا يشخص ولا يعالج ولا يستبدل الرعاية الطبية المرخصة."
+        "Educational support only. OrganHeal does not diagnose, treat, prescribe, or replace licensed medical care.",
+        "دعم تثقيفي فقط. OrganHeal لا يشخص ولا يعالج ولا يصف علاجًا ولا يستبدل الرعاية الطبية المرخصة."
       ),
     },
   ];
@@ -187,8 +170,8 @@ export default function Home() {
       number: "01",
       title: text("Build your health profile", "ابنِ ملفك الصحي"),
       description: text(
-        "Start with guided health information that helps OrganHeal understand your journey.",
-        "ابدأ بمعلومات صحية موجهة تساعد OrganHeal على فهم رحلتك."
+        "Start with guided information that helps organize your health context.",
+        "ابدأ بمعلومات موجهة تساعد على تنظيم سياقك الصحي."
       ),
     },
     {
@@ -201,18 +184,18 @@ export default function Home() {
     },
     {
       number: "03",
-      title: text("Generate intelligence", "ولّد الذكاء الصحي"),
+      title: text("Generate health understanding", "ولّد فهمًا صحيًا"),
       description: text(
-        "Turn health data into summaries, risk signals, and doctor-ready preparation.",
-        "حوّل البيانات الصحية إلى ملخصات، إشارات، وتحضير جاهز للطبيب."
+        "Turn health data into clearer summaries, learning points, and doctor-review questions.",
+        "حوّل البيانات الصحية إلى ملخصات أوضح، نقاط تعليمية، وأسئلة لمراجعة الطبيب."
       ),
     },
     {
       number: "04",
-      title: text("Follow the next step", "تابع الخطوة التالية"),
+      title: text("Continue with clarity", "تابع بوضوح"),
       description: text(
-        "Use your dashboard and plan to continue with more clarity over time.",
-        "استخدم لوحة التحكم والخطة للمتابعة بوضوح أكبر مع الوقت."
+        "Use your workspace to keep reports, learning, summaries, and follow-up context organized.",
+        "استخدم مساحتك لتنظيم التقارير والتعلّم والملخصات وسياق المتابعة."
       ),
     },
   ];
@@ -220,65 +203,27 @@ export default function Home() {
   const insightCards: InsightCard[] = [
     {
       label: "LAB",
-      title: text("Lab marker explanation", "شرح مؤشرات المختبر"),
+      title: text("Lab marker learning", "تعلّم مؤشرات المختبر"),
       description: text(
         "Understand common values such as LDL, HDL, HbA1c, creatinine, vitamin D, and liver enzymes.",
         "افهم مؤشرات مثل LDL، HDL، HbA1c، الكرياتينين، فيتامين D، وإنزيمات الكبد."
       ),
     },
     {
-      label: "PLAN",
-      title: text("Personal next steps", "خطوات شخصية تالية"),
+      label: "REPORT",
+      title: text("Report understanding", "فهم التقارير"),
       description: text(
-        "OrganHeal turns health information into a practical direction you can review with your clinician.",
-        "OrganHeal يحوّل معلوماتك الصحية إلى اتجاه عملي يمكنك مراجعته مع الطبيب."
+        "Learn how to read abnormal flags, reference ranges, summary language, and trend comments.",
+        "تعلّم قراءة العلامات غير الطبيعية، القيم المرجعية، لغة الملخص، وملاحظات الاتجاهات."
       ),
     },
     {
-      label: "EDU",
-      title: text("Education linked to your profile", "تثقيف مرتبط بملفك"),
+      label: "VISIT",
+      title: text("Doctor-visit preparation", "التحضير لزيارة الطبيب"),
       description: text(
-        "Education can be connected to organs, lab markers, and health priorities.",
-        "التثقيف يمكن ربطه بالأعضاء، المؤشرات، والأولويات الصحية."
+        "Prepare better questions and organize important results before your appointment.",
+        "حضّر أسئلة أفضل ونظّم النتائج المهمة قبل موعدك."
       ),
-    },
-  ];
-
-  const comparisonRows: ComparisonRow[] = [
-    {
-      feature: text("Basic health profile and assessment", "ملف صحي وتقييم أساسي"),
-      free: true,
-      plus: true,
-    },
-    {
-      feature: text("Educational health assistant", "مساعد صحي تثقيفي"),
-      free: true,
-      plus: true,
-    },
-    {
-      feature: text("Medical report upload", "رفع التقارير الطبية"),
-      free: true,
-      plus: true,
-    },
-    {
-      feature: text("Saved intelligence history", "حفظ تاريخ الذكاء الصحي"),
-      free: false,
-      plus: true,
-    },
-    {
-      feature: text("Patient-friendly PDF summaries", "ملخصات PDF مبسطة للمريض"),
-      free: false,
-      plus: true,
-    },
-    {
-      feature: text("Doctor-ready briefs", "ملخصات جاهزة للطبيب"),
-      free: false,
-      plus: true,
-    },
-    {
-      feature: text("Trend and risk pattern tracking", "تتبع الاتجاهات وأنماط الخطورة"),
-      free: false,
-      plus: true,
     },
   ];
 
@@ -299,50 +244,62 @@ export default function Home() {
           text-decoration: none;
         }
 
-        .publicHomePage .ohHero {
+        .publicHomePage .homeHero {
           position: relative;
           overflow: hidden;
+          padding: 38px;
         }
 
-        .publicHomePage .ohHero::before {
+        .publicHomePage .homeHero::before {
           content: "";
           position: absolute;
           inset: -120px auto auto -120px;
-          width: 300px;
-          height: 300px;
+          width: 320px;
+          height: 320px;
           border-radius: 999px;
-          background: radial-gradient(circle, rgba(20,184,166,0.16), transparent 68%);
+          background: radial-gradient(circle, rgba(20,184,166,0.18), transparent 68%);
           pointer-events: none;
         }
 
-        .publicHomePage .ohHeroGrid {
-          grid-template-columns: minmax(0, 1.1fr) minmax(360px, 0.9fr);
+        [dir="rtl"] .publicHomePage .homeHero::before {
+          inset: -120px -120px auto auto;
+        }
+
+        .publicHomePage .homeHero .ohHeroGrid {
+          grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.86fr);
           align-items: center;
           position: relative;
           z-index: 1;
         }
 
+        .publicHomePage .homeHero .ohTitle {
+          max-width: 860px;
+          font-size: clamp(2.55rem, 5vw, 5.2rem);
+          line-height: 0.96;
+        }
+
+        .publicHomePage .homeHero .ohLead {
+          max-width: 760px;
+        }
+
         .publicHomePage .homeHeroInput {
           width: 100%;
           max-width: 100%;
-          min-height: 48px;
-          border: 1px solid rgba(148, 163, 184, 0.34);
-          border-radius: 14px;
-          padding: 12px 14px;
-          background: rgba(255, 255, 255, 0.95);
+          min-height: 52px;
+          border: 1px solid rgba(15, 118, 110, 0.28);
+          border-radius: 16px;
+          padding: 13px 15px;
+          background: rgba(255, 255, 255, 0.98);
           color: var(--oh-text);
           font: inherit;
+          font-weight: 750;
           outline: none;
-          box-sizing: border-box;
+          box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
         }
 
         .publicHomePage .homeHeroInput:focus {
-          border-color: rgba(20, 184, 166, 0.65);
-          box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.12);
-        }
-
-        .publicHomePage .homeHeroInput::placeholder {
-          color: rgba(71, 85, 105, 0.72);
+          border-color: rgba(20, 184, 166, 0.78);
+          box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.14);
         }
 
         .publicHomePage .homeHeroShowcase {
@@ -357,18 +314,19 @@ export default function Home() {
           max-width: 100%;
           min-width: 0;
           overflow: hidden;
+          border-top: 5px solid #14b8a6;
         }
 
         .publicHomePage .homeMotionStage {
           position: relative;
-          min-height: 270px;
+          min-height: 286px;
           overflow: hidden;
-          border-radius: 26px;
+          border-radius: 28px;
           border: 1px solid rgba(148, 163, 184, 0.18);
           background:
-            radial-gradient(circle at 20% 20%, rgba(20, 184, 166, 0.16), transparent 28%),
-            radial-gradient(circle at 82% 28%, rgba(37, 99, 235, 0.12), transparent 26%),
-            linear-gradient(135deg, rgba(255,255,255,0.94), rgba(240,253,250,0.9));
+            radial-gradient(circle at 20% 20%, rgba(20, 184, 166, 0.18), transparent 28%),
+            radial-gradient(circle at 82% 28%, rgba(37, 99, 235, 0.14), transparent 26%),
+            linear-gradient(135deg, rgba(255,255,255,0.96), rgba(240,253,250,0.9));
           box-shadow: 0 24px 70px rgba(15, 23, 42, 0.08);
           padding: 18px;
         }
@@ -378,7 +336,7 @@ export default function Home() {
           width: 180px;
           height: 180px;
           border-radius: 999px;
-          border: 1px dashed rgba(20, 184, 166, 0.36);
+          border: 1px dashed rgba(20, 184, 166, 0.38);
           left: 50%;
           top: 52%;
           transform: translate(-50%, -50%);
@@ -413,8 +371,8 @@ export default function Home() {
           left: 50%;
           top: 52%;
           transform: translate(-50%, -50%);
-          width: 118px;
-          height: 118px;
+          width: 124px;
+          height: 124px;
           border-radius: 999px;
           display: grid;
           place-items: center;
@@ -427,7 +385,7 @@ export default function Home() {
         }
 
         .publicHomePage .homePulseCore strong {
-          font-size: 1.5rem;
+          font-size: 1.55rem;
           color: var(--oh-text);
           line-height: 1;
         }
@@ -437,14 +395,14 @@ export default function Home() {
           margin-top: 4px;
           color: var(--oh-muted);
           font-size: 0.68rem;
-          font-weight: 900;
+          font-weight: 950;
           letter-spacing: 0.05em;
           text-transform: uppercase;
         }
 
         .publicHomePage .homeFloatingCard {
           position: absolute;
-          width: min(210px, calc(100% - 36px));
+          width: min(214px, calc(100% - 36px));
           padding: 13px;
           border-radius: 18px;
           background: rgba(255, 255, 255, 0.92);
@@ -478,7 +436,7 @@ export default function Home() {
         .publicHomePage .homeSignalLabel {
           font-size: 0.72rem;
           color: var(--oh-muted);
-          font-weight: 900;
+          font-weight: 950;
           text-transform: uppercase;
           letter-spacing: 0.06em;
         }
@@ -486,7 +444,7 @@ export default function Home() {
         .publicHomePage .homeSignalText {
           margin-top: 5px !important;
           color: var(--oh-text);
-          font-weight: 900;
+          font-weight: 950;
           font-size: 0.88rem;
           line-height: 1.35;
         }
@@ -501,80 +459,93 @@ export default function Home() {
           background: linear-gradient(135deg, rgba(20, 184, 166, 0.16), rgba(37, 99, 235, 0.12));
           border: 1px solid rgba(20, 184, 166, 0.22);
           color: var(--oh-primary);
-          font-weight: 900;
+          font-weight: 950;
           letter-spacing: -0.04em;
         }
 
-        .publicHomePage .homeProductPreview {
-          border-radius: 24px;
-          border: 1px solid rgba(148, 163, 184, 0.22);
+        .publicHomePage .homePreviewPanel {
+          border-radius: 28px;
+          border: 1px solid rgba(15, 118, 110, 0.18);
           background:
-            linear-gradient(135deg, rgba(255,255,255,0.94), rgba(240,253,250,0.92));
-          padding: 20px;
-          box-shadow: 0 24px 80px rgba(15, 23, 42, 0.08);
+            radial-gradient(circle at 12% 22%, rgba(20, 184, 166, 0.14), transparent 28%),
+            linear-gradient(135deg, rgba(240, 253, 250, 0.96), rgba(255, 255, 255, 0.96));
+          box-shadow: 0 24px 70px rgba(15, 23, 42, 0.08);
+          padding: 24px;
         }
 
-        .publicHomePage .homePreviewBar {
-          height: 10px;
-          border-radius: 999px;
-          background: rgba(148, 163, 184, 0.22);
-          overflow: hidden;
+        .publicHomePage .homePreviewGrid {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 16px;
         }
 
-        .publicHomePage .homePreviewBar span {
-          display: block;
-          height: 100%;
-          width: 72%;
-          border-radius: inherit;
-          background: linear-gradient(90deg, #14b8a6, #2563eb);
+        .publicHomePage .homePreviewCard {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          min-height: 100%;
+          border-top: 5px solid #14b8a6;
         }
 
-        .publicHomePage .homeComparisonTable {
-          width: 100%;
-          border-collapse: separate;
-          border-spacing: 0;
-          overflow: hidden;
-          border: 1px solid rgba(148, 163, 184, 0.2);
-          border-radius: 18px;
+        .publicHomePage .homeLearningStrip {
+          display: grid;
+          grid-template-columns: minmax(0, 0.65fr) minmax(0, 1fr);
+          gap: 18px;
+          align-items: center;
+          border-radius: 28px;
+          padding: 24px;
+          background: linear-gradient(135deg, rgba(239, 246, 255, 0.9), rgba(240, 253, 250, 0.94));
+          border: 1px solid rgba(37, 99, 235, 0.14);
         }
 
-        .publicHomePage .homeComparisonTable th,
-        .publicHomePage .homeComparisonTable td {
-          padding: 16px;
-          border-bottom: 1px solid rgba(148, 163, 184, 0.16);
-          text-align: ${isArabic ? "right" : "left"};
+        .publicHomePage .homeLearningCloud {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
         }
 
-        .publicHomePage .homeComparisonTable th {
-          background: rgba(248, 250, 252, 0.92);
-          color: var(--oh-text);
-          font-size: 0.88rem;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-        }
-
-        .publicHomePage .homeComparisonTable tr:last-child td {
-          border-bottom: 0;
-        }
-
-        .publicHomePage .homeCheckMark {
+        .publicHomePage .homeLearningChip {
           display: inline-flex;
-          width: 28px;
-          height: 28px;
+          align-items: center;
+          width: fit-content;
+          padding: 8px 11px;
+          border-radius: 999px;
+          background: white;
+          border: 1px solid rgba(15, 118, 110, 0.18);
+          color: #0f766e;
+          font-size: 0.84rem;
+          font-weight: 900;
+          box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+        }
+
+        .publicHomePage .homeSafetyStrip {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          padding: 14px 16px;
+          border-radius: 20px;
+          border: 1px solid rgba(37, 99, 235, 0.16);
+          border-inline-start: 5px solid #2563eb;
+          background: rgba(239, 246, 255, 0.78);
+          color: var(--oh-muted);
+          line-height: 1.65;
+        }
+
+        .publicHomePage .homeSafetyStrip strong {
+          color: var(--oh-text);
+        }
+
+        .publicHomePage .homeSafetyMark {
+          display: inline-flex;
+          width: 34px;
+          height: 34px;
+          flex: 0 0 auto;
           align-items: center;
           justify-content: center;
           border-radius: 999px;
-          font-weight: 900;
-        }
-
-        .publicHomePage .homeCheckMark.active {
-          color: #047857;
-          background: rgba(16, 185, 129, 0.12);
-        }
-
-        .publicHomePage .homeCheckMark.inactive {
-          color: #94a3b8;
-          background: rgba(148, 163, 184, 0.12);
+          background: rgba(37, 99, 235, 0.12);
+          color: #1d4ed8;
+          font-weight: 950;
         }
 
         @keyframes homeOrbitSpin {
@@ -631,25 +602,17 @@ export default function Home() {
         }
 
         @media (max-width: 1100px) {
-          .publicHomePage .ohHeroGrid {
+          .publicHomePage .homeHero .ohHeroGrid,
+          .publicHomePage .homeLearningStrip {
             grid-template-columns: 1fr;
           }
 
-          .publicHomePage .homeHeroShowcase {
+          .publicHomePage .homePreviewGrid {
             grid-template-columns: 1fr;
           }
         }
 
         @media (max-width: 720px) {
-          .publicHomePage .homeComparisonTable {
-            font-size: 0.9rem;
-          }
-
-          .publicHomePage .homeComparisonTable th,
-          .publicHomePage .homeComparisonTable td {
-            padding: 12px;
-          }
-
           .publicHomePage .homeMotionStage {
             min-height: 310px;
           }
@@ -668,8 +631,12 @@ export default function Home() {
         }
 
         @media (max-width: 640px) {
-          .publicHomePage .ohTitle {
-            font-size: clamp(2.1rem, 12vw, 3.1rem);
+          .publicHomePage .homeHero {
+            padding: 28px;
+          }
+
+          .publicHomePage .homeHero .ohTitle {
+            font-size: clamp(2.15rem, 11vw, 3rem);
           }
 
           .publicHomePage .ohButtonRow {
@@ -685,7 +652,7 @@ export default function Home() {
       `}</style>
 
       <div className="ohContainer ohStack large" style={{ padding: "32px 0 64px" }}>
-        <section className="ohHero">
+        <section className="ohHero homeHero">
           <div className="ohHeroGrid">
             <div>
               <p className="ohEyebrow">
@@ -701,33 +668,23 @@ export default function Home() {
 
               <p className="ohLead">
                 {text(
-                  "OrganHeal turns assessments, lab reports, and medical documents into clear health understanding, patient-friendly summaries, and doctor-ready briefs.",
-                  "OrganHeal يحوّل التقييمات، نتائج المختبر، والمستندات الطبية إلى فهم صحي واضح، ملخصات مبسطة للمريض، وملخصات جاهزة للطبيب."
+                  "OrganHeal helps you organize assessments, lab reports, medical documents, learning, and doctor-ready preparation inside one clearer health workspace.",
+                  "يساعدك OrganHeal على تنظيم التقييمات، تقارير المختبر، المستندات الطبية، التعلّم، والتحضير للطبيب داخل مساحة صحية أوضح."
                 )}
               </p>
 
               <div className="ohButtonRow" style={{ marginTop: "24px" }}>
-                <Link href="/assessment" className="primaryBtn">
-                  {text("Start Free Assessment", "ابدأ التقييم المجاني")}
+                <Link href="/signup" className="primaryBtn">
+                  {text("Create Free Account", "إنشاء حساب مجاني")}
                 </Link>
 
-                <a href="#how-it-works" className="secondaryBtn">
-                  {text("See How It Works", "شاهد كيف يعمل")}
-                </a>
-              </div>
+                <Link href="/features" className="secondaryBtn">
+                  {text("Explore Platform Features", "استكشاف ميزات المنصة")}
+                </Link>
 
-              <div className="ohTrustNotice" style={{ marginTop: "22px" }}>
-                <span aria-hidden="true">!</span>
-                <div>
-                  <strong>
-                    {text("Medical safety", "السلامة الطبية")}
-                  </strong>
-                  <br />
-                  {text(
-                    "OrganHeal provides educational health intelligence only. It does not diagnose, treat, or replace emergency care or a licensed clinician.",
-                    "OrganHeal يقدم ذكاء صحي تعليمي فقط. لا يشخص ولا يعالج ولا يستبدل الرعاية الطارئة أو الطبيب المختص."
-                  )}
-                </div>
+                <Link href="/library" className="secondaryBtn">
+                  {text("Open Health Learning Hub", "فتح مركز التعلّم الصحي")}
+                </Link>
               </div>
             </div>
 
@@ -740,19 +697,19 @@ export default function Home() {
                     </p>
 
                     <h2 className="ohCardTitle" style={{ marginTop: "8px" }}>
-                      {text("Try a quick health question", "جرّب سؤالًا صحيًا سريعًا")}
+                      {text("Try a quick educational question", "جرّب سؤالًا تثقيفيًا سريعًا")}
                     </h2>
                   </div>
 
-                  <span className="ohStatusBadge neutral">
-                    {text("Demo", "تجربة")}
+                  <span className="ohStatusBadge good">
+                    {text("Available", "متاح")}
                   </span>
                 </div>
 
                 <p className="ohCardText">
                   {text(
-                    "Ask a general educational question before creating your full health profile.",
-                    "اسأل سؤالًا تثقيفيًا عامًا قبل إنشاء ملفك الصحي الكامل."
+                    "Ask a general health education question before building your private health workspace.",
+                    "اسأل سؤالًا صحيًا تثقيفيًا عامًا قبل بناء مساحتك الصحية الخاصة."
                   )}
                 </p>
 
@@ -784,8 +741,8 @@ export default function Home() {
                 </div>
 
                 {heroAnswer && (
-                  <div className="ohTrustNotice" style={{ marginTop: "16px" }}>
-                    <span aria-hidden="true">AI</span>
+                  <div className="homeSafetyStrip" style={{ marginTop: "16px" }}>
+                    <span className="homeSafetyMark" aria-hidden="true">AI</span>
                     <div>
                       <strong>
                         {text("Quick educational answer", "إجابة تثقيفية سريعة")}
@@ -802,27 +759,41 @@ export default function Home() {
 
                 <div className="homePulseCore">
                   <div>
-                    <strong>72%</strong>
+                    <strong>OH</strong>
                     <span>{text("Clarity", "وضوح")}</span>
                   </div>
                 </div>
 
                 <div className="homeFloatingCard one">
-                  <p className="homeSignalLabel">{text("Report signal", "إشارة تقرير")}</p>
-                  <p className="homeSignalText">{text("Lab markers organized", "تنظيم مؤشرات المختبر")}</p>
+                  <p className="homeSignalLabel">{text("Reports", "التقارير")}</p>
+                  <p className="homeSignalText">{text("Markers organized", "تنظيم المؤشرات")}</p>
                 </div>
 
                 <div className="homeFloatingCard two">
-                  <p className="homeSignalLabel">{text("Doctor brief", "ملخص الطبيب")}</p>
+                  <p className="homeSignalLabel">{text("Doctor prep", "تحضير الطبيب")}</p>
                   <p className="homeSignalText">{text("Questions prepared", "أسئلة جاهزة")}</p>
                 </div>
 
                 <div className="homeFloatingCard three">
-                  <p className="homeSignalLabel">{text("Next step", "الخطوة التالية")}</p>
-                  <p className="homeSignalText">{text("Health direction detected", "تحديد الاتجاه الصحي")}</p>
+                  <p className="homeSignalLabel">{text("Learning", "التعلّم")}</p>
+                  <p className="homeSignalText">{text("Health topics connected", "مواضيع صحية مترابطة")}</p>
                 </div>
               </div>
             </aside>
+          </div>
+        </section>
+
+        <section className="homeSafetyStrip">
+          <span className="homeSafetyMark">OH</span>
+          <div>
+            <strong>
+              {text("Health intelligence with clinical boundaries", "ذكاء صحي بحدود سريرية واضحة")}
+            </strong>
+            <br />
+            {text(
+              "OrganHeal supports education, organization, and preparation. It does not diagnose, treat, prescribe, provide emergency advice, or replace licensed medical care.",
+              "يدعم OrganHeal التثقيف والتنظيم والتحضير. لا يقدم تشخيصًا أو علاجًا أو وصفات أو نصائح طارئة ولا يستبدل الرعاية الطبية المرخصة."
+            )}
           </div>
         </section>
 
@@ -847,15 +818,15 @@ export default function Home() {
 
               <h2 className="ohCardTitle">
                 {text(
-                  "One clear journey from health data to action",
-                  "رحلة واضحة من البيانات الصحية إلى الخطوة العملية"
+                  "One clear journey from information to preparation.",
+                  "رحلة واضحة من المعلومات إلى التحضير."
                 )}
               </h2>
 
               <p className="ohCardText">
                 {text(
-                  "OrganHeal is built around a practical health journey: profile, reports, intelligence, and follow-up.",
-                  "OrganHeal مبني حول رحلة صحية عملية: ملف صحي، تقارير، ذكاء صحي، ومتابعة."
+                  "OrganHeal is built around a practical journey: profile, reports, understanding, and organized follow-up context.",
+                  "OrganHeal مبني حول رحلة عملية: ملف صحي، تقارير، فهم واضح، وسياق متابعة منظم."
                 )}
               </p>
             </div>
@@ -874,177 +845,110 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="ohGrid cols2">
-          <article className="ohCard">
-            <p className="ohMetricLabel">
-              {text("Product Preview", "معاينة المنتج")}
-            </p>
-
-            <h2 className="ohCardTitle">
-              {text("A dashboard built for health decisions", "لوحة تحكم مبنية للقرارات الصحية")}
-            </h2>
-
-            <p className="ohCardText">
-              {text(
-                "The dashboard should summarize the user's current health direction, priority area, and next action without repeating every page.",
-                "لوحة التحكم يجب أن تلخص الاتجاه الصحي الحالي، منطقة الأولوية، والخطوة التالية بدون تكرار كل الصفحات."
-              )}
-            </p>
-
-            <div className="homeProductPreview" style={{ marginTop: "18px" }}>
-              <div className="ohCardHeader">
-                <div>
-                  <p className="ohMetricLabel">
-                    {text("Health Direction", "الاتجاه الصحي")}
-                  </p>
-                  <h3 className="ohCardTitle" style={{ fontSize: "1.25rem" }}>
-                    {text("Your next best action is ready", "خطوتك الصحية التالية جاهزة")}
-                  </h3>
-                </div>
-
-                <span className="ohStatusBadge good">
-                  {text("On track", "مستقر")}
-                </span>
-              </div>
-
-              <div className="ohMetricGrid">
-                <article className="ohMetricCard">
-                  <span className="ohMetricLabel">
-                    {text("Health score", "النتيجة الصحية")}
-                  </span>
-                  <span className="ohMetricValue">78</span>
-                  <span className="ohMetricHint">
-                    {text("Educational estimate", "تقدير تثقيفي")}
-                  </span>
-                </article>
-
-                <article className="ohMetricCard">
-                  <span className="ohMetricLabel">
-                    {text("Priority area", "منطقة الأولوية")}
-                  </span>
-                  <span className="ohMetricHint">
-                    {text("Heart & metabolic health", "القلب والصحة الأيضية")}
-                  </span>
-                </article>
-              </div>
-
-              <div className="homePreviewBar" style={{ marginTop: "18px" }}>
-                <span />
-              </div>
-            </div>
-          </article>
-
-          <article className="ohCard">
-            <p className="ohMetricLabel">
-              {text("Recent Insights Preview", "أمثلة على الرؤى الصحية")}
-            </p>
-
-            <h2 className="ohCardTitle">
-              {text("Examples of what OrganHeal can explain", "أمثلة لما يمكن أن يشرحه OrganHeal")}
-            </h2>
-
-            <p className="ohCardText">
-              {text(
-                "Future insights can be generated from anonymized patterns, report types, and common educational needs.",
-                "يمكن لاحقًا توليد رؤى من أنماط مجهّلة الهوية، أنواع التقارير، والاحتياجات التثقيفية الشائعة."
-              )}
-            </p>
-
-            <div className="ohTimeline" style={{ marginTop: "18px" }}>
-              {insightCards.map((insight) => (
-                <div className="ohTimelineItem" key={insight.title}>
-                  <span className="ohTimelineDot" />
-                  <div>
-                    <p className="ohTimelineTitle">
-                      <span className="ohStatusBadge neutral" style={{ marginInlineEnd: "8px" }}>
-                        {insight.label}
-                      </span>
-                      {insight.title}
-                    </p>
-                    <p className="ohTimelineMeta">{insight.description}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="ohButtonRow" style={{ marginTop: "20px" }}>
-              <Link href="/features" className="primaryBtn">
-                {text("Explore Features", "استكشف الميزات")}
-              </Link>
-
-              <Link href="/library" className="secondaryBtn">
-                {text("Open Education", "فتح التثقيف")}
-              </Link>
-            </div>
-          </article>
-        </section>
-
-        <section className="ohCard">
+        <section className="homePreviewPanel">
           <div className="ohCardHeader">
             <div>
               <p className="ohMetricLabel">
-                {text("Plans & Follow-Up Value", "الخطط وقيمة المتابعة")}
+                {text("What OrganHeal helps you understand", "ما الذي يساعدك OrganHeal على فهمه")}
               </p>
 
               <h2 className="ohCardTitle">
                 {text(
-                  "Start simple. Grow into deeper health intelligence.",
-                  "ابدأ ببساطة. ثم انتقل إلى ذكاء صحي أعمق."
+                  "Reports, learning, and doctor preparation in one connected experience.",
+                  "التقارير والتعلّم والتحضير للطبيب داخل تجربة مترابطة."
                 )}
               </h2>
 
               <p className="ohCardText">
                 {text(
-                  "The strongest subscription value is not one report. It is saved history, trends, PDF summaries, and ongoing follow-up.",
-                  "قيمة الاشتراك الأقوى ليست تقريرًا واحدًا، بل حفظ التاريخ، الاتجاهات، ملخصات PDF، والمتابعة المستمرة."
+                  "Start with available platform areas, then continue inside your private workspace when you create an account.",
+                  "ابدأ بالمناطق المتاحة في المنصة، ثم أكمل داخل مساحتك الخاصة عند إنشاء الحساب."
                 )}
               </p>
             </div>
           </div>
 
-          <table className="homeComparisonTable">
-            <thead>
-              <tr>
-                <th>{text("Feature", "الميزة")}</th>
-                <th>Free</th>
-                <th>Plus</th>
-              </tr>
-            </thead>
+          <div className="homePreviewGrid">
+            {insightCards.map((insight) => (
+              <article className="ohCard homePreviewCard" key={insight.title}>
+                <span className="ohStatusBadge neutral">{insight.label}</span>
+                <h3 className="ohCardTitle" style={{ fontSize: "1.16rem" }}>
+                  {insight.title}
+                </h3>
+                <p className="ohCardText">{insight.description}</p>
+              </article>
+            ))}
+          </div>
 
-            <tbody>
-              {comparisonRows.map((row) => (
-                <tr key={row.feature}>
-                  <td>{row.feature}</td>
-                  <td>
-                    <CheckMark active={row.free} />
-                  </td>
-                  <td>
-                    <CheckMark active={row.plus} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="ohButtonRow" style={{ marginTop: "22px" }}>
+            <Link href="/features" className="primaryBtn">
+              {text("Explore Features", "استكشف الميزات")}
+            </Link>
+
+            <Link href="/library" className="secondaryBtn">
+              {text("Open Learning Hub", "فتح مركز التعلّم")}
+            </Link>
+          </div>
+        </section>
+
+        <section className="homeLearningStrip">
+          <div>
+            <p className="ohMetricLabel">
+              {text("Health learning starts here", "التعلّم الصحي يبدأ هنا")}
+            </p>
+
+            <h2 className="ohCardTitle">
+              {text(
+                "Find articles by marker, organ system, or report topic.",
+                "اعثر على مقالات حسب المؤشر أو العضو أو موضوع التقرير."
+              )}
+            </h2>
+
+            <p className="ohCardText">
+              {text(
+                "The Health Learning Hub helps visitors understand common lab markers, organ systems, report language, and doctor-visit preparation.",
+                "يساعد مركز التعلّم الصحي الزوار على فهم مؤشرات المختبر الشائعة، أجهزة الجسم، لغة التقارير، والتحضير لزيارة الطبيب."
+              )}
+            </p>
+
+            <div className="ohButtonRow" style={{ marginTop: "18px" }}>
+              <Link href="/library" className="primaryBtn">
+                {text("Open Health Learning Hub", "فتح مركز التعلّم الصحي")}
+              </Link>
+
+              <Link href="/blog" className="secondaryBtn">
+                {text("Search Articles", "البحث في المقالات")}
+              </Link>
+            </div>
+          </div>
+
+          <div className="homeLearningCloud">
+            {["LDL", "HDL", "HbA1c", "Creatinine", "eGFR", "ALT", "AST", "Blood Pressure"].map((item) => (
+              <span className="homeLearningChip" key={item}>
+                {item}
+              </span>
+            ))}
+          </div>
         </section>
 
         <section className="ohActionPanel">
           <div className="ohCardHeader" style={{ marginBottom: 0 }}>
             <div>
               <p className="ohMetricLabel">
-                {text("Start Your Health Intelligence Journey", "ابدأ رحلتك الصحية الذكية")}
+                {text("Start your private health workspace", "ابدأ مساحتك الصحية الخاصة")}
               </p>
 
               <h2 className="ohCardTitle" style={{ fontSize: "1.7rem" }}>
                 {text(
-                  "Build your profile once, then let OrganHeal organize your health journey.",
-                  "ابنِ ملفك مرة واحدة، ثم دع OrganHeal ينظم رحلتك الصحية."
+                  "Create your account and organize your health journey with more clarity.",
+                  "أنشئ حسابك ونظّم رحلتك الصحية بوضوح أكبر."
                 )}
               </h2>
 
               <p className="ohCardText">
                 {text(
-                  "Create an account to save assessments, reports, health intelligence, and follow-up results.",
-                  "أنشئ حسابًا لحفظ التقييمات، التقارير، الذكاء الصحي، ونتائج المتابعة."
+                  "Save assessments, reports, educational context, and health preparation inside your OrganHeal workspace.",
+                  "احفظ التقييمات، التقارير، السياق التعليمي، والتحضير الصحي داخل مساحة OrganHeal الخاصة بك."
                 )}
               </p>
             </div>
@@ -1078,4 +982,3 @@ export default function Home() {
     </main>
   );
 }
-
