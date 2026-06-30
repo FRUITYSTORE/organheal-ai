@@ -1,4 +1,4 @@
-type ExecutiveSummaryCardProps = {
+﻿type ExecutiveSummaryCardProps = {
   summary: {
     currentScore: number;
     trend: string;
@@ -10,49 +10,80 @@ type ExecutiveSummaryCardProps = {
   };
 };
 
+function getScoreTone(score: number) {
+  if (score >= 75) return "good";
+  if (score >= 50) return "moderate";
+  return "risk";
+}
+
 export default function ExecutiveSummaryCard({
   summary,
 }: ExecutiveSummaryCardProps) {
+  const scoreTone = getScoreTone(summary.currentScore);
+  const forecastTone = getScoreTone(summary.forecastScore);
+  const confidenceTone = getScoreTone(summary.confidenceScore);
+
   return (
-    <div className="resultBox">
-      <p className="sectionLabel">Executive Health Intelligence Summary</p>
-
-      <h2>{summary.currentScore}/100</h2>
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-          gap: "14px",
-          marginTop: "18px",
-          textAlign: "left",
-        }}
-      >
+    <section className="ohCard">
+      <div className="ohCardHeader">
         <div>
-          <strong>Health Trend</strong>
-          <p>{summary.trend}</p>
+          <p className="ohMetricLabel">Executive Health Intelligence Summary</p>
+
+          <h2 className="ohCardTitle" style={{ marginTop: "8px" }}>
+            Current health intelligence score
+          </h2>
         </div>
 
-        <div>
-          <strong>90-Day Forecast</strong>
-          <p>{summary.forecastScore}/100</p>
-        </div>
-
-        <div>
-          <strong>Confidence</strong>
-          <p>
-            {summary.confidenceLevel} ({summary.confidenceScore}/100)
-          </p>
-        </div>
-
-        <div>
-          <strong>Priority System</strong>
-          <p>{summary.prioritySystem}</p>
-        </div>
+        <span className={`ohStatusBadge ${scoreTone}`}>
+          {summary.currentScore}/100
+        </span>
       </div>
 
-      <h3>Best Next Action</h3>
-      <p>{summary.nextBestAction}</p>
-    </div>
+      <div className="ohMetricGrid">
+        <article className="ohMetricCard">
+          <span className="ohMetricLabel">Current Score</span>
+          <span className="ohMetricValue">{summary.currentScore}</span>
+          <span className="ohMetricHint">Out of 100</span>
+        </article>
+
+        <article className="ohMetricCard">
+          <span className="ohMetricLabel">Health Trend</span>
+          <span className="ohMetricHint">{summary.trend}</span>
+        </article>
+
+        <article className="ohMetricCard">
+          <span className="ohMetricLabel">90-Day Forecast</span>
+          <span className={`ohStatusBadge ${forecastTone}`}>
+            {summary.forecastScore}/100
+          </span>
+        </article>
+
+        <article className="ohMetricCard">
+          <span className="ohMetricLabel">Confidence</span>
+          <span className={`ohStatusBadge ${confidenceTone}`}>
+            {summary.confidenceLevel}
+          </span>
+          <span className="ohMetricHint">
+            {summary.confidenceScore}/100 confidence score
+          </span>
+        </article>
+
+        <article className="ohMetricCard">
+          <span className="ohMetricLabel">Priority System</span>
+          <span className="ohMetricHint">{summary.prioritySystem}</span>
+        </article>
+      </div>
+
+      <div className="ohDivider" />
+
+      <div className="ohTrustNotice">
+        <span aria-hidden="true">🎯</span>
+        <div>
+          <strong>Best Next Action</strong>
+          <br />
+          {summary.nextBestAction}
+        </div>
+      </div>
+    </section>
   );
 }
