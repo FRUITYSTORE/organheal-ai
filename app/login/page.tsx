@@ -21,6 +21,37 @@ function getStoredLanguage(): Language {
   return savedLanguage.toLowerCase().startsWith("ar") ? "ar" : "en";
 }
 
+const privateReturnPrefixes = [
+  "/dashboard",
+  "/reports",
+  "/intelligence",
+  "/health-plan",
+  "/history",
+  "/profile",
+  "/lab-upload",
+  "/checkin",
+  "/organ-report",
+  "/admin",
+];
+
+function getSafeNextPath() {
+  if (typeof window === "undefined") return "";
+
+  const params = new URLSearchParams(window.location.search);
+  const requestedPath = params.get("next") || "";
+
+  if (!requestedPath) return "";
+  if (!requestedPath.startsWith("/") || requestedPath.startsWith("//")) return "";
+
+  const cleanPath = requestedPath.split("?")[0].split("#")[0];
+
+  const isAllowedPrivatePath = privateReturnPrefixes.some(
+    (prefix) => cleanPath === prefix || cleanPath.startsWith(`${prefix}/`)
+  );
+
+  return isAllowedPrivatePath ? requestedPath : "";
+}
+
 export default function LoginPage() {
   const [language, setLanguage] = useState<Language>("en");
   const [identifier, setIdentifier] = useState("");
@@ -197,8 +228,16 @@ export default function LoginPage() {
       Boolean(reports?.length) ||
       Boolean(checkins?.length);
 
+    const safeNextPath = getSafeNextPath();
+    const redirectPath = safeNextPath || (hasStarted ? "/dashboard" : "/onboarding");
+
     showMessage(
-      hasStarted
+      safeNextPath
+        ? text(
+            "Login successful. Returning you to your requested workspace...",
+            "تم تسجيل الدخول. سيتم إعادتك إلى الصفحة المطلوبة..."
+          )
+        : hasStarted
         ? text(
             "Login successful. Redirecting to your dashboard...",
             "تم تسجيل الدخول. سيتم تحويلك إلى لوحة التحكم..."
@@ -210,7 +249,7 @@ export default function LoginPage() {
       "success"
     );
 
-    window.location.href = hasStarted ? "/dashboard" : "/onboarding";
+    window.location.href = redirectPath;
   }
 
   async function handleResendVerification() {
@@ -434,8 +473,8 @@ export default function LoginPage() {
 
               <p className="ohLead">
                 {text(
-                  "Sign in to access your dashboard, reports, Health Intelligence Center, and next step. New users will be guided to onboarding.",
-                  "سجّل الدخول للوصول إلى لوحة التحكم، التقارير، مركز الذكاء الصحي، والخطوة التالية. المستخدم الجديد سيتم توجيهه إلى صفحة البداية."
+                  "Sign in to access your private health workspace. If you were redirected from a protected page, OrganHeal will return you there after login.",
+                  "سجّل الدخول للوصول إلى مساحتك الصحية الخاصة. إذا تم تحويلك من صفحة محمية، سيعيدك OrganHeal إليها بعد الدخول."
                 )}
               </p>
 
@@ -706,3 +745,4 @@ export default function LoginPage() {
     </main>
   );
 }
+
