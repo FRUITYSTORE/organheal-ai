@@ -16,7 +16,6 @@ type StepCard = {
   number: string;
   title: string;
   description: string;
-  href: string;
 };
 
 type InsightCard = {
@@ -153,8 +152,8 @@ export default function Home() {
       label: "AI",
       title: text("Health intelligence, not random advice", "ذكاء صحي وليس نصائح عشوائية"),
       description: text(
-        "OrganHeal is designed to organize health signals, explain them clearly, and prepare you for better medical conversations.",
-        "OrganHeal مصمم لتنظيم المؤشرات الصحية، شرحها بوضوح، وتحضيرك لنقاش طبي أفضل."
+        "OrganHeal organizes health signals, explains them clearly, and prepares you for better medical conversations.",
+        "OrganHeal ينظم المؤشرات الصحية، يشرحها بوضوح، ويحضرّك لنقاش طبي أفضل."
       ),
     },
     {
@@ -186,39 +185,35 @@ export default function Home() {
   const steps: StepCard[] = [
     {
       number: "01",
-      title: text("Start your health profile", "ابدأ ملفك الصحي"),
+      title: text("Build your health profile", "ابنِ ملفك الصحي"),
       description: text(
-        "Complete a guided assessment to create the first layer of your health intelligence.",
-        "أكمل تقييمًا موجهًا لبناء الطبقة الأولى من ذكائك الصحي."
+        "Start with guided health information that helps OrganHeal understand your journey.",
+        "ابدأ بمعلومات صحية موجهة تساعد OrganHeal على فهم رحلتك."
       ),
-      href: "/assessment",
     },
     {
       number: "02",
-      title: text("Upload medical reports", "ارفع التقارير الطبية"),
+      title: text("Add reports and signals", "أضف التقارير والمؤشرات"),
       description: text(
-        "Add lab reports, radiology reports, discharge summaries, or written medical documents.",
-        "أضف تقارير المختبر، الأشعة، ملخصات الخروج، أو المستندات الطبية المكتوبة."
+        "Connect lab reports, medical documents, check-ins, and health priorities.",
+        "اربط تقارير المختبر، المستندات الطبية، التحديثات، والأولويات الصحية."
       ),
-      href: "/lab-upload",
     },
     {
       number: "03",
-      title: text("Generate health intelligence", "ولّد الذكاء الصحي"),
+      title: text("Generate intelligence", "ولّد الذكاء الصحي"),
       description: text(
-        "Turn reports and assessments into patient summaries, risk signals, and doctor-ready briefs.",
-        "حوّل التقارير والتقييمات إلى ملخصات للمريض، إشارات صحية، وملخصات جاهزة للطبيب."
+        "Turn health data into summaries, risk signals, and doctor-ready preparation.",
+        "حوّل البيانات الصحية إلى ملخصات، إشارات، وتحضير جاهز للطبيب."
       ),
-      href: "/intelligence",
     },
     {
       number: "04",
-      title: text("Follow your next step", "تابع خطوتك التالية"),
+      title: text("Follow the next step", "تابع الخطوة التالية"),
       description: text(
-        "Use your dashboard, health plan, and assistant to continue your health journey.",
-        "استخدم لوحة التحكم، الخطة الصحية، والمساعد لمتابعة رحلتك الصحية."
+        "Use your dashboard and plan to continue with more clarity over time.",
+        "استخدم لوحة التحكم والخطة للمتابعة بوضوح أكبر مع الوقت."
       ),
-      href: "/dashboard",
     },
   ];
 
@@ -243,15 +238,15 @@ export default function Home() {
       label: "EDU",
       title: text("Education linked to your profile", "تثقيف مرتبط بملفك"),
       description: text(
-        "Articles and future videos can be connected to organs, lab markers, and health priorities.",
-        "المقالات والفيديوهات لاحقًا يمكن ربطها بالأعضاء، المؤشرات، والأولويات الصحية."
+        "Education can be connected to organs, lab markers, and health priorities.",
+        "التثقيف يمكن ربطه بالأعضاء، المؤشرات، والأولويات الصحية."
       ),
     },
   ];
 
   const comparisonRows: ComparisonRow[] = [
     {
-      feature: text("Basic health assessment", "تقييم صحي أساسي"),
+      feature: text("Basic health profile and assessment", "ملف صحي وتقييم أساسي"),
       free: true,
       plus: true,
     },
@@ -294,18 +289,42 @@ export default function Home() {
       lang={isArabic ? "ar" : "en"}
     >
       <style>{`
+        .publicHomePage,
+        .publicHomePage * {
+          box-sizing: border-box;
+        }
+
         .publicHomePage a {
           color: inherit;
           text-decoration: none;
         }
 
+        .publicHomePage .ohHero {
+          position: relative;
+          overflow: hidden;
+        }
+
+        .publicHomePage .ohHero::before {
+          content: "";
+          position: absolute;
+          inset: -120px auto auto -120px;
+          width: 300px;
+          height: 300px;
+          border-radius: 999px;
+          background: radial-gradient(circle, rgba(20,184,166,0.16), transparent 68%);
+          pointer-events: none;
+        }
+
         .publicHomePage .ohHeroGrid {
-          grid-template-columns: minmax(0, 1.25fr) minmax(330px, 0.75fr);
+          grid-template-columns: minmax(0, 1.1fr) minmax(360px, 0.9fr);
           align-items: center;
+          position: relative;
+          z-index: 1;
         }
 
         .publicHomePage .homeHeroInput {
           width: 100%;
+          max-width: 100%;
           min-height: 48px;
           border: 1px solid rgba(148, 163, 184, 0.34);
           border-radius: 14px;
@@ -314,11 +333,162 @@ export default function Home() {
           color: var(--oh-text);
           font: inherit;
           outline: none;
+          box-sizing: border-box;
         }
 
         .publicHomePage .homeHeroInput:focus {
           border-color: rgba(20, 184, 166, 0.65);
           box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.12);
+        }
+
+        .publicHomePage .homeHeroInput::placeholder {
+          color: rgba(71, 85, 105, 0.72);
+        }
+
+        .publicHomePage .homeHeroShowcase {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 16px;
+          min-width: 0;
+        }
+
+        .publicHomePage .homeAskCard {
+          width: 100%;
+          max-width: 100%;
+          min-width: 0;
+          overflow: hidden;
+        }
+
+        .publicHomePage .homeMotionStage {
+          position: relative;
+          min-height: 270px;
+          overflow: hidden;
+          border-radius: 26px;
+          border: 1px solid rgba(148, 163, 184, 0.18);
+          background:
+            radial-gradient(circle at 20% 20%, rgba(20, 184, 166, 0.16), transparent 28%),
+            radial-gradient(circle at 82% 28%, rgba(37, 99, 235, 0.12), transparent 26%),
+            linear-gradient(135deg, rgba(255,255,255,0.94), rgba(240,253,250,0.9));
+          box-shadow: 0 24px 70px rgba(15, 23, 42, 0.08);
+          padding: 18px;
+        }
+
+        .publicHomePage .homeMotionOrbit {
+          position: absolute;
+          width: 180px;
+          height: 180px;
+          border-radius: 999px;
+          border: 1px dashed rgba(20, 184, 166, 0.36);
+          left: 50%;
+          top: 52%;
+          transform: translate(-50%, -50%);
+          animation: homeOrbitSpin 18s linear infinite;
+        }
+
+        .publicHomePage .homeMotionOrbit::before,
+        .publicHomePage .homeMotionOrbit::after {
+          content: "";
+          position: absolute;
+          width: 13px;
+          height: 13px;
+          border-radius: 999px;
+          background: #14b8a6;
+          box-shadow: 0 0 0 8px rgba(20, 184, 166, 0.12);
+        }
+
+        .publicHomePage .homeMotionOrbit::before {
+          top: -7px;
+          left: 50%;
+        }
+
+        .publicHomePage .homeMotionOrbit::after {
+          bottom: 12px;
+          right: 8px;
+          background: #2563eb;
+          box-shadow: 0 0 0 8px rgba(37, 99, 235, 0.12);
+        }
+
+        .publicHomePage .homePulseCore {
+          position: absolute;
+          left: 50%;
+          top: 52%;
+          transform: translate(-50%, -50%);
+          width: 118px;
+          height: 118px;
+          border-radius: 999px;
+          display: grid;
+          place-items: center;
+          background:
+            radial-gradient(circle at center, rgba(255,255,255,0.98) 54%, transparent 55%),
+            conic-gradient(#14b8a6 0 74%, rgba(148, 163, 184, 0.2) 74% 100%);
+          border: 1px solid rgba(148, 163, 184, 0.18);
+          box-shadow: 0 18px 50px rgba(15, 23, 42, 0.1);
+          animation: homeSoftPulse 3.8s ease-in-out infinite;
+        }
+
+        .publicHomePage .homePulseCore strong {
+          font-size: 1.5rem;
+          color: var(--oh-text);
+          line-height: 1;
+        }
+
+        .publicHomePage .homePulseCore span {
+          display: block;
+          margin-top: 4px;
+          color: var(--oh-muted);
+          font-size: 0.68rem;
+          font-weight: 900;
+          letter-spacing: 0.05em;
+          text-transform: uppercase;
+        }
+
+        .publicHomePage .homeFloatingCard {
+          position: absolute;
+          width: min(210px, calc(100% - 36px));
+          padding: 13px;
+          border-radius: 18px;
+          background: rgba(255, 255, 255, 0.92);
+          border: 1px solid rgba(148, 163, 184, 0.2);
+          box-shadow: 0 16px 38px rgba(15, 23, 42, 0.08);
+          backdrop-filter: blur(14px);
+        }
+
+        .publicHomePage .homeFloatingCard.one {
+          left: 16px;
+          top: 18px;
+          animation: homeFloatOne 5.2s ease-in-out infinite;
+        }
+
+        .publicHomePage .homeFloatingCard.two {
+          right: 16px;
+          top: 48px;
+          animation: homeFloatTwo 5.6s ease-in-out infinite;
+        }
+
+        .publicHomePage .homeFloatingCard.three {
+          left: 28px;
+          bottom: 18px;
+          animation: homeFloatThree 6s ease-in-out infinite;
+        }
+
+        .publicHomePage .homeFloatingCard p {
+          margin: 0;
+        }
+
+        .publicHomePage .homeSignalLabel {
+          font-size: 0.72rem;
+          color: var(--oh-muted);
+          font-weight: 900;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+        }
+
+        .publicHomePage .homeSignalText {
+          margin-top: 5px !important;
+          color: var(--oh-text);
+          font-weight: 900;
+          font-size: 0.88rem;
+          line-height: 1.35;
         }
 
         .publicHomePage .homeIconMark {
@@ -357,20 +527,6 @@ export default function Home() {
           width: 72%;
           border-radius: inherit;
           background: linear-gradient(90deg, #14b8a6, #2563eb);
-        }
-
-        .publicHomePage .homeDemoRing {
-          width: 94px;
-          height: 94px;
-          border-radius: 50%;
-          display: grid;
-          place-items: center;
-          background:
-            radial-gradient(circle at center, #fff 55%, transparent 56%),
-            conic-gradient(#14b8a6 0 72%, rgba(148, 163, 184, 0.22) 72% 100%);
-          border: 1px solid rgba(148, 163, 184, 0.18);
-          font-weight: 900;
-          color: var(--oh-text);
         }
 
         .publicHomePage .homeComparisonTable {
@@ -421,28 +577,65 @@ export default function Home() {
           background: rgba(148, 163, 184, 0.12);
         }
 
-        .publicHomePage a.ohCard,
-        .publicHomePage a.ohMetricCard {
-          color: inherit;
-          text-decoration: none;
-          transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+        @keyframes homeOrbitSpin {
+          from {
+            transform: translate(-50%, -50%) rotate(0deg);
+          }
+          to {
+            transform: translate(-50%, -50%) rotate(360deg);
+          }
         }
 
-        .publicHomePage a.ohCard:hover,
-        .publicHomePage a.ohMetricCard:hover {
-          transform: translateY(-3px);
-          border-color: rgba(20, 184, 166, 0.32);
-          box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+        @keyframes homeSoftPulse {
+          0%, 100% {
+            transform: translate(-50%, -50%) scale(1);
+          }
+          50% {
+            transform: translate(-50%, -50%) scale(1.035);
+          }
         }
 
-        .publicHomePage .primaryBtn,
-        .publicHomePage .secondaryBtn {
-          text-decoration: none;
-          white-space: nowrap;
+        @keyframes homeFloatOne {
+          0%, 100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-8px);
+          }
         }
 
-        @media (max-width: 980px) {
+        @keyframes homeFloatTwo {
+          0%, 100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(9px);
+          }
+        }
+
+        @keyframes homeFloatThree {
+          0%, 100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-6px);
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .publicHomePage .homeMotionOrbit,
+          .publicHomePage .homePulseCore,
+          .publicHomePage .homeFloatingCard {
+            animation: none;
+          }
+        }
+
+        @media (max-width: 1100px) {
           .publicHomePage .ohHeroGrid {
+            grid-template-columns: 1fr;
+          }
+
+          .publicHomePage .homeHeroShowcase {
             grid-template-columns: 1fr;
           }
         }
@@ -455,6 +648,22 @@ export default function Home() {
           .publicHomePage .homeComparisonTable th,
           .publicHomePage .homeComparisonTable td {
             padding: 12px;
+          }
+
+          .publicHomePage .homeMotionStage {
+            min-height: 310px;
+          }
+
+          .publicHomePage .homeFloatingCard {
+            position: relative;
+            inset: auto !important;
+            width: 100%;
+            margin-bottom: 10px;
+          }
+
+          .publicHomePage .homeMotionOrbit,
+          .publicHomePage .homePulseCore {
+            display: none;
           }
         }
 
@@ -522,87 +731,97 @@ export default function Home() {
               </div>
             </div>
 
-            <aside className="ohCard" aria-label={text("Ask OrganHeal demo", "تجربة اسأل OrganHeal")}>
-              <div className="ohCardHeader">
-                <div>
-                  <p className="ohMetricLabel">
-                    {text("Ask OrganHeal", "اسأل OrganHeal")}
-                  </p>
-
-                  <h2 className="ohCardTitle" style={{ marginTop: "8px" }}>
-                    {text("Try a quick health question", "جرّب سؤالًا صحيًا سريعًا")}
-                  </h2>
-                </div>
-
-                <span className="ohStatusBadge neutral">
-                  {text("Demo", "تجربة")}
-                </span>
-              </div>
-
-              <p className="ohCardText">
-                {text(
-                  "Ask a general educational question before creating your full health profile.",
-                  "اسأل سؤالًا تثقيفيًا عامًا قبل إنشاء ملفك الصحي الكامل."
-                )}
-              </p>
-
-              <div className="ohStack" style={{ gap: "12px", marginTop: "16px" }}>
-                <input
-                  className="homeHeroInput"
-                  type="text"
-                  value={heroQuestion}
-                  onChange={(event) => setHeroQuestion(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") askHeroAI();
-                  }}
-                  placeholder={text(
-                    "Example: What should I ask my doctor about LDL?",
-                    "مثال: ماذا أسأل الطبيب عن LDL؟"
-                  )}
-                />
-
-                <button
-                  type="button"
-                  className="primaryBtn"
-                  onClick={askHeroAI}
-                  disabled={heroLoading}
-                >
-                  {heroLoading
-                    ? text("Thinking...", "جاري التفكير...")
-                    : text("Ask OrganHeal", "اسأل OrganHeal")}
-                </button>
-              </div>
-
-              <div className="ohDivider" />
-
-              <div className="ohMetricGrid" style={{ gridTemplateColumns: "94px 1fr" }}>
-                <div className="homeDemoRing">72%</div>
-
-                <div>
-                  <p className="ohMetricLabel">
-                    {text("Demo clarity score", "مؤشر وضوح تجريبي")}
-                  </p>
-                  <p className="ohMetricHint">
-                    {text(
-                      "OrganHeal turns unclear health questions into structured next steps.",
-                      "OrganHeal يحوّل الأسئلة الصحية غير الواضحة إلى خطوات منظمة."
-                    )}
-                  </p>
-                </div>
-              </div>
-
-              {heroAnswer && (
-                <div className="ohTrustNotice" style={{ marginTop: "16px" }}>
-                  <span aria-hidden="true">AI</span>
+            <aside className="homeHeroShowcase" aria-label={text("OrganHeal live preview", "معاينة OrganHeal")}>
+              <div className="ohCard homeAskCard">
+                <div className="ohCardHeader">
                   <div>
-                    <strong>
-                      {text("Quick educational answer", "إجابة تثقيفية سريعة")}
-                    </strong>
-                    <br />
-                    {heroAnswer}
+                    <p className="ohMetricLabel">
+                      {text("Ask OrganHeal", "اسأل OrganHeal")}
+                    </p>
+
+                    <h2 className="ohCardTitle" style={{ marginTop: "8px" }}>
+                      {text("Try a quick health question", "جرّب سؤالًا صحيًا سريعًا")}
+                    </h2>
+                  </div>
+
+                  <span className="ohStatusBadge neutral">
+                    {text("Demo", "تجربة")}
+                  </span>
+                </div>
+
+                <p className="ohCardText">
+                  {text(
+                    "Ask a general educational question before creating your full health profile.",
+                    "اسأل سؤالًا تثقيفيًا عامًا قبل إنشاء ملفك الصحي الكامل."
+                  )}
+                </p>
+
+                <div className="ohStack" style={{ gap: "12px", marginTop: "16px" }}>
+                  <input
+                    className="homeHeroInput"
+                    type="text"
+                    value={heroQuestion}
+                    onChange={(event) => setHeroQuestion(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") askHeroAI();
+                    }}
+                    placeholder={text(
+                      "Example: What should I ask my doctor about LDL?",
+                      "مثال: ماذا أسأل الطبيب عن LDL؟"
+                    )}
+                  />
+
+                  <button
+                    type="button"
+                    className="primaryBtn"
+                    onClick={askHeroAI}
+                    disabled={heroLoading}
+                  >
+                    {heroLoading
+                      ? text("Thinking...", "جاري التفكير...")
+                      : text("Ask OrganHeal", "اسأل OrganHeal")}
+                  </button>
+                </div>
+
+                {heroAnswer && (
+                  <div className="ohTrustNotice" style={{ marginTop: "16px" }}>
+                    <span aria-hidden="true">AI</span>
+                    <div>
+                      <strong>
+                        {text("Quick educational answer", "إجابة تثقيفية سريعة")}
+                      </strong>
+                      <br />
+                      {heroAnswer}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="homeMotionStage" aria-hidden="true">
+                <div className="homeMotionOrbit" />
+
+                <div className="homePulseCore">
+                  <div>
+                    <strong>72%</strong>
+                    <span>{text("Clarity", "وضوح")}</span>
                   </div>
                 </div>
-              )}
+
+                <div className="homeFloatingCard one">
+                  <p className="homeSignalLabel">{text("Report signal", "إشارة تقرير")}</p>
+                  <p className="homeSignalText">{text("Lab markers organized", "تنظيم مؤشرات المختبر")}</p>
+                </div>
+
+                <div className="homeFloatingCard two">
+                  <p className="homeSignalLabel">{text("Doctor brief", "ملخص الطبيب")}</p>
+                  <p className="homeSignalText">{text("Questions prepared", "أسئلة جاهزة")}</p>
+                </div>
+
+                <div className="homeFloatingCard three">
+                  <p className="homeSignalLabel">{text("Next step", "الخطوة التالية")}</p>
+                  <p className="homeSignalText">{text("Health direction detected", "تحديد الاتجاه الصحي")}</p>
+                </div>
+              </div>
             </aside>
           </div>
         </section>
@@ -644,13 +863,13 @@ export default function Home() {
 
           <div className="ohGrid cols4">
             {steps.map((step) => (
-              <Link href={step.href} className="ohCard" key={step.number}>
+              <article className="ohCard" key={step.number}>
                 <p className="ohMetricLabel">{step.number}</p>
                 <h3 className="ohCardTitle" style={{ fontSize: "1.1rem", marginTop: "10px" }}>
                   {step.title}
                 </h3>
                 <p className="ohCardText">{step.description}</p>
-              </Link>
+              </article>
             ))}
           </div>
         </section>
@@ -667,8 +886,8 @@ export default function Home() {
 
             <p className="ohCardText">
               {text(
-                "The dashboard should not repeat every page. It should summarize the user's current health direction, priority area, and next action.",
-                "لوحة التحكم لا يجب أن تكرر كل الصفحات. يجب أن تلخص الاتجاه الصحي الحالي، منطقة الأولوية، والخطوة التالية."
+                "The dashboard should summarize the user's current health direction, priority area, and next action without repeating every page.",
+                "لوحة التحكم يجب أن تلخص الاتجاه الصحي الحالي، منطقة الأولوية، والخطوة التالية بدون تكرار كل الصفحات."
               )}
             </p>
 
@@ -749,12 +968,12 @@ export default function Home() {
             </div>
 
             <div className="ohButtonRow" style={{ marginTop: "20px" }}>
-              <Link href="/library" className="primaryBtn">
-                {text("Explore Education", "استكشف التثقيف")}
+              <Link href="/features" className="primaryBtn">
+                {text("Explore Features", "استكشف الميزات")}
               </Link>
 
-              <Link href="/blog" className="secondaryBtn">
-                {text("Read Articles", "قراءة المقالات")}
+              <Link href="/library" className="secondaryBtn">
+                {text("Open Education", "فتح التثقيف")}
               </Link>
             </div>
           </article>
@@ -781,10 +1000,6 @@ export default function Home() {
                 )}
               </p>
             </div>
-
-            <Link href="/pricing" className="primaryBtn">
-              {text("View Plans", "عرض الخطط")}
-            </Link>
           </div>
 
           <table className="homeComparisonTable">
