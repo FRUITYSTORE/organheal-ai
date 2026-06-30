@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useRef } from "react";
+import { type ReactNode, useRef } from "react";
 import { text, useArabicUi } from "./ArabicUiHelper";
 
 type ExecutiveSummary = {
@@ -35,14 +35,29 @@ function arabicValue(value: unknown) {
     "Medical Report": "تقرير طبي",
     "Radiology Report": "تقرير أشعة",
     "Discharge Summary": "ملخص خروج",
+
     "Liver Health": "صحة الكبد",
     "Kidney Health": "صحة الكلى",
     "Heart Health": "صحة القلب",
     "Lung Health": "صحة الرئتين",
+    "Brain Health": "صحة الدماغ",
+    "Metabolic Health": "الصحة الأيضية",
+
+    Liver: "الكبد",
+    Kidney: "الكلى",
+    Heart: "القلب",
+    Lung: "الرئة",
+    Brain: "الدماغ",
+    Metabolic: "الأيض",
+
     "Preventive Health Monitoring": "متابعة صحية وقائية",
+    "Preventive Monitoring Pattern": "نمط متابعة وقائية",
+    "General Health Monitoring Pattern": "نمط متابعة صحية عامة",
+
     Low: "منخفض",
     Moderate: "متوسط",
     High: "مرتفع",
+    "N/A": "غير متاح",
   };
 
   return map[clean] || clean;
@@ -77,9 +92,10 @@ function extractLabMarkers(...values: Array<string | null | undefined>) {
   }));
 }
 
-function ArabicParagraph({ children }: { children: React.ReactNode }) {
+function ArabicParagraph({ children }: { children: ReactNode }) {
   return (
     <p
+      className="ohCardText"
       style={{
         lineHeight: 1.9,
         whiteSpace: "pre-line",
@@ -94,14 +110,26 @@ function ArabicParagraph({ children }: { children: React.ReactNode }) {
   );
 }
 
-function EnglishParagraph({ children }: { children: React.ReactNode }) {
+function EnglishParagraph({ children }: { children: ReactNode }) {
   return (
-    <p style={{ lineHeight: 1.8, whiteSpace: "pre-line" }}>
+    <p
+      className="ohCardText"
+      style={{
+        lineHeight: 1.8,
+        whiteSpace: "pre-line",
+      }}
+    >
       {children}
     </p>
   );
 }
 
+function getScoreTone(score?: number) {
+  if (typeof score !== "number") return "neutral";
+  if (score >= 75) return "good";
+  if (score >= 50) return "moderate";
+  return "risk";
+}
 
 function applyProfessionalPdfLayout(reportElement: HTMLElement, isArabic: boolean) {
   const style = document.createElement("style");
@@ -185,7 +213,6 @@ function applyProfessionalPdfLayout(reportElement: HTMLElement, isArabic: boolea
   `;
 
   reportElement.prepend(style);
-
   reportElement.classList.add("organhealPdfPage");
 
   reportElement.style.boxSizing = "border-box";
@@ -239,7 +266,6 @@ function applyProfessionalPdfLayout(reportElement: HTMLElement, isArabic: boolea
 
   reportElement.querySelectorAll("div").forEach((element) => {
     const htmlElement = element as HTMLElement;
-
     const textLength = (htmlElement.textContent || "").trim().length;
 
     if (textLength > 0 && textLength < 900) {
@@ -263,10 +289,20 @@ export default function DoctorBriefReportCard({
 }: DoctorBriefReportCardProps) {
   const isArabic = useArabicUi();
   const printRef = useRef<HTMLDivElement>(null);
+
   const generatedAtText = new Date().toLocaleString(isArabic ? "ar" : undefined);
-  const labMarkers = extractLabMarkers(summary, keyFindings, riskSignals, recommendations, doctorBrief);
+  const labMarkers = extractLabMarkers(
+    summary,
+    keyFindings,
+    riskSignals,
+    recommendations,
+    doctorBrief
+  );
+
   const mainFocus = arabicValue(executiveSummary?.prioritySystem);
   const reportType = arabicValue(reportTypeLabel);
+  const scoreTone = getScoreTone(executiveSummary?.currentScore);
+  const forecastTone = getScoreTone(executiveSummary?.forecastScore);
 
   function printDoctorBriefOnly() {
     if (!printRef.current) {
@@ -304,10 +340,15 @@ export default function DoctorBriefReportCard({
             .doctorBriefPrintButton,
             .doctorBriefPrintTip,
             .doctorBriefPrintActions { display: none !important; }
-            .resultBox {
+            .ohCard,
+            .ohMetricCard,
+            .ohActionPanel,
+            .ohTrustNotice {
               border: none !important;
               box-shadow: none !important;
               background: #ffffff !important;
+            }
+            .ohCard {
               padding: 0 !important;
             }
             * { unicode-bidi: isolate; }
@@ -343,12 +384,17 @@ export default function DoctorBriefReportCard({
     reportElement.style.boxShadow = "none";
     reportElement.style.direction = isArabic ? "rtl" : "ltr";
     reportElement.style.textAlign = isArabic ? "right" : "left";
-    reportElement.style.fontFamily = isArabic ? "Tahoma, Arial, sans-serif" : "Arial, sans-serif";
+    reportElement.style.fontFamily = isArabic
+      ? "Tahoma, Arial, sans-serif"
+      : "Arial, sans-serif";
 
     reportElement.querySelectorAll("*").forEach((element) => {
       const htmlElement = element as HTMLElement;
+
       htmlElement.style.color = "#111827";
-      htmlElement.style.fontFamily = isArabic ? "Tahoma, Arial, sans-serif" : "Arial, sans-serif";
+      htmlElement.style.fontFamily = isArabic
+        ? "Tahoma, Arial, sans-serif"
+        : "Arial, sans-serif";
       htmlElement.style.unicodeBidi = "isolate";
       htmlElement.style.letterSpacing = "normal";
       htmlElement.style.wordSpacing = "normal";
@@ -371,7 +417,7 @@ export default function DoctorBriefReportCard({
             "p",
             "li",
             ".organhealPdfKeepTogether",
-            ".organhealPdfSection"
+            ".organhealPdfSection",
           ],
         },
         margin: [16, 18, 16, 18],
@@ -387,6 +433,10 @@ export default function DoctorBriefReportCard({
   return (
     <>
       <style>{`
+        .doctorBriefReportArea {
+          unicode-bidi: isolate;
+        }
+
         .arabicPdfSafeMargins {
           box-sizing: border-box !important;
           width: 100% !important;
@@ -403,8 +453,6 @@ export default function DoctorBriefReportCard({
           word-break: normal !important;
         }
 
-        .patientReportPdfArea[lang="ar"],
-        .patientReportPdfArea[lang="ar"] *,
         .doctorBriefReportArea[lang="ar"],
         .doctorBriefReportArea[lang="ar"] * {
           letter-spacing: normal !important;
@@ -416,9 +464,6 @@ export default function DoctorBriefReportCard({
           unicode-bidi: isolate;
         }
 
-        .patientReportPdfArea[lang="ar"] h1,
-        .patientReportPdfArea[lang="ar"] h2,
-        .patientReportPdfArea[lang="ar"] h3,
         .doctorBriefReportArea[lang="ar"] h1,
         .doctorBriefReportArea[lang="ar"] h2,
         .doctorBriefReportArea[lang="ar"] h3 {
@@ -427,181 +472,277 @@ export default function DoctorBriefReportCard({
           text-transform: none !important;
           line-height: 1.35 !important;
         }
+
+        .doctorBriefReportArea .doctorBriefHeaderActions {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        @media (max-width: 720px) {
+          .doctorBriefReportArea .doctorBriefHeaderActions {
+            width: 100%;
+          }
+
+          .doctorBriefReportArea .doctorBriefHeaderActions button {
+            width: 100%;
+            justify-content: center;
+          }
+        }
       `}</style>
 
-    <div ref={printRef}
-      className="resultBox doctorBriefReportArea arabicPdfSafeMargins organhealPdfPage"
-      dir={isArabic ? "rtl" : "ltr"}
-      lang={isArabic ? "ar" : "en"}
-      style={{
-        textAlign: isArabic ? "right" : "left",
-        fontFamily: isArabic ? "Tahoma, Arial, sans-serif" : undefined,
-        unicodeBidi: "isolate",
-      }}
-    >
-      <div
+      <section
+        ref={printRef}
+        className="ohCard doctorBriefReportArea arabicPdfSafeMargins organhealPdfPage"
+        dir={isArabic ? "rtl" : "ltr"}
+        lang={isArabic ? "ar" : "en"}
         style={{
-          display: "flex",
-          justifyContent: "space-between",
-          gap: "16px",
-          flexWrap: "wrap",
-          alignItems: "flex-start",
-          borderBottom: "1px solid rgba(148,163,184,0.24)",
-          paddingBottom: "16px",
-          marginBottom: "18px",
+          textAlign: isArabic ? "right" : "left",
+          fontFamily: isArabic ? "Tahoma, Arial, sans-serif" : undefined,
+          unicodeBidi: "isolate",
         }}
       >
-        <div>
-          <p className="sectionLabel">OrganHeal AI</p>
+        <div className="ohCardHeader">
+          <div>
+            <p className="ohMetricLabel">OrganHeal AI</p>
 
-          <h2 style={{ marginBottom: "6px" }}>
-            {isArabic ? "ملخص طبي جاهز للطبيب" : "Doctor-Ready Report Summary"}
-          </h2>
+            <h2 className="ohCardTitle" style={{ marginTop: "8px" }}>
+              {isArabic ? "ملخص طبي جاهز للطبيب" : "Doctor-Ready Report Summary"}
+            </h2>
 
-          <p style={{ opacity: 0.78, lineHeight: 1.7 }}>
-            {isArabic
-              ? "ملخص عربي منظم للمراجعة السريرية، مبني من بيانات التقرير الأساسية بدون عرض النص الإنجليزي المولد."
-              : "Structured medical intelligence summary prepared for clinical review."}
-          </p>
+            <p className="ohCardText">
+              {isArabic
+                ? "ملخص منظم للمراجعة السريرية، مبني من بيانات التقرير الأساسية، ومخصص للتحضير للنقاش مع مختص صحي مرخص."
+                : "Structured medical intelligence summary prepared for clinical review and doctor discussion."}
+            </p>
 
-          <p style={{ marginTop: "10px", fontSize: "0.9rem", opacity: 0.8 }}>
-            <strong>{isArabic ? "تاريخ الإنشاء:" : "Generated:"}</strong>
-            <br />
-            {generatedAtText}
-          </p>
-        </div>
-
-        <div className="doctorBriefPrintActions" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-          <button className="secondaryBtn doctorBriefPrintButton" onClick={printDoctorBriefOnly}>
-            {isArabic ? "طباعة ملخص الطبيب" : "Print Doctor Brief"}
-          </button>
-
-          <button className="primaryBtn doctorBriefPrintButton" onClick={downloadDoctorBriefPdf}>
-            {isArabic ? "تنزيل PDF" : "Download PDF"}
-          </button>
-        </div>
-      </div>
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
-          gap: "14px",
-          marginTop: "18px",
-          marginBottom: "18px",
-        }}
-      >
-        <div>
-          <strong>{isArabic ? "التقرير" : "Report"}</strong>
-          <p>{fileName}</p>
-        </div>
-
-        <div>
-          <strong>{isArabic ? "نوع التقرير" : "Report Type"}</strong>
-          <p>{isArabic ? reportType : reportTypeLabel}</p>
-        </div>
-
-        <div>
-          <strong>{isArabic ? "تاريخ الرفع" : "Uploaded"}</strong>
-          <p>{uploadedAtText}</p>
-        </div>
-
-        <div>
-          <strong>{isArabic ? "نظام الأولوية" : "Priority System"}</strong>
-          <p>{isArabic ? mainFocus : executiveSummary?.prioritySystem || "N/A"}</p>
-        </div>
-      </div>
-
-      {isArabic ? (
-        <div>
-          <h3>١. ملخص سريري</h3>
-          <ArabicParagraph>
-            تم إنشاء هذا الملخص كمراجعة تثقيفية منظمة للتقرير المرفوع.
-            نوع التقرير: {reportType}. محور المراجعة الرئيسي: {mainFocus}.
-            لا يمثل هذا الملخص تشخيصًا نهائيًا، بل يساعد في ترتيب المعلومات قبل مراجعة الطبيب.
-          </ArabicParagraph>
-
-          <h3>٢. مؤشرات مختبرية أو سريرية مهمة</h3>
-          {labMarkers.length > 0 ? (
-            <div style={{ display: "grid", gap: "10px", marginBottom: "18px" }}>
-              {labMarkers.map((marker, index) => (
-                <div
-                  key={`${marker.name}-${index}`}
-                  style={{
-                    padding: "12px",
-                    borderRadius: "14px",
-                    background: "rgba(15,23,42,0.22)",
-                    border: "1px solid rgba(148,163,184,0.18)",
-                  }}
-                >
-                  <strong>{marker.name}</strong>
-                  <ArabicParagraph>
-                    القيمة: {marker.value} {marker.unit} — الحالة: {marker.status}
-                    {marker.ref ? ` — المرجع: ${marker.ref}` : ""}
-                  </ArabicParagraph>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <ArabicParagraph>
-              لا توجد مؤشرات منظمة كافية يمكن استخراجها من النص الحالي. يُنصح بالرجوع للتقرير الأصلي عند المراجعة.
-            </ArabicParagraph>
-          )}
-
-          <h3>٣. إشارات خطر تحتاج مراجعة</h3>
-          <ArabicParagraph>
-            في حال وجود أعراض، أو تكرار نتائج غير طبيعية، أو اختلاف واضح عن النتائج السابقة، يجب مراجعة طبيب مرخص.
-            عدم ظهور مؤشر خطير واضح لا يعني إلغاء الحاجة للمتابعة الطبية عند وجود أعراض.
-          </ArabicParagraph>
-
-          <h3>٤. المتابعة الموصى بها</h3>
-          <ArabicParagraph>
-            راجع المؤشرات مع مقدم رعاية صحية مرخص، وكرر الفحوصات ذات العلاقة حسب الخطة الطبية.
-            يفضل مقارنة هذه النتائج مع فحوصات سابقة ولاحقة لفهم الاتجاه الصحي بشكل أفضل.
-          </ArabicParagraph>
-
-          <h3>٥. تركيز المراجعة السريرية</h3>
-          <div
-            style={{
-              padding: "14px",
-              borderRadius: "16px",
-              background: "rgba(15,23,42,0.28)",
-              border: "1px solid rgba(148,163,184,0.18)",
-              marginTop: "12px",
-              marginBottom: "18px",
-            }}
-          >
-            <p><strong>تركيز المراجعة:</strong> {mainFocus}</p>
-            <p><strong>الخطوة المقترحة:</strong> {"راجع المؤشرات مع مقدم رعاية صحية مرخص، وكرر الفحوصات ذات العلاقة حسب التوصية."}</p>
-            <p><strong>النتيجة الحالية:</strong> {executiveSummary?.currentScore ?? "غير متاح"}</p>
-            <p><strong>نتيجة التوقع:</strong> {executiveSummary?.forecastScore ?? "غير متاح"}</p>
-            <p><strong>الثقة:</strong> {arabicValue(executiveSummary?.confidenceLevel || executiveSummary?.confidenceScore)}</p>
+            <p className="ohMetricHint" style={{ marginTop: "10px" }}>
+              <strong>{isArabic ? "تاريخ الإنشاء:" : "Generated:"}</strong>
+              <br />
+              {generatedAtText}
+            </p>
           </div>
 
-          <h3>ملاحظة مهمة</h3>
-          <ArabicParagraph>
-            هذا الملخص مخصص لدعم المراجعة الطبية ولا يستبدل التقييم السريري أو حكم الطبيب.
-          </ArabicParagraph>
+          <div className="doctorBriefPrintActions doctorBriefHeaderActions">
+            <button
+              className="secondaryBtn doctorBriefPrintButton"
+              type="button"
+              onClick={printDoctorBriefOnly}
+            >
+              {isArabic ? "طباعة ملخص الطبيب" : "Print Doctor Brief"}
+            </button>
+
+            <button
+              className="primaryBtn doctorBriefPrintButton"
+              type="button"
+              onClick={downloadDoctorBriefPdf}
+            >
+              {isArabic ? "تنزيل PDF" : "Download PDF"}
+            </button>
+          </div>
         </div>
-      ) : (
-        <div>
-          <h3>1. Clinical Summary</h3>
-          <EnglishParagraph>{text(summary, "N/A")}</EnglishParagraph>
 
-          <h3>2. Key Clinical Findings</h3>
-          <EnglishParagraph>{text(keyFindings, "N/A")}</EnglishParagraph>
+        <div className="ohMetricGrid" style={{ marginTop: "18px" }}>
+          <article className="ohMetricCard">
+            <span className="ohMetricLabel">{isArabic ? "التقرير" : "Report"}</span>
+            <span className="ohMetricHint">{fileName}</span>
+          </article>
 
-          <h3>3. Important Risk Signals</h3>
-          <EnglishParagraph>{text(riskSignals, "N/A")}</EnglishParagraph>
+          <article className="ohMetricCard">
+            <span className="ohMetricLabel">
+              {isArabic ? "نوع التقرير" : "Report Type"}
+            </span>
+            <span className="ohMetricHint">
+              {isArabic ? reportType : reportTypeLabel}
+            </span>
+          </article>
 
-          <h3>4. Recommended Follow-Up</h3>
-          <EnglishParagraph>{text(recommendations, "N/A")}</EnglishParagraph>
+          <article className="ohMetricCard">
+            <span className="ohMetricLabel">
+              {isArabic ? "تاريخ الرفع" : "Uploaded"}
+            </span>
+            <span className="ohMetricHint">{uploadedAtText}</span>
+          </article>
 
-          <h3>5. Clinical Review Note</h3>
-          <EnglishParagraph>{text(doctorBrief, "N/A")}</EnglishParagraph>
+          <article className="ohMetricCard">
+            <span className="ohMetricLabel">
+              {isArabic ? "نظام الأولوية" : "Priority System"}
+            </span>
+            <span className="ohMetricHint">
+              {isArabic ? mainFocus : executiveSummary?.prioritySystem || "N/A"}
+            </span>
+          </article>
+
+          <article className="ohMetricCard">
+            <span className="ohMetricLabel">
+              {isArabic ? "النتيجة الحالية" : "Current Score"}
+            </span>
+            <span className={`ohStatusBadge ${scoreTone}`}>
+              {executiveSummary?.currentScore ?? "N/A"}
+            </span>
+          </article>
+
+          <article className="ohMetricCard">
+            <span className="ohMetricLabel">
+              {isArabic ? "نتيجة التوقع" : "Forecast Score"}
+            </span>
+            <span className={`ohStatusBadge ${forecastTone}`}>
+              {executiveSummary?.forecastScore ?? "N/A"}
+            </span>
+          </article>
         </div>
-      )}
-    </div>
+
+        <div className="ohDivider" />
+
+        {isArabic ? (
+          <div className="ohStack">
+            <article>
+              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
+                ١. ملخص سريري
+              </h3>
+              <ArabicParagraph>
+                تم إنشاء هذا الملخص كمراجعة تثقيفية منظمة للتقرير المرفوع.
+                نوع التقرير: {reportType}. محور المراجعة الرئيسي: {mainFocus}.
+                لا يمثل هذا الملخص تشخيصًا نهائيًا، بل يساعد في ترتيب المعلومات قبل مراجعة الطبيب.
+              </ArabicParagraph>
+            </article>
+
+            <article>
+              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
+                ٢. مؤشرات مختبرية أو سريرية مهمة
+              </h3>
+
+              {labMarkers.length > 0 ? (
+                <div className="ohMetricGrid" style={{ marginTop: "12px" }}>
+                  {labMarkers.map((marker, index) => (
+                    <div className="ohMetricCard" key={`${marker.name}-${index}`}>
+                      <span className="ohMetricLabel">{marker.name}</span>
+                      <span className="ohMetricHint">
+                        القيمة: {marker.value} {marker.unit}
+                      </span>
+                      <span className="ohMetricHint">
+                        الحالة: {marker.status}
+                      </span>
+                      {marker.ref && (
+                        <span className="ohMetricHint">
+                          المرجع: {marker.ref}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <ArabicParagraph>
+                  لا توجد مؤشرات منظمة كافية يمكن استخراجها من النص الحالي. يُنصح بالرجوع للتقرير الأصلي عند المراجعة.
+                </ArabicParagraph>
+              )}
+            </article>
+
+            <article>
+              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
+                ٣. إشارات خطر تحتاج مراجعة
+              </h3>
+              <ArabicParagraph>
+                في حال وجود أعراض، أو تكرار نتائج غير طبيعية، أو اختلاف واضح عن النتائج السابقة، يجب مراجعة طبيب مرخص.
+                عدم ظهور مؤشر خطير واضح لا يعني إلغاء الحاجة للمتابعة الطبية عند وجود أعراض.
+              </ArabicParagraph>
+            </article>
+
+            <article>
+              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
+                ٤. المتابعة الموصى بها
+              </h3>
+              <ArabicParagraph>
+                راجع المؤشرات مع مقدم رعاية صحية مرخص، وكرر الفحوصات ذات العلاقة حسب الخطة الطبية.
+                يفضل مقارنة هذه النتائج مع فحوصات سابقة ولاحقة لفهم الاتجاه الصحي بشكل أفضل.
+              </ArabicParagraph>
+            </article>
+
+            <article className="ohTrustNotice">
+              <span aria-hidden="true">🩺</span>
+              <div>
+                <strong>٥. تركيز المراجعة السريرية</strong>
+                <br />
+                <p style={{ margin: "8px 0 0" }}>
+                  <strong>تركيز المراجعة:</strong> {mainFocus}
+                </p>
+                <p style={{ margin: "8px 0 0" }}>
+                  <strong>الخطوة المقترحة:</strong>{" "}
+                  راجع المؤشرات مع مقدم رعاية صحية مرخص، وكرر الفحوصات ذات العلاقة حسب التوصية.
+                </p>
+                <p style={{ margin: "8px 0 0" }}>
+                  <strong>الثقة:</strong>{" "}
+                  {arabicValue(
+                    executiveSummary?.confidenceLevel ||
+                      executiveSummary?.confidenceScore
+                  )}
+                </p>
+              </div>
+            </article>
+
+            <article>
+              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
+                ملاحظة مهمة
+              </h3>
+              <ArabicParagraph>
+                هذا الملخص مخصص لدعم المراجعة الطبية ولا يستبدل التقييم السريري أو حكم الطبيب.
+              </ArabicParagraph>
+            </article>
+          </div>
+        ) : (
+          <div className="ohStack">
+            <article>
+              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
+                1. Clinical Summary
+              </h3>
+              <EnglishParagraph>{text(summary, "N/A")}</EnglishParagraph>
+            </article>
+
+            <article>
+              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
+                2. Key Clinical Findings
+              </h3>
+              <EnglishParagraph>{text(keyFindings, "N/A")}</EnglishParagraph>
+            </article>
+
+            <article>
+              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
+                3. Important Risk Signals
+              </h3>
+              <EnglishParagraph>{text(riskSignals, "N/A")}</EnglishParagraph>
+            </article>
+
+            <article>
+              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
+                4. Recommended Follow-Up
+              </h3>
+              <EnglishParagraph>{text(recommendations, "N/A")}</EnglishParagraph>
+            </article>
+
+            <article>
+              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
+                5. Clinical Review Note
+              </h3>
+              <EnglishParagraph>{text(doctorBrief, "N/A")}</EnglishParagraph>
+            </article>
+          </div>
+        )}
+
+        <div className="ohDivider" />
+
+        <div className="ohTrustNotice doctorBriefPrintTip">
+          <span aria-hidden="true">⚠️</span>
+          <div>
+            <strong>
+              {isArabic ? "تنبيه طبي" : "Medical safety note"}
+            </strong>
+            <br />
+            {isArabic
+              ? "هذا الملخص للتنظيم والتحضير فقط، ولا يستبدل التشخيص أو الخطة العلاجية من مختص صحي مرخص."
+              : "This summary is for organization and preparation only. It does not replace diagnosis or treatment planning by a licensed healthcare professional."}
+          </div>
+        </div>
+      </section>
     </>
   );
 }
