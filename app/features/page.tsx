@@ -136,7 +136,7 @@ function AccessBadge({
   if (access === "free") {
     return (
       <span className="ohStatusBadge good">
-        {isArabic ? "حساب مجاني" : "Free account"}
+        {isArabic ? "ضمن الحساب المجاني" : "Free account"}
       </span>
     );
   }
@@ -144,14 +144,14 @@ function AccessBadge({
   if (access === "plus") {
     return (
       <span className="ohStatusBadge moderate">
-        {isArabic ? "Plus لاحقًا" : "Plus later"}
+        {isArabic ? "قيمة Plus لاحقًا" : "Plus value later"}
       </span>
     );
   }
 
   return (
     <span className="ohStatusBadge neutral">
-      {isArabic ? "مخطط" : "Planned"}
+      {isArabic ? "قادم لاحقًا" : "Planned"}
     </span>
   );
 }
@@ -212,8 +212,9 @@ export default function FeaturesPage() {
 
         .featureDiscoveryPage .featureDiscoveryCode {
           display: inline-flex;
-          width: 64px;
+          min-width: 64px;
           height: 48px;
+          padding: 0 10px;
           align-items: center;
           justify-content: center;
           border-radius: 16px;
@@ -223,6 +224,7 @@ export default function FeaturesPage() {
           font-weight: 900;
           font-size: 0.68rem;
           letter-spacing: 0.04em;
+          white-space: nowrap;
         }
 
         .featureDiscoveryPage .featurePreviewBox {
@@ -234,6 +236,36 @@ export default function FeaturesPage() {
           color: var(--oh-muted);
           font-size: 0.92rem;
           line-height: 1.7;
+        }
+
+        .featureDiscoveryPage .accessPath {
+          display: grid;
+          gap: 12px;
+          margin-top: 18px;
+        }
+
+        .featureDiscoveryPage .accessPathItem {
+          display: grid;
+          grid-template-columns: 44px 1fr;
+          gap: 12px;
+          align-items: flex-start;
+          padding: 14px;
+          border-radius: 18px;
+          background: rgba(248, 250, 252, 0.82);
+          border: 1px solid rgba(148, 163, 184, 0.18);
+        }
+
+        .featureDiscoveryPage .accessNumber {
+          display: inline-flex;
+          width: 36px;
+          height: 36px;
+          align-items: center;
+          justify-content: center;
+          border-radius: 14px;
+          background: rgba(20, 184, 166, 0.12);
+          border: 1px solid rgba(20, 184, 166, 0.2);
+          color: var(--oh-primary);
+          font-weight: 900;
         }
 
         .featureDiscoveryPage .unlockGrid {
@@ -266,7 +298,8 @@ export default function FeaturesPage() {
             grid-template-columns: 1fr;
           }
 
-          .featureDiscoveryPage .unlockStep {
+          .featureDiscoveryPage .unlockStep,
+          .featureDiscoveryPage .accessPathItem {
             grid-template-columns: 1fr;
           }
         }
@@ -277,20 +310,20 @@ export default function FeaturesPage() {
           <div className="ohHeroGrid">
             <div>
               <p className="ohEyebrow">
-                {text("What OrganHeal Can Do", "ماذا يستطيع OrganHeal أن يفعل؟")}
+                {text("Feature Discovery", "اكتشاف الميزات")}
               </p>
 
               <h1 className="ohTitle">
                 {text(
-                  "Discover the health intelligence platform before you unlock it.",
-                  "اكتشف منصة الذكاء الصحي قبل أن تفتح استخدامها الكامل."
+                  "Discover what OrganHeal can build for your health journey.",
+                  "اكتشف ما يمكن أن يبنيه OrganHeal لرحلتك الصحية."
                 )}
               </h1>
 
               <p className="ohLead">
                 {text(
-                  "OrganHeal helps users understand reports, connect health signals, prepare doctor-ready briefs, and follow a clearer health journey. This page previews the value before account access.",
-                  "يساعد OrganHeal المستخدمين على فهم التقارير، ربط المؤشرات الصحية، تجهيز ملخصات للطبيب، ومتابعة رحلة صحية أوضح. هذه الصفحة تعرض القيمة قبل الدخول إلى الحساب."
+                  "OrganHeal helps users understand reports, connect health signals, prepare doctor-ready briefs, and follow a clearer health journey. Start by seeing the value, then create an account when you are ready to use the tools.",
+                  "يساعد OrganHeal المستخدمين على فهم التقارير، ربط المؤشرات الصحية، تجهيز ملخصات للطبيب، ومتابعة رحلة صحية أوضح. ابدأ بفهم القيمة، ثم أنشئ حسابًا عندما تكون جاهزًا لاستخدام الأدوات."
                 )}
               </p>
 
@@ -299,9 +332,9 @@ export default function FeaturesPage() {
                   {text("Create Free Account", "إنشاء حساب مجاني")}
                 </Link>
 
-                <Link href="/pricing" className="secondaryBtn">
-                  {text("Compare Plans", "مقارنة الخطط")}
-                </Link>
+                <a href="#feature-discovery" className="secondaryBtn">
+                  {text("Explore Features", "استكشاف الميزات")}
+                </a>
               </div>
             </div>
 
@@ -309,57 +342,65 @@ export default function FeaturesPage() {
               <div className="ohCardHeader">
                 <div>
                   <p className="ohMetricLabel">
-                    {text("Access model", "نموذج الوصول")}
+                    {text("Value-first model", "نموذج يبدأ بالقيمة")}
                   </p>
 
                   <h2 className="ohCardTitle" style={{ marginTop: "8px" }}>
                     {text(
-                      "Preview first. Use after account access.",
-                      "المعاينة أولًا. الاستخدام بعد إنشاء الحساب."
+                      "Understand the benefit before thinking about payment.",
+                      "افهم الفائدة قبل التفكير بالدفع."
                     )}
                   </h2>
                 </div>
 
                 <span className="ohStatusBadge neutral">
-                  {text("Preview layer", "طبقة معاينة")}
+                  {text("Visitor friendly", "مناسب للزائر")}
                 </span>
               </div>
 
               <p className="ohCardText">
                 {text(
-                  "Visitors can understand each feature here. Real tools, saved results, private reports, and advanced follow-up require account access or future Plus features.",
-                  "يمكن للزائر فهم كل ميزة هنا. الأدوات الحقيقية، النتائج المحفوظة، التقارير الخاصة، والمتابعة المتقدمة تحتاج حسابًا أو ميزات Plus لاحقًا."
+                  "Visitors should first understand trust, safety, reports, plans, and health intelligence. Pricing remains available later, after the value becomes clear.",
+                  "يجب أن يفهم الزائر أولًا الثقة، السلامة، التقارير، الخطط، والذكاء الصحي. التسعير يبقى متاحًا لاحقًا بعد أن تصبح القيمة واضحة."
                 )}
               </p>
 
-              <div className="ohDivider" />
+              <div className="accessPath">
+                <div className="accessPathItem">
+                  <span className="accessNumber">1</span>
+                  <div>
+                    <p className="ohTimelineTitle">
+                      {text("Public preview", "معاينة عامة")}
+                    </p>
+                    <p className="ohTimelineMeta">
+                      {text(
+                        "See what OrganHeal can help you understand.",
+                        "شاهد ما يمكن أن يساعدك OrganHeal على فهمه."
+                      )}
+                    </p>
+                  </div>
+                </div>
 
-              <div className="ohMetricGrid">
-                <article className="ohMetricCard">
-                  <span className="ohMetricLabel">
-                    {text("Public", "عام")}
-                  </span>
-                  <span className="ohMetricValue">Preview</span>
-                  <span className="ohMetricHint">
-                    {text("Discover value", "اكتشاف القيمة")}
-                  </span>
-                </article>
-
-                <article className="ohMetricCard">
-                  <span className="ohMetricLabel">
-                    {text("Account", "الحساب")}
-                  </span>
-                  <span className="ohMetricValue">Tools</span>
-                  <span className="ohMetricHint">
-                    {text("Use and save", "استخدام وحفظ")}
-                  </span>
-                </article>
+                <div className="accessPathItem">
+                  <span className="accessNumber">2</span>
+                  <div>
+                    <p className="ohTimelineTitle">
+                      {text("Account access", "الوصول بالحساب")}
+                    </p>
+                    <p className="ohTimelineMeta">
+                      {text(
+                        "Use tools, save results, and build your profile.",
+                        "استخدم الأدوات، احفظ النتائج، وابنِ ملفك الصحي."
+                      )}
+                    </p>
+                  </div>
+                </div>
               </div>
             </aside>
           </div>
         </section>
 
-        <section className="ohCard">
+        <section id="feature-discovery" className="ohCard">
           <div className="ohCardHeader">
             <div>
               <p className="ohMetricLabel">
@@ -487,20 +528,20 @@ export default function FeaturesPage() {
           <div className="ohCardHeader" style={{ marginBottom: 0 }}>
             <div>
               <p className="ohMetricLabel">
-                {text("Ready to unlock OrganHeal?", "جاهز لفتح OrganHeal؟")}
+                {text("Ready to start with value?", "جاهز أن تبدأ بالقيمة؟")}
               </p>
 
               <h2 className="ohCardTitle" style={{ fontSize: "1.7rem" }}>
                 {text(
-                  "Start with a free account and build your health intelligence journey.",
-                  "ابدأ بحساب مجاني وابنِ رحلة ذكائك الصحي."
+                  "Create a free account and build your health intelligence journey.",
+                  "أنشئ حسابًا مجانيًا وابدأ بناء رحلة ذكائك الصحي."
                 )}
               </h2>
 
               <p className="ohCardText">
                 {text(
-                  "Create your profile first. Advanced saved intelligence and Plus features can be added as the platform grows.",
-                  "ابدأ بإنشاء ملفك أولًا. يمكن إضافة الذكاء المتقدم المحفوظ وميزات Plus مع تطور المنصة."
+                  "Start with your profile and core tools. Plan comparison remains available when you are ready to evaluate advanced value.",
+                  "ابدأ بملفك والأدوات الأساسية. مقارنة الخطط تبقى متاحة عندما تكون جاهزًا لتقييم القيمة المتقدمة."
                 )}
               </p>
             </div>
@@ -511,7 +552,7 @@ export default function FeaturesPage() {
               </Link>
 
               <Link href="/pricing" className="secondaryBtn">
-                {text("View Plans", "عرض الخطط")}
+                {text("Compare Plans", "مقارنة الخطط")}
               </Link>
             </div>
           </div>

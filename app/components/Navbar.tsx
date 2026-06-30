@@ -69,14 +69,17 @@ export default function Navbar() {
 
   const labels = {
     home: isArabic ? "الرئيسية" : "Home",
+    features: isArabic ? "الميزات" : "Features",
+    education: isArabic ? "التثقيف" : "Education",
+    about: isArabic ? "عن المنصة" : "About",
     dashboard: isArabic ? "لوحة التحكم" : "Dashboard",
     reports: isArabic ? "التقارير" : "Reports",
     intelligence: isArabic ? "مركز الذكاء" : "Intelligence",
-    education: isArabic ? "التثقيف" : "Education",
     healthPlan: isArabic ? "الخطة الصحية" : "Health Plan",
     history: isArabic ? "التاريخ الصحي" : "History",
     doctorPortal: isArabic ? "بوابة الطبيب" : "Doctor Portal",
     profile: isArabic ? "الملف الشخصي" : "Profile",
+    more: isArabic ? "المزيد" : "More",
     createAccount: isArabic ? "إنشاء حساب" : "Create Account",
     signIn: isArabic ? "تسجيل الدخول" : "Sign In",
     signOut: isArabic ? "تسجيل الخروج" : "Sign Out",
@@ -131,6 +134,73 @@ export default function Navbar() {
 
   return (
     <nav className="navbar" dir={isArabic ? "rtl" : "ltr"}>
+      <style>{`
+        .navMoreMenu {
+          position: relative;
+        }
+
+        .navMoreMenu summary {
+          list-style: none;
+          cursor: pointer;
+          font-weight: 900;
+          color: inherit;
+          user-select: none;
+        }
+
+        .navMoreMenu summary::-webkit-details-marker {
+          display: none;
+        }
+
+        .navMoreMenu summary::after {
+          content: "▾";
+          margin-inline-start: 6px;
+          font-size: 0.72rem;
+          opacity: 0.78;
+        }
+
+        .navMorePanel {
+          position: absolute;
+          top: calc(100% + 12px);
+          right: 0;
+          z-index: 80;
+          min-width: 190px;
+          display: grid;
+          gap: 6px;
+          padding: 10px;
+          border-radius: 18px;
+          border: 1px solid rgba(148, 163, 184, 0.26);
+          background: rgba(2, 6, 23, 0.96);
+          box-shadow: 0 20px 50px rgba(2, 6, 23, 0.32);
+        }
+
+        [dir="rtl"] .navMorePanel {
+          right: auto;
+          left: 0;
+        }
+
+        .navMorePanel a {
+          padding: 10px 12px;
+          border-radius: 12px;
+          white-space: nowrap;
+        }
+
+        .navMorePanel a:hover {
+          background: rgba(20, 184, 166, 0.14);
+        }
+
+        @media (max-width: 900px) {
+          .navMoreMenu {
+            width: 100%;
+          }
+
+          .navMorePanel {
+            position: static;
+            min-width: 0;
+            margin-top: 8px;
+          }
+        }
+      `}</style>
+
       <Link href="/" className="logo" aria-label="OrganHeal home">
         <OrganHealLogo />
 
@@ -141,27 +211,37 @@ export default function Navbar() {
       </Link>
 
       <div className="navLinks">
-        <Link href="/">{labels.home}</Link>
-        <Link href="/dashboard">{labels.dashboard}</Link>
-        <Link href="/reports">{labels.reports}</Link>
-        <Link href="/intelligence">{labels.intelligence}</Link>
-        <Link href="/library">{labels.education}</Link>
-
         {isLoggedIn ? (
           <>
+            <Link href="/dashboard">{labels.dashboard}</Link>
+            <Link href="/reports">{labels.reports}</Link>
+            <Link href="/intelligence">{labels.intelligence}</Link>
             <Link href="/health-plan">{labels.healthPlan}</Link>
-            <Link href="/history">{labels.history}</Link>
-            <Link href="/doctor-portal">{labels.doctorPortal}</Link>
-            <Link href="/profile">{labels.profile}</Link>
+            <Link href="/library">{labels.education}</Link>
+
+            <details className="navMoreMenu">
+              <summary>{labels.more}</summary>
+
+              <div className="navMorePanel">
+                <Link href="/history">{labels.history}</Link>
+                <Link href="/doctor-portal">{labels.doctorPortal}</Link>
+                <Link href="/profile">{labels.profile}</Link>
+              </div>
+            </details>
 
             <LanguageToggle />
 
-            <button className="navLogoutBtn" onClick={signOut}>
+            <button type="button" className="navLogoutBtn" onClick={signOut}>
               {labels.signOut}
             </button>
           </>
         ) : (
           <>
+            <Link href="/">{labels.home}</Link>
+            <Link href="/features">{labels.features}</Link>
+            <Link href="/library">{labels.education}</Link>
+            <Link href="/about">{labels.about}</Link>
+
             <LanguageToggle />
 
             <Link href="/signup" className="navPrimaryBtn">
