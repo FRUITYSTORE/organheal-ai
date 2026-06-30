@@ -1,8 +1,9 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
 
 import Navbar from "./components/Navbar";
+import RouteAccessGuard from "./components/RouteAccessGuard";
 import SiteFooter from "./components/SiteFooter";
 
 export const metadata: Metadata = {
@@ -77,14 +78,9 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <Navbar />
-        {children}
+        <RouteAccessGuard>{children}</RouteAccessGuard>
         <SiteFooter />
       </body>
     </html>
   );
 }
-
-
-
-
-
