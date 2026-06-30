@@ -1,6 +1,7 @@
 ﻿"use client";
 
-import { ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
+import Link from "next/link";
 
 type MedicalReportListProps = {
   hasReports: boolean;
@@ -28,61 +29,94 @@ export default function MedicalReportList({
 }: MedicalReportListProps) {
   const [language, setLanguage] = useState<Language>("en");
 
+  const isArabic = language === "ar";
+
   useEffect(() => {
     function syncLanguage() {
-      setLanguage(getStoredLanguage());
+      const selectedLanguage = getStoredLanguage();
+
+      setLanguage(selectedLanguage);
+      document.documentElement.lang = selectedLanguage;
+      document.documentElement.dir = selectedLanguage === "ar" ? "rtl" : "ltr";
     }
 
     syncLanguage();
 
     window.addEventListener("storage", syncLanguage);
-    window.addEventListener("focus", syncLanguage);
+    window.addEventListener("organheal-language-change", syncLanguage);
 
     return () => {
       window.removeEventListener("storage", syncLanguage);
-      window.removeEventListener("focus", syncLanguage);
+      window.removeEventListener("organheal-language-change", syncLanguage);
     };
   }, []);
 
-  const isArabic = language === "ar";
+  function text(en: string, ar: string) {
+    return isArabic ? ar : en;
+  }
 
   return (
-    <div className="resultBox" dir={isArabic ? "rtl" : "ltr"}>
-      <p className="sectionLabel">
-        {isArabic ? "مكتبة التقارير الطبية" : "📄 MEDICAL REPORT LIBRARY"}
+    <section
+      className="ohCard"
+      dir={isArabic ? "rtl" : "ltr"}
+      lang={isArabic ? "ar" : "en"}
+    >
+      <div className="ohCardHeader">
+        <div>
+          <p className="ohMetricLabel">
+            {text("Medical Report Library", "مكتبة التقارير الطبية")}
+          </p>
+
+          <h2 className="ohCardTitle" style={{ marginTop: "8px" }}>
+            {text("Your Medical Reports", "تقاريرك الطبية")}
+          </h2>
+        </div>
+
+        <span className={`ohStatusBadge ${hasReports ? "good" : "moderate"}`}>
+          {hasReports
+            ? text("Reports available", "توجد تقارير")
+            : text("No reports yet", "لا توجد تقارير بعد")}
+        </span>
+      </div>
+
+      <p className="ohCardText">
+        {text(
+          "View your uploaded reports, open saved intelligence results, and download patient-friendly or doctor-ready PDF summaries.",
+          "اعرض التقارير التي قمت برفعها، وافتح نتائج الذكاء المحفوظة، وحمّل ملخصات مبسطة للمريض أو جاهزة للطبيب."
+        )}
       </p>
 
-      <h2>{isArabic ? "تقاريرك الطبية" : "Your Medical Reports"}</h2>
+      <div className="ohDivider" />
 
-      <p
-        style={{
-          color: "#64748b",
-          lineHeight: 1.8,
-          marginTop: "8px",
-          textAlign: isArabic ? "right" : "left",
-        }}
-      >
-        {isArabic
-          ? "اعرض التقارير التي قمت برفعها، وافتح نتائج الذكاء المحفوظة، وحمّل ملخصات مبسطة للمريض أو جاهزة للطبيب."
-          : "View your uploaded reports, open saved intelligence results, and download patient-friendly or doctor-ready PDF summaries."}
-      </p>
+      {!hasReports ? (
+        <div className="ohEmptyState">
+          <h3>
+            {text(
+              "No medical reports uploaded yet",
+              "لا توجد تقارير طبية مرفوعة بعد"
+            )}
+          </h3>
 
-      {!hasReports && (
-        <p
-          style={{
-            marginTop: "16px",
-            color: "#64748b",
-            lineHeight: 1.8,
-            textAlign: isArabic ? "right" : "left",
-          }}
-        >
-          {isArabic
-            ? "لا توجد تقارير طبية مرفوعة بعد. ارفع تقريرًا طبيًا أولًا حتى يتمكن OrganHeal من توليد الذكاء الصحي."
-            : "No medical reports have been uploaded yet. Upload a report first so OrganHeal can generate health intelligence."}
-        </p>
+          <p>
+            {text(
+              "Upload a medical report first so OrganHeal can extract information and generate health intelligence.",
+              "ارفع تقريرًا طبيًا أولًا حتى يتمكن OrganHeal من استخراج المعلومات وتوليد الذكاء الصحي."
+            )}
+          </p>
+
+          <div className="ohButtonRow" style={{ justifyContent: "center" }}>
+            <Link href="/lab-upload" className="primaryBtn">
+              {text("Upload Report", "رفع تقرير")}
+            </Link>
+
+            <Link href="/reports" className="secondaryBtn">
+              {text("Reports Library", "مكتبة التقارير")}
+            </Link>
+          </div>
+        </div>
+      ) : (
+        <div className="ohStack">{children}</div>
       )}
-
-      {hasReports && children}
-    </div>
+    </section>
   );
 }
