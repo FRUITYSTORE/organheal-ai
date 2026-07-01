@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import PageBackActions from "../components/PageBackActions";
 import { useEffect, useState } from "react";
@@ -352,7 +352,7 @@ export default function DoctorPortalPage() {
     latestDoctorBriefInsight?.doctor_brief ||
     text(
       "No saved report-specific doctor brief is available yet. Generate intelligence from the reports page to prepare one.",
-      "لا يوجد ملخص طبي محفوظ خاص بالتقرير بعد. ولّد الذكاء الصحي من صفحة التقارير لتحضير واحد."
+      "لا يوجد ملخص طبي محفوظ خاص بالتقرير بعد. ولّد التحليل الصحي من صفحة التقارير لتحضير واحد."
     );
 
   const latestRecommendations =
@@ -414,13 +414,13 @@ export default function DoctorPortalPage() {
         }
       : generatedInsights.length === 0
       ? {
-          label: text("Generate report intelligence", "ولّد ذكاء التقرير"),
+          label: text("Analyze report", "حلّل التقرير"),
           description: text(
-            "Open Intelligence Center to generate report summaries, recommendations, and doctor-ready interpretation.",
-            "افتح مركز الذكاء لتوليد ملخصات التقارير، التوصيات، والتفسير الجاهز للطبيب."
+            "Open Report Analysis to generate report summaries, recommendations, and doctor-ready interpretation.",
+            "افتح تحليل التقارير لتوليد ملخصات التقارير، التوصيات، والتفسير الجاهز للطبيب."
           ),
-          href: "/intelligence",
-          buttonText: text("Open Intelligence", "افتح مركز الذكاء"),
+          href: "/reports",
+          buttonText: text("Review Analysis", "افتح تحليل التقارير"),
         }
       : !dailyCheckIn
       ? {
@@ -497,7 +497,7 @@ export default function DoctorPortalPage() {
               <p className="ohLead">
                 {text(
                   "A structured educational pre-visit summary built from assessments, check-ins, uploaded reports, saved intelligence, and health history.",
-                  "ملخص تعليمي منظم قبل الزيارة، مبني على التقييمات، Check-Ins، التقارير المرفوعة، الذكاء الصحي المحفوظ، والتاريخ الصحي."
+                  "ملخص تعليمي منظم قبل الزيارة، مبني على التقييمات، Check-Ins، التقارير المرفوعة، التحليل الصحي المحفوظ، والتاريخ الصحي."
                 )}
               </p>
 
@@ -536,7 +536,7 @@ export default function DoctorPortalPage() {
               <p className="ohCardText">
                 {text(
                   "Based on assessments, reports, saved intelligence, and latest wellness check-in.",
-                  "يعتمد على التقييمات، التقارير، الذكاء الصحي المحفوظ، وآخر Check-In صحي."
+                  "يعتمد على التقييمات، التقارير، التحليل الصحي المحفوظ، وآخر Check-In صحي."
                 )}
               </p>
 
@@ -809,11 +809,11 @@ export default function DoctorPortalPage() {
 
               <article className="ohMetricCard">
                 <span className="ohMetricLabel">
-                  {text("Saved Intelligence", "الذكاء الصحي المحفوظ")}
+                  {text("Saved Analysis", "التحليل الصحي المحفوظ")}
                 </span>
                 <span className="ohMetricValue">{savedIntelligence.length}</span>
                 <span className="ohMetricHint">
-                  {text("Saved generated intelligence results", "نتائج الذكاء الصحي المولدة والمحفوظة")}
+                  {text("Saved saved analysis results", "نتائج التحليل الصحي المولدة والمحفوظة")}
                 </span>
               </article>
             </section>
@@ -1026,7 +1026,7 @@ export default function DoctorPortalPage() {
                   <p className="ohCardText">
                     {text(
                       "This page organizes the patient profile, assessments, reports, intelligence, check-ins, and history into a concise educational brief for discussion with a licensed clinician.",
-                      "تنظم هذه الصفحة ملف المريض، التقييمات، التقارير، الذكاء الصحي، Check-Ins، والتاريخ الصحي في ملخص تعليمي مختصر لمناقشته مع طبيب مرخص."
+                      "تنظم هذه الصفحة ملف المريض، التقييمات، التقارير، التحليل الصحي، Check-Ins، والتاريخ الصحي في ملخص تعليمي مختصر لمناقشته مع طبيب مرخص."
                     )}
                   </p>
                 </div>
@@ -1041,8 +1041,8 @@ export default function DoctorPortalPage() {
                   {text("Reports", "التقارير")}
                 </Link>
 
-                <Link href="/intelligence" className="primaryBtn">
-                  {text("Intelligence", "مركز الذكاء")}
+                <Link href="/reports" className="primaryBtn">
+                  {text("Analysis", "تحليل التقارير")}
                 </Link>
 
                 <Link href="/history" className="secondaryBtn">
@@ -1065,7 +1065,7 @@ export default function DoctorPortalPage() {
                 <strong>{text("Medical safety disclaimer", "تنبيه طبي")}</strong>
                 <br />
                 {text(
-                  "OrganHeal AI provides educational health intelligence support. It does not diagnose, treat, replace clinical judgment, or provide emergency medical advice.",
+                  "OrganHeal AI provides educational health analysis support. It does not diagnose, treat, replace clinical judgment, or provide emergency medical advice.",
                   "OrganHeal AI يقدم دعمًا تعليميًا لتنظيم وفهم المعلومات الصحية. لا يقدم تشخيصًا أو علاجًا ولا يستبدل الحكم الطبي أو يقدم نصائح طبية طارئة."
                 )}
               </div>
@@ -1076,3 +1076,5 @@ export default function DoctorPortalPage() {
     </main>
   );
 }
+
+

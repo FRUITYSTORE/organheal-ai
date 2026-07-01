@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Professional Health Report | OrganHeal AI",
   description:
-    "Generate a professional educational health intelligence report with organ scores, lab summary, wellness check-ins, and health outlook.",
+    "Generate a professional educational health analysis report with organ scores, lab summary, wellness check-ins, and health outlook.",
 };
 
 export default function OrganReportLayout({
@@ -13,3 +13,4 @@ export default function OrganReportLayout({
 }) {
   return children;
 }
+

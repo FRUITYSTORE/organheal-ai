@@ -1,4 +1,4 @@
-﻿type ExecutiveSummaryCardProps = {
+type ExecutiveSummaryCardProps = {
   summary: {
     currentScore: number;
     trend: string;
@@ -27,10 +27,10 @@ export default function ExecutiveSummaryCard({
     <section className="ohCard">
       <div className="ohCardHeader">
         <div>
-          <p className="ohMetricLabel">Executive Health Intelligence Summary</p>
+          <p className="ohMetricLabel">Executive Health Analysis Summary</p>
 
           <h2 className="ohCardTitle" style={{ marginTop: "8px" }}>
-            Current health intelligence score
+            Current health analysis score
           </h2>
         </div>
 
@@ -87,3 +87,5 @@ export default function ExecutiveSummaryCard({
     </section>
   );
 }
+
+

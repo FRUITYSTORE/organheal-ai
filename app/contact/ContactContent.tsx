@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -53,8 +53,8 @@ export default function ContactContent() {
       icon: "💬",
       title: text("Platform Support", "دعم المنصة"),
       description: text(
-        "Questions about using OrganHeal, account access, reports, or health intelligence pages.",
-        "أسئلة حول استخدام OrganHeal، الدخول للحساب، التقارير، أو صفحات الذكاء الصحي."
+        "Questions about using OrganHeal, account access, reports, or health analysis pages.",
+        "أسئلة حول استخدام OrganHeal، الدخول للحساب، التقارير، أو صفحات التحليل الصحي."
       ),
     },
     {
@@ -398,7 +398,7 @@ export default function ContactContent() {
             </strong>
             <br />
             {text(
-              "OrganHeal AI provides educational and organizational health intelligence only. It does not diagnose, treat, prescribe, provide emergency advice, or replace licensed medical care.",
+              "OrganHeal AI provides educational and organizational health analysis only. It does not diagnose, treat, prescribe, provide emergency advice, or replace licensed medical care.",
               "OrganHeal AI يقدم ذكاء صحي تعليمي وتنظيمي فقط. لا يشخص ولا يعالج ولا يصف علاجًا ولا يقدم نصائح طارئة ولا يستبدل الرعاية الطبية المرخصة."
             )}
           </div>
@@ -407,3 +407,5 @@ export default function ContactContent() {
     </main>
   );
 }
+
+

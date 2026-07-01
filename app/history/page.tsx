@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import PageBackActions from "../components/PageBackActions";
 import { type CSSProperties, useEffect, useMemo, useState } from "react";
@@ -50,7 +50,7 @@ type SavedIntelligence = {
 
 type TimelineItem = {
   id: string;
-  type: "Assessment" | "Check-In" | "Report" | "Intelligence";
+  type: "Assessment" | "Check-In" | "Report" | "Analysis";
   title: string;
   subtitle: string;
   score?: number | null;
@@ -173,7 +173,7 @@ export default function HistoryPage() {
     if (value === "Assessment") return "تقييم";
     if (value === "Check-In") return "Check-In";
     if (value === "Report") return "تقرير";
-    if (value === "Intelligence") return "ذكاء صحي";
+    if (value === "Analysis") return "ذكاء صحي";
 
     return value;
   }
@@ -182,7 +182,7 @@ export default function HistoryPage() {
     if (value === "Assessment") return "🧭";
     if (value === "Check-In") return "✅";
     if (value === "Report") return "📄";
-    if (value === "Intelligence") return "🧠";
+    if (value === "Analysis") return "🧠";
     return "•";
   }
 
@@ -457,15 +457,15 @@ export default function HistoryPage() {
 
     ...generatedInsights.map((item) => ({
       id: `intelligence-${item.id}`,
-      type: "Intelligence" as const,
-      title: item.insight_title || text("Saved health intelligence", "ذكاء صحي محفوظ"),
+      type: "Analysis" as const,
+      title: item.insight_title || text("Saved health analysis", "ذكاء صحي محفوظ"),
       subtitle:
         item.ai_status === "Generated"
-          ? text("Generated intelligence result", "نتيجة ذكاء صحي مولدة")
+          ? text("Saved analysis result", "نتيجة ذكاء صحي مولدة")
           : text("Saved intelligence result", "نتيجة ذكاء صحي محفوظة"),
       score: null,
       date: item.created_at || new Date().toISOString(),
-      href: "/intelligence",
+      href: "/reports",
     })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
@@ -474,7 +474,7 @@ export default function HistoryPage() {
     { value: "Assessment", label: text("Assessment", "التقييمات") },
     { value: "Check-In", label: "Check-In" },
     { value: "Report", label: text("Report", "التقارير") },
-    { value: "Intelligence", label: text("Intelligence", "الذكاء الصحي") },
+    { value: "Analysis", label: text("Analysis", "التحليل الصحي") },
   ];
 
   const filteredTimeline =
@@ -517,11 +517,11 @@ export default function HistoryPage() {
       ? {
           label: text("Generate saved intelligence", "ولّد ذكاء صحي محفوظ"),
           description: text(
-            "Open Intelligence Center to generate and save report-based health intelligence.",
-            "افتح مركز الذكاء لتوليد وحفظ ذكاء صحي مبني على التقارير."
+            "Open Report Analysis to generate and save report-based health analysis.",
+            "افتح تحليل التقارير لتوليد وحفظ ذكاء صحي مبني على التقارير."
           ),
-          href: "/intelligence",
-          buttonText: text("Open Intelligence", "افتح مركز الذكاء"),
+          href: "/reports",
+          buttonText: text("Review Analysis", "افتح تحليل التقارير"),
         }
       : {
           label: text("Continue your follow-up plan", "تابع خطة المتابعة"),
@@ -555,7 +555,7 @@ export default function HistoryPage() {
             <p className="ohLead">
               {text(
                 "OrganHeal is connecting assessments, check-ins, reports, and saved intelligence into one timeline.",
-                "يقوم OrganHeal بربط التقييمات، Check-Ins، التقارير، والذكاء الصحي المحفوظ في مسار واحد."
+                "يقوم OrganHeal بربط التقييمات، Check-Ins، التقارير، والتحليل الصحي المحفوظ في مسار واحد."
               )}
             </p>
           </section>
@@ -589,7 +589,7 @@ export default function HistoryPage() {
                   <p className="ohLead">
                     {text(
                       "Review your assessments, wellness check-ins, uploaded reports, saved intelligence, trends, and the next best action in one connected view.",
-                      "راجع التقييمات، Check-Ins، التقارير المرفوعة، الذكاء الصحي المحفوظ، الاتجاهات، والخطوة التالية الأفضل في عرض واحد مترابط."
+                      "راجع التقييمات، Check-Ins، التقارير المرفوعة، التحليل الصحي المحفوظ، الاتجاهات، والخطوة التالية الأفضل في عرض واحد مترابط."
                     )}
                   </p>
 
@@ -704,7 +704,7 @@ export default function HistoryPage() {
 
               <article className="ohMetricCard">
                 <span className="ohMetricLabel">
-                  {text("Saved Intelligence", "الذكاء الصحي المحفوظ")}
+                  {text("Saved Analysis", "التحليل الصحي المحفوظ")}
                 </span>
                 <span className="ohMetricValue">{savedIntelligence.length}</span>
                 <span className="ohMetricHint">
@@ -941,7 +941,7 @@ export default function HistoryPage() {
                   <p className="ohCardText">
                     {text(
                       "Your history connects assessments, wellness check-ins, reports, saved intelligence, and your follow-up plan.",
-                      "يربط تاريخك الصحي بين التقييمات، Check-Ins، التقارير، الذكاء الصحي المحفوظ، وخطة المتابعة."
+                      "يربط تاريخك الصحي بين التقييمات، Check-Ins، التقارير، التحليل الصحي المحفوظ، وخطة المتابعة."
                     )}
                   </p>
                 </div>
@@ -964,8 +964,8 @@ export default function HistoryPage() {
                   {text("Reports", "التقارير")}
                 </Link>
 
-                <Link href="/intelligence" className="secondaryBtn">
-                  {text("Intelligence", "مركز الذكاء")}
+                <Link href="/reports" className="secondaryBtn">
+                  {text("Analysis", "تحليل التقارير")}
                 </Link>
 
                 <Link href="/health-plan" className="primaryBtn">
@@ -979,3 +979,5 @@ export default function HistoryPage() {
     </main>
   );
 }
+
+

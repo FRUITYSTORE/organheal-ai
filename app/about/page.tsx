@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -148,12 +148,12 @@ export default function AboutPage() {
     },
     {
       step: "03",
-      title: text("Generate intelligence", "ولّد الذكاء الصحي"),
+      title: text("Generate intelligence", "ولّد التحليل الصحي"),
       description: text(
         "Turn health data into summaries, signals, opportunities, and next steps.",
         "حوّل البيانات الصحية إلى ملخصات، إشارات، فرص، وخطوات تالية."
       ),
-      href: "/intelligence",
+      href: "/reports",
     },
     {
       step: "04",
@@ -178,14 +178,14 @@ export default function AboutPage() {
 
               <h1 className="ohTitle">
                 {text(
-                  "Personal Health Intelligence for clearer understanding.",
+                  "Personal Health Analysis for clearer understanding.",
                   "ذكاء صحي شخصي يساعدك على فهم صحتك بوضوح."
                 )}
               </h1>
 
               <p className="ohLead">
                 {text(
-                  "OrganHeal AI is an educational and organizational health intelligence platform that helps users understand health assessments, medical reports, lab results, and follow-up patterns in a clear and structured way.",
+                  "OrganHeal AI is an educational and organizational health analysis platform that helps users understand health assessments, medical reports, lab results, and follow-up patterns in a clear and structured way.",
                   "OrganHeal AI منصة صحية تعليمية وتنظيمية تساعد المستخدمين على فهم التقييمات الصحية، التقارير الطبية، نتائج المختبر، وأنماط المتابعة بطريقة واضحة ومنظمة."
                 )}
               </p>
@@ -274,7 +274,7 @@ export default function AboutPage() {
         <section className="ohGrid cols2">
           <article className="ohCard">
             <p className="ohMetricLabel">
-              {text("Personal Health Intelligence Vision", "رؤية الذكاء الصحي الشخصي")}
+              {text("Personal Health Analysis Vision", "رؤية التحليل الصحي الشخصي")}
             </p>
 
             <h2 className="ohCardTitle">
@@ -286,7 +286,7 @@ export default function AboutPage() {
 
             <p className="ohCardText">
               {text(
-                "OrganHeal is being built as a Personal Health Intelligence Operating System: a place where assessments, reports, check-ins, history, doctor briefs, and follow-up plans work together.",
+                "OrganHeal is being built as a Personal Health Analysis Operating System: a place where assessments, reports, check-ins, history, doctor briefs, and follow-up plans work together.",
                 "يتم بناء OrganHeal كنظام تشغيل للذكاء الصحي الشخصي: مكان تعمل فيه التقييمات، التقارير، التحديثات الصحية، التاريخ، ملخصات الطبيب، وخطط المتابعة معًا."
               )}
             </p>
@@ -318,7 +318,7 @@ export default function AboutPage() {
             <p className="ohCardText">
               {text(
                 "The platform is organized around organ health, reports, intelligence, and follow-up.",
-                "المنصة منظمة حول صحة الأعضاء، التقارير، الذكاء الصحي، والمتابعة."
+                "المنصة منظمة حول صحة الأعضاء، التقارير، التحليل الصحي، والمتابعة."
               )}
             </p>
 
@@ -427,7 +427,7 @@ export default function AboutPage() {
             </strong>
             <br />
             {text(
-              "OrganHeal AI provides educational and organizational health intelligence only. It does not diagnose, treat, prescribe, provide emergency advice, or replace licensed medical care.",
+              "OrganHeal AI provides educational and organizational health analysis only. It does not diagnose, treat, prescribe, provide emergency advice, or replace licensed medical care.",
               "OrganHeal AI يقدم ذكاء صحي تعليمي وتنظيمي فقط. لا يشخص ولا يعالج ولا يصف علاجًا ولا يقدم نصائح طارئة ولا يستبدل الرعاية الطبية المرخصة."
             )}
           </div>
@@ -449,8 +449,8 @@ export default function AboutPage() {
 
               <p className="ohCardText">
                 {text(
-                  "The best way to use OrganHeal is to begin with a health assessment, upload medical reports or lab results, then open the Health Intelligence Center for a structured summary.",
-                  "أفضل طريقة لاستخدام OrganHeal هي البدء بتقييم صحي، ثم رفع التقارير الطبية أو نتائج المختبر، وبعدها فتح مركز الذكاء الصحي للحصول على ملخص منظم."
+                  "The best way to use OrganHeal is to begin with a health assessment, upload medical reports or lab results, then open the Report Analysis Center for a structured summary.",
+                  "أفضل طريقة لاستخدام OrganHeal هي البدء بتقييم صحي، ثم رفع التقارير الطبية أو نتائج المختبر، وبعدها فتح مركز تحليل التقارير للحصول على ملخص منظم."
                 )}
               </p>
             </div>
@@ -478,3 +478,5 @@ export default function AboutPage() {
     </main>
   );
 }
+
+

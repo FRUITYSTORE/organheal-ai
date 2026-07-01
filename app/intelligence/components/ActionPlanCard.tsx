@@ -1,4 +1,4 @@
-﻿type ActionPlanCardProps = {
+type ActionPlanCardProps = {
   actionPlan: {
     thisWeek: string[];
     thisMonth: string[];
@@ -55,7 +55,7 @@ export default function ActionPlanCard({ actionPlan }: ActionPlanCardProps) {
 
       <p className="ohCardText">
         This plan organizes your next steps into short-term, monthly, and 90-day
-        actions based on the available health intelligence.
+        actions based on the available health analysis.
       </p>
 
       <div className="ohMetricGrid" style={{ marginTop: "18px" }}>
@@ -80,3 +80,5 @@ export default function ActionPlanCard({ actionPlan }: ActionPlanCardProps) {
     </section>
   );
 }
+
+

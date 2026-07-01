@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { type ReactNode, useEffect, useState } from "react";
 
@@ -155,7 +155,7 @@ export default function MedicalReportCard({
           <p className="ohCardText" style={{ marginTop: "8px" }}>
             {text(
               "Uploaded report ready for extraction review and intelligence generation.",
-              "تقرير مرفوع جاهز لمراجعة الاستخراج وتوليد الذكاء الصحي."
+              "تقرير مرفوع جاهز لمراجعة الاستخراج وتوليد التحليل الصحي."
             )}
           </p>
         </div>
@@ -225,3 +225,5 @@ export default function MedicalReportCard({
     </article>
   );
 }
+
+

@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import PrivacyContent from "./PrivacyContent";
 
 export const metadata: Metadata = {
@@ -10,3 +10,5 @@ export const metadata: Metadata = {
 export default function PrivacyPage() {
   return <PrivacyContent />;
 }
+
+

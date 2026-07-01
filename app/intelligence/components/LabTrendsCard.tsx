@@ -266,3 +266,4 @@ export default function LabTrendsCard({ labTrends }: LabTrendsCardProps) {
     </section>
   );
 }
+

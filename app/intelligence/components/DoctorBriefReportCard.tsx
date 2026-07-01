@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { type ReactNode, useRef } from "react";
 import { text, useArabicUi } from "./ArabicUiHelper";
@@ -746,3 +746,5 @@ export default function DoctorBriefReportCard({
     </>
   );
 }
+
+

@@ -15,7 +15,7 @@ export default function DashboardEmptyState({
 }: DashboardEmptyStateProps) {
   return (
     <div className="emptyStateCard">
-      <div className="emptyStateIcon">＋</div>
+      <div className="emptyStateIcon">ï¼‹</div>
 
       <h3>{title}</h3>
 
@@ -27,3 +27,4 @@ export default function DashboardEmptyState({
     </div>
   );
 }
+

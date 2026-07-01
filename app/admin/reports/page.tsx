@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -274,7 +274,7 @@ export default function AdminReportsPage() {
 
           <article className="ohMetricCard">
             <span className="ohMetricLabel">
-              {text("AI Ready", "جاهز للذكاء الاصطناعي")}
+              {text("AI Ready", "جاهز للتحليل الاصطناعي")}
             </span>
             <span className="ohMetricValue">{metrics.aiReady}</span>
             <span className="ohMetricHint">
@@ -427,3 +427,5 @@ export default function AdminReportsPage() {
     </main>
   );
 }
+
+

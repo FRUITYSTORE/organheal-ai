@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { buildActionPlan } from "../../lib/actionPlanEngine";
@@ -387,7 +387,7 @@ export default function IntelligencePage() {
     if (assessmentData.length === 0 && mergedInsights.length === 0) {
       setMessage(
         currentIsArabic
-          ? "أكمل أول تقييم عضو أو ارفع تقريرًا طبيًا لتفعيل الذكاء الصحي."
+          ? "أكمل أول تقييم عضو أو ارفع تقريرًا طبيًا لتفعيل التحليل الصحي."
           : "Complete your first organ assessment or upload a medical report to unlock intelligence."
       );
     }
@@ -682,7 +682,7 @@ export default function IntelligencePage() {
       doctor_brief: `Detected lab markers:
 ${markerSummary.keyFindings}
 
-Unified Health Intelligence:
+Unified Health Analysis:
 ${unifiedHealth.healthForecast}
 
 Priority Goal:
@@ -721,7 +721,7 @@ Clinical note: This is an educational interpretation and should be reviewed by a
 
     if (saveGeneratedResultError) {
       alert(
-        "Generated intelligence was created, but could not be saved: " +
+        "Saved analysis was created, but could not be saved: " +
           saveGeneratedResultError.message
       );
       return;
@@ -790,7 +790,7 @@ Clinical note: This is an educational interpretation and should be reviewed by a
       : hasOpenGeneratedResult
       ? {
           label: text("RESULT READY", "النتيجة جاهزة"),
-          title: text("Review your generated intelligence", "راجع الذكاء المولّد"),
+          title: text("Review your saved analysis", "راجع الذكاء المولّد"),
           description: text(
             "Your patient-friendly report and doctor-ready brief are available below. The next best step is to continue to your Health Plan.",
             "ملخص المريض والملخص الجاهز للطبيب متاحان أدناه. الخطوة التالية هي المتابعة إلى خطة الصحة."
@@ -803,7 +803,7 @@ Clinical note: This is an educational interpretation and should be reviewed by a
           label: text("SAVED RESULTS", "نتائج محفوظة"),
           title: text("Open a saved intelligence result", "افتح نتيجة ذكاء محفوظة"),
           description: text(
-            "Some reports already have generated intelligence. Open a saved result or generate intelligence for another report.",
+            "Some reports already have saved analysis. Open a saved result or generate intelligence for another report.",
             "بعض التقارير لديها ذكاء مولّد مسبقًا. افتح نتيجة محفوظة أو ولّد ذكاء لتقرير آخر."
           ),
           href: "/reports",
@@ -1001,11 +1001,11 @@ Clinical note: This is an educational interpretation and should be reviewed by a
           <div className="ohHeroGrid">
             <div>
               <p className="ohEyebrow">
-                {text("OrganHeal Intelligence Center", "مركز الذكاء في OrganHeal")}
+                {text("OrganHeal Report Analysis", "تحليل التقارير في OrganHeal")}
               </p>
 
               <h1 className="ohTitle">
-                {text("Health Intelligence Center", "مركز الذكاء الصحي")}
+                {text("Report Analysis Center", "مركز تحليل التقارير")}
               </h1>
 
               <p className="ohLead">
@@ -1093,7 +1093,7 @@ Clinical note: This is an educational interpretation and should be reviewed by a
             </span>
             <span className="ohMetricValue">{completedExtractionCount}</span>
             <span className="ohMetricHint">
-              {text("ready for intelligence", "جاهز للذكاء")}
+              {text("ready for intelligence", "جاهز للتحليل")}
             </span>
           </article>
         </section>
@@ -1106,15 +1106,15 @@ Clinical note: This is an educational interpretation and should be reviewed by a
 
             <h2 className="ohCardTitle">
               {text(
-                "Preparing your health intelligence...",
-                "جاري تحضير الذكاء الصحي..."
+                "Preparing your health analysis...",
+                "جاري تحضير التحليل الصحي..."
               )}
             </h2>
 
             <p className="ohCardText">
               {text(
                 "OrganHeal is loading your assessments, check-ins, reports, and saved intelligence results.",
-                "يقوم OrganHeal بتحميل التقييمات، Check-Ins، التقارير، ونتائج الذكاء المحفوظة."
+                "يقوم OrganHeal بتحميل التقييمات، Check-Ins، التقارير، ونتائج التحليل المحفوظة."
               )}
             </p>
           </section>
@@ -1152,7 +1152,7 @@ Clinical note: This is an educational interpretation and should be reviewed by a
                 <p className="ohCardText">
                   {focusedReportIsGenerated
                     ? text(
-                        "This report already has generated intelligence. Review the result below or continue to your health plan.",
+                        "This report already has saved analysis. Review the result below or continue to your health plan.",
                         "هذا التقرير لديه تحليل مولد. راجع النتيجة بالأسفل أو تابع إلى خطة الصحة."
                       )
                     : text(
@@ -1483,7 +1483,7 @@ Clinical note: This is an educational interpretation and should be reviewed by a
                                   <p className="ohCardText">
                                     {text(
                                       "Your report intelligence is now available. You can return to your reports library, continue your follow-up plan, or go back to your dashboard overview.",
-                                      "أصبح ذكاء التقرير متاحًا الآن. يمكنك العودة إلى مكتبة التقارير، متابعة خطة الصحة، أو الرجوع إلى لوحة التحكم."
+                                      "أصبح تحليل التقرير متاحًا الآن. يمكنك العودة إلى مكتبة التقارير، متابعة خطة الصحة، أو الرجوع إلى لوحة التحكم."
                                     )}
                                   </p>
                                 </div>
@@ -1560,7 +1560,7 @@ Clinical note: This is an educational interpretation and should be reviewed by a
             <br />
             {text(
               "Health intelligence is an educational interpretation of your assessments, check-ins, and uploaded reports. It does not replace diagnosis, treatment, emergency care, or a licensed clinician.",
-              "الذكاء الصحي هو تفسير تعليمي للتقييمات، Check-Ins، والتقارير المرفوعة. لا يستبدل التشخيص أو العلاج أو الرعاية الطارئة أو الطبيب المختص."
+              "التحليل الصحي هو تفسير تعليمي للتقييمات، Check-Ins، والتقارير المرفوعة. لا يستبدل التشخيص أو العلاج أو الرعاية الطارئة أو الطبيب المختص."
             )}
           </div>
         </section>
@@ -1610,6 +1610,8 @@ Clinical note: This is an educational interpretation and should be reviewed by a
     </main>
   );
 }
+
+
 
 
 

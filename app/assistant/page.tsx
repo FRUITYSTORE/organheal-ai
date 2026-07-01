@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -339,8 +339,8 @@ export default function AssistantPage() {
                   {text("Dashboard", "لوحة التحكم")}
                 </Link>
 
-                <Link href="/intelligence" className="secondaryBtn">
-                  {text("Intelligence Center", "مركز الذكاء")}
+                <Link href="/reports" className="secondaryBtn">
+                  {text("Report Analysis", "تحليل التقارير")}
                 </Link>
 
                 <Link href="/reports" className="secondaryBtn">
@@ -548,7 +548,7 @@ export default function AssistantPage() {
             </strong>
             <br />
             {text(
-              "OrganHeal AI provides educational and organizational health intelligence only and does not replace licensed medical care.",
+              "OrganHeal AI provides educational and organizational health analysis only and does not replace licensed medical care.",
               "OrganHeal AI يقدم ذكاء صحي تعليمي وتنظيمي فقط ولا يستبدل الرعاية الطبية المرخصة."
             )}
           </div>
@@ -557,3 +557,5 @@ export default function AssistantPage() {
     </main>
   );
 }
+
+

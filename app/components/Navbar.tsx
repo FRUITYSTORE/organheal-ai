@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
@@ -76,7 +76,7 @@ export default function Navbar() {
     about: isArabic ? "عن المنصة" : "About",
     dashboard: isArabic ? "لوحة التحكم" : "Dashboard",
     reports: isArabic ? "التقارير" : "Reports",
-    intelligence: isArabic ? "مركز الذكاء" : "Intelligence",
+    intelligence: isArabic ? "تحليل التقارير" : "Analysis",
     healthPlan: isArabic ? "الخطة الصحية" : "Health Plan",
     history: isArabic ? "التاريخ الصحي" : "History",
     doctorPortal: isArabic ? "بوابة الطبيب" : "Doctor Portal",
@@ -244,7 +244,7 @@ export default function Navbar() {
           <>
             <Link href="/dashboard">{labels.dashboard}</Link>
             <Link href="/reports">{labels.reports}</Link>
-            <Link href="/intelligence">{labels.intelligence}</Link>
+            <Link href="/reports">{labels.intelligence}</Link>
             <Link href="/health-plan">{labels.healthPlan}</Link>
             <Link href="/library">{labels.education}</Link>
 
@@ -308,4 +308,6 @@ export default function Navbar() {
     </nav>
   );
 }
+
+
 

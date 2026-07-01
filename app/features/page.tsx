@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -35,8 +35,8 @@ const publicFeatures: PublicFeature[] = [
   },
   {
     code: "CENTER",
-    title: "Health Intelligence Center",
-    titleAr: "مركز الذكاء الصحي",
+    title: "Report Analysis Center",
+    titleAr: "مركز تحليل التقارير",
     shortValue:
       "Connect assessments, reports, check-ins, and health signals into one organized intelligence view.",
     shortValueAr:
@@ -44,7 +44,7 @@ const publicFeatures: PublicFeature[] = [
     preview:
       "Review health direction, priority area, saved intelligence, follow-up context, and confidence level.",
     previewAr:
-      "راجع الاتجاه الصحي، منطقة الأولوية، الذكاء المحفوظ، سياق المتابعة، ومستوى الثقة.",
+      "راجع الاتجاه الصحي، منطقة الأولوية، التحليل المحفوظ، سياق المتابعة، ومستوى الثقة.",
     access: "private-workspace",
   },
   {
@@ -86,7 +86,7 @@ const publicFeatures: PublicFeature[] = [
     preview:
       "Track assessments, reports, saved intelligence, check-ins, and the current health journey status.",
     previewAr:
-      "تابع التقييمات، التقارير، الذكاء المحفوظ، التحديثات، وحالة الرحلة الصحية الحالية.",
+      "تابع التقييمات، التقارير، التحليل المحفوظ، التحديثات، وحالة الرحلة الصحية الحالية.",
     access: "account-feature",
   },
   {
@@ -415,7 +415,7 @@ export default function FeaturesPage() {
 
               <h1 className="ohTitle">
                 {text(
-                  "A health intelligence workspace built around your health journey.",
+                  "A health analysis workspace built around your health journey.",
                   "مساحة ذكاء صحي مبنية حول رحلتك الصحية."
                 )}
               </h1>
@@ -515,7 +515,7 @@ export default function FeaturesPage() {
 
               <h2 className="ohCardTitle">
                 {text(
-                  "Designed as one connected health intelligence experience.",
+                  "Designed as one connected health analysis experience.",
                   "مصممة كتجربة ذكاء صحي واحدة ومترابطة."
                 )}
               </h2>
@@ -575,7 +575,7 @@ export default function FeaturesPage() {
 
               <p className="ohCardText">
                 {text(
-                  "Use OrganHeal to connect learning, reports, assessments, summaries, and follow-up direction inside one health intelligence workspace.",
+                  "Use OrganHeal to connect learning, reports, assessments, summaries, and follow-up direction inside one health analysis workspace.",
                   "استخدم OrganHeal لربط التعلّم والتقارير والتقييمات والملخصات واتجاه المتابعة داخل مساحة ذكاء صحي واحدة."
                 )}
               </p>
@@ -596,3 +596,5 @@ export default function FeaturesPage() {
     </main>
   );
 }
+
+

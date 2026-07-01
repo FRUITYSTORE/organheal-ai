@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { type FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
@@ -466,8 +466,8 @@ export default function LoginPage() {
 
               <h1 className="ohTitle">
                 {text(
-                  "Return to your health intelligence journey.",
-                  "ارجع إلى رحلتك مع الذكاء الصحي."
+                  "Return to your health analysis journey.",
+                  "ارجع إلى رحلتك مع التحليل الصحي."
                 )}
               </h1>
 
@@ -720,7 +720,7 @@ export default function LoginPage() {
                 </strong>
                 <br />
                 {text(
-                  "OrganHeal provides educational and organizational health intelligence only and does not replace licensed medical care.",
+                  "OrganHeal provides educational and organizational health analysis only and does not replace licensed medical care.",
                   "OrganHeal يقدم ذكاء صحي تعليمي وتنظيمي فقط ولا يستبدل الرعاية الطبية المرخصة."
                 )}
               </div>
@@ -745,4 +745,6 @@ export default function LoginPage() {
     </main>
   );
 }
+
+
 

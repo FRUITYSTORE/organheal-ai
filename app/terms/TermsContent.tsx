@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -51,7 +51,7 @@ export default function TermsContent() {
       title: text("1. Educational Purpose", "1. الغرض التعليمي"),
       items: [
         text(
-          "OrganHeal AI is designed for educational health intelligence, personal organization, report explanation, and preparation for healthcare discussions.",
+          "OrganHeal AI is designed for educational health analysis, personal organization, report explanation, and preparation for healthcare discussions.",
           "تم تصميم OrganHeal AI للذكاء الصحي التعليمي، التنظيم الشخصي، شرح التقارير، والتحضير للنقاشات الصحية."
         ),
         text(
@@ -221,8 +221,8 @@ export default function TermsContent() {
 
               <p className="ohLead">
                 {text(
-                  "These Terms of Use explain the rules for using OrganHeal AI and its health intelligence features, including educational use, user responsibilities, and medical limitations.",
-                  "توضح شروط الاستخدام هذه القواعد الأساسية لاستخدام OrganHeal AI وميزات الذكاء الصحي، بما يشمل الاستخدام التعليمي، مسؤوليات المستخدم، والحدود الطبية."
+                  "These Terms of Use explain the rules for using OrganHeal AI and its health analysis features, including educational use, user responsibilities, and medical limitations.",
+                  "توضح شروط الاستخدام هذه القواعد الأساسية لاستخدام OrganHeal AI وميزات التحليل الصحي، بما يشمل الاستخدام التعليمي، مسؤوليات المستخدم، والحدود الطبية."
                 )}
               </p>
 
@@ -347,8 +347,8 @@ export default function TermsContent() {
 
             <p className="ohCardText">
               {text(
-                "The Medical Disclaimer explains the limits of educational health intelligence and the need for licensed professional review.",
-                "يوضح إخلاء المسؤولية الطبية حدود الذكاء الصحي التعليمي والحاجة إلى مراجعة مختص مرخص."
+                "The Medical Disclaimer explains the limits of educational health analysis and the need for licensed professional review.",
+                "يوضح إخلاء المسؤولية الطبية حدود التحليل الصحي التعليمي والحاجة إلى مراجعة مختص مرخص."
               )}
             </p>
 
@@ -399,3 +399,5 @@ export default function TermsContent() {
     </main>
   );
 }
+
+

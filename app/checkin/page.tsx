@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import PageBackActions from "../components/PageBackActions";
 import { type CSSProperties, useEffect, useMemo, useState } from "react";
@@ -946,7 +946,7 @@ export default function CheckInPage() {
                   <p className="ohCardText">
                     {text(
                       "After saving your daily check-in, compare your trend, open the health plan, or connect your pattern with reports and intelligence.",
-                      "بعد حفظ Check-In اليومي، قارن الاتجاه، افتح الخطة الصحية، أو اربط نمطك بالتقارير والذكاء الصحي."
+                      "بعد حفظ Check-In اليومي، قارن الاتجاه، افتح الخطة الصحية، أو اربط نمطك بالتقارير والتحليل الصحي."
                     )}
                   </p>
                 </div>
@@ -965,8 +965,8 @@ export default function CheckInPage() {
                   {text("Profile", "الملف الشخصي")}
                 </Link>
 
-                <Link href="/intelligence" className="secondaryBtn">
-                  {text("Intelligence", "مركز الذكاء")}
+                <Link href="/reports" className="secondaryBtn">
+                  {text("Analysis", "تحليل التقارير")}
                 </Link>
               </div>
             </section>
@@ -976,3 +976,5 @@ export default function CheckInPage() {
     </main>
   );
 }
+
+

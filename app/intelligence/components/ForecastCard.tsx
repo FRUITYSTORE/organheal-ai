@@ -215,7 +215,7 @@ export default function ForecastCard({ forecast }: ForecastCardProps) {
 
                     {contextParts.length > 0 && (
                       <p className="mt-1 text-sm text-slate-500">
-                        {contextParts.join(" • ")}
+                        {contextParts.join(" â€¢ ")}
                       </p>
                     )}
                   </div>
@@ -290,3 +290,4 @@ export default function ForecastCard({ forecast }: ForecastCardProps) {
     </section>
   );
 }
+

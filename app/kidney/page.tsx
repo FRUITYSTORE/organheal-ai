@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import PageBackActions from "../components/PageBackActions";
 import { type CSSProperties, useEffect, useState } from "react";
@@ -607,8 +607,8 @@ export default function KidneyPage() {
 
               <p className="ohCardText">
                 {text(
-                  "After saving your kidney assessment, continue to your timeline, upload reports, or open Health Intelligence for a broader view.",
-                  "بعد حفظ تقييم الكلى، تابع إلى مسار التقدم، ارفع التقارير، أو افتح مركز الذكاء الصحي للحصول على رؤية أوسع."
+                  "After saving your kidney assessment, continue to your timeline, upload reports, or open Health Analysis for a broader view.",
+                  "بعد حفظ تقييم الكلى، تابع إلى مسار التقدم، ارفع التقارير، أو افتح مركز تحليل التقارير للحصول على رؤية أوسع."
                 )}
               </p>
             </div>
@@ -627,8 +627,8 @@ export default function KidneyPage() {
               {text("Upload Report", "رفع تقرير")}
             </Link>
 
-            <Link href="/intelligence" className="secondaryBtn">
-              {text("Open Intelligence", "فتح مركز الذكاء")}
+            <Link href="/reports" className="secondaryBtn">
+              {text("Review Analysis", "فتح تحليل التقارير")}
             </Link>
           </div>
         </section>
@@ -636,3 +636,5 @@ export default function KidneyPage() {
     </main>
   );
 }
+
+

@@ -7,7 +7,8 @@ export default function PageBackActions() {
 
   return (
     <button className="pageBackInlineBtn" onClick={() => router.back()}>
-      ← Back
+      â† Back
     </button>
   );
 }
+

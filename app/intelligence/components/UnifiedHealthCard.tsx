@@ -186,7 +186,7 @@ export default function UnifiedHealthCard({
           </p>
 
           <h2 className="mt-1 text-2xl font-bold text-slate-900">
-            Health Intelligence Summary
+            Health Analysis Summary
           </h2>
 
           <p className="mt-2 text-sm leading-6 text-slate-600">
@@ -282,7 +282,7 @@ export default function UnifiedHealthCard({
 
                     {contextParts.length > 0 && (
                       <p className="mt-1 text-sm text-slate-500">
-                        {contextParts.join(" • ")}
+                        {contextParts.join(" â€¢ ")}
                       </p>
                     )}
                   </div>
@@ -339,7 +339,7 @@ export default function UnifiedHealthCard({
       ) : (
         <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-5">
           <p className="text-sm text-slate-600">
-            Unified health intelligence will appear here after OrganHeal
+            Unified health analysis will appear here after OrganHeal
             combines report findings, lab trends, risks, and health strategy
             into one summary.
           </p>
@@ -348,3 +348,4 @@ export default function UnifiedHealthCard({
     </section>
   );
 }
+

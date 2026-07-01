@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -656,7 +656,7 @@ export default function Home() {
           <div className="ohHeroGrid">
             <div>
               <p className="ohEyebrow">
-                {text("Personal Health Intelligence Platform", "منصة ذكاء صحي شخصي")}
+                {text("Personal Health Analysis Platform", "منصة ذكاء صحي شخصي")}
               </p>
 
               <h1 className="ohTitle">
@@ -982,3 +982,5 @@ export default function Home() {
     </main>
   );
 }
+
+

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import PageBackActions from "../components/PageBackActions";
@@ -232,7 +232,7 @@ export default function AssessmentPage() {
             </span>
             <span className="ohMetricValue">AI</span>
             <span className="ohMetricHint">
-              {text("Connect assessments to intelligence", "ربط التقييمات بالذكاء الصحي")}
+              {text("Connect assessments to intelligence", "ربط التقييمات بالتحليل الصحي")}
             </span>
           </article>
         </section>
@@ -279,7 +279,7 @@ export default function AssessmentPage() {
               </h2>
               <p className="ohCardText">
                 {text(
-                  "Each module is short, clear, and designed to create a useful starting point for your personal health intelligence.",
+                  "Each module is short, clear, and designed to create a useful starting point for your personal health analysis.",
                   "كل وحدة قصيرة وواضحة ومصممة لإنشاء نقطة بداية مفيدة لذكائك الصحي الشخصي."
                 )}
               </p>
@@ -372,8 +372,8 @@ export default function AssessmentPage() {
               </h2>
               <p className="ohCardText">
                 {text(
-                  "After saving assessments, open your timeline, upload reports, and use Health Intelligence to connect the results into a clear follow-up direction.",
-                  "بعد حفظ التقييمات، افتح مسار التقدم، ارفع التقارير، واستخدم مركز الذكاء الصحي لربط النتائج باتجاه متابعة واضح."
+                  "After saving assessments, open your timeline, upload reports, and use Health Analysis to connect the results into a clear follow-up direction.",
+                  "بعد حفظ التقييمات، افتح مسار التقدم، ارفع التقارير، واستخدم مركز تحليل التقارير لربط النتائج باتجاه متابعة واضح."
                 )}
               </p>
             </div>
@@ -388,8 +388,8 @@ export default function AssessmentPage() {
               {text("Upload Medical Report", "رفع تقرير طبي")}
             </Link>
 
-            <Link href="/intelligence" className="secondaryBtn">
-              {text("Open Intelligence", "فتح مركز الذكاء")}
+            <Link href="/reports" className="secondaryBtn">
+              {text("Review Analysis", "فتح تحليل التقارير")}
             </Link>
 
             <Link href="/health-plan" className="secondaryBtn">
@@ -401,3 +401,5 @@ export default function AssessmentPage() {
     </main>
   );
 }
+
+

@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
 
@@ -10,16 +10,16 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://www.organheal.com"),
 
   title: {
-    default: "OrganHeal AI | AI-Powered Health Intelligence",
+    default: "OrganHeal AI | AI-Powered Health Analysis",
     template: "%s | OrganHeal AI",
   },
 
   description:
-    "OrganHeal AI helps users understand organ health, interpret lab results, track wellness patterns, and generate personalized health intelligence reports.",
+    "OrganHeal AI helps users understand organ health, interpret lab results, track wellness patterns, and generate personalized health analysis reports.",
 
   keywords: [
     "OrganHeal AI",
-    "health intelligence",
+    "health analysis",
     "organ health",
     "AI health platform",
     "lab result interpretation",
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
   },
 
   openGraph: {
-    title: "OrganHeal AI | AI-Powered Health Intelligence",
+    title: "OrganHeal AI | AI-Powered Health Analysis",
     description:
       "Understand organ health, track wellness patterns, interpret labs, and generate personalized health reports with OrganHeal AI.",
     url: "https://www.organheal.com",
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "OrganHeal AI health intelligence platform preview",
+        alt: "OrganHeal AI health analysis platform preview",
       },
     ],
     locale: "en_US",
@@ -57,7 +57,7 @@ export const metadata: Metadata = {
 
   twitter: {
     card: "summary_large_image",
-    title: "OrganHeal AI | AI-Powered Health Intelligence",
+    title: "OrganHeal AI | AI-Powered Health Analysis",
     description:
       "Understand organ health, track wellness patterns, interpret labs, and generate personalized health reports with OrganHeal AI.",
     images: ["/og-image.png"],
@@ -84,3 +84,5 @@ export default function RootLayout({
     </html>
   );
 }
+
+

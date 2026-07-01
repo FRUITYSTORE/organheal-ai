@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { type ReactNode, useEffect, useState } from "react";
 import Link from "next/link";
@@ -82,7 +82,7 @@ export default function MedicalReportList({
       <p className="ohCardText">
         {text(
           "View your uploaded reports, open saved intelligence results, and download patient-friendly or doctor-ready PDF summaries.",
-          "اعرض التقارير التي قمت برفعها، وافتح نتائج الذكاء المحفوظة، وحمّل ملخصات مبسطة للمريض أو جاهزة للطبيب."
+          "اعرض التقارير التي قمت برفعها، وافتح نتائج التحليل المحفوظة، وحمّل ملخصات مبسطة للمريض أو جاهزة للطبيب."
         )}
       </p>
 
@@ -99,8 +99,8 @@ export default function MedicalReportList({
 
           <p>
             {text(
-              "Upload a medical report first so OrganHeal can extract information and generate health intelligence.",
-              "ارفع تقريرًا طبيًا أولًا حتى يتمكن OrganHeal من استخراج المعلومات وتوليد الذكاء الصحي."
+              "Upload a medical report first so OrganHeal can extract information and generate health analysis.",
+              "ارفع تقريرًا طبيًا أولًا حتى يتمكن OrganHeal من استخراج المعلومات وتوليد التحليل الصحي."
             )}
           </p>
 
@@ -120,3 +120,5 @@ export default function MedicalReportList({
     </section>
   );
 }
+
+

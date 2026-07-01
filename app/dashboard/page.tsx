@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -294,7 +294,7 @@ export default function DashboardPage() {
           ? "افتح مكتبة التقارير لتحويل تقاريرك إلى ملخص مفهوم للمريض وملخص جاهز للطبيب."
           : "Open the Reports Library to turn your reports into a patient-friendly summary and doctor-ready brief.",
         href: "/reports",
-        buttonText: isArabic ? "افتح مكتبة التقارير" : "Open Intelligence",
+        buttonText: isArabic ? "افتح مكتبة التقارير" : "Review Analysis",
       }
     : hasSavedIntelligence && !hasCheckIn
     ? {
@@ -416,7 +416,7 @@ export default function DashboardPage() {
       href: "/checkin",
     },
     {
-      title: isArabic ? "مكتبة التقارير" : "Intelligence",
+      title: isArabic ? "مكتبة التقارير" : "Analysis",
       text: isArabic ? "راجع ملخص المريض وملخص الطبيب." : "Review patient and doctor-ready summaries.",
       href: "/reports",
     },
@@ -1153,8 +1153,8 @@ export default function DashboardPage() {
                       : `Current priority area: ${currentPriority}.`
                     : hasReports
                     ? isArabic
-                      ? "لديك تقارير محفوظة. الخطوة التالية هي توليد ذكاء التقرير أو إضافة تقييم صحي."
-                      : "You have saved reports. The next step is to generate report intelligence or add a health assessment."
+                      ? "لديك تقارير محفوظة. الخطوة التالية هي توليد تحليل التقرير أو إضافة تقييم صحي."
+                      : "You have saved reports. The next step is to analyze report or add a health assessment."
                     : isArabic
                     ? "ابدأ بتقييم صحي أو ارفع تقريرًا طبيًا حتى يبدأ OrganHeal ببناء الصورة الصحية."
                     : "Start with an assessment or upload a report so OrganHeal can build your health picture."}
@@ -1171,7 +1171,7 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="dashboardActionRow">
-                  <Link href="/intelligence" className="dashboardPrimaryAction">
+                  <Link href="/reports" className="dashboardPrimaryAction">
                     {isArabic ? "مكتبة التقارير" : "Reports Library"}
                   </Link>
 
@@ -1224,4 +1224,6 @@ export default function DashboardPage() {
     </main>
   );
 }
+
+
 

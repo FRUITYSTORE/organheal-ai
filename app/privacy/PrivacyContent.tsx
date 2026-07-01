@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -55,8 +55,8 @@ export default function PrivacyContent() {
           "معلومات الحساب مثل البريد الإلكتروني، اسم المستخدم المختار، تفاصيل الملف الشخصي، والمعلومات المرتبطة بتسجيل الدخول."
         ),
         text(
-          "Health-related inputs provided by the user, including organ assessments, daily check-ins, health history, uploaded medical reports, lab values, and generated health intelligence summaries.",
-          "المدخلات الصحية التي يقدمها المستخدم، بما في ذلك تقييمات الأعضاء، التحديثات اليومية، التاريخ الصحي، التقارير الطبية المرفوعة، قيم المختبر، وملخصات الذكاء الصحي المولدة."
+          "Health-related inputs provided by the user, including organ assessments, daily check-ins, health history, uploaded medical reports, lab values, and generated health analysis summaries.",
+          "المدخلات الصحية التي يقدمها المستخدم، بما في ذلك تقييمات الأعضاء، التحديثات اليومية، التاريخ الصحي، التقارير الطبية المرفوعة، قيم المختبر، وملخصات التحليل الصحي المولدة."
         ),
         text(
           "Technical information such as browser type, device information, session data, and basic usage activity to keep the service secure and functional.",
@@ -68,7 +68,7 @@ export default function PrivacyContent() {
       title: text("2. How Information Is Used", "2. كيفية استخدام المعلومات"),
       items: [
         text(
-          "Information is used to provide health assessments, organize uploaded reports, generate educational health intelligence, create patient-friendly summaries, support doctor-ready briefs, and improve the user experience.",
+          "Information is used to provide health assessments, organize uploaded reports, generate educational health analysis, create patient-friendly summaries, support doctor-ready briefs, and improve the user experience.",
           "تُستخدم المعلومات لتقديم التقييمات الصحية، تنظيم التقارير المرفوعة، توليد ذكاء صحي تعليمي، إنشاء ملخصات مفهومة للمستخدم، دعم ملخصات جاهزة للطبيب، وتحسين تجربة المستخدم."
         ),
         text(
@@ -365,3 +365,5 @@ export default function PrivacyContent() {
     </main>
   );
 }
+
+

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { type FormEvent, useEffect, useState } from "react";
@@ -369,8 +369,8 @@ export default function SignupPage() {
 
               <h1 className="ohTitle">
                 {text(
-                  "Start your personal health intelligence journey.",
-                  "ابدأ رحلتك مع الذكاء الصحي الشخصي."
+                  "Start your personal health analysis journey.",
+                  "ابدأ رحلتك مع التحليل الصحي الشخصي."
                 )}
               </h1>
 
@@ -670,7 +670,7 @@ export default function SignupPage() {
                 </strong>
                 <br />
                 {text(
-                  "OrganHeal provides educational and organizational health intelligence only and does not replace licensed medical care.",
+                  "OrganHeal provides educational and organizational health analysis only and does not replace licensed medical care.",
                   "OrganHeal يقدم ذكاء صحي تعليمي وتنظيمي فقط ولا يستبدل الرعاية الطبية المرخصة."
                 )}
               </div>
@@ -695,3 +695,5 @@ export default function SignupPage() {
     </main>
   );
 }
+
+

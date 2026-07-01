@@ -1,4 +1,4 @@
-﻿type HealthStoryCardProps = {
+type HealthStoryCardProps = {
   story: string;
 };
 
@@ -41,3 +41,5 @@ export default function HealthStoryCard({ story }: HealthStoryCardProps) {
     </section>
   );
 }
+
+

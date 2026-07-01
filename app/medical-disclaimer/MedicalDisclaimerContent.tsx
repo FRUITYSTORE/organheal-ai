@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -179,7 +179,7 @@ export default function MedicalDisclaimerContent() {
 
               <p className="ohLead">
                 {text(
-                  "OrganHeal AI provides educational and organizational health intelligence only. It is not a substitute for professional medical advice, diagnosis, treatment, or emergency care.",
+                  "OrganHeal AI provides educational and organizational health analysis only. It is not a substitute for professional medical advice, diagnosis, treatment, or emergency care.",
                   "OrganHeal AI يقدم معلومات صحية تعليمية وتنظيمية فقط. لا يُعد بديلًا عن الاستشارة الطبية المهنية أو التشخيص أو العلاج أو الرعاية الطارئة."
                 )}
               </p>
@@ -361,3 +361,5 @@ export default function MedicalDisclaimerContent() {
     </main>
   );
 }
+
+

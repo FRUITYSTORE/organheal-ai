@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 
@@ -172,8 +172,8 @@ export default function DoctorReadySummaryCard({
 
       <p className="ohCardText">
         {text(
-          "This brief organizes the most important health intelligence points to support a focused discussion with a licensed healthcare professional.",
-          "هذا الملخص ينظّم أهم نقاط الذكاء الصحي لدعم نقاش واضح ومركز مع مختص صحي مرخص."
+          "This brief organizes the most important health analysis points to support a focused discussion with a licensed healthcare professional.",
+          "هذا الملخص ينظّم أهم نقاط التحليل الصحي لدعم نقاش واضح ومركز مع مختص صحي مرخص."
         )}
       </p>
 
@@ -267,3 +267,5 @@ export default function DoctorReadySummaryCard({
     </section>
   );
 }
+
+

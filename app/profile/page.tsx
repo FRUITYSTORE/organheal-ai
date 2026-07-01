@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import PageBackActions from "../components/PageBackActions";
 import { type CSSProperties, useEffect, useState } from "react";
@@ -312,15 +312,15 @@ export default function ProfilePage() {
       : savedIntelligence.length === 0
       ? {
           label: text(
-            "Generate saved health intelligence",
-            "ولّد الذكاء الصحي المحفوظ"
+            "Generate saved health analysis",
+            "ولّد التحليل الصحي المحفوظ"
           ),
           description: text(
-            "Open Intelligence Center to generate and save insights from your reports.",
-            "افتح مركز الذكاء لتوليد وحفظ ملخصات ذكية من تقاريرك."
+            "Open Report Analysis to generate and save insights from your reports.",
+            "افتح تحليل التقارير لتوليد وحفظ ملخصات ذكية من تقاريرك."
           ),
-          href: "/intelligence",
-          buttonText: text("Open Intelligence", "افتح مركز الذكاء"),
+          href: "/reports",
+          buttonText: text("Review Analysis", "افتح تحليل التقارير"),
         }
       : !dailyCheckIn
       ? {
@@ -372,7 +372,7 @@ export default function ProfilePage() {
             <p className="ohLead">
               {text(
                 "OrganHeal is connecting your profile, assessments, reports, check-ins, and saved intelligence.",
-                "يقوم OrganHeal بربط ملفك، التقييمات، التقارير، Check-Ins، والذكاء الصحي المحفوظ."
+                "يقوم OrganHeal بربط ملفك، التقييمات، التقارير، Check-Ins، والتحليل الصحي المحفوظ."
               )}
             </p>
           </section>
@@ -401,7 +401,7 @@ export default function ProfilePage() {
                   <p className="ohLead">
                     {text(
                       "A clear view of your saved health identity, assessments, reports, intelligence, check-ins, and the next best action.",
-                      "نظرة واضحة على هويتك الصحية المحفوظة، التقييمات، التقارير، الذكاء الصحي، Check-Ins، والخطوة التالية الأفضل."
+                      "نظرة واضحة على هويتك الصحية المحفوظة، التقييمات، التقارير، التحليل الصحي، Check-Ins، والخطوة التالية الأفضل."
                     )}
                   </p>
 
@@ -572,7 +572,7 @@ export default function ProfilePage() {
                     </div>
 
                     <div>
-                      <strong>{text("Saved intelligence", "الذكاء الصحي المحفوظ")}</strong>
+                      <strong>{text("Saved intelligence", "التحليل الصحي المحفوظ")}</strong>
                       <p className="ohCardText">
                         {isArabic
                           ? `${savedIntelligence.length} نتيجة محفوظة · ${generatedInsightCount} نتيجة مولدة`
@@ -711,7 +711,7 @@ export default function ProfilePage() {
                   <span className="ohTimelineDot" />
                   <div>
                     <p className="ohTimelineTitle">
-                      {text("Health Intelligence Saved", "تم حفظ الذكاء الصحي")}
+                      {text("Health Analysis Saved", "تم حفظ التحليل الصحي")}
                     </p>
                     <p className="ohTimelineMeta">
                       {savedIntelligence.length > 0
@@ -721,7 +721,7 @@ export default function ProfilePage() {
                         : text("No saved intelligence yet", "لا يوجد ذكاء صحي محفوظ بعد")}
                     </p>
                   </div>
-                  <Link href="/intelligence" className="secondaryBtn">
+                  <Link href="/reports" className="secondaryBtn">
                     {text("Open", "فتح")}
                   </Link>
                 </div>
@@ -772,7 +772,7 @@ export default function ProfilePage() {
                   <p className="ohCardText">
                     {text(
                       "Your profile connects your account, assessments, reports, intelligence results, check-ins, and follow-up plan.",
-                      "ملفك يربط الحساب، التقييمات، التقارير، نتائج الذكاء الصحي، Check-Ins، وخطة المتابعة في مكان واحد."
+                      "ملفك يربط الحساب، التقييمات، التقارير، نتائج التحليل الصحي، Check-Ins، وخطة المتابعة في مكان واحد."
                     )}
                   </p>
                 </div>
@@ -787,8 +787,8 @@ export default function ProfilePage() {
                   {text("Reports", "التقارير")}
                 </Link>
 
-                <Link href="/intelligence" className="primaryBtn">
-                  {text("Intelligence", "مركز الذكاء")}
+                <Link href="/reports" className="primaryBtn">
+                  {text("Analysis", "تحليل التقارير")}
                 </Link>
 
                 <Link href="/health-plan" className="secondaryBtn">
@@ -806,3 +806,5 @@ export default function ProfilePage() {
     </main>
   );
 }
+
+

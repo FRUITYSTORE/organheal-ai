@@ -50,3 +50,5 @@ export default function ArabicSafeText({
 
   return <p {...props}>{safeText}</p>;
 }
+
+

@@ -1,4 +1,4 @@
-﻿import type { MetadataRoute } from "next";
+import type { MetadataRoute } from "next";
 import { blogPosts } from "../lib/blogData";
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -32,3 +32,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   return [...staticRoutes, ...blogRoutes];
 }
+
+

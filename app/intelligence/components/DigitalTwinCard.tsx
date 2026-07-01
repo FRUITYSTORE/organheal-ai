@@ -188,7 +188,7 @@ export default function DigitalTwinCard({
                       <p className="mt-1 text-sm text-slate-500">
                         {[item.organ, item.system, item.category]
                           .filter((value) => value && value.trim().length > 0)
-                          .join(" • ")}
+                          .join(" â€¢ ")}
                       </p>
                     )}
                   </div>
@@ -245,3 +245,4 @@ export default function DigitalTwinCard({
     </section>
   );
 }
+

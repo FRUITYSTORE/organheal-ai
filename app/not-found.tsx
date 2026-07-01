@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 
 export default function NotFound() {
   return (
@@ -77,7 +77,7 @@ export default function NotFound() {
                 <div className="ohTimelineItem">
                   <span className="ohTimelineDot" />
                   <div>
-                    <p className="ohTimelineTitle">Health Intelligence</p>
+                    <p className="ohTimelineTitle">Health Analysis</p>
                     <p className="ohTimelineMeta">
                       Turn your health data into clear next steps.
                     </p>
@@ -101,7 +101,7 @@ export default function NotFound() {
             <p className="ohMetricLabel">Reports</p>
             <h2 className="ohCardTitle">Upload Lab Report</h2>
             <p className="ohCardText">
-              Upload medical reports and prepare them for health intelligence.
+              Upload medical reports and prepare them for health analysis.
             </p>
           </Link>
 
@@ -119,7 +119,7 @@ export default function NotFound() {
           <div>
             <strong>Medical safety reminder</strong>
             <br />
-            OrganHeal provides educational and organizational health intelligence
+            OrganHeal provides educational and organizational health analysis
             only and does not replace licensed medical care.
           </div>
         </section>
@@ -127,3 +127,5 @@ export default function NotFound() {
     </main>
   );
 }
+
+

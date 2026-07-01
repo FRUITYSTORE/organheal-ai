@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 
@@ -234,7 +234,7 @@ export default function HealthPassportCard({
             <p className="ohTimelineMeta">
               {text(
                 "This card gives a fast view of your current OrganHeal intelligence status.",
-                "هذه البطاقة تعطيك نظرة سريعة على حالة الذكاء الصحي الحالية في OrganHeal."
+                "هذه البطاقة تعطيك نظرة سريعة على حالة التحليل الصحي الحالية في OrganHeal."
               )}
             </p>
           </div>
@@ -258,3 +258,5 @@ export default function HealthPassportCard({
     </section>
   );
 }
+
+

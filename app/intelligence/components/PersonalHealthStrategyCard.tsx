@@ -1,4 +1,4 @@
-﻿type PersonalHealthStrategy = {
+type PersonalHealthStrategy = {
   healthRisks: string;
   actionPlan90Days: string;
   nutritionStrategy: string;
@@ -99,3 +99,5 @@ export default function PersonalHealthStrategyCard({
     </section>
   );
 }
+
+

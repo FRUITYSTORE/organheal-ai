@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import type { ChangeEvent, DragEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
@@ -85,7 +85,7 @@ export default function LabUploadPage() {
       setLatestUploadedFileName(uploadedFileName);
       setMessage(
         currentIsArabic
-          ? `تم اختيار الملف "${uploadedFileName}" من الصفحة الرئيسية. ارفعه هنا لحفظه بأمان والمتابعة إلى الاستخراج أو الذكاء الصحي.`
+          ? `تم اختيار الملف "${uploadedFileName}" من الصفحة الرئيسية. ارفعه هنا لحفظه بأمان والمتابعة إلى الاستخراج أو التحليل الصحي.`
           : `Your file "${uploadedFileName}" was selected from the homepage. Upload it here to save it securely and continue to extraction or intelligence review.`
       );
       sessionStorage.removeItem("organheal-latest-uploaded-lab-file");
@@ -139,7 +139,7 @@ export default function LabUploadPage() {
       setLatestUploadedFileName(data[0].file_name);
       setLatestUploadedReportId(data[0].id);
       setMessage(
-        `Your file "${data[0].file_name}" is saved. You can run extraction, open the report, or continue to Intelligence Center.`
+        `Your file "${data[0].file_name}" is saved. You can run extraction, open the report, or continue to Analyze Report.`
       );
     }
   }
@@ -312,7 +312,7 @@ export default function LabUploadPage() {
           report_type: reportType,
           analysis_status: "uploaded",
           ai_summary:
-            "Medical report uploaded successfully. Text extraction and health intelligence review are available from OrganHeal.",
+            "Medical report uploaded successfully. Text extraction and health analysis review are available from OrganHeal.",
           extraction_status: "Pending",
           extracted_text: null,
           extracted_at: null,
@@ -341,10 +341,10 @@ export default function LabUploadPage() {
             key_findings: "Pending extraction.",
             risk_signals: "Pending extraction.",
             recommendations:
-              "Open Intelligence Center to generate a patient-friendly summary and doctor-ready brief.",
+              "Analyze this report to generate a patient-friendly summary and doctor-ready brief.",
             doctor_brief: "Pending intelligence generation.",
             next_best_action:
-              "Open Intelligence Center to generate structured report intelligence.",
+              "Analyze this report to generate structured report intelligence.",
           },
         ]);
       }
@@ -360,7 +360,7 @@ export default function LabUploadPage() {
     setMessage(
       text(
         `${uploadedCount} report(s) uploaded successfully. Next step: analyze this report now.`,
-        `تم رفع ${uploadedCount} تقرير بنجاح. يمكنك تشغيل الاستخراج الآن، فتح مكتبة التقارير، أو المتابعة إلى مركز الذكاء.`
+        `تم رفع ${uploadedCount} تقرير بنجاح. الخطوة التالية: حلّل هذا التقرير الآن.`
       )
     );
 
@@ -411,8 +411,8 @@ export default function LabUploadPage() {
 
     setMessage(
       text(
-        "Report text extracted successfully. You can now open Intelligence Center.",
-        "تم استخراج نص التقرير بنجاح. يمكنك الآن فتح مركز الذكاء."
+        "Report text extracted successfully. You can now analyze this report.",
+        "تم استخراج نص التقرير بنجاح. يمكنك الآن تحليل هذا التقرير."
       )
     );
     setExtractingReportId(null);
@@ -542,6 +542,12 @@ export default function LabUploadPage() {
 
   const latestFiles = filteredFiles.slice(0, 8);
 
+  const focusedUploadFile = latestFiles[0] || null;
+
+  const compactUploadFiles = focusedUploadFile
+    ? latestFiles.filter((file) => file.id !== focusedUploadFile.id)
+    : [];
+
   const stats = useMemo(() => {
     const completed = uploadedFiles.filter(
       (file) => file.extraction_status === "Completed"
@@ -573,7 +579,230 @@ export default function LabUploadPage() {
     uploadStep === "saved" || uploadedFiles.length > 0 || latestUploadedFileName;
 
   return (
-    <main className="ohPageShell" dir={isArabic ? "rtl" : "ltr"}>
+    <main className="ohPageShell labUploadFocusPage" dir={isArabic ? "rtl" : "ltr"}>
+      <style>{`
+        .labUploadFocusPage,
+        .labUploadFocusPage * {
+          box-sizing: border-box;
+        }
+
+        .labUploadFocusPage a {
+          color: inherit;
+          text-decoration: none;
+        }
+
+        .labUploadFocusPage .ohCard,
+        .labUploadFocusPage .ohMetricCard {
+          border-color: rgba(15, 23, 42, 0.11);
+          box-shadow: 0 18px 42px rgba(15, 23, 42, 0.07);
+        }
+
+        .labUploadFocusPage .primaryBtn {
+          background: linear-gradient(135deg, #0f766e, #14b8a6);
+          color: white;
+          border: 0;
+          box-shadow: 0 14px 34px rgba(20, 184, 166, 0.28);
+        }
+
+        .labUploadFocusPage .secondaryBtn {
+          background: white;
+          color: #0f766e;
+          border: 1px solid rgba(15, 118, 110, 0.24);
+        }
+
+        .labUploadFocusPage input,
+        .labUploadFocusPage select {
+          background: #ffffff;
+          color: #0f172a;
+          border: 1px solid rgba(15, 23, 42, 0.18);
+          font-weight: 800;
+        }
+
+        .latestUploadFocus {
+          overflow: hidden;
+          border-top: 6px solid #0f766e;
+          background:
+            radial-gradient(circle at 88% 8%, rgba(20, 184, 166, 0.14), transparent 30%),
+            #ffffff;
+        }
+
+        .uploadFocusGrid {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) minmax(280px, 0.48fr);
+          gap: 20px;
+          align-items: stretch;
+        }
+
+        .uploadFocusPanel {
+          border-radius: 24px;
+          padding: 20px;
+          background: linear-gradient(135deg, #0f172a, #115e59);
+          color: white;
+          min-height: 100%;
+        }
+
+        .uploadFocusPanel .ohMetricLabel,
+        .uploadFocusPanel .ohCardText {
+          color: rgba(226, 232, 240, 0.86);
+        }
+
+        .uploadFocusPanel .ohCardTitle {
+          color: white;
+        }
+
+        .uploadStatusLine {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          align-items: center;
+          margin-top: 14px;
+        }
+
+        .uploadPill {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          border-radius: 999px;
+          padding: 8px 11px;
+          border: 1px solid rgba(15, 23, 42, 0.08);
+          background: #f8fafc;
+          color: #334155;
+          font-size: 0.78rem;
+          font-weight: 900;
+          line-height: 1;
+          white-space: nowrap;
+        }
+
+        .uploadPill.good {
+          background: rgba(16, 185, 129, 0.11);
+          color: #047857;
+          border-color: rgba(16, 185, 129, 0.24);
+        }
+
+        .uploadPill.moderate {
+          background: rgba(245, 158, 11, 0.13);
+          color: #b45309;
+          border-color: rgba(245, 158, 11, 0.28);
+        }
+
+        .uploadPill.risk {
+          background: rgba(239, 68, 68, 0.1);
+          color: #b91c1c;
+          border-color: rgba(239, 68, 68, 0.22);
+        }
+
+        .compactUploadHistory {
+          margin-top: 22px;
+        }
+
+        .compactUploadTable {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .compactUploadHeader,
+        .compactUploadRow {
+          display: grid;
+          grid-template-columns: minmax(230px, 1.25fr) minmax(140px, 0.7fr) minmax(170px, 0.8fr) minmax(150px, 0.55fr);
+          gap: 12px;
+          align-items: center;
+        }
+
+        .compactUploadHeader {
+          padding: 0 14px;
+          color: var(--oh-muted);
+          font-size: 0.74rem;
+          font-weight: 950;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+        }
+
+        .compactUploadRow {
+          padding: 14px;
+          border-radius: 20px;
+          border: 1px solid rgba(15, 23, 42, 0.08);
+          background: white;
+          box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
+        }
+
+        .compactUploadRow.completed {
+          border-inline-start: 5px solid #10b981;
+        }
+
+        .compactUploadRow.pending {
+          border-inline-start: 5px solid #f59e0b;
+        }
+
+        .compactUploadName {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          min-width: 0;
+        }
+
+        .compactUploadName strong {
+          color: var(--oh-text);
+          font-size: 0.96rem;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .compactUploadName span {
+          color: var(--oh-muted);
+          font-size: 0.82rem;
+          font-weight: 750;
+        }
+
+        .compactUploadActions {
+          display: flex;
+          justify-content: flex-end;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+
+        .compactUploadAction {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 38px;
+          padding: 0 13px;
+          border-radius: 999px;
+          font-weight: 950;
+          font-size: 0.82rem;
+          border: 1px solid rgba(15, 118, 110, 0.18);
+          cursor: pointer;
+        }
+
+        .compactUploadAction.primary {
+          background: #0f766e;
+          color: white;
+          border-color: #0f766e;
+        }
+
+        .compactUploadAction.secondary {
+          background: white;
+          color: #0f766e;
+        }
+
+        @media (max-width: 980px) {
+          .uploadFocusGrid,
+          .compactUploadHeader,
+          .compactUploadRow {
+            grid-template-columns: 1fr;
+          }
+
+          .compactUploadHeader {
+            display: none;
+          }
+
+          .compactUploadActions {
+            justify-content: flex-start;
+          }
+        }
+      `}</style>
+
       <div className="ohContainer ohStack large" style={{ padding: "28px 0 56px" }}>
         <PageBackActions />
 
@@ -586,15 +815,15 @@ export default function LabUploadPage() {
 
               <h1 className="ohTitle">
                 {text(
-                  "Upload your medical report and start health intelligence",
-                  "ارفع تقريرك الطبي وابدأ الذكاء الصحي"
+                  "Upload your medical report and start health analysis",
+                  "ارفع تقريرك الطبي وابدأ التحليل الصحي"
                 )}
               </h1>
 
               <p className="ohLead">
                 {text(
-                  "Upload lab reports, radiology reports, discharge summaries, prescriptions, or medical documents. After saving, you can run extraction or continue to Intelligence Center.",
-                  "ارفع تقارير المختبر، الأشعة، ملخصات الخروج، الوصفات، أو المستندات الطبية. بعد الحفظ يمكنك تشغيل الاستخراج أو الانتقال إلى مركز الذكاء."
+                  "Upload lab reports, radiology reports, discharge summaries, prescriptions, or medical documents. After saving, analyze the report in one guided step.",
+                  "ارفع تقارير المختبر، الأشعة، ملخصات الخروج، الوصفات، أو المستندات الطبية. بعد الحفظ حلّل التقرير بخطوة واضحة واحدة."
                 )}
               </p>
 
@@ -607,8 +836,13 @@ export default function LabUploadPage() {
                   {text("Reports Library", "مكتبة التقارير")}
                 </Link>
 
-                <Link href="/intelligence" className="secondaryBtn">
-                  {text("Intelligence Center", "مركز الذكاء")}
+                <Link
+                  href={getReportAnalysisHref(latestUploadedReportId)}
+                  className={latestUploadedReportId ? "primaryBtn" : "secondaryBtn"}
+                >
+                  {latestUploadedReportId
+                    ? text("Analyze This Report", "تحليل هذا التقرير")
+                    : text("Analyze Report", "تحليل التقرير")}
                 </Link>
               </div>
             </div>
@@ -622,7 +856,7 @@ export default function LabUploadPage() {
                   <h2 className="ohCardTitle" style={{ marginTop: "8px" }}>
                     {stats.total === 0
                       ? text("Upload your first report", "ارفع أول تقرير")
-                      : text("Open Intelligence Center", "افتح مركز الذكاء")}
+                      : text("Analyze latest report", "حلّل آخر تقرير")}
                   </h2>
                 </div>
 
@@ -634,12 +868,12 @@ export default function LabUploadPage() {
               <p className="ohCardText">
                 {stats.total === 0
                   ? text(
-                      "After upload, the report will appear in Reports Library and Intelligence Center.",
-                      "بعد الرفع، سيظهر التقرير في مكتبة التقارير ومركز الذكاء."
+                      "After upload, the report will appear in Reports Library. Use Analyze Report to generate results.",
+                      "بعد الرفع، سيظهر التقرير في مكتبة التقارير وتحليل التقرير."
                     )
                   : text(
-                      "You have saved reports. The next step is to generate or review health intelligence.",
-                      "لديك تقارير محفوظة. الخطوة التالية هي توليد أو مراجعة الذكاء الصحي."
+                      "You have saved reports. The next step is to generate or review health analysis.",
+                      "لديك تقارير محفوظة. الخطوة التالية هي توليد أو مراجعة التحليل الصحي."
                     )}
               </p>
 
@@ -651,7 +885,7 @@ export default function LabUploadPage() {
               >
                 {stats.total === 0
                   ? text("Reports Library", "مكتبة التقارير")
-                  : text("Intelligence Center", "مركز الذكاء")}
+                  : text("Analyze Report", "تحليل التقرير")}
               </Link>
             </div>
           </div>
@@ -674,7 +908,7 @@ export default function LabUploadPage() {
             </span>
             <span className="ohMetricValue">{stats.completed}</span>
             <span className="ohMetricHint">
-              {text("Ready for intelligence", "جاهزة للذكاء")}
+              {text("Ready for analysis", "جاهزة للتحليل")}
             </span>
           </article>
 
@@ -684,7 +918,7 @@ export default function LabUploadPage() {
             </span>
             <span className="ohMetricValue">{stats.pending + stats.processing}</span>
             <span className="ohMetricHint">
-              {text("Need extraction or review", "تحتاج استخراجًا أو مراجعة")}
+              {text("Need analysis or review", "تحتاج تحليلًا أو مراجعة")}
             </span>
           </article>
 
@@ -854,8 +1088,13 @@ export default function LabUploadPage() {
                   {text("Reports Library", "مكتبة التقارير")}
                 </Link>
 
-                <Link href="/intelligence" className="secondaryBtn">
-                  {text("Intelligence Center", "مركز الذكاء")}
+                <Link
+                  href={getReportAnalysisHref(latestUploadedReportId)}
+                  className={latestUploadedReportId ? "primaryBtn" : "secondaryBtn"}
+                >
+                  {latestUploadedReportId
+                    ? text("Analyze This Report", "تحليل هذا التقرير")
+                    : text("Analyze Report", "تحليل التقرير")}
                 </Link>
               </div>
 
@@ -875,12 +1114,15 @@ export default function LabUploadPage() {
 
                     {canShowNextStep && (
                       <div className="ohButtonRow" style={{ marginTop: "14px" }}>
-                        <Link href="/reports" className="primaryBtn">
-                          {text("Open Reports Library", "فتح مكتبة التقارير")}
+                        <Link
+                          href={getReportAnalysisHref(latestUploadedReportId)}
+                          className="primaryBtn"
+                        >
+                          {text("Analyze This Report", "تحليل هذا التقرير")}
                         </Link>
 
-                        <Link href="/intelligence" className="secondaryBtn">
-                          {text("Open Intelligence", "فتح مركز الذكاء")}
+                        <Link href="/reports" className="secondaryBtn">
+                          {text("Reports Library", "مكتبة التقارير")}
                         </Link>
                       </div>
                     )}
@@ -939,23 +1181,24 @@ export default function LabUploadPage() {
               ))}
             </div>
           </article>
-        </section>
-
-        <section className="ohCard">
+        </section>        <section className="ohCard latestUploadFocus">
           <div className="ohCardHeader">
             <div>
               <p className="ohMetricLabel">
-                {text("Recent Reports", "التقارير الأخيرة")}
+                {text("Latest uploaded report", "آخر تقرير مرفوع")}
               </p>
 
               <h2 className="ohCardTitle">
-                {text("Track saving and extraction status", "تابع حالة الحفظ والاستخراج")}
+                {text(
+                  "Analyze the newest report first.",
+                  "حلّل أحدث تقرير أولًا."
+                )}
               </h2>
 
               <p className="ohCardText">
                 {text(
-                  "You can open the original file, run extraction, or continue to Intelligence Center.",
-                  "يمكنك فتح الملف الأصلي، تشغيل الاستخراج، أو الانتقال إلى مركز الذكاء."
+                  "The latest report appears here as the main action. Older uploads stay compact below.",
+                  "يظهر أحدث تقرير هنا كإجراء رئيسي. أما التقارير السابقة فتبقى مختصرة بالأسفل."
                 )}
               </p>
             </div>
@@ -986,12 +1229,8 @@ export default function LabUploadPage() {
             >
               <option value="all">{text("All", "الكل")}</option>
               <option value="pending">{text("Pending", "بانتظار")}</option>
-              <option value="processing">
-                {text("Processing", "جاري الاستخراج")}
-              </option>
-              <option value="completed">
-                {text("Completed", "مكتمل")}
-              </option>
+              <option value="processing">{text("Processing", "قيد المعالجة")}</option>
+              <option value="completed">{text("Completed", "مكتمل")}</option>
               <option value="failed">{text("Failed", "فشل")}</option>
             </select>
           </div>
@@ -1016,95 +1255,165 @@ export default function LabUploadPage() {
                 )}
               </p>
             </div>
-          ) : (
-            <div className="ohGrid cols2">
-              {latestFiles.map((file) => (
-                <article className="ohCard" key={file.id}>
-                  <div className="ohCardHeader">
-                    <div>
-                      <p className="ohMetricLabel">
-                        {getReportTypeLabel(file.report_type)}
-                      </p>
+          ) : focusedUploadFile ? (
+            <>
+              <div className="uploadFocusGrid">
+                <div>
+                  <p className="ohMetricLabel">
+                    {getReportTypeLabel(focusedUploadFile.report_type)}
+                  </p>
 
-                      <h3 className="ohCardTitle">{file.file_name}</h3>
-                    </div>
-
-                    <span className={`ohStatusBadge ${getExtractionTone(file.extraction_status)}`}>
-                      {getExtractionLabel(file.extraction_status)}
-                    </span>
-                  </div>
-
-                  <div className="ohGrid cols2" style={{ gap: "12px" }}>
-                    <div className="ohMetricCard">
-                      <span className="ohMetricLabel">
-                        {text("Uploaded", "تاريخ الرفع")}
-                      </span>
-                      <span className="ohMetricValue" style={{ fontSize: "1.05rem" }}>
-                        {formatDate(file.created_at)}
-                      </span>
-                    </div>
-
-                    <div className="ohMetricCard">
-                      <span className="ohMetricLabel">
-                        {text("Extracted", "تاريخ الاستخراج")}
-                      </span>
-                      <span className="ohMetricValue" style={{ fontSize: "1.05rem" }}>
-                        {formatDate(file.extracted_at)}
-                      </span>
-                    </div>
-                  </div>
+                  <h3 className="ohCardTitle" style={{ fontSize: "1.55rem" }}>
+                    {focusedUploadFile.file_name}
+                  </h3>
 
                   <p className="ohCardText">
-                    {file.extraction_status === "Completed"
+                    {focusedUploadFile.extraction_status === "Completed"
                       ? text(
-                          "Text extraction is completed. Open Intelligence Center to generate summaries.",
-                          "تم استخراج النص. يمكنك فتح مركز الذكاء لتوليد الملخص."
+                          "Text is ready. Analyze this report to generate the patient and doctor-ready summaries.",
+                          "النص جاهز. حلّل هذا التقرير لتوليد ملخص المريض والملخص الجاهز للطبيب."
                         )
                       : text(
-                          "The report is saved. You can run extraction or continue to Intelligence Center.",
-                          "التقرير محفوظ. يمكنك تشغيل الاستخراج أو الانتقال إلى مركز الذكاء."
+                          "This report is saved. Analyze it now; extraction will run internally when needed.",
+                          "هذا التقرير محفوظ. حلّله الآن؛ سيتم تشغيل الاستخراج داخليًا عند الحاجة."
                         )}
                   </p>
 
-                  <div className="ohButtonRow">
-                    <button
-                      type="button"
-                      className="secondaryBtn"
-                      onClick={() => openFile(file.file_path)}
-                    >
-                      {text("Open File", "فتح الملف")}
-                    </button>
+                  <div className="uploadStatusLine">
+                    <span className="uploadPill">
+                      {text("Uploaded", "تم الرفع")}: {formatDate(focusedUploadFile.created_at)}
+                    </span>
 
-                    <button
-                      type="button"
-                      className="secondaryBtn"
-                      onClick={() => runExtraction(file)}
-                      disabled={extractingReportId === file.id}
-                    >
-                      {extractingReportId === file.id
-                        ? text("Extracting...", "جاري الاستخراج...")
-                        : text("Run Extraction", "تشغيل الاستخراج")}
-                    </button>
+                    <span className={`uploadPill ${getExtractionTone(focusedUploadFile.extraction_status)}`}>
+                      {text("Status", "الحالة")}: {getExtractionLabel(focusedUploadFile.extraction_status)}
+                    </span>
 
-                    <Link href="/intelligence" className="primaryBtn">
-                      {text("Intelligence", "مركز الذكاء")}
+                    <span className={`uploadPill ${
+                      focusedUploadFile.extraction_status === "Failed" ? "risk" : "moderate"
+                    }`}>
+                      {text("Next", "التالي")}: {text("Analyze report", "تحليل التقرير")}
+                    </span>
+                  </div>
+
+                  <div className="ohButtonRow" style={{ marginTop: "20px" }}>
+                    <Link
+                      href={getReportAnalysisHref(focusedUploadFile.id)}
+                      className="primaryBtn"
+                    >
+                      {text("Analyze This Report", "تحليل هذا التقرير")}
                     </Link>
 
                     <button
                       type="button"
                       className="secondaryBtn"
-                      onClick={() => deleteFile(file)}
+                      onClick={() => openFile(focusedUploadFile.file_path)}
                     >
-                      {text("Delete", "حذف")}
+                      {text("Open File", "فتح الملف")}
                     </button>
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
 
-        <section className="ohTrustNotice">
+                    <Link href="/reports" className="secondaryBtn">
+                      {text("Reports Library", "مكتبة التقارير")}
+                    </Link>
+                  </div>
+                </div>
+
+                <aside className="uploadFocusPanel">
+                  <p className="ohMetricLabel">
+                    {text("Clear next step", "الخطوة التالية بوضوح")}
+                  </p>
+
+                  <h3 className="ohCardTitle">
+                    {text(
+                      "Upload is only the first step.",
+                      "الرفع هو الخطوة الأولى فقط."
+                    )}
+                  </h3>
+
+                  <p className="ohCardText">
+                    {text(
+                      "After saving a report, the main action should be Analyze This Report. Reports Library is only for history and review.",
+                      "بعد حفظ التقرير، الإجراء الرئيسي يجب أن يكون تحليل هذا التقرير. مكتبة التقارير فقط للسجل والمراجعة."
+                    )}
+                  </p>
+                </aside>
+              </div>
+
+              <div className="compactUploadHistory">
+                <div className="ohCardHeader">
+                  <div>
+                    <p className="ohMetricLabel">
+                      {text("Previous uploads", "الرفعات السابقة")}
+                    </p>
+
+                    <h3 className="ohCardTitle">
+                      {text("Compact upload history", "سجل رفع مختصر")}
+                    </h3>
+                  </div>
+
+                  <span className="ohStatusBadge neutral">
+                    {compactUploadFiles.length}
+                  </span>
+                </div>
+
+                {compactUploadFiles.length === 0 ? (
+                  <div className="ohEmptyState">
+                    <h2>{text("No older uploads", "لا توجد رفعات سابقة")}</h2>
+                    <p>{text("The latest report is shown above.", "آخر تقرير ظاهر بالأعلى.")}</p>
+                  </div>
+                ) : (
+                  <div className="compactUploadTable">
+                    <div className="compactUploadHeader">
+                      <span>{text("Report", "التقرير")}</span>
+                      <span>{text("Status", "الحالة")}</span>
+                      <span>{text("Uploaded", "تاريخ الرفع")}</span>
+                      <span>{text("Action", "الإجراء")}</span>
+                    </div>
+
+                    {compactUploadFiles.map((file) => (
+                      <article
+                        className={`compactUploadRow ${
+                          file.extraction_status === "Completed" ? "completed" : "pending"
+                        }`}
+                        key={file.id}
+                      >
+                        <div className="compactUploadName">
+                          <strong>{file.file_name}</strong>
+                          <span>{getReportTypeLabel(file.report_type)}</span>
+                        </div>
+
+                        <span className={`uploadPill ${getExtractionTone(file.extraction_status)}`}>
+                          {getExtractionLabel(file.extraction_status)}
+                        </span>
+
+                        <span className="ohCardText">
+                          {formatDate(file.created_at)}
+                        </span>
+
+                        <div className="compactUploadActions">
+                          <Link
+                            href={getReportAnalysisHref(file.id)}
+                            className="compactUploadAction primary"
+                          >
+                            {text("Analyze", "تحليل")}
+                          </Link>
+
+                          <button
+                            type="button"
+                            className="compactUploadAction secondary"
+                            onClick={() => openFile(file.file_path)}
+                          >
+                            {text("File", "الملف")}
+                          </button>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          ) : null}
+        </section>
+<section className="ohTrustNotice">
           <span aria-hidden="true">🛡️</span>
           <div>
             <strong>
@@ -1127,15 +1436,15 @@ export default function LabUploadPage() {
 
               <h2 className="ohCardTitle">
                 {text(
-                  "From upload to health intelligence",
-                  "من الرفع إلى الذكاء الصحي"
+                  "From upload to health analysis",
+                  "من الرفع إلى التحليل الصحي"
                 )}
               </h2>
 
               <p className="ohCardText">
                 {text(
-                  "Save the report, run extraction when needed, open Intelligence Center, then continue to your follow-up plan.",
-                  "احفظ التقرير، شغّل الاستخراج عند الحاجة، افتح مركز الذكاء، ثم انتقل إلى خطة المتابعة."
+                  "Save the report, run extraction when needed, open Analyze Report, then continue to your follow-up plan.",
+                  "احفظ التقرير، شغّل الاستخراج عند الحاجة، حلّل آخر تقرير، ثم انتقل إلى خطة المتابعة."
                 )}
               </p>
             </div>
@@ -1146,8 +1455,8 @@ export default function LabUploadPage() {
               {text("Reports", "التقارير")}
             </Link>
 
-            <Link href="/intelligence" className="primaryBtn">
-              {text("Intelligence", "الذكاء")}
+            <Link href={getReportAnalysisHref(latestUploadedReportId)} className="primaryBtn">
+              {text("Analyze Report", "تحليل التقرير")}
             </Link>
 
             <Link href="/health-plan" className="secondaryBtn">
@@ -1163,5 +1472,9 @@ export default function LabUploadPage() {
     </main>
   );
 }
+
+
+
+
 
 

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -50,7 +50,7 @@ export default function SiteFooter() {
           <h3>OrganHeal AI</h3>
           <p>
             {text(
-              "A personal health intelligence platform that helps users understand reports, health signals, education, and next steps with more clarity.",
+              "A personal health analysis platform that helps users understand reports, health signals, education, and next steps with more clarity.",
               "منصة ذكاء صحي شخصي تساعد المستخدمين على فهم التقارير، المؤشرات الصحية، التثقيف، والخطوات التالية بوضوح أكبر."
             )}
           </p>
@@ -112,7 +112,7 @@ export default function SiteFooter() {
         <span>© {new Date().getFullYear()} OrganHeal AI. All rights reserved.</span>
         <span>
           {text(
-            "Educational health intelligence only. Not a diagnosis or emergency service.",
+            "Educational health analysis only. Not a diagnosis or emergency service.",
             "ذكاء صحي تعليمي فقط. ليس تشخيصًا أو خدمة طوارئ."
           )}
         </span>
@@ -120,5 +120,7 @@ export default function SiteFooter() {
     </footer>
   );
 }
+
+
 
 

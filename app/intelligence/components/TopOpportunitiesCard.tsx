@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 
@@ -169,7 +169,7 @@ export default function TopOpportunitiesCard({
       <div className="ohCardHeader">
         <div>
           <p className="ohMetricLabel">
-            {text("Health Intelligence Snapshot", "لقطة الذكاء الصحي")}
+            {text("Health Analysis Snapshot", "لقطة التحليل الصحي")}
           </p>
 
           <h2 className="ohCardTitle" style={{ marginTop: "8px" }}>
@@ -304,3 +304,5 @@ export default function TopOpportunitiesCard({
     </section>
   );
 }
+
+

@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import MedicalDisclaimerContent from "./MedicalDisclaimerContent";
 
 export const metadata: Metadata = {
@@ -10,3 +10,5 @@ export const metadata: Metadata = {
 export default function MedicalDisclaimerPage() {
   return <MedicalDisclaimerContent />;
 }
+
+
