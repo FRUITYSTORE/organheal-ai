@@ -40,15 +40,22 @@ export default function PricingPage() {
         }
 
         .pricingCard {
-          min-height: 360px;
+          min-height: 350px;
           display: flex;
           flex-direction: column;
           padding: 28px;
+          background: #ffffff;
+          border: 1px solid rgba(15, 23, 42, 0.16);
+          box-shadow: 0 22px 52px rgba(15, 23, 42, 0.12);
         }
 
         .pricingCardPrimary {
-          border: 2px solid rgba(20, 184, 166, 0.55);
-          box-shadow: 0 24px 60px rgba(15, 118, 110, 0.16);
+          border: 2px solid #0f766e;
+          box-shadow: 0 26px 62px rgba(15, 118, 110, 0.20);
+        }
+
+        .pricingCard .ohMetricValue {
+          color: #0f172a;
         }
 
         .pricingCard .ohStack {
@@ -65,10 +72,26 @@ export default function PricingPage() {
         .pricingCard .primaryBtn,
         .pricingCard .secondaryBtn {
           min-height: 48px;
-          border-radius: 16px;
+          border-radius: 14px;
           font-weight: 950;
         }
+
+        .pricingCard .primaryBtn {
+          background: linear-gradient(135deg, #0f766e, #115e59) !important;
+          color: #ffffff !important;
+          box-shadow: 0 16px 34px rgba(15, 118, 110, 0.28) !important;
+        }
+
+        .pricingCard .secondaryBtn {
+          background: #0f172a !important;
+          color: #ffffff !important;
+          border: 1px solid #0f172a !important;
+          box-shadow: 0 14px 30px rgba(15, 23, 42, 0.22) !important;
+        }
       `}</style>
+
+
+
 
         <section className="ohHero">
           <div>
