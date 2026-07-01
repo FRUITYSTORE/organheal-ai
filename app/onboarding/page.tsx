@@ -500,8 +500,8 @@ export default function OnboardingPage() {
           </div>
 
           <div className="ohButtonRow">
-            <Link href="/dashboard" className="secondaryBtn">
-              {text("Open Dashboard", "فتح لوحة التحكم")}
+            <Link href="/reports" className="secondaryBtn">
+              {text("Open Reports", "فتح التقارير")}
             </Link>
 
             <Link href="/library" className="secondaryBtn">
