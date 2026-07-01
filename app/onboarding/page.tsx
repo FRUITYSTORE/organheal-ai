@@ -16,6 +16,10 @@ type OnboardingStep = {
   action: string;
   actionAr: string;
   primary: boolean;
+  estimated: string;
+  estimatedAr: string;
+  status: string;
+  statusAr: string;
 };
 
 export default function OnboardingPage() {
@@ -82,6 +86,10 @@ export default function OnboardingPage() {
       action: "Start Assessment",
       actionAr: "ابدأ التقييم",
       primary: true,
+      estimated: "3–5 min",
+      estimatedAr: "3–5 دقائق",
+      status: "Ready",
+      statusAr: "جاهز",
     },
     {
       code: "02",
@@ -95,6 +103,10 @@ export default function OnboardingPage() {
       action: "Upload Document",
       actionAr: "رفع مستند",
       primary: false,
+      estimated: "2–4 min",
+      estimatedAr: "2–4 دقائق",
+      status: "Optional",
+      statusAr: "اختياري",
     },
     {
       code: "03",
@@ -108,6 +120,10 @@ export default function OnboardingPage() {
       action: "Open Reports",
       actionAr: "فتح التقارير",
       primary: false,
+      estimated: "1–2 min",
+      estimatedAr: "1–2 دقيقة",
+      status: "Review",
+      statusAr: "مراجعة",
     },
     {
       code: "04",
@@ -121,6 +137,10 @@ export default function OnboardingPage() {
       action: "Open Health Plan",
       actionAr: "فتح الخطة الصحية",
       primary: false,
+      estimated: "3–6 min",
+      estimatedAr: "3–6 دقائق",
+      status: "Plan",
+      statusAr: "خطة",
     },
     {
       code: "05",
@@ -134,6 +154,10 @@ export default function OnboardingPage() {
       action: "Open Check-In",
       actionAr: "فتح المتابعة",
       primary: false,
+      estimated: "1–3 min",
+      estimatedAr: "1–3 دقائق",
+      status: "Ongoing",
+      statusAr: "مستمر",
     },
   ];
 
@@ -276,6 +300,36 @@ export default function OnboardingPage() {
           transform: translateY(-1px);
         }
 
+
+        .onboardingPage .onboardingStepMeta {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 10px;
+          margin-top: 4px;
+        }
+
+        .onboardingPage .onboardingStepMetaItem {
+          border-radius: 14px;
+          padding: 11px 12px;
+          background: rgba(240, 253, 250, 0.95);
+          border: 1px solid rgba(15, 118, 110, 0.18);
+        }
+
+        .onboardingPage .onboardingStepMetaLabel {
+          display: block;
+          color: #475569;
+          font-size: 0.74rem;
+          font-weight: 850;
+          margin-bottom: 3px;
+        }
+
+        .onboardingPage .onboardingStepMetaValue {
+          display: block;
+          color: #0f172a;
+          font-size: 0.88rem;
+          font-weight: 950;
+        }
+
         .onboardingPage .onboardingSafetyStrip {
           display: flex;
           align-items: flex-start;
@@ -333,6 +387,101 @@ export default function OnboardingPage() {
           background: rgba(255, 255, 255, 0.24) !important;
           color: #ffffff !important;
           border: 1px solid rgba(255, 255, 255, 0.28) !important;
+        }
+
+        
+        /* ===== ORGANHEAL_ONBOARDING_BUTTON_TEXT_FIX ===== */
+
+        .onboardingPage .onboardingStepCard a.onboardingStepAction {
+          direction: inherit !important;
+          justify-content: center !important;
+          gap: 10px !important;
+          min-height: 56px !important;
+          padding: 0 16px !important;
+          text-align: center !important;
+          white-space: nowrap !important;
+          overflow: hidden !important;
+        }
+
+        .onboardingPage .onboardingStepCard a.onboardingStepAction span:first-child {
+          display: block !important;
+          flex: 0 1 auto !important;
+          min-width: 0 !important;
+          max-width: calc(100% - 38px) !important;
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+          white-space: nowrap !important;
+          line-height: 1.2 !important;
+        }
+
+        .onboardingPage .onboardingStepCard a.onboardingStepAction .onboardingStepArrow {
+          flex: 0 0 28px !important;
+        }
+
+        
+        /* ===== ORGANHEAL_ONBOARDING_JOURNEY_CARD_FINAL ===== */
+
+        .onboardingPage .onboardingJourneyCard {
+          overflow: hidden !important;
+          padding: 0 !important;
+          gap: 0 !important;
+          border-top: 5px solid #14b8a6 !important;
+        }
+
+        .onboardingPage .onboardingJourneyCard .ohCardHeader,
+        .onboardingPage .onboardingJourneyCard .ohCardTitle,
+        .onboardingPage .onboardingJourneyCard .ohCardText,
+        .onboardingPage .onboardingJourneyCard .onboardingStepMeta {
+          margin-left: 22px !important;
+          margin-right: 22px !important;
+        }
+
+        .onboardingPage .onboardingJourneyCard .ohCardHeader {
+          margin-top: 20px !important;
+        }
+
+        .onboardingPage .onboardingJourneyCard .ohCardTitle {
+          margin-top: 18px !important;
+          font-size: 1.08rem !important;
+          line-height: 1.3 !important;
+        }
+
+        .onboardingPage .onboardingJourneyCard .ohCardText {
+          margin-top: 10px !important;
+          min-height: 84px !important;
+          line-height: 1.65 !important;
+        }
+
+        .onboardingPage .onboardingJourneyCard .onboardingStepMeta {
+          grid-template-columns: 1fr !important;
+          gap: 8px !important;
+          margin-top: 14px !important;
+          margin-bottom: 18px !important;
+        }
+
+        .onboardingPage .onboardingJourneyCard .onboardingStepMetaItem {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: space-between !important;
+          gap: 12px !important;
+          padding: 10px 12px !important;
+        }
+
+        .onboardingPage .onboardingJourneyCard a.onboardingStepAction {
+          border-radius: 0 !important;
+          min-height: 60px !important;
+          width: 100% !important;
+          margin: 0 !important;
+          padding: 0 22px !important;
+          justify-content: space-between !important;
+          font-size: 0.96rem !important;
+          box-shadow: none !important;
+        }
+
+        .onboardingPage .onboardingJourneyCard a.onboardingStepAction span:first-child {
+          max-width: none !important;
+          overflow: visible !important;
+          text-overflow: clip !important;
         }
 
         @media (max-width: 980px) {
@@ -473,7 +622,7 @@ export default function OnboardingPage() {
 
         <section className="ohGrid cols3">
           {steps.map((step) => (
-            <article className="ohCard onboardingStepCard" key={step.code}>
+            <article className="ohCard onboardingStepCard onboardingJourneyCard" key={step.code}>
               <div className="ohCardHeader">
                 <span className="onboardingCodeMark">{step.code}</span>
 
@@ -491,6 +640,26 @@ export default function OnboardingPage() {
               </p>
 
               <div className="ohDivider" />
+
+              <div className="onboardingStepMeta">
+                <div className="onboardingStepMetaItem">
+                  <span className="onboardingStepMetaLabel">
+                    {text("Estimated time", "الوقت المتوقع")}
+                  </span>
+                  <span className="onboardingStepMetaValue">
+                    {isArabic ? step.estimatedAr : step.estimated}
+                  </span>
+                </div>
+
+                <div className="onboardingStepMetaItem">
+                  <span className="onboardingStepMetaLabel">
+                    {text("Status", "الحالة")}
+                  </span>
+                  <span className="onboardingStepMetaValue">
+                    {isArabic ? step.statusAr : step.status}
+                  </span>
+                </div>
+              </div>
 
               <Link
                 href={step.href}
