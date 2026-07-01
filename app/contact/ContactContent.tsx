@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type Language = "en" | "ar";
 
@@ -20,6 +20,18 @@ function getStoredLanguage(): Language {
 
 export default function ContactContent() {
   const email = "contact@organheal.com";
+
+  const plan = typeof window !== "undefined"
+    ? new URLSearchParams(window.location.search).get("plan")
+    : "";
+
+  const emailSubject = useMemo(() => {
+    if (plan === "personal") return "OrganHeal Personal Plan Access";
+    if (plan === "family") return "OrganHeal Family Plan Access";
+    return "OrganHeal Inquiry";
+  }, [plan]);
+
+  const emailLink = `mailto:${email}?subject=${encodeURIComponent(emailSubject)}`;
 
   const [language, setLanguage] = useState<Language>("en");
   const isArabic = language === "ar";
@@ -131,7 +143,7 @@ export default function ContactContent() {
               </p>
 
               <div className="ohButtonRow" style={{ marginTop: "24px" }}>
-                <a href={`mailto:${email}`} className="primaryBtn">
+                <a href={emailLink} className="primaryBtn">
                   {text("Email OrganHeal", "راسل OrganHeal")}
                 </a>
 
@@ -269,7 +281,7 @@ export default function ContactContent() {
             </div>
 
             <div className="ohButtonRow" style={{ marginTop: "20px" }}>
-              <a href={`mailto:${email}`} className="primaryBtn">
+              <a href={emailLink} className="primaryBtn">
                 {text("Open Email", "فتح البريد")}
               </a>
 
