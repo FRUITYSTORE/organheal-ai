@@ -14,7 +14,7 @@ import {
 } from "../../lib/radiologyEngine";
 import { generateIntelligenceFromText } from "../../lib/extractedTextIntelligence";
 import PageBackActions from "../components/PageBackActions";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { buildHealthIntelligence } from "../../lib/intelligenceBuilder";
 import {
@@ -134,6 +134,7 @@ export default function IntelligencePage() {
   const [expandedReportId, setExpandedReportId] = useState<number | null>(null);
   const [visibleReportsCount, setVisibleReportsCount] =
     useState(REPORTS_PAGE_SIZE);
+  const handledReportRequestRef = useRef("");
 
   useEffect(() => {
     loadIntelligence();
@@ -163,6 +164,89 @@ export default function IntelligencePage() {
     return isArabicUi ? ar : en;
   }
 
+  useEffect(() => {
+    async function handleRequestedReportFromUrl() {
+      if (loading || healthInsights.length === 0 || typeof window === "undefined") {
+        return;
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      const requestedReportId = Number(params.get("reportId") || 0);
+      const requestedInsightId = Number(params.get("insightId") || 0);
+      const shouldAutoAnalyze = params.get("auto") === "1";
+
+      const hasRequestedReport =
+        requestedReportId > 0 && !Number.isNaN(requestedReportId);
+
+      const hasRequestedInsight =
+        requestedInsightId > 0 && !Number.isNaN(requestedInsightId);
+
+      if (!hasRequestedReport && !hasRequestedInsight) {
+        return;
+      }
+
+      const requestKey = `${requestedReportId || 0}:${requestedInsightId || 0}:${
+        shouldAutoAnalyze ? "auto" : "view"
+      }`;
+
+      if (handledReportRequestRef.current === requestKey) {
+        return;
+      }
+
+      const requestedInsight = healthInsights.find((item) => {
+        if (hasRequestedInsight) {
+          return item.id === requestedInsightId;
+        }
+
+        return item.report_id === requestedReportId || item.id === requestedReportId;
+      });
+
+      if (!requestedInsight) {
+        handledReportRequestRef.current = requestKey;
+        setMessage(
+          isArabicUi
+            ? "لم يتم العثور على هذا التقرير داخل حسابك."
+            : "This report was not found in your account."
+        );
+        return;
+      }
+
+      handledReportRequestRef.current = requestKey;
+
+      const requestedIndex = healthInsights.findIndex(
+        (item) => item.id === requestedInsight.id
+      );
+
+      setVisibleReportsCount(
+        Math.max(REPORTS_PAGE_SIZE, requestedIndex + 1)
+      );
+      setExpandedReportId(requestedInsight.id);
+
+      if (requestedInsight.ai_status === "Generated") {
+        await openSavedGeneratedResult(requestedInsight.id);
+        return;
+      }
+
+      if (shouldAutoAnalyze) {
+        setMessage(
+          isArabicUi
+            ? "جاري تحليل التقرير المحدد..."
+            : "Analyzing the selected report..."
+        );
+
+        await generateReportIntelligence(requestedInsight.id);
+        return;
+      }
+
+      setMessage(
+        isArabicUi
+          ? "هذا التقرير جاهز للتحليل. اضغط Analyze Report."
+          : "This report is ready to analyze. Press Analyze Report."
+      );
+    }
+
+    handleRequestedReportFromUrl();
+  }, [loading, healthInsights, isArabicUi]);
   async function loadIntelligence() {
     setLoading(true);
     setMessage("");
@@ -396,10 +480,11 @@ export default function IntelligencePage() {
             Authorization: `Bearer ${sessionData.session.access_token}`,
           },
           body: JSON.stringify({
-            reportId: selectedInsight.report_id,
-            filePath: selectedInsight.file_path,
-            fileName: selectedInsight.file_name,
-          }),
+        insightId: selectedInsight.id,
+        reportId: selectedInsight.report_id,
+        filePath: selectedInsight.file_path,
+        fileName: selectedInsight.file_name,
+      }),
         });
 
         const extractionResult = await extractionResponse.json();
@@ -1188,3 +1273,7 @@ Clinical note: This is an educational interpretation and should be reviewed by a
     </main>
   );
 }
+
+
+
+

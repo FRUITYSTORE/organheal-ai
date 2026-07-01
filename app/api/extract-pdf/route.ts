@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import PDFParser from "pdf2json";
 
@@ -12,40 +12,12 @@ function safeDecode(text: string) {
   }
 }
 
-function logExtractionError(
-  context: string,
-  details: Record<string, unknown>
-) {
-  console.error(`[extract-pdf] ${context}`, details);
-}
-
 function normalizeStoragePath(path: string) {
-  return path
-    .trim()
-    .replace(/^\/+/, "")
-    .replace(/^lab-reports\//, "");
+  return path.trim().replace(/^\/+/, "").replace(/^lab-reports\//, "");
 }
 
 function getFileNameFromPath(path: string) {
   return path.split("/").pop() || path;
-}
-
-function getFolderFromPath(path: string) {
-  const parts = path.split("/");
-  parts.pop();
-  return parts.join("/");
-}
-
-function removeUploadPrefix(name: string) {
-  return name.replace(/^\d+[-_]/, "");
-}
-
-function normalizeFileNameForMatch(name: string) {
-  return safeDecode(name)
-    .toLowerCase()
-    .replace(/\s+/g, "_")
-    .replace(/[^a-z0-9._-]/g, "_")
-    .replace(/_+/g, "_");
 }
 
 function getFileType(fileName: string | null | undefined) {
@@ -57,6 +29,10 @@ function getFileType(fileName: string | null | undefined) {
   if (name.endsWith(".jpeg")) return "image";
 
   return "unknown";
+}
+
+function logExtractionError(context: string, details: Record<string, unknown>) {
+  console.error(`[extract-pdf] ${context}`, details);
 }
 
 function extractTextFromPdfBuffer(buffer: Buffer): Promise<string> {
@@ -72,13 +48,17 @@ function extractTextFromPdfBuffer(buffer: Buffer): Promise<string> {
     });
 
     pdfParser.on("pdfParser_dataReady", (pdfData) => {
-      const text = pdfData.Pages.map((page) =>
-        page.Texts.map((textItem) =>
-          safeDecode(textItem.R.map((r) => r.T).join(" "))
-        ).join(" ")
-      ).join("\n\n");
+      try {
+        const text = pdfData.Pages.map((page) =>
+          page.Texts.map((textItem) =>
+            safeDecode(textItem.R.map((r) => r.T).join(" "))
+          ).join(" ")
+        ).join("\n\n");
 
-      resolve(text.trim());
+        resolve(text.trim());
+      } catch (error) {
+        reject(error);
+      }
     });
 
     pdfParser.parseBuffer(buffer);
@@ -92,10 +72,8 @@ async function extractTextFromImageBuffer(buffer: Buffer): Promise<string> {
     throw new Error("OCR image extraction is not configured on the server.");
   }
 
-  const base64Image = buffer.toString("base64");
-
   const formData = new FormData();
-  formData.append("base64Image", `data:image/png;base64,${base64Image}`);
+  formData.append("base64Image", `data:image/png;base64,${buffer.toString("base64")}`);
   formData.append("language", "eng");
   formData.append("isOverlayRequired", "false");
   formData.append("OCREngine", "2");
@@ -121,58 +99,36 @@ export async function POST(req: Request) {
   try {
     const payload = await req.json();
 
-    const rawReportId = payload?.reportId;
     const reportId =
-      typeof rawReportId === "number"
-        ? rawReportId
-        : typeof rawReportId === "string"
-        ? Number(rawReportId)
+      typeof payload?.reportId === "number"
+        ? payload.reportId
+        : typeof payload?.reportId === "string"
+        ? Number(payload.reportId)
+        : null;
+
+    const insightId =
+      typeof payload?.insightId === "number"
+        ? payload.insightId
+        : typeof payload?.insightId === "string"
+        ? Number(payload.insightId)
         : null;
 
     const payloadFilePath =
       typeof payload?.filePath === "string" ? payload.filePath : "";
 
+    const payloadFileName =
+      typeof payload?.fileName === "string" ? payload.fileName : "";
+
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const anonKey =
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    if (!reportId && !payloadFilePath) {
+    if (!supabaseUrl || !anonKey) {
       return NextResponse.json(
         {
           success: false,
-          error: "Missing report information. Please re-upload the report.",
-        },
-        { status: 400 }
-      );
-    }
-
-    if (!supabaseUrl || supabaseUrl.includes("/rest/v1")) {
-      logExtractionError("Invalid Supabase URL", {
-        hasSupabaseUrl: Boolean(supabaseUrl),
-        includesRestPath: supabaseUrl?.includes("/rest/v1") || false,
-      });
-
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            "Server configuration error. Supabase URL is not configured correctly.",
-        },
-        { status: 500 }
-      );
-    }
-
-    if (!anonKey || !serviceRoleKey) {
-      logExtractionError("Missing Supabase server keys", {
-        hasAnonKey: Boolean(anonKey),
-        hasServiceRoleKey: Boolean(serviceRoleKey),
-      });
-
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            "Server configuration error. Secure report extraction is not configured.",
+          error: "Server configuration error. Supabase client is not configured.",
         },
         { status: 500 }
       );
@@ -193,7 +149,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const userSupabase = createClient(supabaseUrl, anonKey, {
+    const supabase = createClient(supabaseUrl, anonKey, {
       global: {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -205,8 +161,7 @@ export async function POST(req: Request) {
       },
     });
 
-    const { data: authData, error: authError } =
-      await userSupabase.auth.getUser(token);
+    const { data: authData, error: authError } = await supabase.auth.getUser(token);
 
     if (authError || !authData.user) {
       return NextResponse.json(
@@ -220,118 +175,113 @@ export async function POST(req: Request) {
 
     const user = authData.user;
 
-    const adminSupabase = createClient(supabaseUrl, serviceRoleKey, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-      },
-    });
+    let resolvedReportId = reportId;
+    let resolvedFilePath = payloadFilePath;
+    let resolvedFileName = payloadFileName;
 
-    let reportRow: {
-      id: number;
-      user_id: string;
-      file_name: string | null;
-      file_path: string | null;
-      created_at?: string;
-    } | null = null;
-
-    if (reportId) {
-      const { data, error } = await adminSupabase
-        .from("uploaded_lab_files")
-        .select("id, user_id, file_name, file_path, created_at")
-        .eq("id", reportId)
+    if ((!resolvedReportId || !resolvedFilePath) && insightId) {
+      const { data: insightData } = await supabase
+        .from("health_insights")
+        .select("id, report_id")
+        .eq("id", insightId)
         .eq("user_id", user.id)
-        .limit(1)
         .maybeSingle();
 
-      if (error) {
-        logExtractionError("Report lookup by id failed", {
-          reportId,
-          userId: user.id,
-          error: error.message,
-        });
+      if (insightData?.report_id) {
+        resolvedReportId = insightData.report_id;
       }
-
-      reportRow = data || null;
     }
 
-    if (!reportRow && payloadFilePath) {
-      const normalizedPayloadPath = normalizeStoragePath(payloadFilePath);
-
-      if (!normalizedPayloadPath.startsWith(`${user.id}/`)) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: "Forbidden. This report does not belong to your account.",
-          },
-          { status: 403 }
-        );
-      }
-
-      const { data, error } = await adminSupabase
+    if (resolvedReportId && (!resolvedFilePath || !resolvedFileName)) {
+      const { data: reportData } = await supabase
         .from("uploaded_lab_files")
-        .select("id, user_id, file_name, file_path, created_at")
+        .select("id, file_name, file_path")
+        .eq("id", resolvedReportId)
         .eq("user_id", user.id)
-        .eq("file_path", normalizedPayloadPath)
-        .order("created_at", { ascending: false })
-        .limit(1)
         .maybeSingle();
 
-      if (error) {
-        logExtractionError("Report lookup by file path failed", {
-          payloadFilePath,
-          normalizedPayloadPath,
-          userId: user.id,
-          error: error.message,
-        });
+      if (reportData?.file_path) {
+        resolvedFilePath = reportData.file_path;
       }
 
-      reportRow = data || null;
+      if (reportData?.file_name) {
+        resolvedFileName = reportData.file_name;
+      }
     }
 
-    if (!reportRow) {
+    const storagePath = normalizeStoragePath(resolvedFilePath || "");
+
+    if (!storagePath || !storagePath.startsWith(`${user.id}/`)) {
+      logExtractionError("Invalid or missing storage path", {
+        userId: user.id,
+        reportId,
+        insightId,
+        resolvedReportId,
+        storagePath,
+        hasPayloadFilePath: Boolean(payloadFilePath),
+      });
+
       return NextResponse.json(
         {
           success: false,
-          error: "Report was not found for your account.",
+          error: "Report file path is missing or invalid. Please re-upload the report.",
         },
         { status: 404 }
       );
     }
 
-    const filePath = reportRow.file_path || "";
+    if (resolvedReportId) {
+      await supabase
+        .from("uploaded_lab_files")
+        .update({ extraction_status: "Processing" })
+        .eq("id", resolvedReportId)
+        .eq("user_id", user.id);
+    }
 
-    if (!filePath) {
+    const { data: fileBlob, error: downloadError } = await supabase.storage
+      .from("lab-reports")
+      .download(storagePath);
+
+    if (downloadError || !fileBlob) {
+      if (resolvedReportId) {
+        await supabase
+          .from("uploaded_lab_files")
+          .update({ extraction_status: "Failed" })
+          .eq("id", resolvedReportId)
+          .eq("user_id", user.id);
+      }
+
+      logExtractionError("Storage download failed with user session", {
+        userId: user.id,
+        reportId,
+        insightId,
+        resolvedReportId,
+        storagePath,
+        error: downloadError?.message || null,
+      });
+
       return NextResponse.json(
         {
           success: false,
-          error:
-            "Report file path could not be found. Please re-upload the report.",
+          error: "Report file could not be opened. Please re-upload the report.",
         },
-        { status: 404 }
+        { status: 500 }
       );
     }
 
-    let storagePath = normalizeStoragePath(filePath);
-
-    if (!storagePath.startsWith(`${user.id}/`)) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Forbidden. This report file does not belong to your account.",
-        },
-        { status: 403 }
-      );
-    }
-
-    const fileName =
-      reportRow.file_name ||
-      getFileNameFromPath(storagePath) ||
-      "";
-
+    const buffer = Buffer.from(await fileBlob.arrayBuffer());
+    const fileName = resolvedFileName || getFileNameFromPath(storagePath);
     const fileType = getFileType(fileName);
 
     if (fileType === "unknown") {
+      if (resolvedReportId) {
+        await supabase
+          .from("uploaded_lab_files")
+          .update({ extraction_status: "Failed" })
+          .eq("id", resolvedReportId)
+          .eq("user_id", user.id);
+      }
+
       return NextResponse.json(
         {
           success: false,
@@ -341,172 +291,87 @@ export async function POST(req: Request) {
       );
     }
 
-    await adminSupabase
-      .from("uploaded_lab_files")
-      .update({ extraction_status: "Processing" })
-      .eq("id", reportRow.id)
-      .eq("user_id", user.id);
+    let extractedText = "";
 
-    let { data: fileBlob, error: downloadError } = await adminSupabase.storage
-      .from("lab-reports")
-      .download(storagePath);
+    try {
+      if (fileType === "pdf") {
+        extractedText = await extractTextFromPdfBuffer(buffer);
+      }
 
-    if (downloadError || !fileBlob) {
-      const folderPath = getFolderFromPath(storagePath);
-      const fileBaseName = getFileNameFromPath(storagePath);
-
-      const originalFileName =
-        fileName && fileName.trim().length > 0
-          ? fileName.trim()
-          : removeUploadPrefix(fileBaseName);
-
-      const normalizedOriginal = normalizeFileNameForMatch(originalFileName);
-      const normalizedBase = normalizeFileNameForMatch(
-        removeUploadPrefix(fileBaseName)
-      );
-
-      const { data: folderObjects, error: listError } =
-        await adminSupabase.storage.from("lab-reports").list(folderPath, {
-          limit: 100,
-          sortBy: { column: "created_at", order: "desc" },
-        });
-
-      const matchedObject = folderObjects?.find((object) => {
-        const normalizedObjectName = normalizeFileNameForMatch(object.name);
-        const normalizedObjectWithoutPrefix = normalizeFileNameForMatch(
-          removeUploadPrefix(object.name)
-        );
-
-        return (
-          normalizedObjectName === normalizedOriginal ||
-          normalizedObjectName.endsWith(normalizedOriginal) ||
-          normalizedObjectWithoutPrefix === normalizedOriginal ||
-          normalizedObjectWithoutPrefix === normalizedBase
-        );
-      });
-
-      if (listError || !matchedObject) {
-        await adminSupabase
+      if (fileType === "image") {
+        extractedText = await extractTextFromImageBuffer(buffer);
+      }
+    } catch (error) {
+      if (resolvedReportId) {
+        await supabase
           .from("uploaded_lab_files")
           .update({ extraction_status: "Failed" })
-          .eq("id", reportRow.id)
-          .eq("user_id", user.id);
-
-        logExtractionError("Storage object not found after listing folder", {
-          reportId: reportRow.id,
-          userId: user.id,
-          storagePath,
-          folderPath,
-          fileBaseName,
-          originalFileName,
-          listedFiles: folderObjects?.map((item) => item.name) || [],
-          downloadError: downloadError?.message || null,
-          listError: listError?.message || null,
-        });
-
-        return NextResponse.json(
-          {
-            success: false,
-            error:
-              "Report file could not be found in secure storage. Please re-upload the report and try again.",
-          },
-          { status: 500 }
-        );
-      }
-
-      storagePath = folderPath
-        ? `${folderPath}/${matchedObject.name}`
-        : matchedObject.name;
-
-      if (!storagePath.startsWith(`${user.id}/`)) {
-        await adminSupabase
-          .from("uploaded_lab_files")
-          .update({ extraction_status: "Failed" })
-          .eq("id", reportRow.id)
-          .eq("user_id", user.id);
-
-        return NextResponse.json(
-          {
-            success: false,
-            error: "Forbidden. Storage path ownership validation failed.",
-          },
-          { status: 403 }
-        );
-      }
-
-      const retryDownload = await adminSupabase.storage
-        .from("lab-reports")
-        .download(storagePath);
-
-      fileBlob = retryDownload.data;
-      downloadError = retryDownload.error;
-
-      if (!downloadError && fileBlob) {
-        await adminSupabase
-          .from("uploaded_lab_files")
-          .update({ file_path: storagePath })
-          .eq("id", reportRow.id)
+          .eq("id", resolvedReportId)
           .eq("user_id", user.id);
       }
-    }
 
-    if (downloadError || !fileBlob) {
-      await adminSupabase
-        .from("uploaded_lab_files")
-        .update({ extraction_status: "Failed" })
-        .eq("id", reportRow.id)
-        .eq("user_id", user.id);
-
-      logExtractionError("Storage retry failed", {
-        reportId: reportRow.id,
+      logExtractionError("Text parser failed", {
         userId: user.id,
-        finalStoragePath: storagePath,
-        downloadError: downloadError?.message || null,
+        reportId,
+        insightId,
+        resolvedReportId,
+        fileName,
+        fileType,
+        error: error instanceof Error ? error.message : String(error),
       });
 
       return NextResponse.json(
         {
           success: false,
           error:
-            "Report file was located but could not be opened for extraction. Please re-upload the report and try again.",
+            "Could not read text from this report. If this is a scanned PDF or image, OCR setup is required.",
         },
-        { status: 500 }
+        { status: 422 }
       );
     }
 
-    const arrayBuffer = await fileBlob.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    const cleanText = extractedText.trim();
 
-    let cleanText = "";
+    if (!cleanText) {
+      if (resolvedReportId) {
+        await supabase
+          .from("uploaded_lab_files")
+          .update({
+            extraction_status: "Failed",
+            extracted_text: null,
+          })
+          .eq("id", resolvedReportId)
+          .eq("user_id", user.id);
+      }
 
-    if (fileType === "pdf") {
-      cleanText = await extractTextFromPdfBuffer(buffer);
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "No readable text was found in this report. If this is a scanned PDF, OCR setup is required.",
+        },
+        { status: 422 }
+      );
     }
 
-    if (fileType === "image") {
-      cleanText = await extractTextFromImageBuffer(buffer);
+    if (resolvedReportId) {
+      await supabase
+        .from("uploaded_lab_files")
+        .update({
+          extracted_text: cleanText,
+          extraction_status: "Completed",
+          extracted_at: new Date().toISOString(),
+        })
+        .eq("id", resolvedReportId)
+        .eq("user_id", user.id);
     }
-
-    const finalText =
-      cleanText && cleanText.length > 0
-        ? cleanText
-        : "No readable text extracted from this report.";
-
-    await adminSupabase
-      .from("uploaded_lab_files")
-      .update({
-        extracted_text: finalText,
-        extraction_status: "Completed",
-        extracted_at: new Date().toISOString(),
-      })
-      .eq("id", reportRow.id)
-      .eq("user_id", user.id);
 
     return NextResponse.json({
       success: true,
-      fileName: fileName || null,
+      reportId: resolvedReportId,
+      fileName,
       fileType,
-      text: finalText,
+      text: cleanText,
     });
   } catch (error) {
     logExtractionError("Unexpected extraction failure", {
@@ -516,8 +381,7 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         success: false,
-        error:
-          "Report extraction failed unexpectedly. Please re-upload the report and try again.",
+        error: "Report extraction failed unexpectedly. Please try again.",
       },
       { status: 500 }
     );

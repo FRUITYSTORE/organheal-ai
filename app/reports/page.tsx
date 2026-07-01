@@ -744,8 +744,21 @@ export default function ReportsPage() {
                             {text("Open Report", "فتح التقرير")}
                           </button>
 
-                          <Link href={decision.href} className="primaryBtn">
-                            {decision.buttonText}
+                          <Link
+                            href={
+                              report.hasSavedIntelligence
+                                ? `/intelligence?reportId=${report.reportId}`
+                                : `/intelligence?reportId=${report.reportId}&auto=1`
+                            }
+                            className="primaryBtn"
+                          >
+                            {report.hasSavedIntelligence
+                              ? isArabic
+                                ? "عرض التحليل"
+                                : "View Analysis"
+                              : isArabic
+                              ? "تحليل التقرير"
+                              : "Analyze Report"}
                           </Link>
 
                           {report.hasSavedIntelligence && (
@@ -860,3 +873,4 @@ export default function ReportsPage() {
     </main>
   );
 }
+

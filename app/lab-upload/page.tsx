@@ -35,6 +35,7 @@ export default function LabUploadPage() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [latestUploadedFileName, setLatestUploadedFileName] = useState("");
+  const [latestUploadedReportId, setLatestUploadedReportId] = useState<number | null>(null);
   const [message, setMessage] = useState("");
   const [uploadStep, setUploadStep] = useState<UploadStep>("idle");
   const [uploading, setUploading] = useState(false);
@@ -104,6 +105,10 @@ export default function LabUploadPage() {
     }
   }
 
+  function getReportAnalysisHref(reportId?: number | null) {
+    return reportId ? `/intelligence?reportId=${reportId}&auto=1` : "/intelligence";
+  }
+
   async function fetchUploadedFiles() {
     const { data: userData, error: userError } = await supabase.auth.getUser();
 
@@ -132,6 +137,7 @@ export default function LabUploadPage() {
 
     if (wasUploadedFromHomepage && data && data.length > 0) {
       setLatestUploadedFileName(data[0].file_name);
+      setLatestUploadedReportId(data[0].id);
       setMessage(
         `Your file "${data[0].file_name}" is saved. You can run extraction, open the report, or continue to Intelligence Center.`
       );
@@ -345,6 +351,7 @@ export default function LabUploadPage() {
 
       uploadedCount++;
       setLatestUploadedFileName(file.name);
+      setLatestUploadedReportId(insertedFile.id);
     }
 
     setSelectedFiles([]);
@@ -352,7 +359,7 @@ export default function LabUploadPage() {
     setUploadStep("saved");
     setMessage(
       text(
-        `${uploadedCount} report(s) uploaded successfully. You can run extraction now, open Reports Library, or continue to Intelligence Center.`,
+        `${uploadedCount} report(s) uploaded successfully. Next step: analyze this report now.`,
         `تم رفع ${uploadedCount} تقرير بنجاح. يمكنك تشغيل الاستخراج الآن، فتح مكتبة التقارير، أو المتابعة إلى مركز الذكاء.`
       )
     );
@@ -639,7 +646,7 @@ export default function LabUploadPage() {
               <div className="ohDivider" />
 
               <Link
-                href={stats.total === 0 ? "/reports" : "/intelligence"}
+                href={latestUploadedReportId ? getReportAnalysisHref(latestUploadedReportId) : stats.total === 0 ? "/reports" : "/intelligence"}
                 className="primaryBtn"
               >
                 {stats.total === 0
@@ -1156,3 +1163,5 @@ export default function LabUploadPage() {
     </main>
   );
 }
+
+
