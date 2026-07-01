@@ -24,8 +24,8 @@ const plans = [
     price: "Coming soon",
     note: "For family health organization",
     features: ["Multiple profiles", "Family reports", "Shared follow-up"],
-    action: "Request Personal Access",
-    href: "/contact?plan=personal",
+    action: "Request Family Access",
+    href: "/contact?plan=family",
   },
 ];
 
