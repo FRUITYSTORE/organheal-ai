@@ -15,17 +15,17 @@ const plans = [
     name: "Personal",
     price: "Coming soon",
     note: "For ongoing health tracking",
-    features: ["Report history", "Health plan", "Check-ins", "Priority insights"],
-    action: "Join Waitlist",
-    href: "/signup",
+    features: ["Report history", "Health plan", "Check-ins", "Personal tracking"],
+    action: "Request Personal Access",
+    href: "/contact?plan=personal",
   },
   {
     name: "Family",
     price: "Coming soon",
     note: "For family health organization",
-    features: ["Multiple profiles", "Family report library", "Shared follow-up view"],
-    action: "Join Waitlist",
-    href: "/signup",
+    features: ["Multiple profiles", "Family reports", "Shared follow-up"],
+    action: "Request Personal Access",
+    href: "/contact?plan=personal",
   },
 ];
 
@@ -33,6 +33,43 @@ export default function PricingPage() {
   return (
     <main className="ohPageShell">
       <div className="ohContainer ohStack large" style={{ padding: "32px 0 64px" }}>
+
+      <style>{`
+        .pricingGrid {
+          direction: ltr;
+        }
+
+        .pricingCard {
+          min-height: 360px;
+          display: flex;
+          flex-direction: column;
+          padding: 28px;
+        }
+
+        .pricingCardPrimary {
+          border: 2px solid rgba(20, 184, 166, 0.55);
+          box-shadow: 0 24px 60px rgba(15, 118, 110, 0.16);
+        }
+
+        .pricingCard .ohStack {
+          flex: 1;
+        }
+
+        .pricingCard > a {
+          margin-top: auto !important;
+          width: 100% !important;
+          justify-content: center !important;
+          box-sizing: border-box !important;
+        }
+
+        .pricingCard .primaryBtn,
+        .pricingCard .secondaryBtn {
+          min-height: 48px;
+          border-radius: 16px;
+          font-weight: 950;
+        }
+      `}</style>
+
         <section className="ohHero">
           <div>
             <p className="ohEyebrow">Pricing</p>
@@ -52,9 +89,9 @@ export default function PricingPage() {
           </div>
         </section>
 
-        <section className="ohGrid cols3">
+        <section className="ohGrid cols3 pricingGrid">
           {plans.map((plan) => (
-            <article className="ohCard" key={plan.name}>
+            <article className={plan.name === "Free" ? "ohCard pricingCard pricingCardPrimary" : "ohCard pricingCard"} key={plan.name}>
               <p className="ohEyebrow">{plan.note}</p>
               <h2 className="ohCardTitle">{plan.name}</h2>
               <p className="ohMetricValue" style={{ marginTop: "10px" }}>
