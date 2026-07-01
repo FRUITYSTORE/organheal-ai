@@ -5,22 +5,22 @@
 
 Date: 2026-07-01
 
-Functional Signup/Login Journey Validation: PASS
+Assessment-to-Dashboard Flow Validation: PASS
 
 ## Next Immediate Task
 
-Assessment-to-Dashboard Flow Validation
+Report Upload-to-Reports Flow Validation
 
 ## Checklist
 
 1. Login as test user.
-2. Open /assessment.
-3. Complete one assessment.
-4. Confirm assessment saves successfully.
-5. Confirm redirect or next action is clear.
-6. Open /dashboard.
-7. Confirm Dashboard reflects user progress.
-8. Confirm no broken empty state.
-9. Confirm no console/build errors.
-10. If dashboard does not reflect assessment correctly, fix only that flow.
+2. Open /lab-upload.
+3. Upload a test medical report.
+4. Confirm upload succeeds.
+5. Confirm report is saved.
+6. Open /reports.
+7. Confirm uploaded report appears.
+8. Open /dashboard.
+9. Confirm dashboard reflects report activity if designed to do so.
+10. If report upload or reports display fails, fix only that flow.
 
