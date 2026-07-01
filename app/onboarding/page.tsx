@@ -251,6 +251,31 @@ export default function OnboardingPage() {
           border-top: 5px solid #14b8a6;
         }
 
+        .onboardingPage .onboardingStepCard .primaryBtn,
+        .onboardingPage .onboardingStepCard .secondaryBtn {
+          width: 100%;
+          min-height: 48px;
+          margin-top: auto;
+          border-radius: 16px;
+          font-size: 0.9rem;
+          font-weight: 950;
+          letter-spacing: -0.01em;
+          justify-content: center;
+          box-shadow: 0 14px 30px rgba(15, 118, 110, 0.18);
+        }
+
+        .onboardingPage .onboardingStepCard .secondaryBtn {
+          background: #ffffff;
+          border: 1.5px solid rgba(15, 118, 110, 0.45);
+          color: #0f766e;
+        }
+
+        .onboardingPage .onboardingStepCard .secondaryBtn:hover {
+          background: rgba(240, 253, 250, 0.95);
+          border-color: rgba(15, 118, 110, 0.75);
+          transform: translateY(-1px);
+        }
+
         .onboardingPage .onboardingSafetyStrip {
           display: flex;
           align-items: flex-start;
@@ -279,6 +304,123 @@ export default function OnboardingPage() {
           background: rgba(37, 99, 235, 0.12);
           color: #1d4ed8;
           font-weight: 950;
+        }
+
+        
+        /* ===== ORGANHEAL_ONBOARDING_STEP_BUTTONS_V2 ===== */
+
+        .onboardingPage .onboardingStepCard > a{
+          display:flex !important;
+          align-items:center !important;
+          justify-content:center !important;
+          width:100% !important;
+          min-height:52px !important;
+          margin-top:auto !important;
+          border-radius:16px !important;
+          font-size:0.95rem !important;
+          font-weight:900 !important;
+          letter-spacing:-0.01em !important;
+          text-decoration:none !important;
+          transition:all .25s ease !important;
+        }
+
+        .onboardingPage .onboardingStepCard > a.primaryBtn{
+          background:linear-gradient(135deg,#06b6d4,#0f766e) !important;
+          color:#ffffff !important;
+          border:none !important;
+          box-shadow:0 16px 38px rgba(15,118,110,.28) !important;
+        }
+
+        .onboardingPage .onboardingStepCard > a.secondaryBtn{
+          background:#ffffff !important;
+          color:#0f766e !important;
+          border:2px solid #14b8a6 !important;
+          box-shadow:0 12px 28px rgba(15,23,42,.10) !important;
+        }
+
+        .onboardingPage .onboardingStepCard > a:hover{
+          transform:translateY(-2px) scale(1.01) !important;
+        }
+
+        
+        /* ===== ORGANHEAL_ONBOARDING_REAL_STEP_BUTTONS_V3 ===== */
+
+        .onboardingPage a.onboardingStepAction {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: space-between !important;
+          width: 100% !important;
+          min-height: 52px !important;
+          margin-top: auto !important;
+          padding: 0 18px !important;
+          border-radius: 16px !important;
+          color: #ffffff !important;
+          border: 0 !important;
+          font-size: 0.95rem !important;
+          font-weight: 950 !important;
+          box-shadow: 0 14px 30px rgba(15, 118, 110, 0.28) !important;
+        }
+
+        .onboardingPage .onboardingStepCard:nth-child(1) a.onboardingStepAction {
+          background: linear-gradient(135deg, #0f766e, #115e59) !important;
+        }
+
+        .onboardingPage .onboardingStepCard:nth-child(2) a.onboardingStepAction {
+          background: linear-gradient(135deg, #0f766e, #115e59) !important;
+        }
+
+        .onboardingPage .onboardingStepCard:nth-child(3) a.onboardingStepAction {
+          background: linear-gradient(135deg, #0f766e, #115e59) !important;
+        }
+
+        .onboardingPage .onboardingStepCard:nth-child(4) a.onboardingStepAction {
+          background: linear-gradient(135deg, #0f766e, #115e59) !important;
+        }
+
+        .onboardingPage .onboardingStepCard:nth-child(5) a.onboardingStepAction {
+          background: linear-gradient(135deg, #0f766e, #115e59) !important;
+        }
+
+        .onboardingPage .onboardingStepArrow {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 28px;
+          height: 28px;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.18);
+          color: #ffffff;
+          font-size: 1.1rem;
+          font-weight: 950;
+        }
+
+        
+        /* ===== ORGANHEAL_ONBOARDING_BUTTON_CLARITY_FINAL ===== */
+
+        .onboardingPage .onboardingStepCard a.onboardingStepAction,
+        .onboardingPage .onboardingStepCard a.onboardingStepAction:visited {
+          background: linear-gradient(135deg, #0ea5e9, #0891b2) !important;
+          color: #ffffff !important;
+          min-height: 58px !important;
+          padding: 0 20px !important;
+          border-radius: 18px !important;
+          border: 1px solid rgba(255, 255, 255, 0.35) !important;
+          box-shadow: 0 18px 36px rgba(8, 145, 178, 0.32) !important;
+          opacity: 1 !important;
+        }
+
+        .onboardingPage .onboardingStepCard a.onboardingStepAction span {
+          color: #ffffff !important;
+          opacity: 1 !important;
+          font-size: 1rem !important;
+          font-weight: 950 !important;
+          text-shadow: 0 1px 2px rgba(15, 23, 42, 0.22) !important;
+        }
+
+        .onboardingPage .onboardingStepCard a.onboardingStepAction .onboardingStepArrow {
+          background: rgba(255, 255, 255, 0.24) !important;
+          color: #ffffff !important;
+          border: 1px solid rgba(255, 255, 255, 0.28) !important;
         }
 
         @media (max-width: 980px) {
@@ -440,9 +582,10 @@ export default function OnboardingPage() {
 
               <Link
                 href={step.href}
-                className={step.primary ? "primaryBtn" : "secondaryBtn"}
+                className={step.primary ? "primaryBtn onboardingStepAction onboardingStepActionPrimary" : "secondaryBtn onboardingStepAction onboardingStepActionSecondary"}
               >
-                {isArabic ? step.actionAr : step.action}
+                <span>{isArabic ? step.actionAr : step.action}</span>
+                <span className="onboardingStepArrow">{isArabic ? "←" : "→"}</span>
               </Link>
             </article>
           ))}
