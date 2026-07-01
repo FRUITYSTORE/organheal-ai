@@ -77,7 +77,6 @@ export default function Navbar() {
     dashboard: isArabic ? "لوحة التحكم" : "Dashboard",
     uploadReport: isArabic ? "رفع تقرير" : "Upload Report",
     reports: isArabic ? "التقارير" : "Reports",
-    intelligence: isArabic ? "تحليل التقرير" : "Analysis",
     healthPlan: isArabic ? "الخطة الصحية" : "Health Plan",
     history: isArabic ? "التاريخ الصحي" : "History",
     doctorPortal: isArabic ? "بوابة الطبيب" : "Doctor Portal",
@@ -245,7 +244,6 @@ export default function Navbar() {
           <>
             <Link href="/dashboard">{labels.dashboard}</Link>
             <Link href="/reports">{labels.reports}</Link>
-            <Link href="/reports">{labels.intelligence}</Link>
             <Link href="/health-plan">{labels.healthPlan}</Link>
             <Link href="/library">{labels.education}</Link>
 
