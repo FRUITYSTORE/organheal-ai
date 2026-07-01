@@ -288,13 +288,13 @@ export default function DashboardPage() {
       }
     : hasReports && !hasSavedIntelligence
     ? {
-        tag: isArabic ? "جاهز للذكاء" : "Ready for intelligence",
-        label: isArabic ? "ولّد ذكاء التقرير" : "Generate report intelligence",
+        tag: isArabic ? "جاهز للتحليل" : "Ready for analysis",
+        label: isArabic ? "حلّل التقرير" : "Analyze report",
         description: isArabic
-          ? "افتح مركز الذكاء لتحويل تقاريرك إلى ملخص مفهوم للمريض وملخص جاهز للطبيب."
-          : "Open the Intelligence Center to turn your reports into a patient-friendly summary and doctor-ready brief.",
-        href: "/intelligence",
-        buttonText: isArabic ? "افتح مركز الذكاء" : "Open Intelligence",
+          ? "افتح مكتبة التقارير لتحويل تقاريرك إلى ملخص مفهوم للمريض وملخص جاهز للطبيب."
+          : "Open the Reports Library to turn your reports into a patient-friendly summary and doctor-ready brief.",
+        href: "/reports",
+        buttonText: isArabic ? "افتح مكتبة التقارير" : "Open Intelligence",
       }
     : hasSavedIntelligence && !hasCheckIn
     ? {
@@ -342,7 +342,7 @@ export default function DashboardPage() {
       href: "/reports",
     },
     {
-      label: isArabic ? "الذكاء المحفوظ" : "Saved Intelligence",
+      label: isArabic ? "التحليل المحفوظ" : "Saved Analysis",
       value: String(reportStats.savedIntelligence),
       detail: hasSavedIntelligence
         ? `${isArabic ? "آخر نتيجة" : "Latest"}: ${formatDate(
@@ -352,7 +352,7 @@ export default function DashboardPage() {
         : isArabic
         ? "لم يتم التوليد بعد"
         : "Not generated yet",
-      href: "/intelligence",
+      href: "/reports",
     },
     {
       label: isArabic ? "التحديث الصحي" : "Check-In",
@@ -416,9 +416,9 @@ export default function DashboardPage() {
       href: "/checkin",
     },
     {
-      title: isArabic ? "مركز الذكاء" : "Intelligence",
+      title: isArabic ? "مكتبة التقارير" : "Intelligence",
       text: isArabic ? "راجع ملخص المريض وملخص الطبيب." : "Review patient and doctor-ready summaries.",
-      href: "/intelligence",
+      href: "/reports",
     },
     {
       title: isArabic ? "خطة المتابعة" : "Health Plan",
@@ -430,6 +430,62 @@ export default function DashboardPage() {
   return (
     <main className="smartDashboardPage dashboardCommandCenterPage" dir={isArabic ? "rtl" : "ltr"} lang={isArabic ? "ar" : "en"}>
       <style>{`
+        /* ORGANHEAL_DASHBOARD_FLOW_ALIGNMENT_V1 */
+
+        .dashboardCommandCenterPage .dashboardCommandHero {
+          background:
+            radial-gradient(circle at 88% 10%, rgba(20, 184, 166, 0.36), transparent 34%),
+            linear-gradient(135deg, #061826 0%, #0f172a 42%, #0f766e 100%) !important;
+          color: #ffffff !important;
+          border: 1px solid rgba(255, 255, 255, 0.16) !important;
+          box-shadow: 0 34px 90px rgba(15, 23, 42, 0.30) !important;
+        }
+
+        .dashboardCommandCenterPage .dashboardCommandHero h1,
+        .dashboardCommandCenterPage .dashboardCommandHero p,
+        .dashboardCommandCenterPage .dashboardCommandHero span {
+          color: #ffffff !important;
+        }
+
+        .dashboardCommandCenterPage .dashboardCommandCard {
+          border-top: 6px solid #0f766e !important;
+          box-shadow: 0 22px 56px rgba(15, 23, 42, 0.12) !important;
+        }
+
+        .dashboardCommandCenterPage .dashboardCommandGrid .dashboardCommandCard:nth-child(1) {
+          border-top-color: #2563eb !important;
+        }
+
+        .dashboardCommandCenterPage .dashboardCommandGrid .dashboardCommandCard:nth-child(2) {
+          border-top-color: #0f766e !important;
+        }
+
+        .dashboardCommandCenterPage .dashboardCommandGrid .dashboardCommandCard:nth-child(3) {
+          border-top-color: #059669 !important;
+        }
+
+        .dashboardCommandCenterPage .dashboardCommandGrid .dashboardCommandCard:nth-child(4) {
+          border-top-color: #d97706 !important;
+        }
+
+        .dashboardCommandCenterPage .dashboardPrimaryAction {
+          background: linear-gradient(135deg, #06b6d4, #14b8a6) !important;
+          color: #061826 !important;
+          font-weight: 950 !important;
+          box-shadow: 0 16px 40px rgba(6, 182, 212, 0.32) !important;
+        }
+
+        .dashboardCommandCenterPage .dashboardSecondaryAction {
+          background: #ffffff !important;
+          color: #0f766e !important;
+          border: 1px solid rgba(15, 118, 110, 0.28) !important;
+          font-weight: 950 !important;
+        }
+
+        .dashboardCommandCenterPage .dashboardJourneyPanel {
+          border-top: 7px solid #0f766e !important;
+        }
+
         /* ORGANHEAL_DASHBOARD_JOURNEY_TIMELINE_STEP3 */
         .dashboardJourneyPanel {
           background: rgba(255, 255, 255, 0.94);
@@ -928,7 +984,7 @@ export default function DashboardPage() {
 
             <p>
               {isArabic
-                ? "هذه الصفحة تجمع التقييمات، التحديث الصحي، التقارير، الذكاء الصحي، وخطة المتابعة في مكان واحد لتعرف خطوتك التالية بوضوح."
+                ? "هذه الصفحة تجمع التقييمات، التحديث الصحي، التقارير، تحليل التقرير، وخطة المتابعة في مكان واحد لتعرف خطوتك التالية بوضوح."
                 : "This page connects assessments, check-ins, reports, intelligence, and your follow-up plan in one command center."}
             </p>
           </div>
@@ -1016,12 +1072,12 @@ export default function DashboardPage() {
                     },
                     {
                       step: "03",
-                      label: isArabic ? "الذكاء الصحي" : "Health Intelligence",
+                      label: isArabic ? "تحليل التقرير" : "Report Analysis",
                       description: isArabic
                         ? "يحوّل التقارير إلى ملخصات قابلة للفهم والمتابعة."
-                        : "Turns reports into understandable follow-up summaries.",
+                        : "Turns reports into patient and doctor-ready summaries.",
                       ready: hasSavedIntelligence,
-                      href: "/intelligence",
+                      href: "/reports",
                     },
                     {
                       step: "04",
@@ -1070,7 +1126,7 @@ export default function DashboardPage() {
 
             <section className="dashboardCommandLayout">
               <div className="dashboardCommandPanel">
-                <span>{isArabic ? "ملخص الذكاء الصحي" : "Health intelligence snapshot"}</span>
+                <span>{isArabic ? "ملخص التحليل الصحي" : "Health analysis snapshot"}</span>
 
                 <h2>
                   {hasAssessments || hasCheckIn
@@ -1116,7 +1172,7 @@ export default function DashboardPage() {
 
                 <div className="dashboardActionRow">
                   <Link href="/intelligence" className="dashboardPrimaryAction">
-                    {isArabic ? "مركز الذكاء" : "Intelligence Center"}
+                    {isArabic ? "مكتبة التقارير" : "Reports Library"}
                   </Link>
 
                   <Link href="/health-plan" className="dashboardSecondaryAction">
@@ -1157,8 +1213,8 @@ export default function DashboardPage() {
                 </h2>
                 <p>
                   {isArabic
-                    ? "ابدأ بتقييم صحي، ارفع تقريرًا إن وجد، ثم استخدم مركز الذكاء لتكوين ملخص واضح."
-                    : "Start with an assessment, upload a report if available, then use Intelligence Center to create a clear summary."}
+                    ? "ابدأ بتقييم صحي، ارفع تقريرًا إن وجد، ثم استخدم مكتبة التقارير لتكوين ملخص واضح."
+                    : "Start with an assessment, upload a report if available, then use Reports Library to create a clear summary."}
                 </p>
               </section>
             )}
@@ -1168,3 +1224,4 @@ export default function DashboardPage() {
     </main>
   );
 }
+
