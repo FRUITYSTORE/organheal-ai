@@ -356,3 +356,91 @@ Next logical work:
 
 - Health Plan connection QA
 - Confirm that the Intelligence Center to Health Plan journey is clear and not duplicated.
+
+---
+
+# Public Readiness + Private Protection Checkpoint
+
+Date: 2026-07-01
+
+## Completed Phase
+
+OrganHeal AI public experience was cleaned and stabilized so the platform appears as a mature health intelligence product, not as a construction roadmap.
+
+## Public UI Rules Now Approved
+
+- Do not expose unfinished pricing, billing, subscriptions, Plus, Premium, future plans, or roadmap language in public UI.
+- Do not use public labels such as Soon, Planned, Future, Later, In production, Price to be announced, or No payment is active.
+- Unfinished modules must stay in internal backlog/checkpoint files, not public pages.
+- Public visitor navigation should stay focused on:
+  - Home
+  - Features
+  - Health Learning Hub
+  - Blog / Article Finder
+  - About
+  - Contact
+  - Signup
+  - Login
+
+## Completed Cleanups
+
+- Pricing page hidden from public experience and redirected to Features.
+- Footer no longer shows Compare Plans.
+- Homepage cleaned from Free / Plus / Pricing / Subscription language.
+- Learning Hub redesigned to show clear visitor path, featured guides, article finder, learning routes, and available content.
+- Blog discovery improved as article search/filter experience.
+- Article reading page improved for focused reading.
+- Features page cleaned from planned/future product language.
+- Onboarding cleaned from Pricing / Plus / View Plans / later language.
+- Navbar and Footer checked for public clarity.
+
+## Private Protection Added
+
+- RouteAccessGuard added to protect private workspace routes.
+- Login now supports return path using ?next= so users return to the protected page they wanted after login.
+- Sitemap cleaned to include only mature public pages.
+- Robots disallow private workspace, admin, pricing, onboarding, reset-password, and API routes.
+- Proxy headers added with X-Robots-Tag: noindex, nofollow, noarchive for private/non-public routes.
+
+## Protected Private Routes
+
+- /dashboard
+- /reports
+- /intelligence
+- /health-plan
+- /history
+- /profile
+- /lab-upload
+- /checkin
+- /organ-report
+- /admin
+
+## Public Routes That Should Remain Indexable
+
+- /
+- /features
+- /library
+- /blog
+- /blog/[slug]
+- /about
+- /contact
+- /privacy
+- /terms
+- /medical-disclaimer
+
+## Current Working Rule
+
+Before building new features, validate the real user journey:
+
+Visitor → Signup → Email confirmation → Login → Onboarding → Dashboard
+
+Existing user:
+
+Protected route → Login with next path → Return to requested private workspace page
+
+## Next Step
+
+Functional Signup/Login Journey Validation
+
+Do not start a new feature page before this journey is tested and confirmed.
+
