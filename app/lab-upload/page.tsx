@@ -579,7 +579,7 @@ export default function LabUploadPage() {
     uploadStep === "saved" || uploadedFiles.length > 0 || latestUploadedFileName;
 
   return (
-    <main className="ohPageShell labUploadFocusPage" dir={isArabic ? "rtl" : "ltr"}>
+    <main className="ohPageShell labUploadFocusPage labUploadFinalV3" dir={isArabic ? "rtl" : "ltr"}>
       <style>{`
         .labUploadFocusPage,
         .labUploadFocusPage * {
@@ -1469,7 +1469,277 @@ export default function LabUploadPage() {
           </div>
         </section>
       </div>
-    </main>
+      <style>{`
+        /* ORGANHEAL_LAB_UPLOAD_FINAL_V3 */
+
+        .labUploadFinalV3 {
+          min-height: 100vh !important;
+          background:
+            radial-gradient(circle at 12% 5%, rgba(6, 182, 212, 0.22), transparent 28%),
+            radial-gradient(circle at 88% 18%, rgba(15, 118, 110, 0.26), transparent 34%),
+            linear-gradient(180deg, #dbeafe 0%, #e2e8f0 45%, #f8fafc 100%) !important;
+          color: #0f172a !important;
+        }
+
+        .labUploadFinalV3 .ohContainer {
+          max-width: 1180px !important;
+        }
+
+        .labUploadFinalV3 .ohHero,
+        .labUploadFinalV3 .ohContainer > section:first-of-type {
+          background:
+            radial-gradient(circle at 86% 10%, rgba(20, 184, 166, 0.42), transparent 36%),
+            linear-gradient(135deg, #061826 0%, #0f172a 42%, #0f766e 100%) !important;
+          color: #ffffff !important;
+          border-radius: 34px !important;
+          border: 1px solid rgba(255, 255, 255, 0.16) !important;
+          box-shadow: 0 34px 90px rgba(15, 23, 42, 0.34) !important;
+          padding: 38px !important;
+        }
+
+        .labUploadFinalV3 .ohHero :is(h1,h2,h3,p,span,strong,small),
+        .labUploadFinalV3 .ohContainer > section:first-of-type :is(h1,h2,h3,p,span,strong,small) {
+          color: #ffffff !important;
+        }
+
+        .labUploadFinalV3 h1 {
+          font-size: clamp(2.55rem, 5vw, 4.4rem) !important;
+          line-height: 1.03 !important;
+          letter-spacing: -0.05em !important;
+        }
+
+        .labUploadFinalV3 h2,
+        .labUploadFinalV3 h3,
+        .labUploadFinalV3 strong {
+          color: #0f172a !important;
+          font-weight: 950 !important;
+        }
+
+        .labUploadFinalV3 p,
+        .labUploadFinalV3 small,
+        .labUploadFinalV3 li {
+          color: #334155 !important;
+          font-weight: 740 !important;
+          line-height: 1.7 !important;
+        }
+
+        .labUploadFinalV3 .ohMetricGrid > * {
+          min-height: 145px !important;
+          border: 0 !important;
+          border-radius: 24px !important;
+          color: #ffffff !important;
+          box-shadow: 0 24px 62px rgba(15, 23, 42, 0.24) !important;
+        }
+
+        .labUploadFinalV3 .ohMetricGrid > *:nth-child(1) {
+          background: linear-gradient(135deg, #1d4ed8, #0f766e) !important;
+        }
+
+        .labUploadFinalV3 .ohMetricGrid > *:nth-child(2) {
+          background: linear-gradient(135deg, #0f766e, #06b6d4) !important;
+        }
+
+        .labUploadFinalV3 .ohMetricGrid > *:nth-child(3) {
+          background: linear-gradient(135deg, #047857, #10b981) !important;
+        }
+
+        .labUploadFinalV3 .ohMetricGrid > *:nth-child(4) {
+          background: linear-gradient(135deg, #b45309, #f59e0b) !important;
+        }
+
+        .labUploadFinalV3 .ohMetricGrid > * * {
+          color: #ffffff !important;
+        }
+
+        .labUploadFinalV3 .ohCard,
+        .labUploadFinalV3 .ohActionPanel,
+        .labUploadFinalV3 article,
+        .labUploadFinalV3 form {
+          background: #ffffff !important;
+          color: #0f172a !important;
+          border: 1px solid rgba(15, 23, 42, 0.14) !important;
+          border-radius: 30px !important;
+          box-shadow: 0 22px 58px rgba(15, 23, 42, 0.13) !important;
+        }
+
+        .labUploadFinalV3 .ohCard *,
+        .labUploadFinalV3 .ohActionPanel *,
+        .labUploadFinalV3 article *,
+        .labUploadFinalV3 form * {
+          opacity: 1 !important;
+        }
+
+        .labUploadFinalV3 .ohCardHeader {
+          background: linear-gradient(135deg, #061826, #0f766e) !important;
+          border-radius: 22px !important;
+          padding: 18px !important;
+          border: 0 !important;
+          margin-bottom: 18px !important;
+          box-shadow: 0 16px 38px rgba(15, 23, 42, 0.18) !important;
+        }
+
+        .labUploadFinalV3 .ohCardHeader,
+        .labUploadFinalV3 .ohCardHeader * {
+          color: #ffffff !important;
+        }
+
+        /* Upload box */
+        .labUploadFinalV3 input[type="file"] {
+          width: 100% !important;
+          min-height: 210px !important;
+          padding: 84px 24px 24px !important;
+          border: 2px dashed rgba(15, 118, 110, 0.52) !important;
+          border-radius: 28px !important;
+          background:
+            radial-gradient(circle at 50% 24%, rgba(20, 184, 166, 0.24), transparent 24%),
+            linear-gradient(180deg, #f8fafc, #ecfeff) !important;
+          color: #0f172a !important;
+          font-weight: 950 !important;
+          box-shadow:
+            inset 0 0 0 1px rgba(15, 118, 110, 0.10),
+            0 16px 36px rgba(15, 23, 42, 0.08) !important;
+          cursor: pointer !important;
+        }
+
+        .labUploadFinalV3 label:has(input[type="file"]),
+        .labUploadFinalV3 div:has(> input[type="file"]) {
+          display: block !important;
+          padding: 24px !important;
+          border-radius: 30px !important;
+          background: linear-gradient(180deg, #ffffff, #f8fafc) !important;
+          border: 1px solid rgba(15, 23, 42, 0.14) !important;
+          box-shadow: 0 18px 44px rgba(15, 23, 42, 0.12) !important;
+        }
+
+        /* Search and filter */
+        .labUploadFinalV3 input[type="search"],
+        .labUploadFinalV3 input[placeholder*="Search"],
+        .labUploadFinalV3 input[placeholder*="search"],
+        .labUploadFinalV3 input[placeholder*="file"],
+        .labUploadFinalV3 select {
+          min-height: 46px !important;
+          padding: 0 14px !important;
+          border-radius: 14px !important;
+          background: #ffffff !important;
+          color: #0f172a !important;
+          border: 1px solid rgba(15, 23, 42, 0.24) !important;
+          box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08) !important;
+          font-weight: 850 !important;
+        }
+
+        .labUploadFinalV3 input[placeholder*="Search"],
+        .labUploadFinalV3 input[placeholder*="search"],
+        .labUploadFinalV3 input[placeholder*="file"] {
+          width: min(100%, 760px) !important;
+          min-width: 360px !important;
+        }
+
+        .labUploadFinalV3 select {
+          min-width: 190px !important;
+        }
+
+        .labUploadFinalV3 input::placeholder {
+          color: #64748b !important;
+          opacity: 1 !important;
+        }
+
+        /* Dark helper boxes like Clear Next Step */
+        .labUploadFinalV3 .ohContainer > section div[style*="#061826"],
+        .labUploadFinalV3 .ohContainer > section div[style*="#0f766e"],
+        .labUploadFinalV3 .ohContainer > section div[style*="linear-gradient"],
+        .labUploadFinalV3 aside div[style*="#061826"],
+        .labUploadFinalV3 aside div[style*="#0f766e"],
+        .labUploadFinalV3 aside div[style*="linear-gradient"] {
+          padding: 24px !important;
+          border-radius: 24px !important;
+          background: linear-gradient(135deg, #061826, #0f766e) !important;
+          box-shadow: 0 18px 44px rgba(15, 23, 42, 0.18) !important;
+        }
+
+        .labUploadFinalV3 .ohContainer > section div[style*="#061826"] *,
+        .labUploadFinalV3 .ohContainer > section div[style*="#0f766e"] *,
+        .labUploadFinalV3 .ohContainer > section div[style*="linear-gradient"] *,
+        .labUploadFinalV3 aside div[style*="#061826"] *,
+        .labUploadFinalV3 aside div[style*="#0f766e"] *,
+        .labUploadFinalV3 aside div[style*="linear-gradient"] * {
+          color: #ffffff !important;
+          opacity: 1 !important;
+        }
+
+        /* Supported documents on the right */
+        .labUploadFinalV3 .ohTimelineItem,
+        .labUploadFinalV3 [class*="TimelineItem"],
+        .labUploadFinalV3 aside article,
+        .labUploadFinalV3 aside .ohCard {
+          min-height: 96px !important;
+          padding: 18px !important;
+          border-radius: 20px !important;
+          background: #ffffff !important;
+          color: #0f172a !important;
+          border: 1px solid rgba(15, 23, 42, 0.12) !important;
+          border-inline-start: 7px solid #0f766e !important;
+          box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08) !important;
+        }
+
+        .labUploadFinalV3 .ohTimelineItem strong,
+        .labUploadFinalV3 [class*="TimelineItem"] strong,
+        .labUploadFinalV3 aside article strong,
+        .labUploadFinalV3 aside .ohCard strong {
+          font-size: 1rem !important;
+          color: #0f172a !important;
+          font-weight: 950 !important;
+        }
+
+        .labUploadFinalV3 .ohTimelineItem p,
+        .labUploadFinalV3 [class*="TimelineItem"] p,
+        .labUploadFinalV3 aside article p,
+        .labUploadFinalV3 aside .ohCard p {
+          color: #475569 !important;
+          font-weight: 740 !important;
+        }
+
+        /* Buttons */
+        .labUploadFinalV3 .primaryBtn,
+        .labUploadFinalV3 button[type="submit"],
+        .labUploadFinalV3 a[href*="reports"],
+        .labUploadFinalV3 a[href*="intelligence"] {
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          min-height: 42px !important;
+          padding: 0 16px !important;
+          border-radius: 999px !important;
+          background: linear-gradient(135deg, #06b6d4, #14b8a6) !important;
+          color: #061826 !important;
+          border: 0 !important;
+          font-weight: 950 !important;
+          box-shadow: 0 16px 40px rgba(6, 182, 212, 0.34) !important;
+          text-decoration: none !important;
+        }
+
+        .labUploadFinalV3 .primaryBtn *,
+        .labUploadFinalV3 button[type="submit"] *,
+        .labUploadFinalV3 a[href*="reports"] *,
+        .labUploadFinalV3 a[href*="intelligence"] * {
+          color: #061826 !important;
+        }
+
+        .labUploadFinalV3 .secondaryBtn,
+        .labUploadFinalV3 a[href*="file"] {
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          min-height: 40px !important;
+          padding: 0 16px !important;
+          border-radius: 999px !important;
+          background: #ffffff !important;
+          color: #0f766e !important;
+          border: 1px solid rgba(15, 118, 110, 0.34) !important;
+          font-weight: 950 !important;
+          box-shadow: 0 12px 28px rgba(15, 23, 42, 0.10) !important;
+          text-decoration: none !important;
+        }
+      `}</style></main>
   );
 }
 
