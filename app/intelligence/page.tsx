@@ -1093,7 +1093,7 @@ Clinical note: This is an educational interpretation and should be reviewed by a
             </span>
             <span className="ohMetricValue">{completedExtractionCount}</span>
             <span className="ohMetricHint">
-              {text("ready for intelligence", "جاهز للتحليل")}
+              {text("ready for analysis", "جاهز للتحليل")}
             </span>
           </article>
         </section>

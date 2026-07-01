@@ -745,7 +745,7 @@ export default function ReportsPage() {
           <article className="ohMetricCard reportsMetric">
             <span className="ohMetricLabel">{text("Text extracted", "استخراج مكتمل")}</span>
             <span className="ohMetricValue">{extractionCompletedCount}</span>
-            <span className="ohMetricHint">{text("ready for intelligence", "جاهزة للتحليل")}</span>
+            <span className="ohMetricHint">{text("ready for analysis", "جاهزة للتحليل")}</span>
           </article>
         </section>
 

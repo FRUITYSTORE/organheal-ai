@@ -139,7 +139,7 @@ export default function LabUploadPage() {
       setLatestUploadedFileName(data[0].file_name);
       setLatestUploadedReportId(data[0].id);
       setMessage(
-        `Your file "${data[0].file_name}" is saved. You can run extraction, open the report, or continue to Analyze Report.`
+        `Your file "${data[0].file_name}" is saved. You can prepare the report, open the report, or continue to Analyze Report.`
       );
     }
   }
@@ -1275,7 +1275,7 @@ export default function LabUploadPage() {
                         )
                       : text(
                           "This report is saved. Analyze it now; extraction will run internally when needed.",
-                          "هذا التقرير محفوظ. حلّله الآن؛ سيتم تشغيل الاستخراج داخليًا عند الحاجة."
+                          "هذا التقرير محفوظ. حلّله الآن؛ سيتم تجهيز التقرير داخليًا عند الحاجة."
                         )}
                   </p>
 
@@ -1443,7 +1443,7 @@ export default function LabUploadPage() {
 
               <p className="ohCardText">
                 {text(
-                  "Save the report, run extraction when needed, open Analyze Report, then continue to your follow-up plan.",
+                  "Save the report, analyze it when ready, then continue to your follow-up plan.",
                   "احفظ التقرير، شغّل الاستخراج عند الحاجة، حلّل آخر تقرير، ثم انتقل إلى خطة المتابعة."
                 )}
               </p>
