@@ -330,6 +330,89 @@ export default function OnboardingPage() {
           font-weight: 950;
         }
 
+
+        /* ===== ORGANHEAL_ONBOARDING_PROGRESS_TRACKER_V1 ===== */
+
+        .onboardingPage .onboardingProgressCard {
+          padding: 24px;
+          border-radius: 28px;
+          background: linear-gradient(135deg, #ffffff, #f0fdfa);
+          border: 1px solid rgba(15, 118, 110, 0.16);
+          box-shadow: 0 20px 46px rgba(15, 23, 42, 0.10);
+        }
+
+        .onboardingPage .onboardingProgressTop {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 18px;
+          margin-bottom: 18px;
+        }
+
+        .onboardingPage .onboardingProgressTitle {
+          margin: 0;
+          color: #0f172a;
+          font-size: 1.25rem;
+          font-weight: 950;
+        }
+
+        .onboardingPage .onboardingProgressText {
+          margin: 6px 0 0;
+          color: #475569;
+          font-weight: 750;
+          line-height: 1.6;
+        }
+
+        .onboardingPage .onboardingProgressPercent {
+          flex: 0 0 auto;
+          min-width: 84px;
+          text-align: center;
+          padding: 10px 14px;
+          border-radius: 18px;
+          background: #0f766e;
+          color: #ffffff;
+          font-size: 1.2rem;
+          font-weight: 950;
+        }
+
+        .onboardingPage .onboardingProgressTrack {
+          height: 12px;
+          border-radius: 999px;
+          background: rgba(15, 118, 110, 0.12);
+          overflow: hidden;
+        }
+
+        .onboardingPage .onboardingProgressFill {
+          width: 20%;
+          height: 100%;
+          border-radius: inherit;
+          background: linear-gradient(135deg, #0ea5e9, #0891b2);
+        }
+
+        .onboardingPage .onboardingProgressSteps {
+          display: grid;
+          grid-template-columns: repeat(5, 1fr);
+          gap: 10px;
+          margin-top: 16px;
+        }
+
+        .onboardingPage .onboardingProgressStep {
+          padding: 12px;
+          border-radius: 16px;
+          background: #ffffff;
+          border: 1px solid rgba(15, 118, 110, 0.16);
+          color: #334155;
+          font-size: 0.82rem;
+          font-weight: 900;
+          text-align: center;
+        }
+
+        .onboardingPage .onboardingProgressStep.active {
+          background: #0f766e;
+          color: #ffffff;
+          border-color: #0f766e;
+        }
+
         .onboardingPage .onboardingSafetyStrip {
           display: flex;
           align-items: flex-start;
@@ -618,6 +701,37 @@ export default function OnboardingPage() {
               {text("education and preparation only", "تعليم وتحضير فقط")}
             </span>
           </article>
+        </section>
+
+
+        <section className="onboardingProgressCard">
+          <div className="onboardingProgressTop">
+            <div>
+              <h2 className="onboardingProgressTitle">
+                {text("Getting started progress", "تقدم البداية")}
+              </h2>
+              <p className="onboardingProgressText">
+                {text(
+                  "Complete the journey step by step. Start with your first health assessment, then continue through documents, reports, plan, and check-ins.",
+                  "أكمل الرحلة خطوة بخطوة. ابدأ بالتقييم الصحي، ثم تابع المستندات، التقارير، الخطة، والمتابعة."
+                )}
+              </p>
+            </div>
+
+            <div className="onboardingProgressPercent">20%</div>
+          </div>
+
+          <div className="onboardingProgressTrack">
+            <div className="onboardingProgressFill" />
+          </div>
+
+          <div className="onboardingProgressSteps">
+            <div className="onboardingProgressStep active">{text("Assessment", "التقييم")}</div>
+            <div className="onboardingProgressStep">{text("Documents", "المستندات")}</div>
+            <div className="onboardingProgressStep">{text("Reports", "التقارير")}</div>
+            <div className="onboardingProgressStep">{text("Plan", "الخطة")}</div>
+            <div className="onboardingProgressStep">{text("Check-Ins", "المتابعة")}</div>
+          </div>
         </section>
 
         <section className="ohGrid cols3">
