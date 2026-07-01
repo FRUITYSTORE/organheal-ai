@@ -823,12 +823,177 @@ Clinical note: This is an educational interpretation and should be reviewed by a
   const hasOlderReports = healthInsights.length > visibleReportsCount;
   const canShowLessReports = visibleReportsCount > REPORTS_PAGE_SIZE;
 
+  const requestedReportIdForFocus =
+    typeof window !== "undefined"
+      ? Number(new URLSearchParams(window.location.search).get("reportId") || 0)
+      : 0;
+
+  const focusedReportInsight =
+    healthInsights.find((item) => {
+      if (!requestedReportIdForFocus || Number.isNaN(requestedReportIdForFocus)) {
+        return false;
+      }
+
+      return (
+        Number(item.report_id) === requestedReportIdForFocus ||
+        Number(item.id) === requestedReportIdForFocus
+      );
+    }) ||
+    (activeGeneratedInsightId
+      ? healthInsights.find((item) => item.id === activeGeneratedInsightId)
+      : null) ||
+    healthInsights.find((item) => item.ai_status !== "Generated") ||
+    healthInsights[0] ||
+    null;
+
+  const focusedReportIsGenerated = Boolean(
+    focusedReportInsight &&
+      focusedReportInsight.ai_status === "Generated" &&
+      focusedReportInsight.extraction_status === "Completed"
+  );
+
+  const focusedReportHasVisibleResult = Boolean(
+    focusedReportInsight &&
+      generatedResult &&
+      activeGeneratedInsightId === focusedReportInsight.id
+  );
+
+  const compactHealthInsights = focusedReportInsight
+    ? visibleHealthInsights.filter((item) => item.id !== focusedReportInsight.id)
+    : visibleHealthInsights;
+
   return (
     <main
-      className="ohPageShell"
+      className="ohPageShell intelligenceFocusPage"
       dir={isArabicUi ? "rtl" : "ltr"}
       lang={isArabicUi ? "ar" : "en"}
     >
+      <style>{`
+        .intelligenceFocusPage,
+        .intelligenceFocusPage * {
+          box-sizing: border-box;
+        }
+
+        .intelligenceFocusPage a {
+          color: inherit;
+          text-decoration: none;
+        }
+
+        .selectedReportFocus {
+          border-top: 6px solid #0f766e;
+          background:
+            radial-gradient(circle at 88% 8%, rgba(20, 184, 166, 0.14), transparent 30%),
+            #ffffff;
+          box-shadow: 0 22px 58px rgba(15, 23, 42, 0.08);
+        }
+
+        .selectedReportGrid {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) minmax(280px, 0.48fr);
+          gap: 20px;
+          align-items: stretch;
+        }
+
+        .selectedReportPanel {
+          border-radius: 24px;
+          padding: 20px;
+          background: linear-gradient(135deg, #0f172a, #115e59);
+          color: white;
+          min-height: 100%;
+        }
+
+        .selectedReportPanel .ohMetricLabel,
+        .selectedReportPanel .ohCardText {
+          color: rgba(226, 232, 240, 0.86);
+        }
+
+        .selectedReportPanel .ohCardTitle {
+          color: white;
+        }
+
+        .intelligenceStatusLine {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          align-items: center;
+          margin-top: 14px;
+        }
+
+        .intelligencePill {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          border-radius: 999px;
+          padding: 8px 11px;
+          border: 1px solid rgba(15, 23, 42, 0.08);
+          background: #f8fafc;
+          color: #334155;
+          font-size: 0.78rem;
+          font-weight: 900;
+          line-height: 1;
+          white-space: nowrap;
+        }
+
+        .intelligencePill.good {
+          background: rgba(16, 185, 129, 0.11);
+          color: #047857;
+          border-color: rgba(16, 185, 129, 0.22);
+        }
+
+        .intelligencePill.moderate {
+          background: rgba(245, 158, 11, 0.12);
+          color: #b45309;
+          border-color: rgba(245, 158, 11, 0.24);
+        }
+
+        .intelligencePill.neutral {
+          background: rgba(37, 99, 235, 0.1);
+          color: #1d4ed8;
+          border-color: rgba(37, 99, 235, 0.18);
+        }
+
+        .intelligencePrimaryAction {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 44px;
+          padding: 0 18px;
+          border-radius: 999px;
+          background: linear-gradient(135deg, #0f766e, #14b8a6);
+          color: white;
+          font-weight: 950;
+          border: 0;
+          cursor: pointer;
+          box-shadow: 0 14px 34px rgba(20, 184, 166, 0.28);
+        }
+
+        .intelligenceSecondaryAction {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 44px;
+          padding: 0 16px;
+          border-radius: 999px;
+          background: white;
+          color: #0f766e;
+          font-weight: 900;
+          border: 1px solid rgba(15, 118, 110, 0.2);
+          cursor: pointer;
+        }
+
+        .focusedResultStack {
+          margin-top: 20px;
+          display: grid;
+          gap: 16px;
+        }
+
+        @media (max-width: 980px) {
+          .selectedReportGrid {
+            grid-template-columns: 1fr;
+          }
+        }
+      `}</style>
+
       <div className="ohContainer ohStack large" style={{ padding: "28px 0 56px" }}>
         <PageBackActions />
 
@@ -972,7 +1137,179 @@ Clinical note: This is an educational interpretation and should be reviewed by a
           </section>
         )}
 
-        {!loading && healthEngine && (
+        {!loading && focusedReportInsight && (
+          <section className="ohCard selectedReportFocus">
+            <div className="selectedReportGrid">
+              <div>
+                <p className="ohMetricLabel">
+                  {text("Selected report", "التقرير المحدد")}
+                </p>
+
+                <h2 className="ohCardTitle" style={{ fontSize: "1.65rem" }}>
+                  {focusedReportInsight.file_name || "Medical report"}
+                </h2>
+
+                <p className="ohCardText">
+                  {focusedReportIsGenerated
+                    ? text(
+                        "This report already has generated intelligence. Review the result below or continue to your health plan.",
+                        "هذا التقرير لديه تحليل مولد. راجع النتيجة بالأسفل أو تابع إلى خطة الصحة."
+                      )
+                    : text(
+                        "This report is ready for report intelligence. OrganHeal will extract the report text first, then generate a clearer summary.",
+                        "هذا التقرير جاهز للتحليل. سيستخرج OrganHeal نص التقرير أولًا، ثم يولد ملخصًا أوضح."
+                      )}
+                </p>
+
+                <div className="intelligenceStatusLine">
+                  <span className="intelligencePill neutral">
+                    {text("Uploaded", "تم الرفع")}:{" "}
+                    {formatDate(focusedReportInsight.uploaded_at || focusedReportInsight.created_at)}
+                  </span>
+
+                  <span className={`intelligencePill ${
+                    focusedReportInsight.extraction_status === "Completed" ? "good" : "moderate"
+                  }`}>
+                    {text("Extraction", "الاستخراج")}:{" "}
+                    {focusedReportInsight.extraction_status || "Pending"}
+                  </span>
+
+                  <span className={`intelligencePill ${
+                    focusedReportIsGenerated ? "good" : "moderate"
+                  }`}>
+                    {text("Analysis", "التحليل")}:{" "}
+                    {focusedReportIsGenerated
+                      ? text("Generated", "مولد")
+                      : text("Needs generation", "يحتاج توليد")}
+                  </span>
+                </div>
+
+                <div className="ohButtonRow" style={{ marginTop: "20px" }}>
+                  <button
+                    type="button"
+                    className="intelligencePrimaryAction"
+                    onClick={() => {
+                      if (focusedReportIsGenerated) {
+                        openSavedGeneratedResult(focusedReportInsight.id);
+                      } else {
+                        generateReportIntelligence(focusedReportInsight.id);
+                      }
+                    }}
+                  >
+                    {focusedReportIsGenerated
+                      ? text("View Analysis", "عرض التحليل")
+                      : text("Analyze Report", "تحليل التقرير")}
+                  </button>
+
+                  <button
+                    type="button"
+                    className="intelligenceSecondaryAction"
+                    onClick={() => openMedicalReport(focusedReportInsight.file_path)}
+                    disabled={!focusedReportInsight.file_path}
+                  >
+                    {text("Open File", "فتح الملف")}
+                  </button>
+
+                  <Link href="/reports" className="intelligenceSecondaryAction">
+                    {text("Back to Reports", "العودة للتقارير")}
+                  </Link>
+
+                  {focusedReportIsGenerated && (
+                    <Link href="/health-plan" className="intelligenceSecondaryAction">
+                      {text("Health Plan", "خطة الصحة")}
+                    </Link>
+                  )}
+                </div>
+              </div>
+
+              <aside className="selectedReportPanel">
+                <p className="ohMetricLabel">
+                  {text("What happens here", "ماذا يحدث هنا")}
+                </p>
+
+                <h3 className="ohCardTitle">
+                  {text(
+                    "Generate or review one selected report.",
+                    "توليد أو مراجعة تحليل تقرير واحد محدد."
+                  )}
+                </h3>
+
+                <p className="ohCardText">
+                  {text(
+                    "Reports stay organized in the Reports Library. This page focuses only on analyzing the selected report and showing the result clearly.",
+                    "تبقى التقارير منظمة في مكتبة التقارير. هذه الصفحة تركز فقط على تحليل التقرير المحدد وعرض النتيجة بوضوح."
+                  )}
+                </p>
+              </aside>
+            </div>
+
+            {focusedReportHasVisibleResult && generatedResult && (
+              <div className="focusedResultStack">
+                <PatientReportPdfCard
+                  fileName={focusedReportInsight.file_name || "Medical report"}
+                  uploadedAtText={formatDate(focusedReportInsight.uploaded_at || focusedReportInsight.created_at)}
+                  summary={focusedReportInsight.summary}
+                  keyFindings={focusedReportInsight.key_findings}
+                  riskSignals={focusedReportInsight.risk_signals}
+                  recommendations={focusedReportInsight.recommendations}
+                  healthStory={generatedResult.healthStory}
+                  executiveSummary={generatedResult.executiveSummary}
+                />
+
+                <DoctorBriefReportCard
+                  fileName={focusedReportInsight.file_name || "Medical report"}
+                  reportTypeLabel={getReportTypeLabel(focusedReportInsight.report_type)}
+                  uploadedAtText={formatDate(focusedReportInsight.uploaded_at || focusedReportInsight.created_at)}
+                  summary={focusedReportInsight.summary}
+                  keyFindings={focusedReportInsight.key_findings}
+                  riskSignals={focusedReportInsight.risk_signals}
+                  recommendations={focusedReportInsight.recommendations}
+                  doctorBrief={focusedReportInsight.doctor_brief}
+                  executiveSummary={generatedResult.executiveSummary}
+                />
+
+                <GeneratedReportDetailsCard
+                  medicalCategory={focusedReportInsight.medical_category}
+                  summary={focusedReportInsight.summary}
+                  keyFindings={focusedReportInsight.key_findings}
+                  riskSignals={focusedReportInsight.risk_signals}
+                  recommendations={focusedReportInsight.recommendations}
+                  doctorBrief={focusedReportInsight.doctor_brief}
+                />
+
+                {generatedResult.executiveSummary && (
+                  <ExecutiveSummaryCard summary={generatedResult.executiveSummary} />
+                )}
+
+                {generatedResult.healthStory && (
+                  <HealthStoryCard story={generatedResult.healthStory} />
+                )}
+
+                {generatedResult.strategy && (
+                  <PersonalHealthStrategyCard strategy={generatedResult.strategy} />
+                )}
+
+                {generatedResult.actionPlan && (
+                  <ActionPlanCard actionPlan={generatedResult.actionPlan} />
+                )}
+
+                {generatedResult.unifiedHealth && (
+                  <UnifiedHealthCard unifiedHealth={generatedResult.unifiedHealth} />
+                )}
+
+                <TimelineCard timeline={generatedResult.timeline} />
+                <LabTrendsCard labTrends={generatedResult.labTrends} />
+                <LongitudinalRiskCard
+                  longitudinalRisk={generatedResult.longitudinalRisk}
+                />
+                <CrossSourceCard crossSource={generatedResult.crossSource} />
+                <DigitalTwinCard digitalTwin={generatedResult.digitalTwin} />
+              </div>
+            )}
+          </section>
+        )}
+
+        {!loading && healthEngine && !focusedReportInsight && (
           <section className="ohStack">
             <HealthPassportCard
               healthProfile={healthEngine.healthProfile}
@@ -1004,20 +1341,20 @@ Clinical note: This is an educational interpretation and should be reviewed by a
             <div className="ohCardHeader">
               <div>
                 <p className="ohMetricLabel">
-                  {text("Report Intelligence", "ذكاء التقارير")}
+                  {text("Other report intelligence", "تحليلات تقارير أخرى")}
                 </p>
 
                 <h2 className="ohCardTitle">
                   {text(
-                    "Generate or review report intelligence",
-                    "ولّد أو راجع ذكاء التقارير"
+                    "Open another report if needed",
+                    "افتح تقريرًا آخر عند الحاجة"
                   )}
                 </h2>
 
                 <p className="ohCardText">
                   {text(
-                    "Open a medical report, generate intelligence, or review saved patient and doctor-ready summaries.",
-                    "افتح تقريرًا طبيًا، ولّد الذكاء، أو راجع ملخصات المريض والملخصات الجاهزة للطبيب."
+                    "The selected report is shown above. Older report actions stay here in a compact list.",
+                    "التقرير المحدد يظهر بالأعلى. أما إجراءات التقارير الأخرى فتبقى هنا بشكل مختصر."
                   )}
                 </p>
               </div>
@@ -1273,6 +1610,7 @@ Clinical note: This is an educational interpretation and should be reviewed by a
     </main>
   );
 }
+
 
 
 
