@@ -314,8 +314,8 @@ export default function OnboardingPage() {
 
               <p className="ohLead">
                 {text(
-                  "Start with one practical step. You can begin with an assessment, add a medical document when available, or review your dashboard.",
-                  "ابدأ بخطوة عملية واحدة. يمكنك البدء بتقييم صحي، إضافة مستند طبي عند توفره، أو مراجعة لوحة التحكم."
+                  "Begin your OrganHeal journey with a simple guided path. Complete your health assessment, upload medical documents when available, review your reports, build your personalized health plan, and continue improving your health through regular check-ins.",
+                  "ابدأ رحلتك مع OrganHeal بمسار بسيط وموجّه. أكمل تقييمك الصحي، وارفع مستنداتك الطبية عند توفرها، ثم راجع تقاريرك، وابنِ خطتك الصحية الشخصية، واستمر في تحسين صحتك من خلال المتابعة المنتظمة."
                 )}
               </p>
 
@@ -337,8 +337,8 @@ export default function OnboardingPage() {
 
               <h2 className="ohCardTitle" style={{ marginTop: "8px" }}>
                 {text(
-                  "Your first path is simple and flexible.",
-                  "مسارك الأول بسيط ومرن."
+                  "Your Health Journey",
+                  "رحلتك الصحية"
                 )}
               </h2>
 
@@ -353,21 +353,21 @@ export default function OnboardingPage() {
                 <div className="ohTimelineItem">
                   <span className="ohTimelineDot" />
                   <p className="ohTimelineTitle">
-                    {text("Start with one health baseline", "ابدأ بنقطة صحية واحدة")}
+                    {text("Health Assessment", "التقييم الصحي")}
                   </p>
                 </div>
 
                 <div className="ohTimelineItem">
                   <span className="ohTimelineDot" />
                   <p className="ohTimelineTitle">
-                    {text("Add evidence when you have it", "أضف البيانات عند توفرها")}
+                    {text("Medical Documents", "المستندات الطبية")}
                   </p>
                 </div>
 
                 <div className="ohTimelineItem">
                   <span className="ohTimelineDot" />
                   <p className="ohTimelineTitle">
-                    {text("Use the dashboard to stay organized", "استخدم لوحة التحكم للتنظيم")}
+                    {text("Reports & Analysis", "التقارير والتحليل")}
                   </p>
                 </div>
               </div>
