@@ -1,57 +1,26 @@
 ﻿
 ---
 
-# Next Step Checkpoint
+# Completed Validation
 
 Date: 2026-07-01
 
-## Current Stable Phase
-
-Public Readiness + Private Protection is considered complete after final build, sitemap, robots, route guard, proxy header, and onboarding cleanup checks pass.
+Functional Signup/Login Journey Validation: PASS
 
 ## Next Immediate Task
 
-Functional Signup/Login Journey Validation
+Assessment-to-Dashboard Flow Validation
 
-## Validation Checklist
+## Checklist
 
-1. Open site as visitor.
-2. Create a new account.
-3. Confirm email.
-4. Login.
-5. Confirm new user goes to onboarding.
-6. From onboarding, start assessment.
-7. Confirm dashboard opens after login.
-8. Open /dashboard as logged-out user.
-9. Confirm redirect to /login?next=/dashboard.
-10. Login and confirm return to /dashboard.
-11. Test /health-plan, /reports, /intelligence as logged-out user.
-12. Confirm public pages still open:
-    - /
-    - /features
-    - /library
-    - /blog
-
-## Do Not Reintroduce
-
-- Pricing
-- Compare Plans
-- View Plans
-- Plus
-- Premium
-- Future
-- Later
-- Planned
-- Coming soon
-- Roadmap
-- Public links to unfinished modules
-
-## Recommended Next Work After Validation
-
-Only after signup/login/onboarding/dashboard journey is confirmed:
-
-1. Improve actual Dashboard user journey if needed.
-2. Review assessment-to-dashboard flow.
-3. Review report upload-to-reports flow.
-4. Review Intelligence and Health Plan only after data flow is stable.
+1. Login as test user.
+2. Open /assessment.
+3. Complete one assessment.
+4. Confirm assessment saves successfully.
+5. Confirm redirect or next action is clear.
+6. Open /dashboard.
+7. Confirm Dashboard reflects user progress.
+8. Confirm no broken empty state.
+9. Confirm no console/build errors.
+10. If dashboard does not reflect assessment correctly, fix only that flow.
 

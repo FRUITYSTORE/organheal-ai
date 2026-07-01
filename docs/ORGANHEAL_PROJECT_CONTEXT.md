@@ -444,3 +444,41 @@ Functional Signup/Login Journey Validation
 
 Do not start a new feature page before this journey is tested and confirmed.
 
+
+---
+
+# Functional Signup/Login Journey Validation Result
+
+Date: 2026-07-01
+
+## Result
+
+PASS
+
+## Confirmed Working Flow
+
+- Signup page opens correctly.
+- New account creation works.
+- Email confirmation is required.
+- User does not enter private workspace before confirmation.
+- After confirmation, user can login.
+- New user is routed to onboarding.
+- Onboarding opens correctly.
+- Protected route return path works:
+  - /health-plan → /login?next=/health-plan → returns to /health-plan
+  - /reports → /login?next=/reports → returns to /reports
+  - /intelligence → /login?next=/intelligence → returns to /intelligence
+
+## Current Stable State
+
+Public readiness, private route protection, SEO protection, login return path, and new-user entry flow are confirmed.
+
+## Next Recommended Validation
+
+Assessment-to-Dashboard Flow Validation
+
+Goal:
+Confirm that a new user can start an assessment, complete it, save results, and then see the expected state on Dashboard.
+
+Do not start a new feature before validating the assessment-to-dashboard flow.
+
