@@ -234,7 +234,7 @@ export default function KidneyPage() {
   const resultTone = result ? getToneFromLevel(result.level) : "neutral";
 
   return (
-    <main className="ohPageShell" dir={isArabic ? "rtl" : "ltr"}>
+    <main className="ohPageShell assessmentForceV2" dir={isArabic ? "rtl" : "ltr"}>
       <div className="ohContainer ohStack large" style={{ padding: "28px 0 56px" }}>
         <PageBackActions />
 
@@ -628,12 +628,169 @@ export default function KidneyPage() {
             </Link>
 
             <Link href="/reports" className="secondaryBtn">
-              {text("Review Analysis", "فتح تحليل التقارير")}
+              {text("Open Reports", "فتح تحليل التقارير")}
             </Link>
           </div>
         </section>
       </div>
-    </main>
+    
+      <style>{`
+        /* ORGANHEAL_ASSESSMENT_FORCE_V2 */
+
+        .assessmentForceV2 {
+          min-height: 100vh !important;
+          background:
+            radial-gradient(circle at 12% 5%, rgba(6, 182, 212, 0.26), transparent 28%),
+            radial-gradient(circle at 88% 18%, rgba(15, 118, 110, 0.30), transparent 34%),
+            linear-gradient(180deg, #dbeafe 0%, #cbd5e1 45%, #f8fafc 100%) !important;
+        }
+
+        .assessmentForceV2 .ohContainer {
+          max-width: 1180px !important;
+        }
+
+        .assessmentForceV2 a[href="/dashboard"],
+        .assessmentForceV2 a[href="/assessment"] {
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          width: fit-content !important;
+          min-height: 44px !important;
+          padding: 0 18px !important;
+          margin: 0 0 18px 0 !important;
+          border-radius: 999px !important;
+          background: #0f172a !important;
+          color: #ffffff !important;
+          border: 1px solid rgba(15, 23, 42, 0.25) !important;
+          box-shadow: 0 14px 34px rgba(15, 23, 42, 0.24) !important;
+          font-weight: 950 !important;
+          font-size: 0.9rem !important;
+          text-decoration: none !important;
+        }
+
+        .assessmentForceV2 .ohHero,
+        .assessmentForceV2 section:first-of-type {
+          background:
+            radial-gradient(circle at 86% 10%, rgba(20, 184, 166, 0.46), transparent 36%),
+            linear-gradient(135deg, #061826 0%, #0f172a 42%, #0f766e 100%) !important;
+          color: #ffffff !important;
+          border: 1px solid rgba(255, 255, 255, 0.16) !important;
+          box-shadow: 0 34px 90px rgba(15, 23, 42, 0.36) !important;
+        }
+
+        .assessmentForceV2 .ohHero *,
+        .assessmentForceV2 section:first-of-type h1,
+        .assessmentForceV2 section:first-of-type h2,
+        .assessmentForceV2 section:first-of-type h3,
+        .assessmentForceV2 section:first-of-type p,
+        .assessmentForceV2 section:first-of-type span,
+        .assessmentForceV2 section:first-of-type strong {
+          color: #ffffff !important;
+        }
+
+        .assessmentForceV2 .ohEyebrow {
+          background: rgba(209, 250, 229, 0.18) !important;
+          color: #d1fae5 !important;
+          border: 1px solid rgba(209, 250, 229, 0.34) !important;
+          font-weight: 950 !important;
+        }
+
+        .assessmentForceV2 .primaryBtn,
+        .assessmentForceV2 button[type="submit"] {
+          background: linear-gradient(135deg, #06b6d4, #14b8a6) !important;
+          color: #061826 !important;
+          border: 0 !important;
+          font-weight: 950 !important;
+          box-shadow: 0 16px 40px rgba(6, 182, 212, 0.35) !important;
+        }
+
+        .assessmentForceV2 .primaryBtn *,
+        .assessmentForceV2 button[type="submit"] * {
+          color: #061826 !important;
+        }
+
+        .assessmentForceV2 .secondaryBtn {
+          background: #ffffff !important;
+          color: #0f766e !important;
+          border: 1px solid rgba(15, 118, 110, 0.34) !important;
+          font-weight: 950 !important;
+          box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12) !important;
+        }
+
+        .assessmentForceV2 .ohMetricGrid > *,
+        .assessmentForceV2 [class*="MetricCard"] {
+          min-height: 145px !important;
+          border: 0 !important;
+          overflow: hidden !important;
+          color: #ffffff !important;
+          box-shadow: 0 24px 62px rgba(15, 23, 42, 0.24) !important;
+        }
+
+        .assessmentForceV2 .ohMetricGrid > *:nth-child(1) {
+          background: linear-gradient(135deg, #1d4ed8, #0f766e) !important;
+        }
+
+        .assessmentForceV2 .ohMetricGrid > *:nth-child(2) {
+          background: linear-gradient(135deg, #0f766e, #06b6d4) !important;
+        }
+
+        .assessmentForceV2 .ohMetricGrid > *:nth-child(3) {
+          background: linear-gradient(135deg, #047857, #10b981) !important;
+        }
+
+        .assessmentForceV2 .ohMetricGrid > *:nth-child(4) {
+          background: linear-gradient(135deg, #b45309, #f59e0b) !important;
+        }
+
+        .assessmentForceV2 .ohMetricGrid > * *,
+        .assessmentForceV2 [class*="MetricCard"] * {
+          color: #ffffff !important;
+        }
+
+        .assessmentForceV2 .ohCard,
+        .assessmentForceV2 .ohActionPanel,
+        .assessmentForceV2 article,
+        .assessmentForceV2 form {
+          background: #ffffff !important;
+          border: 1px solid rgba(15, 23, 42, 0.16) !important;
+          box-shadow: 0 22px 58px rgba(15, 23, 42, 0.14) !important;
+        }
+
+        .assessmentForceV2 .ohCardHeader {
+          background: linear-gradient(135deg, #061826, #0f766e) !important;
+          border-radius: 22px !important;
+          padding: 16px !important;
+          border: 0 !important;
+          margin-bottom: 18px !important;
+          box-shadow: 0 16px 38px rgba(15, 23, 42, 0.18) !important;
+        }
+
+        .assessmentForceV2 .ohCardHeader,
+        .assessmentForceV2 .ohCardHeader * {
+          color: #ffffff !important;
+        }
+
+        .assessmentForceV2 h2,
+        .assessmentForceV2 h3,
+        .assessmentForceV2 strong {
+          color: #0f172a !important;
+          font-weight: 950 !important;
+        }
+
+        .assessmentForceV2 p,
+        .assessmentForceV2 small {
+          color: #334155 !important;
+          font-weight: 720 !important;
+          line-height: 1.65 !important;
+        }
+
+        .assessmentForceV2 input,
+        .assessmentForceV2 select,
+        .assessmentForceV2 textarea {
+          border: 1px solid rgba(15, 23, 42, 0.22) !important;
+          box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08) !important;
+        }
+      `}</style></main>
   );
 }
 
