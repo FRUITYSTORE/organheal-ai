@@ -85,28 +85,54 @@ export default function OnboardingPage() {
     },
     {
       code: "02",
-      title: "Add a medical document when available",
-      titleAr: "أضف مستندًا طبيًا عند توفره",
+      title: "Add a medical document",
+      titleAr: "أضف مستندًا طبيًا",
       text:
-        "Add lab results, radiology reports, discharge summaries, or medical documents inside your private workspace.",
+        "Upload lab results, radiology reports, discharge summaries, or medical documents when available.",
       textAr:
-        "أضف نتائج المختبر أو تقارير الأشعة أو ملخصات الخروج أو المستندات الطبية داخل مساحتك الخاصة.",
+        "ارفع نتائج المختبر أو تقارير الأشعة أو ملخصات الخروج أو المستندات الطبية عند توفرها.",
       href: "/lab-upload",
-      action: "Add Medical Document",
-      actionAr: "إضافة مستند طبي",
+      action: "Upload Document",
+      actionAr: "رفع مستند",
       primary: false,
     },
     {
       code: "03",
-      title: "Review your dashboard",
-      titleAr: "راجع لوحة التحكم",
+      title: "Review your reports",
+      titleAr: "راجع تقاريرك",
       text:
-        "Use your dashboard to see your saved journey, current context, and next useful action.",
+        "Use the reports library to review uploaded documents and continue into selected report analysis.",
       textAr:
-        "استخدم لوحة التحكم لرؤية رحلتك المحفوظة، السياق الحالي، والخطوة المفيدة التالية.",
-      href: "/dashboard",
-      action: "Open Dashboard",
-      actionAr: "فتح لوحة التحكم",
+        "استخدم مكتبة التقارير لمراجعة المستندات المرفوعة والمتابعة إلى تحليل التقرير المحدد.",
+      href: "/reports",
+      action: "Open Reports",
+      actionAr: "فتح التقارير",
+      primary: false,
+    },
+    {
+      code: "04",
+      title: "Build your health plan",
+      titleAr: "ابنِ خطتك الصحية",
+      text:
+        "Turn your health context into clear priorities, practical tasks, and a safer follow-up direction.",
+      textAr:
+        "حوّل سياقك الصحي إلى أولويات واضحة، مهام عملية، واتجاه متابعة أكثر أمانًا.",
+      href: "/health-plan",
+      action: "Open Health Plan",
+      actionAr: "فتح الخطة الصحية",
+      primary: false,
+    },
+    {
+      code: "05",
+      title: "Keep your check-ins updated",
+      titleAr: "حافظ على تحديث المتابعة",
+      text:
+        "Use check-ins to keep OrganHeal aware of symptoms, progress, changes, and next follow-up needs.",
+      textAr:
+        "استخدم التحديثات اليومية لإبقاء OrganHeal على معرفة بالأعراض، التقدم، التغييرات، واحتياجات المتابعة التالية.",
+      href: "/checkin",
+      action: "Open Check-In",
+      actionAr: "فتح المتابعة",
       primary: false,
     },
   ];
