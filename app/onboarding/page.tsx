@@ -324,8 +324,8 @@ export default function OnboardingPage() {
                   {text("Start Assessment", "ابدأ التقييم")}
                 </Link>
 
-                <Link href="/dashboard" className="secondaryBtn">
-                  {text("Open Dashboard", "فتح لوحة التحكم")}
+                <Link href="/lab-upload" className="secondaryBtn">
+                  {text("Upload Document", "رفع مستند")}
                 </Link>
               </div>
             </div>
