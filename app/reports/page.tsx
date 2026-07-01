@@ -2,67 +2,126 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import PageBackActions from "../components/PageBackActions";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "../../lib/supabase";
 
 type Language = "en" | "ar";
-type ReportFilter = "all" | "saved" | "needs-generation" | "completed-extraction";
 
 type UploadedReport = {
   id: number;
-  file_name: string;
-  file_path: string | null;
-  created_at: string;
-  extraction_status: string | null;
-  extracted_at?: string | null;
+  file_name?: string | null;
+  file_path?: string | null;
+  created_at?: string | null;
+  extraction_status?: string | null;
+  report_type?: string | null;
 };
 
 type HealthInsight = {
   id: number;
-  report_id: number | null;
-  report_type: string | null;
-  ai_status: string | null;
-  risk_level: string | null;
-  summary: string | null;
-  next_best_action: string | null;
-  created_at: string;
-};
-
-type SavedGeneratedResult = {
-  insight_id: number | null;
   report_id?: number | null;
-  updated_at: string | null;
+  report_type?: string | null;
+  ai_status?: string | null;
+  risk_level?: string | null;
+  summary?: string | null;
+  next_best_action?: string | null;
+  updated_at?: string | null;
+  created_at?: string | null;
 };
 
-type ReportLibraryItem = {
+type SavedResult = {
+  insight_id?: number | null;
+  report_id?: number | null;
+  updated_at?: string | null;
+};
+
+type ReportCard = {
   reportId: number;
   insightId: number | null;
   fileName: string;
   filePath: string | null;
-  uploadedAt: string;
-  extractionStatus: string | null;
-  reportType: string | null;
-  aiStatus: string | null;
-  riskLevel: string | null;
-  summary: string | null;
-  nextBestAction: string | null;
-  hasSavedIntelligence: boolean;
+  uploadedAt: string | null;
+  reportType: string;
+  extractionStatus: string;
+  aiStatus: string;
+  riskLevel: string;
+  summary: string;
+  nextBestAction: string;
+  hasSavedAnalysis: boolean;
   savedUpdatedAt: string | null;
 };
 
-const REPORTS_INITIAL_LIMIT = 3;
-const REPORTS_LOAD_STEP = 5;
+function normalizeStatus(value?: string | null) {
+  return value && value.trim() ? value.trim() : "Pending";
+}
+
+function formatDate(value?: string | null) {
+  if (!value) return "—";
+
+  try {
+    return new Intl.DateTimeFormat("en", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date(value));
+  } catch {
+    return "—";
+  }
+}
+
+function getReportTypeLabel(type?: string | null) {
+  const clean = (type || "Laboratory").toLowerCase();
+
+  if (clean.includes("radio")) return "Radiology Report";
+  if (clean.includes("clinical")) return "Clinical Summary";
+  if (clean.includes("prescription")) return "Prescription";
+  if (clean.includes("lab")) return "Laboratory Report";
+
+  return type || "Medical Report";
+}
+
+function getStatusTone(status: string) {
+  const clean = status.toLowerCase();
+
+  if (
+    clean.includes("generated") ||
+    clean.includes("completed") ||
+    clean.includes("saved") ||
+    clean.includes("ready")
+  ) {
+    return "good";
+  }
+
+  if (clean.includes("failed")) {
+    return "risk";
+  }
+
+  if (
+    clean.includes("processing") ||
+    clean.includes("pending") ||
+    clean.includes("next")
+  ) {
+    return "moderate";
+  }
+
+  return "neutral";
+}
 
 export default function ReportsPage() {
   const [language, setLanguage] = useState<Language>("en");
+  const [loading, setLoading] = useState(true);
+  const [reports, setReports] = useState<ReportCard[]>([]);
+  const [message, setMessage] = useState("");
+  const [filter, setFilter] = useState<
+    "all" | "needs-analysis" | "saved" | "failed"
+  >("all");
+  const [searchTerm, setSearchTerm] = useState("");
+
   const isArabic = language === "ar";
 
-  const [reports, setReports] = useState<ReportLibraryItem[]>([]);
-  const [visibleReportsCount, setVisibleReportsCount] = useState(REPORTS_INITIAL_LIMIT);
-  const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [reportFilter, setReportFilter] = useState<ReportFilter>("all");
+  function text(en: string, ar: string) {
+    return isArabic ? ar : en;
+  }
 
   useEffect(() => {
     function syncLanguage() {
@@ -75,7 +134,7 @@ export default function ReportsPage() {
     }
 
     syncLanguage();
-    fetchReports();
+    loadReports();
 
     window.addEventListener("storage", syncLanguage);
     window.addEventListener("organheal-language-change", syncLanguage);
@@ -84,114 +143,108 @@ export default function ReportsPage() {
       window.removeEventListener("storage", syncLanguage);
       window.removeEventListener("organheal-language-change", syncLanguage);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function text(en: string, ar: string) {
-    return isArabic ? ar : en;
-  }
-
-  async function fetchReports() {
+  async function loadReports() {
     setLoading(true);
     setMessage("");
 
-    const { data: userData, error: userError } = await supabase.auth.getUser();
+    const { data: userData } = await supabase.auth.getUser();
 
-    if (userError || !userData.user) {
-      window.location.href = "/login";
+    if (!userData.user) {
+      window.location.href = "/login?next=/reports";
       return;
     }
 
     const userId = userData.user.id;
 
-    const { data: uploadedReports, error: reportsError } = await supabase
+    const { data: uploadedData, error: uploadedError } = await supabase
       .from("uploaded_lab_files")
-      .select("id, file_name, file_path, created_at, extraction_status, extracted_at")
+      .select("*")
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
 
-    if (reportsError) {
-      setMessage("Database error: " + reportsError.message);
+    if (uploadedError) {
+      setMessage(uploadedError.message);
       setLoading(false);
       return;
     }
 
-    const { data: insightsData, error: insightsError } = await supabase
-      .from("health_insights")
-      .select(
-        "id, report_id, report_type, ai_status, risk_level, summary, next_best_action, created_at"
-      )
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
+    const uploadedReports = (uploadedData || []) as UploadedReport[];
+    const reportIds = uploadedReports.map((item) => item.id);
 
-    if (insightsError) {
-      setMessage("Database error: " + insightsError.message);
-      setLoading(false);
-      return;
-    }
+    let insights: HealthInsight[] = [];
 
-    let savedGeneratedResults: SavedGeneratedResult[] = [];
-
-    const { data: savedData, error: savedError } = await supabase
-      .from("generated_intelligence_results")
-      .select("insight_id, report_id, updated_at")
-      .eq("user_id", userId)
-      .order("updated_at", { ascending: false });
-
-    if (!savedError && savedData) {
-      savedGeneratedResults = savedData as SavedGeneratedResult[];
-    } else {
-      const { data: fallbackSavedData } = await supabase
-        .from("generated_intelligence_results")
-        .select("insight_id, updated_at")
+    if (reportIds.length > 0) {
+      const { data: insightData } = await supabase
+        .from("health_insights")
+        .select("*")
         .eq("user_id", userId)
-        .order("updated_at", { ascending: false });
+        .in("report_id", reportIds);
 
-      savedGeneratedResults = (fallbackSavedData || []) as SavedGeneratedResult[];
+      insights = (insightData || []) as HealthInsight[];
     }
 
-    const insights = (insightsData || []) as HealthInsight[];
-    const files = (uploadedReports || []) as UploadedReport[];
+    let savedResults: SavedResult[] = [];
+    const insightIds = insights.map((item) => item.id);
 
-    const mergedReports: ReportLibraryItem[] = files.map((file) => {
-      const insight = insights.find((item) => item.report_id === file.id) || null;
+    if (insightIds.length > 0) {
+      const { data: savedData } = await supabase
+        .from("generated_intelligence_results")
+        .select("*")
+        .eq("user_id", userId)
+        .in("insight_id", insightIds);
 
-      const savedResult = savedGeneratedResults.find((item) => {
-        if (insight?.id && item.insight_id === insight.id) return true;
-        if (item.report_id && item.report_id === file.id) return true;
-        return false;
-      });
+      savedResults = (savedData || []) as SavedResult[];
+    }
+
+    const mergedReports: ReportCard[] = uploadedReports.map((report) => {
+      const insight =
+        insights.find((item) => item.report_id === report.id) || null;
+
+      const saved =
+        savedResults.find((item) => {
+          if (insight?.id && item.insight_id === insight.id) return true;
+          if (item.report_id && item.report_id === report.id) return true;
+          return false;
+        }) || null;
+
+      const extractionStatus = normalizeStatus(report.extraction_status);
+      const aiStatus = saved
+        ? "Generated"
+        : normalizeStatus(insight?.ai_status || "Pending");
 
       return {
-        reportId: file.id,
+        reportId: report.id,
         insightId: insight?.id || null,
-        fileName: file.file_name || "Medical report",
-        filePath: file.file_path || null,
-        uploadedAt: file.created_at,
-        extractionStatus: file.extraction_status || "Pending",
-        reportType: insight?.report_type || null,
-        aiStatus: insight?.ai_status || null,
-        riskLevel: insight?.risk_level || null,
-        summary: insight?.summary || null,
-        nextBestAction: insight?.next_best_action || null,
-        hasSavedIntelligence: Boolean(savedResult),
-        savedUpdatedAt: savedResult?.updated_at || null,
+        fileName: report.file_name || "Medical report",
+        filePath: report.file_path || null,
+        uploadedAt: report.created_at || null,
+        reportType: getReportTypeLabel(report.report_type || insight?.report_type),
+        extractionStatus,
+        aiStatus,
+        riskLevel: insight?.risk_level || "Pending",
+        summary: insight?.summary || "",
+        nextBestAction: insight?.next_best_action || "",
+        hasSavedAnalysis: Boolean(saved) || aiStatus === "Generated",
+        savedUpdatedAt: saved?.updated_at || insight?.updated_at || null,
       };
     });
 
+    mergedReports.sort((a, b) => {
+      return (
+        new Date(b.uploadedAt || 0).getTime() -
+        new Date(a.uploadedAt || 0).getTime()
+      );
+    });
+
     setReports(mergedReports);
-    setVisibleReportsCount(REPORTS_INITIAL_LIMIT);
     setLoading(false);
   }
 
   async function openMedicalReport(filePath: string | null) {
     if (!filePath) {
-      alert(
-        text(
-          "No saved file path was found for this report.",
-          "لا يوجد مسار ملف محفوظ لهذا التقرير."
-        )
-      );
+      alert(text("File path is missing.", "مسار الملف غير موجود."));
       return;
     }
 
@@ -199,678 +252,810 @@ export default function ReportsPage() {
       .from("lab-reports")
       .createSignedUrl(filePath, 60 * 60);
 
-    if (error) {
+    if (error || !data?.signedUrl) {
       alert(
         text(
-          "Unable to open the report right now.",
-          "تعذر فتح التقرير الآن."
+          "Could not open this file. Please re-upload the report.",
+          "تعذر فتح الملف. يرجى رفع التقرير مرة أخرى."
         )
       );
       return;
     }
 
-    window.open(data.signedUrl, "_blank");
+    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
   }
 
-  function formatDate(value: string | null) {
-    if (!value) return text("Not available", "غير متاح");
+  const filteredReports = useMemo(() => {
+    const cleanSearch = searchTerm.trim().toLowerCase();
 
-    return new Date(value).toLocaleString(isArabic ? "ar-AE" : "en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
+    return reports.filter((report) => {
+      const matchesSearch =
+        !cleanSearch ||
+        report.fileName.toLowerCase().includes(cleanSearch) ||
+        report.reportType.toLowerCase().includes(cleanSearch);
+
+      if (!matchesSearch) return false;
+
+      if (filter === "saved") return report.hasSavedAnalysis;
+      if (filter === "needs-analysis") return !report.hasSavedAnalysis;
+      if (filter === "failed") {
+        return (
+          report.extractionStatus.toLowerCase().includes("failed") ||
+          report.aiStatus.toLowerCase().includes("failed")
+        );
+      }
+
+      return true;
     });
+  }, [reports, searchTerm, filter]);
+
+  const savedCount = reports.filter((item) => item.hasSavedAnalysis).length;
+  const needAnalysisCount = reports.filter((item) => !item.hasSavedAnalysis).length;
+  const extractionCompletedCount = reports.filter((item) =>
+    item.extractionStatus.toLowerCase().includes("completed")
+  ).length;
+
+  const featuredReport =
+    filteredReports.find((item) => !item.hasSavedAnalysis) ||
+    filteredReports[0] ||
+    null;
+
+  const compactReports = featuredReport
+    ? filteredReports.filter((item) => item.reportId !== featuredReport.reportId)
+    : filteredReports;
+
+  function getAnalysisHref(report: ReportCard) {
+    return report.hasSavedAnalysis
+      ? `/intelligence?reportId=${report.reportId}`
+      : `/intelligence?reportId=${report.reportId}&auto=1`;
   }
-
-  function getReportTypeLabel(type: string | null) {
-    if (!type) return text("Medical report", "تقرير طبي");
-
-    if (type === "lab") return text("Laboratory", "مختبر");
-    if (type === "radiology") return text("Radiology", "أشعة");
-    if (type === "clinical") return text("Clinical", "تقرير سريري");
-    if (type === "prescription") return text("Prescription", "وصفة طبية");
-    if (type === "medical") return text("General Medical", "تقرير طبي عام");
-
-    return type;
-  }
-
-  function getExtractionLabel(status: string | null) {
-    const cleanStatus = status || "Pending";
-
-    if (cleanStatus === "Completed") {
-      return text("Extraction completed", "الاستخراج مكتمل");
-    }
-
-    if (cleanStatus === "Processing") {
-      return text("Extraction processing", "جاري الاستخراج");
-    }
-
-    if (cleanStatus === "Failed") {
-      return text("Extraction failed", "فشل الاستخراج");
-    }
-
-    return text("Extraction pending", "بانتظار الاستخراج");
-  }
-
-  function getExtractionTone(status: string | null) {
-    const cleanStatus = status || "Pending";
-
-    if (cleanStatus === "Completed") return "good";
-    if (cleanStatus === "Processing") return "moderate";
-    if (cleanStatus === "Failed") return "risk";
-    return "neutral";
-  }
-
-  function getRiskTone(riskLevel: string | null) {
-    const cleanLevel = (riskLevel || "").toLowerCase();
-
-    if (cleanLevel.includes("high") || cleanLevel.includes("risk")) return "risk";
-    if (cleanLevel.includes("moderate") || cleanLevel.includes("medium")) return "moderate";
-    if (cleanLevel.includes("low") || cleanLevel.includes("normal")) return "good";
-
-    return "neutral";
-  }
-
-  function getReportDecision(report: ReportLibraryItem) {
-    if (report.hasSavedIntelligence) {
-      return {
-        label: text("Saved intelligence", "ذكاء محفوظ"),
-        title: text(
-          "Health intelligence is saved",
-          "نتيجة الذكاء الصحي محفوظة"
-        ),
-        description: text(
-          "Open Intelligence Center to review summaries, or continue to your follow-up plan.",
-          "يمكنك فتح مركز الذكاء لمراجعة الملخصات، أو الانتقال إلى خطة المتابعة."
-        ),
-        href: "/intelligence",
-        buttonText: text("Open Result", "فتح النتيجة"),
-        tone: "good",
-      };
-    }
-
-    if (report.insightId) {
-      return {
-        label: text("Ready to generate", "جاهز للتوليد"),
-        title: text(
-          "This report needs intelligence generation",
-          "هذا التقرير يحتاج توليد الذكاء"
-        ),
-        description: text(
-          "Open Intelligence Center and press Generate to turn this report into summaries and follow-up steps.",
-          "افتح مركز الذكاء واضغط Generate لتحويل التقرير إلى ملخصات وخطوات متابعة."
-        ),
-        href: "/intelligence",
-        buttonText: text("Generate in Intelligence", "ولّد في مركز الذكاء"),
-        tone: "moderate",
-      };
-    }
-
-    return {
-      label: text("Saved", "تم الحفظ"),
-      title: text(
-        "The report is saved and needs follow-up",
-        "التقرير محفوظ ويحتاج متابعة"
-      ),
-      description: text(
-        "Open Intelligence Center or upload another report if it does not appear yet.",
-        "افتح مركز الذكاء أو ارفع تقريرًا آخر إذا لم يظهر بعد."
-      ),
-      href: "/intelligence",
-      buttonText: text("Open Intelligence", "فتح مركز الذكاء"),
-      tone: "neutral",
-    };
-  }
-
-  const stats = useMemo(() => {
-    const savedCount = reports.filter((report) => report.hasSavedIntelligence).length;
-    const needsGeneration = reports.filter(
-      (report) => !report.hasSavedIntelligence
-    ).length;
-
-    return {
-      total: reports.length,
-      saved: savedCount,
-      needsGeneration,
-      completedExtraction: reports.filter(
-        (report) => report.extractionStatus === "Completed"
-      ).length,
-    };
-  }, [reports]);
-
-  const filteredReports = reports.filter((report) => {
-    const matchesSearch = report.fileName
-      .toLowerCase()
-      .includes(searchTerm.trim().toLowerCase());
-
-    const matchesFilter =
-      reportFilter === "all" ||
-      (reportFilter === "saved" && report.hasSavedIntelligence) ||
-      (reportFilter === "needs-generation" && !report.hasSavedIntelligence) ||
-      (reportFilter === "completed-extraction" &&
-        report.extractionStatus === "Completed");
-
-    return matchesSearch && matchesFilter;
-  });
-
-  const visibleReports = filteredReports.slice(0, visibleReportsCount);
-  const hiddenReportsCount = Math.max(filteredReports.length - visibleReportsCount, 0);
-  const canShowMoreReports = hiddenReportsCount > 0;
-  const canShowLessReports = visibleReportsCount > REPORTS_INITIAL_LIMIT;
-
-  const primaryNextStep =
-    reports.length === 0
-      ? {
-          label: text("Start here", "ابدأ هنا"),
-          title: text(
-            "Upload your first medical report",
-            "ارفع أول تقرير طبي"
-          ),
-          description: text(
-            "After uploading a report, it will appear here and you can continue to Intelligence Center.",
-            "بعد رفع التقرير، سيظهر هنا ويمكنك المتابعة إلى مركز الذكاء."
-          ),
-          href: "/lab-upload",
-          buttonText: text("Upload Report", "رفع تقرير"),
-        }
-      : stats.saved > 0
-      ? {
-          label: text("Next step", "الخطوة التالية"),
-          title: text(
-            "Review your follow-up plan",
-            "راجع خطة المتابعة"
-          ),
-          description: text(
-            "You have saved intelligence results. Use them to continue into your follow-up plan.",
-            "لديك نتائج ذكاء محفوظة. استخدمها للانتقال إلى خطة المتابعة."
-          ),
-          href: "/health-plan",
-          buttonText: text("Open Health Plan", "فتح خطة الصحة"),
-        }
-      : {
-          label: text("Next step", "الخطوة التالية"),
-          title: text(
-            "Generate intelligence for your reports",
-            "ولّد الذكاء الصحي للتقارير"
-          ),
-          description: text(
-            "You have saved reports. Now open Intelligence Center to generate summaries.",
-            "لديك تقارير محفوظة. افتح مركز الذكاء الآن لتوليد الملخصات."
-          ),
-          href: "/intelligence",
-          buttonText: text("Open Intelligence", "فتح مركز الذكاء"),
-        };
 
   return (
-    <main className="ohPageShell" dir={isArabic ? "rtl" : "ltr"}>
-      <div className="ohContainer ohStack large" style={{ padding: "28px 0 56px" }}>
-        <PageBackActions />
+    <main className="ohPageShell reportsFocusPage" dir={isArabic ? "rtl" : "ltr"}>
+      <style>{`
+        .reportsFocusPage,
+        .reportsFocusPage * {
+          box-sizing: border-box;
+        }
 
-        <section className="ohHero">
+        .reportsFocusPage a {
+          color: inherit;
+          text-decoration: none;
+        }
+
+        .reportsHero {
+          position: relative;
+          overflow: hidden;
+          border: 1px solid rgba(15, 118, 110, 0.16);
+          background:
+            radial-gradient(circle at 90% 12%, rgba(20, 184, 166, 0.22), transparent 30%),
+            linear-gradient(135deg, #ffffff 0%, #eef9f8 54%, #f8fbff 100%);
+        }
+
+        .reportsHero .ohHeroGrid {
+          grid-template-columns: minmax(0, 1fr) minmax(300px, 0.46fr);
+          align-items: center;
+        }
+
+        .reportsHero .ohTitle {
+          max-width: 820px;
+          font-size: clamp(2.05rem, 4vw, 3.6rem);
+          line-height: 1;
+        }
+
+        .reportsCommandCard {
+          border-radius: 28px;
+          padding: 24px;
+          color: white;
+          background:
+            radial-gradient(circle at 88% 8%, rgba(45, 212, 191, 0.45), transparent 32%),
+            linear-gradient(135deg, #0f172a, #0f766e);
+          box-shadow: 0 26px 72px rgba(15, 23, 42, 0.2);
+        }
+
+        .reportsCommandCard .ohMetricLabel,
+        .reportsCommandCard .ohCardText {
+          color: rgba(226, 232, 240, 0.88);
+        }
+
+        .reportsCommandCard .ohCardTitle {
+          color: white;
+        }
+
+        .reportsMetric {
+          border-top: 5px solid rgba(20, 184, 166, 0.78);
+        }
+
+        .reportsMetric.amber {
+          border-top-color: #f59e0b;
+        }
+
+        .reportsMetric.green {
+          border-top-color: #10b981;
+        }
+
+        .reportsMetric.blue {
+          border-top-color: #2563eb;
+        }
+
+        .reportsToolbar {
+          display: grid;
+          grid-template-columns: minmax(260px, 1fr) 220px auto;
+          gap: 12px;
+          align-items: end;
+          padding: 18px;
+          border-radius: 24px;
+          border: 1px solid rgba(15, 118, 110, 0.14);
+          background: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(15, 118, 110, 0.92));
+          color: white;
+        }
+
+        .reportsControl {
+          display: flex;
+          flex-direction: column;
+          gap: 7px;
+        }
+
+        .reportsControl label {
+          font-size: 0.72rem;
+          font-weight: 900;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          color: rgba(209, 250, 229, 0.86);
+        }
+
+        .reportsInput,
+        .reportsSelect {
+          width: 100%;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 15px;
+          background: rgba(255, 255, 255, 0.96);
+          color: #0f172a;
+          padding: 12px 13px;
+          font-weight: 800;
+          outline: none;
+        }
+
+        .reportsClearButton {
+          min-height: 44px;
+          border-radius: 999px;
+          border: 1px solid rgba(255, 255, 255, 0.24);
+          background: rgba(255, 255, 255, 0.12);
+          color: white;
+          font-weight: 900;
+          cursor: pointer;
+          padding: 0 18px;
+        }
+
+        .featuredReportCard {
+          overflow: hidden;
+          border: 1px solid rgba(15, 118, 110, 0.16);
+          border-top: 6px solid #0f766e;
+          background:
+            radial-gradient(circle at 88% 10%, rgba(20, 184, 166, 0.12), transparent 28%),
+            #ffffff;
+          box-shadow: 0 22px 58px rgba(15, 23, 42, 0.08);
+        }
+
+        .featuredReportGrid {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) minmax(280px, 0.52fr);
+          gap: 20px;
+          align-items: stretch;
+        }
+
+        .featuredStatusPanel {
+          border-radius: 24px;
+          padding: 20px;
+          background: linear-gradient(135deg, #0f172a, #115e59);
+          color: white;
+          min-height: 100%;
+        }
+
+        .featuredStatusPanel .ohMetricLabel,
+        .featuredStatusPanel .ohCardText {
+          color: rgba(226, 232, 240, 0.86);
+        }
+
+        .featuredStatusPanel .ohCardTitle {
+          color: white;
+        }
+
+        .reportStatusLine {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          align-items: center;
+          margin-top: 14px;
+        }
+
+        .reportStatusPill {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          border-radius: 999px;
+          padding: 8px 11px;
+          border: 1px solid rgba(15, 23, 42, 0.08);
+          background: #f8fafc;
+          color: #334155;
+          font-size: 0.78rem;
+          font-weight: 900;
+          line-height: 1;
+          white-space: nowrap;
+        }
+
+        .reportStatusPill.good {
+          background: rgba(16, 185, 129, 0.11);
+          color: #047857;
+          border-color: rgba(16, 185, 129, 0.22);
+        }
+
+        .reportStatusPill.moderate {
+          background: rgba(245, 158, 11, 0.12);
+          color: #b45309;
+          border-color: rgba(245, 158, 11, 0.24);
+        }
+
+        .reportStatusPill.risk {
+          background: rgba(239, 68, 68, 0.1);
+          color: #b91c1c;
+          border-color: rgba(239, 68, 68, 0.2);
+        }
+
+        .reportPrimaryAction {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 44px;
+          padding: 0 18px;
+          border-radius: 999px;
+          background: linear-gradient(135deg, #0f766e, #14b8a6);
+          color: white;
+          font-weight: 950;
+          border: 0;
+          box-shadow: 0 14px 34px rgba(20, 184, 166, 0.28);
+        }
+
+        .reportSecondaryAction {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 44px;
+          padding: 0 16px;
+          border-radius: 999px;
+          background: white;
+          color: #0f766e;
+          font-weight: 900;
+          border: 1px solid rgba(15, 118, 110, 0.2);
+          cursor: pointer;
+        }
+
+        .compactReportTable {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .compactReportHeader,
+        .compactReportRow {
+          display: grid;
+          grid-template-columns: minmax(230px, 1.25fr) minmax(150px, 0.7fr) minmax(170px, 0.8fr) minmax(160px, 0.55fr);
+          gap: 12px;
+          align-items: center;
+        }
+
+        .compactReportHeader {
+          padding: 0 14px;
+          color: var(--oh-muted);
+          font-size: 0.74rem;
+          font-weight: 950;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+        }
+
+        .compactReportRow {
+          padding: 14px;
+          border-radius: 20px;
+          border: 1px solid rgba(15, 23, 42, 0.08);
+          background: white;
+          box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
+        }
+
+        .compactReportRow.saved {
+          border-inline-start: 5px solid #10b981;
+        }
+
+        .compactReportRow.pending {
+          border-inline-start: 5px solid #f59e0b;
+        }
+
+        .compactReportName {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          min-width: 0;
+        }
+
+        .compactReportName strong {
+          color: var(--oh-text);
+          font-size: 0.96rem;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .compactReportName span {
+          color: var(--oh-muted);
+          font-size: 0.82rem;
+          font-weight: 750;
+        }
+
+        .compactActionRow {
+          display: flex;
+          justify-content: flex-end;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+
+        .compactAction {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 38px;
+          padding: 0 13px;
+          border-radius: 999px;
+          font-weight: 950;
+          font-size: 0.82rem;
+          border: 1px solid rgba(15, 118, 110, 0.18);
+          cursor: pointer;
+        }
+
+        .compactAction.primary {
+          background: #0f766e;
+          color: white;
+          border-color: #0f766e;
+        }
+
+        .compactAction.secondary {
+          background: white;
+          color: #0f766e;
+        }
+
+        @media (max-width: 980px) {
+          .reportsHero .ohHeroGrid,
+          .reportsToolbar,
+          .featuredReportGrid,
+          .compactReportHeader,
+          .compactReportRow {
+            grid-template-columns: 1fr;
+          }
+
+          .compactActionRow {
+            justify-content: flex-start;
+          }
+
+          .compactReportHeader {
+            display: none;
+          }
+        }
+      `}</style>
+
+      <div className="ohContainer ohStack large" style={{ padding: "28px 0 56px" }}>
+        <Link
+          href="/dashboard"
+          className="ohMetricHint"
+          style={{ color: "var(--oh-primary)", fontWeight: 900 }}
+        >
+          ← {text("Back to Dashboard", "العودة إلى لوحة التحكم")}
+        </Link>
+
+        <section className="ohHero reportsHero">
           <div className="ohHeroGrid">
             <div>
               <p className="ohEyebrow">
-                {text("Reports Library Command Center", "مركز مكتبة التقارير")}
+                {text("Reports Library", "مكتبة التقارير")}
               </p>
 
               <h1 className="ohTitle">
                 {text(
-                  "Track your medical reports and intelligence results",
-                  "تابع تقاريرك الطبية ونتائج الذكاء"
+                  "Your reports, analysis results, and next health step.",
+                  "تقاريرك، نتائج التحليل، والخطوة الصحية التالية."
                 )}
               </h1>
 
               <p className="ohLead">
                 {text(
-                  "This page shows whether a report is saved, whether it needs health intelligence generation, and whether a saved result can be used for your follow-up plan.",
-                  "توضح هذه الصفحة هل التقرير محفوظ، وهل يحتاج توليد ذكاء صحي، وهل توجد نتيجة محفوظة يمكن استخدامها في خطة المتابعة."
+                  "Reports are for documents and results. Intelligence is for analyzing one selected report. Health Plan is for follow-up.",
+                  "التقارير للمستندات والنتائج. صفحة الذكاء لتحليل تقرير محدد. وخطة الصحة للمتابعة."
                 )}
               </p>
 
-              <div className="ohButtonRow" style={{ marginTop: "24px" }}>
+              <div className="ohButtonRow" style={{ marginTop: "22px" }}>
                 <Link href="/lab-upload" className="primaryBtn">
                   {text("Upload Report", "رفع تقرير")}
                 </Link>
 
-                <Link href="/intelligence" className="secondaryBtn">
-                  {text("Intelligence Center", "مركز الذكاء")}
+                <Link href={featuredReport ? getAnalysisHref(featuredReport) : "/lab-upload"} className="secondaryBtn">
+                  {featuredReport?.hasSavedAnalysis
+                    ? text("Review Latest Analysis", "مراجعة آخر تحليل")
+                    : text("Analyze Next Report", "تحليل التقرير التالي")}
                 </Link>
 
                 <Link href="/health-plan" className="secondaryBtn">
-                  {text("Health Plan", "الخطة الصحية")}
+                  {text("Health Plan", "خطة الصحة")}
                 </Link>
               </div>
             </div>
 
-            <div className="ohCard">
-              <div className="ohCardHeader">
-                <div>
-                  <p className="ohMetricLabel">{primaryNextStep.label}</p>
-                  <h2 className="ohCardTitle" style={{ marginTop: "8px" }}>
-                    {primaryNextStep.title}
-                  </h2>
-                </div>
+            <aside className="reportsCommandCard">
+              <p className="ohMetricLabel">
+                {text("Recommended next step", "الخطوة المقترحة")}
+              </p>
 
-                <span className="ohStatusBadge neutral">
-                  {stats.total} {text("reports", "تقارير")}
-                </span>
+              <h2 className="ohCardTitle">
+                {featuredReport
+                  ? featuredReport.hasSavedAnalysis
+                    ? text("Review your latest saved analysis.", "راجع آخر تحليل محفوظ.")
+                    : text("Analyze the next pending report.", "حلّل التقرير التالي.")
+                  : text("Upload your first report.", "ارفع أول تقرير.")}
+              </h2>
+
+              <p className="ohCardText">
+                {text(
+                  "The page now highlights one report, while older reports stay compact below.",
+                  "تعرض الصفحة تقريرًا واحدًا بشكل واضح، بينما تبقى التقارير السابقة مختصرة بالأسفل."
+                )}
+              </p>
+
+              <div className="ohButtonRow" style={{ marginTop: "18px" }}>
+                <Link
+                  href={featuredReport ? getAnalysisHref(featuredReport) : "/lab-upload"}
+                  className="reportPrimaryAction"
+                >
+                  {featuredReport?.hasSavedAnalysis
+                    ? text("View Analysis", "عرض التحليل")
+                    : featuredReport
+                    ? text("Analyze Report", "تحليل التقرير")
+                    : text("Upload Report", "رفع تقرير")}
+                </Link>
               </div>
-
-              <p className="ohCardText">{primaryNextStep.description}</p>
-
-              <div className="ohDivider" />
-
-              <Link href={primaryNextStep.href} className="primaryBtn">
-                {primaryNextStep.buttonText}
-              </Link>
-            </div>
+            </aside>
           </div>
         </section>
 
         <section className="ohMetricGrid">
-          <article className="ohMetricCard">
-            <span className="ohMetricLabel">
-              {text("Total Reports", "كل التقارير")}
-            </span>
-            <span className="ohMetricValue">{stats.total}</span>
-            <span className="ohMetricHint">
-              {text("Reports saved in your account", "تقارير محفوظة في حسابك")}
-            </span>
+          <article className="ohMetricCard reportsMetric blue">
+            <span className="ohMetricLabel">{text("Total reports", "إجمالي التقارير")}</span>
+            <span className="ohMetricValue">{reports.length}</span>
+            <span className="ohMetricHint">{text("saved in your account", "محفوظة في حسابك")}</span>
           </article>
 
-          <article className="ohMetricCard">
-            <span className="ohMetricLabel">
-              {text("Saved Intelligence", "ذكاء محفوظ")}
-            </span>
-            <span className="ohMetricValue">{stats.saved}</span>
-            <span className="ohMetricHint">
-              {text("Results ready for review", "نتائج جاهزة للمراجعة")}
-            </span>
+          <article className="ohMetricCard reportsMetric green">
+            <span className="ohMetricLabel">{text("Saved analysis", "تحليل محفوظ")}</span>
+            <span className="ohMetricValue">{savedCount}</span>
+            <span className="ohMetricHint">{text("ready for review", "جاهز للمراجعة")}</span>
           </article>
 
-          <article className="ohMetricCard">
-            <span className="ohMetricLabel">
-              {text("Need Generation", "تحتاج توليد")}
-            </span>
-            <span className="ohMetricValue">{stats.needsGeneration}</span>
-            <span className="ohMetricHint">
-              {text("Reports that need Generate", "تقارير تحتاج Generate")}
-            </span>
+          <article className="ohMetricCard reportsMetric amber">
+            <span className="ohMetricLabel">{text("Need analysis", "تحتاج تحليل")}</span>
+            <span className="ohMetricValue">{needAnalysisCount}</span>
+            <span className="ohMetricHint">{text("next action required", "تحتاج خطوة تالية")}</span>
           </article>
 
-          <article className="ohMetricCard">
-            <span className="ohMetricLabel">
-              {text("Extraction Completed", "استخراج مكتمل")}
-            </span>
-            <span className="ohMetricValue">{stats.completedExtraction}</span>
-            <span className="ohMetricHint">
-              {text("Reports ready for analysis", "تقارير جاهزة للتحليل")}
-            </span>
+          <article className="ohMetricCard reportsMetric">
+            <span className="ohMetricLabel">{text("Text extracted", "استخراج مكتمل")}</span>
+            <span className="ohMetricValue">{extractionCompletedCount}</span>
+            <span className="ohMetricHint">{text("ready for intelligence", "جاهزة للتحليل")}</span>
           </article>
         </section>
 
-        {loading && (
-          <section className="ohCard">
-            <p className="ohEyebrow">{text("Loading", "تحميل")}</p>
-            <h2 className="ohCardTitle">
-              {text("Loading your reports library...", "جاري تحميل مكتبة التقارير...")}
-            </h2>
-            <p className="ohCardText">
-              {text(
-                "OrganHeal is preparing your saved medical reports and intelligence status.",
-                "يقوم OrganHeal بتحضير التقارير الطبية المحفوظة وحالة الذكاء."
-              )}
-            </p>
-          </section>
-        )}
+        <section className="reportsToolbar">
+          <div className="reportsControl">
+            <label>{text("Find a report", "ابحث عن تقرير")}</label>
+            <input
+              className="reportsInput"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder={text("Search by file name or report type", "ابحث باسم الملف أو نوع التقرير")}
+            />
+          </div>
 
-        {!loading && message && (
-          <section className="ohCard">
-            <p className="ohEyebrow">{text("Notice", "تنبيه")}</p>
-            <h2 className="ohCardTitle">
-              {text("Could not load reports", "تعذر تحميل التقارير")}
-            </h2>
-            <p className="ohCardText">{message}</p>
-          </section>
-        )}
-
-        {!loading && !message && reports.length === 0 && (
-          <section className="ohEmptyState">
-            <h2>
-              {text(
-                "Upload a medical report to start health intelligence",
-                "ارفع تقريرًا طبيًا لتبدأ رحلة الذكاء الصحي"
-              )}
-            </h2>
-
-            <p>
-              {text(
-                "After upload, the report will appear here, then you can move to Intelligence Center to generate a patient-friendly summary and doctor-ready brief.",
-                "بعد الرفع، سيظهر التقرير هنا، ثم تستطيع الانتقال إلى مركز الذكاء لتوليد ملخص للمريض وملخص جاهز للطبيب."
-              )}
-            </p>
-
-            <div className="ohButtonRow" style={{ justifyContent: "center" }}>
-              <Link href="/lab-upload" className="primaryBtn">
-                {text("Upload Medical Report", "رفع تقرير طبي")}
-              </Link>
-
-              <Link href="/dashboard" className="secondaryBtn">
-                {text("Dashboard", "لوحة التحكم")}
-              </Link>
-            </div>
-          </section>
-        )}
-
-        {!loading && !message && reports.length > 0 && (
-          <section className="ohCard">
-            <div className="ohCardHeader">
-              <div>
-                <p className="ohMetricLabel">
-                  {text("Saved Reports", "التقارير المحفوظة")}
-                </p>
-
-                <h2 className="ohCardTitle">
-                  {text(
-                    "Every report should lead to a clear next step",
-                    "كل تقرير يجب أن يقود إلى خطوة واضحة"
-                  )}
-                </h2>
-
-                <p className="ohCardText">
-                  {text(
-                    "Open the original report, continue to Intelligence Center to generate or review results, then use Health Plan for follow-up.",
-                    "افتح التقرير الأصلي، أو انتقل إلى مركز الذكاء لتوليد أو مراجعة النتيجة، ثم استخدم الخطة الصحية للمتابعة."
-                  )}
-                </p>
-              </div>
-
-              <span className="ohStatusBadge neutral">
-                {filteredReports.length} {text("shown", "ظاهر")}
-              </span>
-            </div>
-
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "minmax(0, 1fr) minmax(200px, 280px)",
-                gap: "12px",
-                marginBottom: "18px",
-              }}
+          <div className="reportsControl">
+            <label>{text("Status", "الحالة")}</label>
+            <select
+              className="reportsSelect"
+              value={filter}
+              onChange={(event) => setFilter(event.target.value as typeof filter)}
             >
-              <input
-                type="text"
-                placeholder={text("Search by file name", "ابحث باسم الملف")}
-                value={searchTerm}
-                onChange={(event) => {
-                  setSearchTerm(event.target.value);
-                  setVisibleReportsCount(REPORTS_INITIAL_LIMIT);
-                }}
-              />
+              <option value="all">{text("All reports", "كل التقارير")}</option>
+              <option value="needs-analysis">{text("Needs analysis", "تحتاج تحليل")}</option>
+              <option value="saved">{text("Saved analysis", "تحليل محفوظ")}</option>
+              <option value="failed">{text("Needs attention", "تحتاج مراجعة")}</option>
+            </select>
+          </div>
 
-              <select
-                value={reportFilter}
-                onChange={(event) => {
-                  setReportFilter(event.target.value as ReportFilter);
-                  setVisibleReportsCount(REPORTS_INITIAL_LIMIT);
-                }}
-              >
-                <option value="all">{text("All reports", "كل التقارير")}</option>
-                <option value="saved">{text("Saved intelligence", "ذكاء محفوظ")}</option>
-                <option value="needs-generation">
-                  {text("Needs generation", "تحتاج توليد")}
-                </option>
-                <option value="completed-extraction">
-                  {text("Completed extraction", "استخراج مكتمل")}
-                </option>
-              </select>
+          <button
+            type="button"
+            className="reportsClearButton"
+            onClick={() => {
+              setSearchTerm("");
+              setFilter("all");
+            }}
+          >
+            {text("Reset", "إعادة")}
+          </button>
+        </section>
+
+        {message && (
+          <section className="ohTrustNotice">
+            <span aria-hidden="true">⚠️</span>
+            <div>
+              <strong>{text("Reports notice", "تنبيه التقارير")}</strong>
+              <br />
+              {message}
             </div>
+          </section>
+        )}
 
-            {filteredReports.length === 0 ? (
-              <div className="ohEmptyState">
-                <h2>{text("No matching reports", "لا توجد تقارير مطابقة")}</h2>
-                <p>
-                  {text(
-                    "Try changing the search term or selected filter.",
-                    "جرّب تغيير البحث أو الفلتر المحدد."
-                  )}
-                </p>
+        {loading ? (
+          <section className="ohCard">
+            <div className="ohEmptyState">
+              <h2>{text("Loading your reports...", "جاري تحميل التقارير...")}</h2>
+              <p>{text("Please wait while OrganHeal prepares your report library.", "يرجى الانتظار بينما يجهز OrganHeal مكتبة التقارير.")}</p>
+            </div>
+          </section>
+        ) : filteredReports.length === 0 ? (
+          <section className="ohCard">
+            <div className="ohEmptyState">
+              <h2>{text("No reports found", "لا توجد تقارير")}</h2>
+              <p>{text("Upload a report or reset your search filters.", "ارفع تقريرًا أو أعد ضبط الفلاتر.")}</p>
+
+              <div className="ohButtonRow">
+                <Link href="/lab-upload" className="primaryBtn">
+                  {text("Upload Report", "رفع تقرير")}
+                </Link>
               </div>
-            ) : (
-              <>
-                <div className="ohGrid cols2">
-                  {visibleReports.map((report) => {
-                    const decision = getReportDecision(report);
+            </div>
+          </section>
+        ) : (
+          <>
+            {featuredReport && (
+              <section className="ohCard featuredReportCard">
+                <div className="featuredReportGrid">
+                  <div>
+                    <p className="ohMetricLabel">
+                      {featuredReport.hasSavedAnalysis
+                        ? text("Latest analysis focus", "آخر تحليل للمتابعة")
+                        : text("Current report focus", "التقرير الحالي للمتابعة")}
+                    </p>
+
+                    <h2 className="ohCardTitle" style={{ fontSize: "1.65rem" }}>
+                      {featuredReport.fileName}
+                    </h2>
+
+                    <p className="ohCardText">
+                      {featuredReport.hasSavedAnalysis
+                        ? text(
+                            "This report already has a saved analysis. Review it or continue to your health plan.",
+                            "هذا التقرير لديه تحليل محفوظ. راجعه أو تابع إلى خطة الصحة."
+                          )
+                        : text(
+                            "This report is the next best action. Analyze it to generate a clear report summary.",
+                            "هذا التقرير هو الخطوة التالية. حلّله لتوليد ملخص واضح."
+                          )}
+                    </p>
+
+                    <div className="reportStatusLine">
+                      <span className="reportStatusPill neutral">
+                        {text("Uploaded", "تم الرفع")}: {formatDate(featuredReport.uploadedAt)}
+                      </span>
+
+                      <span className={`reportStatusPill ${getStatusTone(featuredReport.extractionStatus)}`}>
+                        {text("Extraction", "الاستخراج")}: {featuredReport.extractionStatus}
+                      </span>
+
+                      <span className={`reportStatusPill ${featuredReport.hasSavedAnalysis ? "good" : "moderate"}`}>
+                        {text("Analysis", "التحليل")}:{" "}
+                        {featuredReport.hasSavedAnalysis
+                          ? text("Saved", "محفوظ")
+                          : text("Needs analysis", "يحتاج تحليل")}
+                      </span>
+
+                      <span className={`reportStatusPill ${getStatusTone(featuredReport.riskLevel)}`}>
+                        {text("Risk", "الخطورة")}: {featuredReport.riskLevel}
+                      </span>
+                    </div>
+
+                    {featuredReport.summary && (
+                      <p className="ohCardText" style={{ marginTop: "16px" }}>
+                        {featuredReport.summary.length > 220
+                          ? featuredReport.summary.slice(0, 220) + "..."
+                          : featuredReport.summary}
+                      </p>
+                    )}
+
+                    <div className="ohButtonRow" style={{ marginTop: "20px" }}>
+                      <Link href={getAnalysisHref(featuredReport)} className="reportPrimaryAction">
+                        {featuredReport.hasSavedAnalysis
+                          ? text("View Analysis", "عرض التحليل")
+                          : text("Analyze Report", "تحليل التقرير")}
+                      </Link>
+
+                      <button
+                        type="button"
+                        className="reportSecondaryAction"
+                        onClick={() => openMedicalReport(featuredReport.filePath)}
+                        disabled={!featuredReport.filePath}
+                      >
+                        {text("Open File", "فتح الملف")}
+                      </button>
+
+                      {featuredReport.hasSavedAnalysis && (
+                        <Link href="/health-plan" className="reportSecondaryAction">
+                          {text("Health Plan", "خطة الصحة")}
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+
+                  <aside className="featuredStatusPanel">
+                    <p className="ohMetricLabel">
+                      {text("What this page is for", "وظيفة هذه الصفحة")}
+                    </p>
+
+                    <h3 className="ohCardTitle">
+                      {text(
+                        "Reports, analysis results, and health-plan follow-up.",
+                        "التقارير، نتائج التحليل، والمتابعة في خطة الصحة."
+                      )}
+                    </h3>
+
+                    <p className="ohCardText">
+                      {text(
+                        "Use Intelligence only to analyze or review one selected report. Keep this page as your organized report history.",
+                        "استخدم صفحة الذكاء فقط لتحليل أو مراجعة تقرير محدد. واجعل هذه الصفحة مكتبة منظمة للتقارير."
+                      )}
+                    </p>
+                  </aside>
+                </div>
+              </section>
+            )}
+
+            <section className="ohCard">
+              <div className="ohCardHeader">
+                <div>
+                  <p className="ohMetricLabel">
+                    {text("Compact report history", "سجل التقارير المختصر")}
+                  </p>
+
+                  <h2 className="ohCardTitle">
+                    {text(
+                      "Older reports stay short and easy to reopen.",
+                      "التقارير السابقة تبقى مختصرة وسهلة الفتح."
+                    )}
+                  </h2>
+
+                  <p className="ohCardText">
+                    {text(
+                      "Use one click to analyze, review, or open the original file.",
+                      "استخدم ضغطة واحدة للتحليل، المراجعة، أو فتح الملف الأصلي."
+                    )}
+                  </p>
+                </div>
+
+                <span className="ohStatusBadge neutral">
+                  {compactReports.length}
+                </span>
+              </div>
+
+              {compactReports.length === 0 ? (
+                <div className="ohEmptyState">
+                  <h2>{text("No older reports to show", "لا توجد تقارير سابقة")}</h2>
+                  <p>
+                    {text(
+                      "The current focused report is shown above.",
+                      "التقرير الحالي ظاهر بالأعلى."
+                    )}
+                  </p>
+                </div>
+              ) : (
+                <div className="compactReportTable">
+                  <div className="compactReportHeader">
+                    <span>{text("Report", "التقرير")}</span>
+                    <span>{text("Status", "الحالة")}</span>
+                    <span>{text("Uploaded", "تاريخ الرفع")}</span>
+                    <span>{text("Action", "الإجراء")}</span>
+                  </div>
+
+                  {compactReports.map((report) => {
+                    const isSaved = report.hasSavedAnalysis;
 
                     return (
-                      <article className="ohCard" key={report.reportId}>
-                        <div className="ohCardHeader">
-                          <div>
-                            <p className="ohMetricLabel">
-                              {getReportTypeLabel(report.reportType)}
-                            </p>
+                      <article
+                        className={`compactReportRow ${isSaved ? "saved" : "pending"}`}
+                        key={report.reportId}
+                      >
+                        <div className="compactReportName">
+                          <strong>{report.fileName}</strong>
+                          <span>{report.reportType}</span>
+                        </div>
 
-                            <h3 className="ohCardTitle">{report.fileName}</h3>
-                          </div>
+                        <div className="reportStatusLine" style={{ marginTop: 0 }}>
+                          <span className={`reportStatusPill ${isSaved ? "good" : "moderate"}`}>
+                            {isSaved
+                              ? text("Saved analysis", "تحليل محفوظ")
+                              : text("Needs analysis", "يحتاج تحليل")}
+                          </span>
 
-                          <span className={`ohStatusBadge ${decision.tone}`}>
-                            {decision.label}
+                          <span className={`reportStatusPill ${getStatusTone(report.extractionStatus)}`}>
+                            {report.extractionStatus}
                           </span>
                         </div>
 
-                        <div className="ohGrid cols2" style={{ gap: "12px" }}>
-                          <div className="ohMetricCard">
-                            <span className="ohMetricLabel">
-                              {text("Uploaded", "تاريخ الرفع")}
-                            </span>
-                            <span className="ohMetricValue" style={{ fontSize: "1.05rem" }}>
-                              {formatDate(report.uploadedAt)}
-                            </span>
-                          </div>
+                        <span className="ohCardText">
+                          {formatDate(report.uploadedAt)}
+                        </span>
 
-                          <div className="ohMetricCard">
-                            <span className="ohMetricLabel">
-                              {text("Extraction", "الاستخراج")}
-                            </span>
-                            <span className="ohMetricValue" style={{ fontSize: "1.05rem" }}>
-                              {getExtractionLabel(report.extractionStatus)}
-                            </span>
-                            <span className={`ohStatusBadge ${getExtractionTone(report.extractionStatus)}`}>
-                              {report.extractionStatus || "Pending"}
-                            </span>
-                          </div>
+                        <div className="compactActionRow">
+                          <Link
+                            href={getAnalysisHref(report)}
+                            className="compactAction primary"
+                          >
+                            {isSaved
+                              ? text("View", "عرض")
+                              : text("Analyze", "تحليل")}
+                          </Link>
 
-                          <div className="ohMetricCard">
-                            <span className="ohMetricLabel">
-                              {text("Intelligence", "حالة الذكاء")}
-                            </span>
-                            <span className="ohMetricValue" style={{ fontSize: "1.05rem" }}>
-                              {report.hasSavedIntelligence
-                                ? text("Saved", "محفوظ")
-                                : report.aiStatus || text("Pending", "بانتظار")}
-                            </span>
-                            <span className="ohMetricHint">
-                              {report.savedUpdatedAt
-                                ? `${text("Updated", "آخر تحديث")}: ${formatDate(report.savedUpdatedAt)}`
-                                : text("No saved generation yet", "لا يوجد توليد محفوظ بعد")}
-                            </span>
-                          </div>
-
-                          <div className="ohMetricCard">
-                            <span className="ohMetricLabel">
-                              {text("Risk Signal", "إشارة الخطورة")}
-                            </span>
-                            <span className="ohMetricValue" style={{ fontSize: "1.05rem" }}>
-                              {report.riskLevel || text("Pending", "بانتظار")}
-                            </span>
-                            <span className={`ohStatusBadge ${getRiskTone(report.riskLevel)}`}>
-                              {report.riskLevel || text("Neutral", "محايد")}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="ohActionPanel">
-                          <p className="ohMetricLabel">{decision.title}</p>
-                          <p className="ohCardText">{decision.description}</p>
-                        </div>
-
-                        {report.summary && (
-                          <p className="ohCardText">
-                            {report.summary.length > 220
-                              ? report.summary.slice(0, 220) + "..."
-                              : report.summary}
-                          </p>
-                        )}
-
-                        {report.nextBestAction && (
-                          <div className="ohTrustNotice">
-                            <span aria-hidden="true">➡️</span>
-                            <div>
-                              <strong>{text("Next:", "الخطوة التالية:")}</strong>{" "}
-                              {report.nextBestAction}
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="ohButtonRow">
                           <button
                             type="button"
-                            className="secondaryBtn"
+                            className="compactAction secondary"
                             onClick={() => openMedicalReport(report.filePath)}
                             disabled={!report.filePath}
                           >
-                            {text("Open Report", "فتح التقرير")}
+                            {text("File", "الملف")}
                           </button>
-
-                          <Link
-                            href={
-                              report.hasSavedIntelligence
-                                ? `/intelligence?reportId=${report.reportId}`
-                                : `/intelligence?reportId=${report.reportId}&auto=1`
-                            }
-                            className="primaryBtn"
-                          >
-                            {report.hasSavedIntelligence
-                              ? isArabic
-                                ? "عرض التحليل"
-                                : "View Analysis"
-                              : isArabic
-                              ? "تحليل التقرير"
-                              : "Analyze Report"}
-                          </Link>
-
-                          {report.hasSavedIntelligence && (
-                            <Link href="/health-plan" className="secondaryBtn">
-                              {text("Health Plan", "خطة الصحة")}
-                            </Link>
-                          )}
                         </div>
                       </article>
                     );
                   })}
                 </div>
-
-                {filteredReports.length > REPORTS_INITIAL_LIMIT && (
-                  <div
-                    className="ohButtonRow"
-                    style={{ justifyContent: "center", marginTop: "22px" }}
-                  >
-                    {canShowMoreReports && (
-                      <button
-                        type="button"
-                        className="secondaryBtn"
-                        onClick={() =>
-                          setVisibleReportsCount((current) =>
-                            Math.min(current + REPORTS_LOAD_STEP, filteredReports.length)
-                          )
-                        }
-                      >
-                        {text(
-                          `Show More (${Math.min(REPORTS_LOAD_STEP, hiddenReportsCount)})`,
-                          `عرض المزيد (${Math.min(REPORTS_LOAD_STEP, hiddenReportsCount)})`
-                        )}
-                      </button>
-                    )}
-
-                    {canShowLessReports && (
-                      <button
-                        type="button"
-                        className="secondaryBtn"
-                        onClick={() => setVisibleReportsCount(REPORTS_INITIAL_LIMIT)}
-                      >
-                        {text("Show Less", "عرض أقل")}
-                      </button>
-                    )}
-                  </div>
-                )}
-              </>
-            )}
-          </section>
+              )}
+            </section>
+          </>
         )}
 
-        <section className="ohTrustNotice">
-          <span aria-hidden="true">🛡️</span>
-          <div>
-            <strong>
-              {text("Privacy and medical safety reminder", "تذكير الخصوصية والسلامة الطبية")}
-            </strong>
-            <br />
-            {text(
-              "Reports Library organizes your uploaded medical documents and intelligence status. It does not replace diagnosis, treatment, emergency care, or a licensed clinician.",
-              "مكتبة التقارير تنظم مستنداتك الطبية المرفوعة وحالة الذكاء الصحي. لا تستبدل التشخيص أو العلاج أو الرعاية الطارئة أو الطبيب المختص."
-            )}
-          </div>
-        </section>
-
-        <section className="ohCard">
-          <div className="ohCardHeader">
+        <section className="ohActionPanel">
+          <div className="ohCardHeader" style={{ marginBottom: 0 }}>
             <div>
-              <p className="ohMetricLabel">
-                {text("Full Path", "المسار الكامل")}
-              </p>
+              <p className="ohMetricLabel">{text("Clear journey", "مسار واضح")}</p>
 
               <h2 className="ohCardTitle">
                 {text(
-                  "From report upload to follow-up plan",
-                  "من رفع التقرير إلى خطة المتابعة"
+                  "Reports are for documents, intelligence is for analysis, and Health Plan is for follow-up.",
+                  "التقارير للمستندات، الذكاء للتحليل، وخطة الصحة للمتابعة."
                 )}
               </h2>
 
               <p className="ohCardText">
                 {text(
-                  "Upload the report, open Intelligence Center, review summaries, then continue to your follow-up plan.",
-                  "ارفع التقرير، افتح مركز الذكاء، راجع الملخصات، ثم انتقل إلى خطة المتابعة."
+                  "This keeps your flow simple: upload a report, analyze it, review the result, then continue to your health plan.",
+                  "هذا يجعل المسار بسيطًا: ارفع تقريرًا، حلّله، راجع النتيجة، ثم تابع إلى خطة الصحة."
                 )}
               </p>
             </div>
-          </div>
 
-          <div className="ohButtonRow">
-            <Link href="/lab-upload" className="secondaryBtn">
-              {text("Upload", "رفع تقرير")}
-            </Link>
+            <div className="ohButtonRow">
+              <Link href="/lab-upload" className="secondaryBtn">
+                {text("Upload Report", "رفع تقرير")}
+              </Link>
 
-            <Link href="/intelligence" className="primaryBtn">
-              {text("Intelligence", "الذكاء")}
-            </Link>
-
-            <Link href="/health-plan" className="secondaryBtn">
-              {text("Health Plan", "الخطة")}
-            </Link>
-
-            <Link href="/doctor-portal" className="secondaryBtn">
-              {text("Doctor Portal", "بوابة الطبيب")}
-            </Link>
-
-            <Link href="/dashboard" className="secondaryBtn">
-              {text("Dashboard", "لوحة التحكم")}
-            </Link>
+              <Link href="/health-plan" className="primaryBtn">
+                {text("Open Health Plan", "فتح خطة الصحة")}
+              </Link>
+            </div>
           </div>
         </section>
       </div>
     </main>
   );
 }
-
