@@ -43,7 +43,7 @@ type HealthInsight = {
   created_at: string | null;
 };
 
-type SavedIntelligence = {
+type SavedAnalysis = {
   insight_id: number;
   updated_at: string | null;
 };
@@ -66,7 +66,7 @@ export default function HistoryPage() {
   const [dailyCheckIns, setDailyCheckIns] = useState<DailyCheckIn[]>([]);
   const [uploadedReports, setUploadedReports] = useState<UploadedReport[]>([]);
   const [healthInsights, setHealthInsights] = useState<HealthInsight[]>([]);
-  const [savedIntelligence, setSavedIntelligence] = useState<SavedIntelligence[]>(
+  const [savedAnalysis, setSavedAnalysis] = useState<SavedAnalysis[]>(
     []
   );
 
@@ -173,7 +173,7 @@ export default function HistoryPage() {
     if (value === "Assessment") return "تقييم";
     if (value === "Check-In") return "Check-In";
     if (value === "Report") return "تقرير";
-    if (value === "Analysis") return "ذكاء صحي";
+    if (value === "Analysis") return "تحليل صحي";
 
     return value;
   }
@@ -255,7 +255,7 @@ export default function HistoryPage() {
 
     const insightIds = (insightData || []).map((item) => item.id);
 
-    let savedDataRows: SavedIntelligence[] = [];
+    let savedDataRows: SavedAnalysis[] = [];
 
     if (insightIds.length > 0) {
       const { data: savedData } = await supabase
@@ -272,7 +272,7 @@ export default function HistoryPage() {
     setDailyCheckIns((checkInData || []) as DailyCheckIn[]);
     setUploadedReports((reportData || []) as UploadedReport[]);
     setHealthInsights((insightData || []) as HealthInsight[]);
-    setSavedIntelligence(savedDataRows);
+    setSavedAnalysis(savedDataRows);
     setLoading(false);
   }
 
@@ -315,12 +315,12 @@ export default function HistoryPage() {
     (item) => item.extraction_status !== "Completed"
   ).length;
 
-  const savedIntelligenceIds = new Set(
-    savedIntelligence.map((item) => item.insight_id)
+  const savedAnalysisIds = new Set(
+    savedAnalysis.map((item) => item.insight_id)
   );
 
   const generatedInsights = healthInsights.filter(
-    (item) => item.ai_status === "Generated" || savedIntelligenceIds.has(item.id)
+    (item) => item.ai_status === "Generated" || savedAnalysisIds.has(item.id)
   );
 
   const assessmentTrend = useMemo(() => {
@@ -458,11 +458,11 @@ export default function HistoryPage() {
     ...generatedInsights.map((item) => ({
       id: `intelligence-${item.id}`,
       type: "Analysis" as const,
-      title: item.insight_title || text("Saved health analysis", "ذكاء صحي محفوظ"),
+      title: item.insight_title || text("Saved health analysis", "تحليل صحي محفوظ"),
       subtitle:
         item.ai_status === "Generated"
-          ? text("Saved analysis result", "نتيجة ذكاء صحي مولدة")
-          : text("Saved intelligence result", "نتيجة ذكاء صحي محفوظة"),
+          ? text("Saved analysis result", "نتيجة تحليل صحي مولدة")
+          : text("Saved intelligence result", "نتيجة تحليل صحي محفوظة"),
       score: null,
       date: item.created_at || new Date().toISOString(),
       href: "/reports",
@@ -513,12 +513,12 @@ export default function HistoryPage() {
           href: "/lab-upload",
           buttonText: text("Upload Report", "رفع تقرير"),
         }
-      : savedIntelligence.length === 0
+      : savedAnalysis.length === 0
       ? {
-          label: text("Generate saved intelligence", "ولّد ذكاء صحي محفوظ"),
+          label: text("Generate saved intelligence", "ولّد تحليل صحي محفوظ"),
           description: text(
             "Open Report Analysis to generate and save report-based health analysis.",
-            "افتح تحليل التقارير لتوليد وحفظ ذكاء صحي مبني على التقارير."
+            "افتح تحليل التقارير لتوليد وحفظ تحليل صحي مبني على التقارير."
           ),
           href: "/reports",
           buttonText: text("Review Analysis", "افتح تحليل التقارير"),
@@ -527,7 +527,7 @@ export default function HistoryPage() {
           label: text("Continue your follow-up plan", "تابع خطة المتابعة"),
           description: text(
             "Your history has assessments, check-ins, reports, and saved intelligence. Continue with your health plan.",
-            "يحتوي تاريخك الصحي على تقييمات، Check-Ins، تقارير، وذكاء صحي محفوظ. تابع إلى الخطة الصحية."
+            "يحتوي تاريخك الصحي على تقييمات، Check-Ins، تقارير، وتحليل صحي محفوظ. تابع إلى الخطة الصحية."
           ),
           href: "/health-plan",
           buttonText: text("Open Health Plan", "افتح الخطة الصحية"),
@@ -540,7 +540,7 @@ export default function HistoryPage() {
   } as CSSProperties;
 
   return (
-    <main className="ohPageShell" dir={isArabic ? "rtl" : "ltr"}>
+    <main className="ohPageShell followUpCleanV4" dir={isArabic ? "rtl" : "ltr"}>
       <div className="ohContainer ohStack large" style={{ padding: "28px 0 56px" }}>
         <PageBackActions />
 
@@ -706,7 +706,7 @@ export default function HistoryPage() {
                 <span className="ohMetricLabel">
                   {text("Saved Analysis", "التحليل الصحي المحفوظ")}
                 </span>
-                <span className="ohMetricValue">{savedIntelligence.length}</span>
+                <span className="ohMetricValue">{savedAnalysis.length}</span>
                 <span className="ohMetricHint">
                   {text("Connected to your reports", "مرتبط بتقاريرك")}
                 </span>
@@ -976,7 +976,457 @@ export default function HistoryPage() {
           </>
         )}
       </div>
-    </main>
+      <style>{`
+        /* ORGANHEAL_FOLLOWUP_CLEAN_V4 */
+
+        .followUpCleanV4 {
+          min-height: 100vh !important;
+          background:
+            radial-gradient(circle at 12% 5%, rgba(6, 182, 212, 0.22), transparent 28%),
+            radial-gradient(circle at 88% 18%, rgba(15, 118, 110, 0.26), transparent 34%),
+            linear-gradient(180deg, #dbeafe 0%, #d9e5ec 45%, #f8fafc 100%) !important;
+          color: #0f172a !important;
+        }
+
+        .followUpCleanV4 .ohContainer,
+        .followUpCleanV4 [class*="Container"] {
+          max-width: 1180px !important;
+        }
+
+        .followUpCleanV4 .organhealBackButton,
+        .followUpCleanV4 .ohContainer > a[href="/dashboard"],
+        .followUpCleanV4 .ohContainer > div:first-child a[href="/dashboard"] {
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          width: fit-content !important;
+          min-height: 44px !important;
+          padding: 0 18px !important;
+          margin: 0 0 18px 0 !important;
+          border-radius: 999px !important;
+          background: #0f172a !important;
+          color: #ffffff !important;
+          border: 1px solid rgba(15, 23, 42, 0.25) !important;
+          box-shadow: 0 14px 34px rgba(15, 23, 42, 0.24) !important;
+          font-weight: 950 !important;
+          font-size: 0.9rem !important;
+          text-decoration: none !important;
+        }
+
+        /* Main hero only */
+        .followUpCleanV4 .ohHero,
+        .followUpCleanV4 [class*="Hero"],
+        .followUpCleanV4 .ohContainer > section:first-of-type {
+          border-radius: 32px !important;
+          background:
+            radial-gradient(circle at 86% 10%, rgba(20, 184, 166, 0.46), transparent 36%),
+            linear-gradient(135deg, #061826 0%, #0f172a 42%, #0f766e 100%) !important;
+          color: #ffffff !important;
+          border: 1px solid rgba(255, 255, 255, 0.16) !important;
+          box-shadow: 0 34px 90px rgba(15, 23, 42, 0.36) !important;
+        }
+
+        .followUpCleanV4 .ohHero :is(h1,h2,h3,h4,p,span,strong,small,label),
+        .followUpCleanV4 [class*="Hero"] :is(h1,h2,h3,h4,p,span,strong,small,label),
+        .followUpCleanV4 .ohContainer > section:first-of-type :is(h1,h2,h3,h4,p,span,strong,small,label) {
+          color: #ffffff !important;
+        }
+
+        .followUpCleanV4 .ohEyebrow,
+        .followUpCleanV4 [class*="Eyebrow"] {
+          background: rgba(209, 250, 229, 0.18) !important;
+          color: #d1fae5 !important;
+          border: 1px solid rgba(209, 250, 229, 0.34) !important;
+          font-weight: 950 !important;
+        }
+
+        /* Normal content panels must stay white with dark readable text */
+        .followUpCleanV4 .ohContainer > section:not(:first-of-type),
+        .followUpCleanV4 .ohCard,
+        .followUpCleanV4 .ohActionPanel,
+        .followUpCleanV4 form,
+        .followUpCleanV4 article {
+          background: #ffffff !important;
+          color: #0f172a !important;
+          border: 1px solid rgba(15, 23, 42, 0.14) !important;
+          border-radius: 28px !important;
+          box-shadow: 0 22px 58px rgba(15, 23, 42, 0.13) !important;
+        }
+
+        .followUpCleanV4 .ohContainer > section:not(:first-of-type) :is(h1,h2,h3,h4,p,span,strong,small,label,li,div),
+        .followUpCleanV4 .ohCard :is(h1,h2,h3,h4,p,span,strong,small,label,li,div),
+        .followUpCleanV4 .ohActionPanel :is(h1,h2,h3,h4,p,span,strong,small,label,li,div),
+        .followUpCleanV4 form :is(h1,h2,h3,h4,p,span,strong,small,label,li,div),
+        .followUpCleanV4 article :is(h1,h2,h3,h4,p,span,strong,small,label,li,div) {
+          color: #0f172a !important;
+        }
+
+        .followUpCleanV4 p,
+        .followUpCleanV4 small,
+        .followUpCleanV4 li {
+          color: #334155 !important;
+          font-weight: 720 !important;
+          line-height: 1.65 !important;
+        }
+
+        .followUpCleanV4 h1,
+        .followUpCleanV4 h2,
+        .followUpCleanV4 h3,
+        .followUpCleanV4 h4,
+        .followUpCleanV4 strong,
+        .followUpCleanV4 label {
+          color: #0f172a !important;
+          font-weight: 950 !important;
+        }
+
+        /* Section title bars only */
+        .followUpCleanV4 .ohCardHeader {
+          background: linear-gradient(135deg, #061826, #0f766e) !important;
+          border-radius: 22px !important;
+          padding: 16px !important;
+          border: 0 !important;
+          margin-bottom: 18px !important;
+          box-shadow: 0 16px 38px rgba(15, 23, 42, 0.18) !important;
+        }
+
+        .followUpCleanV4 .ohCardHeader,
+        .followUpCleanV4 .ohCardHeader * {
+          color: #ffffff !important;
+        }
+
+        /* Strong stat cards only */
+        .followUpCleanV4 .ohMetricGrid > *,
+        .followUpCleanV4 [class*="MetricGrid"] > *,
+        .followUpCleanV4 [class*="StatsGrid"] > * {
+          min-height: 142px !important;
+          border: 0 !important;
+          overflow: hidden !important;
+          color: #ffffff !important;
+          border-radius: 24px !important;
+          box-shadow: 0 24px 62px rgba(15, 23, 42, 0.24) !important;
+        }
+
+        .followUpCleanV4 .ohMetricGrid > *:nth-child(1),
+        .followUpCleanV4 [class*="MetricGrid"] > *:nth-child(1),
+        .followUpCleanV4 [class*="StatsGrid"] > *:nth-child(1) {
+          background: linear-gradient(135deg, #1d4ed8, #0f766e) !important;
+        }
+
+        .followUpCleanV4 .ohMetricGrid > *:nth-child(2),
+        .followUpCleanV4 [class*="MetricGrid"] > *:nth-child(2),
+        .followUpCleanV4 [class*="StatsGrid"] > *:nth-child(2) {
+          background: linear-gradient(135deg, #0f766e, #06b6d4) !important;
+        }
+
+        .followUpCleanV4 .ohMetricGrid > *:nth-child(3),
+        .followUpCleanV4 [class*="MetricGrid"] > *:nth-child(3),
+        .followUpCleanV4 [class*="StatsGrid"] > *:nth-child(3) {
+          background: linear-gradient(135deg, #047857, #10b981) !important;
+        }
+
+        .followUpCleanV4 .ohMetricGrid > *:nth-child(4),
+        .followUpCleanV4 [class*="MetricGrid"] > *:nth-child(4),
+        .followUpCleanV4 [class*="StatsGrid"] > *:nth-child(4) {
+          background: linear-gradient(135deg, #b45309, #f59e0b) !important;
+        }
+
+        .followUpCleanV4 .ohMetricGrid > * *,
+        .followUpCleanV4 [class*="MetricGrid"] > * *,
+        .followUpCleanV4 [class*="StatsGrid"] > * * {
+          color: #ffffff !important;
+        }
+
+        /* Buttons: force readable contrast */
+        .followUpCleanV4 button,
+        .followUpCleanV4 a[href] {
+          font-weight: 950 !important;
+          text-decoration: none !important;
+        }
+
+        .followUpCleanV4 .primaryBtn,
+        .followUpCleanV4 button[type="submit"],
+        .followUpCleanV4 a[class*="Primary"],
+        .followUpCleanV4 button[class*="Primary"],
+        .followUpCleanV4 .ohHero a[href],
+        .followUpCleanV4 [class*="Hero"] a[href] {
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          min-height: 42px !important;
+          padding: 0 16px !important;
+          border-radius: 999px !important;
+          background: linear-gradient(135deg, #06b6d4, #14b8a6) !important;
+          color: #061826 !important;
+          border: 0 !important;
+          box-shadow: 0 16px 40px rgba(6, 182, 212, 0.35) !important;
+        }
+
+        .followUpCleanV4 .primaryBtn *,
+        .followUpCleanV4 button[type="submit"] *,
+        .followUpCleanV4 a[class*="Primary"] *,
+        .followUpCleanV4 button[class*="Primary"] *,
+        .followUpCleanV4 .ohHero a[href] *,
+        .followUpCleanV4 [class*="Hero"] a[href] * {
+          color: #061826 !important;
+        }
+
+        .followUpCleanV4 .secondaryBtn,
+        .followUpCleanV4 a[class*="Secondary"],
+        .followUpCleanV4 button[class*="Secondary"],
+        .followUpCleanV4 .ohContainer > section:not(:first-of-type) a[href] {
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          min-height: 38px !important;
+          padding: 0 14px !important;
+          border-radius: 999px !important;
+          background: #ffffff !important;
+          color: #0f766e !important;
+          border: 1px solid rgba(15, 118, 110, 0.34) !important;
+          box-shadow: 0 10px 24px rgba(15, 23, 42, 0.10) !important;
+        }
+
+        .followUpCleanV4 .secondaryBtn *,
+        .followUpCleanV4 a[class*="Secondary"] *,
+        .followUpCleanV4 button[class*="Secondary"] *,
+        .followUpCleanV4 .ohContainer > section:not(:first-of-type) a[href] * {
+          color: #0f766e !important;
+        }
+
+        .followUpCleanV4 input,
+        .followUpCleanV4 select,
+        .followUpCleanV4 textarea {
+          background: #ffffff !important;
+          color: #0f172a !important;
+          border: 1px solid rgba(15, 23, 42, 0.22) !important;
+          border-radius: 14px !important;
+          box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08) !important;
+        }
+
+        .followUpCleanV4 input::placeholder,
+        .followUpCleanV4 textarea::placeholder {
+          color: #64748b !important;
+          opacity: 1 !important;
+        }
+
+        .followUpCleanV4 input[type="range"] {
+          accent-color: #0f766e !important;
+          box-shadow: none !important;
+        }
+
+        /* Safety: any white pills must show text */
+        .followUpCleanV4 [style*="background: white"],
+        .followUpCleanV4 [style*="background:#fff"],
+        .followUpCleanV4 [style*="background: #fff"],
+        .followUpCleanV4 [style*="background-color: white"],
+        .followUpCleanV4 [style*="background-color:#fff"],
+        .followUpCleanV4 [style*="background-color: #fff"] {
+          color: #0f172a !important;
+        }
+
+        .followUpCleanV4 [style*="background: white"] *,
+        .followUpCleanV4 [style*="background:#fff"] *,
+        .followUpCleanV4 [style*="background: #fff"] *,
+        .followUpCleanV4 [style*="background-color: white"] *,
+        .followUpCleanV4 [style*="background-color:#fff"] *,
+        .followUpCleanV4 [style*="background-color: #fff"] * {
+          color: #0f172a !important;
+        }
+      `}</style>
+      <style>{`
+        /* ORGANHEAL_FOLLOWUP_FINISH_V5 */
+
+        /* Fix dark section title bars: text must be white, not hidden */
+        .followUpCleanV4 .ohContainer > section:not(:first-of-type) > div:first-child,
+        .followUpCleanV4 .ohCard > div:first-child,
+        .followUpCleanV4 article > div:first-child,
+        .followUpCleanV4 form > div:first-child {
+          padding: 18px !important;
+          border-radius: 22px !important;
+          background: linear-gradient(135deg, #061826 0%, #0f766e 100%) !important;
+          border: 1px solid rgba(255, 255, 255, 0.12) !important;
+          box-shadow: 0 16px 38px rgba(15, 23, 42, 0.18) !important;
+          margin-bottom: 18px !important;
+        }
+
+        .followUpCleanV4 .ohContainer > section:not(:first-of-type) > div:first-child :is(h1,h2,h3,h4,p,span,strong,small,label,div),
+        .followUpCleanV4 .ohCard > div:first-child :is(h1,h2,h3,h4,p,span,strong,small,label,div),
+        .followUpCleanV4 article > div:first-child :is(h1,h2,h3,h4,p,span,strong,small,label,div),
+        .followUpCleanV4 form > div:first-child :is(h1,h2,h3,h4,p,span,strong,small,label,div) {
+          color: #ffffff !important;
+          opacity: 1 !important;
+        }
+
+        .followUpCleanV4 .ohContainer > section:not(:first-of-type) > div:first-child p,
+        .followUpCleanV4 .ohCard > div:first-child p,
+        .followUpCleanV4 article > div:first-child p,
+        .followUpCleanV4 form > div:first-child p {
+          color: rgba(226, 232, 240, 0.94) !important;
+          font-weight: 760 !important;
+        }
+
+        /* But keep inputs/selects inside forms readable */
+        .followUpCleanV4 form > div:first-child input,
+        .followUpCleanV4 form > div:first-child select,
+        .followUpCleanV4 form > div:first-child textarea,
+        .followUpCleanV4 .ohContainer > section:not(:first-of-type) > div:first-child input,
+        .followUpCleanV4 .ohContainer > section:not(:first-of-type) > div:first-child select,
+        .followUpCleanV4 .ohContainer > section:not(:first-of-type) > div:first-child textarea {
+          background: #ffffff !important;
+          color: #0f172a !important;
+          border: 1px solid rgba(15, 23, 42, 0.22) !important;
+        }
+
+        /* Fix buttons on dark bars */
+        .followUpCleanV4 .ohContainer > section:not(:first-of-type) > div:first-child a[href],
+        .followUpCleanV4 .ohContainer > section:not(:first-of-type) > div:first-child button,
+        .followUpCleanV4 .ohCard > div:first-child a[href],
+        .followUpCleanV4 .ohCard > div:first-child button,
+        .followUpCleanV4 article > div:first-child a[href],
+        .followUpCleanV4 article > div:first-child button {
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          min-height: 40px !important;
+          padding: 0 16px !important;
+          border-radius: 999px !important;
+          background: #ffffff !important;
+          color: #0f766e !important;
+          border: 1px solid rgba(255, 255, 255, 0.78) !important;
+          box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18) !important;
+          font-weight: 950 !important;
+          text-decoration: none !important;
+        }
+
+        .followUpCleanV4 .ohContainer > section:not(:first-of-type) > div:first-child a[href] *,
+        .followUpCleanV4 .ohContainer > section:not(:first-of-type) > div:first-child button *,
+        .followUpCleanV4 .ohCard > div:first-child a[href] *,
+        .followUpCleanV4 .ohCard > div:first-child button *,
+        .followUpCleanV4 article > div:first-child a[href] *,
+        .followUpCleanV4 article > div:first-child button * {
+          color: #0f766e !important;
+        }
+
+        /* Improve hero right preview card */
+        .followUpCleanV4 .ohHero aside,
+        .followUpCleanV4 [class*="Hero"] aside,
+        .followUpCleanV4 .ohHero .ohCard,
+        .followUpCleanV4 [class*="Hero"] .ohCard,
+        .followUpCleanV4 .ohContainer > section:first-of-type aside,
+        .followUpCleanV4 .ohContainer > section:first-of-type .ohCard {
+          min-width: 260px !important;
+          min-height: 300px !important;
+          padding: 24px !important;
+          border-radius: 26px !important;
+          background: #ffffff !important;
+          color: #0f172a !important;
+          display: flex !important;
+          flex-direction: column !important;
+          justify-content: space-between !important;
+          box-shadow: 0 30px 78px rgba(0, 0, 0, 0.24) !important;
+        }
+
+        .followUpCleanV4 .ohHero aside *,
+        .followUpCleanV4 [class*="Hero"] aside *,
+        .followUpCleanV4 .ohHero .ohCard *,
+        .followUpCleanV4 [class*="Hero"] .ohCard *,
+        .followUpCleanV4 .ohContainer > section:first-of-type aside *,
+        .followUpCleanV4 .ohContainer > section:first-of-type .ohCard * {
+          color: #0f172a !important;
+        }
+
+        .followUpCleanV4 .ohHero aside > div:first-child,
+        .followUpCleanV4 [class*="Hero"] aside > div:first-child,
+        .followUpCleanV4 .ohHero .ohCard > div:first-child,
+        .followUpCleanV4 [class*="Hero"] .ohCard > div:first-child,
+        .followUpCleanV4 .ohContainer > section:first-of-type aside > div:first-child,
+        .followUpCleanV4 .ohContainer > section:first-of-type .ohCard > div:first-child {
+          background: linear-gradient(135deg, #061826, #0f766e) !important;
+          color: #ffffff !important;
+          border-radius: 18px !important;
+          padding: 14px !important;
+          margin-bottom: 18px !important;
+        }
+
+        .followUpCleanV4 .ohHero aside > div:first-child *,
+        .followUpCleanV4 [class*="Hero"] aside > div:first-child *,
+        .followUpCleanV4 .ohHero .ohCard > div:first-child *,
+        .followUpCleanV4 [class*="Hero"] .ohCard > div:first-child *,
+        .followUpCleanV4 .ohContainer > section:first-of-type aside > div:first-child *,
+        .followUpCleanV4 .ohContainer > section:first-of-type .ohCard > div:first-child * {
+          color: #ffffff !important;
+        }
+
+        /* Make empty right-side circle stronger and useful visually */
+        .followUpCleanV4 .ohHero svg,
+        .followUpCleanV4 [class*="Hero"] svg,
+        .followUpCleanV4 .ohContainer > section:first-of-type svg {
+          width: 132px !important;
+          height: 132px !important;
+          display: block !important;
+          margin: 14px auto !important;
+          filter: drop-shadow(0 14px 24px rgba(15, 23, 42, 0.18)) !important;
+        }
+
+        .followUpCleanV4 .ohHero aside::after,
+        .followUpCleanV4 [class*="Hero"] aside::after,
+        .followUpCleanV4 .ohHero .ohCard::after,
+        .followUpCleanV4 [class*="Hero"] .ohCard::after,
+        .followUpCleanV4 .ohContainer > section:first-of-type aside::after,
+        .followUpCleanV4 .ohContainer > section:first-of-type .ohCard::after {
+          content: "Live health signal";
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 42px;
+          border-radius: 14px;
+          background: #f8fafc;
+          color: #0f766e;
+          border: 1px solid rgba(15, 118, 110, 0.18);
+          font-weight: 950;
+          margin-top: 14px;
+        }
+
+        /* Fix text too close to dark box edges */
+        .followUpCleanV4 .ohHero,
+        .followUpCleanV4 [class*="Hero"],
+        .followUpCleanV4 .ohContainer > section:first-of-type {
+          padding: 38px !important;
+        }
+
+        .followUpCleanV4 .ohHero h1,
+        .followUpCleanV4 [class*="Hero"] h1,
+        .followUpCleanV4 .ohContainer > section:first-of-type h1 {
+          line-height: 1.02 !important;
+          letter-spacing: -0.045em !important;
+          max-width: 740px !important;
+        }
+
+        .followUpCleanV4 .ohHero p,
+        .followUpCleanV4 [class*="Hero"] p,
+        .followUpCleanV4 .ohContainer > section:first-of-type p {
+          max-width: 760px !important;
+          line-height: 1.75 !important;
+          margin-top: 14px !important;
+        }
+
+        /* Improve white pills/buttons visibility everywhere */
+        .followUpCleanV4 a[href],
+        .followUpCleanV4 button {
+          opacity: 1 !important;
+          text-shadow: none !important;
+        }
+
+        .followUpCleanV4 a[href]:not(.organhealBackButton):not([class*="Primary"]),
+        .followUpCleanV4 button:not([class*="Primary"]) {
+          color: #0f766e !important;
+        }
+
+        .followUpCleanV4 a[href]:not(.organhealBackButton):not([class*="Primary"]) *,
+        .followUpCleanV4 button:not([class*="Primary"]) * {
+          color: #0f766e !important;
+        }
+      `}</style></main>
   );
 }
 
