@@ -41,7 +41,7 @@ type HealthInsight = {
   created_at: string | null;
 };
 
-type SavedIntelligence = {
+type SavedAnalysis = {
   insight_id: number;
   updated_at: string | null;
 };
@@ -88,7 +88,7 @@ export default function DoctorPortalPage() {
   const [dailyCheckIn, setDailyCheckIn] = useState<DailyCheckIn | null>(null);
   const [uploadedReports, setUploadedReports] = useState<UploadedReport[]>([]);
   const [healthInsights, setHealthInsights] = useState<HealthInsight[]>([]);
-  const [savedIntelligence, setSavedIntelligence] = useState<SavedIntelligence[]>([]);
+  const [savedAnalysis, setSavedAnalysis] = useState<SavedAnalysis[]>([]);
   const [healthHistory, setHealthHistory] = useState<HealthHistory[]>([]);
 
   const [loading, setLoading] = useState(true);
@@ -232,7 +232,7 @@ export default function DoctorPortalPage() {
 
     const insightIds = (insightData || []).map((item) => item.id);
 
-    let savedRows: SavedIntelligence[] = [];
+    let savedRows: SavedAnalysis[] = [];
 
     if (insightIds.length > 0) {
       const { data: savedData } = await supabase
@@ -242,7 +242,7 @@ export default function DoctorPortalPage() {
         .in("insight_id", insightIds)
         .order("updated_at", { ascending: false });
 
-      savedRows = (savedData || []) as SavedIntelligence[];
+      savedRows = (savedData || []) as SavedAnalysis[];
     }
 
     const { data: historyData } = await supabase
@@ -256,7 +256,7 @@ export default function DoctorPortalPage() {
     setDailyCheckIn((checkInData || null) as DailyCheckIn | null);
     setUploadedReports((reportData || []) as UploadedReport[]);
     setHealthInsights((insightData || []) as HealthInsight[]);
-    setSavedIntelligence(savedRows);
+    setSavedAnalysis(savedRows);
     setHealthHistory((historyData || []) as HealthHistory[]);
     setLoading(false);
   }
@@ -330,12 +330,12 @@ export default function DoctorPortalPage() {
     (item) => item.extraction_status !== "Completed"
   ).length;
 
-  const savedIntelligenceIds = new Set(
-    savedIntelligence.map((item) => item.insight_id)
+  const savedAnalysisIds = new Set(
+    savedAnalysis.map((item) => item.insight_id)
   );
 
   const generatedInsights = healthInsights.filter(
-    (item) => item.ai_status === "Generated" || savedIntelligenceIds.has(item.id)
+    (item) => item.ai_status === "Generated" || savedAnalysisIds.has(item.id)
   );
 
   const latestDoctorBriefInsight =
@@ -417,7 +417,7 @@ export default function DoctorPortalPage() {
           label: text("Analyze report", "حلّل التقرير"),
           description: text(
             "Open Report Analysis to generate report summaries, recommendations, and doctor-ready interpretation.",
-            "افتح تحليل التقارير لتوليد ملخصات التقارير، التوصيات، والتفسير الجاهز للطبيب."
+            "افتح تحليل التقارير لتحليل التقارير، التوصيات، والتفسير الجاهز للطبيب."
           ),
           href: "/reports",
           buttonText: text("Review Analysis", "افتح تحليل التقارير"),
@@ -811,7 +811,7 @@ export default function DoctorPortalPage() {
                 <span className="ohMetricLabel">
                   {text("Saved Analysis", "التحليل الصحي المحفوظ")}
                 </span>
-                <span className="ohMetricValue">{savedIntelligence.length}</span>
+                <span className="ohMetricValue">{savedAnalysis.length}</span>
                 <span className="ohMetricHint">
                   {text("Saved saved analysis results", "نتائج التحليل الصحي المولدة والمحفوظة")}
                 </span>
@@ -910,7 +910,7 @@ export default function DoctorPortalPage() {
               <div className="ohCardHeader">
                 <div>
                   <p className="ohMetricLabel">
-                    {text("Report Intelligence Brief", "ملخص ذكاء التقارير")}
+                    {text("Report Analysis Brief", "ملخص ذكاء التقارير")}
                   </p>
 
                   <h2 className="ohCardTitle">
