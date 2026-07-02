@@ -555,15 +555,15 @@ export default function LibraryPage() {
 
               <h1 className="ohTitle">
                 {text(
-                  "Find health learning by topic, marker, or report.",
+                  "Learn about your health, one clear topic at a time.",
                   "اعثر على محتوى صحي حسب الموضوع أو المؤشر أو التقرير."
                 )}
               </h1>
 
               <p className="ohLead">
                 {text(
-                  "Start with clear, patient-friendly articles designed to help you understand results, prepare better questions, and read health information with more confidence.",
-                  "ابدأ بمقالات واضحة ومبسطة تساعدك على فهم النتائج، وتحضير أسئلة أفضل، وقراءة المعلومات الصحية بثقة أكبر."
+                  "OrganHeal helps you understand lab markers, organs, reports, and next steps through short, focused learning modules.",
+                  "يساعدك OrganHeal على فهم مؤشرات المختبر، الأعضاء، التقارير، والخطوات التالية من خلال وحدات تعليمية قصيرة وواضحة."
                 )}
               </p>
 
