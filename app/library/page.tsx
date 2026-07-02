@@ -729,11 +729,11 @@ export default function LibraryPage() {
               <p className="learningIntentText">{text("A future path for learning from uploaded reports.", "مسار لاحق للتعلّم من التقارير المرفوعة.")}</p>
             </article>
 
-            <article className="learningIntentCard">
+            <Link href="/library/doctor-prep" className="learningIntentCard learningIntentLink">
               <span className="learningIntentCode">04</span>
               <h3 className="learningIntentTitle">{text("Prepare for My Doctor", "التحضير للطبيب")}</h3>
               <p className="learningIntentText">{text("Questions, follow-up points, and what to bring.", "أسئلة، نقاط متابعة، وما يجب إحضاره.")}</p>
-            </article>
+            </Link>
 
             <article className="learningIntentCard">
               <span className="learningIntentCode">05</span>
