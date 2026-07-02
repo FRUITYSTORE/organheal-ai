@@ -505,6 +505,62 @@ export default function LibraryPage() {
           }
         }
 
+
+        .healthLearningHubPage .learningIntentGrid {
+          display: grid;
+          grid-template-columns: repeat(5, minmax(0, 1fr));
+          gap: 14px;
+        }
+
+        .healthLearningHubPage .learningIntentCard {
+          padding: 20px;
+          border-radius: 24px;
+          background: #ffffff;
+          border: 1px solid rgba(15, 23, 42, 0.14);
+          box-shadow: 0 18px 44px rgba(15, 23, 42, 0.10);
+        }
+
+        .healthLearningHubPage .learningIntentCode {
+          display: inline-flex;
+          margin-bottom: 14px;
+          width: 42px;
+          height: 42px;
+          align-items: center;
+          justify-content: center;
+          border-radius: 15px;
+          background: #0f766e;
+          color: #ffffff;
+          font-weight: 950;
+        }
+
+        .healthLearningHubPage .learningIntentTitle {
+          margin: 0;
+          color: #0f172a;
+          font-size: 1rem;
+          font-weight: 950;
+          line-height: 1.25;
+        }
+
+        .healthLearningHubPage .learningIntentText {
+          margin: 10px 0 0;
+          color: #475569;
+          font-size: 0.9rem;
+          font-weight: 750;
+          line-height: 1.6;
+        }
+
+        @media (max-width: 1100px) {
+          .healthLearningHubPage .learningIntentGrid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+        }
+
+        @media (max-width: 640px) {
+          .healthLearningHubPage .learningIntentGrid {
+            grid-template-columns: 1fr;
+          }
+        }
+
         @media (max-width: 980px) {
           .healthLearningHubPage .learningHero .ohHeroGrid {
             grid-template-columns: 1fr;
@@ -569,7 +625,7 @@ export default function LibraryPage() {
 
               <div className="ohButtonRow" style={{ marginTop: "24px" }}>
                 <Link href="/blog" className="primaryBtn">
-                  {text("Open Article Finder", "فتح باحث المقالات")}
+                  {text("Find Learning Modules", "ابحث عن وحدات تعليمية")}
                 </Link>
 
                 <a href="#featured-guides" className="secondaryBtn">
@@ -617,6 +673,60 @@ export default function LibraryPage() {
           </div>
         </section>
 
+
+        <section className="ohCard">
+          <div className="ohCardHeader">
+            <div>
+              <p className="ohMetricLabel">
+                {text("Learning paths", "مسارات التعلّم")}
+              </p>
+
+              <h2 className="ohCardTitle">
+                {text("What would you like to learn today?", "ماذا تريد أن تتعلم اليوم؟")}
+              </h2>
+
+              <p className="ohCardText">
+                {text(
+                  "Choose the easiest starting point. Each path will later connect to short learning modules based on your health context.",
+                  "اختر نقطة البداية الأسهل. لاحقًا سيرتبط كل مسار بوحدات تعليمية قصيرة حسب سياقك الصحي."
+                )}
+              </p>
+            </div>
+          </div>
+
+          <div className="learningIntentGrid">
+            <article className="learningIntentCard">
+              <span className="learningIntentCode">01</span>
+              <h3 className="learningIntentTitle">{text("Understand a Lab Result", "فهم نتيجة مختبر")}</h3>
+              <p className="learningIntentText">{text("LDL, HbA1c, Vitamin D, kidney and liver markers.", "LDL، HbA1c، فيتامين D، ومؤشرات الكلى والكبد.")}</p>
+            </article>
+
+            <article className="learningIntentCard">
+              <span className="learningIntentCode">02</span>
+              <h3 className="learningIntentTitle">{text("Learn by Organ", "التعلّم حسب العضو")}</h3>
+              <p className="learningIntentText">{text("Heart, kidney, liver, lung, brain, and metabolic health.", "القلب، الكلى، الكبد، الرئة، الدماغ، والصحة الأيضية.")}</p>
+            </article>
+
+            <article className="learningIntentCard">
+              <span className="learningIntentCode">03</span>
+              <h3 className="learningIntentTitle">{text("Understand My Report", "فهم تقريري")}</h3>
+              <p className="learningIntentText">{text("A future path for learning from uploaded reports.", "مسار لاحق للتعلّم من التقارير المرفوعة.")}</p>
+            </article>
+
+            <article className="learningIntentCard">
+              <span className="learningIntentCode">04</span>
+              <h3 className="learningIntentTitle">{text("Prepare for My Doctor", "التحضير للطبيب")}</h3>
+              <p className="learningIntentText">{text("Questions, follow-up points, and what to bring.", "أسئلة، نقاط متابعة، وما يجب إحضاره.")}</p>
+            </article>
+
+            <article className="learningIntentCard">
+              <span className="learningIntentCode">05</span>
+              <h3 className="learningIntentTitle">{text("Improve My Lifestyle", "تحسين نمط الحياة")}</h3>
+              <p className="learningIntentText">{text("Food, exercise, sleep, and simple daily actions.", "الغذاء، الرياضة، النوم، وخطوات يومية بسيطة.")}</p>
+            </article>
+          </div>
+        </section>
+
         <section id="featured-guides" className="featuredSection">
           <div className="featuredHeader">
             <div>
@@ -640,7 +750,7 @@ export default function LibraryPage() {
             </div>
 
             <Link href="/blog" className="primaryBtn">
-              {text("Open Full Article Finder", "فتح باحث المقالات الكامل")}
+              {text("Open Full Article Finder", "ابحث عن وحدات تعليمية الكامل")}
             </Link>
           </div>
 
@@ -688,7 +798,7 @@ export default function LibraryPage() {
               <p className="ohCardText">
                 {text(
                   "Use these routes to decide where to begin, then open the article finder to search the full collection.",
-                  "استخدم هذه المسارات لتحديد نقطة البداية، ثم افتح باحث المقالات للبحث في المجموعة كاملة."
+                  "استخدم هذه المسارات لتحديد نقطة البداية، ثم اابحث عن وحدات تعليمية للبحث في المجموعة كاملة."
                 )}
               </p>
             </div>
@@ -745,7 +855,7 @@ export default function LibraryPage() {
             <p className="ohCardText">
               {text(
                 "Open the article finder and search directly by marker name, organ system, or health topic.",
-                "افتح باحث المقالات وابحث مباشرة باسم المؤشر أو العضو أو الموضوع الصحي."
+                "اابحث عن وحدات تعليمية وابحث مباشرة باسم المؤشر أو العضو أو الموضوع الصحي."
               )}
             </p>
 
