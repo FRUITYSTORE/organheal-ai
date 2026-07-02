@@ -613,6 +613,11 @@ export default function LibraryPage() {
       `}</style>
 
       <div className="ohContainer ohStack large" style={{ padding: "32px 0 64px" }}>
+        <div className="ohButtonRow">
+          <Link href="/dashboard" className="secondaryBtn">
+            {text("← Back to Dashboard", "← العودة إلى لوحة التحكم")}
+          </Link>
+        </div>
         <section className="ohHero learningHero">
           <div className="ohHeroGrid">
             <div>
