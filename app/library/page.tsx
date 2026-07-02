@@ -717,11 +717,11 @@ export default function LibraryPage() {
               <p className="learningIntentText">{text("LDL, HbA1c, Vitamin D, kidney and liver markers.", "LDL، HbA1c، فيتامين D، ومؤشرات الكلى والكبد.")}</p>
             </Link>
 
-            <article className="learningIntentCard">
+            <Link href="/library/organs" className="learningIntentCard learningIntentLink">
               <span className="learningIntentCode">02</span>
               <h3 className="learningIntentTitle">{text("Learn by Organ", "التعلّم حسب العضو")}</h3>
               <p className="learningIntentText">{text("Heart, kidney, liver, lung, brain, and metabolic health.", "القلب، الكلى، الكبد، الرئة، الدماغ، والصحة الأيضية.")}</p>
-            </article>
+            </Link>
 
             <article className="learningIntentCard">
               <span className="learningIntentCode">03</span>
