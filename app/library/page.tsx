@@ -723,11 +723,11 @@ export default function LibraryPage() {
               <p className="learningIntentText">{text("Heart, kidney, liver, lung, brain, and metabolic health.", "القلب، الكلى، الكبد، الرئة، الدماغ، والصحة الأيضية.")}</p>
             </Link>
 
-            <article className="learningIntentCard">
+            <Link href="/library/reports" className="learningIntentCard learningIntentLink">
               <span className="learningIntentCode">03</span>
               <h3 className="learningIntentTitle">{text("Understand My Report", "فهم تقريري")}</h3>
-              <p className="learningIntentText">{text("A future path for learning from uploaded reports.", "مسار لاحق للتعلّم من التقارير المرفوعة.")}</p>
-            </article>
+              <p className="learningIntentText">{text("Learn from uploaded reports and turn results into clearer next steps.", "تعلّم من التقارير المرفوعة وحوّل النتائج إلى خطوات أوضح.")}</p>
+            </Link>
 
             <Link href="/library/doctor-prep" className="learningIntentCard learningIntentLink">
               <span className="learningIntentCode">04</span>
