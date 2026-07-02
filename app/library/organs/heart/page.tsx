@@ -32,7 +32,37 @@ const dailyActions = [
 
 export default function HeartLearningWorkspacePage() {
   return (
-    <main className="ohPageShell">
+    <main className="ohPageShell heartLearningPage">
+      <style>{`
+        .heartLearningPage .ohHero {
+          background: linear-gradient(135deg, #062f2f, #0f766e) !important;
+          color: #ffffff !important;
+          border: 1px solid rgba(255,255,255,0.16);
+          box-shadow: 0 28px 70px rgba(15, 118, 110, 0.24);
+        }
+
+        .heartLearningPage .ohHero .ohEyebrow,
+        .heartLearningPage .ohHero .ohTitle,
+        .heartLearningPage .ohHero .ohLead {
+          color: #ffffff !important;
+        }
+
+        .heartLearningPage .ohCard {
+          border: 1px solid rgba(15, 23, 42, 0.16);
+          box-shadow: 0 20px 48px rgba(15, 23, 42, 0.12);
+        }
+
+        .heartLearningPage .ohMetricLabel {
+          color: #0f766e !important;
+          font-weight: 950;
+        }
+
+        .heartLearningPage .secondaryBtn {
+          border-color: rgba(15, 118, 110, 0.45) !important;
+          color: #0f766e !important;
+          font-weight: 950;
+        }
+      `}</style>
       <div className="ohContainer ohStack large" style={{ padding: "32px 0 64px" }}>
         <div className="ohButtonRow">
           <Link href="/library/organs" className="secondaryBtn">
