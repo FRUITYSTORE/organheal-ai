@@ -513,6 +513,7 @@ export default function LibraryPage() {
         }
 
         .healthLearningHubPage .learningIntentCard {
+          display: block;
           padding: 20px;
           border-radius: 24px;
           background: #ffffff;
@@ -539,6 +540,16 @@ export default function LibraryPage() {
           font-size: 1rem;
           font-weight: 950;
           line-height: 1.25;
+        }
+
+        .healthLearningHubPage .learningIntentLink {
+          text-decoration: none;
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .healthLearningHubPage .learningIntentLink:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 22px 52px rgba(15, 118, 110, 0.16);
         }
 
         .healthLearningHubPage .learningIntentText {
@@ -695,11 +706,11 @@ export default function LibraryPage() {
           </div>
 
           <div className="learningIntentGrid">
-            <article className="learningIntentCard">
+            <Link href="/blog" className="learningIntentCard learningIntentLink">
               <span className="learningIntentCode">01</span>
               <h3 className="learningIntentTitle">{text("Understand a Lab Result", "فهم نتيجة مختبر")}</h3>
               <p className="learningIntentText">{text("LDL, HbA1c, Vitamin D, kidney and liver markers.", "LDL، HbA1c، فيتامين D، ومؤشرات الكلى والكبد.")}</p>
-            </article>
+            </Link>
 
             <article className="learningIntentCard">
               <span className="learningIntentCode">02</span>
