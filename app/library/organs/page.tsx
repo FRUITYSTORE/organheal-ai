@@ -4,7 +4,7 @@ const organs = [
   {
     name: "Heart",
     text: "Learn about cholesterol, blood pressure, circulation, and heart risk.",
-    href: "/heart",
+    href: "/library/organs/heart",
   },
   {
     name: "Kidney",
