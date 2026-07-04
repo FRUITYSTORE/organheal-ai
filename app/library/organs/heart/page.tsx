@@ -241,6 +241,37 @@ export default function HeartLearningWorkspacePage() {
             </Link>
           </div>
         </section>
+
+        <section className="ohCard">
+          <div className="ohCardHeader">
+            <div>
+              <p className="ohMetricLabel">Quick check</p>
+              <h2 className="ohCardTitle">Can you answer this?</h2>
+              <p className="ohCardText">
+                Which cholesterol type is often called protective cholesterol?
+              </p>
+            </div>
+
+            <span className="ohStatusBadge neutral">1 question</span>
+          </div>
+
+          <div className="ohGrid cols3" style={{ marginTop: "18px" }}>
+            <article className="ohCard">
+              <p className="ohCardTitle">LDL</p>
+              <p className="ohCardText">Often linked with artery plaque risk.</p>
+            </article>
+
+            <article className="ohCard">
+              <p className="ohCardTitle">HDL</p>
+              <p className="ohCardText">Helps carry cholesterol away from the bloodstream.</p>
+            </article>
+
+            <article className="ohCard">
+              <p className="ohCardTitle">Triglycerides</p>
+              <p className="ohCardText">A type of fat in the blood.</p>
+            </article>
+          </div>
+        </section>
         <section className="ohGrid cols2">
           <article className="ohCard">
             <p className="ohMetricLabel">Doctor questions</p>
