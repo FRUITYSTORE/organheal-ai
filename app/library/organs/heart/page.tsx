@@ -209,6 +209,58 @@ export default function HeartLearningWorkspacePage() {
             </Link>
           </div>
         </section>
+        <section className="ohHero">
+  <p className="ohEyebrow">
+    {text("Heart Learning Workspace", "مساحة تعلم القلب")}
+  </p>
+
+  <h1 className="ohTitle">
+    {text("Start with one heart lesson today.", "ابدأ اليوم بدرس واحد عن صحة القلب.")}
+  </h1>
+
+  <p className="ohLead">
+    {text(
+      "Focus on LDL first. It is the best starting point for understanding cholesterol and heart risk.",
+      "ابدأ أولًا بـ LDL، فهو نقطة بداية مناسبة لفهم الكوليسترول ومخاطر القلب."
+    )}
+  </p>
+
+  <div className="ohGrid cols3" style={{ marginTop: "24px" }}>
+    <article className="ohCard">
+      <p className="ohMetricLabel">{text("Today's lesson", "درس اليوم")}</p>
+      <h2 className="ohCardTitle">{text("LDL Cholesterol", "كوليسترول LDL")}</h2>
+      <p className="ohCardText">
+        {text("Understand what LDL means and why it matters.", "افهم معنى LDL ولماذا هو مهم.")}
+      </p>
+    </article>
+
+    <article className="ohCard">
+      <p className="ohMetricLabel">{text("Estimated time", "الوقت المتوقع")}</p>
+      <h2 className="ohCardTitle">{text("4 minutes", "٤ دقائق")}</h2>
+      <p className="ohCardText">
+        {text("Short and easy to complete.", "قصير وسهل الإكمال.")}
+      </p>
+    </article>
+
+    <article className="ohCard">
+      <p className="ohMetricLabel">{text("Difficulty", "الصعوبة")}</p>
+      <h2 className="ohCardTitle">{text("Easy", "سهل")}</h2>
+      <p className="ohCardText">
+        {text("Made for patients and families.", "مصمم للمرضى والعائلات.")}
+      </p>
+    </article>
+  </div>
+
+  <div className="ohButtonRow" style={{ marginTop: "24px" }}>
+    <Link href="/blog?marker=LDL" className="primaryBtn">
+      {text("Start Lesson", "ابدأ الدرس")}
+    </Link>
+
+    <Link href="/heart" className="secondaryBtn">
+      {text("Open Heart Page", "افتح صفحة القلب")}
+    </Link>
+  </div>
+</section>
 
         <section className="ohCard">
           <div className="ohCardHeader">
