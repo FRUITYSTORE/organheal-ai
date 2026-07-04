@@ -262,16 +262,27 @@ export default function HeartLearningWorkspacePage() {
   </div>
 </section>
 
-        <section className="ohCard">
-          <div className="ohCardHeader">
-            <div>
-              <p className="ohMetricLabel">Knowledge progress</p>
-              <h2 className="ohCardTitle">Heart learning progress</h2>
-              <p className="ohCardText">Your guided heart learning path starts here.</p>
-            </div>
+       <section className="ohCard">
+  <div className="ohCardHeader">
+    <div>
+      <p className="ohMetricLabel">
+        {text("Knowledge Progress", "تقدم المعرفة")}
+      </p>
 
-            <span className="ohStatusBadge good">25%</span>
-          </div>
+      <h2 className="ohCardTitle">
+        {text("Heart Learning Progress", "تقدم تعلم القلب")}
+      </h2>
+
+      <p className="ohCardText">
+        {text(
+          "Your guided heart learning path starts here.",
+          "يبدأ مسار تعلم القلب الموجّه من هنا."
+        )}
+      </p>
+    </div>
+
+    <span className="ohStatusBadge good">25%</span>
+  </div>
 
           <div style={{ height: "12px", borderRadius: "999px", background: "rgba(15, 118, 110, 0.12)", overflow: "hidden" }}>
             <div style={{ width: "25%", height: "100%", background: "#0f766e", borderRadius: "999px" }} />
