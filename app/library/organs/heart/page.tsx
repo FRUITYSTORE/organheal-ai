@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-
+import BackButton from "@/app/components/education/BackButton";
 type Language = "en" | "ar";
 
 function getStoredLanguage(): Language {
@@ -207,11 +207,7 @@ export default function HeartLearningWorkspacePage() {
       `}</style>
 
       <div className="ohContainer ohStack large" style={{ padding: "32px 0 64px" }}>
-        <div className="ohButtonRow">
-          <Link href="/library/organs" className="secondaryBtn">
-            ← Back to Organs
-          </Link>
-        </div>
+       <BackButton href="/library/organs" label="← Back to Organs" />
 
         <section className="ohHero">
           <p className="ohEyebrow">Heart learning workspace</p>
