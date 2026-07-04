@@ -1,30 +1,43 @@
 import Link from "next/link";
 
-const modules = [
+const learningPath = [
   {
-    title: "Cholesterol basics",
-    text: "Understand LDL, HDL, triglycerides, and why one number is not enough.",
+    step: "01",
+    title: "LDL Cholesterol",
+    text: "Understand what LDL means and why it matters for heart risk.",
+    href: "/blog?marker=LDL",
     status: "Start here",
   },
   {
-    title: "Blood pressure and heart risk",
-    text: "Learn how pressure, vessels, lifestyle, and follow-up connect.",
+    step: "02",
+    title: "HDL and Triglycerides",
+    text: "Learn how cholesterol numbers work together, not alone.",
+    href: "/blog",
     status: "Next",
   },
   {
-    title: "Food and daily habits",
-    text: "Small actions that support heart health without overwhelming the user.",
+    step: "03",
+    title: "Blood Pressure",
+    text: "Understand how pressure affects the heart and blood vessels.",
+    href: "/blog",
+    status: "Next",
+  },
+  {
+    step: "04",
+    title: "Daily Habits",
+    text: "Focus on small habits that support heart health.",
+    href: "/blog",
     status: "Practical",
   },
 ];
 
 const doctorQuestions = [
   "Which result matters most in my case?",
-  "Do I need lifestyle changes, medicine, or repeat testing?",
+  "Do I need lifestyle changes, medication, or repeat testing?",
   "When should I repeat my cholesterol or blood pressure checks?",
 ];
 
-const dailyActions = [
+const dailyMissions = [
   "Review one heart marker.",
   "Write one question for your doctor.",
   "Choose one small habit to improve this week.",
@@ -43,10 +56,18 @@ export default function HeartLearningWorkspacePage() {
 
         .heartLearningPage .ohHero .ohEyebrow,
         .heartLearningPage .ohHero .ohTitle,
-        .heartLearningPage .ohHero .ohLead {
+        .heartLearningPage .ohHero .ohLead,
+        .heartLearningPage .ohHero .ohMetricLabel,
+        .heartLearningPage .ohHero .ohCardTitle,
+        .heartLearningPage .ohHero .ohCardText {
           color: #ffffff !important;
         }
 
+        .heartLearningPage .ohHero .ohCard {
+          background: rgba(255,255,255,0.10) !important;
+          border: 1px solid rgba(255,255,255,0.18) !important;
+          box-shadow: none !important;
+        }
 
         .heartLearningPage .ohHero .primaryBtn {
           background: #22d3ee !important;
@@ -64,26 +85,45 @@ export default function HeartLearningWorkspacePage() {
           box-shadow: none !important;
         }
 
-        .heartLearningPage .ohHero .secondaryBtn:hover {
-          background: rgba(255, 255, 255, 0.18) !important;
-        }
-
         .heartLearningPage .ohCard {
           border: 1px solid rgba(15, 23, 42, 0.16);
           box-shadow: 0 20px 48px rgba(15, 23, 42, 0.12);
         }
 
-        .heartLearningPage .ohMetricLabel {
-          color: #0f766e !important;
+        .heartLearningPage .learningPathItem {
+          display: grid;
+          grid-template-columns: auto 1fr auto;
+          gap: 16px;
+          align-items: center;
+        }
+
+        .heartLearningPage .learningPathItem .secondaryBtn {
+          background: linear-gradient(135deg, #0f766e, #0891b2) !important;
+          color: #ffffff !important;
+          border: 0 !important;
+          font-weight: 950 !important;
+          box-shadow: 0 14px 28px rgba(15, 118, 110, 0.22) !important;
+        }
+
+        .heartLearningPage .stepMark {
+          display: inline-flex;
+          width: 46px;
+          height: 46px;
+          align-items: center;
+          justify-content: center;
+          border-radius: 16px;
+          background: #0f766e;
+          color: #ffffff;
           font-weight: 950;
         }
 
-        .heartLearningPage .secondaryBtn {
-          border-color: rgba(15, 118, 110, 0.45) !important;
-          color: #0f766e !important;
-          font-weight: 950;
+        @media (max-width: 760px) {
+          .heartLearningPage .learningPathItem {
+            grid-template-columns: 1fr;
+          }
         }
       `}</style>
+
       <div className="ohContainer ohStack large" style={{ padding: "32px 0 64px" }}>
         <div className="ohButtonRow">
           <Link href="/library/organs" className="secondaryBtn">
@@ -91,37 +131,16 @@ export default function HeartLearningWorkspacePage() {
           </Link>
         </div>
 
-
-        <section className="ohCard">
-          <div className="ohCardHeader">
-            <div>
-              <p className="ohMetricLabel">Learning progress</p>
-              <h2 className="ohCardTitle">Heart learning path</h2>
-              <p className="ohCardText">
-                This is the first version of a guided learning path. Later, OrganHeal will personalize this based on your reports.
-              </p>
-            </div>
-
-            <span className="ohStatusBadge good">25%</span>
-          </div>
-
-          <div style={{ height: "12px", borderRadius: "999px", background: "rgba(15, 118, 110, 0.12)", overflow: "hidden" }}>
-            <div style={{ width: "25%", height: "100%", background: "#0f766e", borderRadius: "999px" }} />
-          </div>
-        </section>
-
         <section className="ohHero">
           <p className="ohEyebrow">Heart learning workspace</p>
-
           <h1 className="ohTitle">Start with one heart lesson today.</h1>
-
           <p className="ohLead">
             Focus on LDL first. It is the best starting point for understanding cholesterol and heart risk.
           </p>
 
           <div className="ohGrid cols3" style={{ marginTop: "24px" }}>
             <article className="ohCard">
-              <p className="ohMetricLabel">Today's lesson</p>
+              <p className="ohMetricLabel">Today&apos;s lesson</p>
               <h2 className="ohCardTitle">LDL Cholesterol</h2>
               <p className="ohCardText">Understand what LDL means and why it matters.</p>
             </article>
@@ -144,23 +163,54 @@ export default function HeartLearningWorkspacePage() {
               Start Lesson
             </Link>
 
-            <Link href="/library/organs" className="secondaryBtn">
-              Back to Organs
+            <Link href="/heart" className="secondaryBtn">
+              Open Heart Page
             </Link>
           </div>
         </section>
-        <section className="ohGrid cols3">
-          {modules.map((module) => (
-            <article className="ohCard" key={module.title}>
-              <p className="ohMetricLabel">{module.status}</p>
-              <h2 className="ohCardTitle">{module.title}</h2>
-              <p className="ohCardText">{module.text}</p>
 
-              <Link href="/blog" className="secondaryBtn" style={{ marginTop: "18px", justifyContent: "center" }}>
-                Open Module
-              </Link>
-            </article>
-          ))}
+        <section className="ohCard">
+          <div className="ohCardHeader">
+            <div>
+              <p className="ohMetricLabel">Knowledge progress</p>
+              <h2 className="ohCardTitle">Heart learning progress</h2>
+              <p className="ohCardText">Your guided heart learning path starts here.</p>
+            </div>
+
+            <span className="ohStatusBadge good">25%</span>
+          </div>
+
+          <div style={{ height: "12px", borderRadius: "999px", background: "rgba(15, 118, 110, 0.12)", overflow: "hidden" }}>
+            <div style={{ width: "25%", height: "100%", background: "#0f766e", borderRadius: "999px" }} />
+          </div>
+        </section>
+
+        <section className="ohCard">
+          <div className="ohCardHeader">
+            <div>
+              <p className="ohMetricLabel">Learning path</p>
+              <h2 className="ohCardTitle">Follow the heart path step by step</h2>
+              <p className="ohCardText">Start with LDL, then continue to pressure and daily habits.</p>
+            </div>
+          </div>
+
+          <div className="ohStack">
+            {learningPath.map((item) => (
+              <article className="ohCard learningPathItem" key={item.title}>
+                <span className="stepMark">{item.step}</span>
+
+                <div>
+                  <p className="ohMetricLabel">{item.status}</p>
+                  <h3 className="ohCardTitle">{item.title}</h3>
+                  <p className="ohCardText">{item.text}</p>
+                </div>
+
+                <Link href={item.href} className="secondaryBtn">
+                  Open
+                </Link>
+              </article>
+            ))}
+          </div>
         </section>
 
         <section className="ohGrid cols2">
@@ -176,11 +226,11 @@ export default function HeartLearningWorkspacePage() {
           </article>
 
           <article className="ohCard">
-            <p className="ohMetricLabel">Daily actions</p>
+            <p className="ohMetricLabel">Today&apos;s mission</p>
             <h2 className="ohCardTitle">Keep it simple</h2>
 
             <div className="ohStack" style={{ marginTop: "16px" }}>
-              {dailyActions.map((action) => (
+              {dailyMissions.map((action) => (
                 <p className="ohCardText" key={action}>• {action}</p>
               ))}
             </div>
