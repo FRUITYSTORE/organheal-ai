@@ -1,4 +1,22 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
+
+type Language = "en" | "ar";
+
+function getStoredLanguage(): Language {
+  if (typeof window === "undefined") return "en";
+
+  const savedLanguage =
+    localStorage.getItem("organheal-language") ||
+    localStorage.getItem("organhealLanguage") ||
+    localStorage.getItem("organheal_language") ||
+    localStorage.getItem("language") ||
+    "";
+
+  return savedLanguage === "ar" ? "ar" : "en";
+}
 
 const learningPath = [
   {
@@ -44,8 +62,31 @@ const dailyMissions = [
 ];
 
 export default function HeartLearningWorkspacePage() {
+  const [language, setLanguage] = useState<Language>("en");
+  const isArabic = language === "ar";
+
+  function text(en: string, ar: string) {
+    return isArabic ? ar : en;
+  }
+
+  useEffect(() => {
+    function syncLanguage() {
+      setLanguage(getStoredLanguage());
+    }
+
+    syncLanguage();
+
+    window.addEventListener("storage", syncLanguage);
+    window.addEventListener("organheal-language-change", syncLanguage);
+
+    return () => {
+      window.removeEventListener("storage", syncLanguage);
+      window.removeEventListener("organheal-language-change", syncLanguage);
+    };
+  }, []);
+
   return (
-    <main className="ohPageShell heartLearningPage">
+    <main className="ohPageShell heartLearningPage" dir={isArabic ? "rtl" : "ltr"}>
       <style>{`
         .heartLearningPage .ohHero {
           background: linear-gradient(135deg, #062f2f, #0f766e) !important;
