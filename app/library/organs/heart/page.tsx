@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import BackButton from "@/app/components/education/BackButton";
 import LearningProgress from "@/app/components/education/LearningProgress";
+import LearningPath from "@/app/components/education/LearningPath";
 type Language = "en" | "ar";
 
 function getStoredLanguage(): Language {
@@ -308,33 +309,19 @@ export default function HeartLearningWorkspacePage() {
   progressValue={25}
 />
 
-        <section className="ohCard">
-          <div className="ohCardHeader">
-            <div>
-              <p className="ohMetricLabel">Learning path</p>
-              <h2 className="ohCardTitle">Follow the heart path step by step</h2>
-              <p className="ohCardText">Start with LDL, then continue to pressure and daily habits.</p>
-            </div>
-          </div>
-
-          <div className="ohStack">
-            {learningPath.map((item) => (
-              <article className="ohCard learningPathItem" key={item.title}>
-                <span className="stepMark">{item.step}</span>
-
-                <div>
-                  <p className="ohMetricLabel">{item.status}</p>
-                  <h3 className="ohCardTitle">{item.title}</h3>
-                  <p className="ohCardText">{item.text}</p>
-                </div>
-
-                <Link href={item.href} className="secondaryBtn">
-  Open
-</Link>
-              </article>
-            ))}
-          </div>
-        </section>
+        <LearningPath
+  label="Learning path"
+  title="Follow the heart path step by step"
+  description="Start with LDL, then continue to pressure and daily habits."
+  items={learningPath.map((item) => ({
+    step: item.step,
+    status: item.status,
+    title: item.title,
+    description: item.text,
+    href: item.href,
+    buttonLabel: "Open",
+  }))}
+/>
 
 
         <section className="ohCard">
