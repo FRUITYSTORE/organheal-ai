@@ -68,7 +68,48 @@ export default function HeartLearningWorkspacePage() {
   function text(en: string, ar: string) {
     return isArabic ? ar : en;
   }
-
+  const learningPath = [
+    {
+      step: "01",
+      title: text("LDL Cholesterol", "كوليسترول LDL"),
+      text: text(
+        "Understand what LDL means and why it matters for heart risk.",
+        "تعرّف على معنى LDL ولماذا يعد مهمًا لصحة القلب."
+      ),
+      href: "/blog?marker=LDL",
+      status: text("Start Here", "ابدأ هنا"),
+    },
+    {
+      step: "02",
+      title: text("HDL & Triglycerides", "HDL والدهون الثلاثية"),
+      text: text(
+        "Learn how cholesterol numbers work together.",
+        "تعلّم كيف تعمل مؤشرات الكوليسترول معًا."
+      ),
+      href: "/blog",
+      status: text("Next", "التالي"),
+    },
+    {
+      step: "03",
+      title: text("Blood Pressure", "ضغط الدم"),
+      text: text(
+        "Understand how blood pressure affects your heart.",
+        "افهم كيف يؤثر ضغط الدم على القلب."
+      ),
+      href: "/blog",
+      status: text("Next", "التالي"),
+    },
+    {
+      step: "04",
+      title: text("Daily Habits", "العادات اليومية"),
+      text: text(
+        "Small daily habits that improve heart health.",
+        "عادات يومية بسيطة تساعد على تحسين صحة القلب."
+      ),
+      href: "/blog",
+      status: text("Practical", "عملي"),
+    },
+  ];
   useEffect(() => {
     function syncLanguage() {
       setLanguage(getStoredLanguage());
@@ -310,8 +351,8 @@ export default function HeartLearningWorkspacePage() {
                 </div>
 
                 <Link href={item.href} className="secondaryBtn">
-                  Open
-                </Link>
+  {text("Open", "افتح")}
+</Link>
               </article>
             ))}
           </div>
