@@ -47,6 +47,27 @@ export default function HeartLearningWorkspacePage() {
           color: #ffffff !important;
         }
 
+
+        .heartLearningPage .ohHero .primaryBtn {
+          background: #22d3ee !important;
+          color: #062f2f !important;
+          border: 0 !important;
+          font-weight: 950 !important;
+          box-shadow: 0 16px 34px rgba(34, 211, 238, 0.28) !important;
+        }
+
+        .heartLearningPage .ohHero .secondaryBtn {
+          background: rgba(255, 255, 255, 0.12) !important;
+          color: #ffffff !important;
+          border: 1px solid rgba(255, 255, 255, 0.30) !important;
+          font-weight: 950 !important;
+          box-shadow: none !important;
+        }
+
+        .heartLearningPage .ohHero .secondaryBtn:hover {
+          background: rgba(255, 255, 255, 0.18) !important;
+        }
+
         .heartLearningPage .ohCard {
           border: 1px solid rgba(15, 23, 42, 0.16);
           box-shadow: 0 20px 48px rgba(15, 23, 42, 0.12);
