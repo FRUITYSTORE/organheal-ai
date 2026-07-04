@@ -91,23 +91,6 @@ export default function HeartLearningWorkspacePage() {
           </Link>
         </div>
 
-        <section className="ohHero">
-          <p className="ohEyebrow">Heart learning workspace</p>
-          <h1 className="ohTitle">Understand your heart health step by step.</h1>
-          <p className="ohLead">
-            Start with cholesterol, blood pressure, daily habits, and doctor questions. Keep it simple and focus on one topic at a time.
-          </p>
-
-          <div className="ohButtonRow" style={{ marginTop: "24px" }}>
-            <Link href="/blog?marker=LDL" className="primaryBtn">
-              Start with LDL
-            </Link>
-
-            <Link href="/heart" className="secondaryBtn">
-              Open Heart Page
-            </Link>
-          </div>
-        </section>
 
         <section className="ohCard">
           <div className="ohCardHeader">
@@ -127,6 +110,45 @@ export default function HeartLearningWorkspacePage() {
           </div>
         </section>
 
+        <section className="ohHero">
+          <p className="ohEyebrow">Heart learning workspace</p>
+
+          <h1 className="ohTitle">Start with one heart lesson today.</h1>
+
+          <p className="ohLead">
+            Focus on LDL first. It is the best starting point for understanding cholesterol and heart risk.
+          </p>
+
+          <div className="ohGrid cols3" style={{ marginTop: "24px" }}>
+            <article className="ohCard">
+              <p className="ohMetricLabel">Today's lesson</p>
+              <h2 className="ohCardTitle">LDL Cholesterol</h2>
+              <p className="ohCardText">Understand what LDL means and why it matters.</p>
+            </article>
+
+            <article className="ohCard">
+              <p className="ohMetricLabel">Estimated time</p>
+              <h2 className="ohCardTitle">4 minutes</h2>
+              <p className="ohCardText">Short, focused, and easy to complete.</p>
+            </article>
+
+            <article className="ohCard">
+              <p className="ohMetricLabel">Difficulty</p>
+              <h2 className="ohCardTitle">Easy</h2>
+              <p className="ohCardText">Made for patients and families.</p>
+            </article>
+          </div>
+
+          <div className="ohButtonRow" style={{ marginTop: "24px" }}>
+            <Link href="/blog?marker=LDL" className="primaryBtn">
+              Start Lesson
+            </Link>
+
+            <Link href="/library/organs" className="secondaryBtn">
+              Back to Organs
+            </Link>
+          </div>
+        </section>
         <section className="ohGrid cols3">
           {modules.map((module) => (
             <article className="ohCard" key={module.title}>
