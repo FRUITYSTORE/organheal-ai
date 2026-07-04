@@ -329,7 +329,7 @@ export default function HeartLearningWorkspacePage() {
                 </div>
 
                 <Link href={item.href} className="secondaryBtn">
-  {text("Open", "افتح")}
+  Open
 </Link>
               </article>
             ))}
