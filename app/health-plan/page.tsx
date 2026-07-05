@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import PriorityCard from "@/app/components/health-plan/PriorityCard";
 
 type Language = "en" | "ar";
 
@@ -1082,27 +1083,17 @@ export default function HealthPlanPage() {
             </div>
           </div>
 
-          <aside className="hpPriorityCard">
-            <span className="hpPriorityLabel">
-              {text("Patient priority", "أولوية المريض")}
-            </span>
-
-            <div className="hpPriorityValue">{priorityOrganDisplay}</div>
-
-            <p className="hpPrioritySub">
-              {text("Risk level", "مستوى الخطورة")}: {riskLevelDisplay}
-              <br />
-              {text("Priority score", "نتيجة الأولوية")}:{" "}
-              {priorityScore === null ? "—" : `${priorityScore}/100`}
-            </p>
-
-            <div className="hpProgressWrap">
-              <div
-                className="hpProgressFill"
-                style={{ width: `${clamp(100 - priorityScoreValue)}%` }}
-              />
-            </div>
-          </aside>
+      <PriorityCard
+  label={text("Patient priority", "أولوية المريض")}
+  organ={priorityOrganDisplay}
+  riskLabel={text("Risk level", "مستوى الخطورة")}
+  riskLevel={riskLevelDisplay}
+  scoreLabel={text("Priority score", "نتيجة الأولوية")}
+  scoreText={
+    priorityScore === null ? "—" : `${priorityScore}/100`
+  }
+  progressPercent={clamp(100 - priorityScoreValue)}
+/>
         </section>
 
         {message && (
