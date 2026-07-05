@@ -909,43 +909,59 @@ const visibleCompactReports = showAllReports
                     )}
                   </p>
                 </div>
-              ) : (
-                <div className="compactReportTable">
-                  <div className="compactReportHeader">
-                    <span>{text("Report", "التقرير")}</span>
-                    <span>{text("Status", "الحالة")}</span>
-                    <span>{text("Uploaded", "تاريخ الرفع")}</span>
-                    <span>{text("Action", "الإجراء")}</span>
+                           ) : (
+                <>
+                  <div className="compactReportTable">
+                    <div className="compactReportHeader">
+                      <span>{text("Report", "التقرير")}</span>
+                      <span>{text("Status", "الحالة")}</span>
+                      <span>{text("Uploaded", "تاريخ الرفع")}</span>
+                      <span>{text("Action", "الإجراء")}</span>
+                    </div>
+
+                    {visibleCompactReports.map((report) => {
+                      const isSaved = report.hasSavedAnalysis;
+
+                      return (
+                        <CompactReportRow
+                          key={report.reportId}
+                          reportId={report.reportId}
+                          fileName={report.fileName}
+                          reportType={report.reportType}
+                          uploadedAt={report.uploadedAt}
+                          extractionStatus={report.extractionStatus}
+                          hasSavedAnalysis={isSaved}
+                          filePath={report.filePath}
+                          analysisHref={getAnalysisHref(report)}
+                          statusTone={getStatusTone}
+                          formatDate={formatDate}
+                          onOpenFile={() => openMedicalReport(report.filePath)}
+                          labels={{
+                            savedAnalysis: text("Saved analysis", "تحليل محفوظ"),
+                            needsAnalysis: text("Needs analysis", "يحتاج تحليل"),
+                            view: text("View", "عرض"),
+                            analyze: text("Analyze", "تحليل"),
+                            file: text("File", "الملف"),
+                          }}
+                        />
+                      );
+                    })}
                   </div>
 
-                  {compactReports.map((report) => {
-                    const isSaved = report.hasSavedAnalysis;
-
-                    return (
-                 <CompactReportRow
-  key={report.reportId}
-  reportId={report.reportId}
-  fileName={report.fileName}
-  reportType={report.reportType}
-  uploadedAt={report.uploadedAt}
-  extractionStatus={report.extractionStatus}
-  hasSavedAnalysis={isSaved}
-  filePath={report.filePath}
-  analysisHref={getAnalysisHref(report)}
-  statusTone={getStatusTone}
-  formatDate={formatDate}
-  onOpenFile={() => openMedicalReport(report.filePath)}
-  labels={{
-    savedAnalysis: text("Saved analysis", "تحليل محفوظ"),
-    needsAnalysis: text("Needs analysis", "يحتاج تحليل"),
-    view: text("View", "عرض"),
-    analyze: text("Analyze", "تحليل"),
-    file: text("File", "الملف"),
-  }}
-/>
-                    );
-                  })}
-                </div>
+                  {compactReports.length > 3 && (
+                    <div className="ohButtonRow" style={{ justifyContent: "center", marginTop: "18px" }}>
+                      <button
+                        type="button"
+                        className="secondaryBtn"
+                        onClick={() => setShowAllReports((current) => !current)}
+                      >
+                        {showAllReports
+                          ? text("View Less", "عرض أقل")
+                          : text("View More", "عرض المزيد")}
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
             </section>
           </>
