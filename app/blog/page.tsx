@@ -5,6 +5,7 @@ import Link from "next/link";
 import PageBackLink from "@/app/components/navigation/PageBackLink";
 import PageEmptyState from "@/app/components/navigation/PageEmptyState";
 import { blogPosts } from "@/lib/blogData";
+import HeroSummaryCard from "@/app/components/navigation/HeroSummaryCard";
 
 type Language = "en" | "ar";
 type BlogPost = (typeof blogPosts)[number];
@@ -591,20 +592,14 @@ export default function BlogPage() {
             
             </div>
 
-            <aside className="articleHeroSummary">
-              <p className="articleHeroSummaryLabel">
-                {text("Available collection", "المجموعة المتاحة")}
-              </p>
-
-              <span className="articleHeroSummaryValue">{blogPosts.length}</span>
-
-              <p className="articleHeroSummaryText">
-                {text(
-                  "Structured articles connected to health areas and lab markers.",
-                  "مقالات منظمة ومرتبطة بالمجالات الصحية ومؤشرات المختبر."
-                )}
-              </p>
-            </aside>
+            <HeroSummaryCard
+  label={text("Available collection", "المجموعة المتاحة")}
+  value={blogPosts.length}
+  description={text(
+    "Structured articles connected to health areas and lab markers.",
+    "مقالات منظمة ومرتبطة بالمجالات الصحية ومؤشرات المختبر."
+  )}
+/>
           </div>
         </section>
 
