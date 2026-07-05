@@ -1,4 +1,5 @@
 import Link from "next/link";
+import PageLayout from "@/app/components/navigation/PageLayout";
 
 const prepSteps = [
   {
@@ -22,21 +23,13 @@ const prepSteps = [
 export default function DoctorPrepLearningPage() {
   return (
     <main className="ohPageShell">
-      <div className="ohContainer ohStack large" style={{ padding: "32px 0 64px" }}>
-        <div className="ohButtonRow">
-          <Link href="/library" className="secondaryBtn">
-            ← Back to Learning
-          </Link>
-        </div>
-
-        <section className="ohHero">
-          <p className="ohEyebrow">Prepare for your doctor</p>
-          <h1 className="ohTitle">Go to your visit with clearer questions.</h1>
-          <p className="ohLead">
-            OrganHeal helps you organize what to ask, what to bring, and what to confirm before leaving the clinic.
-          </p>
-        </section>
-
+      <PageLayout
+        backHref="/library"
+        backLabel="← Back to Learning"
+        eyebrow="Prepare for your doctor"
+        title="Go to your visit with clearer questions."
+        description="OrganHeal helps you organize what to ask, what to bring, and what to confirm before leaving the clinic."
+      >
         <section className="ohGrid cols2">
           {prepSteps.map((step, index) => (
             <article className="ohCard" key={step.title}>
@@ -60,7 +53,7 @@ export default function DoctorPrepLearningPage() {
             Open Reports
           </Link>
         </section>
-      </div>
+      </PageLayout>
     </main>
   );
 }
