@@ -1,5 +1,5 @@
 "use client";
-
+import ArticleCard from "@/app/components/blog/ArticleCard";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import PageBackLink from "@/app/components/navigation/PageBackLink";
@@ -789,36 +789,18 @@ export default function BlogPage() {
                 const readTime = getReadTime(post);
 
                 return (
-                  <article key={post.slug} className="ohCard articleCard">
-                    <div className="articleMetaRow">
-                      <p className="articleCategory">{category}</p>
-                      <span className="ohStatusBadge neutral">{readTime}</span>
-                    </div>
-
-                    <h3 className="ohCardTitle" style={{ fontSize: "1.16rem" }}>
-                      {title}
-                    </h3>
-
-                    <p className="ohCardText articleExcerpt">{excerpt}</p>
-
-                    <div className="articleMarkerRow">
-                      <span className="articleMarker">{organSystem}</span>
-
-                      {post.labMarkers.slice(0, 3).map((marker) => (
-                        <span className="articleMarker" key={`${post.slug}-${marker}`}>
-                          {marker}
-                        </span>
-                      ))}
-                    </div>
-
-                    <div className="articleCardFooter">
-                      <span className="articleDate">{post.date}</span>
-
-                      <Link href={`/blog/${post.slug}`} className="articleReadMore">
-                        {text("Read Article", "اقرأ المقال")}
-                      </Link>
-                    </div>
-                  </article>
+                  <ArticleCard
+  key={post.slug}
+  slug={post.slug}
+  category={category}
+  readTime={readTime}
+  title={title}
+  excerpt={excerpt}
+  organSystem={organSystem}
+  labMarkers={post.labMarkers}
+  date={post.date}
+  readLabel={text("Read Article", "اقرأ المقال")}
+/>
                 );
               })}
             </div>
