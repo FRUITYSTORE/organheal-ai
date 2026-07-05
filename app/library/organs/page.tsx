@@ -1,4 +1,5 @@
 import Link from "next/link";
+import PageLayout from "@/app/components/navigation/PageLayout";
 
 const organs = [
   {
@@ -36,21 +37,13 @@ const organs = [
 export default function OrganLearningPage() {
   return (
     <main className="ohPageShell">
-      <div className="ohContainer ohStack large" style={{ padding: "32px 0 64px" }}>
-        <div className="ohButtonRow">
-          <Link href="/library" className="secondaryBtn">
-            ← Back to Learning
-          </Link>
-        </div>
-
-        <section className="ohHero">
-          <p className="ohEyebrow">Learn by organ</p>
-          <h1 className="ohTitle">Choose the body system you want to understand.</h1>
-          <p className="ohLead">
-            Start with one area. OrganHeal will later connect each organ to short modules, lab markers, reports, and doctor questions.
-          </p>
-        </section>
-
+      <PageLayout
+        backHref="/library"
+        backLabel="← Back to Learning"
+        eyebrow="Learn by organ"
+        title="Choose the body system you want to understand."
+        description="Start with one area. OrganHeal will later connect each organ to short modules, lab markers, reports, and doctor questions."
+      >
         <section className="ohGrid cols3">
           {organs.map((organ) => (
             <article className="ohCard" key={organ.name}>
@@ -68,7 +61,7 @@ export default function OrganLearningPage() {
             </article>
           ))}
         </section>
-      </div>
+      </PageLayout>
     </main>
   );
 }
