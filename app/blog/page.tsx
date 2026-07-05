@@ -6,6 +6,7 @@ import PageBackLink from "@/app/components/navigation/PageBackLink";
 import PageEmptyState from "@/app/components/navigation/PageEmptyState";
 import { blogPosts } from "@/lib/blogData";
 import HeroSummaryCard from "@/app/components/navigation/HeroSummaryCard";
+import StatCard from "@/app/components/ui/StatCard";
 
 type Language = "en" | "ar";
 type BlogPost = (typeof blogPosts)[number];
@@ -707,36 +708,24 @@ export default function BlogPage() {
         </section>
 
         <section className="ohMetricGrid">
-          <article className="ohMetricCard">
-            <span className="ohMetricLabel">
-              {text("Article collection", "مجموعة المقالات")}
-            </span>
-            <span className="ohMetricValue">{blogPosts.length}</span>
-            <span className="ohMetricHint">
-              {text("Available learning items", "مواد تعليمية متاحة")}
-            </span>
-          </article>
+  <StatCard
+    label={text("Article collection", "مجموعة المقالات")}
+    value={blogPosts.length}
+    hint={text("Available learning items", "مواد تعليمية متاحة")}
+  />
 
-          <article className="ohMetricCard">
-            <span className="ohMetricLabel">
-              {text("Current matches", "النتائج الحالية")}
-            </span>
-            <span className="ohMetricValue">{filteredPosts.length}</span>
-            <span className="ohMetricHint">
-              {text("Based on search and filters", "حسب البحث والفلاتر")}
-            </span>
-          </article>
+  <StatCard
+    label={text("Current matches", "النتائج الحالية")}
+    value={filteredPosts.length}
+    hint={text("Based on search and filters", "حسب البحث والفلاتر")}
+  />
 
-          <article className="ohMetricCard">
-            <span className="ohMetricLabel">
-              {text("Lab marker index", "فهرس المؤشرات")}
-            </span>
-            <span className="ohMetricValue">{markerOptions.length}</span>
-            <span className="ohMetricHint">
-              {text("Connected markers", "مؤشرات مرتبطة")}
-            </span>
-          </article>
-        </section>
+  <StatCard
+    label={text("Lab marker index", "فهرس المؤشرات")}
+    value={markerOptions.length}
+    hint={text("Connected markers", "مؤشرات مرتبطة")}
+  />
+</section>
 
         <section className="articleSafetyStrip">
           <span className="articleSafetyMark">OH</span>
