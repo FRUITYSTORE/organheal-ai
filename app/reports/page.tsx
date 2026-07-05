@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
+import PageEmptyState from "@/app/components/navigation/PageEmptyState";
+{}
 
 type Language = "en" | "ar";
 
@@ -798,26 +800,24 @@ export default function ReportsPage() {
         )}
 
         {loading ? (
-          <section className="ohCard">
-            <div className="ohEmptyState">
-              <h2>{text("Loading your reports...", "جاري تحميل التقارير...")}</h2>
-              <p>{text("Please wait while OrganHeal prepares your report library.", "يرجى الانتظار بينما يجهز OrganHeal مكتبة التقارير.")}</p>
-            </div>
-          </section>
-        ) : filteredReports.length === 0 ? (
-          <section className="ohCard">
-            <div className="ohEmptyState">
-              <h2>{text("No reports found", "لا توجد تقارير")}</h2>
-              <p>{text("Upload a report or reset your search filters.", "ارفع تقريرًا أو أعد ضبط الفلاتر.")}</p>
-
-              <div className="ohButtonRow">
-                <Link href="/lab-upload" className="primaryBtn">
-                  {text("Upload Report", "رفع تقرير")}
-                </Link>
-              </div>
-            </div>
-          </section>
-        ) : (
+  <PageEmptyState
+    title={text("Loading your reports...", "جاري تحميل التقارير...")}
+    description={text(
+      "Please wait while OrganHeal prepares your report library.",
+      "يرجى الانتظار بينما يجهز OrganHeal مكتبة التقارير."
+    )}
+  />
+) : filteredReports.length === 0 ? (
+  <PageEmptyState
+    title={text("No reports found", "لا توجد تقارير")}
+    description={text(
+      "Upload a report or reset your search filters.",
+      "ارفع تقريرًا أو أعد ضبط الفلاتر."
+    )}
+    actionHref="/lab-upload"
+    actionLabel={text("Upload Report", "رفع تقرير")}
+  />
+) : (
           <>
             {featuredReport && (
               <section className="ohCard featuredReportCard">
