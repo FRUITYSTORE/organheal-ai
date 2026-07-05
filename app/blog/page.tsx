@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import PageLayout from "@/app/components/navigation/PageLayout";
 import { blogPosts } from "@/lib/blogData";
 
 type Language = "en" | "ar";
