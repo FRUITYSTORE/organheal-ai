@@ -646,6 +646,80 @@ const visibleCompactReports = showAllReports
             display: none;
           }
         }
+                  /* REPORTS_FINAL_VISUAL_STABILIZATION_V1 */
+        .reportsFocusPage .ohContainer {
+          max-width: 1180px !important;
+        }
+
+        .reportsFocusPage .reportsHero {
+          width: 100% !important;
+          min-height: 520px !important;
+          padding: 56px !important;
+          display: block !important;
+        }
+
+        .reportsFocusPage .reportsHero .ohHeroGrid {
+          display: grid !important;
+          grid-template-columns: minmax(0, 1fr) minmax(320px, 0.48fr) !important;
+          gap: 48px !important;
+          align-items: center !important;
+        }
+
+        .reportsFocusPage .reportsHero .ohTitle {
+          font-size: clamp(3.2rem, 6vw, 5.4rem) !important;
+          line-height: 0.95 !important;
+          max-width: 760px !important;
+        }
+
+        .reportsFocusPage .reportsHero .ohLead {
+          font-size: 1.12rem !important;
+          line-height: 1.9 !important;
+          max-width: 680px !important;
+        }
+
+        .reportsFocusPage .reportsCommandCard {
+          background: linear-gradient(135deg, #061826, #0f766e) !important;
+          color: #ffffff !important;
+          min-height: 300px !important;
+          display: flex !important;
+          flex-direction: column !important;
+          justify-content: center !important;
+        }
+
+        .reportsFocusPage .reportsCommandCard .ohMetricLabel {
+          color: rgba(209, 250, 229, 0.9) !important;
+        }
+
+        .reportsFocusPage .reportsCommandCard .ohCardTitle {
+          color: #ffffff !important;
+        }
+
+        .reportsFocusPage .reportsCommandCard .ohCardText {
+          color: rgba(255, 255, 255, 0.88) !important;
+        }
+
+        .reportsFocusPage .compactReportTable + .ohButtonRow .secondaryBtn {
+          background: #ffffff !important;
+          color: #0f766e !important;
+          border: 1px solid rgba(15, 118, 110, 0.34) !important;
+          box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08) !important;
+        }
+
+        @media (max-width: 980px) {
+          .reportsFocusPage .reportsHero {
+            min-height: auto !important;
+            padding: 32px !important;
+          }
+
+          .reportsFocusPage .reportsHero .ohHeroGrid {
+            grid-template-columns: 1fr !important;
+            gap: 24px !important;
+          }
+
+          .reportsFocusPage .reportsHero .ohTitle {
+            font-size: clamp(2.4rem, 10vw, 3.8rem) !important;
+          }
+        }
       `}</style>
 
       <div className="ohContainer ohStack large" style={{ padding: "28px 0 56px" }}>
