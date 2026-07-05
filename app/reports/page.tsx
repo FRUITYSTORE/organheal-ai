@@ -5,6 +5,7 @@ import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import PageEmptyState from "@/app/components/navigation/PageEmptyState";
 import StatCard from "@/app/components/ui/StatCard";
+import FeaturedReportCard from "@/app/components/reports/FeaturedReportCard";
 {}
 
 type Language = "en" | "ar";
@@ -821,106 +822,51 @@ export default function ReportsPage() {
 ) : (
           <>
             {featuredReport && (
-              <section className="ohCard featuredReportCard">
-                <div className="featuredReportGrid">
-                  <div>
-                    <p className="ohMetricLabel">
-                      {featuredReport.hasSavedAnalysis
-                        ? text("Latest analysis focus", "آخر تحليل للمتابعة")
-                        : text("Current report focus", "التقرير الحالي للمتابعة")}
-                    </p>
-
-                    <h2 className="ohCardTitle" style={{ fontSize: "1.65rem" }}>
-                      {featuredReport.fileName}
-                    </h2>
-
-                    <p className="ohCardText">
-                      {featuredReport.hasSavedAnalysis
-                        ? text(
-                            "This report already has a saved analysis. Review it or continue to your health plan.",
-                            "هذا التقرير لديه تحليل محفوظ. راجعه أو تابع إلى خطة الصحة."
-                          )
-                        : text(
-                            "This report is the next best action. Analyze it to generate a clear report summary.",
-                            "هذا التقرير هو الخطوة التالية. حلّله لتوليد ملخص واضح."
-                          )}
-                    </p>
-
-                    <div className="reportStatusLine">
-                      <span className="reportStatusPill neutral">
-                        {text("Uploaded", "تم الرفع")}: {formatDate(featuredReport.uploadedAt)}
-                      </span>
-
-                      <span className={`reportStatusPill ${getStatusTone(featuredReport.extractionStatus)}`}>
-                        {text("Extraction", "الاستخراج")}: {featuredReport.extractionStatus}
-                      </span>
-
-                      <span className={`reportStatusPill ${featuredReport.hasSavedAnalysis ? "good" : "moderate"}`}>
-                        {text("Analysis", "التحليل")}:{" "}
-                        {featuredReport.hasSavedAnalysis
-                          ? text("Saved", "محفوظ")
-                          : text("Needs analysis", "يحتاج تحليل")}
-                      </span>
-
-                      <span className={`reportStatusPill ${getStatusTone(featuredReport.riskLevel)}`}>
-                        {text("Risk", "الخطورة")}: {featuredReport.riskLevel}
-                      </span>
-                    </div>
-
-                    {featuredReport.summary && (
-                      <p className="ohCardText" style={{ marginTop: "16px" }}>
-                        {featuredReport.summary.length > 220
-                          ? featuredReport.summary.slice(0, 220) + "..."
-                          : featuredReport.summary}
-                      </p>
-                    )}
-
-                    <div className="ohButtonRow" style={{ marginTop: "20px" }}>
-                      <Link href={getAnalysisHref(featuredReport)} className="reportPrimaryAction">
-                        {featuredReport.hasSavedAnalysis
-                          ? text("View Analysis", "عرض التحليل")
-                          : text("Analyze Report", "تحليل التقرير")}
-                      </Link>
-
-                      <button
-                        type="button"
-                        className="reportSecondaryAction"
-                        onClick={() => openMedicalReport(featuredReport.filePath)}
-                        disabled={!featuredReport.filePath}
-                      >
-                        {text("Open File", "فتح الملف")}
-                      </button>
-
-                      {featuredReport.hasSavedAnalysis && (
-                        <Link href="/health-plan" className="reportSecondaryAction">
-                          {text("Health Plan", "خطة الصحة")}
-                        </Link>
-                      )}
-                    </div>
-                  </div>
-
-                  <aside className="featuredStatusPanel">
-                    <p className="ohMetricLabel">
-                      {text("What this page is for", "وظيفة هذه الصفحة")}
-                    </p>
-
-                    <h3 className="ohCardTitle">
-                      {text(
-                        "Reports, analysis results, and health-plan follow-up.",
-                        "التقارير، نتائج التحليل، والمتابعة في خطة الصحة."
-                      )}
-                    </h3>
-
-                    <p className="ohCardText">
-                      {text(
-                        "Use Intelligence only to analyze or review one selected report. Keep this page as your organized report history.",
-                        "استخدم صفحة الذكاء فقط لتحليل أو مراجعة تقرير محدد. واجعل هذه الصفحة مكتبة منظمة للتقارير."
-                      )}
-                    </p>
-                  </aside>
-                </div>
-              </section>
-            )}
+  <FeaturedReportCard
+    fileName={featuredReport.fileName}
+    hasSavedAnalysis={featuredReport.hasSavedAnalysis}
+    uploadedAt={featuredReport.uploadedAt}
+    extractionStatus={featuredReport.extractionStatus}
+    riskLevel={featuredReport.riskLevel}
+    summary={featuredReport.summary}
+    filePath={featuredReport.filePath}
+    analysisHref={getAnalysisHref(featuredReport)}
+    statusTone={getStatusTone}
+    formatDate={formatDate}
+    onOpenFile={() => openMedicalReport(featuredReport.filePath)}
+    labels={{
+      latestAnalysisFocus: text("Latest analysis focus", "آخر تحليل للمتابعة"),
+      currentReportFocus: text("Current report focus", "التقرير الحالي للمتابعة"),
+      savedDescription: text(
+        "This report already has a saved analysis. Review it or continue to your health plan.",
+        "هذا التقرير لديه تحليل محفوظ. راجعه أو تابع إلى خطة الصحة."
+      ),
+      needsAnalysisDescription: text(
+        "This report is the next best action. Analyze it to generate a clear report summary.",
+        "هذا التقرير هو الخطوة التالية. حلّله لتوليد ملخص واضح."
+      ),
+      uploaded: text("Uploaded", "تم الرفع"),
+      extraction: text("Extraction", "الاستخراج"),
+      analysis: text("Analysis", "التحليل"),
+      saved: text("Saved", "محفوظ"),
+      needsAnalysis: text("Needs analysis", "يحتاج تحليل"),
+      risk: text("Risk", "الخطورة"),
+      viewAnalysis: text("View Analysis", "عرض التحليل"),
+      analyzeReport: text("Analyze Report", "تحليل التقرير"),
+      openFile: text("Open File", "فتح الملف"),
+      healthPlan: text("Health Plan", "خطة الصحة"),
+      sideLabel: text("What this page is for", "وظيفة هذه الصفحة"),
+      sideTitle: text(
+        "Reports, analysis results, and health-plan follow-up.",
+        "التقارير، نتائج التحليل، والمتابعة في خطة الصحة."
+      ),
+      sideText: text(
+        "Use Intelligence only to analyze or review one selected report. Keep this page as your organized report history.",
+        "استخدم صفحة الذكاء فقط لتحليل أو مراجعة تقرير محدد. واجعل هذه الصفحة مكتبة منظمة للتقارير."
+      ),
+    }}
+  />
+)}
 
             <section className="ohCard">
               <div className="ohCardHeader">
