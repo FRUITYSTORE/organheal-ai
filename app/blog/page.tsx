@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import PageLayout from "@/app/components/navigation/PageLayout";
+import PageBackLink from "@/app/components/navigation/PageBackLink";
 import { blogPosts } from "@/lib/blogData";
 
 type Language = "en" | "ar";
@@ -562,6 +562,10 @@ export default function BlogPage() {
       `}</style>
 
       <div className="ohContainer ohStack large" style={{ padding: "32px 0 64px" }}>
+        <PageBackLink
+  href="/library"
+  label={text("← Back to Health Learning Hub", "← العودة إلى مركز التعلّم الصحي")}
+/>
         <section className="ohHero articleCompactHero">
           <div className="ohHeroGrid">
             <div>
@@ -583,11 +587,7 @@ export default function BlogPage() {
                 )}
               </p>
 
-              <div className="ohButtonRow" style={{ marginTop: "22px" }}>
-                <Link href="/library" className="secondaryBtn">
-                  {text("Back to Health Learning Hub", "العودة إلى مركز التعلّم الصحي")}
-                </Link>
-              </div>
+            
             </div>
 
             <aside className="articleHeroSummary">
