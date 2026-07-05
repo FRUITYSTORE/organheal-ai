@@ -7,6 +7,7 @@ import PageEmptyState from "@/app/components/navigation/PageEmptyState";
 import { blogPosts } from "@/lib/blogData";
 import HeroSummaryCard from "@/app/components/navigation/HeroSummaryCard";
 import StatCard from "@/app/components/ui/StatCard";
+import ArticleFilterPanel from "@/app/components/blog/ArticleFilterPanel";
 
 type Language = "en" | "ar";
 type BlogPost = (typeof blogPosts)[number];
@@ -604,108 +605,39 @@ export default function BlogPage() {
           </div>
         </section>
 
-        <section className="articleSearchPanel">
-          <div className="articleSearchHeader">
-            <div>
-              <p className="ohMetricLabel">
-                {text("Guided article discovery", "اكتشاف المقالات الموجّه")}
-              </p>
-
-              <h2 className="articleSearchTitle">
-                {text(
-                  "Search by marker, organ system, or health question.",
-                  "ابحث حسب المؤشر أو العضو أو السؤال الصحي."
-                )}
-              </h2>
-
-              <p className="articleSearchText">
-                {text(
-                  "The search area is the main action on this page. Use it to narrow the live article collection quickly.",
-                  "منطقة البحث هي الإجراء الأساسي هنا. استخدمها لتضييق مجموعة المقالات المتاحة بسرعة."
-                )}
-              </p>
-            </div>
-
-            <span className="ohStatusBadge good">
-              {text("Live articles", "مقالات متاحة")}
-            </span>
-          </div>
-
-          <div className="articleControlGrid">
-            <div className="articleSearchInputWrap">
-              <span className="articleSearchIcon">⌕</span>
-              <input
-                className="articleControl articleSearchInput"
-                type="search"
-                value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
-                placeholder={text(
-                  "Search LDL, kidney, sleep, blood pressure...",
-                  "ابحث عن LDL، الكلى، النوم، ضغط الدم..."
-                )}
-              />
-            </div>
-
-            <select
-              className="articleControl"
-              value={selectedCategory}
-              onChange={(event) => setSelectedCategory(event.target.value)}
-              aria-label={text("Filter by health area", "فلترة حسب المجال الصحي")}
-            >
-              <option value="all">
-                {text("All health areas", "كل المجالات الصحية")}
-              </option>
-
-              {categoryOptions.map((category) => (
-                <option value={category} key={category}>
-                  {category}
-                </option>
-              ))}
-            </select>
-
-            <select
-              className="articleControl"
-              value={selectedMarker}
-              onChange={(event) => setSelectedMarker(event.target.value)}
-              aria-label={text("Filter by lab marker", "فلترة حسب مؤشر المختبر")}
-            >
-              <option value="all">
-                {text("All lab markers", "كل مؤشرات المختبر")}
-              </option>
-
-              {markerOptions.map((marker) => (
-                <option value={marker} key={marker}>
-                  {marker}
-                </option>
-              ))}
-            </select>
-
-            <button type="button" className="articleClearButton" onClick={resetFilters}>
-              {text("Clear", "مسح")}
-            </button>
-          </div>
-
-          <div className="articleQuickFilterRow">
-            <button
-              type="button"
-              className={`articleQuickFilter ${selectedCategory === "all" ? "active" : ""}`}
-              onClick={() => setSelectedCategory("all")}
-            >
-              {text("All", "الكل")}
-            </button>
-
-            {categoryOptions.map((category) => (
-              <button
-                type="button"
-                className={`articleQuickFilter ${selectedCategory === category ? "active" : ""}`}
-                onClick={() => setSelectedCategory(category)}
-                key={category}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
-        </section>
+        <ArticleFilterPanel
+  searchTerm={searchTerm}
+  selectedCategory={selectedCategory}
+  selectedMarker={selectedMarker}
+  categoryOptions={categoryOptions}
+  markerOptions={markerOptions}
+  labels={{
+    eyebrow: text("Guided article discovery", "اكتشاف المقالات الموجّه"),
+    title: text(
+      "Search by marker, organ system, or health question.",
+      "ابحث حسب المؤشر أو العضو أو السؤال الصحي."
+    ),
+    description: text(
+      "The search area is the main action on this page. Use it to narrow the live article collection quickly.",
+      "منطقة البحث هي الإجراء الأساسي هنا. استخدمها لتضييق مجموعة المقالات المتاحة بسرعة."
+    ),
+    status: text("Live articles", "مقالات متاحة"),
+    searchPlaceholder: text(
+      "Search LDL, kidney, sleep, blood pressure...",
+      "ابحث عن LDL، الكلى، النوم، ضغط الدم..."
+    ),
+    categoryAria: text("Filter by health area", "فلترة حسب المجال الصحي"),
+    markerAria: text("Filter by lab marker", "فلترة حسب مؤشر المختبر"),
+    allHealthAreas: text("All health areas", "كل المجالات الصحية"),
+    allLabMarkers: text("All lab markers", "كل مؤشرات المختبر"),
+    clear: text("Clear", "مسح"),
+    all: text("All", "الكل"),
+  }}
+  onSearchChange={setSearchTerm}
+  onCategoryChange={setSelectedCategory}
+  onMarkerChange={setSelectedMarker}
+  onReset={resetFilters}
+/>
 
         <section className="ohMetricGrid">
   <StatCard
