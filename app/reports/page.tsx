@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import PageEmptyState from "@/app/components/navigation/PageEmptyState";
+import StatCard from "@/app/components/ui/StatCard";
 {}
 
 type Language = "en" | "ar";
@@ -726,30 +727,30 @@ export default function ReportsPage() {
         </section>
 
         <section className="ohMetricGrid">
-          <article className="ohMetricCard reportsMetric blue">
-            <span className="ohMetricLabel">{text("Total reports", "إجمالي التقارير")}</span>
-            <span className="ohMetricValue">{reports.length}</span>
-            <span className="ohMetricHint">{text("saved in your account", "محفوظة في حسابك")}</span>
-          </article>
+  <StatCard
+    label={text("Total reports", "إجمالي التقارير")}
+    value={reports.length}
+    hint={text("saved in your account", "محفوظة في حسابك")}
+  />
 
-          <article className="ohMetricCard reportsMetric green">
-            <span className="ohMetricLabel">{text("Saved analysis", "تحليل محفوظ")}</span>
-            <span className="ohMetricValue">{savedCount}</span>
-            <span className="ohMetricHint">{text("ready for review", "جاهز للمراجعة")}</span>
-          </article>
+  <StatCard
+    label={text("Saved analysis", "تحليل محفوظ")}
+    value={savedCount}
+    hint={text("ready for review", "جاهز للمراجعة")}
+  />
 
-          <article className="ohMetricCard reportsMetric amber">
-            <span className="ohMetricLabel">{text("Need analysis", "تحتاج تحليل")}</span>
-            <span className="ohMetricValue">{needAnalysisCount}</span>
-            <span className="ohMetricHint">{text("next action required", "تحتاج خطوة تالية")}</span>
-          </article>
+  <StatCard
+    label={text("Need analysis", "تحتاج تحليل")}
+    value={needAnalysisCount}
+    hint={text("next action required", "تحتاج خطوة تالية")}
+  />
 
-          <article className="ohMetricCard reportsMetric">
-            <span className="ohMetricLabel">{text("Text extracted", "استخراج مكتمل")}</span>
-            <span className="ohMetricValue">{extractionCompletedCount}</span>
-            <span className="ohMetricHint">{text("ready for analysis", "جاهزة للتحليل")}</span>
-          </article>
-        </section>
+  <StatCard
+    label={text("Text extracted", "استخراج مكتمل")}
+    value={extractionCompletedCount}
+    hint={text("ready for analysis", "جاهزة للتحليل")}
+  />
+</section>
 
         <section className="reportsToolbar">
           <div className="reportsControl">
