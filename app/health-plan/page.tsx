@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import PriorityCard from "@/app/components/health-plan/PriorityCard";
+import WeeklyTasksPanel from "@/app/components/health-plan/WeeklyTasksPanel";
 
 type Language = "en" | "ar";
 
@@ -1266,59 +1267,26 @@ export default function HealthPlanPage() {
           </article>
         </section>
 
-        <section className="hpPanel" id="tasks">
-          <div className="hpPanelHeader">
-            <div className="hpPanelKicker">{text("Action tasks", "مهام المتابعة")}</div>
-            <h2 className="hpPanelTitle">
-              {completedCount} / {planTasks.length} {text("completed", "مكتملة")}
-            </h2>
-            <p className="hpPanelText">
-              {text("Choose simple tasks. Progress is saved on this device.", "اختر مهام بسيطة. يتم حفظ التقدم على هذا الجهاز.")}
-            </p>
-          </div>
-
-          <div className="hpProgressWrap" style={{ background: "rgba(15,23,42,0.12)" }}>
-            <div className="hpProgressFill" style={{ width: `${progressPercent}%` }} />
-          </div>
-
-          <div className="hpTasks" style={{ marginTop: 18 }}>
-            {planTasks.map((task, index) => {
-              const done = completedTasks.includes(task);
-
-              return (
-                <label className={`hpTask ${done ? "done" : ""}`} key={task}>
-                  <span className="hpTaskNumber">{index + 1}</span>
-                  <input
-                    type="checkbox"
-                    checked={done}
-                    onChange={() => toggleTask(task)}
-                  />
-                  <span className="hpTaskText">{task}</span>
-                  <span className={`hpBadge ${done ? "good" : "warn"}`}>
-                    {done ? text("Done", "تم") : text("To do", "مطلوب")}
-                  </span>
-                </label>
-              );
-            })}
-          </div>
-
-          <div className="hpActions">
-            <button
-              type="button"
-              className="hpSecondary"
-              onClick={() => {
-                setCompletedTasks([]);
-                localStorage.removeItem(taskStorageKey);
-              }}
-            >
-              {text("Reset Weekly Tasks", "إعادة مهام الأسبوع")}
-            </button>
-
-            <Link href="/checkin" className="hpPrimary">
-              {text("Open Check-In", "فتح Check-In")}
-            </Link>
-          </div>
-        </section>
+        <WeeklyTasksPanel
+  kicker={text("Action tasks", "مهام المتابعة")}
+  title={`${completedCount} / ${planTasks.length} ${text("completed", "مكتملة")}`}
+  description={text(
+    "Choose simple tasks. Progress is saved on this device.",
+    "اختر مهام بسيطة. يتم حفظ التقدم على هذا الجهاز."
+  )}
+  tasks={planTasks}
+  completedTasks={completedTasks}
+  progressPercent={progressPercent}
+  doneLabel={text("Done", "تم")}
+  todoLabel={text("To do", "مطلوب")}
+  resetLabel={text("Reset Weekly Tasks", "إعادة مهام الأسبوع")}
+  checkInLabel={text("Open Check-In", "فتح Check-In")}
+  onToggleTask={toggleTask}
+  onResetTasks={() => {
+    setCompletedTasks([]);
+    localStorage.removeItem(taskStorageKey);
+  }}
+/>
 
         <section className="hpTwoCol">
           <article className="hpPanel">
