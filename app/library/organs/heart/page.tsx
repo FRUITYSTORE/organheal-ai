@@ -22,37 +22,6 @@ function getStoredLanguage(): Language {
   return savedLanguage === "ar" ? "ar" : "en";
 }
 
-const learningPath = [
-  {
-    step: "01",
-    title: "LDL Cholesterol",
-    text: "Understand what LDL means and why it matters for heart risk.",
-    href: "/blog?marker=LDL",
-    status: "Start here",
-  },
-  {
-    step: "02",
-    title: "HDL and Triglycerides",
-    text: "Learn how cholesterol numbers work together, not alone.",
-    href: "/blog",
-    status: "Next",
-  },
-  {
-    step: "03",
-    title: "Blood Pressure",
-    text: "Understand how pressure affects the heart and blood vessels.",
-    href: "/blog",
-    status: "Next",
-  },
-  {
-    step: "04",
-    title: "Daily Habits",
-    text: "Focus on small habits that support heart health.",
-    href: "/blog",
-    status: "Practical",
-  },
-];
-
 const doctorQuestions = [
   "Which result matters most in my case?",
   "Do I need lifestyle changes, medication, or repeat testing?",
