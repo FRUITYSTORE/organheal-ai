@@ -116,6 +116,7 @@ export default function ReportsPage() {
   const [language, setLanguage] = useState<Language>("en");
   const [loading, setLoading] = useState(true);
   const [reports, setReports] = useState<ReportCard[]>([]);
+  const [showAllReports, setShowAllReports] = useState(false);
   const [message, setMessage] = useState("");
   const [filter, setFilter] = useState<
     "all" | "needs-analysis" | "saved" | "failed"
@@ -314,7 +315,9 @@ export default function ReportsPage() {
       ? `/intelligence?reportId=${report.reportId}`
       : `/intelligence?reportId=${report.reportId}&auto=1`;
   }
-
+const visibleCompactReports = showAllReports
+  ? compactReports
+  : compactReports.slice(0, 3);
   return (
     <main className="ohPageShell reportsFocusPage" dir={isArabic ? "rtl" : "ltr"}>
       <style>{`
