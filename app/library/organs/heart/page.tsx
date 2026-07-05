@@ -5,6 +5,7 @@ import Link from "next/link";
 import BackButton from "@/app/components/education/BackButton";
 import LearningProgress from "@/app/components/education/LearningProgress";
 import LearningPath from "@/app/components/education/LearningPath";
+import VideoLessonCard from "@/app/components/education/VideoLessonCard";
 type Language = "en" | "ar";
 
 function getStoredLanguage(): Language {
@@ -324,33 +325,7 @@ export default function HeartLearningWorkspacePage() {
 />
 
 
-        <section className="ohCard">
-          <div className="ohCardHeader">
-            <div>
-              <p className="ohMetricLabel">Short lesson video</p>
-              <h2 className="ohCardTitle">Understanding LDL</h2>
-              <p className="ohCardText">
-                A short lesson space for a future AI video that explains LDL in simple language.
-              </p>
-            </div>
-
-            <span className="ohStatusBadge neutral">4 min</span>
-          </div>
-
-          <div className="ohActionPanel" style={{ marginTop: "18px" }}>
-            <div>
-              <p className="ohMetricLabel">Coming next</p>
-              <h3 className="ohCardTitle">Video lesson placeholder</h3>
-              <p className="ohCardText">
-                This area will later hold a short video, audio explanation, or animated lesson.
-              </p>
-            </div>
-
-            <Link href="/blog?marker=LDL" className="primaryBtn">
-              Read LDL Lesson
-            </Link>
-          </div>
-        </section>
+       VS
 
         <section className="ohCard">
           <div className="ohCardHeader">
