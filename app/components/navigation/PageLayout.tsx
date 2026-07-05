@@ -1,11 +1,6 @@
+import PageActions, { PageAction } from "./PageActions";
 import type { ReactNode } from "react";
 import PageBackLink from "./PageBackLink";
-
-type PageLayoutAction = {
-  href: string;
-  label: string;
-  variant?: "primary" | "secondary";
-};
 
 type PageLayoutProps = {
   backHref: string;
@@ -13,7 +8,7 @@ type PageLayoutProps = {
   eyebrow?: string;
   title: string;
   description?: string;
-  actions?: PageLayoutAction[];
+  actions?: PageAction[];
   children: ReactNode;
 };
 
@@ -37,19 +32,7 @@ export default function PageLayout({
 
         {description ? <p className="ohLead">{description}</p> : null}
 
-        {actions.length > 0 ? (
-          <div className="ohButtonRow" style={{ marginTop: "24px" }}>
-            {actions.map((action) => (
-              <a
-                key={`${action.href}-${action.label}`}
-                href={action.href}
-                className={action.variant === "secondary" ? "secondaryBtn" : "primaryBtn"}
-              >
-                {action.label}
-              </a>
-            ))}
-          </div>
-        ) : null}
+       <PageActions actions={actions} />
       </section>
 
       {children}
