@@ -1,4 +1,5 @@
 import Link from "next/link";
+import PageLayout from "@/app/components/navigation/PageLayout";
 
 const reportLearningSteps = [
   {
@@ -22,31 +23,17 @@ const reportLearningSteps = [
 export default function ReportLearningPage() {
   return (
     <main className="ohPageShell">
-      <div className="ohContainer ohStack large" style={{ padding: "32px 0 64px" }}>
-        <div className="ohButtonRow">
-          <Link href="/library" className="secondaryBtn">
-            ← Back to Learning
-          </Link>
-        </div>
-
-        <section className="ohHero">
-          <p className="ohEyebrow">Understand my report</p>
-          <h1 className="ohTitle">Turn your report into clear learning steps.</h1>
-          <p className="ohLead">
-            OrganHeal will help you move from uploaded reports to simple explanations, related topics, and better doctor questions.
-          </p>
-
-          <div className="ohButtonRow" style={{ marginTop: "24px" }}>
-            <Link href="/reports" className="primaryBtn">
-              Open My Reports
-            </Link>
-
-            <Link href="/lab-upload" className="secondaryBtn">
-              Upload Report
-            </Link>
-          </div>
-        </section>
-
+      <PageLayout
+        backHref="/library"
+        backLabel="← Back to Learning"
+        eyebrow="Understand my report"
+        title="Turn your report into clear learning steps."
+        description="OrganHeal will help you move from uploaded reports to simple explanations, related topics, and better doctor questions."
+        actions={[
+          { href: "/reports", label: "Open My Reports" },
+          { href: "/lab-upload", label: "Upload Report", variant: "secondary" },
+        ]}
+      >
         <section className="ohGrid cols2">
           {reportLearningSteps.map((step, index) => (
             <article className="ohCard" key={step.title}>
@@ -66,7 +53,7 @@ export default function ReportLearningPage() {
             </p>
           </div>
         </section>
-      </div>
+      </PageLayout>
     </main>
   );
 }
