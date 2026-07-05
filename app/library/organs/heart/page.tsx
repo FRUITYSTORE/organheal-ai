@@ -54,7 +54,7 @@ export default function HeartLearningWorkspacePage() {
         "Understand what LDL means and why it matters for heart risk.",
         "تعرّف على معنى LDL ولماذا يعد مهمًا لصحة القلب."
       ),
-      href: "/blog?marker=LDL",
+      href: "/blog?marker=LDL&from=/library/organs/heart",
       status: text("Start here", "ابدأ هنا"),
     },
     {
@@ -242,7 +242,7 @@ export default function HeartLearningWorkspacePage() {
           </div>
 
           <div className="ohButtonRow" style={{ marginTop: "24px" }}>
-            <Link href="/blog?marker=LDL" className="primaryBtn">
+            <Link href="/blog?marker=LDL&from=/library/organs/heart" className="primaryBtn">
               {text("Start Lesson", "ابدأ الدرس")}
             </Link>
 
@@ -266,7 +266,7 @@ export default function HeartLearningWorkspacePage() {
             "This area will later hold a short video, audio explanation, or animated lesson.",
             "سيحتوي هذا الجزء لاحقًا على فيديو قصير، شرح صوتي، أو درس متحرك."
           )}
-          actionHref="/blog?marker=LDL"
+          actionHref="/blog?marker=LDL&from=/library/organs/heart"
           actionLabel={text("Read LDL Lesson", "اقرأ درس LDL")}
         />
 
