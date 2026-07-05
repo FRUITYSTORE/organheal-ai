@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import PageBackLink from "@/app/components/navigation/PageBackLink";
+import PageEmptyState from "@/app/components/navigation/PageEmptyState";
 import { blogPosts } from "@/lib/blogData";
 
 type Language = "en" | "ar";
@@ -822,31 +823,25 @@ export default function BlogPage() {
               })}
             </div>
           ) : (
-            <div className="ohCard articleEmptyState">
-              <p className="ohMetricLabel">
-                {text("No matching articles", "لا توجد مقالات مطابقة")}
-              </p>
+          <>
+  <PageEmptyState
+    eyebrow={text("No matching articles", "لا توجد مقالات مطابقة")}
+    title={text(
+      "Try a broader search or clear the filters.",
+      "جرّب بحثًا أوسع أو امسح الفلاتر."
+    )}
+    description={text(
+      "The collection only shows available educational content.",
+      "المجموعة تعرض فقط المحتوى التعليمي المتاح."
+    )}
+  />
 
-              <h2 className="ohCardTitle">
-                {text(
-                  "Try a broader search or clear the filters.",
-                  "جرّب بحثًا أوسع أو امسح الفلاتر."
-                )}
-              </h2>
-
-              <p className="ohCardText">
-                {text(
-                  "The collection only shows available educational content.",
-                  "المجموعة تعرض فقط المحتوى التعليمي المتاح."
-                )}
-              </p>
-
-              <div className="ohButtonRow" style={{ justifyContent: "center", marginTop: "18px" }}>
-                <button type="button" className="primaryBtn" onClick={resetFilters}>
-                  {text("Clear Filters", "مسح الفلاتر")}
-                </button>
-              </div>
-            </div>
+  <div className="ohButtonRow" style={{ justifyContent: "center", marginTop: "-18px" }}>
+    <button type="button" className="primaryBtn" onClick={resetFilters}>
+      {text("Clear Filters", "مسح الفلاتر")}
+    </button>
+  </div>
+</>
           )}
         </section>
       </div>
