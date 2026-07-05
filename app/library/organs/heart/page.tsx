@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import BackButton from "@/app/components/education/BackButton";
+import PageBackLink from "@/app/components/navigation/PageBackLink";
 import LearningProgress from "@/app/components/education/LearningProgress";
 import LearningPath from "@/app/components/education/LearningPath";
 import VideoLessonCard from "@/app/components/education/VideoLessonCard";
@@ -193,11 +193,11 @@ export default function HeartLearningWorkspacePage() {
 
       <div className="ohContainer ohStack large" style={{ padding: "32px 0 64px" }}>
         <div className="educationBackStrong">
-          <BackButton
-            href="/library/organs"
-            label={text("← Back to Organs", "← العودة إلى الأعضاء")}
-          />
-        </div>
+  <PageBackLink
+    href="/library/organs"
+    label={text("← Back to Organs", "← العودة إلى الأعضاء")}
+  />
+</div>
 
         <section className="ohHero">
           <p className="ohEyebrow">
