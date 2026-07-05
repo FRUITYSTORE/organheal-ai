@@ -6,6 +6,7 @@ import { supabase } from "../../lib/supabase";
 import PageEmptyState from "@/app/components/navigation/PageEmptyState";
 import StatCard from "@/app/components/ui/StatCard";
 import FeaturedReportCard from "@/app/components/reports/FeaturedReportCard";
+import CompactReportRow from "@/app/components/reports/CompactReportRow";
 {}
 
 type Language = "en" | "ar";
@@ -918,51 +919,27 @@ export default function ReportsPage() {
                     const isSaved = report.hasSavedAnalysis;
 
                     return (
-                      <article
-                        className={`compactReportRow ${isSaved ? "saved" : "pending"}`}
-                        key={report.reportId}
-                      >
-                        <div className="compactReportName">
-                          <strong>{report.fileName}</strong>
-                          <span>{report.reportType}</span>
-                        </div>
-
-                        <div className="reportStatusLine" style={{ marginTop: 0 }}>
-                          <span className={`reportStatusPill ${isSaved ? "good" : "moderate"}`}>
-                            {isSaved
-                              ? text("Saved analysis", "تحليل محفوظ")
-                              : text("Needs analysis", "يحتاج تحليل")}
-                          </span>
-
-                          <span className={`reportStatusPill ${getStatusTone(report.extractionStatus)}`}>
-                            {report.extractionStatus}
-                          </span>
-                        </div>
-
-                        <span className="ohCardText">
-                          {formatDate(report.uploadedAt)}
-                        </span>
-
-                        <div className="compactActionRow">
-                          <Link
-                            href={getAnalysisHref(report)}
-                            className="compactAction primary"
-                          >
-                            {isSaved
-                              ? text("View", "عرض")
-                              : text("Analyze", "تحليل")}
-                          </Link>
-
-                          <button
-                            type="button"
-                            className="compactAction secondary"
-                            onClick={() => openMedicalReport(report.filePath)}
-                            disabled={!report.filePath}
-                          >
-                            {text("File", "الملف")}
-                          </button>
-                        </div>
-                      </article>
+                 <CompactReportRow
+  key={report.reportId}
+  reportId={report.reportId}
+  fileName={report.fileName}
+  reportType={report.reportType}
+  uploadedAt={report.uploadedAt}
+  extractionStatus={report.extractionStatus}
+  hasSavedAnalysis={isSaved}
+  filePath={report.filePath}
+  analysisHref={getAnalysisHref(report)}
+  statusTone={getStatusTone}
+  formatDate={formatDate}
+  onOpenFile={() => openMedicalReport(report.filePath)}
+  labels={{
+    savedAnalysis: text("Saved analysis", "تحليل محفوظ"),
+    needsAnalysis: text("Needs analysis", "يحتاج تحليل"),
+    view: text("View", "عرض"),
+    analyze: text("Analyze", "تحليل"),
+    file: text("File", "الملف"),
+  }}
+/>
                     );
                   })}
                 </div>
