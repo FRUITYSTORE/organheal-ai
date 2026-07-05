@@ -6,6 +6,7 @@ import BackButton from "@/app/components/education/BackButton";
 import LearningProgress from "@/app/components/education/LearningProgress";
 import LearningPath from "@/app/components/education/LearningPath";
 import VideoLessonCard from "@/app/components/education/VideoLessonCard";
+import InfoListCard from "@/app/components/education/InfoListCard";
 type Language = "en" | "ar";
 
 function getStoredLanguage(): Language {
@@ -358,28 +359,18 @@ export default function HeartLearningWorkspacePage() {
           </div>
         </section>
         <section className="ohGrid cols2">
-          <article className="ohCard">
-            <p className="ohMetricLabel">Doctor questions</p>
-            <h2 className="ohCardTitle">Ask better questions</h2>
+  <InfoListCard
+    label="Doctor questions"
+    title="Ask better questions"
+    items={doctorQuestions}
+  />
 
-            <div className="ohStack" style={{ marginTop: "16px" }}>
-              {doctorQuestions.map((question) => (
-                <p className="ohCardText" key={question}>• {question}</p>
-              ))}
-            </div>
-          </article>
-
-          <article className="ohCard">
-            <p className="ohMetricLabel">Today&apos;s mission</p>
-            <h2 className="ohCardTitle">Keep it simple</h2>
-
-            <div className="ohStack" style={{ marginTop: "16px" }}>
-              {dailyMissions.map((action) => (
-                <p className="ohCardText" key={action}>• {action}</p>
-              ))}
-            </div>
-          </article>
-        </section>
+  <InfoListCard
+    label="Today's mission"
+    title="Keep it simple"
+    items={dailyMissions}
+  />
+</section>
       </div>
     </main>
   );
