@@ -7,6 +7,7 @@ import { supabase } from "../../lib/supabase";
 import { generateHealthEngineResult } from "../../lib/healthEngine";
 import RecommendedActionPanel from "@/app/components/doctor-portal/RecommendedActionPanel";
 import DoctorBriefCard from "@/app/components/doctor-portal/DoctorBriefCard";
+import ReportAnalysisBrief from "@/app/components/doctor-portal/ReportAnalysisBrief";
 
 type Language = "en" | "ar";
 
@@ -884,76 +885,27 @@ export default function DoctorPortalPage() {
 />
             </section>
 
-            <section className="ohCard">
-              <div className="ohCardHeader">
-                <div>
-                  <p className="ohMetricLabel">
-                    {text("Report Analysis Brief", "ملخص ذكاء التقارير")}
-                  </p>
-
-                  <h2 className="ohCardTitle">
-                    {text(
-                      "Saved Report-Based Clinical Summary",
-                      "ملخص سريري مبني على التقارير المحفوظة"
-                    )}
-                  </h2>
-                </div>
-
-                <span className={`ohStatusBadge ${generatedInsights.length > 0 ? "good" : "moderate"}`}>
-                  {generatedInsights.length}
-                </span>
-              </div>
-
-              <div className="ohGrid cols3">
-                <article className="ohMetricCard">
-                  <span className="ohMetricLabel">
-                    {text("Generated Insights", "الذكاء المولد")}
-                  </span>
-                  <span className="ohMetricValue">{generatedInsights.length}</span>
-                </article>
-
-                <article className="ohMetricCard">
-                  <span className="ohMetricLabel">
-                    {text("Processed Reports", "تقارير مكتملة")}
-                  </span>
-                  <span className="ohMetricValue">{processedReports}</span>
-                </article>
-
-                <article className="ohMetricCard">
-                  <span className="ohMetricLabel">
-                    {text("Pending Reports", "تقارير بانتظار")}
-                  </span>
-                  <span className="ohMetricValue">{pendingReports}</span>
-                </article>
-              </div>
-
-              <div className="ohDivider" />
-
-              <div className="ohGrid cols2">
-                <article className="ohActionPanel">
-                  <p className="ohMetricLabel">
-                    {text("Summary", "الملخص")}
-                  </p>
-                  <p className="ohCardText">{latestReportSummary}</p>
-                </article>
-
-                <article className="ohActionPanel">
-                  <p className="ohMetricLabel">
-                    {text("Recommendations", "التوصيات")}
-                  </p>
-                  <p className="ohCardText">{latestRecommendations}</p>
-                </article>
-              </div>
-
-              <article className="ohTrustNotice" style={{ marginTop: "16px" }}>
-                <span aria-hidden="true">🩺</span>
-                <div>
-                  <strong>{text("Doctor Brief:", "ملخص الطبيب:")}</strong>
-                  <br />
-                  {latestDoctorBrief}
-                </div>
-              </article>
-            </section>
+           <ReportAnalysisBrief
+  eyebrow={text("Report Analysis Brief", "ملخص ذكاء التقارير")}
+  title={text(
+    "Saved Report-Based Clinical Summary",
+    "ملخص سريري مبني على التقارير المحفوظة"
+  )}
+  count={generatedInsights.length}
+  countTone={generatedInsights.length > 0 ? "good" : "moderate"}
+  generatedLabel={text("Generated Insights", "الذكاء المولد")}
+  processedLabel={text("Processed Reports", "تقارير مكتملة")}
+  pendingLabel={text("Pending Reports", "تقارير بانتظار")}
+  generatedCount={generatedInsights.length}
+  processedCount={processedReports}
+  pendingCount={pendingReports}
+  summaryLabel={text("Summary", "الملخص")}
+  summary={latestReportSummary}
+  recommendationsLabel={text("Recommendations", "التوصيات")}
+  recommendations={latestRecommendations}
+  doctorBriefLabel={text("Doctor Brief:", "ملخص الطبيب:")}
+  doctorBrief={latestDoctorBrief}
+/>
 
                        <section className="ohTrustNotice">
               <span aria-hidden="true">🛡️</span>
