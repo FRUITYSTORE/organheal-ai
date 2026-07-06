@@ -6,6 +6,7 @@ import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { generateHealthEngineResult } from "../../lib/healthEngine";
 import RecommendedActionPanel from "@/app/components/doctor-portal/RecommendedActionPanel";
+import DoctorBriefCard from "@/app/components/doctor-portal/DoctorBriefCard";
 
 type Language = "en" | "ar";
 
@@ -874,25 +875,13 @@ export default function DoctorPortalPage() {
                 </div>
               </article>
 
-              <article className="ohCard">
-                <div className="ohCardHeader">
-                  <div>
-                    <p className="ohMetricLabel">
-                      {text("Doctor Brief", "ملخص الطبيب")}
-                    </p>
-
-                    <h2 className="ohCardTitle">
-                      {text("Pre-Visit Summary", "ملخص قبل الزيارة")}
-                    </h2>
-                  </div>
-
-                  <span className={`ohStatusBadge ${readinessTone}`}>
-                    {doctorBriefReadiness}
-                  </span>
-                </div>
-
-                <p className="ohCardText">{healthEngine.doctorBrief}</p>
-              </article>
+             <DoctorBriefCard
+  eyebrow={text("Doctor Brief", "ملخص الطبيب")}
+  title={text("Pre-Visit Summary", "ملخص قبل الزيارة")}
+  readiness={doctorBriefReadiness}
+  readinessTone={readinessTone}
+  brief={healthEngine.doctorBrief}
+/>
             </section>
 
             <section className="ohCard">
