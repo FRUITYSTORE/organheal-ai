@@ -764,50 +764,110 @@ export default function DoctorPortalPage() {
   href={recommendedAction.href}
   buttonText={recommendedAction.buttonText}
 />
+<DoctorBriefCard
+  eyebrow={text("Doctor Brief", "ملخص الطبيب")}
+  title={text("Pre-Visit Summary", "ملخص قبل الزيارة")}
+  readiness={doctorBriefReadiness}
+  readinessTone={readinessTone}
+  brief={healthEngine.doctorBrief}
+/>
+            <section className="ohGrid cols2">
+  <article className="ohCard">
+    <div className="ohCardHeader">
+      <div>
+        <p className="ohMetricLabel">
+          {text("Clinical Status", "الحالة السريرية")}
+        </p>
 
-            <section className="ohMetricGrid">
-              <article className="ohMetricCard">
-                <span className="ohMetricLabel">
-                  {text("Clinical Overview", "النظرة السريرية العامة")}
-                </span>
-                <span className="ohMetricValue">
-                  {allScores.length > 0 ? `${overallScore}/100` : "N/A"}
-                </span>
-                <span className={`ohStatusBadge ${getScoreTone(overallScore)}`}>
-                  {text("Overview", "نظرة عامة")}
-                </span>
-              </article>
+        <h2 className="ohCardTitle">
+          {allScores.length > 0 ? `${overallScore}/100` : "N/A"}
+        </h2>
+      </div>
 
-              <article className="ohMetricCard">
-                <span className="ohMetricLabel">
-                  {text("Assessments", "التقييمات")}
-                </span>
-                <span className="ohMetricValue">{assessments.length}</span>
-                <span className="ohMetricHint">
-                  {text("Total saved organ assessments", "إجمالي تقييمات الأعضاء المحفوظة")}
-                </span>
-              </article>
+      <span className={`ohStatusBadge ${getScoreTone(overallScore)}`}>
+        {text("Overview", "نظرة عامة")}
+      </span>
+    </div>
 
-              <article className="ohMetricCard">
-                <span className="ohMetricLabel">
-                  {text("Uploaded Reports", "التقارير المرفوعة")}
-                </span>
-                <span className="ohMetricValue">{uploadedReports.length}</span>
-                <span className="ohMetricHint">
-                  {processedReports} {text("processed", "مكتمل")} · {pendingReports} {text("pending", "قيد الانتظار")}
-                </span>
-              </article>
+    <div className="ohTimeline">
+      <div className="ohTimelineItem">
+        <span className="ohTimelineDot" />
+        <div>
+          <p className="ohTimelineTitle">
+            {text("Priority area", "منطقة الأولوية")}
+          </p>
+          <p className="ohTimelineMeta">
+            {localizeOrganName(priorityOrgan?.organ_name)}
+          </p>
+        </div>
+      </div>
 
-              <article className="ohMetricCard">
-                <span className="ohMetricLabel">
-                  {text("Saved Analysis", "التحليل الصحي المحفوظ")}
-                </span>
-                <span className="ohMetricValue">{savedAnalysis.length}</span>
-                <span className="ohMetricHint">
-                  {text("Saved saved analysis results", "نتائج التحليل الصحي المولدة والمحفوظة")}
-                </span>
-              </article>
-            </section>
+      <div className="ohTimelineItem">
+        <span className="ohTimelineDot" />
+        <div>
+          <p className="ohTimelineTitle">
+            {text("Strongest area", "أقوى منطقة")}
+          </p>
+          <p className="ohTimelineMeta">
+            {localizeOrganName(strongestOrgan?.organ_name)}
+          </p>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <article className="ohCard">
+    <div className="ohCardHeader">
+      <div>
+        <p className="ohMetricLabel">
+          {text("Available Clinical Data", "البيانات السريرية المتاحة")}
+        </p>
+
+        <h2 className="ohCardTitle">
+          {text("Data readiness", "جاهزية البيانات")}
+        </h2>
+      </div>
+
+      <span className={`ohStatusBadge ${readinessTone}`}>
+        {doctorBriefReadiness}
+      </span>
+    </div>
+
+    <div className="ohTimeline">
+      <div className="ohTimelineItem">
+        <span className="ohTimelineDot" />
+        <div>
+          <p className="ohTimelineTitle">
+            {text("Assessments", "التقييمات")}
+          </p>
+          <p className="ohTimelineMeta">{assessments.length}</p>
+        </div>
+      </div>
+
+      <div className="ohTimelineItem">
+        <span className="ohTimelineDot" />
+        <div>
+          <p className="ohTimelineTitle">
+            {text("Reports", "التقارير")}
+          </p>
+          <p className="ohTimelineMeta">
+            {uploadedReports.length} · {processedReports} {text("processed", "مكتمل")}
+          </p>
+        </div>
+      </div>
+
+      <div className="ohTimelineItem">
+        <span className="ohTimelineDot" />
+        <div>
+          <p className="ohTimelineTitle">
+            {text("Saved Analysis", "التحليل المحفوظ")}
+          </p>
+          <p className="ohTimelineMeta">{savedAnalysis.length}</p>
+        </div>
+      </div>
+    </div>
+  </article>
+</section>
 
             <section className="ohGrid cols2">
               <article className="ohCard">
@@ -876,14 +936,7 @@ export default function DoctorPortalPage() {
                 </div>
               </article>
 
-             <DoctorBriefCard
-  eyebrow={text("Doctor Brief", "ملخص الطبيب")}
-  title={text("Pre-Visit Summary", "ملخص قبل الزيارة")}
-  readiness={doctorBriefReadiness}
-  readinessTone={readinessTone}
-  brief={healthEngine.doctorBrief}
-/>
-            </section>
+                         </section>
 
            <ReportAnalysisBrief
   eyebrow={text("Report Analysis Brief", "ملخص ذكاء التقارير")}
