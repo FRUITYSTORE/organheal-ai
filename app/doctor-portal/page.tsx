@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { generateHealthEngineResult } from "../../lib/healthEngine";
+import RecommendedActionPanel from "@/app/components/doctor-portal/RecommendedActionPanel";
 
 type Language = "en" | "ar";
 
@@ -754,25 +755,13 @@ export default function DoctorPortalPage() {
 
         {!loading && !message && (
           <>
-            <section className="ohActionPanel">
-              <div className="ohCardHeader" style={{ marginBottom: 0 }}>
-                <div>
-                  <p className="ohMetricLabel">
-                    {text("Recommended Next Step", "الخطوة التالية المقترحة")}
-                  </p>
-
-                  <h2 className="ohCardTitle" style={{ fontSize: "1.55rem" }}>
-                    {recommendedAction.label}
-                  </h2>
-
-                  <p className="ohCardText">{recommendedAction.description}</p>
-                </div>
-
-                <Link href={recommendedAction.href} className="primaryBtn">
-                  {recommendedAction.buttonText}
-                </Link>
-              </div>
-            </section>
+            <RecommendedActionPanel
+  eyebrow={text("Recommended Next Step", "الخطوة التالية المقترحة")}
+  title={recommendedAction.label}
+  description={recommendedAction.description}
+  href={recommendedAction.href}
+  buttonText={recommendedAction.buttonText}
+/>
 
             <section className="ohMetricGrid">
               <article className="ohMetricCard">
