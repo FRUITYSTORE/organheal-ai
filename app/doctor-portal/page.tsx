@@ -1009,56 +1009,6 @@ export default function DoctorPortalPage() {
               </div>
             </section>
 
-            <section className="ohCard">
-              <div className="ohCardHeader">
-                <div>
-                  <p className="ohMetricLabel">
-                    {text("Doctor Brief Journey", "رحلة ملخص الطبيب")}
-                  </p>
-
-                  <h2 className="ohCardTitle">
-                    {text(
-                      "Prepare for a safer clinical discussion",
-                      "التحضير لنقاش سريري أوضح وأكثر أمانًا"
-                    )}
-                  </h2>
-
-                  <p className="ohCardText">
-                    {text(
-                      "This page organizes the patient profile, assessments, reports, intelligence, check-ins, and history into a concise educational brief for discussion with a licensed clinician.",
-                      "تنظم هذه الصفحة ملف المريض، التقييمات، التقارير، التحليل الصحي، Check-Ins، والتاريخ الصحي في ملخص تعليمي مختصر لمناقشته مع طبيب مرخص."
-                    )}
-                  </p>
-                </div>
-              </div>
-
-              <div className="ohButtonRow">
-                <Link href="/profile" className="secondaryBtn">
-                  {text("Profile", "الملف الشخصي")}
-                </Link>
-
-                <Link href="/reports" className="secondaryBtn">
-                  {text("Reports", "التقارير")}
-                </Link>
-
-                <Link href="/reports" className="primaryBtn">
-                  {text("Analysis", "تحليل التقارير")}
-                </Link>
-
-                <Link href="/history" className="secondaryBtn">
-                  {text("History", "التاريخ")}
-                </Link>
-
-                <Link href="/checkin" className="secondaryBtn">
-                  Check-In
-                </Link>
-
-                <Link href="/health-plan" className="secondaryBtn">
-                  {text("Health Plan", "الخطة الصحية")}
-                </Link>
-              </div>
-            </section>
-
             <section className="ohTrustNotice">
               <span aria-hidden="true">🛡️</span>
               <div>
