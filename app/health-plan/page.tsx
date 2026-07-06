@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import PriorityCard from "@/app/components/health-plan/PriorityCard";
 import WeeklyTasksPanel from "@/app/components/health-plan/WeeklyTasksPanel";
+import FollowUpRoadmap from "@/app/components/health-plan/FollowUpRoadmap";
 
 type Language = "en" | "ar";
 
@@ -1288,37 +1289,17 @@ export default function HealthPlanPage() {
   }}
 />
 
-        <section className="hpTwoCol">
-          <article className="hpPanel">
-            <div className="hpPanelHeader">
-              <div className="hpPanelKicker">{text("7-day follow-up plan", "خطة 7 أيام")}</div>
-              <h2 className="hpPanelTitle">
-                {text("Start with small realistic actions", "ابدأ بخطوات واقعية صغيرة")}
-              </h2>
-            </div>
-
-            <div className="hpList">
-              {sevenDayPlan.map((item) => (
-                <div className="hpListItem" key={item}>{item}</div>
-              ))}
-            </div>
-          </article>
-
-          <article className="hpPanel">
-            <div className="hpPanelHeader">
-              <div className="hpPanelKicker">{text("30-day improvement roadmap", "خارطة تحسين 30 يوم")}</div>
-              <h2 className="hpPanelTitle">
-                {text("From data to follow-up", "من البيانات إلى المتابعة")}
-              </h2>
-            </div>
-
-            <div className="hpList">
-              {roadmap.map((item) => (
-                <div className="hpListItem" key={item}>{item}</div>
-              ))}
-            </div>
-          </article>
-        </section>
+        <FollowUpRoadmap
+  sevenDayKicker={text("7-day follow-up plan", "خطة 7 أيام")}
+  sevenDayTitle={text(
+    "Start with small realistic actions",
+    "ابدأ بخطوات واقعية صغيرة"
+  )}
+  sevenDayItems={sevenDayPlan}
+  roadmapKicker={text("30-day improvement roadmap", "خارطة تحسين 30 يوم")}
+  roadmapTitle={text("From data to follow-up", "من البيانات إلى المتابعة")}
+  roadmapItems={roadmap}
+/>
 
         <section className="hpSafety">
           <strong>{text("Medical safety reminder", "تذكير السلامة الطبية")}</strong>
