@@ -9,6 +9,7 @@ import FollowUpRoadmap from "@/app/components/health-plan/FollowUpRoadmap";
 import HealthMetricsGrid from "@/app/components/health-plan/HealthMetricsGrid";
 import MedicalSafetyNotice from "@/app/components/health-plan/MedicalSafetyNotice";
 import LoadingPanel from "@/app/components/health-plan/LoadingPanel";
+import HealthPlanHero from "@/app/components/health-plan/HealthPlanHero";
 
 type Language = "en" | "ar";
 
@@ -1052,54 +1053,36 @@ export default function HealthPlanPage() {
           {text("← Back to Dashboard", "← العودة إلى لوحة التحكم")}
         </Link>
 
-        <section className="hpHero">
-          <div>
-            <span className="hpEyebrow">
-              {text("Personal follow-up intelligence", "خطة متابعة شخصية")}
-            </span>
-
-            <h1 className="hpTitle">
-              {isArabic
-                ? `خطة ${priorityOrganDisplay} الشخصية`
-                : `${priorityOrgan} Personal Health Plan`}
-            </h1>
-
-            <p className="hpLead">
-              {text(
-                "A guided plan that connects assessments, medical reports, report analysis, check-ins, and practical weekly follow-up.",
-                "خطة موجهة تربط التقييمات، التقارير الطبية، تحليل التقارير، Check-In، والمتابعة العملية الأسبوعية."
-              )}
-            </p>
-
-            <div className="hpActions">
-              <Link href={nextAction.href} className="hpPrimary">
-                {nextAction.button}
-              </Link>
-
-              <Link href={latestAnalysisHref} className="hpSecondary">
-                {hasGenerated
-                  ? text("Review Analysis", "مراجعة التحليل")
-                  : text("Analyze Report", "تحليل التقرير")}
-              </Link>
-
-              <Link href="/reports" className="hpSecondary">
-                {text("Reports", "التقارير")}
-              </Link>
-            </div>
-          </div>
-
-      <PriorityCard
-  label={text("Patient priority", "أولوية المريض")}
-  organ={priorityOrganDisplay}
-  riskLabel={text("Risk level", "مستوى الخطورة")}
-  riskLevel={riskLevelDisplay}
-  scoreLabel={text("Priority score", "نتيجة الأولوية")}
-  scoreText={
-    priorityScore === null ? "—" : `${priorityScore}/100`
+       <HealthPlanHero
+  eyebrow={text("Personal follow-up intelligence", "خطة متابعة شخصية")}
+  title={
+    isArabic
+      ? `خطة ${priorityOrganDisplay} الشخصية`
+      : `${priorityOrgan} Personal Health Plan`
   }
-  progressPercent={clamp(100 - priorityScoreValue)}
+  lead={text(
+    "A guided plan that connects assessments, medical reports, report analysis, check-ins, and practical weekly follow-up.",
+    "خطة موجهة تربط التقييمات، التقارير الطبية، تحليل التقارير، Check-In، والمتابعة العملية الأسبوعية."
+  )}
+  primaryHref={nextAction.href}
+  primaryLabel={nextAction.button}
+  analysisHref={latestAnalysisHref}
+  analysisLabel={
+    hasGenerated
+      ? text("Review Analysis", "مراجعة التحليل")
+      : text("Analyze Report", "تحليل التقرير")
+  }
+  reportsLabel={text("Reports", "التقارير")}
+  priority={{
+    label: text("Patient priority", "أولوية المريض"),
+    organ: priorityOrganDisplay,
+    riskLabel: text("Risk level", "مستوى الخطورة"),
+    riskLevel: riskLevelDisplay,
+    scoreLabel: text("Priority score", "نتيجة الأولوية"),
+    scoreText: priorityScore === null ? "—" : `${priorityScore}/100`,
+    progressPercent: clamp(100 - priorityScoreValue),
+  }}
 />
-        </section>
 
         {message && (
           <section className="hpSafety">
