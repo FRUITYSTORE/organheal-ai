@@ -977,39 +977,7 @@ export default function DoctorPortalPage() {
               </article>
             </section>
 
-            <section className="ohCard">
-              <div className="ohCardHeader">
-                <div>
-                  <p className="ohMetricLabel">
-                    {text("Available Data Sources", "مصادر البيانات المتاحة")}
-                  </p>
-
-                  <h2 className="ohCardTitle">
-                    {text(
-                      "What supports this doctor brief?",
-                      "ما الذي يدعم هذا الملخص الطبي؟"
-                    )}
-                  </h2>
-                </div>
-              </div>
-
-              <div className="ohMetricGrid">
-                {dataSources.map((source) => (
-                  <article className="ohMetricCard" key={source.label}>
-                    <span className="ohMetricLabel">{source.label}</span>
-                    <span className="ohMetricValue" style={{ fontSize: "1.35rem" }}>
-                      {source.value}
-                    </span>
-                    <span className={`ohStatusBadge ${source.ready ? "good" : "moderate"}`}>
-                      {source.ready ? text("Available", "متاح") : text("Missing", "غير متوفر")}
-                    </span>
-                    <span className="ohMetricHint">{source.note}</span>
-                  </article>
-                ))}
-              </div>
-            </section>
-
-            <section className="ohTrustNotice">
+                       <section className="ohTrustNotice">
               <span aria-hidden="true">🛡️</span>
               <div>
                 <strong>{text("Medical safety disclaimer", "تنبيه طبي")}</strong>
