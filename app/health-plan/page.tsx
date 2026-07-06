@@ -7,6 +7,8 @@ import PriorityCard from "@/app/components/health-plan/PriorityCard";
 import WeeklyTasksPanel from "@/app/components/health-plan/WeeklyTasksPanel";
 import FollowUpRoadmap from "@/app/components/health-plan/FollowUpRoadmap";
 import HealthMetricsGrid from "@/app/components/health-plan/HealthMetricsGrid";
+import MedicalSafetyNotice from "@/app/components/health-plan/MedicalSafetyNotice";
+import LoadingPanel from "@/app/components/health-plan/LoadingPanel";
 
 type Language = "en" | "ar";
 
@@ -1303,25 +1305,20 @@ export default function HealthPlanPage() {
   roadmapItems={roadmap}
 />
 
-        <section className="hpSafety">
-          <strong>{text("Medical safety reminder", "تذكير السلامة الطبية")}</strong>
-          <br />
-          {text(
-            "This plan is educational and organizational. It does not diagnose disease, prescribe treatment, or replace medical care. Seek urgent care for severe symptoms or emergency warning signs.",
-            "هذه الخطة تعليمية وتنظيمية. لا تشخص الأمراض ولا تصف العلاج ولا تستبدل الرعاية الطبية. اطلب الرعاية العاجلة عند وجود أعراض شديدة أو علامات طارئة."
-          )}
-        </section>
+        <MedicalSafetyNotice
+  title={text("Medical safety reminder", "تذكير السلامة الطبية")}
+  description={text(
+    "This plan is educational and organizational. It does not diagnose disease, prescribe treatment, or replace medical care. Seek urgent care for severe symptoms or emergency warning signs.",
+    "هذه الخطة تعليمية وتنظيمية. لا تشخص الأمراض ولا تصف العلاج ولا تستبدل الرعاية الطبية. اطلب الرعاية العاجلة عند وجود أعراض شديدة أو علامات طارئة."
+  )}
+/>
 
         {loading && (
-          <section className="hpPanel">
-            <div className="hpPanelHeader">
-              <div className="hpPanelKicker">{text("Loading", "تحميل")}</div>
-              <h2 className="hpPanelTitle">
-                {text("Preparing your plan...", "جاري تجهيز الخطة...")}
-              </h2>
-            </div>
-          </section>
-        )}
+  <LoadingPanel
+    kicker={text("Loading", "تحميل")}
+    title={text("Preparing your plan...", "جاري تجهيز الخطة...")}
+  />
+)}
       </div>
     </main>
   );
