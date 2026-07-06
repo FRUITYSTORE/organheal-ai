@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import PriorityCard from "@/app/components/health-plan/PriorityCard";
 import WeeklyTasksPanel from "@/app/components/health-plan/WeeklyTasksPanel";
 import FollowUpRoadmap from "@/app/components/health-plan/FollowUpRoadmap";
+import HealthMetricsGrid from "@/app/components/health-plan/HealthMetricsGrid";
 
 type Language = "en" | "ar";
 
@@ -1104,43 +1105,44 @@ export default function HealthPlanPage() {
           </section>
         )}
 
-        <section className="hpToolGrid">
-          <article className="hpToolCard blue">
-            <div className="hpToolLabel">{text("Priority", "الأولوية")}</div>
-            <div className="hpToolValue">{priorityOrganDisplay}</div>
-            <div className="hpToolHint">
-              {priorityScore === null ? text("Assessment needed", "يحتاج تقييم") : `${priorityScore}/100`}
-            </div>
-          </article>
-
-          <article className="hpToolCard teal">
-            <div className="hpToolLabel">{text("Reports", "التقارير")}</div>
-            <div className="hpToolValue">{uploadedReports.length}</div>
-            <div className="hpToolHint">
-              {completedExtractionCount} {text("ready for analysis", "جاهزة للتحليل")}
-            </div>
-          </article>
-
-          <article className="hpToolCard green">
-            <div className="hpToolLabel">{text("Analysis", "التحليل")}</div>
-            <div className="hpToolValue">{generatedCount}</div>
-            <div className="hpToolHint">
-              {hasGenerated ? text("saved results", "نتائج محفوظة") : text("needs analysis", "يحتاج تحليل")}
-            </div>
-          </article>
-
-          <article className="hpToolCard amber">
-            <div className="hpToolLabel">Check-In</div>
-            <div className="hpToolValue">
-              {latestCheckIn?.wellness_score ?? "—"}
-            </div>
-            <div className="hpToolHint">
-              {latestCheckIn
-                ? text("latest wellness score", "آخر نتيجة صحية")
-                : text("not updated yet", "لم يتم التحديث")}
-            </div>
-          </article>
-        </section>
+        <HealthMetricsGrid
+  items={[
+    {
+      tone: "blue",
+      label: text("Priority", "الأولوية"),
+      value: priorityOrganDisplay,
+      hint:
+        priorityScore === null
+          ? text("Assessment needed", "يحتاج تقييم")
+          : `${priorityScore}/100`,
+    },
+    {
+      tone: "teal",
+      label: text("Reports", "التقارير"),
+      value: uploadedReports.length,
+      hint: `${completedExtractionCount} ${text(
+        "ready for analysis",
+        "جاهزة للتحليل"
+      )}`,
+    },
+    {
+      tone: "green",
+      label: text("Analysis", "التحليل"),
+      value: generatedCount,
+      hint: hasGenerated
+        ? text("saved results", "نتائج محفوظة")
+        : text("needs analysis", "يحتاج تحليل"),
+    },
+    {
+      tone: "amber",
+      label: "Check-In",
+      value: latestCheckIn?.wellness_score ?? "—",
+      hint: latestCheckIn
+        ? text("latest wellness score", "آخر نتيجة صحية")
+        : text("not updated yet", "لم يتم التحديث"),
+    },
+  ]}
+/>
 
         <section className="hpPanel">
           <div className="hpPanelHeader">
