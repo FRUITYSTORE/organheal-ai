@@ -1183,14 +1183,6 @@ export default function DashboardPage() {
                   </Link>
                 </div>
 
-                <div className="dashboardQuickActionGrid">
-                  {quickActions.map((action) => (
-                    <Link href={action.href} key={action.title}>
-                      <strong>{action.title}</strong>
-                      <p>{action.text}</p>
-                    </Link>
-                  ))}
-                </div>
               </aside>
             </section>
 
