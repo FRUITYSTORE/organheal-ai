@@ -167,7 +167,7 @@ export default function ReportsPage() {
 
     const { data: uploadedData, error: uploadedError } = await supabase
       .from("uploaded_lab_files")
-      .select("*")
+      .select("id, file_name, file_path, report_type, extraction_status, extracted_text, created_at")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
 .limit(50);
@@ -186,7 +186,7 @@ export default function ReportsPage() {
     if (reportIds.length > 0) {
       const { data: insightData } = await supabase
         .from("health_insights")
-        .select("*")
+        .select("id, report_id, ai_status, risk_level, summary, created_at")
         .eq("user_id", userId)
         .in("report_id", reportIds)
 .limit(50);
@@ -200,7 +200,7 @@ export default function ReportsPage() {
     if (insightIds.length > 0) {
       const { data: savedData } = await supabase
         .from("generated_intelligence_results")
-        .select("*")
+        .select("insight_id, updated_at")
         .eq("user_id", userId)
        .in("insight_id", insightIds)
 .limit(50);
