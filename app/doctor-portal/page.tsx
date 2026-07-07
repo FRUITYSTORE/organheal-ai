@@ -912,9 +912,9 @@ export default function DoctorPortalPage() {
                       {localizeOrganName(item.organ)}
                     </span>
                     <span className="ohMetricValue">{item.score}/100</span>
-                    <span className={`ohStatusBadge ${getScoreTone(item.score)}`}>
-                      {text("Score", "المؤشر")}
-                    </span>
+                   <StatusBadge tone={getScoreTone(item.score)}>
+  {text("Score", "المؤشر")}
+</StatusBadge>
                   </article>
                 ))}
               </div>
