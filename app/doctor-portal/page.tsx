@@ -10,6 +10,7 @@ import DoctorBriefCard from "@/app/components/doctor-portal/DoctorBriefCard";
 import ReportAnalysisBrief from "@/app/components/doctor-portal/ReportAnalysisBrief";
 import TrustNotice from "@/app/components/ui/TrustNotice";
 import SectionHeader from "@/app/components/ui/SectionHeader";
+import StatusBadge from "@/app/components/ui/StatusBadge";
 
 type Language = "en" | "ar";
 
@@ -533,9 +534,9 @@ export default function DoctorPortalPage() {
                   </h2>
                 </div>
 
-                <span className={`ohStatusBadge ${readinessTone}`}>
-                  {allScores.length > 0 ? `${overallScore}/100` : "N/A"}
-                </span>
+               <StatusBadge tone={readinessTone}>
+  {allScores.length > 0 ? `${overallScore}/100` : "N/A"}
+</StatusBadge>
               </div>
 
               <p className="ohCardText">
