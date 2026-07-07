@@ -8,6 +8,7 @@ import { generateHealthEngineResult } from "../../lib/healthEngine";
 import RecommendedActionPanel from "@/app/components/doctor-portal/RecommendedActionPanel";
 import DoctorBriefCard from "@/app/components/doctor-portal/DoctorBriefCard";
 import ReportAnalysisBrief from "@/app/components/doctor-portal/ReportAnalysisBrief";
+import TrustNotice from "@/app/components/ui/TrustNotice";
 
 type Language = "en" | "ar";
 
@@ -922,17 +923,13 @@ export default function DoctorPortalPage() {
             )}
           </section>
         )}
-                       <section className="ohTrustNotice">
-              <span aria-hidden="true">🛡️</span>
-              <div>
-                <strong>{text("Medical safety disclaimer", "تنبيه طبي")}</strong>
-                <br />
-                {text(
-                  "OrganHeal AI provides educational health analysis support. It does not diagnose, treat, replace clinical judgment, or provide emergency medical advice.",
-                  "OrganHeal AI يقدم دعمًا تعليميًا لتنظيم وفهم المعلومات الصحية. لا يقدم تشخيصًا أو علاجًا ولا يستبدل الحكم الطبي أو يقدم نصائح طبية طارئة."
-                )}
-              </div>
-            </section>
+                   <TrustNotice
+  title={text("Medical safety disclaimer", "تنبيه طبي")}
+  description={text(
+    "OrganHeal AI provides educational health analysis support. It does not diagnose, treat, replace clinical judgment, or provide emergency medical advice.",
+    "OrganHeal AI يقدم دعمًا تعليميًا لتنظيم وفهم المعلومات الصحية. لا يقدم تشخيصًا أو علاجًا ولا يستبدل الحكم الطبي أو يقدم نصائح طبية طارئة."
+  )}
+/>
           </>
         )}
       </div>
