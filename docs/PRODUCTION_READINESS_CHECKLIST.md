@@ -56,6 +56,42 @@ Each page should have a clear query and loading budget. New features must not ad
 
 Move from page-level multiple queries toward summary views or backend summary functions where appropriate, especially for Dashboard and Doctor Portal.
 
+---
+
+## Database Index Plan
+
+These indexes should be reviewed and added carefully through Supabase SQL Editor or migrations. Indexes improve read performance for user-specific pages, especially when tables grow.
+
+### High Priority Indexes
+
+```sql
+create index if not exists idx_profiles_id
+on profiles(id);
+
+create index if not exists idx_organ_assessments_user_created
+on organ_assessments(user_id, created_at desc);
+
+create index if not exists idx_daily_checkins_user_created
+on daily_checkins(user_id, created_at desc);
+
+create index if not exists idx_uploaded_lab_files_user_created
+on uploaded_lab_files(user_id, created_at desc);
+
+create index if not exists idx_health_insights_user_created
+on health_insights(user_id, created_at desc);
+
+create index if not exists idx_health_insights_user_report
+on health_insights(user_id, report_id);
+
+create index if not exists idx_generated_results_user_updated
+on generated_intelligence_results(user_id, updated_at desc);
+
+create index if not exists idx_generated_results_user_insight
+on generated_intelligence_results(user_id, insight_id);
+
+create index if not exists idx_health_history_user_created
+on health_history(user_id, created_at desc);
+
 ## Build Rules
 
 Before every commit:
