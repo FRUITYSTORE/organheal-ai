@@ -833,9 +833,9 @@ export default function DoctorPortalPage() {
                 </h2>
               </div>
 
-              <span className={`ohStatusBadge ${getScoreTone(sharedReport.overall_score)}`}>
-                {text("Shared", "مشترك")}
-              </span>
+              <StatusBadge tone={getScoreTone(sharedReport.overall_score)}>
+  {text("Shared", "مشترك")}
+</StatusBadge>
             </div>
 
             <div className="ohMetricGrid">
