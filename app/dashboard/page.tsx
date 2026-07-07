@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { buildHealthIntelligence } from "../../lib/intelligenceBuilder";
+import DashboardOverviewGrid from "@/app/components/dashboard/DashboardOverviewGrid";
 
 type Language = "en" | "ar";
 
@@ -1016,15 +1017,7 @@ export default function DashboardPage() {
           </section>
         ) : (
           <>
-            <section className="dashboardCommandGrid">
-              {overviewCards.map((card) => (
-                <Link href={card.href} key={card.label} className="dashboardCommandCard">
-                  <span>{card.label}</span>
-                  <strong>{card.value}</strong>
-                  <p>{card.detail}</p>
-                </Link>
-              ))}
-            </section>
+           <DashboardOverviewGrid cards={overviewCards} />
 
 
             <section className="dashboardJourneyPanel">
