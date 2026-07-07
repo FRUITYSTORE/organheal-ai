@@ -202,7 +202,8 @@ export default function DoctorPortalPage() {
       .from("organ_assessments")
       .select("organ_name, score, risk_level, notes, created_at")
       .eq("user_id", userId)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+.limit(20);
 
     if (organError) {
       setMessage(
@@ -226,7 +227,8 @@ export default function DoctorPortalPage() {
       .from("uploaded_lab_files")
       .select("id, file_name, extraction_status, created_at")
       .eq("user_id", userId)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+.limit(20);
 
     const { data: insightData } = await supabase
       .from("health_insights")
@@ -234,7 +236,8 @@ export default function DoctorPortalPage() {
         "id, report_id, insight_title, ai_status, summary, key_findings, recommendations, doctor_brief, created_at"
       )
       .eq("user_id", userId)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+.limit(20);
 
     const insightIds = (insightData || []).map((item) => item.id);
 
@@ -246,7 +249,8 @@ export default function DoctorPortalPage() {
         .select("insight_id, updated_at")
         .eq("user_id", userId)
         .in("insight_id", insightIds)
-        .order("updated_at", { ascending: false });
+        .order("updated_at", { ascending: false })
+.limit(20);
 
       savedRows = (savedData || []) as SavedAnalysis[];
     }
