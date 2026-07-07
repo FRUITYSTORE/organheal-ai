@@ -168,7 +168,8 @@ export default function DashboardPage() {
       .from("organ_assessments")
       .select("organ_name, score, risk_level, notes, created_at")
       .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+.limit(20);
 
     if (organError) {
       setMessage("Database error: " + organError.message);
@@ -202,7 +203,8 @@ export default function DashboardPage() {
       .from("generated_intelligence_results")
       .select("id, created_at")
       .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+.limit(20);
 
     if (!generatedError && generatedResults) {
       savedIntelligenceCount = generatedResults.length;
@@ -212,7 +214,8 @@ export default function DashboardPage() {
         .from("health_insights")
         .select("id, ai_status, created_at")
         .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+.limit(20);
 
       const generatedInsights = (insightData || []).filter(
         (item) => item.ai_status === "Generated"
