@@ -7,6 +7,7 @@ import PageEmptyState from "@/app/components/navigation/PageEmptyState";
 import StatCard from "@/app/components/ui/StatCard";
 import FeaturedReportCard from "@/app/components/reports/FeaturedReportCard";
 import CompactReportRow from "@/app/components/reports/CompactReportRow";
+import StatusBadge from "@/app/components/ui/StatusBadge";
 {}
 
 type Language = "en" | "ar";
@@ -968,9 +969,9 @@ const visibleCompactReports = showAllReports
                   </p>
                 </div>
 
-                <span className="ohStatusBadge neutral">
-                  {compactReports.length}
-                </span>
+               <StatusBadge tone="neutral">
+  {compactReports.length}
+</StatusBadge>
               </div>
 
               {compactReports.length === 0 ? (
