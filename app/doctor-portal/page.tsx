@@ -9,6 +9,7 @@ import RecommendedActionPanel from "@/app/components/doctor-portal/RecommendedAc
 import DoctorBriefCard from "@/app/components/doctor-portal/DoctorBriefCard";
 import ReportAnalysisBrief from "@/app/components/doctor-portal/ReportAnalysisBrief";
 import TrustNotice from "@/app/components/ui/TrustNotice";
+import SectionHeader from "@/app/components/ui/SectionHeader";
 
 type Language = "en" | "ar";
 
