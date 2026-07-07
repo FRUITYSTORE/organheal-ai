@@ -624,9 +624,9 @@ export default function DoctorPortalPage() {
         </h2>
       </div>
 
-      <span className={`ohStatusBadge ${readinessTone}`}>
-        {doctorBriefReadiness}
-      </span>
+      <StatusBadge tone={readinessTone}>
+  {doctorBriefReadiness}
+</StatusBadge>
     </div>
 
     <div className="ohTimeline">
@@ -678,9 +678,9 @@ export default function DoctorPortalPage() {
       </h2>
     </div>
 
-    <span className={`ohStatusBadge ${getScoreTone(overallScore)}`}>
-      {allScores.length > 0 ? `${overallScore}/100` : "N/A"}
-    </span>
+   <StatusBadge tone={getScoreTone(overallScore)}>
+  {allScores.length > 0 ? `${overallScore}/100` : "N/A"}
+</StatusBadge>
   </div>
 
   <div className="ohTimeline">
@@ -782,9 +782,9 @@ export default function DoctorPortalPage() {
               </p>
             </div>
 
-            <span className="ohStatusBadge neutral">
-              {text("Secure Link", "رابط مؤقت")}
-            </span>
+            <StatusBadge tone="neutral">
+  {text("Secure Link", "رابط مؤقت")}
+</StatusBadge>
           </div>
 
           <div className="ohGrid cols2" style={{ alignItems: "end" }}>
