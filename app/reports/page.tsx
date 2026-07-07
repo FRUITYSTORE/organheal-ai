@@ -653,11 +653,11 @@ const visibleCompactReports = showAllReports
         }
 
         .reportsFocusPage .reportsHero {
-          width: 100% !important;
-          min-height: 520px !important;
-          padding: 56px !important;
-          display: block !important;
-        }
+  width: 100% !important;
+  min-height: 360px !important;
+  padding: 38px !important;
+  display: block !important;
+}
 
         .reportsFocusPage .reportsHero .ohHeroGrid {
           display: grid !important;
@@ -666,11 +666,11 @@ const visibleCompactReports = showAllReports
           align-items: center !important;
         }
 
-        .reportsFocusPage .reportsHero .ohTitle {
-          font-size: clamp(3.2rem, 6vw, 5.4rem) !important;
-          line-height: 0.95 !important;
-          max-width: 760px !important;
-        }
+       .reportsFocusPage .reportsHero .ohTitle {
+  font-size: clamp(2.6rem, 5vw, 4.2rem) !important;
+  line-height: 1 !important;
+  max-width: 760px !important;
+}
 
         .reportsFocusPage .reportsHero .ohLead {
           font-size: 1.12rem !important;
