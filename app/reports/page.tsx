@@ -169,7 +169,8 @@ export default function ReportsPage() {
       .from("uploaded_lab_files")
       .select("*")
       .eq("user_id", userId)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+.limit(50);
 
     if (uploadedError) {
       setMessage(uploadedError.message);
@@ -187,7 +188,8 @@ export default function ReportsPage() {
         .from("health_insights")
         .select("*")
         .eq("user_id", userId)
-        .in("report_id", reportIds);
+        .in("report_id", reportIds)
+.limit(50);
 
       insights = (insightData || []) as HealthInsight[];
     }
@@ -200,7 +202,8 @@ export default function ReportsPage() {
         .from("generated_intelligence_results")
         .select("*")
         .eq("user_id", userId)
-        .in("insight_id", insightIds);
+       .in("insight_id", insightIds)
+.limit(50);
 
       savedResults = (savedData || []) as SavedResult[];
     }
