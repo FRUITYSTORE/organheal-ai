@@ -1017,9 +1017,7 @@ export default function DashboardPage() {
           </section>
         ) : (
           <>
-           <DashboardOverviewGrid cards={overviewCards} />
-
-
+          
             <section className="dashboardJourneyPanel">
               <div className="dashboardJourneyHeader">
                 <div>
@@ -1116,7 +1114,7 @@ export default function DashboardPage() {
                 ))}
               </div>
             </section>
-
+ <DashboardOverviewGrid cards={overviewCards} />
             <section className="dashboardCommandLayout">
               <div className="dashboardCommandPanel">
                 <span>{isArabic ? "ملخص التحليل الصحي" : "Health analysis snapshot"}</span>
