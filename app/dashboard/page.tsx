@@ -5,6 +5,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { buildHealthIntelligence } from "../../lib/intelligenceBuilder";
 import DashboardOverviewGrid from "@/app/components/dashboard/DashboardOverviewGrid";
+import { getDashboardSummary } from "@/lib/services/dashboard/dashboard.service";
 
 type Language = "en" | "ar";
 
@@ -156,82 +157,20 @@ export default function DashboardPage() {
 
     const user = userData.user;
 
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("username")
-      .eq("id", user.id)
-      .maybeSingle();
+   try {
+  const dashboardSummary = await getDashboardSummary(user.id);
 
-    setUsername(profileData?.username || user.email || "User");
-
-    const { data: organData, error: organError } = await supabase
-      .from("organ_assessments")
-      .select("organ_name, score, risk_level, notes, created_at")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-.limit(20);
-
-    if (organError) {
-      setMessage("Database error: " + organError.message);
-      setLoading(false);
-      return;
-    }
-
-    const { data: checkInData, error: checkInError } = await supabase
-      .from("daily_checkins")
-      .select("mood, wellness_score, created_at")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (checkInError) {
-      setMessage("Database error: " + checkInError.message);
-      setLoading(false);
-      return;
-    }
-
-    const { count: uploadedReportCount } = await supabase
-      .from("uploaded_lab_files")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", user.id);
-
-    let savedIntelligenceCount = 0;
-    let latestIntelligenceDate: string | null = null;
-
-    const { data: generatedResults, error: generatedError } = await supabase
-      .from("generated_intelligence_results")
-      .select("id, created_at")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-.limit(20);
-
-    if (!generatedError && generatedResults) {
-      savedIntelligenceCount = generatedResults.length;
-      latestIntelligenceDate = generatedResults[0]?.created_at || null;
-    } else {
-      const { data: insightData } = await supabase
-        .from("health_insights")
-        .select("id, ai_status, created_at")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-.limit(20);
-
-      const generatedInsights = (insightData || []).filter(
-        (item) => item.ai_status === "Generated"
-      );
-
-      savedIntelligenceCount = generatedInsights.length;
-      latestIntelligenceDate = generatedInsights[0]?.created_at || null;
-    }
-
-    setAssessments((organData || []) as Assessment[]);
-    setDailyCheckIn((checkInData || null) as DailyCheckIn | null);
-    setReportStats({
-      uploadedReports: uploadedReportCount || 0,
-      savedIntelligence: savedIntelligenceCount,
-      latestIntelligenceDate,
-    });
+  setUsername(dashboardSummary.profile?.username || user.email || "User");
+  setAssessments(dashboardSummary.assessments as Assessment[]);
+  setDailyCheckIn(dashboardSummary.latestCheckIn as DailyCheckIn | null);
+  setReportStats(dashboardSummary.reportStats);
+} catch (error) {
+  setMessage(
+    error instanceof Error ? "Database error: " + error.message : "Database error"
+  );
+  setLoading(false);
+  return;
+}
 
     setLoading(false);
   }
