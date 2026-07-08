@@ -8,6 +8,7 @@ import StatCard from "@/app/components/ui/StatCard";
 import FeaturedReportCard from "@/app/components/reports/FeaturedReportCard";
 import CompactReportRow from "@/app/components/reports/CompactReportRow";
 import StatusBadge from "@/app/components/ui/StatusBadge";
+import { getReportsLibrary } from "@/lib/services/reports/reports.service";
 {}
 
 type Language = "en" | "ar";
@@ -163,92 +164,18 @@ export default function ReportsPage() {
       return;
     }
 
-    const userId = userData.user.id;
+   const userId = userData.user.id;
 
-    const { data: uploadedData, error: uploadedError } = await supabase
-      .from("uploaded_lab_files")
-      .select("id, file_name, file_path, report_type, extraction_status, extracted_text, created_at")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-.limit(50);
-
-    if (uploadedError) {
-      setMessage(uploadedError.message);
-      setLoading(false);
-      return;
-    }
-
-    const uploadedReports = (uploadedData || []) as UploadedReport[];
-    const reportIds = uploadedReports.map((item) => item.id);
-
-    let insights: HealthInsight[] = [];
-
-    if (reportIds.length > 0) {
-      const { data: insightData } = await supabase
-        .from("health_insights")
-        .select("id, report_id, ai_status, risk_level, summary, created_at")
-        .eq("user_id", userId)
-        .in("report_id", reportIds)
-.limit(50);
-
-      insights = (insightData || []) as HealthInsight[];
-    }
-
-    let savedResults: SavedResult[] = [];
-    const insightIds = insights.map((item) => item.id);
-
-    if (insightIds.length > 0) {
-      const { data: savedData } = await supabase
-        .from("generated_intelligence_results")
-        .select("insight_id, updated_at")
-        .eq("user_id", userId)
-       .in("insight_id", insightIds)
-.limit(50);
-
-      savedResults = (savedData || []) as SavedResult[];
-    }
-
-    const mergedReports: ReportCard[] = uploadedReports.map((report) => {
-      const insight =
-        insights.find((item) => item.report_id === report.id) || null;
-
-      const saved =
-        savedResults.find((item) => {
-          if (insight?.id && item.insight_id === insight.id) return true;
-          if (item.report_id && item.report_id === report.id) return true;
-          return false;
-        }) || null;
-
-      const extractionStatus = normalizeStatus(report.extraction_status);
-      const aiStatus = saved
-        ? "Generated"
-        : normalizeStatus(insight?.ai_status || "Pending");
-
-      return {
-        reportId: report.id,
-        insightId: insight?.id || null,
-        fileName: report.file_name || "Medical report",
-        filePath: report.file_path || null,
-        uploadedAt: report.created_at || null,
-        reportType: getReportTypeLabel(report.report_type || insight?.report_type),
-        extractionStatus,
-        aiStatus,
-        riskLevel: insight?.risk_level || "Pending",
-        summary: insight?.summary || "",
-        nextBestAction: insight?.next_best_action || "",
-        hasSavedAnalysis: Boolean(saved) || aiStatus === "Generated",
-        savedUpdatedAt: saved?.updated_at || insight?.updated_at || null,
-      };
-    });
-
-    mergedReports.sort((a, b) => {
-      return (
-        new Date(b.uploadedAt || 0).getTime() -
-        new Date(a.uploadedAt || 0).getTime()
-      );
-    });
-
-    setReports(mergedReports);
+try {
+  const reportsLibrary = await getReportsLibrary(userId);
+  setReports(reportsLibrary as ReportCard[]);
+} catch (error) {
+  setMessage(
+    error instanceof Error ? error.message : "Failed to load reports."
+  );
+  setLoading(false);
+  return;
+}
     setLoading(false);
   }
 
