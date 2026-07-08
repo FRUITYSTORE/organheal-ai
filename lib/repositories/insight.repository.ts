@@ -50,4 +50,25 @@ export async function countGeneratedInsights(
   return (data || []).filter(
     (item) => item.ai_status === "generated"
   ).length;
+}export type GeneratedIntelligenceSummary = {
+  id: number;
+  created_at: string | null;
+};
+
+export async function getRecentGeneratedIntelligenceResults(
+  userId: string,
+  limit = 20
+): Promise<GeneratedIntelligenceSummary[]> {
+  const { data, error } = await supabase
+    .from("generated_intelligence_results")
+    .select("id, created_at")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data || []) as GeneratedIntelligenceSummary[];
 }
