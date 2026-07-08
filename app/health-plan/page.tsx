@@ -10,6 +10,7 @@ import HealthMetricsGrid from "@/app/components/health-plan/HealthMetricsGrid";
 import MedicalSafetyNotice from "@/app/components/health-plan/MedicalSafetyNotice";
 import LoadingPanel from "@/app/components/health-plan/LoadingPanel";
 import HealthPlanHero from "@/app/components/health-plan/HealthPlanHero";
+import { getHealthPlanSummary } from "@/lib/services/health-plan/health-plan.service";
 
 type Language = "en" | "ar";
 
@@ -441,71 +442,22 @@ export default function HealthPlanPage() {
     }
 
     const userId = userData.user.id;
+try {
+  const summary = await getHealthPlanSummary(userId);
 
-    const [
-      assessmentResponse,
-      checkInResponse,
-      reportsResponse,
-      insightsResponse,
-      generatedResponse,
-      historyResponse,
-    ] = await Promise.all([
-      supabase
-        .from("organ_assessments")
-        .select("organ_name, score, risk_level")
-        .eq("user_id", userId)
-        .order("score", { ascending: true })
-        .limit(1)
-        .maybeSingle(),
-      supabase
-        .from("daily_checkins")
-        .select("mood, wellness_score, created_at")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle(),
-      supabase
-        .from("uploaded_lab_files")
-        .select("id, file_name, extraction_status, created_at, extracted_at")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false })
-        .limit(10),
-      supabase
-        .from("health_insights")
-        .select("id, report_id, ai_status, risk_level, summary, next_best_action, created_at")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false })
-        .limit(10),
-      supabase
-        .from("generated_intelligence_results")
-        .select("insight_id, report_id, updated_at")
-        .eq("user_id", userId)
-        .order("updated_at", { ascending: false })
-        .limit(10),
-      supabase
-        .from("health_history")
-        .select("id, created_at")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false })
-        .limit(10),
-    ]);
-
-    if (assessmentResponse.error) {
-      setPriorityAssessment(null);
-    } else {
-      setPriorityAssessment((assessmentResponse.data || null) as PriorityAssessment | null);
-    }
-
-    if (checkInResponse.error) {
-      setLatestCheckIn(null);
-    } else {
-      setLatestCheckIn((checkInResponse.data || null) as DailyCheckIn | null);
-    }
-
-    setUploadedReports((reportsResponse.data || []) as UploadedReport[]);
-    setHealthInsights((insightsResponse.data || []) as HealthInsight[]);
-    setGeneratedResults((generatedResponse.data || []) as GeneratedResult[]);
-    setHistoryItems((historyResponse.data || []) as HistoryItem[]);
+  setPriorityAssessment(summary.priorityAssessment as PriorityAssessment | null);
+  setLatestCheckIn(summary.latestCheckIn as DailyCheckIn | null);
+  setUploadedReports(summary.uploadedReports as UploadedReport[]);
+  setHealthInsights(summary.healthInsights as HealthInsight[]);
+  setGeneratedResults(summary.generatedResults as GeneratedResult[]);
+  setHistoryItems(summary.historyItems as HistoryItem[]);
+} catch (error) {
+  setMessage(
+    error instanceof Error ? "Database error: " + error.message : "Database error"
+  );
+  setLoading(false);
+  return;
+}
     setLoading(false);
   }
 
