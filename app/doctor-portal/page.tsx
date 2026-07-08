@@ -11,6 +11,7 @@ import ReportAnalysisBrief from "@/app/components/doctor-portal/ReportAnalysisBr
 import TrustNotice from "@/app/components/ui/TrustNotice";
 import SectionHeader from "@/app/components/ui/SectionHeader";
 import StatusBadge from "@/app/components/ui/StatusBadge";
+import { getDoctorPortalSummary } from "@/lib/services/doctor/doctor-portal.service";
 
 type Language = "en" | "ar";
 
@@ -198,76 +199,25 @@ export default function DoctorPortalPage() {
 
     const userId = userData.user.id;
 
-    const { data: organData, error: organError } = await supabase
-      .from("organ_assessments")
-      .select("organ_name, score, risk_level, notes, created_at")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-.limit(20);
+    try {
+  const doctorSummary = await getDoctorPortalSummary(userId);
 
-    if (organError) {
-      setMessage(
-        currentIsArabic
-          ? "حدث خطأ في قاعدة البيانات: " + organError.message
-          : "Database error: " + organError.message
-      );
-      setLoading(false);
-      return;
-    }
-
-    const { data: checkInData } = await supabase
-      .from("daily_checkins")
-      .select("mood, wellness_score, created_at")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    const { data: reportData } = await supabase
-      .from("uploaded_lab_files")
-      .select("id, file_name, extraction_status, created_at")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-.limit(20);
-
-    const { data: insightData } = await supabase
-      .from("health_insights")
-      .select(
-        "id, report_id, insight_title, ai_status, summary, key_findings, recommendations, doctor_brief, created_at"
-      )
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-.limit(20);
-
-    const insightIds = (insightData || []).map((item) => item.id);
-
-    let savedRows: SavedAnalysis[] = [];
-
-    if (insightIds.length > 0) {
-      const { data: savedData } = await supabase
-        .from("generated_intelligence_results")
-        .select("insight_id, updated_at")
-        .eq("user_id", userId)
-        .in("insight_id", insightIds)
-        .order("updated_at", { ascending: false })
-.limit(20);
-
-      savedRows = (savedData || []) as SavedAnalysis[];
-    }
-
-    const { data: historyData } = await supabase
-      .from("health_history")
-      .select("id, module_name, score, status, created_at")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(10);
-
-    setAssessments((organData || []) as Assessment[]);
-    setDailyCheckIn((checkInData || null) as DailyCheckIn | null);
-    setUploadedReports((reportData || []) as UploadedReport[]);
-    setHealthInsights((insightData || []) as HealthInsight[]);
-    setSavedAnalysis(savedRows);
-    setHealthHistory((historyData || []) as HealthHistory[]);
+  setAssessments(doctorSummary.assessments as Assessment[]);
+  setDailyCheckIn(doctorSummary.latestCheckIn as DailyCheckIn | null);
+  setUploadedReports(doctorSummary.uploadedReports as UploadedReport[]);
+  setHealthInsights(doctorSummary.healthInsights as HealthInsight[]);
+  setSavedAnalysis(doctorSummary.savedAnalysis as SavedAnalysis[]);
+  setHealthHistory(doctorSummary.healthHistory as HealthHistory[]);
+} catch (error) {
+  setMessage(
+    currentIsArabic
+      ? "حدث خطأ في قاعدة البيانات: " +
+          (error instanceof Error ? error.message : "")
+      : "Database error: " + (error instanceof Error ? error.message : "")
+  );
+  setLoading(false);
+  return;
+}
     setLoading(false);
   }
 

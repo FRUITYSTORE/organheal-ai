@@ -71,4 +71,26 @@ export async function getRecentGeneratedIntelligenceResults(
   }
 
   return (data || []) as GeneratedIntelligenceSummary[];
+}export type GeneratedResultSummary = {
+  insight_id: number | null;
+  report_id: number | null;
+  updated_at: string | null;
+};
+
+export async function getRecentGeneratedResults(
+  userId: string,
+  limit = 20
+): Promise<GeneratedResultSummary[]> {
+  const { data, error } = await supabase
+    .from("generated_intelligence_results")
+    .select("insight_id, report_id, updated_at")
+    .eq("user_id", userId)
+    .order("updated_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data || []) as GeneratedResultSummary[];
 }

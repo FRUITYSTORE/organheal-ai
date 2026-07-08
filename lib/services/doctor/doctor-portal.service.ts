@@ -2,42 +2,39 @@ import { getRecentAssessments } from "@/lib/repositories/assessment.repository";
 import { getLatestCheckIn } from "@/lib/repositories/checkin.repository";
 import { getRecentUploadedReports } from "@/lib/repositories/reports.repository";
 import {
-  getRecentGeneratedResults,
+  getRecentGeneratedIntelligenceResults,
   getRecentHealthInsights,
 } from "@/lib/repositories/insight.repository";
 import { getRecentHealthHistory } from "@/lib/repositories/history.repository";
 
-export async function getHealthPlanSummary(userId: string) {
+export async function getDoctorPortalSummary(userId: string) {
   const [
     assessments,
     latestCheckIn,
     uploadedReports,
     healthInsights,
     generatedResults,
-    historyItems,
+    healthHistory,
   ] = await Promise.all([
     getRecentAssessments(userId, 20),
     getLatestCheckIn(userId),
-    getRecentUploadedReports(userId, 10),
-    getRecentHealthInsights(userId, 10),
-    getRecentGeneratedResults(userId, 10),
+    getRecentUploadedReports(userId, 20),
+    getRecentHealthInsights(userId, 20),
+    getRecentGeneratedIntelligenceResults(userId, 20),
     getRecentHealthHistory(userId, 10),
   ]);
 
-  const priorityAssessment =
-    assessments.length > 0
-      ? [...assessments].sort((a, b) => a.score - b.score)[0]
-      : null;
+  const savedAnalysis = generatedResults.map((item) => ({
+    insight_id: item.id,
+    updated_at: item.created_at,
+  }));
 
   return {
-    priorityAssessment,
+    assessments,
     latestCheckIn,
     uploadedReports,
     healthInsights,
-    generatedResults,
-   historyItems: historyItems.map((item) => ({
-  ...item,
-  id: Number(item.id),
-})),
+    savedAnalysis,
+    healthHistory,
   };
 }
