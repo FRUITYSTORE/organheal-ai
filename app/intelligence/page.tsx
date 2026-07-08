@@ -301,9 +301,12 @@ export default function IntelligencePage() {
 
     const { data: insights, error: insightsError } = await supabase
       .from("health_insights")
-      .select("*")
+   .select(
+  "id, report_id, insight_title, summary, key_findings, recommendations, doctor_brief, ai_status, risk_level, next_best_action, report_type, created_at"
+)
       .eq("user_id", userId)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+.limit(20);
 
     if (insightsError) {
       setMessage(
