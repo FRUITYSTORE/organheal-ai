@@ -1,23 +1,32 @@
 import { PatientSummary } from "@/lib/models/patient";
+import { EngineResult } from "@/lib/health-intelligence/models/engine-result";
 
 export type HealthRiskLevel = "low" | "moderate" | "high" | "unknown";
 
-export type HealthRiskResult = {
+export type HealthRiskData = {
   overallRisk: HealthRiskLevel;
-  confidence: number;
   drivers: string[];
   recommendation: string;
 };
 
-export function calculateHealthRisk(patient: PatientSummary): HealthRiskResult {
+export type HealthRiskResult = EngineResult<HealthRiskData>;
+
+export function calculateHealthRisk(
+  patient: PatientSummary
+): HealthRiskResult {
+  const generatedAt = new Date().toISOString();
   const drivers: string[] = [];
 
   if (!patient.assessments.length) {
     return {
-      overallRisk: "unknown",
+      status: "insufficient-data",
       confidence: 0,
-      drivers: ["No assessment data is available yet."],
-      recommendation: "Complete your first health assessment.",
+      generatedAt,
+      data: {
+        overallRisk: "unknown",
+        drivers: ["No assessment data is available yet."],
+        recommendation: "Complete your first health assessment.",
+      },
     };
   }
 
@@ -31,7 +40,10 @@ export function calculateHealthRisk(patient: PatientSummary): HealthRiskResult {
     drivers.push(`${lowestAssessment.organ_name} assessment is below target.`);
   }
 
-  if (patient.latestCheckIn && patient.latestCheckIn.wellness_score < 60) {
+  if (
+    patient.latestCheckIn &&
+    patient.latestCheckIn.wellness_score < 60
+  ) {
     drivers.push("Latest Check-In wellness score is below 60.");
   }
 
@@ -39,7 +51,9 @@ export function calculateHealthRisk(patient: PatientSummary): HealthRiskResult {
   const hasGeneratedInsights = patient.generatedResults.length > 0;
 
   if (hasReports && !hasGeneratedInsights) {
-    drivers.push("Reports are uploaded but analysis is not fully generated yet.");
+    drivers.push(
+      "Reports are uploaded but analysis is not fully generated yet."
+    );
   }
 
   const overallRisk =
@@ -51,24 +65,26 @@ export function calculateHealthRisk(patient: PatientSummary): HealthRiskResult {
       ? "moderate"
       : "low";
 
-  const confidence =
-    patient.assessments.length > 0 && patient.latestCheckIn && hasReports
-      ? 85
-      : patient.assessments.length > 0 && patient.latestCheckIn
-      ? 70
-      : 55;
-
-  const recommendation =
-    overallRisk === "high"
-      ? "Review this risk with a healthcare professional and keep your follow-up data updated."
-      : overallRisk === "moderate"
-      ? "Follow your health plan and update Check-In regularly."
-      : "Maintain healthy habits and continue routine follow-up.";
-
   return {
-    overallRisk,
-    confidence,
-    drivers: drivers.length ? drivers : ["No major risk drivers detected."],
-    recommendation,
+    status: "ready",
+    confidence:
+      patient.assessments.length >= 3
+        ? 85
+        : patient.assessments.length >= 1
+        ? 65
+        : 0,
+    generatedAt,
+    data: {
+      overallRisk,
+      drivers: drivers.length
+        ? drivers
+        : ["No major risk drivers detected."],
+      recommendation:
+        overallRisk === "high"
+          ? "Review this risk with a healthcare professional and keep your follow-up data updated."
+          : overallRisk === "moderate"
+          ? "Follow your health plan and update Check-In regularly."
+          : "Maintain healthy habits and continue routine follow-up.",
+    },
   };
 }
