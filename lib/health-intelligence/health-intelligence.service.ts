@@ -4,9 +4,7 @@ import {
   PatientPriorityResult,
 } from "@/lib/health-intelligence/engines/priority.engine";
 
-export type HealthIntelligenceResult = {
-  priority: PatientPriorityResult;
-};
+import { HealthIntelligenceResult } from "@/lib/health-intelligence/models/health-intelligence-result";
 
 export function buildHealthIntelligence(input: {
   assessments: AssessmentSummary[];
