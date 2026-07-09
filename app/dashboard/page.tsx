@@ -389,6 +389,7 @@ const [healthIntelligence, setHealthIntelligence] =
   font-weight: 900;
   font-size: 0.85rem;
 }
+  
         .dashboardCommandCenterPage .dashboardCommandHero {
           background:
             radial-gradient(circle at 88% 10%, rgba(20, 184, 166, 0.36), transparent 34%),
@@ -1107,24 +1108,75 @@ const [healthIntelligence, setHealthIntelligence] =
     marginTop: "18px",
   }}
 >
-  <span className="dashboardBadge">
-    {isArabic ? "جاهزية الرحلة 100%" : "Journey Ready 100%"}
+  <div className="dashboardBadgeRow">
+  <span className="dashboardMiniBadge">
+    {isArabic
+      ? `اكتمال الرحلة ${progressPercent}%`
+      : `Journey Ready ${progressPercent}%`}
   </span>
 
-  <span className="dashboardBadge">
-    {isArabic ? "الذكاء الصحي محدث" : "Health Intelligence Updated"}
+  <span className="dashboardMiniBadge">
+    {isArabic
+      ? "آخر تحليل: اليوم"
+      : "Last Intelligence: Today"}
   </span>
 
-  <span className="dashboardBadge">
-    {isArabic ? "الخطوة التالية" : "Next Milestone"}
+  <span className="dashboardMiniBadge">
+    {isArabic
+      ? "المراجعة القادمة: 7 أيام"
+      : "Next Review: 7 Days"}
   </span>
 </div>
+</div>
+<div className="dashboardPlanProgress">
+  <div
+    className="dashboardPlanProgressBar"
+    style={{ width: `${progressPercent}%` }}
+  />
+</div>
 
-                <div className="dashboardActionRow">
-                  <Link href={nextStep.href} className="dashboardPrimaryAction">
-                    {nextStep.buttonText}
-                  </Link>
-                </div>
+<p className="dashboardPlanProgressText">
+  {isArabic
+    ? "جميع البيانات الصحية الأساسية أصبحت متصلة."
+    : "All core health information has been connected."}
+</p>
+                <div className="dashboardSignalGrid" style={{ marginTop: "22px" }}>
+  <article>
+    <span>{isArabic ? "جاهزية الرحلة" : "Journey readiness"}</span>
+    <strong>{progressPercent}%</strong>
+    <p>
+      {isArabic
+        ? `${completedSteps} من 4 عناصر أساسية مكتملة.`
+        : `${completedSteps} of 4 core elements completed.`}
+    </p>
+  </article>
+
+  <article>
+    <span>{isArabic ? "الأولوية الحالية" : "Current priority"}</span>
+    <strong>{currentPriority}</strong>
+    <p>
+      {isArabic
+        ? "مرتبطة بالذكاء الصحي الحالي."
+        : "Linked to the current health intelligence."}
+    </p>
+  </article>
+
+  <article>
+    <span>{isArabic ? "الهدف التالي" : "Next milestone"}</span>
+    <strong>{nextStep.tag}</strong>
+    <p>{nextStep.label}</p>
+  </article>
+</div>
+
+<div className="dashboardActionRow" style={{ marginTop: "22px" }}>
+  <Link href={nextStep.href} className="dashboardPrimaryAction">
+    {nextStep.buttonText}
+  </Link>
+
+  <Link href="/reports" className="dashboardSecondaryAction">
+    {isArabic ? "مراجعة التقارير" : "Review Reports"}
+  </Link>
+</div>
 
               </section>
             </section>
