@@ -1,4 +1,4 @@
-import { ClinicalFinding } from "@/lib/health-intelligence/engines/clinical-findings.engine";
+import { ClinicalFinding } from "@/lib/health-intelligence/models/clinical-findings";
 import { PatientPriorityResult } from "@/lib/health-intelligence/engines/priority.engine";
 import { HealthRiskResult } from "@/lib/health-intelligence/engines/risk.engine";
 

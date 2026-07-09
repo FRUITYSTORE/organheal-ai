@@ -6,6 +6,8 @@ import { supabase } from "@/lib/supabase";
 import { buildHealthIntelligence } from "../../lib/intelligenceBuilder";
 import DashboardOverviewGrid from "@/app/components/dashboard/DashboardOverviewGrid";
 import { getDashboardSummary } from "@/lib/services/dashboard/dashboard.service";
+import DashboardIntelligenceCard from "@/app/components/dashboard/DashboardIntelligenceCard";
+import { HealthIntelligenceResult } from "@/lib/health-intelligence/models/health-intelligence-result";
 
 type Language = "en" | "ar";
 
@@ -164,6 +166,7 @@ export default function DashboardPage() {
   setAssessments(dashboardSummary.assessments as Assessment[]);
   setDailyCheckIn(dashboardSummary.latestCheckIn as DailyCheckIn | null);
   setReportStats(dashboardSummary.reportStats);
+  setHealthIntelligence(dashboardSummary.healthIntelligence);
 } catch (error) {
   setMessage(
     error instanceof Error ? "Database error: " + error.message : "Database error"
@@ -181,7 +184,8 @@ export default function DashboardPage() {
   const hasCheckIn = Boolean(dailyCheckIn);
   const hasAnyData =
     hasAssessments || hasReports || hasSavedIntelligence || hasCheckIn;
-
+const [healthIntelligence, setHealthIntelligence] =
+  useState<HealthIntelligenceResult | null>(null);
   const intelligence = buildHealthIntelligence({
     assessments: assessments.map((item) => ({
       organ_name: item.organ_name,
@@ -1057,6 +1061,12 @@ export default function DashboardPage() {
               </div>
             </section>
  <DashboardOverviewGrid cards={overviewCards} />
+ {healthIntelligence && (
+  <DashboardIntelligenceCard
+    intelligence={healthIntelligence}
+    isArabic={isArabic}
+  />
+)}
             <section className="dashboardCommandLayout">
               <div className="dashboardCommandPanel">
                 <span>{isArabic ? "ملخص التحليل الصحي" : "Health analysis snapshot"}</span>
