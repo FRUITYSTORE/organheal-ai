@@ -1,6 +1,7 @@
 import { AssessmentSummary } from "@/lib/models/assessment";
+import { EngineResult } from "@/lib/health-intelligence/models/engine-result";
 
-export type PatientPriorityResult = {
+export type PatientPriorityData = {
   priorityOrgan: string | null;
   priorityScore: number | null;
   riskLevel: "low" | "moderate" | "high" | "unknown";
@@ -8,16 +9,25 @@ export type PatientPriorityResult = {
   nextAction: string;
 };
 
+export type PatientPriorityResult = EngineResult<PatientPriorityData>;
+
 export function calculatePatientPriority(
   assessments: AssessmentSummary[]
 ): PatientPriorityResult {
+  const generatedAt = new Date().toISOString();
+
   if (!assessments.length) {
     return {
-      priorityOrgan: null,
-      priorityScore: null,
-      riskLevel: "unknown",
-      reason: "No assessment data is available yet.",
-      nextAction: "Complete your first health assessment.",
+      status: "insufficient-data",
+      confidence: 0,
+      generatedAt,
+      data: {
+        priorityOrgan: null,
+        priorityScore: null,
+        riskLevel: "unknown",
+        reason: "No assessment data is available yet.",
+        nextAction: "Complete your first health assessment.",
+      },
     };
   }
 
@@ -35,10 +45,15 @@ export function calculatePatientPriority(
       : "Maintain healthy habits and continue regular follow-up.";
 
   return {
-    priorityOrgan: priority.organ_name,
-    priorityScore: priority.score,
-    riskLevel,
-    reason: `${priority.organ_name} has the lowest current score among available assessments.`,
-    nextAction,
+    status: "ready",
+    confidence: assessments.length >= 3 ? 80 : 60,
+    generatedAt,
+    data: {
+      priorityOrgan: priority.organ_name,
+      priorityScore: priority.score,
+      riskLevel,
+      reason: `${priority.organ_name} has the lowest current score among available assessments.`,
+      nextAction,
+    },
   };
 }
