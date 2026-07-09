@@ -1,15 +1,13 @@
-import { AssessmentSummary } from "@/lib/models/assessment";
-import {
-  calculatePatientPriority,
-  PatientPriorityResult,
-} from "@/lib/health-intelligence/engines/priority.engine";
-
+import { PatientSummary } from "@/lib/models/patient";
+import { calculatePatientPriority } from "@/lib/health-intelligence/engines/priority.engine";
+import { calculateHealthRisk } from "@/lib/health-intelligence/engines/risk.engine";
 import { HealthIntelligenceResult } from "@/lib/health-intelligence/models/health-intelligence-result";
 
-export function buildHealthIntelligence(input: {
-  assessments: AssessmentSummary[];
-}): HealthIntelligenceResult {
+export function buildHealthIntelligence(
+  patient: PatientSummary
+): HealthIntelligenceResult {
   return {
-    priority: calculatePatientPriority(input.assessments),
+    priority: calculatePatientPriority(patient.assessments),
+    risk: calculateHealthRisk(patient),
   };
 }
