@@ -1,33 +1,21 @@
-import { getRecentAssessments } from "@/lib/repositories/assessment.repository";
-import { getLatestCheckIn } from "@/lib/repositories/checkin.repository";
 import { getUserProfileSummary } from "@/lib/repositories/profile.repository";
 import { countUploadedReports } from "@/lib/repositories/reports.repository";
-import {
-  getRecentGeneratedIntelligenceResults,
-  getRecentHealthInsights,
-} from "@/lib/repositories/insight.repository";
+import { getRecentGeneratedIntelligenceResults } from "@/lib/repositories/insight.repository";
+import { getPatientSummary } from "@/lib/services/shared/patient-summary.service";
 
 export async function getDashboardSummary(userId: string) {
-  const [
-    profile,
-    assessments,
-    latestCheckIn,
-    uploadedReports,
-    generatedResults,
-    healthInsights,
-  ] = await Promise.all([
-    getUserProfileSummary(userId),
-    getRecentAssessments(userId, 20),
-    getLatestCheckIn(userId),
-    countUploadedReports(userId),
-    getRecentGeneratedIntelligenceResults(userId, 20),
-    getRecentHealthInsights(userId, 20),
-  ]);
+  const [profile, uploadedReports, generatedResults, patientSummary] =
+    await Promise.all([
+      getUserProfileSummary(userId),
+      countUploadedReports(userId),
+      getRecentGeneratedIntelligenceResults(userId, 20),
+      getPatientSummary(userId),
+    ]);
 
   const generatedInsights =
     generatedResults.length > 0
       ? generatedResults
-      : healthInsights.filter(
+      : patientSummary.healthInsights.filter(
           (item) =>
             item.ai_status === "Generated" || item.ai_status === "generated"
         );
@@ -36,8 +24,8 @@ export async function getDashboardSummary(userId: string) {
 
   return {
     profile,
-    assessments,
-    latestCheckIn,
+    assessments: patientSummary.assessments,
+    latestCheckIn: patientSummary.latestCheckIn,
     reportStats: {
       uploadedReports,
       savedIntelligence: generatedInsights.length,
