@@ -11,6 +11,7 @@ import MedicalSafetyNotice from "@/app/components/health-plan/MedicalSafetyNotic
 import LoadingPanel from "@/app/components/health-plan/LoadingPanel";
 import HealthPlanHero from "@/app/components/health-plan/HealthPlanHero";
 import { getHealthPlanSummary } from "@/lib/services/health-plan/health-plan.service";
+import TodaysHealthMission from "@/app/components/health-plan/TodaysHealthMission";
 
 type Language = "en" | "ar";
 
@@ -1034,6 +1035,13 @@ try {
     scoreText: priorityScore === null ? "—" : `${priorityScore}/100`,
     progressPercent: clamp(100 - priorityScoreValue),
   }}
+/>
+
+<TodaysHealthMission
+  isArabic={isArabic}
+  priorityOrgan={priorityOrganDisplay}
+  priorityScore={priorityScore}
+ primaryAction={nextAction.detail}
 />
 
         {message && (
