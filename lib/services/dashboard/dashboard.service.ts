@@ -22,8 +22,9 @@ export async function getDashboardSummary(userId: string) {
         );
 
   const latestIntelligenceDate = generatedInsights[0]?.created_at || null;
-  const healthIntelligence = buildHealthIntelligence({
-  assessments: patientSummary.assessments,
+ const healthIntelligence = buildHealthIntelligence({
+  ...patientSummary,
+  profile,
 });
 
   return {
