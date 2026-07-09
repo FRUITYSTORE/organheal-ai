@@ -6,8 +6,9 @@ import {
   getRecentHealthInsights,
 } from "@/lib/repositories/insight.repository";
 import { getRecentHealthHistory } from "@/lib/repositories/history.repository";
+import { PatientSummary } from "@/lib/models/patient";
 
-export async function getPatientSummary(userId: string) {
+export async function getPatientSummary(userId: string): Promise<PatientSummary> {
   const [
     assessments,
     latestCheckIn,
@@ -25,6 +26,7 @@ export async function getPatientSummary(userId: string) {
   ]);
 
   return {
+    profile: null,
     assessments,
     latestCheckIn,
     uploadedReports,
