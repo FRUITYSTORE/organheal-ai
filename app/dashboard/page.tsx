@@ -378,7 +378,17 @@ const [healthIntelligence, setHealthIntelligence] =
     <main className="smartDashboardPage dashboardCommandCenterPage" dir={isArabic ? "rtl" : "ltr"} lang={isArabic ? "ar" : "en"}>
       <style>{`
         /* ORGANHEAL_DASHBOARD_FLOW_ALIGNMENT_V1 */
-
+.dashboardBadge {
+  display: inline-flex !important;
+  align-items: center;
+  border-radius: 999px;
+  padding: 8px 14px;
+  background: #ecfeff;
+  color: #0f766e !important;
+  border: 1px solid #99f6e4;
+  font-weight: 900;
+  font-size: 0.85rem;
+}
         .dashboardCommandCenterPage .dashboardCommandHero {
           background:
             radial-gradient(circle at 88% 10%, rgba(20, 184, 166, 0.36), transparent 34%),
@@ -1067,67 +1077,48 @@ const [healthIntelligence, setHealthIntelligence] =
     isArabic={isArabic}
   />
 )}
-            <section className="dashboardCommandLayout">
-              <div className="dashboardCommandPanel">
-                <span>{isArabic ? "ملخص التحليل الصحي" : "Health analysis snapshot"}</span>
-
-                <h2>
-                  {hasAssessments || hasCheckIn
-                    ? `${intelligence.overallScore}/100`
-                    : hasReports
-                    ? isArabic
-                      ? "التقارير جاهزة"
-                      : "Reports ready"
-                    : isArabic
-                    ? "ابدأ رحلتك الصحية"
-                    : "Start your health journey"}
-                </h2>
-
-                {(hasAssessments || hasCheckIn) && (
-                  <strong className={`dashboardScore ${getScoreClass(intelligence.overallScore)}`}>
-                    {getStatus(intelligence.overallScore, isArabic)}
-                  </strong>
-                )}
-
-                <p>
-                  {hasAssessments || hasCheckIn
-                    ? isArabic
-                      ? `منطقة الأولوية الحالية: ${currentPriority}.`
-                      : `Current priority area: ${currentPriority}.`
-                    : hasReports
-                    ? isArabic
-                      ? "لديك تقارير محفوظة. الخطوة التالية هي توليد تحليل التقرير أو إضافة تقييم صحي."
-                      : "You have saved reports. The next step is to analyze report or add a health assessment."
-                    : isArabic
-                    ? "ابدأ بتقييم صحي أو ارفع تقريرًا طبيًا حتى يبدأ OrganHeal ببناء الصورة الصحية."
-                    : "Start with an assessment or upload a report so OrganHeal can build your health picture."}
-                </p>
-
-                <div className="dashboardSignalGrid">
-                  {commandCards.map((card) => (
-                    <article key={card.label}>
-                      <span>{card.label}</span>
-                      <strong>{card.value}</strong>
-                      <p>{card.note}</p>
-                    </article>
-                  ))}
-                </div>
-
-                <div className="dashboardActionRow">
-                  <Link href="/reports" className="dashboardPrimaryAction">
-                    {isArabic ? "مكتبة التقارير" : "Reports Library"}
-                  </Link>
-
-                  <Link href="/health-plan" className="dashboardSecondaryAction">
-                    {isArabic ? "خطة المتابعة" : "Health Plan"}
-                  </Link>
-                </div>
-              </div>
-
-              <aside className="dashboardNextActionPanel">
+            <section className="dashboardCommandLayout" style={{ gridTemplateColumns: "1fr" }}>
+              <section
+  className="dashboardNextActionPanel"
+  style={{
+    width: "100%",
+    maxWidth: "100%",
+  }}
+>
                 <span>{nextStep.tag}</span>
                 <h2>{nextStep.label}</h2>
+                <p
+  style={{
+    marginTop: "14px",
+    fontWeight: 700,
+    color: "#0f766e",
+  }}
+>
+  {isArabic
+    ? "هذه هي أهم خطوة يمكنك القيام بها الآن."
+    : "This is the highest-impact action you can take right now."}
+</p>
                 <p>{nextStep.description}</p>
+                <div
+  style={{
+    display: "flex",
+    gap: "12px",
+    flexWrap: "wrap",
+    marginTop: "18px",
+  }}
+>
+  <span className="dashboardBadge">
+    {isArabic ? "جاهزية الرحلة 100%" : "Journey Ready 100%"}
+  </span>
+
+  <span className="dashboardBadge">
+    {isArabic ? "الذكاء الصحي محدث" : "Health Intelligence Updated"}
+  </span>
+
+  <span className="dashboardBadge">
+    {isArabic ? "الخطوة التالية" : "Next Milestone"}
+  </span>
+</div>
 
                 <div className="dashboardActionRow">
                   <Link href={nextStep.href} className="dashboardPrimaryAction">
@@ -1135,7 +1126,7 @@ const [healthIntelligence, setHealthIntelligence] =
                   </Link>
                 </div>
 
-              </aside>
+              </section>
             </section>
 
             {!hasAnyData && (
