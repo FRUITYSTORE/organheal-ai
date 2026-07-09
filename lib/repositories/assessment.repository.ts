@@ -1,12 +1,5 @@
 import { supabase } from "@/lib/supabase";
-
-export type AssessmentSummary = {
-  organ_name: string;
-  score: number;
-  risk_level: string | null;
-  notes?: string | null;
-  created_at?: string;
-};
+import { AssessmentSummary } from "@/lib/models/assessment";
 
 export async function getRecentAssessments(
   userId: string,
