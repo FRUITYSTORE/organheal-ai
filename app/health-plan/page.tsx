@@ -378,7 +378,8 @@ export default function HealthPlanPage() {
         href: "#tasks",
         button: text("Continue Tasks", "متابعة المهام"),
       };
-
+const activeNextAction =
+  healthPlanView?.nextAction ?? nextAction;
   const taskStorageKey = `organheal-health-plan-tasks-${priorityOrgan}`;
 
   const baseTasks = isArabic
@@ -1041,8 +1042,8 @@ try {
     "A guided plan that connects assessments, medical reports, report analysis, check-ins, and practical weekly follow-up.",
     "خطة موجهة تربط التقييمات، التقارير الطبية، تحليل التقارير، Check-In، والمتابعة العملية الأسبوعية."
   )}
-  primaryHref={healthPlanView?.nextAction.href ?? nextAction.href}
-primaryLabel={healthPlanView?.nextAction.button ?? nextAction.button}
+  primaryHref={activeNextAction.href}
+primaryLabel={activeNextAction.button}
   analysisHref={latestAnalysisHref}
   analysisLabel={
     hasGenerated
@@ -1066,9 +1067,9 @@ primaryLabel={healthPlanView?.nextAction.button ?? nextAction.button}
   priorityOrgan={priorityOrganDisplay}
   priorityScore={priorityScore}
   primaryAction={
-    healthPlanView?.todaysMission.primaryAction ??
-    nextAction.detail
-  }
+  healthPlanView?.todaysMission.primaryAction ??
+  activeNextAction.detail
+}
 />
 
         {message && (
@@ -1119,8 +1120,8 @@ primaryLabel={healthPlanView?.nextAction.button ?? nextAction.button}
         <section className="hpPanel">
           <div className="hpPanelHeader">
             <div className="hpPanelKicker">{text("Next best action", "الخطوة التالية")}</div>
-            <h2 className="hpPanelTitle">{healthPlanView?.nextAction.title ?? nextAction.title}</h2>
-            <p className="hpPanelText">{healthPlanView?.nextAction.detail ?? nextAction.detail}</p>
+            <h2 className="hpPanelTitle">{activeNextAction.title}</h2>
+<p className="hpPanelText">{activeNextAction.detail}</p>
           </div>
 
           <div className="hpSignalGrid">
@@ -1244,18 +1245,16 @@ primaryLabel={healthPlanView?.nextAction.button ?? nextAction.button}
 
         <WeeklyTasksPanel
   kicker={text("Action tasks", "مهام المتابعة")}
-  title={`${completedCount} / ${
-  healthPlanView?.weeklyTasks.length || planTasks.length
-} ${text("completed", "مكتملة")}`}
+  title={`${completedCount} / ${activeTasks.length} ${text(
+  "completed",
+  "مكتملة"
+)}`}
   description={text(
     "Choose simple tasks. Progress is saved on this device.",
     "اختر مهام بسيطة. يتم حفظ التقدم على هذا الجهاز."
   )}
-  tasks={
-  healthPlanView?.weeklyTasks.length
-    ? healthPlanView.weeklyTasks
-    : planTasks
-}
+ tasks={activeTasks}
+
   completedTasks={completedTasks}
   progressPercent={progressPercent}
   doneLabel={text("Done", "تم")}
