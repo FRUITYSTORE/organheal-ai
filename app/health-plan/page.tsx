@@ -55,7 +55,21 @@ type HistoryItem = {
   id: number;
   created_at: string | null;
 };
-
+type HealthPlanView = {
+  todaysMission: {
+    title: string;
+    primaryAction: string;
+  };
+  nextAction: {
+    title: string;
+    detail: string;
+    href: string;
+    button: string;
+    priority: "urgent" | "high" | "routine";
+  };
+  weeklyTasks: string[];
+  nextReviewDays: number;
+};
 const organTasks: Record<string, string[]> = {
   Heart: [
     "Review the latest patient summary and doctor-ready brief.",
@@ -227,6 +241,8 @@ export default function HealthPlanPage() {
   const [healthInsights, setHealthInsights] = useState<HealthInsight[]>([]);
   const [generatedResults, setGeneratedResults] = useState<GeneratedResult[]>([]);
   const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
+  const [healthPlanView, setHealthPlanView] =
+  useState<HealthPlanView | null>(null);
   const [completedTasks, setCompletedTasks] = useState<string[]>([]);
 
   const isArabic = language === "ar";
@@ -392,12 +408,19 @@ export default function HealthPlanPage() {
     [language, priorityOrgan, hasGenerated, hasReports, hasCheckIn]
   );
 
-  const completedCount = completedTasks.filter((task) =>
-    planTasks.includes(task)
-  ).length;
+ const activeTasks =
+  healthPlanView?.weeklyTasks.length
+    ? healthPlanView.weeklyTasks
+    : planTasks;
 
-  const progressPercent =
-    planTasks.length > 0 ? Math.round((completedCount / planTasks.length) * 100) : 0;
+const completedCount = completedTasks.filter((task) =>
+  activeTasks.includes(task)
+).length;
+
+const progressPercent =
+  activeTasks.length > 0
+    ? Math.round((completedCount / activeTasks.length) * 100)
+    : 0;
 
   const sevenDayPlan = [
     text("Day 1: Review your priority and next best action.", "اليوم 1: راجع الأولوية والخطوة التالية."),
@@ -452,6 +475,7 @@ try {
   setHealthInsights(summary.healthInsights as HealthInsight[]);
   setGeneratedResults(summary.generatedResults as GeneratedResult[]);
   setHistoryItems(summary.historyItems as HistoryItem[]);
+  setHealthPlanView(summary.healthPlanView);
 } catch (error) {
   setMessage(
     error instanceof Error ? "Database error: " + error.message : "Database error"
@@ -1017,8 +1041,8 @@ try {
     "A guided plan that connects assessments, medical reports, report analysis, check-ins, and practical weekly follow-up.",
     "خطة موجهة تربط التقييمات، التقارير الطبية، تحليل التقارير، Check-In، والمتابعة العملية الأسبوعية."
   )}
-  primaryHref={nextAction.href}
-  primaryLabel={nextAction.button}
+  primaryHref={healthPlanView?.nextAction.href ?? nextAction.href}
+primaryLabel={healthPlanView?.nextAction.button ?? nextAction.button}
   analysisHref={latestAnalysisHref}
   analysisLabel={
     hasGenerated
@@ -1041,7 +1065,10 @@ try {
   isArabic={isArabic}
   priorityOrgan={priorityOrganDisplay}
   priorityScore={priorityScore}
- primaryAction={nextAction.detail}
+  primaryAction={
+    healthPlanView?.todaysMission.primaryAction ??
+    nextAction.detail
+  }
 />
 
         {message && (
@@ -1092,8 +1119,8 @@ try {
         <section className="hpPanel">
           <div className="hpPanelHeader">
             <div className="hpPanelKicker">{text("Next best action", "الخطوة التالية")}</div>
-            <h2 className="hpPanelTitle">{nextAction.title}</h2>
-            <p className="hpPanelText">{nextAction.detail}</p>
+            <h2 className="hpPanelTitle">{healthPlanView?.nextAction.title ?? nextAction.title}</h2>
+            <p className="hpPanelText">{healthPlanView?.nextAction.detail ?? nextAction.detail}</p>
           </div>
 
           <div className="hpSignalGrid">
@@ -1217,12 +1244,18 @@ try {
 
         <WeeklyTasksPanel
   kicker={text("Action tasks", "مهام المتابعة")}
-  title={`${completedCount} / ${planTasks.length} ${text("completed", "مكتملة")}`}
+  title={`${completedCount} / ${
+  healthPlanView?.weeklyTasks.length || planTasks.length
+} ${text("completed", "مكتملة")}`}
   description={text(
     "Choose simple tasks. Progress is saved on this device.",
     "اختر مهام بسيطة. يتم حفظ التقدم على هذا الجهاز."
   )}
-  tasks={planTasks}
+  tasks={
+  healthPlanView?.weeklyTasks.length
+    ? healthPlanView.weeklyTasks
+    : planTasks
+}
   completedTasks={completedTasks}
   progressPercent={progressPercent}
   doneLabel={text("Done", "تم")}

@@ -1,3 +1,5 @@
+import { buildHealthIntelligence } from "@/lib/health-intelligence/health-intelligence.service";
+import { buildHealthPlanViewModel } from "@/lib/services/health-plan/health-plan-view.service";
 import { getPatientSummary } from "@/lib/services/shared/patient-summary.service";
 
 export async function getHealthPlanSummary(userId: string) {
@@ -7,6 +9,12 @@ export async function getHealthPlanSummary(userId: string) {
     patientSummary.assessments.length > 0
       ? [...patientSummary.assessments].sort((a, b) => a.score - b.score)[0]
       : null;
+
+  const intelligence = buildHealthIntelligence(patientSummary);
+
+  const healthPlanView = buildHealthPlanViewModel(
+    intelligence.recommendations
+  );
 
   return {
     priorityAssessment,
@@ -18,5 +26,6 @@ export async function getHealthPlanSummary(userId: string) {
       ...item,
       id: Number(item.id),
     })),
+    healthPlanView,
   };
 }
