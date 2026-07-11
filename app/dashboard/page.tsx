@@ -198,7 +198,7 @@ const [healthIntelligence, setHealthIntelligence] =
   const progressPercent = Math.round((completedSteps / 4) * 100);
 
  const currentPriority = localizeOrganName(
-  healthIntelligence?.priority.data.priorityOrgan ||
+  healthIntelligence?.priority.data.priorityOrgan||
     latestAssessment?.organ_name ||
     "General Health",
   isArabic
