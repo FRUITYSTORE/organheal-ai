@@ -34,16 +34,40 @@ function severityColor(severity: string) {
   if (severity === "warning") return "#f59e0b";
   return "#0891b2";
 }
+function healthLevelLabel(
+  level: string,
+  isArabic: boolean
+) {
+  switch (level) {
+    case "critical":
+      return isArabic ? "حرج" : "CRITICAL";
 
+    case "high-concern":
+      return isArabic ? "يحتاج متابعة" : "HIGH CONCERN";
+
+    case "moderate":
+      return isArabic ? "متوسط" : "MODERATE";
+
+    case "stable":
+      return isArabic ? "مستقر" : "STABLE";
+
+    case "strong":
+      return isArabic ? "قوي" : "STRONG";
+
+    default:
+      return level;
+  }
+}
 export default function DashboardIntelligenceCard({
   intelligence,
   isArabic,
 }: DashboardIntelligenceCardProps) {
   const topFindings = intelligence.findings.slice(0, 3);
-  const risk = intelligence.risk.data.overallRisk;
-  const priorityOrgan = intelligence.priority.data.priorityOrgan;
-  const priorityScore = intelligence.priority.data.priorityScore;
-
+const risk = intelligence.risk.data.overallRisk;
+const priorityOrgan = intelligence.priority.data.priorityOrgan;
+const priorityScore = intelligence.priority.data.priorityScore;
+const healthScore = intelligence.healthScore.data.score;
+const healthLevel = intelligence.healthScore.data.level;
   return (
     <section
   className="dashboardIntelligenceCard"
@@ -146,12 +170,10 @@ export default function DashboardIntelligenceCard({
                   : `${priorityScore}/100`,
             },
             {
-              label: isArabic ? "مصادر القرار" : "Based on",
-              value: String(topFindings.length),
-              detail: isArabic
-                ? "تقييمات، تقارير، Check-In، وتحليل محفوظ"
-                : "Assessments, reports, Check-In, and saved analysis",
-            },
+  label: isArabic ? "نتيجة الذكاء الصحي" : "Health Score",
+  value: `${healthScore}/100`,
+  detail: healthLevelLabel(healthLevel, isArabic),
+},
           ].map((item) => (
             <div key={item.label}>
               <span style={{ color: "#67e8f9", fontWeight: 950 }}>{item.label}</span>
