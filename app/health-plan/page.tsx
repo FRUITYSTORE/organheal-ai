@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import PriorityCard from "@/app/components/health-plan/PriorityCard";
 import WeeklyTasksPanel from "@/app/components/health-plan/WeeklyTasksPanel";
@@ -12,6 +12,8 @@ import LoadingPanel from "@/app/components/health-plan/LoadingPanel";
 import HealthPlanHero from "@/app/components/health-plan/HealthPlanHero";
 import { getHealthPlanSummary } from "@/lib/services/health-plan/health-plan.service";
 import TodaysHealthMission from "@/app/components/health-plan/TodaysHealthMission";
+import { buildFallbackNextAction } from "@/lib/services/health-plan/health-plan-fallback";
+import { buildFallbackTasks } from "@/lib/services/health-plan/task-library";
 
 type Language = "en" | "ar";
 
@@ -70,107 +72,7 @@ type HealthPlanView = {
   weeklyTasks: string[];
   nextReviewDays: number;
 };
-const organTasks: Record<string, string[]> = {
-  Heart: [
-    "Review the latest patient summary and doctor-ready brief.",
-    "Check blood pressure at least 3 times this week.",
-    "Reduce salty or heavily processed food for the next 7 days.",
-    "Walk for 20 minutes on at least 4 days this week.",
-    "Track chest pain, shortness of breath, palpitation, or unusual fatigue.",
-  ],
-  Kidney: [
-    "Review creatinine, eGFR, urine, and blood pressure trends.",
-    "Track hydration and urine changes for the next 7 days.",
-    "Avoid unnecessary NSAID painkillers unless prescribed.",
-    "Reduce high-salt meals this week.",
-    "Prepare questions for your doctor if swelling or urine changes appear.",
-  ],
-  Liver: [
-    "Review liver enzymes and previous liver-related reports.",
-    "Avoid alcohol and unnecessary supplements.",
-    "Track fatigue, abdominal discomfort, yellowing, or dark urine.",
-    "Reduce fried and high-fat meals this week.",
-    "Prepare medication and supplement list for doctor review.",
-  ],
-  Lung: [
-    "Track cough, breathing difficulty, and activity tolerance.",
-    "Avoid smoke, dust, and strong respiratory irritants.",
-    "Record oxygen saturation if clinically relevant and available.",
-    "Review inhaler or respiratory medication adherence if applicable.",
-    "Prepare questions if symptoms worsen at night or with activity.",
-  ],
-  Brain: [
-    "Track sleep quality, headache pattern, focus, and stress level.",
-    "Reduce late screen exposure before sleep.",
-    "Practice a short breathing or relaxation routine daily.",
-    "Review dizziness, weakness, numbness, or neurological warning symptoms.",
-    "Prepare notes about sleep, headache, focus, or mood patterns.",
-  ],
-  Metabolic: [
-    "Review glucose, HbA1c, cholesterol, weight, and waist trends.",
-    "Reduce sugary drinks and refined carbohydrates.",
-    "Walk or exercise for at least 20 minutes on 4 days this week.",
-    "Track weight or waist measurement weekly.",
-    "Choose one healthier meal replacement each day.",
-  ],
-  General: [
-    "Review the latest report analysis.",
-    "Complete one wellness check-in this week.",
-    "Choose one realistic lifestyle action for the next 7 days.",
-    "Repeat your priority assessment after 4 weeks.",
-  ],
-};
 
-const arabicOrganTasks: Record<string, string[]> = {
-  Heart: [
-    "راجع ملخص المريض وملخص الطبيب من آخر تحليل.",
-    "قِس ضغط الدم ثلاث مرات على الأقل هذا الأسبوع.",
-    "قلل الملح والأطعمة المصنعة خلال الأيام القادمة.",
-    "امشِ 20 دقيقة في 4 أيام على الأقل هذا الأسبوع.",
-    "تابع ألم الصدر، ضيق النفس، الخفقان، أو التعب غير المعتاد.",
-  ],
-  Kidney: [
-    "راجع الكرياتينين، eGFR، البول، وضغط الدم.",
-    "تابع شرب الماء وتغيرات البول خلال 7 أيام.",
-    "تجنب المسكنات غير الضرورية إلا إذا وصفها الطبيب.",
-    "قلل الوجبات عالية الملح هذا الأسبوع.",
-    "جهز أسئلة للطبيب إذا ظهر تورم أو تغير في البول.",
-  ],
-  Liver: [
-    "راجع إنزيمات الكبد والتقارير السابقة.",
-    "تجنب الكحول والمكملات غير الضرورية.",
-    "تابع التعب، ألم البطن، الاصفرار، أو تغير لون البول.",
-    "قلل المقليات والدهون هذا الأسبوع.",
-    "جهز قائمة الأدوية والمكملات لمراجعتها مع الطبيب.",
-  ],
-  Lung: [
-    "تابع السعال، ضيق التنفس، وتحمل النشاط.",
-    "تجنب الدخان والغبار والروائح القوية.",
-    "سجل الأكسجين إذا كان مناسبًا ومتاحًا.",
-    "راجع الالتزام بالبخاخات أو أدوية التنفس إن وجدت.",
-    "جهز أسئلة إذا زادت الأعراض ليلًا أو مع الحركة.",
-  ],
-  Brain: [
-    "تابع النوم، الصداع، التركيز، ومستوى التوتر.",
-    "قلل استخدام الشاشات قبل النوم.",
-    "مارس تنفسًا هادئًا أو استرخاء قصيرًا يوميًا.",
-    "راجع الدوخة، الضعف، التنميل، أو أي أعراض عصبية مقلقة.",
-    "جهز ملاحظات عن النوم أو الصداع أو التركيز أو المزاج.",
-  ],
-  Metabolic: [
-    "راجع السكر، HbA1c، الدهون، الوزن، ومحيط الخصر.",
-    "قلل المشروبات السكرية والكربوهيدرات المكررة.",
-    "امشِ أو مارس نشاطًا 20 دقيقة في 4 أيام هذا الأسبوع.",
-    "تابع الوزن أو محيط الخصر أسبوعيًا.",
-    "اختر وجبة واحدة يوميًا تكون صحية أكثر.",
-  ],
-  General: [
-    "راجع آخر تحليل للتقرير الطبي.",
-    "أكمل تحديثًا صحيًا واحدًا هذا الأسبوع.",
-    "اختر عادة صحية واقعية للأيام السبعة القادمة.",
-    "أعد تقييم الأولوية الصحية بعد 4 أسابيع.",
-  ],
-};
 
 function getStoredLanguage(): Language {
   if (typeof window === "undefined") return "en";
@@ -329,62 +231,19 @@ export default function HealthPlanPage() {
       ? text("Moderate follow-up", "متابعة متوسطة")
       : text("Preventive follow-up", "متابعة وقائية");
 
-  const nextAction = !hasAssessment
-    ? {
-        title: text("Start your health assessment", "ابدأ التقييم الصحي"),
-        detail: text(
-          "Complete one assessment so OrganHeal can identify the priority area.",
-          "أكمل تقييمًا واحدًا حتى يحدد OrganHeal الأولوية الصحية."
-        ),
-        href: "/assessment",
-        button: text("Start Assessment", "ابدأ التقييم"),
-      }
-    : !hasReports
-    ? {
-        title: text("Upload your first medical report", "ارفع أول تقرير طبي"),
-        detail: text(
-          "A report makes the plan more specific and easier to review.",
-          "وجود تقرير يجعل الخطة أدق وأسهل للمراجعة."
-        ),
-        href: "/lab-upload",
-        button: text("Upload Report", "رفع تقرير"),
-      }
-    : !hasGenerated
-    ? {
-        title: text("Analyze the latest report", "حلّل آخر تقرير"),
-        detail: text(
-          "Generate a patient-friendly summary and doctor-ready brief.",
-          "ولّد ملخصًا مبسطًا للمريض وملخصًا جاهزًا للطبيب."
-        ),
-        href: latestAnalysisHref,
-        button: text("Analyze Report", "تحليل التقرير"),
-      }
-    : !hasCheckIn
-    ? {
-        title: text("Complete today check-in", "أكمل Check-In اليوم"),
-        detail: text(
-          "Add sleep, stress, energy, activity, and mood so the plan becomes more personal.",
-          "أضف النوم، الضغط، الطاقة، النشاط، والمزاج حتى تصبح الخطة أكثر شخصية."
-        ),
-        href: "/checkin",
-        button: text("Open Check-In", "فتح Check-In"),
-      }
-    : {
-        title: text("Continue this week plan", "تابع خطة هذا الأسبوع"),
-        detail: text(
-          "Your plan is active. Continue the practical tasks below.",
-          "الخطة فعالة الآن. تابع المهام العملية بالأسفل."
-        ),
-        href: "#tasks",
-        button: text("Continue Tasks", "متابعة المهام"),
-      };
-const activeNextAction =
-  healthPlanView?.nextAction ?? nextAction;
-  const taskStorageKey = `organheal-health-plan-tasks-${priorityOrgan}`;
+ const fallbackNextAction = buildFallbackNextAction({
+  hasAssessment,
+  hasReports,
+  hasGenerated,
+  hasCheckIn,
+  latestAnalysisHref,
+  text,
+});
 
-  const baseTasks = isArabic
-    ? arabicOrganTasks[priorityOrgan] || arabicOrganTasks.General
-    : organTasks[priorityOrgan] || organTasks.General;
+const activeNextAction =
+  healthPlanView?.nextAction ?? fallbackNextAction;
+
+  const taskStorageKey = `organheal-health-plan-tasks-${priorityOrgan}`;
 
   const dynamicTasks = [
     hasGenerated
@@ -403,11 +262,14 @@ const activeNextAction =
       : null,
   ].filter(Boolean) as string[];
 
-  const planTasks = useMemo(
-    () => [...dynamicTasks, ...baseTasks].slice(0, 8),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [language, priorityOrgan, hasGenerated, hasReports, hasCheckIn]
-  );
+  const planTasks = buildFallbackTasks({
+  priorityOrgan,
+  isArabic,
+  hasGenerated,
+  hasReports,
+  hasCheckIn,
+  text,
+});
 
  const activeTasks =
   healthPlanView?.weeklyTasks.length
