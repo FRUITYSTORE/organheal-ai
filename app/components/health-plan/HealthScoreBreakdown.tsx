@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+
 type HealthScoreContributor = {
   id:
     | "assessment"
@@ -40,6 +44,8 @@ export default function HealthScoreBreakdown({
   summary,
   contributors,
 }: HealthScoreBreakdownProps) {
+  const [showDetails, setShowDetails] = useState(false);
+
   return (
     <section className="hpPanel">
       <div className="hpPanelHeader">
@@ -56,73 +62,101 @@ export default function HealthScoreBreakdown({
         <p className="hpPanelText">{summary}</p>
       </div>
 
-      <div className="hpScoreSummaryGrid">
-        <div className="hpScoreSummaryItem">
-          <span>{isArabic ? "النتيجة" : "Health score"}</span>
-          <strong>{score}/100</strong>
+      <div className="hpScoreOverview">
+        <div className="hpScorePrimary">
+          <span>
+            {isArabic
+              ? "الذكاء الصحي العام"
+              : "Overall Health Intelligence"}
+          </span>
+
+          <strong>
+            {score}
+            <small>/100</small>
+          </strong>
         </div>
 
-        <div className="hpScoreSummaryItem">
-          <span>{isArabic ? "مستوى الثقة" : "Confidence"}</span>
-          <strong>{confidence}%</strong>
-        </div>
+        <div className="hpScoreMeta">
+          <div>
+            <span>{isArabic ? "مستوى الثقة" : "Confidence"}</span>
+            <strong>{confidence}%</strong>
+          </div>
 
-        <div className="hpScoreSummaryItem">
-          <span>{isArabic ? "اكتمال البيانات" : "Data completeness"}</span>
-          <strong>{dataCompleteness}%</strong>
+          <div>
+            <span>{isArabic ? "اكتمال البيانات" : "Data completeness"}</span>
+            <strong>{dataCompleteness}%</strong>
+          </div>
         </div>
       </div>
 
-      <div className="hpContributorGrid">
-        {contributors.map((contributor) => (
-          <article
-            className={`hpContributorCard ${
-              contributor.available ? "available" : "missing"
-            }`}
-            key={contributor.id}
-          >
-            <div className="hpContributorTop">
-              <div>
-                <span className="hpContributorLabel">
-                  {isArabic
-                    ? arabicLabels[contributor.id]
-                    : contributor.label}
-                </span>
+      <div className="hpScoreDetailsAction">
+        <button
+          type="button"
+          className="hpSecondary"
+          onClick={() => setShowDetails((current) => !current)}
+          aria-expanded={showDetails}
+        >
+          {showDetails
+            ? isArabic
+              ? "إخفاء تفاصيل النتيجة"
+              : "Hide score details"
+            : isArabic
+              ? "عرض تفاصيل النتيجة"
+              : "Show score details"}
+        </button>
+      </div>
 
-                <strong className="hpContributorScore">
-                  {contributor.available
-                    ? `${contributor.score}/100`
-                    : isArabic
-                      ? "غير متاح"
-                      : "Not available"}
-                </strong>
-              </div>
+      {showDetails && (
+        <div className="hpContributorList">
+          {contributors.map((contributor) => {
+            const displayedScore = contributor.available
+              ? Math.min(Math.max(contributor.score, 0), 100)
+              : 0;
 
-              <span
-                className={`hpBadge ${
-                  contributor.available ? "good" : "warn"
+            return (
+              <article
+                className={`hpContributorRow ${
+                  contributor.available ? "available" : "missing"
                 }`}
+                key={contributor.id}
               >
-                {contributor.weight}% {isArabic ? "وزن" : "weight"}
-              </span>
-            </div>
+                <div className="hpContributorRowHeader">
+                  <div>
+                    <span className="hpContributorRowLabel">
+                      {isArabic
+                        ? arabicLabels[contributor.id]
+                        : contributor.label}
+                    </span>
 
-            <div className="hpContributorProgress">
-              <span
-                style={{
-                  width: contributor.available
-                    ? `${Math.min(Math.max(contributor.score, 0), 100)}%`
-                    : "0%",
-                }}
-              />
-            </div>
+                    <p className="hpContributorRowText">
+                      {contributor.explanation}
+                    </p>
+                  </div>
 
-            <p className="hpContributorText">
-              {contributor.explanation}
-            </p>
-          </article>
-        ))}
-      </div>
+                  <div className="hpContributorRowValue">
+                    <strong>
+                      {contributor.available
+                        ? contributor.score
+                        : isArabic
+                          ? "—"
+                          : "—"}
+                    </strong>
+
+                    <span>
+                      {contributor.weight}%{" "}
+                      {isArabic ? "وزن" : "weight"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="hpContributorBar">
+                  <span style={{ width: `${displayedScore}%` }} />
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 }

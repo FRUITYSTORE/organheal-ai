@@ -13,8 +13,9 @@ export async function getHealthPlanSummary(userId: string) {
   const intelligence = buildHealthIntelligence(patientSummary);
 
   const healthPlanView = buildHealthPlanViewModel(
-    intelligence.recommendations
-  );
+  intelligence.recommendations,
+  intelligence.healthScore
+);
 
   return {
     priorityAssessment,
