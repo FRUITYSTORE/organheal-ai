@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { buildHealthIntelligence } from "../../lib/intelligenceBuilder";
 import DashboardOverviewGrid from "@/app/components/dashboard/DashboardOverviewGrid";
 import { getDashboardSummary } from "@/lib/services/dashboard/dashboard.service";
 import DashboardIntelligenceCard from "@/app/components/dashboard/DashboardIntelligenceCard";
@@ -186,16 +185,6 @@ export default function DashboardPage() {
     hasAssessments || hasReports || hasSavedIntelligence || hasCheckIn;
 const [healthIntelligence, setHealthIntelligence] =
   useState<HealthIntelligenceResult | null>(null);
-  const intelligence = buildHealthIntelligence({
-    assessments: assessments.map((item) => ({
-      organ_name: item.organ_name,
-      score: item.score,
-      created_at: item.created_at,
-    })),
-    labReport: null,
-    dailyCheckIn,
-    isArabic,
-  });
 
   const latestAssessment = assessments[0] || null;
 
@@ -208,10 +197,12 @@ const [healthIntelligence, setHealthIntelligence] =
 
   const progressPercent = Math.round((completedSteps / 4) * 100);
 
-  const currentPriority = localizeOrganName(
-    intelligence.priorityOrgan || latestAssessment?.organ_name || "General Health",
-    isArabic
-  );
+ const currentPriority = localizeOrganName(
+  healthIntelligence?.priority.data.priorityOrgan ||
+    latestAssessment?.organ_name ||
+    "General Health",
+  isArabic
+);
 
   const nextStep: NextStep = !hasAssessments && !hasReports
     ? {
