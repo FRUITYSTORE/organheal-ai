@@ -3,11 +3,21 @@ import {
   HealthRecommendation,
   RecommendationData,
 } from "@/lib/health-intelligence/engines/recommendation.engine";
+import { HealthScoreData } from "@/lib/health-intelligence/engines/health-score.engine";
 
 export type HealthPlanViewModel = {
   status: EngineResult<RecommendationData>["status"];
   confidence: number;
   generatedAt: string;
+
+  healthScore: {
+  score: number;
+  level: HealthScoreData["level"];
+  confidence: number;
+  dataCompleteness: number;
+  summary: string;
+  contributors: HealthScoreData["contributors"];
+};
 
   todaysMission: {
     title: string;
@@ -46,7 +56,8 @@ function getActionButton(action: HealthRecommendation) {
 }
 
 export function buildHealthPlanViewModel(
-  recommendations: EngineResult<RecommendationData>
+  recommendations: EngineResult<RecommendationData>,
+  healthScore: EngineResult<HealthScoreData>
 ): HealthPlanViewModel {
   const { data, status, confidence, generatedAt } = recommendations;
 
@@ -54,6 +65,15 @@ export function buildHealthPlanViewModel(
     status,
     confidence,
     generatedAt,
+
+ healthScore: {
+  score: healthScore.data.score,
+  level: healthScore.data.level,
+  confidence: healthScore.confidence,
+  dataCompleteness: healthScore.data.dataCompleteness,
+  summary: healthScore.data.summary,
+  contributors: healthScore.data.contributors,
+},
 
     todaysMission: {
       title: data.todaysMission,

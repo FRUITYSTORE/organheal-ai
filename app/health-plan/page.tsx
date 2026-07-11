@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import PriorityCard from "@/app/components/health-plan/PriorityCard";
 import WeeklyTasksPanel from "@/app/components/health-plan/WeeklyTasksPanel";
 import FollowUpRoadmap from "@/app/components/health-plan/FollowUpRoadmap";
 import HealthMetricsGrid from "@/app/components/health-plan/HealthMetricsGrid";
@@ -14,6 +13,7 @@ import { getHealthPlanSummary } from "@/lib/services/health-plan/health-plan.ser
 import TodaysHealthMission from "@/app/components/health-plan/TodaysHealthMission";
 import { buildFallbackNextAction } from "@/lib/services/health-plan/health-plan-fallback";
 import { buildFallbackTasks } from "@/lib/services/health-plan/task-library";
+import HealthScoreBreakdown from "@/app/components/health-plan/HealthScoreBreakdown";
 
 type Language = "en" | "ar";
 
@@ -53,15 +53,40 @@ type GeneratedResult = {
   updated_at: string | null;
 };
 
-type HistoryItem = {
-  id: number;
-  created_at: string | null;
-};
 type HealthPlanView = {
+  healthScore: {
+  score: number;
+  level:
+    | "critical"
+    | "high-concern"
+    | "moderate"
+    | "stable"
+    | "strong";
+  confidence: number;
+  dataCompleteness: number;
+  summary: string;
+  contributors: Array<{
+    id:
+      | "assessment"
+      | "checkin"
+      | "reports"
+      | "analysis"
+      | "history"
+      | "findings";
+    label: string;
+    score: number;
+    weight: number;
+    weightedScore: number;
+    available: boolean;
+    explanation: string;
+  }>;
+};
+
   todaysMission: {
     title: string;
     primaryAction: string;
   };
+
   nextAction: {
     title: string;
     detail: string;
@@ -69,6 +94,7 @@ type HealthPlanView = {
     button: string;
     priority: "urgent" | "high" | "routine";
   };
+
   weeklyTasks: string[];
   nextReviewDays: number;
 };
@@ -112,21 +138,7 @@ function localize(value: string | null | undefined, isArabic: boolean) {
   return map[clean] || clean || "غير متاح";
 }
 
-function formatDate(value?: string | null) {
-  if (!value) return "—";
 
-  try {
-    return new Intl.DateTimeFormat("en", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(new Date(value));
-  } catch {
-    return "—";
-  }
-}
 
 function clamp(value: number, min = 0, max = 100) {
   return Math.min(Math.max(value, min), max);
@@ -142,7 +154,6 @@ export default function HealthPlanPage() {
   const [uploadedReports, setUploadedReports] = useState<UploadedReport[]>([]);
   const [healthInsights, setHealthInsights] = useState<HealthInsight[]>([]);
   const [generatedResults, setGeneratedResults] = useState<GeneratedResult[]>([]);
-  const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
   const [healthPlanView, setHealthPlanView] =
   useState<HealthPlanView | null>(null);
   const [completedTasks, setCompletedTasks] = useState<string[]>([]);
@@ -212,24 +223,22 @@ export default function HealthPlanPage() {
   const hasReports = uploadedReports.length > 0;
   const hasGenerated = generatedCount > 0;
   const hasCheckIn = Boolean(latestCheckIn);
-  const hasHistory = historyItems.length > 0;
 
-  const readinessScore = [
-    hasAssessment,
-    hasReports,
-    hasGenerated,
-    hasCheckIn,
-    hasHistory,
-  ].filter(Boolean).length * 20;
+const healthScoreLevelDisplay = healthPlanView
+  ? text(
+      healthPlanView.healthScore.level
+        .replace("-", " ")
+        .replace(/\b\w/g, (character) => character.toUpperCase()),
+      {
+        critical: "حرج",
+        "high-concern": "يحتاج متابعة مكثفة",
+        moderate: "متوسط",
+        stable: "مستقر",
+        strong: "قوي",
+      }[healthPlanView.healthScore.level]
+    )
+  : text("Not available", "غير متاح");
 
-  const followUpLevel =
-    priorityScore === null
-      ? text("Start with assessment", "ابدأ بالتقييم")
-      : priorityScore < 50
-      ? text("High follow-up", "متابعة عالية")
-      : priorityScore < 80
-      ? text("Moderate follow-up", "متابعة متوسطة")
-      : text("Preventive follow-up", "متابعة وقائية");
 
  const fallbackNextAction = buildFallbackNextAction({
   hasAssessment,
@@ -244,23 +253,6 @@ const activeNextAction =
   healthPlanView?.nextAction ?? fallbackNextAction;
 
   const taskStorageKey = `organheal-health-plan-tasks-${priorityOrgan}`;
-
-  const dynamicTasks = [
-    hasGenerated
-      ? text(
-          "Review the patient summary and doctor-ready brief from the latest analysis.",
-          "راجع ملخص المريض وملخص الطبيب من آخر تحليل."
-        )
-      : hasReports
-      ? text("Analyze the latest saved report.", "حلّل أحدث تقرير محفوظ.")
-      : null,
-    !hasCheckIn
-      ? text("Complete a wellness check-in this week.", "أكمل تحديثًا صحيًا هذا الأسبوع.")
-      : null,
-    hasReports
-      ? text("Review extracted reports and connect them to this plan.", "راجع التقارير واربطها بالخطة.")
-      : null,
-  ].filter(Boolean) as string[];
 
   const planTasks = buildFallbackTasks({
   priorityOrgan,
@@ -337,7 +329,6 @@ try {
   setUploadedReports(summary.uploadedReports as UploadedReport[]);
   setHealthInsights(summary.healthInsights as HealthInsight[]);
   setGeneratedResults(summary.generatedResults as GeneratedResult[]);
-  setHistoryItems(summary.historyItems as HistoryItem[]);
   setHealthPlanView(summary.healthPlanView);
 } catch (error) {
   setMessage(
@@ -653,49 +644,6 @@ try {
           line-height: 1.65;
         }
 
-        .hpTwoCol {
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-          gap: 20px;
-        }
-
-        .hpSignalGrid {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 14px;
-        }
-
-        .hpSignal {
-          padding: 16px;
-          border-radius: 20px;
-          background: #f8fafc;
-          border: 1px solid rgba(15, 23, 42, 0.10);
-          border-inline-start: 6px solid #0f766e;
-        }
-
-        .hpSignal:nth-child(2) {
-          border-inline-start-color: #2563eb;
-        }
-
-        .hpSignal:nth-child(3) {
-          border-inline-start-color: #d97706;
-        }
-
-        .hpSignalLabel {
-          color: #0f766e;
-          font-size: 0.73rem;
-          font-weight: 950;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-        }
-
-        .hpSignalValue {
-          margin-top: 8px;
-          color: #0f172a;
-          font-weight: 950;
-          font-size: 1.15rem;
-        }
-
         .hpSignalText {
           margin-top: 6px;
           color: #475569;
@@ -703,44 +651,7 @@ try {
           line-height: 1.55;
         }
 
-        .hpChecklist {
-          display: grid;
-          gap: 12px;
-        }
-
-        .hpCheckItem {
-          display: grid;
-          grid-template-columns: auto minmax(0, 1fr) auto;
-          gap: 12px;
-          align-items: center;
-          padding: 14px;
-          border-radius: 18px;
-          background: white;
-          border: 1px solid rgba(15, 23, 42, 0.10);
-          border-inline-start: 6px solid #0f766e;
-          box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
-        }
-
-        .hpDot {
-          width: 12px;
-          height: 12px;
-          border-radius: 999px;
-          background: #0f766e;
-          box-shadow: 0 0 0 5px rgba(15, 118, 110, 0.12);
-        }
-
-        .hpCheckTitle {
-          color: #0f172a;
-          font-weight: 950;
-        }
-
-        .hpCheckText {
-          margin-top: 3px;
-          color: #475569;
-          font-weight: 720;
-        }
-
-        .hpBadge {
+             .hpBadge {
           display: inline-flex;
           min-height: 30px;
           align-items: center;
@@ -856,17 +767,117 @@ try {
           color: #061826 !important;
           text-shadow: none !important;
         }
-        @media (max-width: 980px) {
-          .hpHero,
-          .hpTwoCol,
-          .hpSignalGrid {
-            grid-template-columns: 1fr;
-          }
+          .hpScoreSummaryGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
 
-          .hpToolGrid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-          }
-        }
+.hpScoreSummaryItem {
+  padding: 18px;
+  border-radius: 20px;
+  background: #f8fafc;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+}
+
+.hpScoreSummaryItem span {
+  display: block;
+  color: #475569;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.hpScoreSummaryItem strong {
+  display: block;
+  margin-top: 8px;
+  color: #0f172a;
+  font-size: 1.65rem;
+  font-weight: 950;
+}
+
+.hpContributorGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.hpContributorCard {
+  padding: 18px;
+  border-radius: 22px;
+  background: #f8fafc;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+}
+
+.hpContributorCard.available {
+  border-inline-start: 6px solid #0f766e;
+}
+
+.hpContributorCard.missing {
+  border-inline-start: 6px solid #d97706;
+}
+
+.hpContributorTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.hpContributorLabel {
+  display: block;
+  color: #475569;
+  font-size: 0.76rem;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.hpContributorScore {
+  display: block;
+  margin-top: 7px;
+  color: #0f172a;
+  font-size: 1.3rem;
+  font-weight: 950;
+}
+
+.hpContributorProgress {
+  height: 10px;
+  margin-top: 16px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #e2e8f0;
+}
+
+.hpContributorProgress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #06b6d4, #10b981);
+}
+
+.hpContributorText {
+  margin: 13px 0 0;
+  color: #475569;
+  font-weight: 720;
+  line-height: 1.55;
+}
+       @media (max-width: 980px) {
+  .hpHero {
+    grid-template-columns: 1fr;
+  }
+
+  .hpToolGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hpScoreSummaryGrid,
+  .hpContributorGrid {
+    grid-template-columns: 1fr;
+  }
+}
 
         @media (max-width: 640px) {
           .hpToolGrid {
@@ -943,14 +954,16 @@ primaryLabel={activeNextAction.button}
         <HealthMetricsGrid
   items={[
     {
-      tone: "blue",
-      label: text("Priority", "الأولوية"),
-      value: priorityOrganDisplay,
-      hint:
-        priorityScore === null
-          ? text("Assessment needed", "يحتاج تقييم")
-          : `${priorityScore}/100`,
-    },
+  tone: "blue",
+  label: text("Health intelligence", "الذكاء الصحي"),
+  value: healthPlanView?.healthScore.score ?? "—",
+  hint: healthPlanView
+    ? `${healthScoreLevelDisplay} · ${healthPlanView.healthScore.confidence}% ${text(
+        "confidence",
+        "ثقة"
+      )}`
+    : text("Calculating score", "جاري حساب النتيجة"),
+},
     {
       tone: "teal",
       label: text("Reports", "التقارير"),
@@ -978,132 +991,53 @@ primaryLabel={activeNextAction.button}
     },
   ]}
 />
+{healthPlanView && (
+  <HealthScoreBreakdown
+    isArabic={isArabic}
+    score={healthPlanView.healthScore.score}
+    confidence={healthPlanView.healthScore.confidence}
+    dataCompleteness={
+      healthPlanView.healthScore.dataCompleteness
+    }
+    summary={healthPlanView.healthScore.summary}
+    contributors={healthPlanView.healthScore.contributors}
+  />
+)}
 
-        <section className="hpPanel">
-          <div className="hpPanelHeader">
-            <div className="hpPanelKicker">{text("Next best action", "الخطوة التالية")}</div>
-            <h2 className="hpPanelTitle">{activeNextAction.title}</h2>
-<p className="hpPanelText">{activeNextAction.detail}</p>
-          </div>
+        <article className="hpPanel">
+  <div className="hpPanelHeader">
+    <div className="hpPanelKicker">
+      {text("Reports and analysis", "التقارير والتحليل")}
+    </div>
 
-          <div className="hpSignalGrid">
-            <div className="hpSignal">
-              <div className="hpSignalLabel">{text("Follow-up level", "مستوى المتابعة")}</div>
-              <div className="hpSignalValue">{followUpLevel}</div>
-              <div className="hpSignalText">
-                {text("Based on the current priority and available data.", "حسب الأولوية الحالية والبيانات المتوفرة.")}
-              </div>
-            </div>
+    <h2 className="hpPanelTitle">
+      {hasGenerated
+        ? text("Analysis is saved", "التحليل محفوظ")
+        : text("Analysis is still needed", "التحليل ما زال مطلوبًا")}
+    </h2>
+  </div>
 
-            <div className="hpSignal">
-              <div className="hpSignalLabel">{text("Latest report", "آخر تقرير")}</div>
-              <div className="hpSignalValue">
-                {latestReport?.file_name || text("Not uploaded", "لم يتم الرفع")}
-              </div>
-              <div className="hpSignalText">
-                {latestReport
-                  ? formatDate(latestReport.created_at)
-                  : text("Upload a report to strengthen this plan.", "ارفع تقريرًا لتقوية الخطة.")}
-              </div>
-            </div>
+  <p className="hpSignalText">
+    {latestInsight?.next_best_action ||
+      latestInsight?.summary ||
+      text(
+        "Analyze your latest report so this plan can become more specific and useful.",
+        "حلّل آخر تقرير حتى تصبح الخطة أكثر دقة وفائدة."
+      )}
+  </p>
 
-            <div className="hpSignal">
-              <div className="hpSignalLabel">{text("Latest analysis", "آخر تحليل")}</div>
-              <div className="hpSignalValue">
-                {hasGenerated ? text("Saved", "محفوظ") : text("Missing", "غير موجود")}
-              </div>
-              <div className="hpSignalText">
-                {latestGenerated?.updated_at
-                  ? formatDate(latestGenerated.updated_at)
-                  : text("Analyze the latest report for better guidance.", "حلّل آخر تقرير لتوجيه أفضل.")}
-              </div>
-            </div>
-          </div>
-        </section>
+  <div className="hpActions">
+    <Link href={latestAnalysisHref} className="hpPrimary">
+      {hasGenerated
+        ? text("Review Analysis", "مراجعة التحليل")
+        : text("Analyze Latest Report", "تحليل آخر تقرير")}
+    </Link>
 
-        <section className="hpTwoCol">
-          <article className="hpPanel">
-            <div className="hpPanelHeader">
-              <div className="hpPanelKicker">{text("Plan command center", "مركز قيادة الخطة")}</div>
-              <h2 className="hpPanelTitle">
-                {text("What makes this plan stronger?", "ما الذي يجعل هذه الخطة أقوى؟")}
-              </h2>
-            </div>
-
-            <div className="hpChecklist">
-              {[
-                {
-                  label: text("Health assessment", "التقييم الصحي"),
-                  note: text("Defines the priority area.", "يحدد الأولوية الصحية."),
-                  ready: hasAssessment,
-                },
-                {
-                  label: text("Medical reports", "التقارير الطبية"),
-                  note: text("Adds clinical context.", "تضيف سياقًا طبيًا."),
-                  ready: hasReports,
-                },
-                {
-                  label: text("Report analysis", "تحليل التقرير"),
-                  note: text("Turns reports into summaries.", "يحول التقرير إلى ملخصات."),
-                  ready: hasGenerated,
-                },
-                {
-                  label: "Check-In",
-                  note: text("Reflects daily symptoms and habits.", "يعكس الأعراض والعادات اليومية."),
-                  ready: hasCheckIn,
-                },
-                {
-                  label: text("Health history", "التاريخ الصحي"),
-                  note: text("Helps compare progress over time.", "يساعد على مقارنة التقدم."),
-                  ready: hasHistory,
-                },
-              ].map((item) => (
-                <div className="hpCheckItem" key={item.label}>
-                  <span className="hpDot" />
-                  <div>
-                    <div className="hpCheckTitle">{item.label}</div>
-                    <div className="hpCheckText">{item.note}</div>
-                  </div>
-                  <span className={`hpBadge ${item.ready ? "good" : "warn"}`}>
-                    {item.ready ? text("Ready", "جاهز") : text("Pending", "بانتظار")}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </article>
-
-          <article className="hpPanel">
-            <div className="hpPanelHeader">
-              <div className="hpPanelKicker">{text("Reports and analysis", "التقارير والتحليل")}</div>
-              <h2 className="hpPanelTitle">
-                {hasGenerated
-                  ? text("Analysis is saved", "التحليل محفوظ")
-                  : text("Analysis is still needed", "التحليل ما زال مطلوبًا")}
-              </h2>
-            </div>
-
-            <p className="hpSignalText">
-              {latestInsight?.next_best_action ||
-                latestInsight?.summary ||
-                text(
-                  "Analyze your latest report so this plan can become more specific and useful.",
-                  "حلّل آخر تقرير حتى تصبح الخطة أكثر دقة وفائدة."
-                )}
-            </p>
-
-            <div className="hpActions">
-              <Link href={latestAnalysisHref} className="hpPrimary">
-                {hasGenerated
-                  ? text("Review Analysis", "مراجعة التحليل")
-                  : text("Analyze Latest Report", "تحليل آخر تقرير")}
-              </Link>
-
-              <Link href="/reports" className="hpSecondary">
-                {text("Reports Library", "مكتبة التقارير")}
-              </Link>
-            </div>
-          </article>
-        </section>
+    <Link href="/reports" className="hpSecondary">
+      {text("Reports Library", "مكتبة التقارير")}
+    </Link>
+  </div>
+</article>
 
         <WeeklyTasksPanel
   kicker={text("Action tasks", "مهام المتابعة")}
