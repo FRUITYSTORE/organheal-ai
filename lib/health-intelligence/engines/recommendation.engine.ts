@@ -32,7 +32,38 @@ export type RecommendationData = {
 function clampScore(score: number) {
   return Math.min(Math.max(Math.round(score), 0), 100);
 }
+function getDaysSince(value?: string | null) {
+  if (!value) return null;
 
+  const timestamp = new Date(value).getTime();
+
+  if (Number.isNaN(timestamp)) return null;
+
+  const difference = Date.now() - timestamp;
+
+  return Math.max(
+    0,
+    Math.floor(difference / (1000 * 60 * 60 * 24))
+  );
+}
+
+function getAssessmentRecencyScore(daysSince: number | null) {
+  if (daysSince === null) return 5;
+  if (daysSince >= 90) return 20;
+  if (daysSince >= 30) return 12;
+  if (daysSince >= 14) return 5;
+
+  return 0;
+}
+
+function getCheckInRecencyScore(daysSince: number | null) {
+  if (daysSince === null) return 10;
+  if (daysSince >= 14) return 25;
+  if (daysSince >= 7) return 18;
+  if (daysSince >= 3) return 10;
+
+  return 0;
+}
 function getPriorityFromScore(
   score: number
 ): RecommendationPriority {
@@ -89,7 +120,13 @@ function buildRecommendationCandidates(
   const priorityAssessment = getPriorityAssessment(patient);
   const wellnessScore =
     patient.latestCheckIn?.wellness_score ?? null;
+const assessmentDaysSince = getDaysSince(
+  priorityAssessment?.created_at
+);
 
+const checkInDaysSince = getDaysSince(
+  patient.latestCheckIn?.created_at
+);
   const criticalFindings = findings.filter(
     (finding) => finding.severity === "critical"
   );
@@ -113,9 +150,14 @@ function buildRecommendationCandidates(
   }
 
   if (priorityAssessment) {
-    const assessmentUrgency = clampScore(
-      100 - priorityAssessment.score
-    );
+    const assessmentRecencyScore =
+  getAssessmentRecencyScore(assessmentDaysSince);
+
+const assessmentUrgency = clampScore(
+  100 -
+    priorityAssessment.score +
+    assessmentRecencyScore
+);
 
     recommendations.push(
       createRecommendation({
@@ -125,10 +167,17 @@ function buildRecommendationCandidates(
         category: "follow-up",
         href: "/health-plan",
         score: assessmentUrgency,
-        reasons: [
-          `The current assessment score is ${priorityAssessment.score}/100.`,
-          `${priorityAssessment.organ_name} is the current priority area.`,
-        ],
+       reasons: [
+  `The current assessment score is ${priorityAssessment.score}/100.`,
+  `${priorityAssessment.organ_name} is the current priority area.`,
+  assessmentDaysSince === null
+    ? "The assessment date is unavailable, reducing recency certainty."
+    : assessmentDaysSince >= 30
+      ? `The assessment is ${assessmentDaysSince} days old and may need updating.`
+      : `The assessment was updated ${assessmentDaysSince} day${
+          assessmentDaysSince === 1 ? "" : "s"
+        } ago.`,
+],
       })
     );
   }
@@ -190,10 +239,20 @@ function buildRecommendationCandidates(
     );
   }
 
-  if (wellnessScore !== null && wellnessScore < 70) {
-    const wellnessUrgency = clampScore(
-      100 - wellnessScore + 20
-    );
+  if (
+  wellnessScore !== null &&
+  (wellnessScore < 70 ||
+    getCheckInRecencyScore(checkInDaysSince) > 0)
+) {
+  const checkInRecencyScore =
+    getCheckInRecencyScore(checkInDaysSince);
+
+  const wellnessUrgency = clampScore(
+    100 -
+      wellnessScore +
+      20 +
+      checkInRecencyScore
+  );
 
     recommendations.push(
       createRecommendation({
@@ -205,9 +264,18 @@ function buildRecommendationCandidates(
         href: "/checkin",
         score: wellnessUrgency,
         reasons: [
-          `The latest wellness score is ${wellnessScore}/100.`,
-          "A lower wellness score needs closer short-term follow-up.",
-        ],
+  `The latest wellness score is ${wellnessScore}/100.`,
+  wellnessScore < 70
+    ? "A lower wellness score needs closer short-term follow-up."
+    : "The wellness score is acceptable, but the Check-In needs updating.",
+  checkInDaysSince === null
+    ? "The latest Check-In date is unavailable."
+    : checkInDaysSince >= 3
+      ? `The latest Check-In is ${checkInDaysSince} days old.`
+      : `The latest Check-In was completed ${checkInDaysSince} day${
+          checkInDaysSince === 1 ? "" : "s"
+        } ago.`,
+],
       })
     );
   }
