@@ -1,3 +1,4 @@
+import { buildHealthIntelligence } from "@/lib/health-intelligence/health-intelligence.service";
 import { getPatientSummary } from "@/lib/services/shared/patient-summary.service";
 
 export async function getDoctorPortalSummary(userId: string) {
@@ -8,6 +9,8 @@ export async function getDoctorPortalSummary(userId: string) {
     updated_at: item.updated_at,
   }));
 
+  const healthIntelligence = buildHealthIntelligence(patientSummary);
+
   return {
     assessments: patientSummary.assessments,
     latestCheckIn: patientSummary.latestCheckIn,
@@ -15,5 +18,6 @@ export async function getDoctorPortalSummary(userId: string) {
     healthInsights: patientSummary.healthInsights.slice(0, 20),
     savedAnalysis,
     healthHistory: patientSummary.historyItems.slice(0, 10),
+    healthIntelligence,
   };
 }

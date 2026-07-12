@@ -4,7 +4,6 @@ import PageBackActions from "../components/PageBackActions";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
-import { generateHealthEngineResult } from "../../lib/healthEngine";
 import RecommendedActionPanel from "@/app/components/doctor-portal/RecommendedActionPanel";
 import DoctorBriefCard from "@/app/components/doctor-portal/DoctorBriefCard";
 import ReportAnalysisBrief from "@/app/components/doctor-portal/ReportAnalysisBrief";
@@ -12,6 +11,7 @@ import TrustNotice from "@/app/components/ui/TrustNotice";
 import SectionHeader from "@/app/components/ui/SectionHeader";
 import StatusBadge from "@/app/components/ui/StatusBadge";
 import { getDoctorPortalSummary } from "@/lib/services/doctor/doctor-portal.service";
+import { HealthIntelligenceResult } from "@/lib/health-intelligence/models/health-intelligence-result";
 
 type Language = "en" | "ar";
 
@@ -97,6 +97,8 @@ export default function DoctorPortalPage() {
   const [healthInsights, setHealthInsights] = useState<HealthInsight[]>([]);
   const [savedAnalysis, setSavedAnalysis] = useState<SavedAnalysis[]>([]);
   const [healthHistory, setHealthHistory] = useState<HealthHistory[]>([]);
+  const [healthIntelligence, setHealthIntelligence] =
+  useState<HealthIntelligenceResult | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
@@ -208,6 +210,7 @@ export default function DoctorPortalPage() {
   setHealthInsights(doctorSummary.healthInsights as HealthInsight[]);
   setSavedAnalysis(doctorSummary.savedAnalysis as SavedAnalysis[]);
   setHealthHistory(doctorSummary.healthHistory as HealthHistory[]);
+  setHealthIntelligence(doctorSummary.healthIntelligence);
 } catch (error) {
   setMessage(
     currentIsArabic
@@ -322,15 +325,18 @@ export default function DoctorPortalPage() {
       "لا توجد توصيات محفوظة خاصة بالتقرير بعد."
     );
 
-  const healthEngine = generateHealthEngineResult({
-    overallScore,
-    labScore: null,
-    dailyCheckInScore: dailyCheckIn?.wellness_score ?? null,
-    priorityOrgan: priorityOrgan?.organ_name ?? null,
-    strongestOrgan: strongestOrgan?.organ_name ?? null,
-    isArabic,
-  });
+const officialHealthScore =
+  healthIntelligence?.healthScore.status === "ready"
+    ? healthIntelligence.healthScore.data.score
+    : null;
 
+const officialHealthLevel =
+  healthIntelligence?.healthScore.data.level ?? null;
+
+const officialPriorityOrgan =
+  healthIntelligence?.priority.data.priorityOrgan ??
+  priorityOrgan?.organ_name ??
+  null;
   const doctorBriefReadiness =
     assessments.length > 0 &&
     dailyCheckIn &&
@@ -502,9 +508,40 @@ export default function DoctorPortalPage() {
 
               <div className="ohDivider" />
 
-              <p className="ohMetricLabel">
-                {text("Priority Area", "منطقة الأولوية")}
-              </p>
+<p className="ohMetricLabel">
+  {text("Health Intelligence Score", "نتيجة الذكاء الصحي")}
+</p>
+
+<p className="ohMetricValue" style={{ fontSize: "1.45rem" }}>
+  {officialHealthScore !== null
+    ? `${officialHealthScore}/100`
+    : "N/A"}
+</p>
+
+<p className="ohCardText" style={{ marginTop: "6px" }}>
+  {officialHealthLevel
+    ? text(
+        officialHealthLevel.replace("-", " ").toUpperCase(),
+        {
+          critical: "حرج",
+          "high-concern": "يحتاج متابعة مكثفة",
+          moderate: "متوسط",
+          stable: "مستقر",
+          strong: "قوي",
+        }[officialHealthLevel]
+      )
+    : text("More data is needed", "نحتاج بيانات أكثر")}
+</p>
+
+<div className="ohDivider" />
+
+<p className="ohMetricLabel">
+  {text("Priority Area", "منطقة الأولوية")}
+</p>
+
+<p className="ohMetricValue" style={{ fontSize: "1.45rem" }}>
+  {localizeOrganName(officialPriorityOrgan)}
+</p>
 
               <p className="ohMetricValue" style={{ fontSize: "1.45rem" }}>
                 {localizeOrganName(priorityOrgan?.organ_name)}
@@ -563,8 +600,15 @@ export default function DoctorPortalPage() {
   title={text("Pre-Visit Summary", "ملخص قبل الزيارة")}
   readiness={doctorBriefReadiness}
   readinessTone={readinessTone}
-  brief={healthEngine.doctorBrief}
+ brief={
+  healthIntelligence?.doctorBrief.data.brief ??
+  text(
+    "Not enough data is available to prepare the doctor brief.",
+    "لا تتوفر بيانات كافية لإعداد ملخص الطبيب."
+  )
+}
 />
+
             <section className="ohGrid cols2">
 <article className="ohCard">
     <div className="ohCardHeader">
@@ -628,7 +672,8 @@ export default function DoctorPortalPage() {
       </p>
 
       <h2 className="ohCardTitle">
-        {healthEngine.healthProfile}
+        {healthIntelligence?.doctorBrief.data.profile ??
+  text("Health profile unavailable", "الملف الصحي غير متاح")}
       </h2>
     </div>
 
@@ -672,7 +717,8 @@ export default function DoctorPortalPage() {
         </p>
 
         <p className="ohTimelineMeta">
-          {healthEngine.riskPattern}
+          {healthIntelligence?.doctorBrief.data.riskPattern ??
+  text("Risk pattern unavailable", "نمط الخطورة غير متاح")}
         </p>
       </div>
     </div>

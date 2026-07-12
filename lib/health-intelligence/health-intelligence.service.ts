@@ -4,12 +4,20 @@ import { calculatePatientPriority } from "@/lib/health-intelligence/engines/prio
 import { calculateHealthRisk } from "@/lib/health-intelligence/engines/risk.engine";
 import { generateHealthRecommendations } from "@/lib/health-intelligence/engines/recommendation.engine";
 import { calculateHealthScore } from "@/lib/health-intelligence/engines/health-score.engine";
+import { generateDoctorBrief } from "@/lib/health-intelligence/engines/doctor-brief.engine";
 import { HealthIntelligenceResult } from "@/lib/health-intelligence/models/health-intelligence-result";
+import { buildIntelligenceOverview } from "@/lib/health-intelligence/engines/intelligence-overview.engine";
 
 export function buildHealthIntelligence(
   patient: PatientSummary
 ): HealthIntelligenceResult {
   const findings = buildClinicalFindings(patient);
+
+  const priority = calculatePatientPriority(
+    patient.assessments
+  );
+
+  const risk = calculateHealthRisk(patient);
 
   const recommendations = generateHealthRecommendations(
     patient,
@@ -21,11 +29,29 @@ export function buildHealthIntelligence(
     findings
   );
 
-  return {
+  const doctorBrief = generateDoctorBrief({
+    patient,
     findings,
-    priority: calculatePatientPriority(patient.assessments),
-    risk: calculateHealthRisk(patient),
+    priority,
+    risk,
     recommendations,
     healthScore,
-  };
+  });
+const intelligenceOverview = buildIntelligenceOverview({
+  patient,
+  priority,
+  recommendations,
+  healthScore,
+  doctorBrief,
+});
+
+  return {
+  findings,
+  priority,
+  risk,
+  recommendations,
+  healthScore,
+  doctorBrief,
+  intelligenceOverview,
+};
 }
