@@ -16,7 +16,6 @@ import { generateIntelligenceFromText } from "../../lib/extractedTextIntelligenc
 import PageBackActions from "../components/PageBackActions";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../lib/supabase";
-import { buildHealthIntelligence } from "../../lib/intelligenceBuilder";
 import {
   detectLabMarkers,
   buildLabMarkerSummary,
@@ -44,6 +43,8 @@ import GeneratedReportDetailsCard from "./components/GeneratedReportDetailsCard"
 import PersonalHealthStrategyCard from "./components/PersonalHealthStrategyCard";
 import DoctorBriefReportCard from "./components/DoctorBriefReportCard";
 import PatientReportPdfCard from "./components/PatientReportPdfCard";
+import { getIntelligenceSummary } from "@/lib/services/intelligence/intelligence.service";
+import { HealthIntelligenceResult } from "@/lib/health-intelligence/models/health-intelligence-result";
 
 type Assessment = {
   organ_name: string;
@@ -57,7 +58,7 @@ type DailyCheckIn = {
   created_at: string;
 };
 
-type HealthEngine = ReturnType<typeof buildHealthIntelligence>;
+type HealthEngine = HealthIntelligenceResult;
 
 type GeneratedIntelligenceResult = {
   strategy: any;
@@ -263,41 +264,33 @@ export default function IntelligencePage() {
 
     const userId = userData.user.id;
 
-    const { data: checkInData } = await supabase
-      .from("daily_checkins")
-      .select("mood, wellness_score, created_at")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    let assessmentData: Assessment[] = [];
 
-    setDailyCheckIn(checkInData || null);
+try {
+  const intelligenceSummary =
+    await getIntelligenceSummary(userId);
 
-    const { data: assessments, error: assessmentError } = await supabase
-      .from("organ_assessments")
-      .select("organ_name, score, created_at")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
+  assessmentData =
+    intelligenceSummary.assessments as Assessment[];
 
-    if (assessmentError) {
-      setMessage("Database error: " + assessmentError.message);
-      setLoading(false);
-      return;
-    }
+  setAssessmentData(assessmentData);
 
-    const assessmentData = (assessments || []) as Assessment[];
-    setAssessmentData(assessmentData);
+  setDailyCheckIn(
+    intelligenceSummary.latestCheckIn as DailyCheckIn | null
+  );
 
-    if (assessmentData.length > 0) {
-      const intelligence = buildHealthIntelligence({
-        assessments: assessmentData,
-        labReport: null,
-        dailyCheckIn: null,
-        isArabic: false,
-      });
-
-      setHealthEngine(intelligence);
-    }
+  setHealthEngine(
+    intelligenceSummary.healthIntelligence
+  );
+} catch (error) {
+  setMessage(
+    error instanceof Error
+      ? `Database error: ${error.message}`
+      : "Database error"
+  );
+  setLoading(false);
+  return;
+}
 
     const { data: insights, error: insightsError } = await supabase
       .from("health_insights")
@@ -1314,28 +1307,6 @@ Clinical note: This is an educational interpretation and should be reviewed by a
 
         {!loading && healthEngine && !focusedReportInsight && (
           <section className="ohStack">
-            <HealthPassportCard
-              healthProfile={healthEngine.healthProfile}
-              overallScore={healthEngine.overallScore}
-              healthAgeStatus={healthEngine.healthAgeStatus}
-              priorityOrgan={healthEngine.priorityOrgan}
-              potentialScore={healthEngine.potentialScore}
-            />
-
-            <TopOpportunitiesCard
-              strongestOrgan={healthEngine.strongestOrgan}
-              riskPattern={healthEngine.riskPattern}
-              potentialGain={healthEngine.potentialGain}
-              opportunities={healthEngine.opportunities.slice(0, 3)}
-            />
-
-            <DoctorReadySummaryCard
-              overallScore={healthEngine.overallScore}
-              priorityOrgan={healthEngine.priorityOrgan}
-              riskPattern={healthEngine.riskPattern}
-              opportunityTitle={healthEngine.opportunityTitle}
-              bestNextAction={healthEngine.bestNextAction}
-            />
           </section>
         )}
 
