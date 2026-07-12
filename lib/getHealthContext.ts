@@ -1,42 +1,54 @@
-import { supabase } from "./supabase";
-import { buildHealthIntelligence } from "./intelligenceBuilder";
+import { buildHealthIntelligence } from "@/lib/health-intelligence/health-intelligence.service";
+import { getPatientSummary } from "@/lib/services/shared/patient-summary.service";
+import { supabase } from "@/lib/supabase";
 
-export async function getHealthContext(isArabic = false) {
-  const { data: userData } = await supabase.auth.getUser();
+export async function getHealthContext(_isArabic = false) {
+  const { data: userData, error: userError } =
+    await supabase.auth.getUser();
 
-  if (!userData?.user) {
+  if (userError || !userData.user) {
     return null;
   }
 
-  const user = userData.user;
+  const patientSummary = await getPatientSummary(
+    userData.user.id
+  );
 
-  const { data: assessments } = await supabase
-    .from("organ_assessments")
-    .select("organ_name, score, created_at")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
+  const intelligence =
+    buildHealthIntelligence(patientSummary);
 
-  const { data: dailyCheckIn, error: checkInError } = await supabase
-    .from("daily_checkins")
-    .select("mood, wellness_score, created_at")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  const intelligence = buildHealthIntelligence({
-    assessments: assessments || [],
-    labReport: null,
-    dailyCheckIn: checkInError ? null : dailyCheckIn || null,
-    isArabic,
-  });
+  const overview =
+    intelligence.intelligenceOverview.data;
 
   return {
-    overallScore: intelligence.overallScore,
-    strongestOrgan: intelligence.strongestOrgan,
-    priorityOrgan: intelligence.priorityOrgan,
+    overallScore: intelligence.healthScore.data.score,
+    strongestOrgan: overview.strongestOrgan,
+    priorityOrgan:
+      intelligence.priority.data.priorityOrgan,
     labScore: null,
-    dailyCheckInScore: checkInError ? null : dailyCheckIn?.wellness_score ?? null,
+    dailyCheckInScore:
+      patientSummary.latestCheckIn?.wellness_score ?? null,
+
+    riskPattern:
+      intelligence.doctorBrief.data.riskPattern,
+
+    healthAge: null,
+    healthAgeStatus: overview.healthAgeStatus,
+
+    doctorBrief:
+      intelligence.doctorBrief.data.brief,
+
+    healthScore: {
+      score: intelligence.healthScore.data.score,
+      level: intelligence.healthScore.data.level,
+      confidence: intelligence.healthScore.confidence,
+      dataCompleteness:
+        intelligence.healthScore.data.dataCompleteness,
+    },
+
+    recommendation:
+      intelligence.recommendations.data.primaryAction,
+
     healthEngine: intelligence,
   };
 }
