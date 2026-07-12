@@ -3,8 +3,7 @@
 import PageBackActions from "../components/PageBackActions";
 import { type CSSProperties, useEffect, useState } from "react";
 import Link from "next/link";
-import { supabase } from "../../lib/supabase";
-import { saveOrganAssessmentResult } from "@/lib/services/organs/organ-assessment.service";
+import { saveAssessmentFlow } from "@/lib/services/organs/assessment-flow.service";
 
 type Language = "en" | "ar";
 
@@ -96,40 +95,29 @@ export default function HeartPage() {
   async function saveAssessment(score: number, level: string, message: string) {
     setSaveMessage(text("Saving heart assessment...", "جاري حفظ تقييم القلب..."));
 
-    const { data, error: userError } = await supabase.auth.getUser();
+   const result = await saveAssessmentFlow({
+  organName: "Heart",
+  score,
+  riskLevel: level,
+  notes: message,
+});
 
-    if (userError) {
-      setSaveMessage(
-        text("Auth error: ", "خطأ في تسجيل الدخول: ") + userError.message
-      );
-      return;
-    }
-
-    const user = data.user;
-
-    if (!user) {
-      setSaveMessage(
-        text(
-          "Result calculated locally. Please login to save it.",
-          "تم حساب النتيجة محليًا. يرجى تسجيل الدخول لحفظها."
-        )
-      );
-      return;
-    }
-
-    try {
-  await saveOrganAssessmentResult({
-    userId: user.id,
-    organName: "Heart",
-    score,
-    riskLevel: level,
-    notes: message,
-  });
-} catch (error) {
+if (result.status === "not-authenticated") {
   setSaveMessage(
-    error instanceof Error
-      ? error.message
-      : "Could not save assessment."
+    text(
+      "Please login to save your assessment.",
+      "يرجى تسجيل الدخول لحفظ التقييم."
+    )
+  );
+  return;
+}
+
+if (result.status === "error") {
+  setSaveMessage(
+    text(
+      `Could not save assessment: ${result.message}`,
+      `تعذر حفظ التقييم: ${result.message}`
+    )
   );
   return;
 }

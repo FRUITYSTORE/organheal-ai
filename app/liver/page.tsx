@@ -4,7 +4,8 @@ import PageBackActions from "../components/PageBackActions";
 import { type CSSProperties, useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
-import { saveOrganAssessmentResult } from "@/lib/services/organs/organ-assessment.service";
+import { saveAssessmentFlow } from "@/lib/services/organs/assessment-flow.service";
+
 
 type Language = "en" | "ar";
 
@@ -90,46 +91,29 @@ export default function LiverPage() {
   async function saveAssessment(score: number, level: string, message: string) {
     setSaveMessage(text("Saving liver assessment...", "جاري حفظ تقييم الكبد..."));
 
-    const { data, error: userError } = await supabase.auth.getUser();
+    const result = await saveAssessmentFlow({
+  organName: "Liver",
+  score,
+  riskLevel: level,
+  notes: message,
+});
 
-    if (userError) {
-      setSaveMessage(
-        text("Auth error: ", "خطأ في تسجيل الدخول: ") + userError.message
-      );
-      return;
-    }
-
-    const user = data.user;
-
-    if (!user) {
-      setSaveMessage(
-        text(
-          "Please login to save your assessment.",
-          "يرجى تسجيل الدخول لحفظ التقييم."
-        )
-      );
-      return;
-    }
-
-    try {
-  await saveOrganAssessmentResult({
-    userId: user.id,
-    organName: "Liver",
-    score,
-    riskLevel: level,
-    notes: message,
-  });
-} catch (error) {
+if (result.status === "not-authenticated") {
   setSaveMessage(
-    error instanceof Error
-      ? text(
-          `Could not save liver assessment: ${error.message}`,
-          `تعذر حفظ تقييم الكبد: ${error.message}`
-        )
-      : text(
-          "Could not save liver assessment.",
-          "تعذر حفظ تقييم الكبد."
-        )
+    text(
+      "Please login to save your assessment.",
+      "يرجى تسجيل الدخول لحفظ التقييم."
+    )
+  );
+  return;
+}
+
+if (result.status === "error") {
+  setSaveMessage(
+    text(
+      `Could not save assessment: ${result.message}`,
+      `تعذر حفظ التقييم: ${result.message}`
+    )
   );
   return;
 }

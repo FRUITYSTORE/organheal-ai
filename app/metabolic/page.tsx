@@ -4,7 +4,7 @@ import PageBackActions from "../components/PageBackActions";
 import { type CSSProperties, useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
-import { saveOrganAssessmentResult } from "@/lib/services/organs/organ-assessment.service";
+import { saveAssessmentFlow } from "@/lib/services/organs/assessment-flow.service";
 
 type Language = "en" | "ar";
 
@@ -92,46 +92,29 @@ export default function MetabolicPage() {
       text("Saving metabolic assessment...", "جاري حفظ تقييم الأيض...")
     );
 
-    const { data, error: userError } = await supabase.auth.getUser();
+    const result = await saveAssessmentFlow({
+  organName: "Metabolic",
+  score,
+  riskLevel: level,
+  notes: message,
+});
 
-    if (userError) {
-      setSaveMessage(
-        text("Auth error: ", "خطأ في تسجيل الدخول: ") + userError.message
-      );
-      return;
-    }
-
-    const user = data.user;
-
-    if (!user) {
-      setSaveMessage(
-        text(
-          "Please login to save your assessment.",
-          "يرجى تسجيل الدخول لحفظ التقييم."
-        )
-      );
-      return;
-    }
-
-   try {
-  await saveOrganAssessmentResult({
-    userId: user.id,
-    organName: "Metabolic",
-    score,
-    riskLevel: level,
-    notes: message,
-  });
-} catch (error) {
+if (result.status === "not-authenticated") {
   setSaveMessage(
-    error instanceof Error
-      ? text(
-          `Could not save metabolic assessment: ${error.message}`,
-          `تعذر حفظ تقييم الأيض: ${error.message}`
-        )
-      : text(
-          "Could not save metabolic assessment.",
-          "تعذر حفظ تقييم الأيض."
-        )
+    text(
+      "Please login to save your assessment.",
+      "يرجى تسجيل الدخول لحفظ التقييم."
+    )
+  );
+  return;
+}
+
+if (result.status === "error") {
+  setSaveMessage(
+    text(
+      `Could not save assessment: ${result.message}`,
+      `تعذر حفظ التقييم: ${result.message}`
+    )
   );
   return;
 }
