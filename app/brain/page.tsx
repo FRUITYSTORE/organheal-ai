@@ -4,6 +4,7 @@ import PageBackActions from "../components/PageBackActions";
 import { type CSSProperties, useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
+import { saveOrganAssessmentResult } from "@/lib/services/organs/organ-assessment.service";
 
 type Language = "en" | "ar";
 
@@ -110,42 +111,28 @@ export default function BrainPage() {
       return;
     }
 
-    const { error: upsertError } = await supabase
-      .from("organ_assessments")
-      .upsert(
-        {
-          user_id: user.id,
-          organ_name: "Brain",
-          score: score,
-          risk_level: level,
-          notes: message,
-        },
-        {
-          onConflict: "user_id,organ_name",
-        }
-      );
-
-    if (upsertError) {
-      setSaveMessage(
-        text("Database error: ", "خطأ في قاعدة البيانات: ") + upsertError.message
-      );
-      return;
-    }
-
-    const { error: historyError } = await supabase.from("health_history").insert({
-      user_id: user.id,
-      module_name: "Brain",
-      score: score,
-      status: level,
-      notes: message,
-    });
-
-    if (historyError) {
-      setSaveMessage(
-        text("History error: ", "خطأ في التاريخ الصحي: ") + historyError.message
-      );
-      return;
-    }
+    try {
+  await saveOrganAssessmentResult({
+    userId: user.id,
+    organName: "Brain",
+    score,
+    riskLevel: level,
+    notes: message,
+  });
+} catch (error) {
+  setSaveMessage(
+    error instanceof Error
+      ? text(
+          `Could not save brain assessment: ${error.message}`,
+          `تعذر حفظ تقييم الدماغ: ${error.message}`
+        )
+      : text(
+          "Could not save brain assessment.",
+          "تعذر حفظ تقييم الدماغ."
+        )
+  );
+  return;
+}
 
     setSaveMessage(
       text("Brain assessment saved successfully.", "تم حفظ تقييم الدماغ بنجاح.")

@@ -4,6 +4,7 @@ import PageBackActions from "../components/PageBackActions";
 import { type CSSProperties, useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
+import { saveOrganAssessmentResult } from "@/lib/services/organs/organ-assessment.service";
 
 type Language = "en" | "ar";
 
@@ -110,42 +111,28 @@ export default function LiverPage() {
       return;
     }
 
-    const { error: upsertError } = await supabase
-      .from("organ_assessments")
-      .upsert(
-        {
-          user_id: user.id,
-          organ_name: "Liver",
-          score: score,
-          risk_level: level,
-          notes: message,
-        },
-        {
-          onConflict: "user_id,organ_name",
-        }
-      );
-
-    if (upsertError) {
-      setSaveMessage(
-        text("Database error: ", "خطأ في قاعدة البيانات: ") + upsertError.message
-      );
-      return;
-    }
-
-    const { error: historyError } = await supabase.from("health_history").insert({
-      user_id: user.id,
-      module_name: "Liver",
-      score: score,
-      status: level,
-      notes: message,
-    });
-
-    if (historyError) {
-      setSaveMessage(
-        text("History error: ", "خطأ في التاريخ الصحي: ") + historyError.message
-      );
-      return;
-    }
+    try {
+  await saveOrganAssessmentResult({
+    userId: user.id,
+    organName: "Liver",
+    score,
+    riskLevel: level,
+    notes: message,
+  });
+} catch (error) {
+  setSaveMessage(
+    error instanceof Error
+      ? text(
+          `Could not save liver assessment: ${error.message}`,
+          `تعذر حفظ تقييم الكبد: ${error.message}`
+        )
+      : text(
+          "Could not save liver assessment.",
+          "تعذر حفظ تقييم الكبد."
+        )
+  );
+  return;
+}
 
     setSaveMessage(
       text("Liver assessment saved successfully.", "تم حفظ تقييم الكبد بنجاح.")

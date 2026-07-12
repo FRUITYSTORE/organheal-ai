@@ -9,6 +9,14 @@ export type HealthHistorySummary = {
   created_at: string;
 };
 
+export type AddHealthHistoryInput = {
+  userId: string;
+  moduleName: string;
+  score: number;
+  status: string;
+  notes?: string | null;
+};
+
 export async function getRecentHealthHistory(
   userId: string,
   limit = 10
@@ -25,4 +33,26 @@ export async function getRecentHealthHistory(
   }
 
   return (data || []) as HealthHistorySummary[];
+}
+
+export async function addHealthHistoryItem({
+  userId,
+  moduleName,
+  score,
+  status,
+  notes,
+}: AddHealthHistoryInput): Promise<void> {
+  const { error } = await supabase
+    .from("health_history")
+    .insert({
+      user_id: userId,
+      module_name: moduleName,
+      score,
+      status,
+      notes: notes ?? null,
+    });
+
+  if (error) {
+    throw new Error(error.message);
+  }
 }
