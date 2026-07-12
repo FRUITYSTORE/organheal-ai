@@ -6,6 +6,8 @@ import { RecommendationData } from "@/lib/health-intelligence/engines/recommenda
 import { HealthScoreData } from "@/lib/health-intelligence/engines/health-score.engine";
 import { DoctorBriefData } from "@/lib/health-intelligence/engines/doctor-brief.engine";
 import { IntelligenceOverviewData } from "@/lib/health-intelligence/engines/intelligence-overview.engine";
+import { HealthTrendData } from "@/lib/health-intelligence/engines/trend.engine";
+import { TrendSummaryData } from "@/lib/health-intelligence/engines/trend-summary.engine";
 
 export type HealthIntelligenceResult = {
   findings: ClinicalFinding[];
@@ -13,6 +15,8 @@ export type HealthIntelligenceResult = {
   risk: HealthRiskResult;
   recommendations: EngineResult<RecommendationData>;
   healthScore: EngineResult<HealthScoreData>;
+  trend: EngineResult<HealthTrendData>;
+  trendSummary: EngineResult<TrendSummaryData>;
   doctorBrief: EngineResult<DoctorBriefData>;
   intelligenceOverview: EngineResult<IntelligenceOverviewData>;
 };

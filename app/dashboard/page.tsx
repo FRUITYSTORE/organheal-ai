@@ -6,7 +6,9 @@ import { supabase } from "@/lib/supabase";
 import DashboardOverviewGrid from "@/app/components/dashboard/DashboardOverviewGrid";
 import { getDashboardSummary } from "@/lib/services/dashboard/dashboard.service";
 import DashboardIntelligenceCard from "@/app/components/dashboard/DashboardIntelligenceCard";
+import HealthDirectionCard from "@/app/components/health-intelligence/HealthDirectionCard";
 import { HealthIntelligenceResult } from "@/lib/health-intelligence/models/health-intelligence-result";
+
 
 type Language = "en" | "ar";
 
@@ -565,7 +567,173 @@ const [healthIntelligence, setHealthIntelligence] =
         .dashboardCommandCenterPage[dir="rtl"] .dashboardJourneyHeader {
           direction: rtl;
         }
+.healthDirectionCard {
+  margin-bottom: 22px;
+  padding: 26px;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  box-shadow: 0 24px 65px rgba(15, 23, 42, 0.07);
+}
 
+.healthDirectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 22px;
+}
+
+.healthDirectionKicker {
+  color: #0891b2;
+  font-size: 0.76rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.healthDirectionTitle {
+  margin: 9px 0 8px;
+  color: #0f172a;
+  font-size: clamp(1.45rem, 3vw, 2rem);
+  line-height: 1.15;
+}
+
+.healthDirectionDescription {
+  max-width: 780px;
+  margin: 0;
+  color: #64748b;
+  font-weight: 650;
+  line-height: 1.65;
+}
+
+.healthDirectionStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  flex-shrink: 0;
+  padding: 11px 16px;
+  border-radius: 999px;
+  font-weight: 950;
+}
+
+.healthDirectionStatus.improving {
+  color: #047857;
+  background: #ecfdf5;
+}
+
+.healthDirectionStatus.worsening {
+  color: #b91c1c;
+  background: #fef2f2;
+}
+
+.healthDirectionStatus.stable {
+  color: #0369a1;
+  background: #f0f9ff;
+}
+
+.healthDirectionStatus.insufficient-data {
+  color: #92400e;
+  background: #fffbeb;
+}
+
+.healthDirectionMetrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 22px;
+}
+
+.healthDirectionMetrics article {
+  padding: 18px;
+  border-radius: 20px;
+  background: #f8fafc;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.healthDirectionMetrics span,
+.healthDirectionMetrics small {
+  display: block;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.healthDirectionMetrics strong {
+  display: block;
+  margin: 8px 0 5px;
+  color: #0f172a;
+  font-size: 1.3rem;
+  font-weight: 950;
+}
+
+.healthDirectionSignals {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(148, 163, 184, 0.22);
+}
+
+.healthDirectionSignalsHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  color: #0f172a;
+}
+
+.healthDirectionSignalsHeader span {
+  color: #64748b;
+  font-size: 0.84rem;
+  font-weight: 750;
+}
+
+.healthDirectionSignalList {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.healthDirectionSignal {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: #f8fafc;
+  border-inline-start: 5px solid #0284c7;
+}
+
+.healthDirectionSignal.improving {
+  border-inline-start-color: #059669;
+}
+
+.healthDirectionSignal.worsening {
+  border-inline-start-color: #dc2626;
+}
+
+.healthDirectionSignal.stable {
+  border-inline-start-color: #0284c7;
+}
+
+.healthDirectionSignal > div > span {
+  display: block;
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.healthDirectionSignalValue {
+  text-align: end;
+}
+
+.healthDirectionSignalValue strong {
+  color: #0f172a;
+  font-size: 1.1rem;
+}
+
+.healthDirectionSignalValue span {
+  color: #64748b;
+  font-size: 0.78rem;
+}
         @media (max-width: 1100px) {
           .dashboardJourneyTimeline {
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -898,7 +1066,9 @@ const [healthIntelligence, setHealthIntelligence] =
           .dashboardCommandLayout {
             grid-template-columns: 1fr;
           }
-
+.healthDirectionMetrics {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
           .dashboardCommandGrid,
           .dashboardSignalGrid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -909,7 +1079,18 @@ const [healthIntelligence, setHealthIntelligence] =
           .dashboardCommandGrid,
           .dashboardSignalGrid {
             grid-template-columns: 1fr;
-          }
+          }.healthDirectionHeader,
+.healthDirectionSignalsHeader {
+  flex-direction: column;
+}
+
+.healthDirectionMetrics {
+  grid-template-columns: 1fr;
+}
+
+.healthDirectionSignal {
+  align-items: flex-start;
+}
 
           .dashboardCommandHero,
           .dashboardCommandPanel,
@@ -1063,7 +1244,16 @@ const [healthIntelligence, setHealthIntelligence] =
               </div>
             </section>
  <DashboardOverviewGrid cards={overviewCards} />
- {healthIntelligence && (
+
+{healthIntelligence && (
+  <HealthDirectionCard
+  summary={healthIntelligence.trendSummary.data}
+  confidence={healthIntelligence.trendSummary.confidence}
+  isArabic={isArabic}
+/>
+)}
+
+{healthIntelligence && (
   <DashboardIntelligenceCard
     intelligence={healthIntelligence}
     isArabic={isArabic}
