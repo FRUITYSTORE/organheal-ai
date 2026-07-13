@@ -6,9 +6,11 @@ import { generateHealthRecommendations } from "@/lib/health-intelligence/engines
 import { calculateHealthScore } from "@/lib/health-intelligence/engines/health-score.engine";
 import { calculateHealthTrend } from "@/lib/health-intelligence/engines/trend.engine";
 import { buildTrendSummary } from "@/lib/health-intelligence/engines/trend-summary.engine";
+import { buildHealthTimeline } from "@/lib/health-intelligence/engines/health-timeline.engine";
 import { generateDoctorBrief } from "@/lib/health-intelligence/engines/doctor-brief.engine";
 import { buildIntelligenceOverview } from "@/lib/health-intelligence/engines/intelligence-overview.engine";
 import { HealthIntelligenceResult } from "@/lib/health-intelligence/models/health-intelligence-result";
+import { detectHealthPatterns } from "@/lib/health-intelligence/engines/health-pattern.engine";
 
 export function buildHealthIntelligence(
   patient: PatientSummary
@@ -32,6 +34,10 @@ export function buildHealthIntelligence(
   const trend = calculateHealthTrend(patient);
 
   const trendSummary = buildTrendSummary(trend);
+  const timeline = buildHealthTimeline({
+  patient,
+  trend,
+});
 
   const doctorBrief = generateDoctorBrief({
     patient,
@@ -41,6 +47,13 @@ export function buildHealthIntelligence(
     recommendations,
     healthScore,
   });
+
+  const patterns = detectHealthPatterns({
+  patient,
+  findings,
+  trend,
+  timeline,
+});
 
   const intelligenceOverview = buildIntelligenceOverview({
     patient,
@@ -58,7 +71,9 @@ export function buildHealthIntelligence(
     healthScore,
     trend,
     trendSummary,
+    patterns,
     doctorBrief,
+    timeline,
     intelligenceOverview,
   };
 }

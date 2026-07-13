@@ -8,7 +8,7 @@ import { getDashboardSummary } from "@/lib/services/dashboard/dashboard.service"
 import DashboardIntelligenceCard from "@/app/components/dashboard/DashboardIntelligenceCard";
 import HealthDirectionCard from "@/app/components/health-intelligence/HealthDirectionCard";
 import { HealthIntelligenceResult } from "@/lib/health-intelligence/models/health-intelligence-result";
-
+import PrimaryHealthPatternCard from "@/app/components/health-intelligence/PrimaryHealthPatternCard";
 
 type Language = "en" | "ar";
 
@@ -734,6 +734,183 @@ const [healthIntelligence, setHealthIntelligence] =
   color: #64748b;
   font-size: 0.78rem;
 }
+  .primaryPatternCard {
+  margin-bottom: 22px;
+  padding: 24px;
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  box-shadow: 0 22px 58px rgba(15, 23, 42, 0.06);
+  border-inline-start: 6px solid #64748b;
+}
+
+.primaryPatternCard.critical {
+  border-inline-start-color: #dc2626;
+}
+
+.primaryPatternCard.high {
+  border-inline-start-color: #ea580c;
+}
+
+.primaryPatternCard.moderate {
+  border-inline-start-color: #d97706;
+}
+
+.primaryPatternCard.informational {
+  border-inline-start-color: #0891b2;
+}
+
+.primaryPatternCard.empty {
+  border-inline-start-color: #94a3b8;
+}
+
+.primaryPatternHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.primaryPatternKicker {
+  color: #0891b2;
+  font-size: 0.76rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.primaryPatternCard h2 {
+  margin: 9px 0 0;
+  color: #0f172a;
+  font-size: clamp(1.35rem, 2.5vw, 1.85rem);
+  line-height: 1.2;
+}
+
+.primaryPatternBadge {
+  flex-shrink: 0;
+  padding: 9px 13px;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 0.78rem;
+  font-weight: 950;
+}
+
+.primaryPatternDescription {
+  margin: 14px 0 0;
+  color: #64748b;
+  font-weight: 650;
+  line-height: 1.65;
+}
+
+.primaryPatternMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.primaryPatternMeta span {
+  padding: 8px 11px;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.primaryPatternAction {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 18px;
+  background: #f8fafc;
+}
+
+.primaryPatternAction strong {
+  color: #0f172a;
+  font-size: 0.82rem;
+}
+
+.primaryPatternAction p {
+  margin: 5px 0 0;
+  color: #475569;
+  line-height: 1.55;
+}
+
+.healthIntelligenceCommandCenter {
+  margin-bottom: 24px;
+  padding: 24px;
+  border-radius: 32px;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(239, 246, 255, 0.92),
+      rgba(240, 253, 250, 0.9)
+    );
+  border: 1px solid rgba(14, 116, 144, 0.15);
+  box-shadow: 0 26px 70px rgba(15, 23, 42, 0.08);
+}
+
+.healthCommandCenterHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 20px;
+  padding: 4px 4px 20px;
+  border-bottom: 1px solid rgba(14, 116, 144, 0.14);
+}
+
+.healthCommandCenterKicker {
+  display: block;
+  color: #0e7490;
+  font-size: 0.76rem;
+  font-weight: 950;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.healthCommandCenterHeader h2 {
+  max-width: 760px;
+  margin: 9px 0 8px;
+  color: #0f172a;
+  font-size: clamp(1.45rem, 3vw, 2rem);
+  line-height: 1.2;
+}
+
+.healthCommandCenterHeader p {
+  max-width: 780px;
+  margin: 0;
+  color: #64748b;
+  font-weight: 650;
+  line-height: 1.65;
+}
+
+.healthCommandCenterBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 90px;
+  padding: 13px 16px;
+  border-radius: 18px;
+  background: #ffffff;
+  color: #0f766e;
+  border: 1px solid rgba(15, 118, 110, 0.16);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.07);
+  font-size: 1.1rem;
+  font-weight: 950;
+}
+
+.healthCommandCenterStack {
+  display: grid;
+  gap: 16px;
+}
+
+.healthCommandCenterStack > .healthDirectionCard,
+.healthCommandCenterStack > .primaryPatternCard {
+  margin-bottom: 0;
+}
+
         @media (max-width: 1100px) {
           .dashboardJourneyTimeline {
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -744,6 +921,21 @@ const [healthIntelligence, setHealthIntelligence] =
           .dashboardJourneyHeader {
             display: block;
           }
+.healthIntelligenceCommandCenter {
+  padding: 16px;
+  border-radius: 24px;
+}
+
+.healthCommandCenterHeader {
+  flex-direction: column;
+}
+
+.healthCommandCenterBadge {
+  min-width: 0;
+}
+          .primaryPatternHeader {
+  flex-direction: column;
+}
 
           .dashboardJourneyNext {
             display: inline-flex;
@@ -1246,18 +1438,51 @@ const [healthIntelligence, setHealthIntelligence] =
  <DashboardOverviewGrid cards={overviewCards} />
 
 {healthIntelligence && (
-  <HealthDirectionCard
-  summary={healthIntelligence.trendSummary.data}
-  confidence={healthIntelligence.trendSummary.confidence}
-  isArabic={isArabic}
-/>
-)}
+  <section className="healthIntelligenceCommandCenter">
+    <div className="healthCommandCenterHeader">
+      <div>
+        <span className="healthCommandCenterKicker">
+          {isArabic
+            ? "مركز الذكاء الصحي"
+            : "Health Intelligence Command Center"}
+        </span>
 
-{healthIntelligence && (
-  <DashboardIntelligenceCard
-    intelligence={healthIntelligence}
-    isArabic={isArabic}
-  />
+        <h2>
+          {isArabic
+            ? "افهم الاتجاه، النمط، وحالة صحتك في مكان واحد"
+            : "Understand your direction, pattern, and health status in one place"}
+        </h2>
+
+        <p>
+          {isArabic
+            ? "يجمع هذا القسم أهم نتائج محرك OrganHeal ويحوّل بياناتك إلى صورة صحية مترابطة."
+            : "This section combines OrganHeal’s most important intelligence signals into one connected health picture."}
+        </p>
+      </div>
+
+      <span className="healthCommandCenterBadge">
+        {healthIntelligence.healthScore.data.score}/100
+      </span>
+    </div>
+
+    <div className="healthCommandCenterStack">
+      <HealthDirectionCard
+        summary={healthIntelligence.trendSummary.data}
+        confidence={healthIntelligence.trendSummary.confidence}
+        isArabic={isArabic}
+      />
+
+      <PrimaryHealthPatternCard
+        pattern={healthIntelligence.patterns.data.primaryPattern}
+        isArabic={isArabic}
+      />
+
+      <DashboardIntelligenceCard
+        intelligence={healthIntelligence}
+        isArabic={isArabic}
+      />
+    </div>
+  </section>
 )}
             <section className="dashboardCommandLayout" style={{ gridTemplateColumns: "1fr" }}>
               <section
