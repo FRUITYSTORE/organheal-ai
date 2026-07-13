@@ -1,0 +1,100 @@
+.ohPageHero {
+  padding: 40px;
+  border: 1px solid rgba(103, 232, 249, 0.14);
+  border-radius: 30px;
+  background:
+    linear-gradient(
+      135deg,
+      #0f172a 0%,
+      #12344a 52%,
+      #0f766e 100%
+    );
+  color: #ffffff;
+  box-shadow: 0 28px 70px rgba(15, 23, 42, 0.16);
+}
+
+.ohPageHeroContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 28px;
+}
+
+.ohPageHeroCopy {
+  min-width: 0;
+}
+
+.ohPageHeroEyebrow {
+  display: block;
+  color: #67e8f9;
+  font-size: 0.76rem;
+  font-weight: 950;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.ohPageHeroTitle {
+  max-width: 860px;
+  margin: 12px 0 10px;
+  color: #ffffff;
+  font-size: clamp(2.25rem, 6vw, 4.25rem);
+  font-weight: 950;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+}
+
+.ohPageHeroDescription {
+  max-width: 780px;
+  margin: 0;
+  color: #dbeafe;
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.75;
+}
+
+.ohPageHeroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.ohPageHeroBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-width: 86px;
+  padding: 12px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-weight: 950;
+  backdrop-filter: blur(12px);
+}
+
+.ohPageHeroExtra {
+  margin-top: 26px;
+  padding-top: 22px;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+@media (max-width: 620px) {
+  .ohPageHero {
+    padding: 26px;
+    border-radius: 23px;
+  }
+
+  .ohPageHeroContent {
+    flex-direction: column;
+  }
+
+  .ohPageHeroTitle {
+    font-size: 2.35rem;
+  }
+
+  .ohPageHeroBadge {
+    min-width: 0;
+  }
+}
