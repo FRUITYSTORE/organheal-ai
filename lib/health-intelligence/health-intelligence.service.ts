@@ -11,6 +11,7 @@ import { generateDoctorBrief } from "@/lib/health-intelligence/engines/doctor-br
 import { buildIntelligenceOverview } from "@/lib/health-intelligence/engines/intelligence-overview.engine";
 import { HealthIntelligenceResult } from "@/lib/health-intelligence/models/health-intelligence-result";
 import { detectHealthPatterns } from "@/lib/health-intelligence/engines/health-pattern.engine";
+import { buildHealthEvidence } from "@/lib/health-intelligence/engines/health-evidence.engine";
 
 export function buildHealthIntelligence(
   patient: PatientSummary
@@ -55,6 +56,16 @@ export function buildHealthIntelligence(
   timeline,
 });
 
+const evidence = buildHealthEvidence({
+  patient,
+  findings,
+  priority,
+  healthScore,
+  trend,
+  patterns,
+  timeline,
+});
+
   const intelligenceOverview = buildIntelligenceOverview({
     patient,
     priority,
@@ -72,6 +83,7 @@ export function buildHealthIntelligence(
     trend,
     trendSummary,
     patterns,
+    evidence,
     doctorBrief,
     timeline,
     intelligenceOverview,

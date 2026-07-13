@@ -9,6 +9,7 @@ import DashboardIntelligenceCard from "@/app/components/dashboard/DashboardIntel
 import HealthDirectionCard from "@/app/components/health-intelligence/HealthDirectionCard";
 import { HealthIntelligenceResult } from "@/lib/health-intelligence/models/health-intelligence-result";
 import PrimaryHealthPatternCard from "@/app/components/health-intelligence/PrimaryHealthPatternCard";
+import HealthEvidenceCard from "@/app/components/health-intelligence/HealthEvidenceCard";
 
 type Language = "en" | "ar";
 
@@ -917,7 +918,144 @@ const [healthIntelligence, setHealthIntelligence] =
   border: 1px solid rgba(15, 118, 110, 0.18);
   background: rgba(255, 255, 255, 0.96);
 }
-  
+
+.healthEvidenceCard {
+  padding: 24px;
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(14, 116, 144, 0.16);
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.05);
+}
+
+.healthEvidenceHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 22px;
+}
+
+.healthEvidenceKicker {
+  color: #0e7490;
+  font-size: 0.76rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.healthEvidenceHeader h2 {
+  margin: 9px 0 8px;
+  color: #0f172a;
+  font-size: clamp(1.3rem, 2.5vw, 1.8rem);
+  line-height: 1.2;
+}
+
+.healthEvidenceHeader p {
+  max-width: 760px;
+  margin: 0;
+  color: #64748b;
+  font-weight: 650;
+  line-height: 1.65;
+}
+
+.healthEvidenceConfidence {
+  flex-shrink: 0;
+  min-width: 100px;
+  padding: 13px 16px;
+  border-radius: 18px;
+  background: #ecfeff;
+  text-align: center;
+}
+
+.healthEvidenceConfidence span {
+  display: block;
+  color: #0e7490;
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.healthEvidenceConfidence strong {
+  display: block;
+  margin-top: 5px;
+  color: #0f172a;
+  font-size: 1.25rem;
+}
+
+.healthEvidenceMetrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.healthEvidenceMetrics article {
+  padding: 15px;
+  border-radius: 17px;
+  background: #f8fafc;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+.healthEvidenceMetrics span {
+  display: block;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.healthEvidenceMetrics strong {
+  display: block;
+  margin-top: 6px;
+  color: #0f172a;
+  font-size: 1.2rem;
+}
+
+.healthEvidenceList {
+  display: grid;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.healthEvidenceListHeader {
+  margin-bottom: 3px;
+  color: #0f172a;
+}
+
+.healthEvidenceItem {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  border-radius: 17px;
+  background: #f8fafc;
+}
+
+.healthEvidenceSource {
+  display: block;
+  margin-bottom: 4px;
+  color: #0891b2;
+  font-size: 0.7rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.healthEvidenceItem strong {
+  color: #0f172a;
+}
+
+.healthEvidenceItem p {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.healthEvidenceValue {
+  flex-shrink: 0;
+  color: #0f766e;
+  font-weight: 950;
+}
+
         @media (max-width: 1100px) {
           .dashboardJourneyTimeline {
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -928,6 +1066,18 @@ const [healthIntelligence, setHealthIntelligence] =
           .dashboardJourneyHeader {
             display: block;
           }
+            .healthEvidenceHeader {
+  flex-direction: column;
+}
+
+.healthEvidenceMetrics {
+  grid-template-columns: 1fr;
+}
+
+.healthEvidenceItem {
+  align-items: flex-start;
+}
+  
 .healthIntelligenceCommandCenter {
   padding: 16px;
   border-radius: 24px;
@@ -1478,6 +1628,11 @@ const [healthIntelligence, setHealthIntelligence] =
         confidence={healthIntelligence.trendSummary.confidence}
         isArabic={isArabic}
       />
+<HealthEvidenceCard
+  evidence={healthIntelligence.evidence.data}
+  confidence={healthIntelligence.evidence.confidence}
+  isArabic={isArabic}
+/>
 
       <PrimaryHealthPatternCard
   pattern={healthIntelligence.patterns.data.primaryPattern}

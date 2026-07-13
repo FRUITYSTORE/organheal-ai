@@ -10,6 +10,7 @@ import { HealthTrendData } from "@/lib/health-intelligence/engines/trend.engine"
 import { TrendSummaryData } from "@/lib/health-intelligence/engines/trend-summary.engine";
 import { HealthTimelineData } from "@/lib/health-intelligence/engines/health-timeline.engine";
 import { HealthPatternData } from "@/lib/health-intelligence/engines/health-pattern.engine";
+import { HealthEvidenceData } from "@/lib/health-intelligence/engines/health-evidence.engine";
 
 export type HealthIntelligenceResult = {
   findings: ClinicalFinding[];
@@ -20,6 +21,7 @@ export type HealthIntelligenceResult = {
   trend: EngineResult<HealthTrendData>;
   trendSummary: EngineResult<TrendSummaryData>;
   patterns: EngineResult<HealthPatternData>;
+  evidence: EngineResult<HealthEvidenceData>;
   doctorBrief: EngineResult<DoctorBriefData>;
   timeline: EngineResult<HealthTimelineData>;
   intelligenceOverview: EngineResult<IntelligenceOverviewData>;
