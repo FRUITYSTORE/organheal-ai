@@ -566,4 +566,27 @@
   display: block;
   margin-top: 6px;
   color: var(--knowledge-text-muted);
+}.knowledgeRecommendationReason {
+  margin-top: 18px;
+  padding: 18px;
+  border-radius: 16px;
+  background: #f8fafc;
+  border: 1px solid var(--knowledge-border);
+}
+
+.knowledgeRecommendationReason strong {
+  display: block;
+  color: var(--knowledge-text);
+  margin-bottom: 10px;
+}
+
+.knowledgeRecommendationReason ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.knowledgeRecommendationReason li {
+  margin-bottom: 8px;
+  color: var(--knowledge-text-muted);
+  line-height: 1.6;
 }

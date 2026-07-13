@@ -10,6 +10,9 @@ import HealthDirectionCard from "@/app/components/health-intelligence/HealthDire
 import { HealthIntelligenceResult } from "@/lib/health-intelligence/models/health-intelligence-result";
 import PrimaryHealthPatternCard from "@/app/components/health-intelligence/PrimaryHealthPatternCard";
 import HealthEvidenceCard from "@/app/components/health-intelligence/HealthEvidenceCard";
+import RecommendedKnowledgeCard from "@/app/components/health-intelligence/RecommendedKnowledgeCard";
+
+import type { PersonalizedKnowledgeRecommendations } from "@/lib/services/knowledge/knowledge-recommendation.service";
 
 type Language = "en" | "ar";
 
@@ -168,7 +171,44 @@ export default function DashboardPage() {
   setAssessments(dashboardSummary.assessments as Assessment[]);
   setDailyCheckIn(dashboardSummary.latestCheckIn as DailyCheckIn | null);
   setReportStats(dashboardSummary.reportStats);
-  setHealthIntelligence(dashboardSummary.healthIntelligence);
+  const intelligence =
+  dashboardSummary.healthIntelligence;
+
+setHealthIntelligence(intelligence);
+setKnowledgeRecommendations(null);
+
+try {
+  const knowledgeResponse = await fetch(
+    "/api/knowledge-recommendations",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        intelligence,
+        language:
+          getStoredLanguage() === "ar"
+            ? "ar"
+            : "en",
+      }),
+    }
+  );
+
+  if (knowledgeResponse.ok) {
+    const recommendations =
+      (await knowledgeResponse.json()) as PersonalizedKnowledgeRecommendations;
+
+    setKnowledgeRecommendations(recommendations);
+  }
+} catch (knowledgeError) {
+  console.error(
+    "Could not load knowledge recommendations:",
+    knowledgeError
+  );
+
+  setKnowledgeRecommendations(null);
+}
 } catch (error) {
   setMessage(
     error instanceof Error ? "Database error: " + error.message : "Database error"
@@ -188,6 +228,10 @@ export default function DashboardPage() {
     hasAssessments || hasReports || hasSavedIntelligence || hasCheckIn;
 const [healthIntelligence, setHealthIntelligence] =
   useState<HealthIntelligenceResult | null>(null);
+  const [
+  knowledgeRecommendations,
+  setKnowledgeRecommendations,
+] = useState<PersonalizedKnowledgeRecommendations | null>(null);
 
   const latestAssessment = assessments[0] || null;
 
@@ -1077,7 +1121,7 @@ const [healthIntelligence, setHealthIntelligence] =
 .healthEvidenceItem {
   align-items: flex-start;
 }
-  
+
 .healthIntelligenceCommandCenter {
   padding: 16px;
   border-radius: 24px;
@@ -1633,7 +1677,11 @@ const [healthIntelligence, setHealthIntelligence] =
   confidence={healthIntelligence.evidence.confidence}
   isArabic={isArabic}
 />
-
+{knowledgeRecommendations && (
+  <RecommendedKnowledgeCard
+    recommendations={knowledgeRecommendations}
+  />
+)}
       <PrimaryHealthPatternCard
   pattern={healthIntelligence.patterns.data.primaryPattern}
   isArabic={isArabic}

@@ -15,6 +15,10 @@ import {
   KnowledgeAssetGraph,
 } from "@/lib/services/knowledge/knowledge-graph.service";
 import { getKnowledgePackByOrgan } from "@/lib/services/knowledge/knowledge-pack.service";
+import {
+  buildKnowledgeExplanation,
+  KnowledgeExplanation,
+} from "@/lib/services/knowledge/knowledge-explanation.service";
 
 type GetKnowledgeRecommendationsInput = {
   intelligence: HealthIntelligenceResult;
@@ -24,7 +28,7 @@ type GetKnowledgeRecommendationsInput = {
 
 export type PersonalizedKnowledgeRecommendations = {
   recommendedPack: KnowledgePack | null;
-
+intelligenceExplanation: KnowledgeExplanation;
   assetRecommendations: ReturnType<
     typeof recommendKnowledgeAssets
   >;
@@ -95,6 +99,10 @@ export function getPersonalizedKnowledgeRecommendations({
     });
 
   return {
+    intelligenceExplanation:
+  buildKnowledgeExplanation(
+    intelligence
+  ),
     recommendedPack,
     assetRecommendations,
     contentRecommendations,

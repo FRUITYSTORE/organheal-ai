@@ -1,6 +1,8 @@
 import Link from "next/link";
 
-import { PersonalizedKnowledgeRecommendations } from "@/lib/services/knowledge/knowledge-recommendation.service";
+import type { PersonalizedKnowledgeRecommendations } from "@/lib/services/knowledge/knowledge-recommendation.service";
+import { buildKnowledgeExplanation } from "@/lib/services/knowledge/knowledge-explanation.service";
+import "@/app/knowledge/knowledge.css";
 
 type Props = {
   recommendations: PersonalizedKnowledgeRecommendations;
@@ -15,6 +17,8 @@ export default function RecommendedKnowledgeCard({
     recommendations.contentRecommendations.data
       .recommendations[0] ?? null;
 
+const explanation =
+  recommendations.intelligenceExplanation;
   if (!pack && !article) {
     return null;
   }
@@ -33,7 +37,23 @@ export default function RecommendedKnowledgeCard({
         OrganHeal selected educational content that matches
         your current health priorities.
       </p>
+<section
+  className="knowledgeRecommendationReason"
+>
+  <strong>
+    {explanation.title}
+  </strong>
 
+  <ul>
+    {explanation.reasons.map(
+      (reason) => (
+        <li key={reason}>
+          {reason}
+        </li>
+      )
+    )}
+  </ul>
+</section>
       {pack && (
         <Link
           href={`/knowledge/${pack.slug}`}
