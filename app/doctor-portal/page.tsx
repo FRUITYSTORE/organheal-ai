@@ -12,6 +12,7 @@ import SectionHeader from "@/app/components/ui/SectionHeader";
 import StatusBadge from "@/app/components/ui/StatusBadge";
 import { getDoctorPortalSummary } from "@/lib/services/doctor/doctor-portal.service";
 import { HealthIntelligenceResult } from "@/lib/health-intelligence/models/health-intelligence-result";
+import DoctorEvidenceCard from "@/app/components/doctor-portal/DoctorEvidenceCard";
 
 type Language = "en" | "ar";
 
@@ -594,6 +595,11 @@ const officialPriorityOrgan =
   description={recommendedAction.description}
   href={recommendedAction.href}
   buttonText={recommendedAction.buttonText}
+/>
+<DoctorEvidenceCard
+  evidence={healthIntelligence!.evidence.data}
+  confidence={healthIntelligence!.evidence.confidence}
+  isArabic={isArabic}
 />
 <DoctorBriefCard
   eyebrow={text("Doctor Brief", "ملخص الطبيب")}
