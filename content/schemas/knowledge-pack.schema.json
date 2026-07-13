@@ -1,0 +1,220 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "organheal-knowledge-pack.schema.json",
+  "title": "OrganHeal Knowledge Pack",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "slug",
+    "language",
+    "name",
+    "organ",
+    "status",
+    "version",
+    "summary",
+    "sections",
+    "relatedAssets",
+    "review"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "language": {
+      "enum": ["en", "ar"]
+    },
+    "name": {
+      "type": "string",
+      "minLength": 3
+    },
+    "organ": {
+      "type": "string",
+      "minLength": 2
+    },
+    "status": {
+      "enum": [
+        "draft",
+        "medical-review",
+        "approved",
+        "published",
+        "archived"
+      ]
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 20
+    },
+    "audiences": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "general",
+          "children",
+          "parents",
+          "older-adults",
+          "pregnancy",
+          "caregivers",
+          "healthcare-professionals"
+        ]
+      },
+      "uniqueItems": true,
+      "default": ["general"]
+    },
+    "sections": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "overview",
+        "normalFunction",
+        "warningSigns",
+        "riskFactors",
+        "healthyHabits",
+        "nutrition",
+        "exercise",
+        "commonConditions",
+        "labInterpretation",
+        "guidelines",
+        "latestResearch",
+        "videos",
+        "faqs",
+        "checklists",
+        "doctorResources",
+        "familyGuides",
+        "mythsVsFacts"
+      ],
+      "properties": {
+        "overview": {
+          "$ref": "#/$defs/section"
+        },
+        "normalFunction": {
+          "$ref": "#/$defs/section"
+        },
+        "warningSigns": {
+          "$ref": "#/$defs/section"
+        },
+        "riskFactors": {
+          "$ref": "#/$defs/section"
+        },
+        "healthyHabits": {
+          "$ref": "#/$defs/section"
+        },
+        "nutrition": {
+          "$ref": "#/$defs/section"
+        },
+        "exercise": {
+          "$ref": "#/$defs/section"
+        },
+        "commonConditions": {
+          "$ref": "#/$defs/section"
+        },
+        "labInterpretation": {
+          "$ref": "#/$defs/section"
+        },
+        "guidelines": {
+          "$ref": "#/$defs/section"
+        },
+        "latestResearch": {
+          "$ref": "#/$defs/section"
+        },
+        "videos": {
+          "$ref": "#/$defs/section"
+        },
+        "faqs": {
+          "$ref": "#/$defs/section"
+        },
+        "checklists": {
+          "$ref": "#/$defs/section"
+        },
+        "doctorResources": {
+          "$ref": "#/$defs/section"
+        },
+        "familyGuides": {
+          "$ref": "#/$defs/section"
+        },
+        "mythsVsFacts": {
+          "$ref": "#/$defs/section"
+        }
+      }
+    },
+    "relatedAssets": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "createdAt",
+        "updatedAt",
+        "reviewedAt",
+        "reviewedBy",
+        "nextReviewAt"
+      ],
+      "properties": {
+        "createdAt": {
+          "type": "string",
+          "format": "date"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date"
+        },
+        "reviewedAt": {
+          "type": ["string", "null"],
+          "format": "date"
+        },
+        "reviewedBy": {
+          "type": ["string", "null"]
+        },
+        "nextReviewAt": {
+          "type": ["string", "null"],
+          "format": "date"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "section": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "title",
+        "summary",
+        "itemIds"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 2
+        },
+        "summary": {
+          "type": "string"
+        },
+        "itemIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        }
+      }
+    }
+  }
+}

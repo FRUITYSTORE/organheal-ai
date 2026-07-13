@@ -5,7 +5,10 @@ export type HealthKnowledgeContentType =
   | "daily-fact"
   | "family-guide"
   | "research-update"
-  | "myth-vs-fact";
+  | "myth-vs-fact"
+  | "faq"
+  | "doctor-resource"
+  | "checklist";
 
 export type HealthKnowledgeEvidenceLevel =
   | "clinical-guideline"
@@ -21,7 +24,8 @@ export type HealthKnowledgeAudience =
   | "parents"
   | "older-adults"
   | "pregnancy"
-  | "caregivers";
+  | "caregivers"
+  | "healthcare-professionals";
 
 export type HealthKnowledgeLanguage = "en" | "ar";
 

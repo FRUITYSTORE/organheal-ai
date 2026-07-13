@@ -1,0 +1,123 @@
+{
+  "id": "pack-organ-en",
+  "slug": "organ-health",
+  "language": "en",
+  "name": "Organ Health Knowledge Pack",
+  "organ": "Organ",
+  "status": "draft",
+  "version": "1.0.0",
+  "summary": "A structured health knowledge pack for this organ.",
+  "audiences": ["general"],
+  "sections": {
+    "overview": {
+      "enabled": true,
+      "title": "Overview",
+      "summary": "",
+      "itemIds": []
+    },
+    "normalFunction": {
+      "enabled": true,
+      "title": "Normal Function",
+      "summary": "",
+      "itemIds": []
+    },
+    "warningSigns": {
+      "enabled": true,
+      "title": "Warning Signs",
+      "summary": "",
+      "itemIds": []
+    },
+    "riskFactors": {
+      "enabled": true,
+      "title": "Risk Factors",
+      "summary": "",
+      "itemIds": []
+    },
+    "healthyHabits": {
+      "enabled": true,
+      "title": "Healthy Habits",
+      "summary": "",
+      "itemIds": []
+    },
+    "nutrition": {
+      "enabled": true,
+      "title": "Nutrition",
+      "summary": "",
+      "itemIds": []
+    },
+    "exercise": {
+      "enabled": true,
+      "title": "Exercise",
+      "summary": "",
+      "itemIds": []
+    },
+    "commonConditions": {
+      "enabled": true,
+      "title": "Common Conditions",
+      "summary": "",
+      "itemIds": []
+    },
+    "labInterpretation": {
+      "enabled": true,
+      "title": "Lab Interpretation",
+      "summary": "",
+      "itemIds": []
+    },
+    "guidelines": {
+      "enabled": true,
+      "title": "Medical Guidelines",
+      "summary": "",
+      "itemIds": []
+    },
+    "latestResearch": {
+      "enabled": true,
+      "title": "Latest Research",
+      "summary": "",
+      "itemIds": []
+    },
+    "videos": {
+      "enabled": true,
+      "title": "Videos",
+      "summary": "",
+      "itemIds": []
+    },
+    "faqs": {
+      "enabled": true,
+      "title": "Frequently Asked Questions",
+      "summary": "",
+      "itemIds": []
+    },
+    "checklists": {
+      "enabled": true,
+      "title": "Checklists",
+      "summary": "",
+      "itemIds": []
+    },
+    "doctorResources": {
+      "enabled": true,
+      "title": "Doctor Resources",
+      "summary": "",
+      "itemIds": []
+    },
+    "familyGuides": {
+      "enabled": true,
+      "title": "Family Guides",
+      "summary": "",
+      "itemIds": []
+    },
+    "mythsVsFacts": {
+      "enabled": true,
+      "title": "Myths vs Facts",
+      "summary": "",
+      "itemIds": []
+    }
+  },
+  "relatedAssets": [],
+  "review": {
+    "createdAt": "2026-01-01",
+    "updatedAt": "2026-01-01",
+    "reviewedAt": null,
+    "reviewedBy": null,
+    "nextReviewAt": null
+  }
+}

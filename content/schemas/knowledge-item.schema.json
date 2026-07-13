@@ -1,0 +1,221 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "organheal-knowledge-item.schema.json",
+  "title": "OrganHeal Knowledge Item",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "slug",
+    "type",
+    "language",
+    "status",
+    "title",
+    "summary",
+    "practicalTakeaway",
+    "organTags",
+    "topicTags",
+    "riskTags",
+    "patternTags",
+    "recommendationTags",
+    "audiences",
+    "evidenceLevel",
+    "sources",
+    "publishedAt",
+    "reviewedAt",
+    "featured"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "type": {
+      "enum": [
+        "article",
+        "video",
+        "health-minute",
+        "daily-fact",
+        "family-guide",
+        "research-update",
+        "myth-vs-fact",
+        "faq",
+        "doctor-resource",
+        "checklist"
+      ]
+    },
+    "language": {
+      "enum": ["en", "ar"]
+    },
+    "status": {
+      "enum": [
+        "draft",
+        "medical-review",
+        "approved",
+        "published",
+        "archived"
+      ]
+    },
+    "title": {
+      "type": "string",
+      "minLength": 3
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 10
+    },
+    "practicalTakeaway": {
+      "type": "string",
+      "minLength": 10
+    },
+    "body": {
+      "type": "string"
+    },
+    "organTags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "conditionTags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true,
+      "default": []
+    },
+    "topicTags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "riskTags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "patternTags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "recommendationTags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "audiences": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "general",
+          "children",
+          "parents",
+          "older-adults",
+          "pregnancy",
+          "caregivers",
+          "healthcare-professionals"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "evidenceLevel": {
+      "enum": [
+        "clinical-guideline",
+        "systematic-review",
+        "randomized-trial",
+        "observational-study",
+        "expert-consensus",
+        "educational"
+      ]
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "url"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "publication": {
+            "type": ["string", "null"]
+          },
+          "publishedAt": {
+            "type": ["string", "null"],
+            "format": "date"
+          },
+          "doi": {
+            "type": ["string", "null"]
+          },
+          "pubmedId": {
+            "type": ["string", "null"]
+          },
+          "guidelineOrganization": {
+            "type": ["string", "null"]
+          }
+        }
+      }
+    },
+    "readingMinutes": {
+      "type": ["integer", "null"],
+      "minimum": 1
+    },
+    "videoMinutes": {
+      "type": ["number", "null"],
+      "minimum": 0
+    },
+    "imageUrl": {
+      "type": ["string", "null"]
+    },
+    "videoUrl": {
+      "type": ["string", "null"]
+    },
+    "publishedAt": {
+      "type": "string",
+      "format": "date"
+    },
+    "reviewedAt": {
+      "type": "string",
+      "format": "date"
+    },
+    "reviewedBy": {
+      "type": ["string", "null"]
+    },
+    "expiresAt": {
+      "type": ["string", "null"],
+      "format": "date"
+    },
+    "featured": {
+      "type": "boolean"
+    },
+    "relatedAssets": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true,
+      "default": []
+    }
+  }
+}
