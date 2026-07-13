@@ -1,16 +1,20 @@
+import "server-only";
+
 import { HealthIntelligenceResult } from "@/lib/health-intelligence/models/health-intelligence-result";
 import { knowledgeAssetCatalog } from "@/lib/health-knowledge/catalog/knowledge-asset.catalog";
-import { knowledgeCatalog } from "@/lib/health-knowledge/catalog/knowledge.catalog";
 import { recommendHealthKnowledge } from "@/lib/health-knowledge/engines/health-knowledge.engine";
 import { recommendKnowledgeAssets } from "@/lib/health-knowledge/engines/knowledge-asset-recommendation.engine";
 import {
   HealthKnowledgeAudience,
   HealthKnowledgeLanguage,
 } from "@/lib/health-knowledge/models/knowledge-item";
+import { KnowledgePack } from "@/lib/health-knowledge/models/knowledge-pack";
+import { getPublishedRegisteredKnowledgeItems } from "@/lib/services/knowledge/content-registry.service";
 import {
   getKnowledgeGraphsForAssets,
   KnowledgeAssetGraph,
 } from "@/lib/services/knowledge/knowledge-graph.service";
+import { getKnowledgePackByOrgan } from "@/lib/services/knowledge/knowledge-pack.service";
 
 type GetKnowledgeRecommendationsInput = {
   intelligence: HealthIntelligenceResult;
@@ -19,6 +23,8 @@ type GetKnowledgeRecommendationsInput = {
 };
 
 export type PersonalizedKnowledgeRecommendations = {
+  recommendedPack: KnowledgePack | null;
+
   assetRecommendations: ReturnType<
     typeof recommendKnowledgeAssets
   >;
@@ -49,6 +55,13 @@ export function getPersonalizedKnowledgeRecommendations({
   const primaryRecommendation =
     intelligence.recommendations.data.primaryAction;
 
+  const registeredItems =
+    getPublishedRegisteredKnowledgeItems();
+
+  const recommendedPack = priorityOrgan
+    ? getKnowledgePackByOrgan(priorityOrgan)
+    : null;
+
   const assetRecommendations =
     recommendKnowledgeAssets({
       assets: knowledgeAssetCatalog,
@@ -71,7 +84,7 @@ export function getPersonalizedKnowledgeRecommendations({
 
   const contentRecommendations =
     recommendHealthKnowledge({
-      items: knowledgeCatalog,
+      items: registeredItems,
       language,
       audience,
       priorityOrgan,
@@ -82,6 +95,7 @@ export function getPersonalizedKnowledgeRecommendations({
     });
 
   return {
+    recommendedPack,
     assetRecommendations,
     contentRecommendations,
     assetGraphs,
