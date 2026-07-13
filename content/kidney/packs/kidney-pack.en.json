@@ -1,0 +1,153 @@
+{
+  "id": "kidney-pack-en",
+  "slug": "kidney-pack",
+  "language": "en",
+
+  "name": "Kidney Health Knowledge Pack",
+
+  "organ": "kidney",
+
+  "status": "published",
+
+  "version": "1.0.0",
+
+  "summary": "Complete educational package for kidney health.",
+
+  "audiences": [
+    "general"
+  ],
+
+  "sections": {
+
+    "overview": {
+      "enabled": true,
+      "title": "Overview",
+      "summary": "Introduction to kidney health.",
+      "itemIds": [
+        "kidney-health-overview-en"
+      ]
+    },
+
+    "normalFunction": {
+      "enabled": true,
+      "title": "Normal Function",
+      "summary": "",
+      "itemIds": []
+    },
+
+    "warningSigns": {
+      "enabled": true,
+      "title": "Warning Signs",
+      "summary": "",
+      "itemIds": []
+    },
+
+    "riskFactors": {
+      "enabled": true,
+      "title": "Risk Factors",
+      "summary": "",
+      "itemIds": []
+    },
+
+    "healthyHabits": {
+      "enabled": true,
+      "title": "Healthy Habits",
+      "summary": "",
+      "itemIds": []
+    },
+
+    "nutrition": {
+      "enabled": true,
+      "title": "Nutrition",
+      "summary": "",
+      "itemIds": []
+    },
+
+    "exercise": {
+      "enabled": true,
+      "title": "Exercise",
+      "summary": "",
+      "itemIds": []
+    },
+
+    "commonConditions": {
+      "enabled": true,
+      "title": "Common Conditions",
+      "summary": "",
+      "itemIds": []
+    },
+
+    "labInterpretation": {
+      "enabled": true,
+      "title": "Laboratory Interpretation",
+      "summary": "",
+      "itemIds": []
+    },
+
+    "guidelines": {
+      "enabled": true,
+      "title": "Clinical Guidelines",
+      "summary": "",
+      "itemIds": []
+    },
+
+    "latestResearch": {
+      "enabled": true,
+      "title": "Latest Research",
+      "summary": "",
+      "itemIds": []
+    },
+
+    "videos": {
+      "enabled": true,
+      "title": "Videos",
+      "summary": "",
+      "itemIds": []
+    },
+
+    "faqs": {
+      "enabled": true,
+      "title": "Frequently Asked Questions",
+      "summary": "",
+      "itemIds": []
+    },
+
+    "checklists": {
+      "enabled": true,
+      "title": "Checklist",
+      "summary": "",
+      "itemIds": []
+    },
+
+    "doctorResources": {
+      "enabled": true,
+      "title": "Doctor Resources",
+      "summary": "",
+      "itemIds": []
+    },
+
+    "familyGuides": {
+      "enabled": true,
+      "title": "Family Guides",
+      "summary": "",
+      "itemIds": []
+    },
+
+    "mythsVsFacts": {
+      "enabled": true,
+      "title": "Myths vs Facts",
+      "summary": "",
+      "itemIds": []
+    }
+  },
+
+  "relatedAssets": [],
+
+  "review": {
+    "createdAt": "2026-07-01",
+    "updatedAt": "2026-07-01",
+    "reviewedAt": "2026-07-01",
+    "reviewedBy": "OrganHeal Medical Board",
+    "nextReviewAt": "2027-07-01"
+  }
+}

@@ -4,10 +4,11 @@ import fs from "node:fs";
 import path from "node:path";
 
 import {
-  HealthKnowledgeItem,
+  HealthKnowledgeAudience,
   HealthKnowledgeContentType,
   HealthKnowledgeEvidenceLevel,
-  HealthKnowledgeAudience,
+  HealthKnowledgeItem,
+  HealthKnowledgeStatus,
 } from "@/lib/health-knowledge/models/knowledge-item";
 import {
   KnowledgePack,
@@ -50,6 +51,14 @@ const AUDIENCES: HealthKnowledgeAudience[] = [
   "pregnancy",
   "caregivers",
   "healthcare-professionals",
+];
+
+const KNOWLEDGE_STATUSES: HealthKnowledgeStatus[] = [
+  "draft",
+  "medical-review",
+  "approved",
+  "published",
+  "archived",
 ];
 
 const PACK_STATUSES: KnowledgePackStatus[] = [
@@ -108,18 +117,24 @@ function isStringArray(
 ): value is string[] {
   return (
     Array.isArray(value) &&
-    value.every((item) => typeof item === "string")
+    value.every(
+      (item) => typeof item === "string"
+    )
   );
 }
 
 function isValidDate(value: unknown) {
   return (
     typeof value === "string" &&
-    !Number.isNaN(new Date(value).getTime())
+    !Number.isNaN(
+      new Date(value).getTime()
+    )
   );
 }
 
-function getJsonFiles(directory: string): string[] {
+function getJsonFiles(
+  directory: string
+): string[] {
   if (!fs.existsSync(directory)) {
     return [];
   }
@@ -149,7 +164,9 @@ function getJsonFiles(directory: string): string[] {
   });
 }
 
-function readJsonFile(filePath: string): unknown {
+function readJsonFile(
+  filePath: string
+): unknown {
   const raw = fs.readFileSync(
     filePath,
     "utf8"
@@ -161,7 +178,9 @@ function readJsonFile(filePath: string): unknown {
 function validateKnowledgeItem(
   value: unknown
 ): value is HealthKnowledgeItem {
-  if (!isRecord(value)) return false;
+  if (!isRecord(value)) {
+    return false;
+  }
 
   if (
     typeof value.id !== "string" ||
@@ -169,21 +188,31 @@ function validateKnowledgeItem(
     !KNOWLEDGE_ITEM_TYPES.includes(
       value.type as HealthKnowledgeContentType
     ) ||
-    (value.language !== "en" &&
-      value.language !== "ar") ||
+    (
+      value.language !== "en" &&
+      value.language !== "ar"
+    ) ||
+    !KNOWLEDGE_STATUSES.includes(
+      value.status as HealthKnowledgeStatus
+    ) ||
     typeof value.title !== "string" ||
     typeof value.summary !== "string" ||
-    typeof value.practicalTakeaway !== "string" ||
+    typeof value.practicalTakeaway !==
+      "string" ||
     !isStringArray(value.organTags) ||
+    !isStringArray(value.conditionTags) ||
     !isStringArray(value.topicTags) ||
     !isStringArray(value.riskTags) ||
     !isStringArray(value.patternTags) ||
-    !isStringArray(value.recommendationTags) ||
+    !isStringArray(
+      value.recommendationTags
+    ) ||
     !Array.isArray(value.audiences) ||
-    !value.audiences.every((audience) =>
-      AUDIENCES.includes(
-        audience as HealthKnowledgeAudience
-      )
+    !value.audiences.every(
+      (audience) =>
+        AUDIENCES.includes(
+          audience as HealthKnowledgeAudience
+        )
     ) ||
     !EVIDENCE_LEVELS.includes(
       value.evidenceLevel as HealthKnowledgeEvidenceLevel
@@ -193,6 +222,30 @@ function validateKnowledgeItem(
     !isValidDate(value.reviewedAt) ||
     typeof value.featured !== "boolean" ||
     typeof value.active !== "boolean"
+  ) {
+    return false;
+  }
+
+  if (
+    value.body !== undefined &&
+    value.body !== null &&
+    typeof value.body !== "string"
+  ) {
+    return false;
+  }
+
+  if (
+    value.reviewedBy !== undefined &&
+    value.reviewedBy !== null &&
+    typeof value.reviewedBy !== "string"
+  ) {
+    return false;
+  }
+
+  if (
+    value.expiresAt !== undefined &&
+    value.expiresAt !== null &&
+    !isValidDate(value.expiresAt)
   ) {
     return false;
   }
@@ -221,13 +274,17 @@ function validatePackSection(
 function validateKnowledgePack(
   value: unknown
 ): value is KnowledgePack {
-  if (!isRecord(value)) return false;
+  if (!isRecord(value)) {
+    return false;
+  }
 
   if (
     typeof value.id !== "string" ||
     typeof value.slug !== "string" ||
-    (value.language !== "en" &&
-      value.language !== "ar") ||
+    (
+      value.language !== "en" &&
+      value.language !== "ar"
+    ) ||
     typeof value.name !== "string" ||
     typeof value.organ !== "string" ||
     !PACK_STATUSES.includes(
@@ -236,10 +293,11 @@ function validateKnowledgePack(
     typeof value.version !== "string" ||
     typeof value.summary !== "string" ||
     !Array.isArray(value.audiences) ||
-    !value.audiences.every((audience) =>
-      AUDIENCES.includes(
-        audience as HealthKnowledgeAudience
-      )
+    !value.audiences.every(
+      (audience) =>
+        AUDIENCES.includes(
+          audience as HealthKnowledgeAudience
+        )
     ) ||
     !isRecord(value.sections) ||
     !isStringArray(value.relatedAssets) ||
@@ -250,36 +308,41 @@ function validateKnowledgePack(
 
   const sections = value.sections;
 
-if (!isRecord(sections)) {
-  return false;
-}
+  const sectionsValid =
+    PACK_SECTION_KEYS.every((key) =>
+      validatePackSection(
+        sections[key]
+      )
+    );
 
-const sectionsValid = PACK_SECTION_KEYS.every((key) =>
-  validatePackSection(sections[key])
-);
+  if (!sectionsValid) {
+    return false;
+  }
 
-  if (!sectionsValid) return false;
+  const review = value.review;
 
   return (
-    isValidDate(value.review.createdAt) &&
-    isValidDate(value.review.updatedAt) &&
+    isValidDate(review.createdAt) &&
+    isValidDate(review.updatedAt) &&
     (
-      value.review.reviewedAt === null ||
-      isValidDate(value.review.reviewedAt)
+      review.reviewedAt === null ||
+      isValidDate(review.reviewedAt)
     ) &&
     (
-      value.review.reviewedBy === null ||
-      typeof value.review.reviewedBy ===
+      review.reviewedBy === null ||
+      typeof review.reviewedBy ===
         "string"
     ) &&
     (
-      value.review.nextReviewAt === null ||
-      isValidDate(value.review.nextReviewAt)
+      review.nextReviewAt === null ||
+      isValidDate(review.nextReviewAt)
     )
   );
 }
 
-function shouldIgnoreFile(filePath: string) {
+function shouldIgnoreFile(
+  filePath: string
+) {
   const normalizedPath =
     filePath.replaceAll("\\", "/");
 
@@ -296,16 +359,23 @@ function shouldIgnoreFile(filePath: string) {
   );
 }
 
-export function loadMedicalContent(): LoadedMedicalContent {
+export function loadMedicalContent():
+  LoadedMedicalContent {
   const files = getJsonFiles(
     CONTENT_ROOT
   ).filter(
-    (filePath) => !shouldIgnoreFile(filePath)
+    (filePath) =>
+      !shouldIgnoreFile(filePath)
   );
 
-  const knowledgeItems: HealthKnowledgeItem[] = [];
-  const knowledgePacks: KnowledgePack[] = [];
-  const issues: ContentLoadIssue[] = [];
+  const knowledgeItems:
+    HealthKnowledgeItem[] = [];
+
+  const knowledgePacks:
+    KnowledgePack[] = [];
+
+  const issues:
+    ContentLoadIssue[] = [];
 
   for (const filePath of files) {
     const relativeFile = path.relative(
@@ -314,14 +384,19 @@ export function loadMedicalContent(): LoadedMedicalContent {
     );
 
     try {
-      const value = readJsonFile(filePath);
+      const value =
+        readJsonFile(filePath);
 
-      if (validateKnowledgeItem(value)) {
+      if (
+        validateKnowledgeItem(value)
+      ) {
         knowledgeItems.push(value);
         continue;
       }
 
-      if (validateKnowledgePack(value)) {
+      if (
+        validateKnowledgePack(value)
+      ) {
         knowledgePacks.push(value);
         continue;
       }
@@ -350,13 +425,20 @@ export function loadMedicalContent(): LoadedMedicalContent {
 }
 
 export function loadPublishedKnowledgeItems() {
-  return loadMedicalContent().knowledgeItems.filter(
-    (item) => item.active
-  );
+  return loadMedicalContent()
+    .knowledgeItems
+    .filter(
+      (item) =>
+        item.active &&
+        item.status === "published"
+    );
 }
 
 export function loadPublishedKnowledgePacks() {
-  return loadMedicalContent().knowledgePacks.filter(
-    (pack) => pack.status === "published"
-  );
+  return loadMedicalContent()
+    .knowledgePacks
+    .filter(
+      (pack) =>
+        pack.status === "published"
+    );
 }

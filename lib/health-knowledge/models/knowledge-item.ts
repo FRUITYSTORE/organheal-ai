@@ -18,6 +18,13 @@ export type HealthKnowledgeEvidenceLevel =
   | "expert-consensus"
   | "educational";
 
+  export type HealthKnowledgeStatus =
+  | "draft"
+  | "medical-review"
+  | "approved"
+  | "published"
+  | "archived";
+  
 export type HealthKnowledgeAudience =
   | "general"
   | "children"
@@ -41,16 +48,20 @@ export type HealthKnowledgeItem = {
   slug: string;
 
   type: HealthKnowledgeContentType;
-  language: HealthKnowledgeLanguage;
+   language: HealthKnowledgeLanguage;
+    status: HealthKnowledgeStatus;
 
   title: string;
   summary: string;
   practicalTakeaway: string;
+  body?: string | null;
 
   organTags: string[];
+   conditionTags: string[];
   topicTags: string[];
   riskTags: string[];
   patternTags: string[];
+  
   recommendationTags: string[];
 
   audiences: HealthKnowledgeAudience[];
@@ -66,6 +77,7 @@ export type HealthKnowledgeItem = {
 
   publishedAt: string;
   reviewedAt: string;
+  reviewedBy?: string | null;
   expiresAt?: string | null;
 
   featured: boolean;

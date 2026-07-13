@@ -1,0 +1,73 @@
+{
+  "id": "kidney-health-overview-en",
+  "slug": "kidney-health-overview",
+  "type": "article",
+  "language": "en",
+
+  "status": "published",
+
+  "title": "Kidney Health Overview",
+
+  "summary": "Understand how healthy kidneys work and why protecting them matters.",
+
+  "practicalTakeaway": "Protecting kidney function begins with early monitoring, healthy lifestyle choices, and timely medical evaluation.",
+
+  "body": "Coming soon.",
+
+  "organTags": [
+    "kidney"
+  ],
+
+  "conditionTags": [
+    "ckd"
+  ],
+
+  "topicTags": [
+    "kidney-health"
+  ],
+
+  "riskTags": [
+    "kidney-risk"
+  ],
+
+  "patternTags": [
+    "kidney-pattern"
+  ],
+
+  "recommendationTags": [
+    "hydration"
+  ],
+
+  "audiences": [
+    "general"
+  ],
+
+  "evidenceLevel": "clinical-guideline",
+
+  "sources": [
+    {
+      "name": "KDIGO 2024 CKD Guideline",
+      "url": "https://kdigo.org/wp-content/uploads/2024/03/KDIGO-2024-CKD-Guideline.pdf"
+    }
+  ],
+
+  "readingMinutes": 5,
+
+  "videoMinutes": null,
+
+  "imageUrl": null,
+
+  "videoUrl": null,
+
+  "publishedAt": "2026-07-01",
+
+  "reviewedAt": "2026-07-01",
+
+  "reviewedBy": "OrganHeal Medical Board",
+
+  "expiresAt": null,
+
+  "featured": true,
+
+  "active": true
+}
