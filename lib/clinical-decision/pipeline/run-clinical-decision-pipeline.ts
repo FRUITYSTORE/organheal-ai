@@ -1,4 +1,5 @@
 import "server-only";
+import { healthPassportStage } from "@/lib/clinical-decision/pipeline/stages/health-passport.stage";
 
 import type {
   HealthKnowledgeAudience,
@@ -28,10 +29,11 @@ function createPipeline(
   stopOnFailure = true
 ) {
   return new ClinicalDecisionPipeline<ClinicalDecisionContext>({
-    stopOnFailure,
-  })
-    .addStage(healthIntelligenceStage)
-    .addStage(personalizedKnowledgeStage);
+  stopOnFailure,
+})
+  .addStage(healthIntelligenceStage)
+  .addStage(healthPassportStage)
+  .addStage(personalizedKnowledgeStage);
 }
 
 export async function runClinicalDecisionPipeline({

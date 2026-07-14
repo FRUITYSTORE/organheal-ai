@@ -27,8 +27,11 @@ export async function buildClinicalDecision({
       audience,
     });
 
-  const { intelligence, knowledge } =
-    pipelineResult.context;
+  const {
+  intelligence,
+  knowledge,
+  passport,
+} = pipelineResult.context;
 
   if (!intelligence) {
     throw new Error(
@@ -41,7 +44,12 @@ export async function buildClinicalDecision({
       "Clinical decision pipeline did not produce personalized knowledge."
     );
   }
-
+  
+if (!passport) {
+  throw new Error(
+    "Clinical decision pipeline did not produce a Health Passport."
+  );
+}
   const completedStages =
     pipelineResult.executions
       .filter(
@@ -49,19 +57,21 @@ export async function buildClinicalDecision({
           execution.status === "completed"
       )
       .map((execution) => execution.stageId)
-      .filter(
-        (
-          stageId
-        ): stageId is
-          | "health-intelligence"
-          | "personalized-knowledge" =>
-          stageId === "health-intelligence" ||
-          stageId === "personalized-knowledge"
-      );
-
+     .filter(
+  (
+    stageId
+  ): stageId is
+    | "health-intelligence"
+    | "health-passport"
+    | "personalized-knowledge" =>
+    stageId === "health-intelligence" ||
+    stageId === "health-passport" ||
+    stageId === "personalized-knowledge"
+);
   return {
     intelligence,
     knowledge,
+    passport,
     metadata: {
       status: pipelineResult.successful
         ? completedStages.length === 2

@@ -1,5 +1,6 @@
 import type { HealthIntelligenceResult } from "@/lib/health-intelligence/models/health-intelligence-result";
 import type { PersonalizedKnowledgeRecommendations } from "@/lib/services/knowledge/knowledge-recommendation.service";
+import type { PassportModuleResult } from "@/lib/modules/passport";
 
 export type ClinicalDecisionPipelineStatus =
   | "ready"
@@ -8,6 +9,7 @@ export type ClinicalDecisionPipelineStatus =
 
 export type ClinicalDecisionPipelineStage =
   | "health-intelligence"
+  | "health-passport"
   | "personalized-knowledge";
 
 export type ClinicalDecisionPipelineMetadata = {
@@ -19,5 +21,6 @@ export type ClinicalDecisionPipelineMetadata = {
 export type ClinicalDecisionResult = {
   intelligence: HealthIntelligenceResult;
   knowledge: PersonalizedKnowledgeRecommendations;
+  passport: PassportModuleResult;
   metadata: ClinicalDecisionPipelineMetadata;
 };

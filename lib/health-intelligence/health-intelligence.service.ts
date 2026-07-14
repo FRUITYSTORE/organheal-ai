@@ -12,6 +12,7 @@ import { buildIntelligenceOverview } from "@/lib/health-intelligence/engines/int
 import { HealthIntelligenceResult } from "@/lib/health-intelligence/models/health-intelligence-result";
 import { detectHealthPatterns } from "@/lib/health-intelligence/engines/health-pattern.engine";
 import { buildHealthEvidence } from "@/lib/health-intelligence/engines/health-evidence.engine";
+import { buildHealthPassport } from "@/lib/health-intelligence/engines/health-passport.engine";
 
 export function buildHealthIntelligence(
   patient: PatientSummary
@@ -74,18 +75,26 @@ const evidence = buildHealthEvidence({
     doctorBrief,
   });
 
+  const healthPassport = buildHealthPassport({
+  patient,
+  healthScore,
+  priority,
+  intelligenceOverview,
+});
+
   return {
-    findings,
-    priority,
-    risk,
-    recommendations,
-    healthScore,
-    trend,
-    trendSummary,
-    patterns,
-    evidence,
-    doctorBrief,
-    timeline,
-    intelligenceOverview,
-  };
+  findings,
+  priority,
+  risk,
+  recommendations,
+  healthScore,
+  trend,
+  trendSummary,
+  timeline,
+  patterns,
+  evidence,
+  doctorBrief,
+  intelligenceOverview,
+  healthPassport,
+};
 }
