@@ -1,10 +1,16 @@
 "use client";
 
 import PageBackActions from "../components/PageBackActions";
-import { type CSSProperties, useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import type { TimelineModuleResult } from "@/lib/modules/timeline";
+import type { PassportModuleResult } from "@/lib/modules/passport";
+import HistoryOverviewCard from "@/app/components/history/HistoryOverviewCard";
 
 type Language = "en" | "ar";
 
@@ -80,6 +86,8 @@ const [officialTimeline, setOfficialTimeline] =
   const [selectedFilter, setSelectedFilter] = useState("All");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+const [officialPassport, setOfficialPassport] =
+  useState<PassportModuleResult | null>(null);
 
   useEffect(() => {
     function syncLanguage() {
@@ -174,23 +182,26 @@ const [officialTimeline, setOfficialTimeline] =
     return value;
   }
 
-  function localizeType(value: TimelineItem["type"]) {
-    if (value === "Trend") return "اتجاه صحي";
-    if (!isArabic) return value;
+  function localizeType(
+  value: TimelineItem["type"]
+) {
+  if (!isArabic) return value;
 
-    if (value === "Assessment") return "تقييم";
-    if (value === "Check-In") return "Check-In";
-    if (value === "Report") return "تقرير";
-    if (value === "Analysis") return "تحليل صحي";
+  if (value === "Assessment") return "تقييم";
+  if (value === "Check-In") return "Check-In";
+  if (value === "Report") return "تقرير";
+  if (value === "Analysis") return "تحليل صحي";
+  if (value === "Trend") return "اتجاه صحي";
 
-    return value;
-  }
+  return value;
+}
 
   function getTimelineIcon(value: TimelineItem["type"]) {
     if (value === "Assessment") return "🧭";
     if (value === "Check-In") return "✅";
     if (value === "Report") return "📄";
     if (value === "Analysis") return "🧠";
+    if (value === "Trend") return "📈";
     return "•";
   }
 
@@ -215,6 +226,7 @@ const [officialTimeline, setOfficialTimeline] =
 
     const userId = userData.user.id;
     let timelineDecision: TimelineModuleResult | null = null;
+    setOfficialPassport(null);
 
 try {
   const response = await fetch(
@@ -237,10 +249,12 @@ try {
 
   if (response.ok) {
     const decision = (await response.json()) as {
-      timeline: TimelineModuleResult;
-    };
+  timeline: TimelineModuleResult;
+  passport: PassportModuleResult;
+};
 
-    timelineDecision = decision.timeline;
+timelineDecision = decision.timeline;
+setOfficialPassport(decision.passport);
   } else {
     console.error(
       "History decision request failed:",
@@ -346,6 +360,57 @@ try {
     allScores.length > 0
       ? Math.round(allScores.reduce((sum, score) => sum + score, 0) / allScores.length)
       : 0;
+const effectiveProgressScore =
+  officialPassport?.data.overallScore ??
+  overallProgressScore;
+
+const hasOfficialProgress =
+  officialPassport !== null &&
+  officialPassport.status === "ready";
+
+const progressDataAvailable =
+  hasOfficialProgress ||
+  allScores.length > 0;
+
+  const getOfficialSourceCount = (
+  sourceId:
+    | "assessments"
+    | "checkin"
+    | "reports"
+    | "analysis"
+    | "history",
+  fallback: number
+) => {
+  return (
+    officialPassport?.data.sources.find(
+      (source) => source.id === sourceId
+    )?.count ?? fallback
+  );
+};
+
+const assessmentCount =
+  getOfficialSourceCount(
+    "assessments",
+    history.length
+  );
+
+const checkInCount =
+  getOfficialSourceCount(
+    "checkin",
+    dailyCheckIns.length
+  );
+
+const reportCount =
+  getOfficialSourceCount(
+    "reports",
+    uploadedReports.length
+  );
+
+const analysisCount =
+  getOfficialSourceCount(
+    "analysis",
+    savedAnalysis.length
+  );
 
   const latestCheckIn = dailyCheckIns[0] || null;
 
@@ -622,10 +687,6 @@ const timelineItems =
 
   const hasAnyHistory = timelineItems.length > 0;
 
-  const scoreRingStyle = {
-    "--score": Math.max(0, Math.min(100, overallProgressScore)),
-  } as CSSProperties;
-
   return (
     <main className="ohPageShell followUpCleanV4" dir={isArabic ? "rtl" : "ltr"}>
       <div className="ohContainer ohStack large" style={{ padding: "28px 0 56px" }}>
@@ -663,82 +724,64 @@ const timelineItems =
         {!loading && !message && (
           <>
             <section className="ohHero">
-              <div className="ohHeroGrid">
-                <div>
-                  <p className="ohEyebrow">
-                    {text("Health Journey Command Timeline", "مسار قيادة الرحلة الصحية")}
-                  </p>
+  <div className="ohHeroGrid">
+    <div>
+      <p className="ohEyebrow">
+        {text(
+          "Health Journey Command Timeline",
+          "مسار قيادة الرحلة الصحية"
+        )}
+      </p>
 
-                  <h1 className="ohTitle">
-                    {text("Progress Timeline", "مسار التقدم")}
-                  </h1>
+      <h1 className="ohTitle">
+        {text(
+          "Progress Timeline",
+          "مسار التقدم"
+        )}
+      </h1>
 
-                  <p className="ohLead">
-                    {text(
-                      "Review your assessments, wellness check-ins, uploaded reports, saved intelligence, trends, and the next best action in one connected view.",
-                      "راجع التقييمات، Check-Ins، التقارير المرفوعة، التحليل الصحي المحفوظ، الاتجاهات، والخطوة التالية الأفضل في عرض واحد مترابط."
-                    )}
-                  </p>
+      <p className="ohLead">
+        {text(
+          "Review your assessments, wellness check-ins, uploaded reports, saved intelligence, trends, and the next best action in one connected view.",
+          "راجع التقييمات، Check-Ins، التقارير المرفوعة، التحليل الصحي المحفوظ، الاتجاهات، والخطوة التالية الأفضل في عرض واحد مترابط."
+        )}
+      </p>
 
-                  <div className="ohButtonRow" style={{ marginTop: "24px" }}>
-                    <Link href={recommendedAction.href} className="primaryBtn">
-                      {recommendedAction.buttonText}
-                    </Link>
+      <div
+        className="ohButtonRow"
+        style={{ marginTop: "24px" }}
+      >
+        <Link
+          href={recommendedAction.href}
+          className="primaryBtn"
+        >
+          {recommendedAction.buttonText}
+        </Link>
 
-                    <Link href="/dashboard" className="secondaryBtn">
-                      {text("Open Dashboard", "فتح لوحة التحكم")}
-                    </Link>
-                  </div>
-                </div>
+        <Link
+          href="/dashboard"
+          className="secondaryBtn"
+        >
+          {text(
+            "Open Dashboard",
+            "فتح لوحة التحكم"
+          )}
+        </Link>
+      </div>
+    </div>
 
-                <div className="ohCard">
-                  <div className="ohCardHeader">
-                    <div>
-                      <p className="ohMetricLabel">
-                        {text("Overall Progress Score", "مؤشر التقدم العام")}
-                      </p>
-                      <h2 className="ohCardTitle" style={{ marginTop: "8px" }}>
-                        {allScores.length > 0
-                          ? getScoreStatus(overallProgressScore)
-                          : text("No Data Yet", "لا توجد بيانات بعد")}
-                      </h2>
-                    </div>
-
-                    <span
-                      className={`ohStatusBadge ${
-                        allScores.length > 0 ? getTone(overallProgressScore) : "neutral"
-                      }`}
-                    >
-                      {allScores.length > 0
-                        ? `${overallProgressScore}/100`
-                        : text("Pending", "بانتظار")}
-                    </span>
-                  </div>
-
-                  <div
-                    style={{
-                      display: "grid",
-                      placeItems: "center",
-                      margin: "18px 0",
-                    }}
-                  >
-                    <div className="ohScoreRing" style={scoreRingStyle}>
-                      <div>
-                        <strong>{allScores.length > 0 ? overallProgressScore : 0}</strong>
-                        <span>{text("progress", "تقدم")}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <p className="ohCardText">
-                    {text(
-                      "This score averages saved assessments and wellness check-ins.",
-                      "هذا المؤشر يحسب متوسط التقييمات المحفوظة و Check-Ins الصحية."
-                    )}
-                  </p>
-                </div>
-              </div>
-            </section>
+    <HistoryOverviewCard
+      overallScore={effectiveProgressScore}
+      progressDataAvailable={progressDataAvailable}
+      passport={officialPassport}
+      assessmentCount={assessmentCount}
+      checkInCount={checkInCount}
+      reportCount={reportCount}
+      analysisCount={analysisCount}
+      isArabic={isArabic}
+    />
+  </div>
+</section>
 
             <section className="ohActionPanel">
               <div className="ohCardHeader" style={{ marginBottom: 0 }}>
@@ -757,49 +800,98 @@ const timelineItems =
                 </Link>
               </div>
             </section>
+<section className="ohMetricGrid">
+  <article className="ohMetricCard">
+    <span className="ohMetricLabel">
+      {text(
+        "Assessments",
+        "التقييمات"
+      )}
+    </span>
 
-            <section className="ohMetricGrid">
-              <article className="ohMetricCard">
-                <span className="ohMetricLabel">
-                  {text("Assessments", "التقييمات")}
-                </span>
-                <span className="ohMetricValue">{history.length}</span>
-                <span className="ohMetricHint">
-                  {text("Saved assessment records", "سجلات تقييم محفوظة")}
-                </span>
-              </article>
+    <span className="ohMetricValue">
+      {assessmentCount}
+    </span>
 
-              <article className="ohMetricCard">
-                <span className="ohMetricLabel">Check-Ins</span>
-                <span className="ohMetricValue">{dailyCheckIns.length}</span>
-                <span className="ohMetricHint">
-                  {text("Wellness updates saved", "تحديثات عافية محفوظة")}
-                </span>
-              </article>
+    <span className="ohMetricHint">
+      {officialPassport?.status === "ready"
+        ? text(
+            "Connected to your official Health Passport",
+            "مرتبطة بجواز الصحة الرسمي"
+          )
+        : text(
+            "Saved assessment records",
+            "سجلات تقييم محفوظة"
+          )}
+    </span>
+  </article>
 
-              <article className="ohMetricCard">
-                <span className="ohMetricLabel">
-                  {text("Reports", "التقارير")}
-                </span>
-                <span className="ohMetricValue">{uploadedReports.length}</span>
-                <span className="ohMetricHint">
-                  {isArabic
-                    ? `${processedReports} مكتمل · ${pendingReports} قيد الانتظار`
-                    : `${processedReports} processed · ${pendingReports} pending`}
-                </span>
-              </article>
+  <article className="ohMetricCard">
+    <span className="ohMetricLabel">
+      Check-Ins
+    </span>
 
-              <article className="ohMetricCard">
-                <span className="ohMetricLabel">
-                  {text("Saved Analysis", "التحليل الصحي المحفوظ")}
-                </span>
-                <span className="ohMetricValue">{savedAnalysis.length}</span>
-                <span className="ohMetricHint">
-                  {text("Connected to your reports", "مرتبط بتقاريرك")}
-                </span>
-              </article>
-            </section>
+    <span className="ohMetricValue">
+      {checkInCount}
+    </span>
 
+    <span className="ohMetricHint">
+      {officialPassport?.status === "ready"
+        ? text(
+            "Included in your health timeline",
+            "مدرجة في المسار الصحي"
+          )
+        : text(
+            "Wellness updates saved",
+            "تحديثات عافية محفوظة"
+          )}
+    </span>
+  </article>
+
+  <article className="ohMetricCard">
+    <span className="ohMetricLabel">
+      {text(
+        "Reports",
+        "التقارير"
+      )}
+    </span>
+
+    <span className="ohMetricValue">
+      {reportCount}
+    </span>
+
+    <span className="ohMetricHint">
+      {isArabic
+        ? `${processedReports} مكتمل · ${pendingReports} قيد الانتظار`
+        : `${processedReports} processed · ${pendingReports} pending`}
+    </span>
+  </article>
+
+  <article className="ohMetricCard">
+    <span className="ohMetricLabel">
+      {text(
+        "Saved Analysis",
+        "التحليل الصحي المحفوظ"
+      )}
+    </span>
+
+    <span className="ohMetricValue">
+      {analysisCount}
+    </span>
+
+    <span className="ohMetricHint">
+      {officialPassport?.status === "ready"
+        ? text(
+            "Connected intelligence results",
+            "نتائج ذكاء صحي مترابطة"
+          )
+        : text(
+            "Connected to your reports",
+            "مرتبطة بتقاريرك"
+          )}
+    </span>
+  </article>
+</section>
             <section className="ohGrid cols2">
               <article className="ohCard">
                 <div className="ohCardHeader">
