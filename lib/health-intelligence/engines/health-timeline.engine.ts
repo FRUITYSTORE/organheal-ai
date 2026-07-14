@@ -114,22 +114,18 @@ function buildAssessmentEvents(
 function buildCheckInEvents(
   patient: PatientSummary
 ): HealthTimelineEvent[] {
-  const checkIn = patient.latestCheckIn;
-
-  if (
-    !checkIn ||
-    !isValidDate(checkIn.created_at)
-  ) {
-    return [];
-  }
-
-  return [
-    {
-      id: `checkin-${checkIn.created_at}`,
-      type: "checkin",
-      severity: getCheckInSeverity(checkIn.wellness_score),
+  return patient.recentCheckIns
+    .filter((checkIn) =>
+      isValidDate(checkIn.created_at)
+    )
+    .map((checkIn, index) => ({
+      id: `checkin-${checkIn.created_at}-${index}`,
+      type: "checkin" as const,
+      severity: getCheckInSeverity(
+        checkIn.wellness_score
+      ),
       title: "Daily Check-In completed",
-      description: `The latest wellness score is ${checkIn.wellness_score}/100.`,
+      description: `The wellness score was ${checkIn.wellness_score}/100.`,
       date: checkIn.created_at,
       organ: null,
       score: checkIn.wellness_score,
@@ -137,8 +133,7 @@ function buildCheckInEvents(
       metadata: {
         mood: checkIn.mood,
       },
-    },
-  ];
+    }));
 }
 
 function buildReportEvents(

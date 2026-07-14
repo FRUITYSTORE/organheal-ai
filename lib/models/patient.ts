@@ -12,6 +12,7 @@ export type PatientSummary = {
   profile: UserProfileSummary | null;
   assessments: AssessmentSummary[];
   latestCheckIn: DailyCheckInSummary | null;
+  recentCheckIns: DailyCheckInSummary[];
   uploadedReports: UploadedReportSummary[];
   healthInsights: HealthInsightSummary[];
   generatedResults: GeneratedResultSummary[];
