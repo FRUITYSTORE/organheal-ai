@@ -4,6 +4,7 @@ import type { HealthIntelligenceResult } from "@/lib/health-intelligence/models/
 
 import type { PersonalizedKnowledgeRecommendations } from "@/lib/services/knowledge/knowledge-recommendation.service";
 import type { PassportModuleResult } from "@/lib/modules/passport";
+import type { TimelineModuleResult } from "@/lib/modules/timeline";
 
 export type ClinicalDecisionContext = {
   patient: PatientSummary;
@@ -13,6 +14,8 @@ export type ClinicalDecisionContext = {
   knowledge: PersonalizedKnowledgeRecommendations | null;
 
   passport: PassportModuleResult | null;
+
+  timeline: TimelineModuleResult | null;
 
   metadata: {
     language: "en" | "ar";
@@ -36,6 +39,8 @@ export function createClinicalDecisionContext(
     knowledge: null,
 
     passport: null,
+
+    timeline: null,
     
     metadata: {
       language,

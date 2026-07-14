@@ -27,6 +27,10 @@ export type DashboardDecisionResult = {
   ReturnType<typeof buildClinicalDecision>
 >["passport"];
 
+timeline: Awaited<
+  ReturnType<typeof buildClinicalDecision>
+>["timeline"];
+
   pipeline: {
     status: Awaited<
       ReturnType<typeof buildClinicalDecision>
@@ -55,6 +59,7 @@ export async function getDashboardDecision({
     intelligence: decision.intelligence,
     knowledge: decision.knowledge,
 passport: decision.passport,
+timeline: decision.timeline,
     pipeline: {
       status: decision.metadata.status,
       completedStages:

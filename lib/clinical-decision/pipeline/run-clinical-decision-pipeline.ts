@@ -1,6 +1,6 @@
 import "server-only";
 import { healthPassportStage } from "@/lib/clinical-decision/pipeline/stages/health-passport.stage";
-
+import { healthTimelineStage } from "@/lib/clinical-decision/pipeline/stages/health-timeline.stage";
 import type {
   HealthKnowledgeAudience,
   HealthKnowledgeLanguage,
@@ -33,6 +33,7 @@ function createPipeline(
 })
   .addStage(healthIntelligenceStage)
   .addStage(healthPassportStage)
+  .addStage(healthTimelineStage)
   .addStage(personalizedKnowledgeStage);
 }
 

@@ -31,6 +31,7 @@ export async function buildClinicalDecision({
   intelligence,
   knowledge,
   passport,
+  timeline,
 } = pipelineResult.context;
 
   if (!intelligence) {
@@ -50,6 +51,13 @@ if (!passport) {
     "Clinical decision pipeline did not produce a Health Passport."
   );
 }
+
+if (!timeline) {
+  throw new Error(
+    "Clinical decision pipeline did not produce a Health Timeline."
+  );
+}
+
   const completedStages =
     pipelineResult.executions
       .filter(
@@ -63,26 +71,27 @@ if (!passport) {
   ): stageId is
     | "health-intelligence"
     | "health-passport"
+    | "health-timeline"
     | "personalized-knowledge" =>
     stageId === "health-intelligence" ||
     stageId === "health-passport" ||
     stageId === "personalized-knowledge"
 );
   return {
-    intelligence,
-    knowledge,
-    passport,
-    metadata: {
-      status: pipelineResult.successful
-        ? completedStages.length === 2
-          ? "ready"
-          : "partial"
-        : "partial",
+  intelligence,
+  knowledge,
+  passport,
+  timeline,
 
-      completedStages,
+  metadata: {
+    status: pipelineResult.successful
+      ? completedStages.length === 4
+        ? "ready"
+        : "partial"
+      : "partial",
 
-      generatedAt:
-        pipelineResult.completedAt,
-    },
-  };
+    completedStages,
+    generatedAt: pipelineResult.completedAt,
+  },
+};
 }
