@@ -11,6 +11,8 @@ import { supabase } from "../../lib/supabase";
 import type { TimelineModuleResult } from "@/lib/modules/timeline";
 import type { PassportModuleResult } from "@/lib/modules/passport";
 import HistoryOverviewCard from "@/app/components/history/HistoryOverviewCard";
+import HistoryTrendCard from "@/app/components/history/HistoryTrendCard";
+import HistoryPriorityCard from "@/app/components/history/HistoryPriorityCard";
 
 type Language = "en" | "ar";
 
@@ -893,82 +895,36 @@ const timelineItems =
   </article>
 </section>
             <section className="ohGrid cols2">
-              <article className="ohCard">
-                <div className="ohCardHeader">
-                  <div>
-                    <p className="ohMetricLabel">
-                      {text("Progress Trends", "اتجاهات التقدم")}
-                    </p>
-                    <h2 className="ohCardTitle">
-                      {text("What changed recently?", "ما الذي تغيّر مؤخرًا؟")}
-                    </h2>
-                  </div>
-                </div>
+  <HistoryTrendCard
+    assessmentTrend={assessmentTrend}
+    wellnessTrend={wellnessTrend}
+    isArabic={isArabic}
+  />
 
-                <div className="ohStack">
-                  <div>
-                    <span className={`ohStatusBadge ${assessmentTrend.tone}`}>
-                      {assessmentTrend.label}
-                    </span>
-                    <p className="ohCardText">{assessmentTrend.description}</p>
-                  </div>
-
-                  <div>
-                    <span className={`ohStatusBadge ${wellnessTrend.tone}`}>
-                      {wellnessTrend.label}
-                    </span>
-                    <p className="ohCardText">{wellnessTrend.description}</p>
-                  </div>
-                </div>
-              </article>
-
-              <article className="ohCard">
-                <div className="ohCardHeader">
-                  <div>
-                    <p className="ohMetricLabel">
-                      {text("Priority & Best Records", "الأولوية وأفضل السجلات")}
-                    </p>
-                    <h2 className="ohCardTitle">
-                      {text("Signals from your timeline", "إشارات من مسارك")}
-                    </h2>
-                  </div>
-                </div>
-
-                <div className="ohStack">
-                  <div>
-                    <strong>{text("Priority Focus", "الأولوية الصحية")}</strong>
-                    <p className="ohCardText">
-                      {priorityAssessment
-                        ? isArabic
-                          ? `${localizeModuleName(priorityAssessment.module_name)} · أقل مؤشر: ${priorityAssessment.score}/100`
-                          : `${priorityAssessment.module_name} · Lowest score: ${priorityAssessment.score}/100`
-                        : text(
-                            "Complete assessments to identify a priority area.",
-                            "أكمل التقييمات لتحديد منطقة الأولوية."
-                          )}
-                    </p>
-                  </div>
-
-                  <div>
-                    <strong>{text("Best Assessment", "أفضل تقييم")}</strong>
-                    <p className="ohCardText">
-                      {bestAssessment
-                        ? `${localizeModuleName(bestAssessment.module_name)} · ${bestAssessment.score}/100`
-                        : text("No assessment yet", "لا يوجد تقييم بعد")}
-                    </p>
-                  </div>
-
-                  <div>
-                    <strong>{text("Latest Check-In", "آخر Check-In")}</strong>
-                    <p className="ohCardText">
-                      {latestCheckIn
-                        ? `${latestCheckIn.wellness_score}/100 · ${latestCheckIn.mood}`
-                        : text("No check-in yet", "لا يوجد Check-In بعد")}
-                    </p>
-                  </div>
-                </div>
-              </article>
-            </section>
+  <HistoryPriorityCard
+    priorityAssessment={
+      priorityAssessment
+        ? {
+            module: localizeModuleName(
+              priorityAssessment.module_name
+            ),
+            score: priorityAssessment.score,
+          }
+        : null
+    }
+    bestAssessment={
+      bestAssessment
+        ? {
+            module: localizeModuleName(
+              bestAssessment.module_name
+            ),
+            score: bestAssessment.score,
+          }
+        : null
+    }
+    isArabic={isArabic}
+  />
+</section>
 
             <section className="ohCard">
               <div className="ohCardHeader">
