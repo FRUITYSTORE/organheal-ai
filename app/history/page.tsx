@@ -13,6 +13,7 @@ import type { PassportModuleResult } from "@/lib/modules/passport";
 import HistoryOverviewCard from "@/app/components/history/HistoryOverviewCard";
 import HistoryTrendCard from "@/app/components/history/HistoryTrendCard";
 import HistoryPriorityCard from "@/app/components/history/HistoryPriorityCard";
+import HistoryTimelineFilters from "@/app/components/history/HistoryTimelineFilters";
 
 type Language = "en" | "ar";
 
@@ -926,32 +927,12 @@ const timelineItems =
   />
 </section>
 
-            <section className="ohCard">
-              <div className="ohCardHeader">
-                <div>
-                  <p className="ohMetricLabel">
-                    {text("Filter Timeline", "تصفية المسار")}
-                  </p>
-                  <h2 className="ohCardTitle">
-                    {text("Focus your health history", "ركّز التاريخ الصحي")}
-                  </h2>
-                </div>
-              </div>
-
-              <div className="ohButtonRow">
-                {filters.map((filter) => (
-                  <button
-                    key={filter.value}
-                    className={
-                      selectedFilter === filter.value ? "primaryBtn" : "secondaryBtn"
-                    }
-                    onClick={() => setSelectedFilter(filter.value)}
-                  >
-                    {filter.label}
-                  </button>
-                ))}
-              </div>
-            </section>
+           <HistoryTimelineFilters
+  filters={filters}
+  selectedFilter={selectedFilter}
+  onChange={setSelectedFilter}
+  isArabic={isArabic}
+/>
 
             <section className="ohCard">
               <div className="ohCardHeader">
