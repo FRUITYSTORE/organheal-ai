@@ -4,6 +4,7 @@ import PageBackActions from "../components/PageBackActions";
 import { type CSSProperties, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
+import type { TimelineModuleResult } from "@/lib/modules/timeline";
 
 type Language = "en" | "ar";
 
@@ -50,7 +51,12 @@ type SavedAnalysis = {
 
 type TimelineItem = {
   id: string;
-  type: "Assessment" | "Check-In" | "Report" | "Analysis";
+  type:
+  | "Assessment"
+  | "Check-In"
+  | "Report"
+  | "Analysis"
+  | "Trend";
   title: string;
   subtitle: string;
   score?: number | null;
@@ -69,7 +75,8 @@ export default function HistoryPage() {
   const [savedAnalysis, setSavedAnalysis] = useState<SavedAnalysis[]>(
     []
   );
-
+const [officialTimeline, setOfficialTimeline] =
+  useState<TimelineModuleResult | null>(null);
   const [selectedFilter, setSelectedFilter] = useState("All");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
@@ -168,6 +175,7 @@ export default function HistoryPage() {
   }
 
   function localizeType(value: TimelineItem["type"]) {
+    if (value === "Trend") return "اتجاه صحي";
     if (!isArabic) return value;
 
     if (value === "Assessment") return "تقييم";
@@ -206,6 +214,45 @@ export default function HistoryPage() {
     }
 
     const userId = userData.user.id;
+    let timelineDecision: TimelineModuleResult | null = null;
+
+try {
+  const response = await fetch(
+    "/api/history-decision",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        userId,
+        language:
+          currentLanguage === "ar"
+            ? "ar"
+            : "en",
+        audience: "general",
+      }),
+    }
+  );
+
+  if (response.ok) {
+    const decision = (await response.json()) as {
+      timeline: TimelineModuleResult;
+    };
+
+    timelineDecision = decision.timeline;
+  } else {
+    console.error(
+      "History decision request failed:",
+      await response.text()
+    );
+  }
+} catch (error) {
+  console.error(
+    "Could not load official health timeline:",
+    error
+  );
+}
 
     const { data: historyData, error: historyError } = await supabase
       .from("health_history")
@@ -273,6 +320,7 @@ export default function HistoryPage() {
     setUploadedReports((reportData || []) as UploadedReport[]);
     setHealthInsights((insightData || []) as HealthInsight[]);
     setSavedAnalysis(savedDataRows);
+    setOfficialTimeline(timelineDecision);
     setLoading(false);
   }
 
@@ -420,7 +468,7 @@ export default function HistoryPage() {
     };
   }, [dailyCheckIns, isArabic]);
 
-  const timelineItems: TimelineItem[] = [
+  const legacyTimelineItems: TimelineItem[] = [
     ...history.map((item) => ({
       id: `assessment-${item.id}`,
       type: "Assessment" as const,
@@ -468,6 +516,38 @@ export default function HistoryPage() {
       href: "/reports",
     })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+const officialTimelineItems: TimelineItem[] =
+  officialTimeline?.data.events.map(
+    (event) => {
+      const typeMap: Record<
+        typeof event.type,
+        TimelineItem["type"]
+      > = {
+        assessment: "Assessment",
+        checkin: "Check-In",
+        report: "Report",
+        analysis: "Analysis",
+        trend: "Trend",
+      };
+
+      return {
+        id: event.id,
+        type: typeMap[event.type],
+        title: event.organ
+          ? localizeModuleName(event.organ)
+          : event.title,
+        subtitle: event.description,
+        score: event.score,
+        date: event.date,
+        href: event.href || "/history",
+      };
+    }
+  ) ?? [];
+
+const timelineItems =
+  officialTimelineItems.length > 0
+    ? officialTimelineItems
+    : legacyTimelineItems;
 
   const filters = [
     { value: "All", label: text("All", "الكل") },
@@ -475,6 +555,13 @@ export default function HistoryPage() {
     { value: "Check-In", label: "Check-In" },
     { value: "Report", label: text("Report", "التقارير") },
     { value: "Analysis", label: text("Analysis", "التحليل الصحي") },
+    {
+  value: "Trend",
+  label: text(
+    "Trend",
+    "الاتجاهات"
+  ),
+},
   ];
 
   const filteredTimeline =
