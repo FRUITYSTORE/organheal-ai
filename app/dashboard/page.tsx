@@ -13,6 +13,7 @@ import HealthEvidenceCard from "@/app/components/health-intelligence/HealthEvide
 import RecommendedKnowledgeCard from "@/app/components/health-intelligence/RecommendedKnowledgeCard";
 
 import type { PersonalizedKnowledgeRecommendations } from "@/lib/services/knowledge/knowledge-recommendation.service";
+import DashboardTimelinePreview from "@/app/components/health-intelligence/DashboardTimelinePreview";
 
 type Language = "en" | "ar";
 
@@ -1099,7 +1100,189 @@ const [healthIntelligence, setHealthIntelligence] =
   color: #0f766e;
   font-weight: 950;
 }
+.dashboardTimelinePreview {
+  padding: 24px;
+  border: 1px solid rgba(14, 116, 144, 0.16);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.05);
+}
 
+.dashboardTimelinePreviewHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 22px;
+}
+
+.dashboardTimelinePreviewKicker {
+  color: #0891b2;
+  font-size: 0.75rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dashboardTimelinePreviewHeader h2 {
+  margin: 8px 0;
+  color: #0f172a;
+  font-size: 1.55rem;
+}
+
+.dashboardTimelinePreviewHeader p {
+  max-width: 720px;
+  margin: 0;
+  color: #475569;
+  line-height: 1.65;
+}
+
+.dashboardTimelinePreviewMeta {
+  flex-shrink: 0;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: #ecfeff;
+  text-align: center;
+}
+
+.dashboardTimelinePreviewMeta span {
+  display: block;
+  color: #0e7490;
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.dashboardTimelinePreviewMeta strong {
+  display: block;
+  margin-top: 4px;
+  color: #0f172a;
+  font-size: 1.15rem;
+}
+
+.dashboardTimelinePreviewList {
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.dashboardTimelinePreviewItem {
+  display: block;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  background: #f8fafc;
+  color: inherit;
+  text-decoration: none;
+}
+
+.dashboardTimelinePreviewItem:hover {
+  border-color: #67e8f9;
+  background: #ecfeff;
+}
+
+.dashboardTimelinePreviewItemTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: center;
+}
+
+.dashboardTimelinePreviewItemTop > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dashboardTimelinePreviewItemTop time {
+  color: #64748b;
+  font-size: 0.76rem;
+  font-weight: 750;
+}
+
+.dashboardTimelineSeverity,
+.dashboardTimelineType {
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
+.dashboardTimelineType {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.dashboardTimelineSeverity.information {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.dashboardTimelineSeverity.success {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.dashboardTimelineSeverity.warning {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.dashboardTimelineSeverity.critical {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.dashboardTimelineTitle {
+  display: block;
+  margin-top: 12px;
+  color: #0f172a;
+}
+
+.dashboardTimelineDescription {
+  margin: 6px 0 0;
+  color: #475569;
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.dashboardTimelineSignals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.dashboardTimelineSignals span {
+  padding: 6px 9px;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #0f766e;
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.dashboardTimelinePreviewFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.dashboardTimelinePreviewFooter > div span {
+  display: block;
+  color: #64748b;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.dashboardTimelinePreviewFooter > div strong {
+  display: block;
+  margin-top: 3px;
+  color: #0f172a;
+  font-size: 1.2rem;
+}
         @media (max-width: 1100px) {
           .dashboardJourneyTimeline {
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1116,6 +1299,17 @@ const [healthIntelligence, setHealthIntelligence] =
 
 .healthEvidenceMetrics {
   grid-template-columns: 1fr;
+}
+
+.dashboardTimelinePreviewHeader,
+.dashboardTimelinePreviewFooter {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.dashboardTimelinePreviewItemTop {
+  align-items: flex-start;
+  flex-direction: column;
 }
 
 .healthEvidenceItem {
@@ -1680,6 +1874,13 @@ const [healthIntelligence, setHealthIntelligence] =
 {knowledgeRecommendations && (
   <RecommendedKnowledgeCard
     recommendations={knowledgeRecommendations}
+  />
+)}
+{healthIntelligence.timeline.data.events.length > 0 && (
+  <DashboardTimelinePreview
+    timeline={healthIntelligence.timeline.data}
+    confidence={healthIntelligence.timeline.confidence}
+    isArabic={isArabic}
   />
 )}
       <PrimaryHealthPatternCard
