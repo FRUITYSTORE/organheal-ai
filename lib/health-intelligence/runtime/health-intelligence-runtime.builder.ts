@@ -20,6 +20,18 @@ import {
   type HealthIntelligenceRuntime,
 } from "@/lib/health-intelligence/runtime/health-intelligence-runtime";
 
+import {
+  buildHealthStory,
+} from "@/lib/health-intelligence/engines/health-story.engine";
+
+import {
+  buildHealthEngineContext,
+} from "@/lib/health-intelligence/engines/shared/health-engine-context";
+
+import {
+  buildHealthMomentum,
+} from "@/lib/health-intelligence/engines/health-momentum.engine";
+
 export type BuildHealthRuntimeInput = {
   userId: string;
     patient?: PatientSummary;
@@ -228,6 +240,19 @@ export async function buildHealthRuntime(
       patient,
       input
     );
+    const engineContext =
+    buildHealthEngineContext(
+      context
+    );
+
+  const story =
+    buildHealthStory(
+      engineContext
+    );
+      const momentum =
+    buildHealthMomentum(
+      engineContext
+    );
 
   const journey =
     buildHealthJourney(
@@ -251,5 +276,10 @@ export async function buildHealthRuntime(
       intelligence.timeline.data,
 
     journey,
+
+        story,
+
+            momentum,
+
   });
 }

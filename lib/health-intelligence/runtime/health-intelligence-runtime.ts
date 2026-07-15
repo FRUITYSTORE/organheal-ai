@@ -14,6 +14,14 @@ import type {
   HealthTimelineData,
 } from "../engines/health-timeline.engine";
 
+import type {
+  HealthStoryData,
+} from "../engines/health-story.engine";
+
+import type {
+  HealthMomentumData,
+} from "../engines/health-momentum.engine";
+
 export type HealthRuntimeModuleStatus =
   | "ready"
   | "unavailable"
@@ -28,6 +36,14 @@ export type HealthRuntimeModuleResult<TData> = {
 export type HealthIntelligenceRuntimeModules = {
   passport: HealthRuntimeModuleResult<
     HealthPassportData
+  >;
+
+    story: HealthRuntimeModuleResult<
+    HealthStoryData
+  >;
+
+    momentum: HealthRuntimeModuleResult<
+    HealthMomentumData
   >;
 
   timeline: HealthRuntimeModuleResult<
@@ -73,10 +89,31 @@ function createModuleResult<T>(
 export function buildHealthIntelligenceRuntime(
   input: BuildHealthIntelligenceRuntimeInput
 ): HealthIntelligenceRuntime {
-  const modules: HealthIntelligenceRuntimeModules = {
-    passport: createModuleResult(input.passport),
-    timeline: createModuleResult(input.timeline),
-    journey: createModuleResult(input.journey),
+    const modules: HealthIntelligenceRuntimeModules = {
+    passport:
+      createModuleResult(
+        input.passport
+      ),
+
+    timeline:
+      createModuleResult(
+        input.timeline
+      ),
+
+    journey:
+      createModuleResult(
+        input.journey
+      ),
+
+    story:
+      createModuleResult(
+        input.story
+      ),
+
+    momentum:
+      createModuleResult(
+        input.momentum
+      ),
   };
 
   const moduleList = Object.values(modules);
@@ -109,8 +146,10 @@ export function buildHealthIntelligenceRuntime(
 }
 export type BuildHealthIntelligenceRuntimeInput = {
   context: HealthIntelligenceContext;
-
+  
   passport?: HealthPassportData | null;
   timeline?: HealthTimelineData | null;
   journey?: HealthJourneyData | null;
+    story?: HealthStoryData | null;
+      momentum?: HealthMomentumData | null;
 };

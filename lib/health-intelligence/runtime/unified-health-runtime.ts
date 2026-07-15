@@ -58,6 +58,9 @@ export type UnifiedHealthRuntime = {
   journey:
     IntelligenceRuntimeResult["modules"]["journey"];
 
+      story:
+    IntelligenceRuntimeResult["modules"]["story"];
+
   metadata: {
     clinicalStatus:
       ClinicalDecisionResult["metadata"]["status"];
@@ -171,6 +174,11 @@ export async function buildUnifiedHealthRuntime({
       intelligenceRuntime
         .modules
         .journey,
+
+            story:
+      intelligenceRuntime
+        .modules
+        .story,
 
     metadata: {
       clinicalStatus:
