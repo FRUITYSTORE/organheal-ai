@@ -22,6 +22,7 @@ import {
 
 export type BuildHealthRuntimeInput = {
   userId: string;
+    patient?: PatientSummary;
 
   language?: HealthIntelligenceContextLanguage;
   audience?: HealthIntelligenceContextAudience;
@@ -215,7 +216,8 @@ function buildJourneyInput({
 export async function buildHealthRuntime(
   input: BuildHealthRuntimeInput
 ): Promise<HealthIntelligenceRuntime> {
-  const patient =
+    const patient =
+    input.patient ??
     await getPatientSummary(input.userId);
 
   const intelligence =

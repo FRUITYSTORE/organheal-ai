@@ -36,8 +36,9 @@ export async function POST(request: NextRequest) {
     const patient =
       await getPatientSummary(body.userId);
 
-    const decision =
+        const decision =
       await getHistoryDecision({
+        userId: body.userId,
         patient,
         language:
           body.language === "ar"
