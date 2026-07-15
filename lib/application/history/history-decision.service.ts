@@ -10,16 +10,8 @@ import type {
 } from "@/lib/models/patient";
 
 import {
-  buildClinicalDecision,
-} from "@/lib/clinical-decision/clinical-decision.service";
-
-import {
-  buildHealthRuntime,
-} from "@/lib/health-intelligence/runtime/health-intelligence-runtime.builder";
-
-import type {
-  HealthIntelligenceContextAudience,
-} from "@/lib/health-intelligence/context/health-intelligence-context";
+  buildUnifiedHealthRuntime,
+} from "@/lib/health-intelligence/runtime/unified-health-runtime";
 
 export type GetHistoryDecisionInput = {
   userId: string;
@@ -28,64 +20,44 @@ export type GetHistoryDecisionInput = {
   audience?: HealthKnowledgeAudience;
 };
 
-type ClinicalDecisionResult = Awaited<
-  ReturnType<typeof buildClinicalDecision>
->;
-
-type RuntimeResult = Awaited<
-  ReturnType<typeof buildHealthRuntime>
+type UnifiedRuntimeResult = Awaited<
+  ReturnType<typeof buildUnifiedHealthRuntime>
 >;
 
 export type HistoryDecisionResult = {
-  timeline: ClinicalDecisionResult["timeline"];
+  timeline:
+    UnifiedRuntimeResult["timeline"];
 
-  passport: ClinicalDecisionResult["passport"];
+  passport:
+    UnifiedRuntimeResult["passport"];
 
-  knowledge: ClinicalDecisionResult["knowledge"];
+  knowledge:
+    UnifiedRuntimeResult["knowledge"];
 
-  journey: RuntimeResult["modules"]["journey"];
+  journey:
+    UnifiedRuntimeResult["journey"];
 
   runtime: {
-    version: RuntimeResult["version"];
+    version:
+      UnifiedRuntimeResult["intelligenceRuntime"]["version"];
+
     readyModuleCount: number;
     unavailableModuleCount: number;
     errorModuleCount: number;
+
     generatedAt: string;
   };
 
   pipeline: {
     status:
-      ClinicalDecisionResult["metadata"]["status"];
+      UnifiedRuntimeResult["metadata"]["clinicalStatus"];
 
     completedStages:
-      ClinicalDecisionResult["metadata"]["completedStages"];
+      UnifiedRuntimeResult["metadata"]["clinicalCompletedStages"];
 
     generatedAt: string;
   };
 };
-
-function mapRuntimeAudience(
-  audience: HealthKnowledgeAudience
-): HealthIntelligenceContextAudience {
-  if (
-    audience ===
-    "healthcare-professionals"
-  ) {
-    return "clinician";
-  }
-
-  if (
-    audience === "children" ||
-    audience === "parents" ||
-    audience === "older-adults" ||
-    audience === "pregnancy" ||
-    audience === "caregivers"
-  ) {
-    return "patient";
-  }
-
-  return "general";
-}
 
 export async function getHistoryDecision({
   userId,
@@ -93,68 +65,82 @@ export async function getHistoryDecision({
   language = "en",
   audience = "general",
 }: GetHistoryDecisionInput): Promise<HistoryDecisionResult> {
-  const [decision, runtime] =
-    await Promise.all([
-      buildClinicalDecision({
-        patient,
-        language,
-        audience,
-      }),
+  const unifiedRuntime =
+    await buildUnifiedHealthRuntime({
+      userId,
+      patient,
+      language,
+      audience,
 
-      buildHealthRuntime({
-        userId,
-        patient,
-        language,
-        audience:
-          mapRuntimeAudience(audience),
+      hasHealthPlan: false,
 
-        hasHealthPlan: false,
-
-        hasDoctorBrief:
-          patient.healthInsights.some(
-            (insight) =>
-              typeof insight.doctor_brief ===
-                "string" &&
-              insight.doctor_brief.trim()
-                .length > 0
-          ),
-      }),
-    ]);
+      hasDoctorBrief:
+        patient.healthInsights.some(
+          (insight) =>
+            typeof insight.doctor_brief ===
+              "string" &&
+            insight.doctor_brief
+              .trim()
+              .length > 0
+        ),
+    });
 
   return {
-    timeline: decision.timeline,
-    passport: decision.passport,
-    knowledge: decision.knowledge,
+    timeline:
+      unifiedRuntime.timeline,
+
+    passport:
+      unifiedRuntime.passport,
+
+    knowledge:
+      unifiedRuntime.knowledge,
 
     journey:
-      runtime.modules.journey,
+      unifiedRuntime.journey,
 
     runtime: {
       version:
-        runtime.version,
+        unifiedRuntime
+          .intelligenceRuntime
+          .version,
 
       readyModuleCount:
-        runtime.readyModuleCount,
+        unifiedRuntime
+          .metadata
+          .readyModuleCount,
 
       unavailableModuleCount:
-        runtime.unavailableModuleCount,
+        unifiedRuntime
+          .metadata
+          .unavailableModuleCount,
 
       errorModuleCount:
-        runtime.errorModuleCount,
+        unifiedRuntime
+          .metadata
+          .errorModuleCount,
 
       generatedAt:
-        runtime.generatedAt,
+        unifiedRuntime
+          .metadata
+          .generatedAt,
     },
 
     pipeline: {
       status:
-        decision.metadata.status,
+        unifiedRuntime
+          .metadata
+          .clinicalStatus,
 
       completedStages:
-        decision.metadata.completedStages,
+        unifiedRuntime
+          .metadata
+          .clinicalCompletedStages,
 
       generatedAt:
-        decision.metadata.generatedAt,
+        unifiedRuntime
+          .clinicalDecision
+          .metadata
+          .generatedAt,
     },
   };
 }
