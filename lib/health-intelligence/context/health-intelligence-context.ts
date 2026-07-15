@@ -19,11 +19,13 @@ export type HealthContextAssessment = {
 export type HealthContextCheckIn = {
   id: string;
   mood: string;
-  energyLevel: number;
-  stressLevel: number;
-  sleepQuality: number;
-  hydration: number;
-  physicalActivity: number;
+
+  energyLevel: number | null;
+  stressLevel: number | null;
+  sleepQuality: number | null;
+  hydration: number | null;
+  physicalActivity: number | null;
+
   wellnessScore: number;
   createdAt: string;
 };
