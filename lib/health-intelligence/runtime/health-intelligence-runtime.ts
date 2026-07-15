@@ -22,6 +22,26 @@ import type {
   HealthMomentumData,
 } from "../engines/health-momentum.engine";
 
+import type {
+  ClinicalConfidenceData,
+} from "../engines/clinical-confidence.engine";
+
+import type {
+  EvidenceIntelligenceData,
+} from "../engines/evidence-intelligence.engine";
+
+import type {
+  NextDecisionData,
+} from "../engines/next-decision.engine";
+
+import type {
+  DecisionImpactData,
+} from "../engines/decision-impact.engine";
+
+import type {
+  HealthIntelligenceSummaryData,
+} from "../engines/health-intelligence-summary.engine";
+
 export type HealthRuntimeModuleStatus =
   | "ready"
   | "unavailable"
@@ -38,14 +58,6 @@ export type HealthIntelligenceRuntimeModules = {
     HealthPassportData
   >;
 
-    story: HealthRuntimeModuleResult<
-    HealthStoryData
-  >;
-
-    momentum: HealthRuntimeModuleResult<
-    HealthMomentumData
-  >;
-
   timeline: HealthRuntimeModuleResult<
     HealthTimelineData
   >;
@@ -53,6 +65,37 @@ export type HealthIntelligenceRuntimeModules = {
   journey: HealthRuntimeModuleResult<
     HealthJourneyData
   >;
+
+  story: HealthRuntimeModuleResult<
+    HealthStoryData
+  >;
+
+  momentum: HealthRuntimeModuleResult<
+    HealthMomentumData
+  >;
+
+  clinicalConfidence:
+    HealthRuntimeModuleResult<
+      ClinicalConfidenceData
+    >;
+
+      evidence: HealthRuntimeModuleResult<
+    EvidenceIntelligenceData
+  >;
+  nextDecision:
+    HealthRuntimeModuleResult<
+      NextDecisionData
+    >;
+
+  decisionImpact:
+    HealthRuntimeModuleResult<
+      DecisionImpactData
+    >;
+
+  summary:
+    HealthRuntimeModuleResult<
+      HealthIntelligenceSummaryData
+    >;
 };
 
 export type HealthIntelligenceRuntime = {
@@ -114,6 +157,30 @@ export function buildHealthIntelligenceRuntime(
       createModuleResult(
         input.momentum
       ),
+
+          clinicalConfidence:
+      createModuleResult(
+        input.clinicalConfidence
+      ),
+
+          evidence:
+      createModuleResult(
+        input.evidence
+      ),
+    nextDecision:
+      createModuleResult(
+        input.nextDecision
+      ),
+
+    decisionImpact:
+      createModuleResult(
+        input.decisionImpact
+      ),
+
+    summary:
+      createModuleResult(
+        input.summary
+      ),
   };
 
   const moduleList = Object.values(modules);
@@ -146,10 +213,23 @@ export function buildHealthIntelligenceRuntime(
 }
 export type BuildHealthIntelligenceRuntimeInput = {
   context: HealthIntelligenceContext;
-  
+
   passport?: HealthPassportData | null;
   timeline?: HealthTimelineData | null;
   journey?: HealthJourneyData | null;
-    story?: HealthStoryData | null;
-      momentum?: HealthMomentumData | null;
+  story?: HealthStoryData | null;
+  momentum?: HealthMomentumData | null;
+
+  clinicalConfidence?:
+    ClinicalConfidenceData | null;
+      evidence?:
+    EvidenceIntelligenceData | null;
+      nextDecision?:
+    NextDecisionData | null;
+
+  decisionImpact?:
+    DecisionImpactData | null;
+
+  summary?:
+    HealthIntelligenceSummaryData | null;
 };

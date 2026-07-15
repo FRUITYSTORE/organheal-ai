@@ -32,6 +32,26 @@ import {
   buildHealthMomentum,
 } from "@/lib/health-intelligence/engines/health-momentum.engine";
 
+import {
+  buildClinicalConfidence,
+} from "@/lib/health-intelligence/engines/clinical-confidence.engine";
+
+import {
+  buildEvidenceIntelligence,
+} from "@/lib/health-intelligence/engines/evidence-intelligence.engine";
+
+import {
+  buildNextDecision,
+} from "@/lib/health-intelligence/engines/next-decision.engine";
+
+import {
+  buildDecisionImpact,
+} from "@/lib/health-intelligence/engines/decision-impact.engine";
+
+import {
+  buildHealthIntelligenceSummary,
+} from "@/lib/health-intelligence/engines/health-intelligence-summary.engine";
+
 export type BuildHealthRuntimeInput = {
   userId: string;
     patient?: PatientSummary;
@@ -254,6 +274,36 @@ export async function buildHealthRuntime(
       engineContext
     );
 
+    const clinicalConfidence =
+  buildClinicalConfidence(
+    engineContext
+  );
+const evidence =
+  buildEvidenceIntelligence(
+    engineContext
+  );
+  const nextDecision =
+  buildNextDecision({
+    engineContext,
+    evidence,
+    clinicalConfidence,
+    momentum,
+  });
+
+const decisionImpact =
+  buildDecisionImpact(
+    nextDecision
+  );
+
+const summary =
+  buildHealthIntelligenceSummary({
+    story,
+    momentum,
+    clinicalConfidence,
+    evidence,
+    nextDecision,
+    decisionImpact,
+  });
   const journey =
     buildHealthJourney(
       buildJourneyInput({
@@ -280,6 +330,16 @@ export async function buildHealthRuntime(
         story,
 
             momentum,
+
+            clinicalConfidence,
+
+            evidence,
+
+              nextDecision,
+
+  decisionImpact,
+
+  summary,
 
   });
 }

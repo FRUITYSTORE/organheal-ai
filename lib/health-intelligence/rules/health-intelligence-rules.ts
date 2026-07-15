@@ -7,11 +7,12 @@ export const HEALTH_INTELLIGENCE_RULES = {
       alignedMaximumDifference: 5,
     },
   },
+
   momentum: {
     minimumMeaningfulChange: 3,
   },
 
-    confidence: {
+  confidence: {
     highMinimumScore: 75,
     moderateMinimumScore: 45,
 
@@ -23,7 +24,23 @@ export const HEALTH_INTELLIGENCE_RULES = {
       comparableHistoryMaximum: 20,
     },
   },
-  
+
+  evidenceIntelligence: {
+    strength: {
+      veryStrongMinimum: 85,
+      strongMinimum: 70,
+      moderateMinimum: 50,
+      weakMinimum: 25,
+    },
+
+    sufficientDataPointCount: 5,
+
+    contradiction: {
+      highDifferenceMinimum: 15,
+      moderateDifferenceMinimum: 8,
+    },
+  },
+
   evidence: {
     comprehensive: {
       minimumSourceCount: 4,
