@@ -31,9 +31,10 @@ export default function DashboardIntelligenceCard({
     overflow: "hidden",
     background: "rgba(255, 255, 255, 0.94)",
     border: "1px solid rgba(148, 163, 184, 0.22)",
-    borderRadius: "28px",
-    boxShadow: "0 24px 65px rgba(15, 23, 42, 0.08)",
-    padding: "24px",
+    borderRadius: "22px",
+    boxShadow:
+  "0 12px 32px rgba(15, 23, 42, 0.05)",
+    padding: "20px",
     marginBottom: "22px",
   }}
 >
@@ -79,7 +80,7 @@ export default function DashboardIntelligenceCard({
   </p>
 </div>
 
-      <div style={{ padding: "26px 0 0" }}>
+      <div style={{ padding: "18px 0 0" }}>
         <span style={{ color: "#0891b2", fontWeight: 900 }}>
           {isArabic ? "أهم المؤشرات الصحية" : "Key Health Signals"}
         </span>
@@ -93,7 +94,10 @@ export default function DashboardIntelligenceCard({
                 gridTemplateColumns: "34px 1fr",
                 gap: "14px",
                 position: "relative",
-                paddingBottom: index === topFindings.length - 1 ? 0 : "20px",
+                paddingBottom:
+  index === topFindings.length - 1
+    ? 0
+    : "14px",
               }}
             >
               <div style={{ position: "relative" }}>
@@ -128,7 +132,7 @@ export default function DashboardIntelligenceCard({
                   border: "1px solid rgba(148, 163, 184, 0.18)",
                   background: "rgba(248, 250, 252, 0.75)",
                   borderRadius: "20px",
-                  padding: "18px",
+                  padding: "15px 16px",
                 }}
               >
                 <p
@@ -157,8 +161,8 @@ export default function DashboardIntelligenceCard({
 
       <div
   style={{
-    marginTop: "34px",
-    paddingTop: "28px",
+    marginTop: "24px",
+paddingTop: "20px",
     borderTop:
       "1px solid rgba(148,163,184,0.18)",
   }}

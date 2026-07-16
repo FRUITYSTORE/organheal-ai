@@ -26,83 +26,43 @@ export default function DashboardNextActionSection({
   completedSteps,
   currentPriority,
 }: DashboardNextActionSectionProps) {
-  return (
-    <section
-      className="dashboardNextActionPanel healthCommandCenterNextAction"
-      style={{
-        width: "100%",
-        maxWidth: "100%",
-      }}
-    >
-      <span>{nextStep.tag}</span>
-
-      <h2>{nextStep.label}</h2>
-
-      <p
-        style={{
-          marginTop: "14px",
-          fontWeight: 700,
-          color: "#0f766e",
-        }}
-      >
-        {isArabic
-          ? "هذه هي أهم خطوة يمكنك القيام بها الآن."
-          : "This is the highest-impact action you can take right now."}
-      </p>
-
-      <p>{nextStep.description}</p>
-
-      <div
-        style={{
-          display: "flex",
-          gap: "12px",
-          flexWrap: "wrap",
-          marginTop: "18px",
-        }}
-      >
-        <div className="dashboardBadgeRow">
-          <span className="dashboardMiniBadge">
-            {isArabic
-              ? `اكتمال الرحلة ${progressPercent}%`
-              : `Journey Ready ${progressPercent}%`}
+   return (
+    <section className="dashboardNextActionCompact">
+      <div className="dashboardNextActionCompactMain">
+        <div>
+          <span className="dashboardNextActionCompactEyebrow">
+            {nextStep.tag}
           </span>
 
-          <span className="dashboardMiniBadge">
-            {isArabic
-              ? "آخر تحليل: اليوم"
-              : "Last Intelligence: Today"}
-          </span>
+          <h2>
+            {nextStep.label}
+          </h2>
 
-          <span className="dashboardMiniBadge">
+          <p>
+            {nextStep.description}
+          </p>
+        </div>
+
+        <div className="dashboardNextActionCompactButtons">
+          <Link
+            href={nextStep.href}
+            className="dashboardPrimaryAction"
+          >
+            {nextStep.buttonText}
+          </Link>
+
+          <Link
+            href="/reports"
+            className="dashboardSecondaryAction"
+          >
             {isArabic
-              ? "المراجعة القادمة: 7 أيام"
-              : "Next Review: 7 Days"}
-          </span>
+              ? "مراجعة التقارير"
+              : "Review Reports"}
+          </Link>
         </div>
       </div>
 
-      <div className="dashboardPlanProgress">
-        <div
-          className="dashboardPlanProgressBar"
-          style={{
-            width:
-              `${progressPercent}%`,
-          }}
-        />
-      </div>
-
-      <p className="dashboardPlanProgressText">
-        {isArabic
-          ? "جميع البيانات الصحية الأساسية أصبحت متصلة."
-          : "All core health information has been connected."}
-      </p>
-
-      <div
-        className="dashboardSignalGrid"
-        style={{
-          marginTop: "22px",
-        }}
-      >
+      <div className="dashboardNextActionCompactMeta">
         <article>
           <span>
             {isArabic
@@ -114,11 +74,11 @@ export default function DashboardNextActionSection({
             {progressPercent}%
           </strong>
 
-          <p>
+          <small>
             {isArabic
-              ? `${completedSteps} من 4 عناصر أساسية مكتملة.`
-              : `${completedSteps} of 4 core elements completed.`}
-          </p>
+              ? `${completedSteps} من 4 مكتملة`
+              : `${completedSteps} of 4 complete`}
+          </small>
         </article>
 
         <article>
@@ -132,51 +92,32 @@ export default function DashboardNextActionSection({
             {currentPriority}
           </strong>
 
-          <p>
+          <small>
             {isArabic
-              ? "مرتبطة بالذكاء الصحي الحالي."
-              : "Linked to the current health intelligence."}
-          </p>
+              ? "استنادًا إلى أحدث البيانات"
+              : "Based on latest data"}
+          </small>
         </article>
 
         <article>
           <span>
             {isArabic
-              ? "الهدف التالي"
-              : "Next milestone"}
+              ? "المراجعة القادمة"
+              : "Next review"}
           </span>
 
           <strong>
-            {nextStep.tag}
+            {isArabic
+              ? "خلال 7 أيام"
+              : "In 7 days"}
           </strong>
 
-          <p>
-            {nextStep.label}
-          </p>
+          <small>
+            {isArabic
+              ? "متابعة اعتيادية"
+              : "Routine follow-up"}
+          </small>
         </article>
-      </div>
-
-      <div
-        className="dashboardActionRow"
-        style={{
-          marginTop: "22px",
-        }}
-      >
-        <Link
-          href={nextStep.href}
-          className="dashboardPrimaryAction"
-        >
-          {nextStep.buttonText}
-        </Link>
-
-        <Link
-          href="/reports"
-          className="dashboardSecondaryAction"
-        >
-          {isArabic
-            ? "مراجعة التقارير"
-            : "Review Reports"}
-        </Link>
       </div>
     </section>
   );

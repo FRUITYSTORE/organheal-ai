@@ -957,6 +957,47 @@ const [healthIntelligence, setHealthIntelligence] =
   font-weight: 900;
   font-size: 0.85rem;
 }
+  /* ORGANHEAL_DASHBOARD_TYPOGRAPHY_AUDIT_V1 */
+.dashboardSectionTitle,
+.healthDirectionTitle,
+.healthEvidenceHeader h2,
+.dashboardTimelinePreviewHeader h2,
+.healthCommandCenterHeader h2,
+.dashboardNextActionCompact h2,
+.dashboardIntelligenceCard h2 {
+  font-size:
+    clamp(1.35rem, 2.4vw, 1.9rem);
+  line-height: 1.22;
+  letter-spacing: -0.015em;
+}
+
+.dashboardSectionDescription,
+.healthDirectionDescription,
+.healthEvidenceHeader p,
+.dashboardTimelinePreviewHeader p,
+.healthCommandCenterHeader p,
+.dashboardNextActionCompactMain p {
+  font-size: 0.95rem;
+  line-height: 1.65;
+}
+
+.dashboardSectionEyebrow,
+.healthDirectionKicker,
+.healthEvidenceKicker,
+.dashboardTimelinePreviewKicker,
+.healthCommandCenterKicker,
+.dashboardNextActionCompactEyebrow {
+  font-size: 0.72rem;
+  letter-spacing: 0.075em;
+}
+
+.dashboardCommandCenterPage h2 {
+  text-wrap: balance;
+}
+
+.dashboardCommandCenterPage p {
+  text-wrap: pretty;
+}
   
         .dashboardCommandCenterPage .dashboardCommandHero {
           background:
@@ -1081,7 +1122,42 @@ const [healthIntelligence, setHealthIntelligence] =
           padding: 24px;
           margin-bottom: 22px;
         }
+/* ORGANHEAL_DASHBOARD_SECTION_SPACING_V1 */
+.dashboardCommandShell > * {
+  margin-top: 0;
+}
 
+.dashboardCommandShell > * + * {
+  margin-top: 18px;
+}
+
+.dashboardSection,
+.dashboardIntelligenceHero,
+.dashboardWelcomeStrip,
+.dashboardNextActionCompact,
+.dashboardIntelligenceCard,
+.healthIntelligenceCommandCenter {
+  margin-bottom: 0 !important;
+}
+
+.healthCommandCenterStack {
+  gap: 14px;
+}
+
+.dashboardOverviewPanel
+.dashboardSectionContent {
+  margin-top: 2px;
+}
+
+@media (max-width: 620px) {
+  .dashboardCommandShell > * + * {
+    margin-top: 14px;
+  }
+
+  .healthCommandCenterStack {
+    gap: 12px;
+  }
+}
         .dashboardJourneyHeader {
           display: flex;
           align-items: flex-start;
@@ -2274,7 +2350,205 @@ const [healthIntelligence, setHealthIntelligence] =
             padding: 20px;
             border-radius: 22px;
           }
-        }
+        }/* ORGANHEAL_DASHBOARD_COMPACT_NEXT_ACTION_V1 */
+.dashboardNextActionCompact {
+  padding: 22px;
+  margin-bottom: 22px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(15, 118, 110, 0.18);
+  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.07);
+}
+
+.dashboardNextActionCompactMain {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 28px;
+}
+
+.dashboardNextActionCompactEyebrow {
+  display: block;
+  color: #0891b2;
+  font-size: 0.74rem;
+  font-weight: 950;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.dashboardNextActionCompact h2 {
+  margin: 7px 0;
+  color: #0f172a;
+  font-size: clamp(1.55rem, 3vw, 2.2rem);
+  line-height: 1.2;
+}
+
+.dashboardNextActionCompactMain p {
+  max-width: 720px;
+  margin: 0;
+  color: #64748b;
+  line-height: 1.65;
+}
+
+.dashboardNextActionCompactButtons {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.dashboardNextActionCompactButtons a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 11px 16px;
+  border-radius: 999px;
+  text-decoration: none;
+}
+
+.dashboardNextActionCompactMeta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.dashboardNextActionCompactMeta article {
+  min-width: 0;
+  padding: 13px 15px;
+  border-radius: 16px;
+  background: #f8fafc;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+.dashboardNextActionCompactMeta span,
+.dashboardNextActionCompactMeta small {
+  display: block;
+  color: #64748b;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.dashboardNextActionCompactMeta strong {
+  display: block;
+  margin: 5px 0 3px;
+  color: #0f172a;
+  font-size: 1rem;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.dashboardCommandCenterPage[dir="rtl"] .dashboardNextActionCompact {
+  direction: rtl;
+  text-align: right;
+}
+
+.dashboardCommandCenterPage[dir="rtl"] .dashboardNextActionCompactButtons {
+  justify-content: flex-start;
+}
+
+@media (max-width: 820px) {
+  .dashboardNextActionCompactMain {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dashboardNextActionCompactButtons {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 620px) {
+  .dashboardNextActionCompact {
+    padding: 18px;
+    border-radius: 20px;
+  }
+
+  .dashboardNextActionCompactMeta {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboardNextActionCompactButtons a {
+    width: 100%;
+  }
+}/* ORGANHEAL_DASHBOARD_ACTION_SYSTEM_V1 */
+.dashboardIntelligenceDecisionAction,
+.dashboardPrimaryAction,
+.dashboardSecondaryAction,
+.dashboardJourneyNext {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 17px;
+  border-radius: 999px;
+  line-height: 1.2;
+  font-size: 0.88rem;
+  font-weight: 900;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease,
+    background-color 0.18s ease;
+}
+
+.dashboardIntelligenceDecisionAction:hover,
+.dashboardPrimaryAction:hover,
+.dashboardSecondaryAction:hover,
+.dashboardJourneyNext:hover {
+  transform: translateY(-2px);
+}
+
+.dashboardIntelligenceDecisionAction:focus-visible,
+.dashboardPrimaryAction:focus-visible,
+.dashboardSecondaryAction:focus-visible,
+.dashboardJourneyNext:focus-visible,
+.dashboardTodayAction:focus-visible {
+  outline: 3px solid rgba(6, 182, 212, 0.3);
+  outline-offset: 3px;
+}
+
+.dashboardPrimaryAction,
+.dashboardIntelligenceDecisionAction {
+  border: 1px solid rgba(13, 148, 136, 0.24);
+  box-shadow: 0 12px 28px rgba(20, 184, 166, 0.2);
+}
+
+.dashboardSecondaryAction,
+.dashboardJourneyNext {
+  background: #ffffff;
+  color: #0f766e;
+  border: 1px solid rgba(15, 118, 110, 0.25);
+}
+
+.dashboardSecondaryAction:hover,
+.dashboardJourneyNext:hover {
+  border-color: rgba(15, 118, 110, 0.48);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+}
+
+.dashboardTodayAction {
+  min-height: 82px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 620px) {
+  .dashboardIntelligenceDecisionAction,
+  .dashboardNextActionCompactButtons
+    .dashboardPrimaryAction,
+  .dashboardNextActionCompactButtons
+    .dashboardSecondaryAction {
+    width: 100%;
+  }
+}
       `}</style>
 
       <div className="dashboardCommandShell">
