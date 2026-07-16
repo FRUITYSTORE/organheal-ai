@@ -10,9 +10,18 @@ import ReportAnalysisBrief from "@/app/components/doctor-portal/ReportAnalysisBr
 import TrustNotice from "@/app/components/ui/TrustNotice";
 import SectionHeader from "@/app/components/ui/SectionHeader";
 import StatusBadge from "@/app/components/ui/StatusBadge";
-import { getDoctorPortalSummary } from "@/lib/services/doctor/doctor-portal.service";
 import { HealthIntelligenceResult } from "@/lib/health-intelligence/models/health-intelligence-result";
 import DoctorEvidenceCard from "@/app/components/doctor-portal/DoctorEvidenceCard";
+import type {
+  HealthRuntimeModuleResult,
+} from "@/lib/health-intelligence/runtime/health-intelligence-runtime";
+
+import type {
+  HealthIntelligenceSummaryData,
+} from "@/lib/health-intelligence/engines/health-intelligence-summary.engine";
+import {
+  presentDoctorIntelligence,
+} from "@/lib/health-intelligence/presentation/doctor-intelligence.presenter";
 
 type Language = "en" | "ar";
 
@@ -47,6 +56,20 @@ type HealthInsight = {
   recommendations: string | null;
   doctor_brief: string | null;
   created_at: string | null;
+};
+
+type DoctorIntelligenceSummary = {
+  summary:
+    HealthRuntimeModuleResult<
+      HealthIntelligenceSummaryData
+    >;
+
+  story: unknown;
+  momentum: unknown;
+  clinicalConfidence: unknown;
+  evidence: unknown;
+  nextDecision: unknown;
+  decisionImpact: unknown;
 };
 
 type SavedAnalysis = {
@@ -108,6 +131,12 @@ export default function DoctorPortalPage() {
   const [sharedReport, setSharedReport] = useState<SharedReport | null>(null);
   const [shareMessage, setShareMessage] = useState("");
   const [checkingShareCode, setCheckingShareCode] = useState(false);
+  const [
+  doctorIntelligence,
+  setDoctorIntelligence,
+] = useState<
+  DoctorIntelligenceSummary | null
+>(null);
 
   useEffect(() => {
     function syncLanguage() {
@@ -184,6 +213,7 @@ export default function DoctorPortalPage() {
   async function fetchDoctorPortalData() {
     setLoading(true);
     setMessage("");
+setDoctorIntelligence(null);
 
     const currentLanguage = getStoredLanguage();
     const currentIsArabic = currentLanguage === "ar";
@@ -203,7 +233,43 @@ export default function DoctorPortalPage() {
     const userId = userData.user.id;
 
     try {
-  const doctorSummary = await getDoctorPortalSummary(userId);
+  const doctorResponse =
+  await fetch(
+    "/api/doctor-portal-summary",
+    {
+      method: "POST",
+
+      headers: {
+        "Content-Type":
+          "application/json",
+      },
+
+      body: JSON.stringify({
+  userId,
+  language:
+    currentLanguage,
+}),
+    }
+  );
+
+if (!doctorResponse.ok) {
+  const errorPayload =
+    (await doctorResponse
+      .json()
+      .catch(() => null)) as
+      | {
+          error?: string;
+        }
+      | null;
+
+  throw new Error(
+    errorPayload?.error ||
+      "Could not load the doctor portal summary."
+  );
+}
+
+const doctorSummary =
+  await doctorResponse.json();
 
   setAssessments(doctorSummary.assessments as Assessment[]);
   setDailyCheckIn(doctorSummary.latestCheckIn as DailyCheckIn | null);
@@ -212,6 +278,10 @@ export default function DoctorPortalPage() {
   setSavedAnalysis(doctorSummary.savedAnalysis as SavedAnalysis[]);
   setHealthHistory(doctorSummary.healthHistory as HealthHistory[]);
   setHealthIntelligence(doctorSummary.healthIntelligence);
+  setDoctorIntelligence(
+  doctorSummary.doctorIntelligence ??
+    null
+);
 } catch (error) {
   setMessage(
     currentIsArabic
@@ -441,6 +511,33 @@ const officialPriorityOrgan =
       ready: Boolean(dailyCheckIn),
     },
   ];
+  const doctorSummaryV2 =
+    doctorIntelligence?.summary.status ===
+      "ready" &&
+    doctorIntelligence.summary.data
+      ? doctorIntelligence.summary.data
+      : null;
+
+    const doctorPresentation =
+    doctorSummaryV2
+      ? presentDoctorIntelligence(
+          doctorSummaryV2,
+          isArabic
+            ? "ar"
+            : "en"
+        )
+      : null;
+
+  const doctorBriefText =
+    doctorPresentation?.brief ??
+    healthIntelligence
+      ?.doctorBrief
+      .data
+      .brief ??
+    text(
+      "Not enough data is available to prepare the doctor brief.",
+      "لا تتوفر بيانات كافية لإعداد ملخص الطبيب."
+    );
 
   return (
     <main className="ohPageShell" dir={isArabic ? "rtl" : "ltr"} lang={isArabic ? "ar" : "en"}>
@@ -606,13 +703,7 @@ const officialPriorityOrgan =
   title={text("Pre-Visit Summary", "ملخص قبل الزيارة")}
   readiness={doctorBriefReadiness}
   readinessTone={readinessTone}
- brief={
-  healthIntelligence?.doctorBrief.data.brief ??
-  text(
-    "Not enough data is available to prepare the doctor brief.",
-    "لا تتوفر بيانات كافية لإعداد ملخص الطبيب."
-  )
-}
+ brief={doctorBriefText}
 />
 
             <section className="ohGrid cols2">
