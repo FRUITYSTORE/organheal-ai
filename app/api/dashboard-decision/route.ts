@@ -1,11 +1,22 @@
-import { NextRequest, NextResponse } from "next/server";
+import {
+  NextRequest,
+  NextResponse,
+} from "next/server";
 
-import type { PatientSummary } from "@/lib/models/patient";
-import { getDashboardDecision } from "@/lib/application/dashboard/dashboard-decision.service";
+import type {
+  PatientSummary,
+} from "@/lib/models/patient";
+
+import {
+  getDashboardDecision,
+} from "@/lib/application/dashboard/dashboard-decision.service";
 
 type DashboardDecisionRequest = {
+  userId?: string;
   patient?: PatientSummary;
+
   language?: "en" | "ar";
+
   audience?:
     | "general"
     | "children"
@@ -14,18 +25,24 @@ type DashboardDecisionRequest = {
     | "pregnancy"
     | "caregivers"
     | "healthcare-professionals";
+
+  hasHealthPlan?: boolean;
+  hasDoctorBrief?: boolean;
 };
 
-export async function POST(request: NextRequest) {
+export async function POST(
+  request: NextRequest
+) {
   try {
     const body =
-      (await request.json()) as DashboardDecisionRequest;
+      (await request.json()) as
+        DashboardDecisionRequest;
 
-    if (!body.patient) {
+    if (!body.userId) {
       return NextResponse.json(
         {
           error:
-            "Patient summary is required to build the dashboard decision.",
+            "User ID is required to build the dashboard intelligence.",
         },
         {
           status: 400,
@@ -33,24 +50,53 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const decision = await getDashboardDecision({
-      patient: body.patient,
-      language:
-        body.language === "ar"
-          ? "ar"
-          : "en",
-      audience:
-        body.audience ?? "general",
-    });
+    if (!body.patient) {
+      return NextResponse.json(
+        {
+          error:
+            "Patient summary is required to build the dashboard intelligence.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
 
-    return NextResponse.json(decision);
+    const decision =
+      await getDashboardDecision({
+        userId:
+          body.userId,
+
+        patient:
+          body.patient,
+
+        language:
+          body.language === "ar"
+            ? "ar"
+            : "en",
+
+        audience:
+          body.audience ??
+          "general",
+
+        hasHealthPlan:
+          body.hasHealthPlan ??
+          false,
+
+        hasDoctorBrief:
+          body.hasDoctorBrief,
+      });
+
+    return NextResponse.json(
+      decision
+    );
   } catch (error) {
     return NextResponse.json(
       {
         error:
           error instanceof Error
             ? error.message
-            : "Could not build dashboard decision.",
+            : "Could not build dashboard intelligence.",
       },
       {
         status: 500,

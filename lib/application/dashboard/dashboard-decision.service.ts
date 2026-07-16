@@ -4,68 +4,139 @@ import type {
   HealthKnowledgeAudience,
   HealthKnowledgeLanguage,
 } from "@/lib/health-knowledge/models/knowledge-item";
-import type { PatientSummary } from "@/lib/models/patient";
 
-import { buildClinicalDecision } from "@/lib/clinical-decision/clinical-decision.service";
+import type {
+  PatientSummary,
+} from "@/lib/models/patient";
+
+import {
+  buildUnifiedHealthRuntime,
+} from "@/lib/health-intelligence/runtime/unified-health-runtime";
+
+import type {
+  DashboardIntelligenceViewModel,
+} from "@/lib/application/dashboard/dashboard-intelligence.view-model";
 
 export type GetDashboardDecisionInput = {
+  userId: string;
   patient: PatientSummary;
+
   language?: HealthKnowledgeLanguage;
   audience?: HealthKnowledgeAudience;
+
+  hasHealthPlan?: boolean;
+  hasDoctorBrief?: boolean;
 };
 
+type UnifiedRuntimeResult = Awaited<
+  ReturnType<
+    typeof buildUnifiedHealthRuntime
+  >
+>;
+
 export type DashboardDecisionResult = {
-  intelligence: Awaited<
-    ReturnType<typeof buildClinicalDecision>
-  >["intelligence"];
+  intelligence:
+    UnifiedRuntimeResult["clinicalDecision"]["intelligence"];
 
-  knowledge: Awaited<
-    ReturnType<typeof buildClinicalDecision>
-  >["knowledge"];
+  knowledge:
+    UnifiedRuntimeResult["knowledge"];
 
-  passport: Awaited<
-  ReturnType<typeof buildClinicalDecision>
->["passport"];
+  passport:
+    UnifiedRuntimeResult["passport"];
 
-timeline: Awaited<
-  ReturnType<typeof buildClinicalDecision>
->["timeline"];
+  timeline:
+    UnifiedRuntimeResult["timeline"];
+
+  dashboardIntelligence:
+    DashboardIntelligenceViewModel | null;
+
+  summary:
+    UnifiedRuntimeResult["summary"];
 
   pipeline: {
-    status: Awaited<
-      ReturnType<typeof buildClinicalDecision>
-    >["metadata"]["status"];
+    status:
+      UnifiedRuntimeResult["metadata"]["clinicalStatus"];
 
-    completedStages: Awaited<
-      ReturnType<typeof buildClinicalDecision>
-    >["metadata"]["completedStages"];
+    completedStages:
+      UnifiedRuntimeResult["metadata"]["clinicalCompletedStages"];
+
+    readyModuleCount: number;
+    unavailableModuleCount: number;
+    errorModuleCount: number;
 
     generatedAt: string;
   };
 };
 
 export async function getDashboardDecision({
+  userId,
   patient,
   language = "en",
   audience = "general",
+  hasHealthPlan = false,
+  hasDoctorBrief,
 }: GetDashboardDecisionInput): Promise<DashboardDecisionResult> {
-  const decision = await buildClinicalDecision({
-    patient,
-    language,
-    audience,
-  });
+  const runtime =
+    await buildUnifiedHealthRuntime({
+      userId,
+      patient,
+      language,
+      audience,
+      hasHealthPlan,
+      hasDoctorBrief,
+    });
 
   return {
-    intelligence: decision.intelligence,
-    knowledge: decision.knowledge,
-passport: decision.passport,
-timeline: decision.timeline,
+    intelligence:
+      runtime
+        .clinicalDecision
+        .intelligence,
+
+    knowledge:
+      runtime.knowledge,
+
+    passport:
+      runtime.passport,
+
+    timeline:
+      runtime.timeline,
+
+    dashboardIntelligence:
+      runtime.dashboardIntelligence,
+
+    summary:
+      runtime.summary,
+
     pipeline: {
-      status: decision.metadata.status,
+      status:
+        runtime
+          .metadata
+          .clinicalStatus,
+
       completedStages:
-        decision.metadata.completedStages,
+        runtime
+          .metadata
+          .clinicalCompletedStages,
+
+      readyModuleCount:
+        runtime
+          .metadata
+          .readyModuleCount,
+
+      unavailableModuleCount:
+        runtime
+          .metadata
+          .unavailableModuleCount,
+
+      errorModuleCount:
+        runtime
+          .metadata
+          .errorModuleCount,
+
       generatedAt:
-        decision.metadata.generatedAt,
+        runtime
+          .metadata
+          .generatedAt,
     },
   };
 }

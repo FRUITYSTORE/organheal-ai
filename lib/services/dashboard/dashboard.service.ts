@@ -27,14 +27,25 @@ export async function getDashboardSummary(userId: string) {
   profile,
 });
 
-  return {
+    return {
     profile,
-    assessments: patientSummary.assessments,
-    latestCheckIn: patientSummary.latestCheckIn,
+
+    patientSummary,
+
+    assessments:
+      patientSummary.assessments,
+
+    latestCheckIn:
+      patientSummary.latestCheckIn,
+
     healthIntelligence,
+
     reportStats: {
       uploadedReports,
-      savedIntelligence: generatedInsights.length,
+
+      savedIntelligence:
+        generatedInsights.length,
+
       latestIntelligenceDate,
     },
   };

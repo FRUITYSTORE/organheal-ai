@@ -2,6 +2,10 @@ import type {
   HealthIntelligenceSummaryData,
 } from "@/lib/health-intelligence/engines/health-intelligence-summary.engine";
 
+import {
+  healthIntelligencePresenter,
+} from "@/lib/health-intelligence/presentation/health-intelligence.presenter";
+
 export type DashboardHeroCard = {
   headline: string;
   narrative: string;
@@ -22,11 +26,11 @@ export type DashboardEvidenceCard = {
 };
 
 export type DashboardDecisionCard = {
-  type:
-    HealthIntelligenceSummaryData["decision"]["type"];
+  title: string;
+  description: string;
+  actionLabel: string;
 
-  urgency:
-    HealthIntelligenceSummaryData["decision"]["urgency"];
+  urgencyLabel: string;
 
   href:
     HealthIntelligenceSummaryData["decision"]["href"];
@@ -58,6 +62,13 @@ export type DashboardIntelligenceViewModel = {
 export function buildDashboardIntelligenceViewModel(
   summary: HealthIntelligenceSummaryData
 ): DashboardIntelligenceViewModel {
+    const presentedDecision =
+    healthIntelligencePresenter
+      .presentNextDecision(
+        summary.decision.type,
+        summary.decision.urgency,
+        "en"
+      );
   return {
     hero: {
       headline:
@@ -81,16 +92,22 @@ export function buildDashboardIntelligenceViewModel(
         summary.evidence.strengthScore,
     },
 
-    decision: {
-      type:
-        summary.decision.type,
+   decision: {
+  title:
+    presentedDecision.title,
 
-      urgency:
-        summary.decision.urgency,
+  description:
+    presentedDecision.description,
 
-      href:
-        summary.decision.href,
-    },
+  actionLabel:
+    presentedDecision.actionLabel,
+
+  urgencyLabel:
+    presentedDecision.urgencyLabel,
+
+  href:
+    summary.decision.href,
+},
 
     impact: {
       primaryImpact:

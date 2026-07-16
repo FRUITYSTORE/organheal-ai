@@ -8,12 +8,22 @@ import { getDashboardSummary } from "@/lib/services/dashboard/dashboard.service"
 import DashboardIntelligenceCard from "@/app/components/dashboard/DashboardIntelligenceCard";
 import HealthDirectionCard from "@/app/components/health-intelligence/HealthDirectionCard";
 import { HealthIntelligenceResult } from "@/lib/health-intelligence/models/health-intelligence-result";
-import PrimaryHealthPatternCard from "@/app/components/health-intelligence/PrimaryHealthPatternCard";
 import HealthEvidenceCard from "@/app/components/health-intelligence/HealthEvidenceCard";
 import RecommendedKnowledgeCard from "@/app/components/health-intelligence/RecommendedKnowledgeCard";
 
 import type { PersonalizedKnowledgeRecommendations } from "@/lib/services/knowledge/knowledge-recommendation.service";
 import DashboardTimelinePreview from "@/app/components/health-intelligence/DashboardTimelinePreview";
+import DashboardHeroIntelligence from "@/app/components/dashboard/DashboardHeroIntelligence";
+
+import type {
+  DashboardIntelligenceViewModel,
+} from "@/lib/application/dashboard/dashboard-intelligence.view-model";
+import DashboardJourneySection from "@/app/components/dashboard/DashboardJourneySection";
+import DashboardNextActionSection from "@/app/components/dashboard/DashboardNextActionSection";
+import DashboardOverviewSection from "@/app/components/dashboard/DashboardOverviewSection";
+import {
+  buildDashboardViewState,
+} from "@/app/components/dashboard/dashboard-view-state";
 
 type Language = "en" | "ar";
 
@@ -130,6 +140,12 @@ export default function DashboardPage() {
   const [language, setLanguage] = useState<Language>("en");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [
+    dashboardIntelligence,
+    setDashboardIntelligence,
+  ] = useState<
+    DashboardIntelligenceViewModel | null
+  >(null);
 
   useEffect(() => {
     function syncLanguage() {
@@ -155,6 +171,7 @@ export default function DashboardPage() {
   async function fetchDashboardData() {
     setLoading(true);
     setMessage("");
+  setDashboardIntelligence(null);
 
     const { data: userData, error: userError } = await supabase.auth.getUser();
 
@@ -172,6 +189,69 @@ export default function DashboardPage() {
   setAssessments(dashboardSummary.assessments as Assessment[]);
   setDailyCheckIn(dashboardSummary.latestCheckIn as DailyCheckIn | null);
   setReportStats(dashboardSummary.reportStats);
+    try {
+    const decisionResponse =
+      await fetch(
+        "/api/dashboard-decision",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+
+          body: JSON.stringify({
+            userId:
+              user.id,
+
+            patient:
+              dashboardSummary
+                .patientSummary,
+
+            language:
+              getStoredLanguage(),
+
+            audience:
+              "general",
+          }),
+        }
+      );
+
+    if (!decisionResponse.ok) {
+      const errorPayload =
+        (await decisionResponse
+          .json()
+          .catch(() => null)) as
+          | {
+              error?: string;
+            }
+          | null;
+
+      throw new Error(
+        errorPayload?.error ||
+          "Could not load dashboard intelligence."
+      );
+    }
+
+    const dashboardDecision =
+      (await decisionResponse.json()) as {
+        dashboardIntelligence:
+          DashboardIntelligenceViewModel | null;
+      };
+
+    setDashboardIntelligence(
+      dashboardDecision
+        .dashboardIntelligence
+    );
+  } catch (decisionError) {
+    console.error(
+      "Could not load Dashboard Intelligence:",
+      decisionError
+    );
+
+    setDashboardIntelligence(null);
+  }
   const intelligence =
   dashboardSummary.healthIntelligence;
 
@@ -412,10 +492,459 @@ const [healthIntelligence, setHealthIntelligence] =
       href: "/health-plan",
     },
   ];
+  const dashboardViewState =
+    buildDashboardViewState({
+      isArabic,
 
+      dashboardIntelligence,
+
+      journey: {
+        nextStep: {
+          label:
+            nextStep.label,
+
+          href:
+            nextStep.href,
+        },
+
+        hasAssessments,
+        hasReports,
+        hasSavedIntelligence,
+        hasCheckIn,
+      },
+
+      nextAction: {
+        nextStep,
+        progressPercent,
+        completedSteps,
+        currentPriority,
+      },
+
+      overview: {
+        cards:
+          overviewCards,
+      },
+    });
   return (
     <main className="smartDashboardPage dashboardCommandCenterPage" dir={isArabic ? "rtl" : "ltr"} lang={isArabic ? "ar" : "en"}>
+      {dashboardViewState.hero && (
+  <DashboardHeroIntelligence
+    {...dashboardViewState.hero}
+  />
+)}
       <style>{`
+      /* ORGANHEAL_TODAYS_ACTIONS_V1 */
+.dashboardTodayActions {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.dashboardTodayAction {
+  min-height: 86px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  border-radius: 18px;
+  text-decoration: none;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.dashboardTodayAction span {
+  display: block;
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 950;
+  line-height: 1.35;
+}
+
+.dashboardTodayAction small {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.dashboardTodayActionPrimary {
+  color: #042f2e;
+  background:
+    linear-gradient(
+      135deg,
+      #67e8f9,
+      #2dd4bf
+    );
+  border: 1px solid
+    rgba(13, 148, 136, 0.28);
+  box-shadow:
+    0 14px 30px
+    rgba(45, 212, 191, 0.22);
+}
+
+.dashboardTodayActionPrimary small {
+  color: #115e59;
+}
+
+.dashboardTodayActionSecondary {
+  color: #0f766e;
+  background: #ffffff;
+  border: 1px solid
+    rgba(15, 118, 110, 0.28);
+}
+
+.dashboardTodayActionSecondary small {
+  color: #64748b;
+}
+
+.dashboardTodayActionPrimary:hover,
+.dashboardTodayActionSecondary:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 18px 36px
+    rgba(15, 23, 42, 0.1);
+}
+
+.dashboardTodayActionDisabled {
+  color: #64748b;
+  background: #f1f5f9;
+  border: 1px dashed #cbd5e1;
+  cursor: not-allowed;
+}
+
+.dashboardTodayActionDisabled small {
+  color: #94a3b8;
+}
+
+.dashboardCommandCenterPage[dir="rtl"]
+.dashboardTodayActions {
+  direction: rtl;
+}
+
+@media (max-width: 760px) {
+  .dashboardTodayActions {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboardTodayAction {
+    min-height: 76px;
+  }
+}
+      /* ORGANHEAL_DASHBOARD_INTELLIGENCE_HERO_V1 */
+.dashboardIntelligenceHero {
+  max-width: 1180px;
+  margin: 0 auto 22px;
+  padding: 28px;
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1.25fr)
+    minmax(300px, 0.75fr);
+  gap: 22px;
+  align-items: stretch;
+  border-radius: 30px;
+  overflow: hidden;
+  color: #ffffff;
+  background:
+    radial-gradient(
+      circle at 92% 8%,
+      rgba(45, 212, 191, 0.28),
+      transparent 34%
+    ),
+    linear-gradient(
+      135deg,
+      #020617 0%,
+      #0f172a 52%,
+      #115e59 100%
+    );
+  border: 1px solid
+    rgba(255, 255, 255, 0.14);
+  box-shadow:
+    0 30px 80px
+    rgba(15, 23, 42, 0.26);
+}
+
+/* ORGANHEAL_DASHBOARD_COMPACT_WELCOME_V1 */
+.dashboardWelcomeStrip {
+  max-width: 1180px;
+  margin: 0 auto 22px;
+  padding: 20px 24px;
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(420px, 0.85fr);
+  gap: 24px;
+  align-items: center;
+  border-radius: 24px;
+  background:
+    rgba(255, 255, 255, 0.94);
+  border: 1px solid
+    rgba(15, 118, 110, 0.18);
+  box-shadow:
+    0 18px 50px
+    rgba(15, 23, 42, 0.08);
+}
+
+.dashboardWelcomeIdentity > span {
+  display: block;
+  color: #0891b2;
+  font-size: 0.74rem;
+  font-weight: 950;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.dashboardWelcomeIdentity h1 {
+  margin: 7px 0 5px;
+  color: #0f172a;
+  font-size:
+    clamp(1.45rem, 3vw, 2.15rem);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.dashboardWelcomeIdentity p {
+  margin: 0;
+  color: #64748b;
+  line-height: 1.6;
+}
+
+.dashboardWelcomeMetrics {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.dashboardWelcomeMetrics article {
+  min-width: 0;
+  padding: 14px;
+  border-radius: 17px;
+  background: #f8fafc;
+  border: 1px solid
+    rgba(148, 163, 184, 0.18);
+}
+
+.dashboardWelcomeMetrics span {
+  display: block;
+  color: #64748b;
+  font-size: 0.71rem;
+  font-weight: 800;
+}
+
+.dashboardWelcomeMetrics strong {
+  display: block;
+  margin-top: 6px;
+  color: #0f172a;
+  font-size: 1.1rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.dashboardCommandCenterPage[dir="rtl"]
+.dashboardWelcomeStrip {
+  direction: rtl;
+  text-align: right;
+}
+
+@media (max-width: 900px) {
+  .dashboardWelcomeStrip {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .dashboardWelcomeStrip {
+    padding: 18px;
+    border-radius: 20px;
+  }
+
+  .dashboardWelcomeMetrics {
+    grid-template-columns: 1fr;
+  }
+}
+  
+.dashboardIntelligenceHeroContent {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.dashboardIntelligenceHeroKicker {
+  display: inline-flex;
+  width: fit-content;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  color: #67e8f9;
+  background:
+    rgba(8, 145, 178, 0.14);
+  border: 1px solid
+    rgba(103, 232, 249, 0.24);
+  font-size: 0.76rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dashboardIntelligenceHero h2 {
+  max-width: 820px;
+  margin: 0;
+  color: #ffffff;
+  font-size:
+    clamp(2rem, 4.5vw, 3.7rem);
+  line-height: 1.08;
+}
+
+.dashboardIntelligenceHeroNarrative {
+  max-width: 850px;
+  margin: 16px 0 0;
+  color: #cbd5e1;
+  font-size: 1rem;
+  line-height: 1.8;
+}
+
+.dashboardIntelligenceHeroSignals {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.dashboardIntelligenceHeroSignals article {
+  min-width: 0;
+  padding: 16px;
+  border-radius: 18px;
+  background:
+    rgba(255, 255, 255, 0.07);
+  border: 1px solid
+    rgba(255, 255, 255, 0.12);
+}
+
+.dashboardIntelligenceHeroSignals span,
+.dashboardIntelligenceHeroSignals small {
+  display: block;
+  color: #94a3b8;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.dashboardIntelligenceHeroSignals strong {
+  display: block;
+  margin: 7px 0 4px;
+  color: #ffffff;
+  font-size: 1.15rem;
+  overflow-wrap: anywhere;
+}
+
+.dashboardIntelligenceDecision {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 24px;
+  border-radius: 24px;
+  color: #0f172a;
+  background:
+    rgba(255, 255, 255, 0.96);
+  box-shadow:
+    0 20px 50px
+    rgba(2, 6, 23, 0.18);
+}
+
+.dashboardIntelligenceDecisionUrgency {
+  display: inline-flex;
+  width: fit-content;
+  margin-bottom: 14px;
+  padding: 7px 11px;
+  border-radius: 999px;
+  color: #0f766e;
+  background: #ccfbf1;
+  font-size: 0.74rem;
+  font-weight: 900;
+}
+
+.dashboardIntelligenceDecisionLabel {
+  margin: 0;
+  color: #0891b2;
+  font-size: 0.76rem;
+  font-weight: 950;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.dashboardIntelligenceDecision h3 {
+  margin: 9px 0 10px;
+  color: #0f172a;
+  font-size:
+    clamp(1.5rem, 3vw, 2.15rem);
+  line-height: 1.18;
+}
+
+.dashboardIntelligenceDecision > p:not(
+  .dashboardIntelligenceDecisionLabel
+) {
+  margin: 0;
+  color: #475569;
+  line-height: 1.7;
+}
+
+.dashboardIntelligenceDecisionAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  margin-top: 20px;
+  padding: 12px 17px;
+  border-radius: 999px;
+  color: #042f2e;
+  background:
+    linear-gradient(
+      135deg,
+      #67e8f9,
+      #2dd4bf
+    );
+  font-weight: 950;
+  text-decoration: none;
+  box-shadow:
+    0 14px 32px
+    rgba(45, 212, 191, 0.26);
+}
+
+.dashboardIntelligenceDecisionAction:hover {
+  transform: translateY(-1px);
+}
+
+.dashboardCommandCenterPage[dir="rtl"]
+.dashboardIntelligenceHero {
+  direction: rtl;
+  text-align: right;
+}
+
+@media (max-width: 980px) {
+  .dashboardIntelligenceHero {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 680px) {
+  .dashboardIntelligenceHero {
+    padding: 18px;
+    border-radius: 24px;
+  }
+
+  .dashboardIntelligenceHeroSignals {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboardIntelligenceDecision {
+    padding: 20px;
+    border-radius: 20px;
+  }
+}
         /* ORGANHEAL_DASHBOARD_FLOW_ALIGNMENT_V1 */
 .dashboardBadge {
   display: inline-flex !important;
@@ -478,7 +1007,67 @@ const [healthIntelligence, setHealthIntelligence] =
           border: 1px solid rgba(15, 118, 110, 0.28) !important;
           font-weight: 950 !important;
         }
+.dashboardSection {
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 28px;
+  box-shadow: 0 24px 65px rgba(15, 23, 42, 0.08);
+  padding: 24px;
+  margin-bottom: 22px;
+}
 
+.dashboardSectionHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.dashboardSectionEyebrow {
+  display: block;
+  color: #0891b2;
+  font-size: 0.76rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dashboardSectionTitle {
+  color: #0f172a;
+  margin: 8px 0 10px;
+  font-size: clamp(1.7rem, 3vw, 2.5rem);
+}
+
+.dashboardSectionDescription {
+  color: #475569;
+  line-height: 1.8;
+  margin: 0;
+  max-width: 760px;
+}
+
+.dashboardSectionAction {
+  flex-shrink: 0;
+}
+
+.dashboardSectionContent {
+  width: 100%;
+}
+
+@media (max-width: 620px) {
+  .dashboardSection {
+    padding: 20px;
+    border-radius: 22px;
+  }
+
+  .dashboardSectionHeader {
+    display: block;
+  }
+
+  .dashboardSectionAction {
+    margin-top: 12px;
+  }
+}
         .dashboardCommandCenterPage .dashboardJourneyPanel {
           border-top: 7px solid #0f766e !important;
         }
@@ -1689,36 +2278,65 @@ const [healthIntelligence, setHealthIntelligence] =
       `}</style>
 
       <div className="dashboardCommandShell">
-        <section className="dashboardCommandHero">
-          <div>
-            <p className="launchEyebrow">
-              {isArabic ? "مركز قيادة الصحة الشخصية" : "Personal Health Command Center"}
-            </p>
+        <section className="dashboardWelcomeStrip">
+  <div className="dashboardWelcomeIdentity">
+    <span>
+      {isArabic
+        ? "مركز الصحة الشخصية"
+        : "Personal Health Command Center"}
+    </span>
 
-            <h1>
-              {isArabic ? `مرحبًا، ${username}` : `Welcome, ${username}`}
-            </h1>
+    <h1>
+      {isArabic
+        ? `مرحبًا، ${username}`
+        : `Welcome, ${username}`}
+    </h1>
 
-            <p>
-              {isArabic
-                ? "هذه الصفحة تجمع التقييمات، التحديث الصحي، التقارير، تحليل التقرير، وخطة المتابعة في مكان واحد لتعرف خطوتك التالية بوضوح."
-                : "This page connects assessments, check-ins, reports, intelligence, and your follow-up plan in one command center."}
-            </p>
-          </div>
+    <p>
+      {isArabic
+        ? "بياناتك الصحية الأساسية مترابطة وجاهزة للمتابعة."
+        : "Your core health information is connected and ready for follow-up."}
+    </p>
+  </div>
 
-          <div className="dashboardProgressCard">
-            <span>{isArabic ? "جاهزية الرحلة الصحية" : "Health journey readiness"}</span>
-            <strong>{progressPercent}%</strong>
-            <div>
-              <i style={{ width: `${progressPercent}%` }} />
-            </div>
-            <p>
-              {isArabic
-                ? `${completedSteps} من 4 عناصر أساسية مكتملة.`
-                : `${completedSteps} of 4 core elements completed.`}
-            </p>
-          </div>
-        </section>
+  <div className="dashboardWelcomeMetrics">
+    <article>
+      <span>
+        {isArabic
+          ? "جاهزية الرحلة"
+          : "Journey readiness"}
+      </span>
+
+      <strong>
+        {progressPercent}%
+      </strong>
+    </article>
+
+    <article>
+      <span>
+        {isArabic
+          ? "العناصر المكتملة"
+          : "Completed elements"}
+      </span>
+
+      <strong>
+        {completedSteps}/4
+      </strong>
+    </article>
+
+    <article>
+      <span>
+        {isArabic
+          ? "الأولوية الحالية"
+          : "Current priority"}
+      </span>
+
+      <strong>
+        {currentPriority}
+      </strong>
+    </article>
+  </div>
+</section>
 
         {message && <div className="dashboardErrorBox">{message}</div>}
 
@@ -1734,103 +2352,13 @@ const [healthIntelligence, setHealthIntelligence] =
         ) : (
           <>
           
-            <section className="dashboardJourneyPanel">
-              <div className="dashboardJourneyHeader">
-                <div>
-                  <span>{isArabic ? "رحلة OrganHeal" : "OrganHeal Journey"}</span>
-
-                  <h2>
-                    {isArabic
-                      ? "أين أنت الآن في رحلتك الصحية؟"
-                      : "Where are you in your health journey?"}
-                  </h2>
-
-                  <p>
-                    {isArabic
-                      ? "كل خطوة تضيف طبقة جديدة من الفهم: التقييم، التقارير، الذكاء، التحديث الصحي، ثم خطة المتابعة."
-                      : "Each step adds a new layer of understanding: assessment, reports, intelligence, check-in, then the follow-up plan."}
-                  </p>
-                </div>
-
-                <Link href={nextStep.href} className="dashboardJourneyNext">
-                  {isArabic ? "الخطوة التالية" : "Next step"}: {nextStep.label}
-                </Link>
-              </div>
-
-              <div className="dashboardJourneyTimeline">
-                {[
-                    {
-                      step: "01",
-                      label: isArabic ? "التقييم الصحي" : "Health Assessment",
-                      description: isArabic
-                        ? "يبني أول صورة عن صحة الأعضاء."
-                        : "Builds the first picture of organ health.",
-                      ready: hasAssessments,
-                      href: "/assessment",
-                    },
-                    {
-                      step: "02",
-                      label: isArabic ? "التقارير الطبية" : "Medical Reports",
-                      description: isArabic
-                        ? "يربط التقييم ببيانات صحية فعلية."
-                        : "Connects assessments with real health data.",
-                      ready: hasReports,
-                      href: "/reports",
-                    },
-                    {
-                      step: "03",
-                      label: isArabic ? "تحليل التقرير" : "Report Analysis",
-                      description: isArabic
-                        ? "يحوّل التقارير إلى ملخصات قابلة للفهم والمتابعة."
-                        : "Turns reports into patient and doctor-ready summaries.",
-                      ready: hasSavedIntelligence,
-                      href: "/reports",
-                    },
-                    {
-                      step: "04",
-                      label: isArabic ? "التحديث الصحي" : "Daily Check-In",
-                      description: isArabic
-                        ? "يجعل الخطة مرتبطة بالحالة اليومية."
-                        : "Keeps the plan connected to daily status.",
-                      ready: hasCheckIn,
-                      href: "/checkin",
-                    },
-                    {
-                      step: "05",
-                      label: isArabic ? "خطة المتابعة" : "Health Plan",
-                      description: isArabic
-                        ? "يجمع كل شيء في خطة عملية قابلة للتنفيذ."
-                        : "Connects everything into an actionable follow-up plan.",
-                      ready: hasAssessments || hasReports || hasSavedIntelligence || hasCheckIn,
-                      href: "/health-plan",
-                    },
-                  ].map((item) => (
-                  <Link
-                    href={item.href}
-                    key={item.step}
-                    className={`dashboardJourneyStep ${item.ready ? "ready" : "pending"}`}
-                  >
-                    <div className="dashboardJourneyNumber">
-                      {item.ready ? "✓" : item.step}
-                    </div>
-
-                    <strong>{item.label}</strong>
-                    <p>{item.description}</p>
-
-                    <span className="dashboardJourneyStatus">
-                      {item.ready
-                        ? isArabic
-                          ? "مكتمل"
-                          : "Complete"
-                        : isArabic
-                        ? "بانتظار"
-                        : "Pending"}
-                    </span>
-                  </Link>
-                ))}
-              </div>
-            </section>
- <DashboardOverviewGrid cards={overviewCards} />
+           <DashboardJourneySection
+  {...dashboardViewState.journey}
+/>
+ 
+<DashboardOverviewSection
+  {...dashboardViewState.overview}
+/>
 
 {healthIntelligence && (
   <section className="healthIntelligenceCommandCenter">
@@ -1871,11 +2399,7 @@ const [healthIntelligence, setHealthIntelligence] =
   confidence={healthIntelligence.evidence.confidence}
   isArabic={isArabic}
 />
-{knowledgeRecommendations && (
-  <RecommendedKnowledgeCard
-    recommendations={knowledgeRecommendations}
-  />
-)}
+
 {healthIntelligence.timeline.data.events.length > 0 && (
   <DashboardTimelinePreview
     timeline={healthIntelligence.timeline.data}
@@ -1883,139 +2407,17 @@ const [healthIntelligence, setHealthIntelligence] =
     isArabic={isArabic}
   />
 )}
-      <PrimaryHealthPatternCard
-  pattern={healthIntelligence.patterns.data.primaryPattern}
-  isArabic={isArabic}
+
+{knowledgeRecommendations && (
+  <RecommendedKnowledgeCard
+    recommendations={knowledgeRecommendations}
+  />
+)}
+
+
+<DashboardNextActionSection
+  {...dashboardViewState.nextAction}
 />
-
-<section
-  className="dashboardNextActionPanel healthCommandCenterNextAction"
-  style={{
-    width: "100%",
-    maxWidth: "100%",
-  }}
->
-  <span>{nextStep.tag}</span>
-
-  <h2>{nextStep.label}</h2>
-
-  <p
-    style={{
-      marginTop: "14px",
-      fontWeight: 700,
-      color: "#0f766e",
-    }}
-  >
-    {isArabic
-      ? "هذه هي أهم خطوة يمكنك القيام بها الآن."
-      : "This is the highest-impact action you can take right now."}
-  </p>
-
-  <p>{nextStep.description}</p>
-
-  <div
-    style={{
-      display: "flex",
-      gap: "12px",
-      flexWrap: "wrap",
-      marginTop: "18px",
-    }}
-  >
-    <div className="dashboardBadgeRow">
-      <span className="dashboardMiniBadge">
-        {isArabic
-          ? `اكتمال الرحلة ${progressPercent}%`
-          : `Journey Ready ${progressPercent}%`}
-      </span>
-
-      <span className="dashboardMiniBadge">
-        {isArabic
-          ? "آخر تحليل: اليوم"
-          : "Last Intelligence: Today"}
-      </span>
-
-      <span className="dashboardMiniBadge">
-        {isArabic
-          ? "المراجعة القادمة: 7 أيام"
-          : "Next Review: 7 Days"}
-      </span>
-    </div>
-  </div>
-
-  <div className="dashboardPlanProgress">
-    <div
-      className="dashboardPlanProgressBar"
-      style={{ width: `${progressPercent}%` }}
-    />
-  </div>
-
-  <p className="dashboardPlanProgressText">
-    {isArabic
-      ? "جميع البيانات الصحية الأساسية أصبحت متصلة."
-      : "All core health information has been connected."}
-  </p>
-
-  <div
-    className="dashboardSignalGrid"
-    style={{ marginTop: "22px" }}
-  >
-    <article>
-      <span>
-        {isArabic ? "جاهزية الرحلة" : "Journey readiness"}
-      </span>
-
-      <strong>{progressPercent}%</strong>
-
-      <p>
-        {isArabic
-          ? `${completedSteps} من 4 عناصر أساسية مكتملة.`
-          : `${completedSteps} of 4 core elements completed.`}
-      </p>
-    </article>
-
-    <article>
-      <span>
-        {isArabic ? "الأولوية الحالية" : "Current priority"}
-      </span>
-
-      <strong>{currentPriority}</strong>
-
-      <p>
-        {isArabic
-          ? "مرتبطة بالذكاء الصحي الحالي."
-          : "Linked to the current health intelligence."}
-      </p>
-    </article>
-
-    <article>
-      <span>
-        {isArabic ? "الهدف التالي" : "Next milestone"}
-      </span>
-
-      <strong>{nextStep.tag}</strong>
-      <p>{nextStep.label}</p>
-    </article>
-  </div>
-
-  <div
-    className="dashboardActionRow"
-    style={{ marginTop: "22px" }}
-  >
-    <Link
-      href={nextStep.href}
-      className="dashboardPrimaryAction"
-    >
-      {nextStep.buttonText}
-    </Link>
-
-    <Link
-      href="/reports"
-      className="dashboardSecondaryAction"
-    >
-      {isArabic ? "مراجعة التقارير" : "Review Reports"}
-    </Link>
-  </div>
-</section>
 
 <DashboardIntelligenceCard
   intelligence={healthIntelligence}

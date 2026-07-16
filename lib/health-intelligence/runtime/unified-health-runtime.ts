@@ -21,6 +21,11 @@ import type {
   HealthIntelligenceContextAudience,
 } from "@/lib/health-intelligence/context/health-intelligence-context";
 
+import {
+  buildDashboardIntelligenceViewModel,
+  type DashboardIntelligenceViewModel,
+} from "@/lib/application/dashboard/dashboard-intelligence.view-model";
+
 export type BuildUnifiedHealthRuntimeInput = {
   userId: string;
   patient: PatientSummary;
@@ -55,12 +60,18 @@ export type UnifiedHealthRuntime = {
   knowledge:
     ClinicalDecisionResult["knowledge"];
 
-  journey:
+    journey:
     IntelligenceRuntimeResult["modules"]["journey"];
 
-      story:
+  story:
     IntelligenceRuntimeResult["modules"]["story"];
 
+  summary:
+    IntelligenceRuntimeResult["modules"]["summary"];
+
+      dashboardIntelligence:
+    DashboardIntelligenceViewModel | null;
+    
   metadata: {
     clinicalStatus:
       ClinicalDecisionResult["metadata"]["status"];
@@ -156,6 +167,23 @@ export async function buildUnifiedHealthRuntime({
         resolvedDoctorBrief,
     }),
   ]);
+  
+  const dashboardIntelligence =
+    intelligenceRuntime
+      .modules
+      .summary
+      .status === "ready" &&
+    intelligenceRuntime
+      .modules
+      .summary
+      .data !== null
+      ? buildDashboardIntelligenceViewModel(
+          intelligenceRuntime
+            .modules
+            .summary
+            .data
+        )
+      : null;
 
   return {
     clinicalDecision,
@@ -170,15 +198,21 @@ export async function buildUnifiedHealthRuntime({
     knowledge:
       clinicalDecision.knowledge,
 
-    journey:
+        journey:
       intelligenceRuntime
         .modules
         .journey,
 
-            story:
+    story:
       intelligenceRuntime
         .modules
         .story,
+
+    summary:
+      intelligenceRuntime
+        .modules
+        .summary,
+            dashboardIntelligence,
 
     metadata: {
       clinicalStatus:
