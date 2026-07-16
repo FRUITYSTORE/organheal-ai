@@ -33,23 +33,30 @@ export async function POST(
     }
 
     const summary =
-  await getDoctorPortalSummary(
-    body.userId,
-    body.language === "ar"
-      ? "ar"
-      : "en"
-  );
+      await getDoctorPortalSummary(
+        body.userId,
+        body.language === "ar"
+          ? "ar"
+          : "en"
+      );
 
     return NextResponse.json(
       summary
     );
   } catch (error) {
+    console.error(error);
+
     return NextResponse.json(
       {
         error:
           error instanceof Error
             ? error.message
             : "Could not build the doctor portal summary.",
+
+        stack:
+          error instanceof Error
+            ? error.stack
+            : null,
       },
       {
         status: 500,

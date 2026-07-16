@@ -3,9 +3,11 @@ import type {
   NextDecisionUrgency,
 } from "../engines/next-decision.engine";
 
-export type HealthIntelligencePresentationLanguage =
-  | "en"
-  | "ar";
+import {
+  presentationText,
+  type HealthIntelligencePresentationLanguage,
+} from "./presentation.types";
+
 
 export type NextDecisionPresentation = {
   title: string;
@@ -15,16 +17,6 @@ export type NextDecisionPresentation = {
   urgencyLabel: string;
 };
 
-function text(
-  language:
-    HealthIntelligencePresentationLanguage,
-  english: string,
-  arabic: string
-): string {
-  return language === "ar"
-    ? arabic
-    : english;
-}
 
 function getUrgencyLabel(
   urgency: NextDecisionUrgency,
@@ -32,12 +24,12 @@ function getUrgencyLabel(
     HealthIntelligencePresentationLanguage
 ): string {
   return urgency === "soon"
-    ? text(
+    ? presentationText(
         language,
         "Recommended soon",
         "موصى بها قريبًا"
       )
-    : text(
+    : presentationText(
         language,
         "Routine next step",
         "خطوة متابعة اعتيادية"
@@ -59,19 +51,19 @@ export function presentNextDecision(
   switch (type) {
     case "build-baseline":
       return {
-        title: text(
+        title: presentationText(
           language,
           "Build your health baseline",
           "أنشئ خط الأساس الصحي"
         ),
 
-        description: text(
+        description: presentationText(
           language,
           "Complete a health assessment so OrganHeal can establish your first connected health picture.",
           "أكمل تقييمًا صحيًا حتى يتمكن OrganHeal من إنشاء أول صورة صحية مترابطة لك."
         ),
 
-        actionLabel: text(
+        actionLabel: presentationText(
           language,
           "Start Assessment",
           "ابدأ التقييم"
@@ -82,19 +74,19 @@ export function presentNextDecision(
 
     case "add-daily-context":
       return {
-        title: text(
+        title: presentationText(
           language,
           "Add today’s health context",
           "أضف سياق حالتك الصحية اليوم"
         ),
 
-        description: text(
+        description: presentationText(
           language,
           "Complete a Check-In to connect your daily wellness with your assessments and follow-up plan.",
           "أكمل التحديث الصحي لربط عافيتك اليومية بالتقييمات وخطة المتابعة."
         ),
 
-        actionLabel: text(
+        actionLabel: presentationText(
           language,
           "Open Check-In",
           "افتح التحديث الصحي"
@@ -105,19 +97,19 @@ export function presentNextDecision(
 
     case "add-medical-evidence":
       return {
-        title: text(
+        title: presentationText(
           language,
           "Add medical evidence",
           "أضف دليلًا طبيًا"
         ),
 
-        description: text(
+        description: presentationText(
           language,
           "Upload a medical report to strengthen the evidence behind your health intelligence.",
           "ارفع تقريرًا طبيًا لتعزيز الأدلة التي يعتمد عليها ذكاؤك الصحي."
         ),
 
-        actionLabel: text(
+        actionLabel: presentationText(
           language,
           "Upload Report",
           "ارفع تقريرًا"
@@ -128,19 +120,19 @@ export function presentNextDecision(
 
     case "complete-report-processing":
       return {
-        title: text(
+        title: presentationText(
           language,
           "Complete report processing",
           "أكمل معالجة التقرير"
         ),
 
-        description: text(
+        description: presentationText(
           language,
           "Finish processing the uploaded report so its information can support analysis and follow-up.",
           "أكمل معالجة التقرير المرفوع حتى تدعم معلوماته التحليل والمتابعة."
         ),
 
-        actionLabel: text(
+        actionLabel: presentationText(
           language,
           "Review Reports",
           "راجع التقارير"
@@ -151,19 +143,19 @@ export function presentNextDecision(
 
     case "generate-analysis":
       return {
-        title: text(
+        title: presentationText(
           language,
           "Generate report analysis",
           "أنشئ تحليل التقرير"
         ),
 
-        description: text(
+        description: presentationText(
           language,
           "Generate the report analysis to connect medical evidence with your assessments and health history.",
           "أنشئ تحليل التقرير لربط الأدلة الطبية بتقييماتك وتاريخك الصحي."
         ),
 
-        actionLabel: text(
+        actionLabel: presentationText(
           language,
           "Review Analysis",
           "راجع التحليل"
@@ -174,19 +166,19 @@ export function presentNextDecision(
 
     case "add-followup-history":
       return {
-        title: text(
+        title: presentationText(
           language,
           "Add follow-up history",
           "أضف بيانات متابعة جديدة"
         ),
 
-        description: text(
+        description: presentationText(
           language,
           "Add another Check-In so OrganHeal can compare changes over time and identify momentum more clearly.",
           "أضف تحديثًا صحيًا جديدًا حتى يتمكن OrganHeal من مقارنة التغيرات مع الوقت وتحديد الاتجاه بوضوح أكبر."
         ),
 
-        actionLabel: text(
+        actionLabel: presentationText(
           language,
           "Add Check-In",
           "أضف تحديثًا صحيًا"
@@ -197,19 +189,19 @@ export function presentNextDecision(
 
     case "review-declining-momentum":
       return {
-        title: text(
+        title: presentationText(
           language,
           "Review the latest health direction",
           "راجع أحدث اتجاه صحي"
         ),
 
-        description: text(
+        description: presentationText(
           language,
           "Your recent data shows declining or mixed movement. Review your health plan and connected signals.",
           "تظهر بياناتك الحديثة اتجاهًا متراجعًا أو مختلطًا. راجع خطتك الصحية والإشارات المترابطة."
         ),
 
-        actionLabel: text(
+        actionLabel: presentationText(
           language,
           "Review Health Plan",
           "راجع الخطة الصحية"
@@ -220,19 +212,19 @@ export function presentNextDecision(
 
     case "continue-health-plan":
       return {
-        title: text(
+        title: presentationText(
           language,
           "Continue your health plan",
           "تابع خطتك الصحية"
         ),
 
-        description: text(
+        description: presentationText(
           language,
           "Your core information is connected. Continue the actions and follow-up steps in your health plan.",
           "معلوماتك الصحية الأساسية مترابطة. تابع الإجراءات وخطوات المتابعة في خطتك الصحية."
         ),
 
-        actionLabel: text(
+        actionLabel: presentationText(
           language,
           "Open Health Plan",
           "افتح الخطة الصحية"

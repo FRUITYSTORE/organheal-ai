@@ -1,4 +1,6 @@
-import { HealthEvidenceData } from "@/lib/health-intelligence/engines/health-evidence.engine";
+import type {
+  HealthEvidenceData,
+} from "@/lib/health-intelligence/engines/health-evidence.engine";
 
 type Props = {
   evidence: HealthEvidenceData;
@@ -17,68 +19,67 @@ export default function DoctorEvidenceCard({
         <div>
           <p className="ohMetricLabel">
             {isArabic
-              ? "أدلة الذكاء الصحي"
+              ? "الأدلة السريرية"
               : "Clinical Evidence"}
           </p>
 
           <h2 className="ohCardTitle">
             {isArabic
-              ? "لماذا توصل النظام لهذا الاستنتاج؟"
-              : "Why did OrganHeal reach this conclusion?"}
+              ? "ملخص قوة الأدلة"
+              : "Evidence Strength Summary"}
           </h2>
         </div>
 
-        <div className="ohMetricValue">
+        <span className="ohStatusBadge neutral">
           {confidence}%
-        </div>
+        </span>
       </div>
 
       <p className="ohCardText">
         {evidence.explanation}
       </p>
 
-      <div className="ohGrid cols3" style={{ marginTop: 20 }}>
-        <article className="ohMetricCard">
-          <span>{isArabic ? "الأدلة" : "Evidence"}</span>
-          <strong>{evidence.evidenceCount}</strong>
-        </article>
-
-        <article className="ohMetricCard">
-          <span>{isArabic ? "المصادر" : "Sources"}</span>
-          <strong>{evidence.sourceCount}</strong>
-        </article>
-
-        <article className="ohMetricCard">
-          <span>{isArabic ? "النقاط" : "Data Points"}</span>
-          <strong>{evidence.dataPointsReviewed}</strong>
-        </article>
-      </div>
-
       <div
+        className="ohMetricGrid"
         style={{
-          marginTop: 24,
-          display: "grid",
-          gap: 12,
+          marginTop: "18px",
         }}
       >
-        {evidence.primaryEvidence.slice(0, 5).map((item) => (
-          <div
-            key={item.id}
-            className="ohTimelineItem"
-          >
-            <span className="ohTimelineDot" />
+        <article className="ohMetricCard">
+          <span className="ohMetricLabel">
+            {isArabic
+              ? "عناصر الأدلة"
+              : "Evidence Items"}
+          </span>
 
-            <div>
-              <p className="ohTimelineTitle">
-                {item.title}
-              </p>
+          <span className="ohMetricValue">
+            {evidence.evidenceCount}
+          </span>
+        </article>
 
-              <p className="ohTimelineMeta">
-                {item.detail}
-              </p>
-            </div>
-          </div>
-        ))}
+        <article className="ohMetricCard">
+          <span className="ohMetricLabel">
+            {isArabic
+              ? "المصادر المترابطة"
+              : "Connected Sources"}
+          </span>
+
+          <span className="ohMetricValue">
+            {evidence.sourceCount}
+          </span>
+        </article>
+
+        <article className="ohMetricCard">
+          <span className="ohMetricLabel">
+            {isArabic
+              ? "نقاط البيانات"
+              : "Data Points"}
+          </span>
+
+          <span className="ohMetricValue">
+            {evidence.dataPointsReviewed}
+          </span>
+        </article>
       </div>
     </section>
   );

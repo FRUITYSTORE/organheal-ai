@@ -4,8 +4,12 @@ import type {
 
 import {
   presentNextDecision,
-  type HealthIntelligencePresentationLanguage,
 } from "./next-decision.presenter";
+
+import {
+  presentationText,
+  type HealthIntelligencePresentationLanguage,
+} from "./presentation.types";
 
 export type DoctorIntelligencePresentation = {
   brief: string;
@@ -20,16 +24,6 @@ export type DoctorIntelligencePresentation = {
   generatedAt: string;
 };
 
-function text(
-  language:
-    HealthIntelligencePresentationLanguage,
-  english: string,
-  arabic: string
-): string {
-  return language === "ar"
-    ? arabic
-    : english;
-}
 
 export function presentDoctorIntelligence(
   summary:
@@ -47,19 +41,19 @@ export function presentDoctorIntelligence(
   const brief = [
     summary.healthPicture.narrative,
 
-    text(
+    presentationText(
       language,
       `Evidence strength: ${summary.evidence.strengthScore}/100.`,
       `قوة الأدلة: ${summary.evidence.strengthScore}/100.`
     ),
 
-    text(
+    presentationText(
       language,
       `Current momentum: ${summary.momentum.status}.`,
       `الاتجاه الصحي الحالي: ${summary.momentum.status}.`
     ),
 
-    text(
+    presentationText(
       language,
       `Recommended next step: ${decision.title}. ${decision.description}`,
       `الخطوة التالية الموصى بها: ${decision.title}. ${decision.description}`

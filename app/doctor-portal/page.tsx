@@ -395,14 +395,28 @@ const doctorSummary =
       "No saved report-specific recommendations are available yet.",
       "لا توجد توصيات محفوظة خاصة بالتقرير بعد."
     );
-
+const hasClinicalBaseline =
+  assessments.length > 0 ||
+  Boolean(dailyCheckIn) ||
+  uploadedReports.length > 0 ||
+  generatedInsights.length > 0;
 const officialHealthScore =
-  healthIntelligence?.healthScore.status === "ready"
-    ? healthIntelligence.healthScore.data.score
+  hasClinicalBaseline &&
+  healthIntelligence?.healthScore.status ===
+    "ready"
+    ? healthIntelligence
+        .healthScore
+        .data
+        .score
     : null;
 
 const officialHealthLevel =
-  healthIntelligence?.healthScore.data.level ?? null;
+  hasClinicalBaseline
+    ? healthIntelligence
+        ?.healthScore
+        .data
+        .level ?? null
+    : null;
 
 const officialPriorityOrgan =
   healthIntelligence?.priority.data.priorityOrgan ??
@@ -425,7 +439,7 @@ const officialPriorityOrgan =
       ? "moderate"
       : "neutral";
 
-  const recommendedAction =
+  const legacyRecommendedAction =
     assessments.length === 0
       ? {
           label: text(
@@ -538,6 +552,31 @@ const officialPriorityOrgan =
       "Not enough data is available to prepare the doctor brief.",
       "لا تتوفر بيانات كافية لإعداد ملخص الطبيب."
     );
+  const recommendedAction =
+    doctorPresentation &&
+    doctorSummaryV2
+      ? {
+          label:
+            doctorPresentation
+              .decision
+              .title,
+
+          description:
+            doctorPresentation
+              .decision
+              .description,
+
+          href:
+            doctorSummaryV2
+              .decision
+              .href,
+
+          buttonText:
+            doctorPresentation
+              .decision
+              .actionLabel,
+        }
+      : legacyRecommendedAction;
 
   return (
     <main className="ohPageShell" dir={isArabic ? "rtl" : "ltr"} lang={isArabic ? "ar" : "en"}>
@@ -565,89 +604,102 @@ const officialPriorityOrgan =
                 )}
               </p>
 
-              <div className="ohButtonRow" style={{ marginTop: "24px" }}>
-                <Link href={recommendedAction.href} className="primaryBtn">
-                  {recommendedAction.buttonText}
+                              <div
+                className="ohButtonRow"
+                style={{
+                  marginTop: "24px",
+                }}
+              >
+                <Link
+                  href="/reports"
+                  className="secondaryBtn"
+                >
+                  {text(
+                    "Reports",
+                    "التقارير"
+                  )}
                 </Link>
 
-                <Link href="/reports" className="secondaryBtn">
-                  {text("Reports", "التقارير")}
-                </Link>
-
-                <Link href="/health-plan" className="secondaryBtn">
-                  {text("Health Plan", "الخطة الصحية")}
+                <Link
+                  href="/health-plan"
+                  className="secondaryBtn"
+                >
+                  {text(
+                    "Health Plan",
+                    "الخطة الصحية"
+                  )}
                 </Link>
               </div>
             </div>
 
-            <div className="ohCard">
-              <div className="ohCardHeader">
-                <div>
-                  <p className="ohMetricLabel">
-                    {text("Doctor Brief Readiness", "جاهزية ملخص الطبيب")}
-                  </p>
+         <div className="ohCard">
+  <div className="ohCardHeader">
+    <div>
+      <p className="ohMetricLabel">
+        {text(
+          "Doctor Brief Readiness",
+          "جاهزية ملخص الطبيب"
+        )}
+      </p>
 
-                  <h2 className="ohCardTitle" style={{ marginTop: "8px" }}>
-                    {doctorBriefReadiness}
-                  </h2>
-                </div>
+      <h2
+        className="ohCardTitle"
+        style={{
+          marginTop: "8px",
+        }}
+      >
+        {doctorBriefReadiness}
+      </h2>
+    </div>
 
-               <StatusBadge tone={readinessTone}>
-  {allScores.length > 0 ? `${overallScore}/100` : "N/A"}
-</StatusBadge>
-              </div>
+    <StatusBadge tone={readinessTone}>
+      {doctorBriefReadiness}
+    </StatusBadge>
+  </div>
 
-              <p className="ohCardText">
-                {text(
-                  "Based on assessments, reports, saved intelligence, and latest wellness check-in.",
-                  "يعتمد على التقييمات، التقارير، التحليل الصحي المحفوظ، وآخر Check-In صحي."
-                )}
-              </p>
+  <p className="ohCardText">
+    {text(
+      "OrganHeal has organized the available health information into a structured pre-visit summary.",
+      "نظّم OrganHeal المعلومات الصحية المتاحة في ملخص منظم قبل الزيارة."
+    )}
+  </p>
 
-              <div className="ohDivider" />
+  <div className="ohDivider" />
 
-<p className="ohMetricLabel">
-  {text("Health Intelligence Score", "نتيجة الذكاء الصحي")}
-</p>
+  <p className="ohMetricLabel">
+    {text(
+      "Priority Area",
+      "منطقة الأولوية"
+    )}
+  </p>
 
-<p className="ohMetricValue" style={{ fontSize: "1.45rem" }}>
-  {officialHealthScore !== null
-    ? `${officialHealthScore}/100`
-    : "N/A"}
-</p>
+  <p
+    className="ohMetricValue"
+    style={{
+      fontSize: "1.45rem",
+    }}
+  >
+    {localizeOrganName(
+      officialPriorityOrgan
+    )}
+  </p>
 
-<p className="ohCardText" style={{ marginTop: "6px" }}>
-  {officialHealthLevel
-    ? text(
-        officialHealthLevel.replace("-", " ").toUpperCase(),
-        {
-          critical: "حرج",
-          "high-concern": "يحتاج متابعة مكثفة",
-          moderate: "متوسط",
-          stable: "مستقر",
-          strong: "قوي",
-        }[officialHealthLevel]
-      )
-    : text("More data is needed", "نحتاج بيانات أكثر")}
-</p>
-
-<div className="ohDivider" />
-
-<p className="ohMetricLabel">
-  {text("Priority Area", "منطقة الأولوية")}
-</p>
-
-<p className="ohMetricValue" style={{ fontSize: "1.45rem" }}>
-  {localizeOrganName(officialPriorityOrgan)}
-</p>
-
-              <p className="ohMetricValue" style={{ fontSize: "1.45rem" }}>
-                {localizeOrganName(priorityOrgan?.organ_name)}
-              </p>
-            </div>
-          </div>
-        </section>
-
+    <div
+    className="ohButtonRow"
+    style={{
+      marginTop: "18px",
+    }}
+  >
+    <Link
+      href={recommendedAction.href}
+      className="primaryBtn"
+    >
+      {recommendedAction.buttonText}
+    </Link>
+  </div>
+</div>
+</div>
+</section>
           {loading && (
           <section className="ohCard">
             <p className="ohEyebrow">
@@ -693,11 +745,45 @@ const officialPriorityOrgan =
   href={recommendedAction.href}
   buttonText={recommendedAction.buttonText}
 />
-<DoctorEvidenceCard
-  evidence={healthIntelligence!.evidence.data}
-  confidence={healthIntelligence!.evidence.confidence}
-  isArabic={isArabic}
-/>
+{hasClinicalBaseline &&
+healthIntelligence ? (
+  <DoctorEvidenceCard
+    evidence={
+      healthIntelligence
+        .evidence
+        .data
+    }
+    confidence={
+      healthIntelligence
+        .evidence
+        .confidence
+    }
+    isArabic={isArabic}
+  />
+) : (
+  <section className="ohCard">
+    <p className="ohMetricLabel">
+      {text(
+        "Clinical Evidence",
+        "الأدلة السريرية"
+      )}
+    </p>
+
+    <h2 className="ohCardTitle">
+      {text(
+        "No clinical evidence available yet",
+        "لا توجد أدلة سريرية متاحة بعد"
+      )}
+    </h2>
+
+    <p className="ohCardText">
+      {text(
+        "Complete an assessment, Check-In, or upload a medical report before OrganHeal evaluates evidence strength.",
+        "أكمل تقييمًا أو تحديثًا صحيًا أو ارفع تقريرًا طبيًا قبل أن يقيّم OrganHeal قوة الأدلة."
+      )}
+    </p>
+  </section>
+)}
 <DoctorBriefCard
   eyebrow={text("Doctor Brief", "ملخص الطبيب")}
   title={text("Pre-Visit Summary", "ملخص قبل الزيارة")}
@@ -705,160 +791,260 @@ const officialPriorityOrgan =
   readinessTone={readinessTone}
  brief={doctorBriefText}
 />
-
-            <section className="ohGrid cols2">
-<article className="ohCard">
-    <div className="ohCardHeader">
-      <div>
-        <p className="ohMetricLabel">
-          {text("Available Clinical Data", "البيانات السريرية المتاحة")}
-        </p>
-
-        <h2 className="ohCardTitle">
-          {text("Data readiness", "جاهزية البيانات")}
-        </h2>
-      </div>
-
-      <StatusBadge tone={readinessTone}>
-  {doctorBriefReadiness}
-</StatusBadge>
-    </div>
-
-    <div className="ohTimeline">
-      <div className="ohTimelineItem">
-        <span className="ohTimelineDot" />
-        <div>
-          <p className="ohTimelineTitle">
-            {text("Assessments", "التقييمات")}
-          </p>
-          <p className="ohTimelineMeta">{assessments.length}</p>
-        </div>
-      </div>
-
-      <div className="ohTimelineItem">
-        <span className="ohTimelineDot" />
-        <div>
-          <p className="ohTimelineTitle">
-            {text("Reports", "التقارير")}
-          </p>
-          <p className="ohTimelineMeta">
-            {uploadedReports.length} · {processedReports} {text("processed", "مكتمل")}
-          </p>
-        </div>
-      </div>
-
-      <div className="ohTimelineItem">
-        <span className="ohTimelineDot" />
-        <div>
-          <p className="ohTimelineTitle">
-            {text("Saved Analysis", "التحليل المحفوظ")}
-          </p>
-          <p className="ohTimelineMeta">{savedAnalysis.length}</p>
-        </div>
-      </div>
-    </div>
-  </article>
-</section>
-
-            <section className="ohGrid cols2">
-             <article className="ohCard">
+<section className="ohCard">
   <div className="ohCardHeader">
     <div>
       <p className="ohMetricLabel">
-        {text("Patient Clinical Snapshot", "الملخص السريري للمريض")}
+        {text(
+          "Clinical Overview",
+          "النظرة السريرية العامة"
+        )}
       </p>
 
       <h2 className="ohCardTitle">
-        {healthIntelligence?.doctorBrief.data.profile ??
-  text("Health profile unavailable", "الملف الصحي غير متاح")}
+        {text(
+          "Patient Data & Health Snapshot",
+          "بيانات المريض والملخص الصحي"
+        )}
       </h2>
+
+      <p className="ohCardText">
+        {text(
+          "A concise view of the available clinical data, current priority, strongest assessed area, and recent wellness context.",
+          "عرض مختصر للبيانات السريرية المتاحة، والأولوية الحالية، وأقوى منطقة تم تقييمها، وآخر حالة صحية مسجلة."
+        )}
+      </p>
     </div>
 
-   <StatusBadge tone={getScoreTone(overallScore)}>
-  {allScores.length > 0 ? `${overallScore}/100` : "N/A"}
-</StatusBadge>
+    <StatusBadge tone={readinessTone}>
+      {doctorBriefReadiness}
+    </StatusBadge>
   </div>
 
-  <div className="ohTimeline">
-    <div className="ohTimelineItem">
-      <span className="ohTimelineDot" />
-      <div>
-        <p className="ohTimelineTitle">
-          {text("Priority Organ", "العضو ذو الأولوية")}
-        </p>
+   <div className="ohMetricGrid">
+    <article className="ohMetricCard">
+      <span className="ohMetricLabel">
+        {text(
+          "Assessments",
+          "التقييمات"
+        )}
+      </span>
 
-        <p className="ohTimelineMeta">
-          {localizeOrganName(priorityOrgan?.organ_name)}
-        </p>
-      </div>
-    </div>
+      <span className="ohMetricValue">
+        {assessments.length}
+      </span>
 
-    <div className="ohTimelineItem">
-      <span className="ohTimelineDot" />
-      <div>
-        <p className="ohTimelineTitle">
-          {text("Strongest Organ", "أفضل عضو")}
-        </p>
+      <span className="ohCardText">
+        {assessments.length > 0
+          ? text(
+              "Available",
+              "متاحة"
+            )
+          : text(
+              "Missing",
+              "غير متوفرة"
+            )}
+      </span>
+    </article>
 
-        <p className="ohTimelineMeta">
-          {localizeOrganName(strongestOrgan?.organ_name)}
-        </p>
-      </div>
-    </div>
+    <article className="ohMetricCard">
+      <span className="ohMetricLabel">
+        {text(
+          "Reports",
+          "التقارير"
+        )}
+      </span>
 
-    <div className="ohTimelineItem">
-      <span className="ohTimelineDot" />
-      <div>
-        <p className="ohTimelineTitle">
-          {text("Risk Pattern", "نمط الخطورة")}
-        </p>
+      <span className="ohMetricValue">
+        {uploadedReports.length}
+      </span>
 
-        <p className="ohTimelineMeta">
-          {healthIntelligence?.doctorBrief.data.riskPattern ??
-  text("Risk pattern unavailable", "نمط الخطورة غير متاح")}
-        </p>
-      </div>
-    </div>
+      <span className="ohCardText">
+        {uploadedReports.length === 0
+          ? text(
+              "No reports uploaded",
+              "لم يتم رفع تقارير"
+            )
+          : pendingReports > 0
+            ? text(
+                `${pendingReports} pending`,
+                `${pendingReports} قيد الانتظار`
+              )
+            : text(
+                "All processed",
+                "جميعها مكتملة"
+              )}
+      </span>
+    </article>
 
-    <div className="ohTimelineItem">
-      <span className="ohTimelineDot" />
-      <div>
-        <p className="ohTimelineTitle">
-          {text("Latest Check-In", "آخر Check-In")}
-        </p>
+    <article className="ohMetricCard">
+      <span className="ohMetricLabel">
+        {text(
+          "Generated Insights",
+          "الذكاء المولد"
+        )}
+      </span>
 
-        <p className="ohTimelineMeta">
-          {dailyCheckIn
-            ? `${dailyCheckIn.wellness_score}/100 · ${dailyCheckIn.mood} · ${formatDate(dailyCheckIn.created_at)}`
-            : text("No check-in yet", "لا يوجد Check-In بعد")}
-        </p>
-      </div>
-    </div>
+      <span className="ohMetricValue">
+        {generatedInsights.length}
+      </span>
+
+      <span className="ohCardText">
+        {generatedInsights.length > 0
+          ? text(
+              "Available",
+              "متاح"
+            )
+          : text(
+              "Not generated",
+              "لم يتم توليده"
+            )}
+      </span>
+    </article>
+
+    <article className="ohMetricCard">
+      <span className="ohMetricLabel">
+        {text(
+          "Latest Check-In",
+          "آخر تحديث صحي"
+        )}
+      </span>
+
+      <span className="ohMetricValue">
+        {dailyCheckIn
+          ? `${dailyCheckIn.wellness_score}/100`
+          : "N/A"}
+      </span>
+
+      <span className="ohCardText">
+        {dailyCheckIn
+          ? formatDate(
+              dailyCheckIn.created_at
+            )
+          : text(
+              "Not completed",
+              "غير مكتمل"
+            )}
+      </span>
+    </article>
   </div>
-</article>
 
-                         </section>
+  <div className="ohDivider" />
 
-           <ReportAnalysisBrief
-  eyebrow={text("Report Analysis Brief", "ملخص ذكاء التقارير")}
+{hasClinicalBaseline ? (
+  <div className="ohGrid cols2">
+    <article className="ohActionPanel">
+      <p className="ohMetricLabel">
+        {text(
+          "Priority Area",
+          "منطقة الأولوية"
+        )}
+      </p>
+
+      <p className="ohMetricValue">
+        {localizeOrganName(
+          officialPriorityOrgan
+        )}
+      </p>
+    </article>
+
+    <article className="ohActionPanel">
+      <p className="ohMetricLabel">
+        {text(
+          "Strongest Area",
+          "أقوى منطقة"
+        )}
+      </p>
+
+      <p className="ohMetricValue">
+        {localizeOrganName(
+          strongestOrgan?.organ_name
+        )}
+      </p>
+    </article>
+
+    <article className="ohActionPanel">
+      <p className="ohMetricLabel">
+        {text(
+          "Risk Pattern",
+          "نمط الخطورة"
+        )}
+      </p>
+
+      <p className="ohCardText">
+        {healthIntelligence
+          ?.doctorBrief
+          .data
+          .riskPattern ??
+          text(
+            "Not available",
+            "غير متاح"
+          )}
+      </p>
+    </article>
+
+    <article className="ohActionPanel">
+      <p className="ohMetricLabel">
+        {text(
+          "Health Profile",
+          "الملف الصحي"
+        )}
+      </p>
+
+      <p className="ohCardText">
+        {healthIntelligence
+          ?.doctorBrief
+          .data
+          .profile ??
+          text(
+            "Not available",
+            "غير متاح"
+          )}
+      </p>
+    </article>
+  </div>
+) : (
+  <div className="ohEmptyState">
+    <p>
+      {text(
+        "Clinical priorities and profile will appear after health data is added.",
+        "ستظهر الأولويات والملف الصحي بعد إضافة البيانات الصحية."
+      )}
+    </p>
+  </div>
+)}
+</section>
+
+  <ReportAnalysisBrief
+  eyebrow={text(
+    "Report Analysis Brief",
+    "ملخص ذكاء التقارير"
+  )}
   title={text(
     "Saved Report-Based Clinical Summary",
     "ملخص سريري مبني على التقارير المحفوظة"
   )}
-  count={generatedInsights.length}
-  countTone={generatedInsights.length > 0 ? "good" : "moderate"}
-  generatedLabel={text("Generated Insights", "الذكاء المولد")}
-  processedLabel={text("Processed Reports", "تقارير مكتملة")}
-  pendingLabel={text("Pending Reports", "تقارير بانتظار")}
-  generatedCount={generatedInsights.length}
-  processedCount={processedReports}
-  pendingCount={pendingReports}
-  summaryLabel={text("Summary", "الملخص")}
-  summary={latestReportSummary}
-  recommendationsLabel={text("Recommendations", "التوصيات")}
-  recommendations={latestRecommendations}
-  doctorBriefLabel={text("Doctor Brief:", "ملخص الطبيب:")}
-  doctorBrief={latestDoctorBrief}
+  summaryLabel={text(
+    "Summary",
+    "الملخص"
+  )}
+  summary={
+    latestReportSummary
+  }
+  recommendationsLabel={text(
+    "Recommendations",
+    "التوصيات"
+  )}
+  recommendations={
+    latestRecommendations
+  }
+  doctorBriefLabel={text(
+    "Doctor Brief:",
+    "ملخص الطبيب:"
+  )}
+  doctorBrief={
+    latestDoctorBrief
+  }
 />
       <section className="ohCard">
           <div className="ohCardHeader">
