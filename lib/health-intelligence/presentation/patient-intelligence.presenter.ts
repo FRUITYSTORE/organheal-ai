@@ -71,7 +71,7 @@ function presentEvidenceStrength(
     return presentationText(
       language,
       "The available information provides a relatively strong health picture.",
-      "المعلومات المتوفرة تقدم صورة صحية قوية نسبيًا."
+      "تقدم المعلومات المتوفرة صورة صحية قوية نسبيًا."
     );
   }
 
@@ -79,14 +79,14 @@ function presentEvidenceStrength(
     return presentationText(
       language,
       "The available information provides a useful but incomplete health picture.",
-      "المعلومات المتوفرة تقدم صورة صحية مفيدة لكنها غير مكتملة."
+      "تقدم المعلومات المتوفرة صورة صحية مفيدة، لكنها غير مكتملة."
     );
   }
 
   return presentationText(
     language,
     "The current health picture is limited and would benefit from more recent information.",
-    "الصورة الصحية الحالية محدودة وستصبح أوضح عند إضافة معلومات حديثة."
+    "الصورة الصحية الحالية محدودة، وستصبح أوضح عند إضافة معلومات حديثة."
   );
 }
 
