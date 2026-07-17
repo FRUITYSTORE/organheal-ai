@@ -643,7 +643,7 @@ export default function PatientReportPdfCard({
               </h3>
               <EnglishParagraph>
                 {text(
-                  summary,
+                  patientWhatThisMeans,
                   "Your report was reviewed by OrganHeal AI and summarized in a simple way."
                 )}
               </EnglishParagraph>
@@ -655,7 +655,7 @@ export default function PatientReportPdfCard({
               </h3>
               <EnglishParagraph>
                 {text(
-                  keyFindings,
+                  patientMainThingsNoticed,
                   "No major findings were clearly identified from the available data."
                 )}
               </EnglishParagraph>
@@ -667,7 +667,7 @@ export default function PatientReportPdfCard({
               </h3>
               <EnglishParagraph>
                 {text(
-                  riskSignals,
+                  patientWhatNeedsAttention,
                   "No urgent warning signals were clearly detected. Please review your original report with a healthcare professional."
                 )}
               </EnglishParagraph>
@@ -679,7 +679,7 @@ export default function PatientReportPdfCard({
               </h3>
               <EnglishParagraph>
                 {text(
-                  recommendations || executiveSummary?.nextBestAction,
+                  patientHelpfulNextSteps,
                   "Follow up with your healthcare provider if you have symptoms or concerns."
                 )}
               </EnglishParagraph>
@@ -691,7 +691,7 @@ export default function PatientReportPdfCard({
               </h3>
               <EnglishParagraph>
                 {text(
-                  healthStory,
+                  patientHealthStory,
                   "As more assessments, check-ins, and reports are added, OrganHeal will build a clearer picture of your health journey."
                 )}
               </EnglishParagraph>
