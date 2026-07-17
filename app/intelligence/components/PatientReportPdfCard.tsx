@@ -619,18 +619,6 @@ export default function PatientReportPdfCard({
                     "ستصبح قصة صحتك أوضح مع إضافة المزيد من التقارير والفحوصات والمتابعات."
                   )}
                 </p>
-                <p style={{ margin: "8px 0 0" }}>
-                  <strong>النتيجة الصحية الحالية:</strong>{" "}
-                  {executiveSummary?.currentScore ?? "غير متاح"}
-                </p>
-                <p style={{ margin: "8px 0 0" }}>
-                  <strong>الاتجاه الصحي المتوقع:</strong>{" "}
-                  {executiveSummary?.forecastScore ?? "غير متاح"}
-                </p>
-                <p style={{ margin: "8px 0 0" }}>
-                  <strong>الثقة:</strong>{" "}
-                  {arabicValue(executiveSummary?.confidenceLevel)}
-                </p>
               </div>
             </article>
 
