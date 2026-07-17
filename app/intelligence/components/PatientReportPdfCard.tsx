@@ -612,6 +612,12 @@ export default function PatientReportPdfCard({
                 <strong>٥. اتجاهك الصحي</strong>
                 <br />
                 <p style={{ margin: "8px 0 0" }}>
+                  {text(
+                    patientHealthStory,
+                    "ستصبح قصة صحتك أوضح مع إضافة المزيد من التقارير والفحوصات والمتابعات."
+                  )}
+                </p>
+                <p style={{ margin: "8px 0 0" }}>
                   <strong>النتيجة الصحية الحالية:</strong>{" "}
                   {executiveSummary?.currentScore ?? "غير متاح"}
                 </p>
@@ -625,7 +631,12 @@ export default function PatientReportPdfCard({
                 </p>
                 <p style={{ margin: "8px 0 0" }}>
                   <strong>أفضل خطوة تالية:</strong>{" "}
-                  راجع المؤشرات مع مقدم رعاية صحية مرخص، وكرر الفحوصات ذات العلاقة حسب التوصية.
+                  {text(
+                    patientPresentation
+                      ? `${patientPresentation.decision.title}. ${patientPresentation.decision.description}`
+                      : patientHelpfulNextSteps,
+                    "راجع النتائج مع مقدم رعاية صحية مرخص واتبع توصيات المتابعة."
+                  )}
                 </p>
               </div>
             </article>
