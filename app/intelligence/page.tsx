@@ -142,6 +142,15 @@ export default function IntelligencePage() {
       HealthIntelligenceSummaryData
     > | null
   >(null);
+
+  const unifiedDoctorBriefV2 =
+    intelligenceSummaryV2?.status === "ready" &&
+    intelligenceSummaryV2.data
+      ? presentDoctorIntelligence(
+          intelligenceSummaryV2.data,
+          isArabicUi ? "ar" : "en"
+        ).brief
+      : null;
   const [healthInsights, setHealthInsights] = useState<HealthInsight[]>([]);
   const [assessmentData, setAssessmentData] = useState<Assessment[]>([]);
   const [dailyCheckIn, setDailyCheckIn] = useState<DailyCheckIn | null>(null);
@@ -1320,13 +1329,8 @@ Clinical note: This is an educational interpretation and should be reviewed by a
                   riskSignals={focusedReportInsight.risk_signals}
                   recommendations={focusedReportInsight.recommendations}
                   doctorBrief={
-  intelligenceSummaryV2?.status === "ready" &&
-  intelligenceSummaryV2.data
-    ? presentDoctorIntelligence(
-        intelligenceSummaryV2.data,
-        isArabicUi ? "ar" : "en"
-      ).brief
-    : focusedReportInsight.doctor_brief
+  unifiedDoctorBriefV2 ??
+  focusedReportInsight.doctor_brief
 }
                   executiveSummary={generatedResult.executiveSummary}
                 />
@@ -1337,7 +1341,10 @@ Clinical note: This is an educational interpretation and should be reviewed by a
                   keyFindings={focusedReportInsight.key_findings}
                   riskSignals={focusedReportInsight.risk_signals}
                   recommendations={focusedReportInsight.recommendations}
-                  doctorBrief={focusedReportInsight.doctor_brief}
+                  doctorBrief={
+  unifiedDoctorBriefV2 ??
+  focusedReportInsight.doctor_brief
+}
                 />
 
                 {generatedResult.executiveSummary && (
@@ -1462,13 +1469,8 @@ Clinical note: This is an educational interpretation and should be reviewed by a
                               riskSignals={item.risk_signals}
                               recommendations={item.recommendations}
                               doctorBrief={
-  intelligenceSummaryV2?.status === "ready" &&
-  intelligenceSummaryV2.data
-    ? presentDoctorIntelligence(
-        intelligenceSummaryV2.data,
-        isArabicUi ? "ar" : "en"
-      ).brief
-    : item.doctor_brief
+  unifiedDoctorBriefV2 ??
+  item.doctor_brief
 }
                               executiveSummary={generatedResult.executiveSummary}
                             />
@@ -1479,7 +1481,10 @@ Clinical note: This is an educational interpretation and should be reviewed by a
                               keyFindings={item.key_findings}
                               riskSignals={item.risk_signals}
                               recommendations={item.recommendations}
-                              doctorBrief={item.doctor_brief}
+                              doctorBrief={
+  unifiedDoctorBriefV2 ??
+  item.doctor_brief
+}
                             />
 
                             {generatedResult.executiveSummary && (
