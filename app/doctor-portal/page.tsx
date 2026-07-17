@@ -20,8 +20,8 @@ import type {
   HealthIntelligenceSummaryData,
 } from "@/lib/health-intelligence/engines/health-intelligence-summary.engine";
 import {
-  presentDoctorIntelligence,
-} from "@/lib/health-intelligence/presentation/doctor-intelligence.presenter";
+  healthIntelligencePresenter,
+} from "@/lib/health-intelligence/presentation/health-intelligence.presenter";
 
 type Language = "en" | "ar";
 
@@ -534,7 +534,7 @@ const officialPriorityOrgan =
 
     const doctorPresentation =
     doctorSummaryV2
-      ? presentDoctorIntelligence(
+      ? healthIntelligencePresenter.presentDoctorIntelligence(
           doctorSummaryV2,
           isArabic
             ? "ar"
