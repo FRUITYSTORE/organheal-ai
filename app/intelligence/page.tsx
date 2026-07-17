@@ -45,6 +45,15 @@ import DoctorBriefReportCard from "./components/DoctorBriefReportCard";
 import PatientReportPdfCard from "./components/PatientReportPdfCard";
 import { getIntelligenceSummary } from "@/lib/services/intelligence/intelligence.service";
 import { HealthIntelligenceResult } from "@/lib/health-intelligence/models/health-intelligence-result";
+import type {
+  HealthRuntimeModuleResult,
+} from "@/lib/health-intelligence/runtime/health-intelligence-runtime";
+import type {
+  HealthIntelligenceSummaryData,
+} from "@/lib/health-intelligence/engines/health-intelligence-summary.engine";
+import {
+  presentDoctorIntelligence,
+} from "@/lib/health-intelligence/presentation/doctor-intelligence.presenter";
 
 type Assessment = {
   organ_name: string;
@@ -125,6 +134,14 @@ export default function IntelligencePage() {
   const isArabicUi = uiLanguage === "ar";
 
   const [healthEngine, setHealthEngine] = useState<HealthEngine | null>(null);
+  const [
+    intelligenceSummaryV2,
+    setIntelligenceSummaryV2,
+  ] = useState<
+    HealthRuntimeModuleResult<
+      HealthIntelligenceSummaryData
+    > | null
+  >(null);
   const [healthInsights, setHealthInsights] = useState<HealthInsight[]>([]);
   const [assessmentData, setAssessmentData] = useState<Assessment[]>([]);
   const [dailyCheckIn, setDailyCheckIn] = useState<DailyCheckIn | null>(null);
@@ -291,6 +308,48 @@ try {
   setLoading(false);
   return;
 }
+
+    setIntelligenceSummaryV2(null);
+
+    try {
+      const summaryV2Response =
+        await fetch(
+          "/api/intelligence-summary",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+            body: JSON.stringify({
+              userId,
+              language:
+                currentLanguage,
+            }),
+          }
+        );
+
+      if (!summaryV2Response.ok) {
+        throw new Error(
+          "Could not load the unified intelligence summary."
+        );
+      }
+
+      const summaryV2Payload =
+        await summaryV2Response.json();
+
+      setIntelligenceSummaryV2(
+        summaryV2Payload.summary ??
+          null
+      );
+    } catch (error) {
+      console.error(
+        "Unified intelligence summary error:",
+        error
+      );
+
+      setIntelligenceSummaryV2(null);
+    }
 
     const { data: insights, error: insightsError } = await supabase
       .from("health_insights")
@@ -1260,7 +1319,15 @@ Clinical note: This is an educational interpretation and should be reviewed by a
                   keyFindings={focusedReportInsight.key_findings}
                   riskSignals={focusedReportInsight.risk_signals}
                   recommendations={focusedReportInsight.recommendations}
-                  doctorBrief={focusedReportInsight.doctor_brief}
+                  doctorBrief={
+  intelligenceSummaryV2?.status === "ready" &&
+  intelligenceSummaryV2.data
+    ? presentDoctorIntelligence(
+        intelligenceSummaryV2.data,
+        isArabicUi ? "ar" : "en"
+      ).brief
+    : focusedReportInsight.doctor_brief
+}
                   executiveSummary={generatedResult.executiveSummary}
                 />
 
@@ -1394,7 +1461,15 @@ Clinical note: This is an educational interpretation and should be reviewed by a
                               keyFindings={item.key_findings}
                               riskSignals={item.risk_signals}
                               recommendations={item.recommendations}
-                              doctorBrief={item.doctor_brief}
+                              doctorBrief={
+  intelligenceSummaryV2?.status === "ready" &&
+  intelligenceSummaryV2.data
+    ? presentDoctorIntelligence(
+        intelligenceSummaryV2.data,
+        isArabicUi ? "ar" : "en"
+      ).brief
+    : item.doctor_brief
+}
                               executiveSummary={generatedResult.executiveSummary}
                             />
 
