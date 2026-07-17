@@ -634,15 +634,6 @@ export default function PatientReportPdfCard({
               </div>
             </article>
 
-            <article>
-              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
-                ملاحظة مهمة
-              </h3>
-              <ArabicParagraph>
-                هذا التقرير للتثقيف والفهم الشخصي فقط. لا يستبدل الاستشارة الطبية أو التشخيص أو العلاج.
-                راجع النتائج دائمًا مع مقدم رعاية صحية مرخص.
-              </ArabicParagraph>
-            </article>
           </div>
         ) : (
           <div className="ohStack">
