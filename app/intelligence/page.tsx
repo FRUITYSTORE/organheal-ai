@@ -52,11 +52,8 @@ import type {
   HealthIntelligenceSummaryData,
 } from "@/lib/health-intelligence/engines/health-intelligence-summary.engine";
 import {
-  presentDoctorIntelligence,
-} from "@/lib/health-intelligence/presentation/doctor-intelligence.presenter";
-import {
-  presentPatientIntelligence,
-} from "@/lib/health-intelligence/presentation/patient-intelligence.presenter";
+  healthIntelligencePresenter,
+} from "@/lib/health-intelligence/presentation/health-intelligence.presenter";
 
 type Assessment = {
   organ_name: string;
@@ -149,7 +146,7 @@ export default function IntelligencePage() {
   const unifiedDoctorBriefV2 =
     intelligenceSummaryV2?.status === "ready" &&
     intelligenceSummaryV2.data
-      ? presentDoctorIntelligence(
+      ? healthIntelligencePresenter.presentDoctorIntelligence(
           intelligenceSummaryV2.data,
           isArabicUi ? "ar" : "en"
         ).brief
@@ -158,7 +155,7 @@ export default function IntelligencePage() {
   const unifiedPatientPresentationV2 =
     intelligenceSummaryV2?.status === "ready" &&
     intelligenceSummaryV2.data
-      ? presentPatientIntelligence(
+      ? healthIntelligencePresenter.presentPatientIntelligence(
           intelligenceSummaryV2.data,
           isArabicUi ? "ar" : "en"
         )
