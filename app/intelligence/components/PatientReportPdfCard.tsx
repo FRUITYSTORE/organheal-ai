@@ -555,7 +555,14 @@ export default function PatientReportPdfCard({
                 ٢. أهم المؤشرات التي ظهرت
               </h3>
 
-              {labMarkers.length > 0 ? (
+              <ArabicParagraph>
+                {text(
+                  patientMainThingsNoticed,
+                  "لم يتم تحديد مؤشرات رئيسية واضحة من البيانات المتاحة حاليًا."
+                )}
+              </ArabicParagraph>
+
+              {labMarkers.length > 0 && (
                 <div className="ohMetricGrid" style={{ marginTop: "12px" }}>
                   {labMarkers.map((marker, index) => (
                     <div className="ohMetricCard" key={`${marker.name}-${index}`}>
@@ -574,11 +581,6 @@ export default function PatientReportPdfCard({
                     </div>
                   ))}
                 </div>
-              ) : (
-                <ArabicParagraph>
-                  لا توجد مؤشرات مختبرية واضحة يمكن استخراجها بشكل منظم من النص الحالي.
-                  يُنصح بمراجعة التقرير الأصلي مع مختص صحي.
-                </ArabicParagraph>
               )}
             </article>
 
