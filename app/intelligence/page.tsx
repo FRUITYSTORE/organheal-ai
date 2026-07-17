@@ -54,6 +54,9 @@ import type {
 import {
   presentDoctorIntelligence,
 } from "@/lib/health-intelligence/presentation/doctor-intelligence.presenter";
+import {
+  presentPatientIntelligence,
+} from "@/lib/health-intelligence/presentation/patient-intelligence.presenter";
 
 type Assessment = {
   organ_name: string;
@@ -150,6 +153,15 @@ export default function IntelligencePage() {
           intelligenceSummaryV2.data,
           isArabicUi ? "ar" : "en"
         ).brief
+      : null;
+
+  const unifiedPatientPresentationV2 =
+    intelligenceSummaryV2?.status === "ready" &&
+    intelligenceSummaryV2.data
+      ? presentPatientIntelligence(
+          intelligenceSummaryV2.data,
+          isArabicUi ? "ar" : "en"
+        )
       : null;
   const [healthInsights, setHealthInsights] = useState<HealthInsight[]>([]);
   const [assessmentData, setAssessmentData] = useState<Assessment[]>([]);
@@ -1318,6 +1330,7 @@ Clinical note: This is an educational interpretation and should be reviewed by a
                   recommendations={focusedReportInsight.recommendations}
                   healthStory={generatedResult.healthStory}
                   executiveSummary={generatedResult.executiveSummary}
+                  patientPresentation={unifiedPatientPresentationV2}
                 />
 
                 <DoctorBriefReportCard
@@ -1458,6 +1471,7 @@ Clinical note: This is an educational interpretation and should be reviewed by a
                               recommendations={item.recommendations}
                               healthStory={generatedResult.healthStory}
                               executiveSummary={generatedResult.executiveSummary}
+                              patientPresentation={unifiedPatientPresentationV2}
                             />
 
                             <DoctorBriefReportCard

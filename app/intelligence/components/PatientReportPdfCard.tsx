@@ -1,6 +1,9 @@
 "use client";
 
 import { type ReactNode, useRef } from "react";
+import type {
+  PatientIntelligencePresentation,
+} from "@/lib/health-intelligence/presentation/patient-intelligence.presenter";
 import { text, useArabicUi } from "./ArabicUiHelper";
 
 type ExecutiveSummary = {
@@ -20,6 +23,7 @@ type PatientReportPdfCardProps = {
   recommendations: string | null | undefined;
   healthStory: string | null | undefined;
   executiveSummary: ExecutiveSummary | null | undefined;
+  patientPresentation?: PatientIntelligencePresentation | null;
 };
 
 function arabicValue(value: unknown) {
@@ -282,6 +286,7 @@ export default function PatientReportPdfCard({
   recommendations,
   healthStory,
   executiveSummary,
+  patientPresentation,
 }: PatientReportPdfCardProps) {
   const isArabic = useArabicUi();
   const patientReportRef = useRef<HTMLElement>(null);
