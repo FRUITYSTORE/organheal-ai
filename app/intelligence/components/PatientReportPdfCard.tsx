@@ -302,6 +302,23 @@ export default function PatientReportPdfCard({
   const currentScoreTone = getScoreTone(executiveSummary?.currentScore);
   const forecastScoreTone = getScoreTone(executiveSummary?.forecastScore);
 
+  const patientWhatThisMeans =
+    patientPresentation?.whatThisMeans || summary;
+
+  const patientMainThingsNoticed =
+    patientPresentation?.mainThingsNoticed || keyFindings;
+
+  const patientWhatNeedsAttention =
+    patientPresentation?.whatNeedsAttention || riskSignals;
+
+  const patientHelpfulNextSteps =
+    patientPresentation?.helpfulNextSteps ||
+    recommendations ||
+    executiveSummary?.nextBestAction;
+
+  const patientHealthStory =
+    patientPresentation?.healthStory || healthStory;
+
   async function downloadPatientPdf() {
     if (!patientReportRef.current) return;
 
