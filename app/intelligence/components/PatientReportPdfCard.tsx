@@ -631,15 +631,6 @@ export default function PatientReportPdfCard({
                   <strong>الثقة:</strong>{" "}
                   {arabicValue(executiveSummary?.confidenceLevel)}
                 </p>
-                <p style={{ margin: "8px 0 0" }}>
-                  <strong>أفضل خطوة تالية:</strong>{" "}
-                  {text(
-                    patientPresentation
-                      ? `${patientPresentation.decision.title}. ${patientPresentation.decision.description}`
-                      : patientHelpfulNextSteps,
-                    "راجع النتائج مع مقدم رعاية صحية مرخص واتبع توصيات المتابعة."
-                  )}
-                </p>
               </div>
             </article>
 
