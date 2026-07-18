@@ -2,6 +2,9 @@
 
 import { type ReactNode, useRef } from "react";
 import { text, useArabicUi } from "./ArabicUiHelper";
+import type {
+  DoctorIntelligencePresentation,
+} from "../../../lib/health-intelligence/presentation/doctor-intelligence.presenter";
 
 type ExecutiveSummary = {
   currentScore?: number;
@@ -22,6 +25,7 @@ type DoctorBriefReportCardProps = {
   riskSignals: string | null | undefined;
   recommendations: string | null | undefined;
   doctorBrief: string | null | undefined;
+  doctorPresentation?: DoctorIntelligencePresentation | null;
   executiveSummary: ExecutiveSummary | null | undefined;
 };
 
