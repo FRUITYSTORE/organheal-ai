@@ -312,7 +312,10 @@ export default function DoctorBriefReportCard({
 
   const clinicalSummary =
     doctorPresentation?.clinicalSummary ?? doctorBrief ?? null;
-  function printDoctorBriefOnly() {
+  
+  const evidenceSummary =
+    doctorPresentation?.evidenceSummary ?? null;
+function printDoctorBriefOnly() {
     if (!printRef.current) {
       window.print();
       return;
@@ -678,6 +681,15 @@ export default function DoctorBriefReportCard({
 
             <article>
               <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
+                ٦. ملخص الأدلة
+              </h3>
+              <ArabicParagraph>
+                {text(evidenceSummary, "غير متاح")}
+              </ArabicParagraph>
+            </article>
+
+            <article>
+              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
                 ملاحظة مهمة
               </h3>
               <ArabicParagraph>
@@ -720,6 +732,13 @@ export default function DoctorBriefReportCard({
                 5. Clinical Review Note
               </h3>
               <EnglishParagraph>{text(clinicalSummary, "N/A")}</EnglishParagraph>
+            </article>
+
+            <article>
+              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
+                6. Evidence Summary
+              </h3>
+              <EnglishParagraph>{text(evidenceSummary, "N/A")}</EnglishParagraph>
             </article>
           </div>
         )}
