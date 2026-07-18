@@ -19,6 +19,7 @@ import {
 
 import {
   getGeneratedResultByInsightId,
+  getLatestGeneratedResultByInsightIds,
   saveGeneratedIntelligenceResult,
 } from "@/lib/repositories/insight.repository";
 import {
@@ -428,22 +429,22 @@ try {
     const generatedInsightIds = mergedInsights.map((item) => item.id);
 
     if (generatedInsightIds.length > 0) {
-      const { data: savedGeneratedResult, error: savedGeneratedResultError } =
-        await supabase
-          .from("generated_intelligence_results")
-          .select("insight_id, result, updated_at")
-          .eq("user_id", userId)
-          .in("insight_id", generatedInsightIds)
-          .order("updated_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
+      try {
+  const savedGeneratedResult =
+    await getLatestGeneratedResultByInsightIds(
+      userId,
+      generatedInsightIds
+    );
 
-      if (!savedGeneratedResultError && savedGeneratedResult?.result) {
-        setGeneratedResult(
-          savedGeneratedResult.result as GeneratedIntelligenceResult
-        );
-        setActiveGeneratedInsightId(savedGeneratedResult.insight_id);
-      }
+  if (savedGeneratedResult?.result) {
+    setGeneratedResult(
+      savedGeneratedResult.result as GeneratedIntelligenceResult
+    );
+    setActiveGeneratedInsightId(savedGeneratedResult.insight_id);
+  }
+} catch {
+  // Keep page loading resilient if no saved result can be loaded.
+}
     }
 
     if (assessmentData.length === 0 && mergedInsights.length === 0) {
