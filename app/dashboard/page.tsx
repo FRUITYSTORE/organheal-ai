@@ -534,6 +534,13 @@ const nextStep: NextStep = !hasAssessments && !hasReports
       trendConfidence:
         dashboardTrendConfidence,
 
+
+      evidence:
+        dashboardEvidence,
+
+      evidenceConfidence:
+        dashboardEvidenceConfidence,
+
       journey: {
         nextStep: {
           label:
@@ -2704,14 +2711,11 @@ const nextStep: NextStep = !hasAssessments && !hasReports
     {...dashboardViewState.healthDirection}
   />
 )}
-{dashboardEvidence &&
-  dashboardEvidenceConfidence !== undefined && (
-    <HealthEvidenceCard
-      evidence={dashboardEvidence}
-      confidence={dashboardEvidenceConfidence}
-      isArabic={isArabic}
-    />
-  )}
+{dashboardViewState.healthEvidence && (
+  <HealthEvidenceCard
+    {...dashboardViewState.healthEvidence}
+  />
+)}
 
 {dashboardTimeline &&
   dashboardTimelineConfidence !== undefined &&
