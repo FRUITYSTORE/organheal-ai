@@ -319,6 +319,37 @@ export default function PatientReportPdfCard({
   const patientHealthStory =
     patientPresentation?.healthStory || healthStory;
 
+  const patientReportSections = [
+    {
+      titleAr: "١. ماذا يعني هذا التقرير؟",
+      titleEn: "1. What This Report Means",
+      value: patientWhatThisMeans,
+      fallbackAr: "تمت مراجعة تقريرك وتقديم ملخص صحي مبسط يساعدك على فهم الصورة العامة.",
+      fallbackEn: "Your report was reviewed by OrganHeal AI and summarized in a simple way.",
+    },
+    {
+      titleAr: "٢. أهم المؤشرات التي ظهرت",
+      titleEn: "2. Main Things Noticed",
+      value: patientMainThingsNoticed,
+      fallbackAr: "لم يتم تحديد مؤشرات رئيسية واضحة من البيانات المتاحة حاليًا.",
+      fallbackEn: "No major findings were clearly identified from the available data.",
+    },
+    {
+      titleAr: "٣. ما الذي قد يحتاج إلى انتباه؟",
+      titleEn: "3. What May Need Attention",
+      value: patientWhatNeedsAttention,
+      fallbackAr: "لا تظهر حاليًا إشارات واضحة تستدعي القلق العاجل، مع أهمية مراجعة التقرير الأصلي مع مختص صحي.",
+      fallbackEn: "No urgent warning signals were clearly detected. Please review your original report with a healthcare professional.",
+    },
+    {
+      titleAr: "٤. خطوات تالية مفيدة",
+      titleEn: "4. Helpful Next Steps",
+      value: patientHelpfulNextSteps,
+      fallbackAr: "راجع النتائج مع مقدم رعاية صحية مرخص، واتبع توصيات المتابعة والفحوصات اللازمة.",
+      fallbackEn: "Follow up with your healthcare provider if you have symptoms or concerns.",
+    },
+  ];
+
   async function downloadPatientPdf() {
     if (!patientReportRef.current) return;
 
@@ -536,36 +567,30 @@ export default function PatientReportPdfCard({
 
         <div className="ohDivider" />
 
-        {isArabic ? (
-          <div className="ohStack">
-            <article>
+        <div className="ohStack">
+          {patientReportSections.map((section, index) => (
+            <article key={section.titleEn}>
               <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
-                ١. ماذا يعني هذا التقرير؟
-              </h3>
-              <ArabicParagraph>
-                {text(
-                  patientWhatThisMeans,
-                  "تمت مراجعة تقريرك وتقديم ملخص صحي مبسط يساعدك على فهم الصورة العامة."
-                )}
-              </ArabicParagraph>
-            </article>
-
-            <article>
-              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
-                ٢. أهم المؤشرات التي ظهرت
+                {isArabic ? section.titleAr : section.titleEn}
               </h3>
 
-              <ArabicParagraph>
-                {text(
-                  patientMainThingsNoticed,
-                  "لم يتم تحديد مؤشرات رئيسية واضحة من البيانات المتاحة حاليًا."
-                )}
-              </ArabicParagraph>
+              {isArabic ? (
+                <ArabicParagraph>
+                  {text(section.value, section.fallbackAr)}
+                </ArabicParagraph>
+              ) : (
+                <EnglishParagraph>
+                  {text(section.value, section.fallbackEn)}
+                </EnglishParagraph>
+              )}
 
-              {labMarkers.length > 0 && (
+              {isArabic && index === 1 && labMarkers.length > 0 && (
                 <div className="ohMetricGrid" style={{ marginTop: "12px" }}>
-                  {labMarkers.map((marker, index) => (
-                    <div className="ohMetricCard" key={`${marker.name}-${index}`}>
+                  {labMarkers.map((marker, markerIndex) => (
+                    <div
+                      className="ohMetricCard"
+                      key={`${marker.name}-${markerIndex}`}
+                    >
                       <span className="ohMetricLabel">{marker.name}</span>
                       <span className="ohMetricHint">
                         القيمة: {marker.value} {marker.unit}
@@ -583,31 +608,9 @@ export default function PatientReportPdfCard({
                 </div>
               )}
             </article>
+          ))}
 
-            <article>
-              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
-                ٣. ما الذي قد يحتاج إلى انتباه؟
-              </h3>
-              <ArabicParagraph>
-                {text(
-                  patientWhatNeedsAttention,
-                  "لا تظهر حاليًا إشارات واضحة تستدعي القلق العاجل، مع أهمية مراجعة التقرير الأصلي مع مختص صحي."
-                )}
-              </ArabicParagraph>
-            </article>
-
-            <article>
-              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
-                ٤. خطوات تالية مفيدة
-              </h3>
-              <ArabicParagraph>
-                {text(
-                  patientHelpfulNextSteps,
-                  "راجع النتائج مع مقدم رعاية صحية مرخص، واتبع توصيات المتابعة والفحوصات اللازمة."
-                )}
-              </ArabicParagraph>
-            </article>
-
+          {isArabic ? (
             <article className="ohTrustNotice">
               <span aria-hidden="true">📈</span>
               <div>
@@ -621,58 +624,7 @@ export default function PatientReportPdfCard({
                 </p>
               </div>
             </article>
-
-          </div>
-        ) : (
-          <div className="ohStack">
-            <article>
-              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
-                1. What This Report Means
-              </h3>
-              <EnglishParagraph>
-                {text(
-                  patientWhatThisMeans,
-                  "Your report was reviewed by OrganHeal AI and summarized in a simple way."
-                )}
-              </EnglishParagraph>
-            </article>
-
-            <article>
-              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
-                2. Main Things Noticed
-              </h3>
-              <EnglishParagraph>
-                {text(
-                  patientMainThingsNoticed,
-                  "No major findings were clearly identified from the available data."
-                )}
-              </EnglishParagraph>
-            </article>
-
-            <article>
-              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
-                3. What May Need Attention
-              </h3>
-              <EnglishParagraph>
-                {text(
-                  patientWhatNeedsAttention,
-                  "No urgent warning signals were clearly detected. Please review your original report with a healthcare professional."
-                )}
-              </EnglishParagraph>
-            </article>
-
-            <article>
-              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
-                4. Helpful Next Steps
-              </h3>
-              <EnglishParagraph>
-                {text(
-                  patientHelpfulNextSteps,
-                  "Follow up with your healthcare provider if you have symptoms or concerns."
-                )}
-              </EnglishParagraph>
-            </article>
-
+          ) : (
             <article>
               <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
                 5. Your Health Story in Simple Words
@@ -684,8 +636,8 @@ export default function PatientReportPdfCard({
                 )}
               </EnglishParagraph>
             </article>
-          </div>
-        )}
+          )}
+        </div>
 
         <div className="ohDivider" />
 
