@@ -347,6 +347,12 @@ const dashboardEvidence =
 
 const dashboardEvidenceConfidence =
   healthIntelligence?.evidence.confidence;
+
+const dashboardTimeline =
+  healthIntelligence?.timeline.data;
+
+const dashboardTimelineConfidence =
+  healthIntelligence?.timeline.confidence;
 const nextStep: NextStep = !hasAssessments && !hasReports
     ? {
         tag: isArabic ? "ابدأ هنا" : "Start here",
