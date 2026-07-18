@@ -423,14 +423,6 @@ const analysisCount =
     (item) => item.extraction_status !== "Completed"
   ).length;
 
-  const savedAnalysisIds = new Set(
-    savedAnalysis.map((item) => item.insight_id)
-  );
-
-  const generatedInsights = healthInsights.filter(
-    (item) => item.ai_status === "Generated" || savedAnalysisIds.has(item.id)
-  );
-
   const assessmentTrend = useMemo(() => {
     if (history.length < 2) {
       return {
@@ -528,54 +520,6 @@ const analysisCount =
     };
   }, [dailyCheckIns, isArabic]);
 
-  const legacyTimelineItems: TimelineItem[] = [
-    ...history.map((item) => ({
-      id: `assessment-${item.id}`,
-      type: "Assessment" as const,
-      title: localizeModuleName(item.module_name),
-      subtitle: localizeStatus(item.status || "Assessment saved"),
-      score: item.score,
-      date: item.created_at,
-      href: "/assessment",
-    })),
-
-    ...dailyCheckIns.map((item) => ({
-      id: `checkin-${item.id}`,
-      type: "Check-In" as const,
-      title: isArabic
-        ? `Check-In صحي · ${item.mood}`
-        : `Wellness Check-In · ${item.mood}`,
-      subtitle: isArabic
-        ? `الطاقة ${item.energy_level}/5 · النوم ${item.sleep_quality}/5 · التوتر ${item.stress_level}/5`
-        : `Energy ${item.energy_level}/5 · Sleep ${item.sleep_quality}/5 · Stress ${item.stress_level}/5`,
-      score: item.wellness_score,
-      date: item.created_at,
-      href: "/checkin",
-    })),
-
-    ...uploadedReports.map((item) => ({
-      id: `report-${item.id}`,
-      type: "Report" as const,
-      title: item.file_name || text("Medical report", "تقرير طبي"),
-      subtitle: localizeStatus(item.extraction_status || "Uploaded"),
-      score: null,
-      date: item.created_at,
-      href: "/reports",
-    })),
-
-    ...generatedInsights.map((item) => ({
-      id: `intelligence-${item.id}`,
-      type: "Analysis" as const,
-      title: item.insight_title || text("Saved health analysis", "تحليل صحي محفوظ"),
-      subtitle:
-        item.ai_status === "Generated"
-          ? text("Saved analysis result", "نتيجة تحليل صحي مولدة")
-          : text("Saved intelligence result", "نتيجة تحليل صحي محفوظة"),
-      score: null,
-      date: item.created_at || new Date().toISOString(),
-      href: "/reports",
-    })),
-  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 const officialTimelineItems: TimelineItem[] =
   officialTimeline?.data.events.map(
     (event) => {
@@ -604,10 +548,7 @@ const officialTimelineItems: TimelineItem[] =
     }
   ) ?? [];
 
-const timelineItems =
-  officialTimelineItems.length > 0
-    ? officialTimelineItems
-    : legacyTimelineItems;
+const timelineItems = officialTimelineItems;
 
   const filters = [
     { value: "All", label: text("All", "الكل") },
