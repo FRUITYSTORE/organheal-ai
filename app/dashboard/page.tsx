@@ -335,6 +335,12 @@ const [healthIntelligence, setHealthIntelligence] =
   
 const dashboardHealthScore =
   healthIntelligence?.healthScore.data.score ?? null;
+
+const dashboardTrendSummary =
+  healthIntelligence?.trendSummary.data;
+
+const dashboardTrendConfidence =
+  healthIntelligence?.trendSummary.confidence;
 const nextStep: NextStep = !hasAssessments && !hasReports
     ? {
         tag: isArabic ? "ابدأ هنا" : "Start here",
@@ -2666,11 +2672,14 @@ const nextStep: NextStep = !hasAssessments && !hasReports
     </div>
 
     <div className="healthCommandCenterStack">
-      <HealthDirectionCard
-        summary={healthIntelligence.trendSummary.data}
-        confidence={healthIntelligence.trendSummary.confidence}
-        isArabic={isArabic}
-      />
+      {dashboardTrendSummary &&
+  dashboardTrendConfidence !== undefined && (
+    <HealthDirectionCard
+      summary={dashboardTrendSummary}
+      confidence={dashboardTrendConfidence}
+      isArabic={isArabic}
+    />
+  )}
 <HealthEvidenceCard
   evidence={healthIntelligence.evidence.data}
   confidence={healthIntelligence.evidence.confidence}
