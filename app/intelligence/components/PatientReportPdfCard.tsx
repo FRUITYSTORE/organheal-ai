@@ -614,33 +614,36 @@ export default function PatientReportPdfCard({
             </article>
           ))}
 
-          {isArabic ? (
-            <article className="ohTrustNotice">
-              <span aria-hidden="true">📈</span>
-              <div>
-                <strong>٥. اتجاهك الصحي</strong>
-                <br />
-                <p style={{ margin: "8px 0 0" }}>
-                  {text(
-                    patientHealthStory,
-                    "ستصبح قصة صحتك أوضح مع إضافة المزيد من التقارير والفحوصات والمتابعات."
-                  )}
-                </p>
-              </div>
-            </article>
-          ) : (
-            <article>
-              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
-                5. Your Health Story in Simple Words
-              </h3>
-              <EnglishParagraph>
-                {text(
-                  patientHealthStory,
-                  "As more assessments, check-ins, and reports are added, OrganHeal will build a clearer picture of your health journey."
-                )}
-              </EnglishParagraph>
-            </article>
-          )}
+          <article className={isArabic ? "ohTrustNotice" : undefined}>
+            {isArabic && <span aria-hidden="true">📈</span>}
+
+            <div>
+              {isArabic ? (
+                <>
+                  <strong>٥. اتجاهك الصحي</strong>
+                  <br />
+                  <p style={{ margin: "8px 0 0" }}>
+                    {text(
+                      patientHealthStory,
+                      "ستصبح قصة صحتك أوضح مع إضافة المزيد من التقارير والفحوصات والمتابعات."
+                    )}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
+                    5. Your Health Story in Simple Words
+                  </h3>
+                  <EnglishParagraph>
+                    {text(
+                      patientHealthStory,
+                      "As more assessments, check-ins, and reports are added, OrganHeal will build a clearer picture of your health journey."
+                    )}
+                  </EnglishParagraph>
+                </>
+              )}
+            </div>
+          </article>
         </div>
 
         <div className="ohDivider" />
