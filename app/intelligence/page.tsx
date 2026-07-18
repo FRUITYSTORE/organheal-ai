@@ -16,6 +16,10 @@ import {
   saveMedicalReportMarkers,
   type HistoricalMedicalMarker,
 } from "@/lib/repositories/report-markers.repository";
+
+import {
+  getGeneratedResultByInsightId,
+} from "@/lib/repositories/insight.repository";
 import {
   buildHealthInsightUpdate,
 } from "@/lib/services/intelligence/intelligence-persistence.service";
@@ -475,16 +479,20 @@ try {
       return;
     }
 
-    const { data: savedGeneratedResult, error } = await supabase
-      .from("generated_intelligence_results")
-      .select("result")
-      .eq("user_id", userData.user.id)
-      .eq("insight_id", insightId)
-      .maybeSingle();
+    let savedGeneratedResult;
 
-    if (error) {
-      alert("Could not load saved intelligence result: " + error.message);
-      return;
+try {
+  savedGeneratedResult =
+    await getGeneratedResultByInsightId(
+      userData.user.id,
+      insightId
+    );
+} catch (error) {
+  alert(
+    "Could not load saved intelligence result: " +
+      (error instanceof Error ? error.message : String(error))
+  );
+  return;
     }
 
     if (!savedGeneratedResult?.result) {
