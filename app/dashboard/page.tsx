@@ -341,6 +341,12 @@ const dashboardTrendSummary =
 
 const dashboardTrendConfidence =
   healthIntelligence?.trendSummary.confidence;
+
+const dashboardEvidence =
+  healthIntelligence?.evidence.data;
+
+const dashboardEvidenceConfidence =
+  healthIntelligence?.evidence.confidence;
 const nextStep: NextStep = !hasAssessments && !hasReports
     ? {
         tag: isArabic ? "ابدأ هنا" : "Start here",
@@ -2680,11 +2686,14 @@ const nextStep: NextStep = !hasAssessments && !hasReports
       isArabic={isArabic}
     />
   )}
-<HealthEvidenceCard
-  evidence={healthIntelligence.evidence.data}
-  confidence={healthIntelligence.evidence.confidence}
-  isArabic={isArabic}
-/>
+{dashboardEvidence &&
+  dashboardEvidenceConfidence !== undefined && (
+    <HealthEvidenceCard
+      evidence={dashboardEvidence}
+      confidence={dashboardEvidenceConfidence}
+      isArabic={isArabic}
+    />
+  )}
 
 {healthIntelligence.timeline.data.events.length > 0 && (
   <DashboardTimelinePreview
