@@ -3,6 +3,7 @@ import { HealthIntelligenceResult } from "@/lib/health-intelligence/models/healt
 
 type DashboardIntelligenceCardProps = {
   intelligence: HealthIntelligenceResult;
+  actionSummary: string;
   isArabic: boolean;
 };
 
@@ -20,6 +21,7 @@ function severityColor(severity: string) {
 
 export default function DashboardIntelligenceCard({
   intelligence,
+  actionSummary,
   isArabic,
 }: DashboardIntelligenceCardProps) {
   const topFindings = intelligence.findings.slice(0, 3);
@@ -172,7 +174,7 @@ paddingTop: "20px",
         </span>
 
         <p style={{ margin: "8px 0 16px", color: "#475569" }}>
-          {intelligence.risk.data.recommendation}
+          {actionSummary}
         </p>
 
        <div className="dashboardTodayActions">

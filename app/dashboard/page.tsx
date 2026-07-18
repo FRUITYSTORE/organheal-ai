@@ -2695,6 +2695,7 @@ const [healthIntelligence, setHealthIntelligence] =
 
 <DashboardIntelligenceCard
   intelligence={healthIntelligence}
+  actionSummary={healthIntelligence.risk.data.recommendation}
   isArabic={isArabic}
 />
     </div>
