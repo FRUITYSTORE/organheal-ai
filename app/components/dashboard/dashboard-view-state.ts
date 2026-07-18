@@ -28,6 +28,7 @@ export type DashboardViewState = {
   journey: JourneyProps;
   nextAction: NextActionProps;
   overview: OverviewProps;
+  healthScore: number | null;
 };
 
 export type BuildDashboardViewStateInput = {
@@ -35,6 +36,8 @@ export type BuildDashboardViewStateInput = {
 
   dashboardIntelligence:
     HeroProps["intelligence"] | null;
+
+  healthScore: number | null;
 
   journey: Omit<
     JourneyProps,
@@ -55,6 +58,7 @@ export type BuildDashboardViewStateInput = {
 export function buildDashboardViewState({
   isArabic,
   dashboardIntelligence,
+  healthScore,
   journey,
   nextAction,
   overview,
@@ -84,5 +88,7 @@ export function buildDashboardViewState({
       ...overview,
       isArabic,
     },
+
+    healthScore,
   };
 }

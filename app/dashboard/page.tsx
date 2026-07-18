@@ -525,6 +525,9 @@ const nextStep: NextStep = !hasAssessments && !hasReports
 
       dashboardIntelligence,
 
+      healthScore:
+        dashboardHealthScore,
+
       journey: {
         nextStep: {
           label:
@@ -2685,7 +2688,7 @@ const nextStep: NextStep = !hasAssessments && !hasReports
       </div>
 
       <span className="healthCommandCenterBadge">
-        {dashboardHealthScore}/100
+        {dashboardViewState.healthScore}/100
       </span>
     </div>
 
