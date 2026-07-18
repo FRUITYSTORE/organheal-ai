@@ -88,7 +88,7 @@ function extractLabMarkers(...values: Array<string | null | undefined>) {
     name: match[1].trim(),
     value: match[2].trim(),
     unit: (match[3] || "").trim(),
-    status: englishStatusToArabic(match[4]),
+    status: match[4].trim(),
     ref: match[5].replace(/\(default\)/gi, "").trim(),
   }));
 }
@@ -584,7 +584,7 @@ export default function PatientReportPdfCard({
                 </EnglishParagraph>
               )}
 
-              {isArabic && index === 1 && labMarkers.length > 0 && (
+              {index === 1 && labMarkers.length > 0 && (
                 <div className="ohMetricGrid" style={{ marginTop: "12px" }}>
                   {labMarkers.map((marker, markerIndex) => (
                     <div
@@ -593,14 +593,18 @@ export default function PatientReportPdfCard({
                     >
                       <span className="ohMetricLabel">{marker.name}</span>
                       <span className="ohMetricHint">
-                        القيمة: {marker.value} {marker.unit}
+                        {isArabic ? "القيمة" : "Value"}: {marker.value}{" "}
+                        {marker.unit}
                       </span>
                       <span className="ohMetricHint">
-                        الحالة: {marker.status}
+                        {isArabic ? "الحالة" : "Status"}:{" "}
+                        {isArabic
+                          ? englishStatusToArabic(marker.status)
+                          : marker.status}
                       </span>
                       {marker.ref && (
                         <span className="ohMetricHint">
-                          المرجع: {marker.ref}
+                          {isArabic ? "المرجع" : "Reference"}: {marker.ref}
                         </span>
                       )}
                     </div>
