@@ -12,6 +12,11 @@ import {
 } from "./presentation.types";
 
 export type DoctorIntelligencePresentation = {
+  clinicalSummary: string;
+  evidenceSummary: string;
+  momentumSummary: string;
+  decisionSummary: string;
+
   brief: string;
 
   decision: {
@@ -23,7 +28,6 @@ export type DoctorIntelligencePresentation = {
 
   generatedAt: string;
 };
-
 
 export function presentDoctorIntelligence(
   summary:
@@ -38,29 +42,43 @@ export function presentDoctorIntelligence(
       language
     );
 
-  const brief = [
-    summary.healthPicture.narrative,
+  const clinicalSummary =
+    summary.healthPicture.narrative;
 
+  const evidenceSummary =
     presentationText(
       language,
       `Evidence strength: ${summary.evidence.strengthScore}/100.`,
       `قوة الأدلة: ${summary.evidence.strengthScore}/100.`
-    ),
+    );
 
+  const momentumSummary =
     presentationText(
       language,
       `Current momentum: ${summary.momentum.status}.`,
       `الاتجاه الصحي الحالي: ${summary.momentum.status}.`
-    ),
+    );
 
+  const decisionSummary =
     presentationText(
       language,
       `Recommended next step: ${decision.title}. ${decision.description}`,
       `الخطوة التالية الموصى بها: ${decision.title}. ${decision.description}`
-    ),
+    );
+
+  const brief = [
+    clinicalSummary,
+    evidenceSummary,
+    momentumSummary,
+    decisionSummary,
   ].join("\n\n");
 
   return {
+    clinicalSummary,
+    evidenceSummary,
+    momentumSummary,
+    decisionSummary,
+
     brief,
 
     decision,
