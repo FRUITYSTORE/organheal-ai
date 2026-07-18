@@ -7,7 +7,7 @@ import {
   RecommendationData,
 } from "@/lib/health-intelligence/engines/recommendation.engine";
 import { HealthScoreData } from "@/lib/health-intelligence/engines/health-score.engine";
-import { DoctorBriefData } from "@/lib/health-intelligence/engines/doctor-brief.engine";
+import { DoctorClinicalData } from "@/lib/health-intelligence/engines/doctor-brief.engine";
 
 export type IntelligenceOverviewData = {
   healthProfile: string;
@@ -30,7 +30,7 @@ type BuildIntelligenceOverviewInput = {
   priority: PatientPriorityResult;
   recommendations: EngineResult<RecommendationData>;
   healthScore: EngineResult<HealthScoreData>;
-  doctorBrief: EngineResult<DoctorBriefData>;
+  doctorBrief: EngineResult<DoctorClinicalData>;
 };
 
 function getStrongestAssessment(patient: PatientSummary) {
