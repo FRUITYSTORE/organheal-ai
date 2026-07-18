@@ -213,9 +213,13 @@ const [officialPassport, setOfficialPassport] =
     setMessage("");
 
     const currentLanguage = getCurrentLanguage();
-    const currentIsArabic = currentLanguage === "ar";
+    const currentIsArabic =
+      currentLanguage === "ar";
 
-    const { data: userData, error: userError } = await supabase.auth.getUser();
+    const {
+      data: userData,
+      error: userError,
+    } = await supabase.auth.getUser();
 
     if (userError || !userData.user) {
       setMessage(
@@ -223,124 +227,112 @@ const [officialPassport, setOfficialPassport] =
           ? "يرجى تسجيل الدخول أو إنشاء حساب لعرض التاريخ الصحي."
           : "Please login or sign up to view your health history."
       );
+
       setLoading(false);
       return;
     }
 
-    const userId = userData.user.id;
-    let timelineDecision: TimelineModuleResult | null = null;
+    setOfficialTimeline(null);
     setOfficialPassport(null);
 
-try {
-  const response = await fetch(
-    "/api/history-decision",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        userId,
-        language:
-          currentLanguage === "ar"
-            ? "ar"
-            : "en",
-        audience: "general",
-      }),
-    }
-  );
+    try {
+      const response = await fetch(
+        "/api/history-decision",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId: userData.user.id,
+            language:
+              currentLanguage === "ar"
+                ? "ar"
+                : "en",
+            audience: "general",
+          }),
+        }
+      );
 
-  if (response.ok) {
-    const decision = (await response.json()) as {
-  timeline: TimelineModuleResult;
-  passport: PassportModuleResult;
-};
+      if (!response.ok) {
+        const responseMessage =
+          await response.text();
 
-timelineDecision = decision.timeline;
-setOfficialPassport(decision.passport);
-  } else {
-    console.error(
-      "History decision request failed:",
-      await response.text()
-    );
-  }
-} catch (error) {
-  console.error(
-    "Could not load official health timeline:",
-    error
-  );
-}
+        console.error(
+          "History decision request failed:",
+          responseMessage
+        );
 
-    const { data: historyData, error: historyError } = await supabase
-      .from("health_history")
-      .select("id, module_name, score, status, notes, created_at")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
+        setMessage(
+          currentIsArabic
+            ? "تعذر تحميل التاريخ الصحي حاليًا."
+            : "Could not load your health history right now."
+        );
 
-    if (historyError) {
+        return;
+      }
+
+      const decision =
+        (await response.json()) as {
+          timeline: TimelineModuleResult;
+          passport: PassportModuleResult;
+
+          patientSnapshot: {
+            historyItems: HealthHistory[];
+            recentCheckIns: DailyCheckIn[];
+            uploadedReports: UploadedReport[];
+            healthInsights: HealthInsight[];
+
+            generatedResults: Array<{
+              insight_id: number;
+              updated_at: string | null;
+            }>;
+          };
+        };
+
+      setHistory(
+        decision.patientSnapshot.historyItems
+      );
+
+      setDailyCheckIns(
+        decision.patientSnapshot.recentCheckIns
+      );
+
+      setUploadedReports(
+        decision.patientSnapshot.uploadedReports
+      );
+
+      setHealthInsights(
+        decision.patientSnapshot.healthInsights
+      );
+
+      setSavedAnalysis(
+        decision.patientSnapshot.generatedResults.map(
+          (result) => ({
+            insight_id: result.insight_id,
+            updated_at:
+              result.updated_at ?? null,
+          })
+        )
+      );
+
+      setOfficialTimeline(decision.timeline);
+      setOfficialPassport(decision.passport);
+    } catch (error) {
+      console.error(
+        "Could not load official health history:",
+        error
+      );
+
       setMessage(
         currentIsArabic
-          ? "حدث خطأ في قاعدة البيانات: " + historyError.message
-          : "Database error: " + historyError.message
+          ? "تعذر تحميل التاريخ الصحي حاليًا."
+          : "Could not load your health history right now."
       );
+    } finally {
       setLoading(false);
-      return;
     }
-
-    const { data: checkInData, error: checkInError } = await supabase
-      .from("daily_checkins")
-      .select(
-        "id, mood, energy_level, stress_level, sleep_quality, hydration, physical_activity, wellness_score, created_at"
-      )
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
-
-    if (checkInError) {
-      setMessage(
-        currentIsArabic
-          ? "حدث خطأ في قاعدة البيانات: " + checkInError.message
-          : "Database error: " + checkInError.message
-      );
-      setLoading(false);
-      return;
-    }
-
-    const { data: reportData } = await supabase
-      .from("uploaded_lab_files")
-      .select("id, file_name, extraction_status, created_at")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
-
-    const { data: insightData } = await supabase
-      .from("health_insights")
-      .select("id, report_id, ai_status, insight_title, created_at")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
-
-    const insightIds = (insightData || []).map((item) => item.id);
-
-    let savedDataRows: SavedAnalysis[] = [];
-
-    if (insightIds.length > 0) {
-      const { data: savedData } = await supabase
-        .from("generated_intelligence_results")
-        .select("insight_id, updated_at")
-        .eq("user_id", userId)
-        .in("insight_id", insightIds)
-        .order("updated_at", { ascending: false });
-
-      savedDataRows = savedData || [];
-    }
-
-    setHistory((historyData || []) as HealthHistory[]);
-    setDailyCheckIns((checkInData || []) as DailyCheckIn[]);
-    setUploadedReports((reportData || []) as UploadedReport[]);
-    setHealthInsights((insightData || []) as HealthInsight[]);
-    setSavedAnalysis(savedDataRows);
-    setOfficialTimeline(timelineDecision);
-    setLoading(false);
   }
-
   function getScoreStatus(score: number) {
     if (score >= 80) return text("Strong", "قوي");
     if (score >= 60) return text("Stable", "مستقر");

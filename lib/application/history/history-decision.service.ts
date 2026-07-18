@@ -37,6 +37,23 @@ export type HistoryDecisionResult = {
   journey:
     UnifiedRuntimeResult["journey"];
 
+
+  patientSnapshot: {
+    historyItems:
+      PatientSummary["historyItems"];
+
+    recentCheckIns:
+      PatientSummary["recentCheckIns"];
+
+    uploadedReports:
+      PatientSummary["uploadedReports"];
+
+    healthInsights:
+      PatientSummary["healthInsights"];
+
+    generatedResults:
+      PatientSummary["generatedResults"];
+  };
   runtime: {
     version:
       UnifiedRuntimeResult["intelligenceRuntime"]["version"];
@@ -98,6 +115,23 @@ export async function getHistoryDecision({
     journey:
       unifiedRuntime.journey,
 
+
+    patientSnapshot: {
+      historyItems:
+        patient.historyItems,
+
+      recentCheckIns:
+        patient.recentCheckIns,
+
+      uploadedReports:
+        patient.uploadedReports,
+
+      healthInsights:
+        patient.healthInsights,
+
+      generatedResults:
+        patient.generatedResults,
+    },
     runtime: {
       version:
         unifiedRuntime
