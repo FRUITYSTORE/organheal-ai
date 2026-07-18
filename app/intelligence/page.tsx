@@ -1,29 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { buildActionPlan } from "../../lib/actionPlanEngine";
-import { buildHealthStory } from "../../lib/healthStoryEngine";
-import { buildHistoricalLabTrends } from "../../lib/historicalLabTrendEngine";
-import { buildLongitudinalRisk } from "../../lib/longitudinalRiskEngine";
-import { buildHealthTimeline } from "../../lib/healthTimelineEngine";
-import { buildPatientDigitalTwin } from "../../lib/patientDigitalTwin";
-import { buildCrossSourceIntelligence } from "../../lib/crossSourceIntelligence";
-import {
-  detectRadiologyFindings,
-  buildRadiologySummary,
-} from "../../lib/radiologyEngine";
 import { generateIntelligenceFromText } from "../../lib/extractedTextIntelligence";
 import PageBackActions from "../components/PageBackActions";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../lib/supabase";
+import { detectLabMarkers } from "../../lib/labMarkerDetector";
 import {
-  detectLabMarkers,
-  buildLabMarkerSummary,
-} from "../../lib/labMarkerDetector";
-import { buildHealthStrategy } from "../../lib/healthStrategyEngine";
-import { buildUnifiedHealthIntelligence } from "../../lib/unifiedHealthEngine";
-import { detectClinicalPatterns } from "../../lib/clinicalPatternEngine";
-import { buildForecast } from "../../lib/forecastEngine";
+  buildReportIntelligenceResult,
+  type GeneratedIntelligenceResult,
+} from "@/lib/services/intelligence/report-intelligence-result.service";
 import ExecutiveSummaryCard from "./components/ExecutiveSummaryCard";
 import HealthStoryCard from "./components/HealthStoryCard";
 import ActionPlanCard from "./components/ActionPlanCard";
@@ -69,19 +55,6 @@ type DailyCheckIn = {
 
 type HealthEngine = HealthIntelligenceResult;
 
-type GeneratedIntelligenceResult = {
-  strategy: any;
-  unifiedHealth: any;
-  digitalTwin: any;
-  crossSource: any;
-  timeline: any;
-  longitudinalRisk: any;
-  forecast: any;
-  healthStory: string;
-  actionPlan: any;
-  executiveSummary: any;
-  labTrends: any[];
-};
 
 type HealthInsight = {
   id: number;
@@ -617,8 +590,6 @@ try {
       }
     }
 
-    const markerSummary = buildLabMarkerSummary(detectedMarkers);
-
     let historicalMarkerRows: any[] = [];
 
     const { data: userDataForHistory } = await supabase.auth.getUser();
@@ -633,100 +604,22 @@ try {
       historicalMarkerRows = data || [];
     }
 
-    const labTrends = buildHistoricalLabTrends(
-      historicalMarkerRows
-        .filter((row) => row.marker_value !== null)
-        .map((row) => ({
-          marker: row.marker_name,
-          value: Number(row.marker_value),
-          date: row.created_at,
-        }))
-    );
-
-    const radiologyFindings = detectRadiologyFindings(extractedText);
-    const radiologySummary = buildRadiologySummary(radiologyFindings);
-    const isRadiologyReport = selectedInsight.report_type === "radiology";
-
-    const clinicalPatterns = detectClinicalPatterns(detectedMarkers);
-    const healthStrategy = buildHealthStrategy(detectedMarkers);
-
-    const unifiedHealth = buildUnifiedHealthIntelligence({
-      detectedMarkers,
-      healthStrategy,
-    });
-
-    const digitalTwin = buildPatientDigitalTwin({
-      markers: detectedMarkers,
-      radiologyFindings,
-    });
-
-    const crossSource = buildCrossSourceIntelligence({
+    const {
+      generatedResultPayload,
+      markerSummary,
+      radiologySummary,
+      isRadiologyReport,
+      clinicalPatterns,
+    } = buildReportIntelligenceResult({
+      extractedText,
+      reportType: selectedInsight.report_type,
       detectedMarkers,
       assessments: assessmentData,
       dailyCheckIn,
+      historicalMarkerRows,
     });
 
-    const timeline = buildHealthTimeline([
-      ...assessmentData.map((item) => ({
-        source: "assessment" as const,
-        label: item.organ_name,
-        score: item.score,
-        date: item.created_at,
-      })),
-
-      ...(dailyCheckIn
-        ? [
-            {
-              source: "checkin" as const,
-              label: "Daily Check-In",
-              score: dailyCheckIn.wellness_score || 0,
-              date: dailyCheckIn.created_at,
-            },
-          ]
-        : []),
-    ]);
-
-    const longitudinalRisk = buildLongitudinalRisk(timeline);
-    const forecast = buildForecast(detectedMarkers, crossSource.confidenceScore);
-
-    const healthStory = buildHealthStory({
-      timeline,
-      longitudinalRisk,
-      forecast,
-      crossSource,
-      digitalTwin,
-    });
-
-    const actionPlan = buildActionPlan({
-      digitalTwin,
-      forecast,
-      longitudinalRisk,
-      crossSource,
-    });
-
-    const executiveSummary = {
-      currentScore: forecast.currentScore,
-      trend: timeline.trendDirection,
-      forecastScore: forecast.forecastScore,
-      confidenceLevel: crossSource.confidenceLevel,
-      confidenceScore: crossSource.confidenceScore,
-      prioritySystem: digitalTwin.primarySystem,
-      nextBestAction: unifiedHealth.nextBestAction,
-    };
-
-    const generatedResultPayload: GeneratedIntelligenceResult = {
-      strategy: healthStrategy,
-      unifiedHealth,
-      digitalTwin,
-      crossSource,
-      timeline,
-      longitudinalRisk,
-      forecast,
-      healthStory,
-      actionPlan,
-      executiveSummary,
-      labTrends,
-    };
+    const { unifiedHealth } = generatedResultPayload;
 
     setGeneratedResult(generatedResultPayload);
     setActiveGeneratedInsightId(insightId);
