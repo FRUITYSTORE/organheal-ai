@@ -12,6 +12,11 @@ import {
 } from "@/lib/services/intelligence/report-intelligence-result.service";
 import ExecutiveSummaryCard from "./components/ExecutiveSummaryCard";
 import {
+  getHistoricalMedicalMarkers,
+  saveMedicalReportMarkers,
+  type HistoricalMedicalMarker,
+} from "@/lib/repositories/report-markers.repository";
+import {
   buildHealthInsightUpdate,
 } from "@/lib/services/intelligence/intelligence-persistence.service";
 import HealthStoryCard from "./components/HealthStoryCard";
@@ -578,33 +583,31 @@ try {
     }
 
     if (selectedInsight.report_id) {
-      const markerRows = detectedMarkers
+      const validMarkers = detectedMarkers
         .filter((marker) => marker.value !== null)
         .map((marker) => ({
-          user_id: userData.user.id,
-          report_id: selectedInsight.report_id,
-          marker_name: marker.marker,
-          marker_value: marker.value,
-          marker_unit: marker.unit,
+          userId: userData.user.id,
+          reportId: selectedInsight.report_id as number,
+          markerName: marker.marker,
+          markerValue: marker.value as number,
+          markerUnit: marker.unit,
         }));
 
-      if (markerRows.length > 0) {
-        await supabase.from("medical_report_markers").insert(markerRows);
+      try {
+        await saveMedicalReportMarkers(validMarkers);
+      } catch (error) {
+        console.error("Could not save medical report markers", error);
       }
     }
 
-    let historicalMarkerRows: any[] = [];
+    let historicalMarkerRows: HistoricalMedicalMarker[] = [];
 
-    const { data: userDataForHistory } = await supabase.auth.getUser();
-
-    if (userDataForHistory.user) {
-      const { data } = await supabase
-        .from("medical_report_markers")
-        .select("marker_name, marker_value, created_at")
-        .eq("user_id", userDataForHistory.user.id)
-        .order("created_at", { ascending: true });
-
-      historicalMarkerRows = data || [];
+    try {
+      historicalMarkerRows = await getHistoricalMedicalMarkers(
+        userData.user.id
+      );
+    } catch (error) {
+      console.error("Could not load historical medical markers", error);
     }
 
     const {
