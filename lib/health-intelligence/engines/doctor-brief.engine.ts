@@ -10,7 +10,6 @@ import {
 import { HealthScoreData } from "@/lib/health-intelligence/engines/health-score.engine";
 
 export type DoctorClinicalData = {
-  brief: string;
   profile: string;
   priorityOrgan: string | null;
   strongestOrgan: string | null;
