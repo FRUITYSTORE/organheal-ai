@@ -143,14 +143,17 @@ export default function IntelligencePage() {
     > | null
   >(null);
 
-  const unifiedDoctorBriefV2 =
+  const unifiedDoctorPresentationV2 =
     intelligenceSummaryV2?.status === "ready" &&
     intelligenceSummaryV2.data
       ? healthIntelligencePresenter.presentDoctorIntelligence(
           intelligenceSummaryV2.data,
           isArabicUi ? "ar" : "en"
-        ).brief
+        )
       : null;
+
+  const unifiedDoctorBriefV2 =
+    unifiedDoctorPresentationV2?.brief ?? null;
 
   const unifiedPatientPresentationV2 =
     intelligenceSummaryV2?.status === "ready" &&
