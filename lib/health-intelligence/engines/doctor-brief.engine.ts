@@ -9,7 +9,7 @@ import {
 } from "@/lib/health-intelligence/engines/recommendation.engine";
 import { HealthScoreData } from "@/lib/health-intelligence/engines/health-score.engine";
 
-export type DoctorBriefData = {
+export type DoctorClinicalData = {
   brief: string;
   profile: string;
   priorityOrgan: string | null;
@@ -20,7 +20,9 @@ export type DoctorBriefData = {
   recommendedAction: HealthRecommendation;
   keyFindings: ClinicalFinding[];
 };
-
+export type DoctorBriefData = DoctorClinicalData & {
+  brief: string;
+};
 type BuildDoctorBriefInput = {
   patient: PatientSummary;
   findings: ClinicalFinding[];
