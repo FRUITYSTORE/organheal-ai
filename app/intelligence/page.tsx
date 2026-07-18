@@ -11,6 +11,9 @@ import {
   type GeneratedIntelligenceResult,
 } from "@/lib/services/intelligence/report-intelligence-result.service";
 import ExecutiveSummaryCard from "./components/ExecutiveSummaryCard";
+import {
+  buildHealthInsightUpdate,
+} from "@/lib/services/intelligence/intelligence-persistence.service";
 import HealthStoryCard from "./components/HealthStoryCard";
 import ActionPlanCard from "./components/ActionPlanCard";
 import TimelineCard from "./components/TimelineCard";
@@ -625,43 +628,15 @@ try {
     setActiveGeneratedInsightId(insightId);
     setExpandedReportId(insightId);
 
-    const intelligence = {
-      ...generateIntelligenceFromText(extractedText, selectedInsight.report_type),
-      ai_status: "Generated",
-      summary: isRadiologyReport ? radiologySummary.summary : markerSummary.summary,
-      key_findings: isRadiologyReport
-        ? radiologySummary.riskSignals
-        : markerSummary.keyFindings,
-      risk_signals:
-        clinicalPatterns.length > 0
-          ? clinicalPatterns
-              .map(
-                (pattern) =>
-                  `${pattern.title} (${pattern.severity}): ${pattern.summary}`
-              )
-              .join("\n")
-          : markerSummary.riskSignals,
-      recommendations: isRadiologyReport
-        ? radiologySummary.recommendations
-        : clinicalPatterns.length > 0
-        ? clinicalPatterns
-            .map((pattern) => `${pattern.title}: ${pattern.suggestedFocus}`)
-            .join("\n")
-        : markerSummary.recommendations,
-      doctor_brief: `Detected lab markers:
-${markerSummary.keyFindings}
-
-Unified Health Analysis:
-${unifiedHealth.healthForecast}
-
-Priority Goal:
-${unifiedHealth.priorityGoal}
-
-Next Best Action:
-${unifiedHealth.nextBestAction}
-
-Clinical note: This is an educational interpretation and should be reviewed by a licensed healthcare professional.`,
-    };
+    const intelligence = buildHealthInsightUpdate({
+      extractedText,
+      reportType: selectedInsight.report_type,
+      markerSummary,
+      radiologySummary,
+      isRadiologyReport,
+      clinicalPatterns,
+      unifiedHealth,
+    });
 
     const { error } = await supabase
       .from("health_insights")
