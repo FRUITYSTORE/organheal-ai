@@ -87,7 +87,7 @@ function extractLabMarkers(...values: Array<string | null | undefined>) {
     name: match[1].trim(),
     value: match[2].trim(),
     unit: (match[3] || "").trim(),
-    status: englishStatusToArabic(match[4]),
+    status: match[4].trim(),
     ref: match[5].replace(/\(default\)/gi, "").trim(),
   }));
 }
@@ -621,7 +621,7 @@ export default function DoctorBriefReportCard({
                         القيمة: {marker.value} {marker.unit}
                       </span>
                       <span className="ohMetricHint">
-                        الحالة: {marker.status}
+                        الحالة: {englishStatusToArabic(marker.status)}
                       </span>
                       {marker.ref && (
                         <span className="ohMetricHint">
