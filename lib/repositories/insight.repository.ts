@@ -151,3 +151,26 @@ export async function saveGeneratedIntelligenceResult(
     throw new Error(error.message);
   }
 }
+export async function getLatestGeneratedResultByInsightIds(
+  userId: string,
+  insightIds: number[]
+): Promise<SavedGeneratedIntelligenceResult | null> {
+  if (insightIds.length === 0) {
+    return null;
+  }
+
+  const { data, error } = await supabase
+    .from("generated_intelligence_results")
+    .select("insight_id, result, updated_at")
+    .eq("user_id", userId)
+    .in("insight_id", insightIds)
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data as SavedGeneratedIntelligenceResult | null;
+}
