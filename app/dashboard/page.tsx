@@ -548,6 +548,13 @@ const nextStep: NextStep = !hasAssessments && !hasReports
       timelineConfidence:
         dashboardTimelineConfidence,
 
+
+      findings:
+        dashboardFindings,
+
+      actionSummary:
+        dashboardActionSummary,
+
       journey: {
         nextStep: {
           label:
@@ -2741,11 +2748,9 @@ const nextStep: NextStep = !hasAssessments && !hasReports
   {...dashboardViewState.nextAction}
 />
 
-{dashboardActionSummary && (
+{dashboardViewState.healthIntelligenceCard && (
   <DashboardIntelligenceCard
-    findings={dashboardFindings}
-    actionSummary={dashboardActionSummary}
-    isArabic={isArabic}
+    {...dashboardViewState.healthIntelligenceCard}
   />
 )}
     </div>

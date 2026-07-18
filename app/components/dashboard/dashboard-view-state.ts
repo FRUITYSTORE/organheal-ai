@@ -9,6 +9,7 @@ import type DashboardOverviewSection from "./DashboardOverviewSection";
 import type HealthDirectionCard from "@/app/components/health-intelligence/HealthDirectionCard";
 import type HealthEvidenceCard from "@/app/components/health-intelligence/HealthEvidenceCard";
 import type DashboardTimelinePreview from "@/app/components/health-intelligence/DashboardTimelinePreview";
+import type DashboardIntelligenceCard from "./DashboardIntelligenceCard";
 
 type HeroProps = ComponentProps<
   typeof DashboardHeroIntelligence
@@ -38,6 +39,10 @@ type DashboardTimelineProps = ComponentProps<
   typeof DashboardTimelinePreview
 >;
 
+type DashboardIntelligenceProps = ComponentProps<
+  typeof DashboardIntelligenceCard
+>;
+
 export type DashboardViewState = {
   hero: HeroProps | null;
   journey: JourneyProps;
@@ -47,6 +52,7 @@ export type DashboardViewState = {
   healthDirection: HealthDirectionProps | null;
   healthEvidence: HealthEvidenceProps | null;
   healthTimeline: DashboardTimelineProps | null;
+  healthIntelligenceCard: DashboardIntelligenceProps | null;
 };
 
 export type BuildDashboardViewStateInput = {
@@ -75,6 +81,12 @@ export type BuildDashboardViewStateInput = {
   timelineConfidence:
     DashboardTimelineProps["confidence"] | undefined;
 
+  findings:
+    DashboardIntelligenceProps["findings"];
+
+  actionSummary:
+    DashboardIntelligenceProps["actionSummary"] | null | undefined;
+
   journey: Omit<
     JourneyProps,
     "isArabic"
@@ -101,6 +113,8 @@ export function buildDashboardViewState({
   evidenceConfidence,
   timeline,
   timelineConfidence,
+  findings,
+  actionSummary,
   journey,
   nextAction,
   overview,
@@ -160,6 +174,15 @@ export function buildDashboardViewState({
         ? {
             timeline,
             confidence: timelineConfidence,
+            isArabic,
+          }
+        : null,
+
+    healthIntelligenceCard:
+      actionSummary
+        ? {
+            findings,
+            actionSummary,
             isArabic,
           }
         : null,
