@@ -6,6 +6,7 @@ import type DashboardHeroIntelligence from "./DashboardHeroIntelligence";
 import type DashboardJourneySection from "./DashboardJourneySection";
 import type DashboardNextActionSection from "./DashboardNextActionSection";
 import type DashboardOverviewSection from "./DashboardOverviewSection";
+import type HealthDirectionCard from "@/app/components/health-intelligence/HealthDirectionCard";
 
 type HeroProps = ComponentProps<
   typeof DashboardHeroIntelligence
@@ -23,12 +24,17 @@ type OverviewProps = ComponentProps<
   typeof DashboardOverviewSection
 >;
 
+type HealthDirectionProps = ComponentProps<
+  typeof HealthDirectionCard
+>;
+
 export type DashboardViewState = {
   hero: HeroProps | null;
   journey: JourneyProps;
   nextAction: NextActionProps;
   overview: OverviewProps;
   healthScore: number | null;
+  healthDirection: HealthDirectionProps | null;
 };
 
 export type BuildDashboardViewStateInput = {
@@ -38,6 +44,12 @@ export type BuildDashboardViewStateInput = {
     HeroProps["intelligence"] | null;
 
   healthScore: number | null;
+
+  trendSummary:
+    HealthDirectionProps["summary"] | null | undefined;
+
+  trendConfidence:
+    HealthDirectionProps["confidence"] | undefined;
 
   journey: Omit<
     JourneyProps,
@@ -59,6 +71,8 @@ export function buildDashboardViewState({
   isArabic,
   dashboardIntelligence,
   healthScore,
+  trendSummary,
+  trendConfidence,
   journey,
   nextAction,
   overview,
@@ -90,5 +104,15 @@ export function buildDashboardViewState({
     },
 
     healthScore,
+
+    healthDirection:
+      trendSummary &&
+      trendConfidence !== undefined
+        ? {
+            summary: trendSummary,
+            confidence: trendConfidence,
+            isArabic,
+          }
+        : null,
   };
 }

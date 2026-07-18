@@ -528,6 +528,12 @@ const nextStep: NextStep = !hasAssessments && !hasReports
       healthScore:
         dashboardHealthScore,
 
+      trendSummary:
+        dashboardTrendSummary,
+
+      trendConfidence:
+        dashboardTrendConfidence,
+
       journey: {
         nextStep: {
           label:
@@ -2693,14 +2699,11 @@ const nextStep: NextStep = !hasAssessments && !hasReports
     </div>
 
     <div className="healthCommandCenterStack">
-      {dashboardTrendSummary &&
-  dashboardTrendConfidence !== undefined && (
-    <HealthDirectionCard
-      summary={dashboardTrendSummary}
-      confidence={dashboardTrendConfidence}
-      isArabic={isArabic}
-    />
-  )}
+      {dashboardViewState.healthDirection && (
+  <HealthDirectionCard
+    {...dashboardViewState.healthDirection}
+  />
+)}
 {dashboardEvidence &&
   dashboardEvidenceConfidence !== undefined && (
     <HealthEvidenceCard
