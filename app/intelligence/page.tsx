@@ -19,6 +19,7 @@ import {
 
 import {
   getGeneratedResultByInsightId,
+  saveGeneratedIntelligenceResult,
 } from "@/lib/repositories/insight.repository";
 import {
   buildHealthInsightUpdate,
@@ -659,28 +660,20 @@ try {
       return;
     }
 
-    const { error: saveGeneratedResultError } = await supabase
-      .from("generated_intelligence_results")
-      .upsert(
-        {
-          user_id: userData.user.id,
-          insight_id: insightId,
-          report_id: selectedInsight.report_id,
-          result: generatedResultPayload,
-          updated_at: new Date().toISOString(),
-        },
-        {
-          onConflict: "user_id,insight_id",
-        }
-      );
-
-    if (saveGeneratedResultError) {
-      alert(
-        "Saved analysis was created, but could not be saved: " +
-          saveGeneratedResultError.message
-      );
-      return;
-    }
+   try {
+  await saveGeneratedIntelligenceResult({
+    userId: userData.user.id,
+    insightId,
+    reportId: selectedInsight.report_id,
+    result: generatedResultPayload,
+  });
+} catch (error) {
+  alert(
+    "Could not save generated intelligence result: " +
+      (error instanceof Error ? error.message : String(error))
+  );
+  return;
+}
 
     setHealthInsights((currentInsights) =>
       currentInsights.map((item) =>
