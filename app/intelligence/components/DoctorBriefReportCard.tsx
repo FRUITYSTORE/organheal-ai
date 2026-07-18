@@ -315,6 +315,9 @@ export default function DoctorBriefReportCard({
   
   const evidenceSummary =
     doctorPresentation?.evidenceSummary ?? null;
+
+  const momentumSummary =
+    doctorPresentation?.momentumSummary ?? null;
 function printDoctorBriefOnly() {
     if (!printRef.current) {
       window.print();
@@ -690,6 +693,15 @@ function printDoctorBriefOnly() {
 
             <article>
               <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
+                ٧. ملخص التقدم
+              </h3>
+              <ArabicParagraph>
+                {text(momentumSummary, "غير متاح")}
+              </ArabicParagraph>
+            </article>
+
+            <article>
+              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
                 ملاحظة مهمة
               </h3>
               <ArabicParagraph>
@@ -739,6 +751,13 @@ function printDoctorBriefOnly() {
                 6. Evidence Summary
               </h3>
               <EnglishParagraph>{text(evidenceSummary, "N/A")}</EnglishParagraph>
+            </article>
+
+            <article>
+              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
+                7. Momentum Summary
+              </h3>
+              <EnglishParagraph>{text(momentumSummary, "N/A")}</EnglishParagraph>
             </article>
           </div>
         )}
