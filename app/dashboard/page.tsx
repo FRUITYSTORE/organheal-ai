@@ -356,6 +356,9 @@ const dashboardTimelineConfidence =
 
 const dashboardActionSummary =
   healthIntelligence?.risk.data.recommendation;
+
+const dashboardFindings =
+  healthIntelligence?.findings ?? [];
 const nextStep: NextStep = !hasAssessments && !hasReports
     ? {
         tag: isArabic ? "ابدأ هنا" : "Start here",
@@ -2727,7 +2730,7 @@ const nextStep: NextStep = !hasAssessments && !hasReports
 
 {dashboardActionSummary && (
   <DashboardIntelligenceCard
-    intelligence={healthIntelligence}
+    findings={dashboardFindings}
     actionSummary={dashboardActionSummary}
     isArabic={isArabic}
   />

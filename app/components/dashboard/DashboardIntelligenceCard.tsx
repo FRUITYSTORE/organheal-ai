@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { HealthIntelligenceResult } from "@/lib/health-intelligence/models/health-intelligence-result";
+import type { ClinicalFinding } from "@/lib/health-intelligence/models/clinical-findings";
 
 type DashboardIntelligenceCardProps = {
-  intelligence: HealthIntelligenceResult;
+  findings: ClinicalFinding[];
   actionSummary: string;
   isArabic: boolean;
 };
@@ -20,11 +20,11 @@ function severityColor(severity: string) {
 }
 
 export default function DashboardIntelligenceCard({
-  intelligence,
+  findings,
   actionSummary,
   isArabic,
 }: DashboardIntelligenceCardProps) {
-  const topFindings = intelligence.findings.slice(0, 3);
+  const topFindings = findings.slice(0, 3);
   
   return (
     <section
