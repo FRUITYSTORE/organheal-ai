@@ -50,7 +50,9 @@ export async function countGeneratedInsights(
   return (data || []).filter(
     (item) => item.ai_status === "generated"
   ).length;
-}export type GeneratedIntelligenceSummary = {
+}
+
+export type GeneratedIntelligenceSummary = {
   id: number;
   created_at: string | null;
 };
@@ -71,7 +73,9 @@ export async function getRecentGeneratedIntelligenceResults(
   }
 
   return (data || []) as GeneratedIntelligenceSummary[];
-}export type GeneratedResultSummary = {
+}
+
+export type GeneratedResultSummary = {
   insight_id: number | null;
   report_id: number | null;
   updated_at: string | null;
@@ -93,4 +97,57 @@ export async function getRecentGeneratedResults(
   }
 
   return (data || []) as GeneratedResultSummary[];
+}
+export type SavedGeneratedIntelligenceResult = {
+  insight_id: number;
+  result: unknown;
+  updated_at: string | null;
+};
+
+export type SaveGeneratedIntelligenceResultInput = {
+  userId: string;
+  insightId: number;
+  reportId: number | null;
+  result: unknown;
+};
+
+export async function getGeneratedResultByInsightId(
+  userId: string,
+  insightId: number
+): Promise<SavedGeneratedIntelligenceResult | null> {
+  const { data, error } = await supabase
+    .from("generated_intelligence_results")
+    .select("insight_id, result, updated_at")
+    .eq("user_id", userId)
+    .eq("insight_id", insightId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data as SavedGeneratedIntelligenceResult | null;
+}
+
+export async function saveGeneratedIntelligenceResult(
+  input: SaveGeneratedIntelligenceResultInput
+): Promise<void> {
+  const { error } = await supabase
+    .from("generated_intelligence_results")
+    .upsert(
+      {
+        user_id: input.userId,
+        insight_id: input.insightId,
+        report_id: input.reportId,
+        result: input.result,
+        updated_at: new Date().toISOString(),
+      },
+      {
+        onConflict: "user_id,insight_id",
+      }
+    );
+
+  if (error) {
+    throw new Error(error.message);
+  }
 }
