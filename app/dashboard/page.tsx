@@ -353,6 +353,9 @@ const dashboardTimeline =
 
 const dashboardTimelineConfidence =
   healthIntelligence?.timeline.confidence;
+
+const dashboardActionSummary =
+  healthIntelligence?.risk.data.recommendation;
 const nextStep: NextStep = !hasAssessments && !hasReports
     ? {
         tag: isArabic ? "ابدأ هنا" : "Start here",
@@ -2701,13 +2704,15 @@ const nextStep: NextStep = !hasAssessments && !hasReports
     />
   )}
 
-{healthIntelligence.timeline.data.events.length > 0 && (
-  <DashboardTimelinePreview
-    timeline={healthIntelligence.timeline.data}
-    confidence={healthIntelligence.timeline.confidence}
-    isArabic={isArabic}
-  />
-)}
+{dashboardTimeline &&
+  dashboardTimelineConfidence !== undefined &&
+  dashboardTimeline.events.length > 0 && (
+    <DashboardTimelinePreview
+      timeline={dashboardTimeline}
+      confidence={dashboardTimelineConfidence}
+      isArabic={isArabic}
+    />
+  )}
 
 {knowledgeRecommendations && (
   <RecommendedKnowledgeCard
@@ -2720,11 +2725,13 @@ const nextStep: NextStep = !hasAssessments && !hasReports
   {...dashboardViewState.nextAction}
 />
 
-<DashboardIntelligenceCard
-  intelligence={healthIntelligence}
-  actionSummary={healthIntelligence.risk.data.recommendation}
-  isArabic={isArabic}
-/>
+{dashboardActionSummary && (
+  <DashboardIntelligenceCard
+    intelligence={healthIntelligence}
+    actionSummary={dashboardActionSummary}
+    isArabic={isArabic}
+  />
+)}
     </div>
   </section>
 )}
