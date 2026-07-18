@@ -8,6 +8,7 @@ import type DashboardNextActionSection from "./DashboardNextActionSection";
 import type DashboardOverviewSection from "./DashboardOverviewSection";
 import type HealthDirectionCard from "@/app/components/health-intelligence/HealthDirectionCard";
 import type HealthEvidenceCard from "@/app/components/health-intelligence/HealthEvidenceCard";
+import type DashboardTimelinePreview from "@/app/components/health-intelligence/DashboardTimelinePreview";
 
 type HeroProps = ComponentProps<
   typeof DashboardHeroIntelligence
@@ -33,6 +34,10 @@ type HealthEvidenceProps = ComponentProps<
   typeof HealthEvidenceCard
 >;
 
+type DashboardTimelineProps = ComponentProps<
+  typeof DashboardTimelinePreview
+>;
+
 export type DashboardViewState = {
   hero: HeroProps | null;
   journey: JourneyProps;
@@ -41,6 +46,7 @@ export type DashboardViewState = {
   healthScore: number | null;
   healthDirection: HealthDirectionProps | null;
   healthEvidence: HealthEvidenceProps | null;
+  healthTimeline: DashboardTimelineProps | null;
 };
 
 export type BuildDashboardViewStateInput = {
@@ -62,6 +68,12 @@ export type BuildDashboardViewStateInput = {
 
   evidenceConfidence:
     HealthEvidenceProps["confidence"] | undefined;
+
+  timeline:
+    DashboardTimelineProps["timeline"] | null | undefined;
+
+  timelineConfidence:
+    DashboardTimelineProps["confidence"] | undefined;
 
   journey: Omit<
     JourneyProps,
@@ -87,6 +99,8 @@ export function buildDashboardViewState({
   trendConfidence,
   evidence,
   evidenceConfidence,
+  timeline,
+  timelineConfidence,
   journey,
   nextAction,
   overview,
@@ -135,6 +149,17 @@ export function buildDashboardViewState({
         ? {
             evidence,
             confidence: evidenceConfidence,
+            isArabic,
+          }
+        : null,
+
+    healthTimeline:
+      timeline &&
+      timelineConfidence !== undefined &&
+      timeline.events.length > 0
+        ? {
+            timeline,
+            confidence: timelineConfidence,
             isArabic,
           }
         : null,
