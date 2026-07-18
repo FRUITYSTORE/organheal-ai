@@ -318,6 +318,9 @@ export default function DoctorBriefReportCard({
 
   const momentumSummary =
     doctorPresentation?.momentumSummary ?? null;
+
+  const decisionSummary =
+    doctorPresentation?.decisionSummary ?? null;
 function printDoctorBriefOnly() {
     if (!printRef.current) {
       window.print();
@@ -702,6 +705,15 @@ function printDoctorBriefOnly() {
 
             <article>
               <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
+                ٨. ملخص القرار
+              </h3>
+              <ArabicParagraph>
+                {text(decisionSummary, "غير متاح")}
+              </ArabicParagraph>
+            </article>
+
+            <article>
+              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
                 ملاحظة مهمة
               </h3>
               <ArabicParagraph>
@@ -758,6 +770,13 @@ function printDoctorBriefOnly() {
                 7. Momentum Summary
               </h3>
               <EnglishParagraph>{text(momentumSummary, "N/A")}</EnglishParagraph>
+            </article>
+
+            <article>
+              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
+                8. Decision Summary
+              </h3>
+              <EnglishParagraph>{text(decisionSummary, "N/A")}</EnglishParagraph>
             </article>
           </div>
         )}
