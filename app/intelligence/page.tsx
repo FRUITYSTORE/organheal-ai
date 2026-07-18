@@ -20,6 +20,7 @@ import {
 import {
   getGeneratedResultByInsightId,
   getLatestGeneratedResultByInsightIds,
+  getRecentHealthInsights,
   saveGeneratedIntelligenceResult,
 } from "@/lib/repositories/insight.repository";
 import {
@@ -359,24 +360,19 @@ try {
       setIntelligenceSummaryV2(null);
     }
 
-    const { data: insights, error: insightsError } = await supabase
-      .from("health_insights")
-   .select(
-  "id, report_id, insight_title, summary, key_findings, recommendations, doctor_brief, ai_status, risk_level, next_best_action, report_type, created_at"
-)
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-.limit(20);
+    let insights;
 
-    if (insightsError) {
-      setMessage(
-        currentIsArabic
-          ? "تعذر تحميل ذكاء التقارير الطبية."
-          : "Could not load medical report intelligence."
-      );
-      setLoading(false);
-      return;
-    }
+try {
+  insights = await getRecentHealthInsights(userId, 20);
+} catch {
+  setMessage(
+    currentIsArabic
+      ? "تعذر تحميل نتائج الذكاء الصحي."
+      : "Could not load health intelligence results."
+  );
+  setLoading(false);
+  return;
+}
 
     const reportIds = (insights || [])
       .map((item) => item.report_id)
