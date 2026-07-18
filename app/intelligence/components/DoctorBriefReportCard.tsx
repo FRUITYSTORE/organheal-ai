@@ -289,6 +289,7 @@ export default function DoctorBriefReportCard({
   riskSignals,
   recommendations,
   doctorBrief,
+  doctorPresentation,
   executiveSummary,
 }: DoctorBriefReportCardProps) {
   const isArabic = useArabicUi();
@@ -308,6 +309,9 @@ export default function DoctorBriefReportCard({
   const scoreTone = getScoreTone(executiveSummary?.currentScore);
   const forecastTone = getScoreTone(executiveSummary?.forecastScore);
 
+
+  const clinicalSummary =
+    doctorPresentation?.clinicalSummary ?? doctorBrief ?? null;
   function printDoctorBriefOnly() {
     if (!printRef.current) {
       window.print();
@@ -667,7 +671,7 @@ export default function DoctorBriefReportCard({
               <div style={{ width: "100%" }}>
                 <strong>٥. ملخص المراجعة السريرية</strong>
                 <ArabicParagraph>
-                  {text(doctorBrief, "غير متاح")}
+                  {text(clinicalSummary, "غير متاح")}
                 </ArabicParagraph>
               </div>
             </article>
@@ -715,7 +719,7 @@ export default function DoctorBriefReportCard({
               <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
                 5. Clinical Review Note
               </h3>
-              <EnglishParagraph>{text(doctorBrief, "N/A")}</EnglishParagraph>
+              <EnglishParagraph>{text(clinicalSummary, "N/A")}</EnglishParagraph>
             </article>
           </div>
         )}
