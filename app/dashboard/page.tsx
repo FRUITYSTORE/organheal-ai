@@ -332,7 +332,10 @@ const [healthIntelligence, setHealthIntelligence] =
   isArabic
 );
 
-  const nextStep: NextStep = !hasAssessments && !hasReports
+  
+const dashboardHealthScore =
+  healthIntelligence?.healthScore.data.score ?? null;
+const nextStep: NextStep = !hasAssessments && !hasReports
     ? {
         tag: isArabic ? "ابدأ هنا" : "Start here",
         label: isArabic ? "ابدأ بأول تقييم صحي" : "Start your first health assessment",
@@ -2658,7 +2661,7 @@ const [healthIntelligence, setHealthIntelligence] =
       </div>
 
       <span className="healthCommandCenterBadge">
-        {healthIntelligence.healthScore.data.score}/100
+        {dashboardHealthScore}/100
       </span>
     </div>
 
