@@ -25,6 +25,7 @@ import {
 } from "@/lib/repositories/insight.repository";
 import {
   buildHealthInsightUpdate,
+  updateHealthInsight,  
 } from "@/lib/services/intelligence/intelligence-persistence.service";
 import HealthStoryCard from "./components/HealthStoryCard";
 import ActionPlanCard from "./components/ActionPlanCard";
@@ -647,15 +648,15 @@ try {
       unifiedHealth,
     });
 
-    const { error } = await supabase
-      .from("health_insights")
-      .update(intelligence)
-      .eq("id", insightId);
-
-    if (error) {
-      alert("Could not generate intelligence: " + error.message);
-      return;
-    }
+    try {
+  await updateHealthInsight(insightId, intelligence);
+} catch (error) {
+  alert(
+    "Could not generate intelligence: " +
+      (error instanceof Error ? error.message : String(error))
+  );
+  return;
+}
 
    try {
   await saveGeneratedIntelligenceResult({
