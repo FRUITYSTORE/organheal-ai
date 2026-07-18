@@ -660,23 +660,11 @@ export default function DoctorBriefReportCard({
 
             <article className="ohTrustNotice">
               <span aria-hidden="true">🩺</span>
-              <div>
-                <strong>٥. تركيز المراجعة السريرية</strong>
-                <br />
-                <p style={{ margin: "8px 0 0" }}>
-                  <strong>تركيز المراجعة:</strong> {mainFocus}
-                </p>
-                <p style={{ margin: "8px 0 0" }}>
-                  <strong>الخطوة المقترحة:</strong>{" "}
-                  راجع المؤشرات مع مقدم رعاية صحية مرخص، وكرر الفحوصات ذات العلاقة حسب التوصية.
-                </p>
-                <p style={{ margin: "8px 0 0" }}>
-                  <strong>الثقة:</strong>{" "}
-                  {arabicValue(
-                    executiveSummary?.confidenceLevel ||
-                      executiveSummary?.confidenceScore
-                  )}
-                </p>
+              <div style={{ width: "100%" }}>
+                <strong>٥. ملخص المراجعة السريرية</strong>
+                <ArabicParagraph>
+                  {text(doctorBrief, "غير متاح")}
+                </ArabicParagraph>
               </div>
             </article>
 
