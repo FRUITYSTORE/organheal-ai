@@ -4,23 +4,15 @@ import Link from "next/link";
 import {
   loadIntelligencePage,
 } from "@/lib/services/intelligence/intelligence-page-loader.service";
-import { generateIntelligenceFromText } from "../../lib/extractedTextIntelligence";
+import {
+  generateReportIntelligenceRuntime,
+} from "@/lib/services/intelligence/report-intelligence-generation-runtime.service";
 import PageBackActions from "../components/PageBackActions";
 import { useEffect, useRef, useState } from "react";
-import {
-  prepareReportMarkerRuntime,
-} from "@/lib/services/intelligence/report-marker-runtime.service";
-import {
-  buildReportIntelligenceResult,
-  type GeneratedIntelligenceResult,
+import type {
+  GeneratedIntelligenceResult,
 } from "@/lib/services/intelligence/report-intelligence-result.service";
 import ExecutiveSummaryCard from "./components/ExecutiveSummaryCard";
-import {
-  persistReportIntelligence,
-} from "@/lib/services/intelligence/report-intelligence-persistence-runtime.service";
-import {
-  buildHealthInsightUpdate,
-} from "@/lib/services/intelligence/intelligence-persistence.service";
 import HealthStoryCard from "./components/HealthStoryCard";
 import ActionPlanCard from "./components/ActionPlanCard";
 import TimelineCard from "./components/TimelineCard";
@@ -50,9 +42,6 @@ import type {
 import {
   healthIntelligencePresenter,
 } from "@/lib/health-intelligence/presentation/health-intelligence.presenter";
-import {
-  loadReportTextRuntime,
-} from "@/lib/services/intelligence/report-text-runtime.service";
 import {
   loadSavedReportIntelligence,
 } from "@/lib/services/intelligence/saved-report-intelligence-runtime.service";
@@ -423,7 +412,9 @@ export default function IntelligencePage() {
   }
 
   async function generateReportIntelligence(insightId: number) {
-    const selectedInsight = healthInsights.find((item) => item.id === insightId);
+    const selectedInsight = healthInsights.find(
+      (item) => item.id === insightId
+    );
 
     if (!selectedInsight) return;
 
@@ -437,104 +428,48 @@ export default function IntelligencePage() {
       return;
     }
 
-    const reportTextResult = await loadReportTextRuntime({
-      userId: sessionResult.userId,
-      insightId: selectedInsight.id,
-      reportId: selectedInsight.report_id,
-      filePath: selectedInsight.file_path,
-      fileName: selectedInsight.file_name,
-    });
+    const generationResult =
+      await generateReportIntelligenceRuntime({
+        userId: sessionResult.userId,
+        insight: selectedInsight,
+        assessments: assessmentData,
+        dailyCheckIn,
+      });
 
-    if (reportTextResult.errorMessage) {
-      alert(reportTextResult.errorMessage);
+    if (!generationResult.success) {
+      if (generationResult.stage === "report-text") {
+        alert(generationResult.errorMessage);
 
-      if (reportTextResult.requiresLogin) {
-        window.location.href = "/login";
-      }
-
-      return;
-    }
-
-    const extractedText = reportTextResult.extractedText;
-
-    if (!extractedText) {
-      return;
-    }
-
-    const {
-      detectedMarkers,
-      historicalMarkerRows,
-    } = await prepareReportMarkerRuntime({
-      userId: sessionResult.userId,
-      reportId: selectedInsight.report_id,
-      extractedText,
-    });
-
-    const {
-      generatedResultPayload,
-      markerSummary,
-      radiologySummary,
-      isRadiologyReport,
-      clinicalPatterns,
-    } = buildReportIntelligenceResult({
-      extractedText,
-      reportType: selectedInsight.report_type,
-      detectedMarkers,
-      assessments: assessmentData,
-      dailyCheckIn,
-      historicalMarkerRows,
-    });
-
-    const { unifiedHealth } = generatedResultPayload;
-
-    setGeneratedResult(generatedResultPayload);
-    setActiveGeneratedInsightId(insightId);
-    setExpandedReportId(insightId);
-
-    const intelligence = buildHealthInsightUpdate({
-      extractedText,
-      reportType: selectedInsight.report_type,
-      markerSummary,
-      radiologySummary,
-      isRadiologyReport,
-      clinicalPatterns,
-      unifiedHealth,
-    });
-
-    const persistenceResult = await persistReportIntelligence({
-      userId: sessionResult.userId,
-      insightId,
-      reportId: selectedInsight.report_id,
-      intelligence,
-      generatedResult: generatedResultPayload,
-    });
-
-    if (!persistenceResult.success) {
-      const errorMessage =
-        persistenceResult.error instanceof Error
-          ? persistenceResult.error.message
-          : String(persistenceResult.error);
-
-      if (persistenceResult.stage === "health-insight") {
-        alert("Could not generate intelligence: " + errorMessage);
+        if (generationResult.requiresLogin) {
+          window.location.href = "/login";
+        }
+      } else if (generationResult.stage === "health-insight") {
+        alert(
+          "Could not generate intelligence: " +
+            generationResult.errorMessage
+        );
       } else {
         alert(
           "Could not save generated intelligence result: " +
-            errorMessage
+            generationResult.errorMessage
         );
       }
 
       return;
     }
 
+    setGeneratedResult(generationResult.generatedResult);
+    setActiveGeneratedInsightId(insightId);
+    setExpandedReportId(insightId);
+
     setHealthInsights((currentInsights) =>
       currentInsights.map((item) =>
         item.id === insightId
           ? {
               ...item,
-              ...intelligence,
+              ...generationResult.intelligence,
               extraction_status: "Completed",
-              extracted_text: extractedText,
+              extracted_text: generationResult.extractedText,
               extracted_at: new Date().toISOString(),
             }
           : item
