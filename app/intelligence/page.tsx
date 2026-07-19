@@ -17,9 +17,10 @@ import {
   getGeneratedResultByInsightId,
   getLatestGeneratedResultByInsightIds,
   getRecentHealthInsights,
-  saveGeneratedIntelligenceResult,
-  updateHealthInsight,
 } from "@/lib/repositories/insight.repository";
+import {
+  persistReportIntelligence,
+} from "@/lib/services/intelligence/report-intelligence-persistence-runtime.service";
 import {
   buildHealthInsightUpdate,
 } from "@/lib/services/intelligence/intelligence-persistence.service";
@@ -586,30 +587,31 @@ try {
       unifiedHealth,
     });
 
-    try {
-  await updateHealthInsight(insightId, intelligence);
-} catch (error) {
-  alert(
-    "Could not generate intelligence: " +
-      (error instanceof Error ? error.message : String(error))
-  );
-  return;
-}
+    const persistenceResult = await persistReportIntelligence({
+      userId: userData.user.id,
+      insightId,
+      reportId: selectedInsight.report_id,
+      intelligence,
+      generatedResult: generatedResultPayload,
+    });
 
-   try {
-  await saveGeneratedIntelligenceResult({
-    userId: userData.user.id,
-    insightId,
-    reportId: selectedInsight.report_id,
-    result: generatedResultPayload,
-  });
-} catch (error) {
-  alert(
-    "Could not save generated intelligence result: " +
-      (error instanceof Error ? error.message : String(error))
-  );
-  return;
-}
+    if (!persistenceResult.success) {
+      const errorMessage =
+        persistenceResult.error instanceof Error
+          ? persistenceResult.error.message
+          : String(persistenceResult.error);
+
+      if (persistenceResult.stage === "health-insight") {
+        alert("Could not generate intelligence: " + errorMessage);
+      } else {
+        alert(
+          "Could not save generated intelligence result: " +
+            errorMessage
+        );
+      }
+
+      return;
+    }
 
     setHealthInsights((currentInsights) =>
       currentInsights.map((item) =>
