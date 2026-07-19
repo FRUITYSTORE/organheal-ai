@@ -51,6 +51,9 @@ import {
 import {
   createUploadedReportSignedUrl,
 } from "@/lib/repositories/reports.repository";
+import {
+  getIntelligenceReportRequest,
+} from "@/lib/services/intelligence/intelligence-report-request.service";
 
 type Assessment = {
   organ_name: string;
@@ -193,24 +196,14 @@ export default function IntelligencePage() {
         return;
       }
 
-      const params = new URLSearchParams(window.location.search);
-      const requestedReportId = Number(params.get("reportId") || 0);
-      const requestedInsightId = Number(params.get("insightId") || 0);
-      const shouldAutoAnalyze = params.get("auto") === "1";
-
-      const hasRequestedReport =
-        requestedReportId > 0 && !Number.isNaN(requestedReportId);
-
-      const hasRequestedInsight =
-        requestedInsightId > 0 && !Number.isNaN(requestedInsightId);
-
-      if (!hasRequestedReport && !hasRequestedInsight) {
-        return;
-      }
-
-      const requestKey = `${requestedReportId || 0}:${requestedInsightId || 0}:${
-        shouldAutoAnalyze ? "auto" : "view"
-      }`;
+      const {
+  requestedReportId,
+  requestedInsightId,
+  shouldAutoAnalyze,
+  hasRequestedReport,
+  hasRequestedInsight,
+  requestKey,
+} = getIntelligenceReportRequest(window.location.search);
 
       if (handledReportRequestRef.current === requestKey) {
         return;
@@ -559,9 +552,9 @@ export default function IntelligencePage() {
   const canShowLessReports = visibleReportsCount > REPORTS_PAGE_SIZE;
 
   const requestedReportIdForFocus =
-    typeof window !== "undefined"
-      ? Number(new URLSearchParams(window.location.search).get("reportId") || 0)
-      : 0;
+  typeof window !== "undefined"
+    ? getIntelligenceReportRequest(window.location.search).requestedReportId
+    : 0;
 
   const focusedReportInsight =
     healthInsights.find((item) => {
