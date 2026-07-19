@@ -14,7 +14,6 @@ import {
 } from "@/lib/services/intelligence/report-intelligence-result.service";
 import ExecutiveSummaryCard from "./components/ExecutiveSummaryCard";
 import {
-  getGeneratedResultByInsightId,
   getLatestGeneratedResultByInsightIds,
   getRecentHealthInsights,
 } from "@/lib/repositories/insight.repository";
@@ -56,6 +55,9 @@ import {
 import {
   loadReportTextRuntime,
 } from "@/lib/services/intelligence/report-text-runtime.service";
+import {
+  loadSavedReportIntelligence,
+} from "@/lib/services/intelligence/saved-report-intelligence-runtime.service";
 import {
   createUploadedReportSignedUrl,
   getUploadedReportsByIds,
@@ -469,22 +471,21 @@ try {
       return;
     }
 
-    let savedGeneratedResult;
+    const savedResultRuntime = await loadSavedReportIntelligence({
+      userId: userData.user.id,
+      insightId,
+    });
 
-try {
-  savedGeneratedResult =
-    await getGeneratedResultByInsightId(
-      userData.user.id,
-      insightId
-    );
-} catch (error) {
-  alert(
-    "Could not load saved intelligence result: " +
-      (error instanceof Error ? error.message : String(error))
-  );
-  return;
+    if (!savedResultRuntime.success) {
+      alert(
+        "Could not load saved intelligence result: " +
+          savedResultRuntime.errorMessage
+      );
+      return;
     }
 
+    const savedGeneratedResult =
+      savedResultRuntime.savedGeneratedResult;
     if (!savedGeneratedResult?.result) {
       const shouldRegenerate = window.confirm(
         text(
