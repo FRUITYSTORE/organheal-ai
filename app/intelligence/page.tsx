@@ -57,6 +57,7 @@ import {
   loadReportTextRuntime,
 } from "@/lib/services/intelligence/report-text-runtime.service";
 import {
+  createUploadedReportSignedUrl,
   getUploadedReportsByIds,
 } from "@/lib/repositories/reports.repository";
 
@@ -450,18 +451,16 @@ try {
   async function openMedicalReport(filePath: string | null | undefined) {
     if (!filePath) return;
 
-    const { data, error } = await supabase.storage
-      .from("lab-reports")
-      .createSignedUrl(filePath, 60 * 60);
-
-    if (error) {
-      alert("Could not open report: " + error.message);
-      return;
+    try {
+      const signedUrl = await createUploadedReportSignedUrl(filePath);
+      window.open(signedUrl, "_blank");
+    } catch (error) {
+      alert(
+        "Could not open report: " +
+          (error instanceof Error ? error.message : String(error))
+      );
     }
-
-    window.open(data.signedUrl, "_blank");
   }
-
   async function openSavedGeneratedResult(insightId: number) {
     const { data: userData } = await supabase.auth.getUser();
 

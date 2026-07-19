@@ -82,3 +82,17 @@ export async function getUploadedReportsByIds(
 
   return data?.extracted_text ?? null;
 }
+export async function createUploadedReportSignedUrl(
+  filePath: string,
+  expiresInSeconds = 60 * 60
+): Promise<string> {
+  const { data, error } = await supabase.storage
+    .from("lab-reports")
+    .createSignedUrl(filePath, expiresInSeconds);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data.signedUrl;
+}
