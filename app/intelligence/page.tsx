@@ -56,6 +56,7 @@ import type {
 import {
   healthIntelligencePresenter,
 } from "@/lib/health-intelligence/presentation/health-intelligence.presenter";
+import { getUploadedReportsByIds } from "@/lib/repositories/reports.repository";
 
 type Assessment = {
   organ_name: string;
@@ -390,15 +391,12 @@ try {
     }[] = [];
 
     if (reportIds.length > 0) {
-      const { data: reportData } = await supabase
-        .from("uploaded_lab_files")
-        .select(
-          "id, file_name, file_path, created_at, extraction_status, extracted_text, extracted_at"
-        )
-        .in("id", reportIds);
-
-      reports = reportData || [];
-    }
+  try {
+    reports = await getUploadedReportsByIds(userId, reportIds);
+  } catch {
+    reports = [];
+  }
+}
 
     const mergedInsights = (insights || []).map((item) => {
       const report = reports.find(
