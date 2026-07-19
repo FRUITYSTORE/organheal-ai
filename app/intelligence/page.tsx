@@ -1,6 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import {
+  loadIntelligencePage,
+} from "@/lib/services/intelligence/intelligence-page-loader.service";
 import { generateIntelligenceFromText } from "../../lib/extractedTextIntelligence";
 import PageBackActions from "../components/PageBackActions";
 import { useEffect, useRef, useState } from "react";
@@ -12,10 +15,6 @@ import {
   type GeneratedIntelligenceResult,
 } from "@/lib/services/intelligence/report-intelligence-result.service";
 import ExecutiveSummaryCard from "./components/ExecutiveSummaryCard";
-import {
-  getLatestGeneratedResultByInsightIds,
-  getRecentHealthInsights,
-} from "@/lib/repositories/insight.repository";
 import {
   persistReportIntelligence,
 } from "@/lib/services/intelligence/report-intelligence-persistence-runtime.service";
@@ -40,7 +39,7 @@ import GeneratedReportDetailsCard from "./components/GeneratedReportDetailsCard"
 import PersonalHealthStrategyCard from "./components/PersonalHealthStrategyCard";
 import DoctorBriefReportCard from "./components/DoctorBriefReportCard";
 import PatientReportPdfCard from "./components/PatientReportPdfCard";
-import { getIntelligenceSummary } from "@/lib/services/intelligence/intelligence.service";
+
 import { HealthIntelligenceResult } from "@/lib/health-intelligence/models/health-intelligence-result";
 import type {
   HealthRuntimeModuleResult,
@@ -62,7 +61,6 @@ import {
 } from "@/lib/services/intelligence/intelligence-session-runtime.service";
 import {
   createUploadedReportSignedUrl,
-  getUploadedReportsByIds,
 } from "@/lib/repositories/reports.repository";
 
 type Assessment = {
@@ -287,161 +285,76 @@ export default function IntelligencePage() {
     setLoading(true);
     setMessage("");
 
-    const currentLanguage = getIntelligenceStoredLanguage();
-    const currentIsArabic = currentLanguage === "ar";
+    const currentLanguage =
+      getIntelligenceStoredLanguage();
+    const currentIsArabic =
+      currentLanguage === "ar";
 
-    const sessionResult = await getIntelligenceSession();
+    const sessionResult =
+      await getIntelligenceSession();
 
     if (!sessionResult.success) {
       window.location.href = "/login";
       return;
     }
 
-    const userId = sessionResult.userId;
-
-    let assessmentData: Assessment[] = [];
-
-try {
-  const intelligenceSummary =
-    await getIntelligenceSummary(userId);
-
-  assessmentData =
-    intelligenceSummary.assessments as Assessment[];
-
-  setAssessmentData(assessmentData);
-
-  setDailyCheckIn(
-    intelligenceSummary.latestCheckIn as DailyCheckIn | null
-  );
-
-  setHealthEngine(
-    intelligenceSummary.healthIntelligence
-  );
-} catch (error) {
-  setMessage(
-    error instanceof Error
-      ? `Database error: ${error.message}`
-      : "Database error"
-  );
-  setLoading(false);
-  return;
-}
-
-    setIntelligenceSummaryV2(null);
-
-    try {
-      const summaryV2Response =
-        await fetch(
-          "/api/intelligence-summary",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type":
-                "application/json",
-            },
-            body: JSON.stringify({
-              userId,
-              language:
-                currentLanguage,
-            }),
-          }
-        );
-
-      if (!summaryV2Response.ok) {
-        throw new Error(
-          "Could not load the unified intelligence summary."
-        );
-      }
-
-      const summaryV2Payload =
-        await summaryV2Response.json();
-
-      setIntelligenceSummaryV2(
-        summaryV2Payload.summary ??
-          null
-      );
-    } catch (error) {
-      console.error(
-        "Unified intelligence summary error:",
-        error
+    const pageResult =
+      await loadIntelligencePage(
+        sessionResult.userId,
+        currentLanguage
       );
 
-      setIntelligenceSummaryV2(null);
+    if (!pageResult.success) {
+      setMessage(pageResult.errorMessage);
+      setLoading(false);
+      return;
     }
 
-    let insights;
+    const {
+      intelligenceSummary,
+      intelligenceSummaryV2,
+      insights,
+      latestGeneratedResult,
+    } = pageResult.data;
 
-try {
-  insights = await getRecentHealthInsights(userId, 20);
-} catch {
-  setMessage(
-    currentIsArabic
-      ? "تعذر تحميل نتائج الذكاء الصحي."
-      : "Could not load health intelligence results."
-  );
-  setLoading(false);
-  return;
-}
+    const assessmentData =
+      intelligenceSummary.assessments as Assessment[];
 
-    const reportIds = (insights || [])
-  .map((item) => item.report_id)
-  .filter((reportId): reportId is number => reportId !== null);
+    setAssessmentData(assessmentData);
 
-    let reports: Awaited<ReturnType<typeof getUploadedReportsByIds>> = [];
+    setDailyCheckIn(
+      intelligenceSummary.latestCheckIn as
+        | DailyCheckIn
+        | null
+    );
 
-    if (reportIds.length > 0) {
-  try {
-    reports = await getUploadedReportsByIds(userId, reportIds);
-  } catch {
-    reports = [];
-  }
-}
+    setHealthEngine(
+      intelligenceSummary.healthIntelligence
+    );
 
-    const mergedInsights = (insights || []).map((item) => {
-      const report = reports.find(
-        (reportItem) => reportItem.id === item.report_id
-      );
+    setIntelligenceSummaryV2(
+      intelligenceSummaryV2
+    );
 
-      return {
-        ...item,
-        file_name: report?.file_name || "Medical report",
-        file_path: report?.file_path || null,
-        uploaded_at: report?.created_at || item.created_at,
-        extraction_status: report?.extraction_status || "Pending",
-        extracted_text: report?.extracted_text || null,
-        extracted_at: report?.extracted_at || null,
-      };
-    });
+    setHealthInsights(insights);
 
-    setHealthInsights(mergedInsights);
+    setGeneratedResult(
+      latestGeneratedResult?.result
+        ? latestGeneratedResult.result as GeneratedIntelligenceResult
+        : null
+    );
 
-    setGeneratedResult(null);
-    setActiveGeneratedInsightId(null);
+    setActiveGeneratedInsightId(
+      latestGeneratedResult?.insight_id ?? null
+    );
+
     setExpandedReportId(null);
     setVisibleReportsCount(REPORTS_PAGE_SIZE);
 
-    const generatedInsightIds = mergedInsights.map((item) => item.id);
-
-    if (generatedInsightIds.length > 0) {
-      try {
-  const savedGeneratedResult =
-    await getLatestGeneratedResultByInsightIds(
-      userId,
-      generatedInsightIds
-    );
-
-  if (savedGeneratedResult?.result) {
-    setGeneratedResult(
-      savedGeneratedResult.result as GeneratedIntelligenceResult
-    );
-    setActiveGeneratedInsightId(savedGeneratedResult.insight_id);
-  }
-} catch {
-  // Keep page loading resilient if no saved result can be loaded.
-}
-    }
-
-    if (assessmentData.length === 0 && mergedInsights.length === 0) {
+    if (
+      assessmentData.length === 0 &&
+      insights.length === 0
+    ) {
       setMessage(
         currentIsArabic
           ? "أكمل أول تقييم عضو أو ارفع تقريرًا طبيًا لتفعيل التحليل الصحي."
@@ -451,7 +364,6 @@ try {
 
     setLoading(false);
   }
-
   async function openMedicalReport(filePath: string | null | undefined) {
     if (!filePath) return;
 
