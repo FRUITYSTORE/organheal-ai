@@ -53,7 +53,9 @@ import {
   healthIntelligencePresenter,
 } from "@/lib/health-intelligence/presentation/health-intelligence.presenter";
 import {
-  getUploadedReportExtractedText,
+  loadReportTextRuntime,
+} from "@/lib/services/intelligence/report-text-runtime.service";
+import {
   getUploadedReportsByIds,
 } from "@/lib/repositories/reports.repository";
 
@@ -513,66 +515,34 @@ try {
     setActiveGeneratedInsightId(null);
     setGeneratedResult(null);
 
-    let extractedText: string | null = null;
-const { data: userData } = await supabase.auth.getUser();
+    const { data: userData } = await supabase.auth.getUser();
 
-if (!userData.user) {
-  alert("User session expired. Please log in again.");
-  return;
-}
-    if (selectedInsight.report_id && selectedInsight.file_path) {
-      try {
-        const { data: sessionData, error: sessionError } =
-          await supabase.auth.getSession();
-
-        if (sessionError || !sessionData.session?.access_token) {
-          alert("Your session expired. Please login again.");
-          window.location.href = "/login";
-          return;
-        }
-
-        const extractionResponse = await fetch("/api/extract-pdf", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${sessionData.session.access_token}`,
-          },
-          body: JSON.stringify({
-        insightId: selectedInsight.id,
-        reportId: selectedInsight.report_id,
-        filePath: selectedInsight.file_path,
-        fileName: selectedInsight.file_name,
-      }),
-        });
-
-        const extractionResult = await extractionResponse.json();
-
-        if (!extractionResponse.ok || !extractionResult.success) {
-          alert(extractionResult.error || "PDF extraction failed.");
-          return;
-        }
-
-        extractedText = extractionResult.text || null;
-      } catch (error) {
-        console.error("Extraction failed", error);
-        alert("Extraction failed.");
-        return;
-      }
+    if (!userData.user) {
+      alert("User session expired. Please log in again.");
+      return;
     }
 
-    if (!extractedText && selectedInsight.report_id) {
-  try {
-   extractedText = await getUploadedReportExtractedText(
-  userData.user.id,
-  selectedInsight.report_id
-);
-  } catch {
-    extractedText = null;
-  }
-}
+    const reportTextResult = await loadReportTextRuntime({
+      userId: userData.user.id,
+      insightId: selectedInsight.id,
+      reportId: selectedInsight.report_id,
+      filePath: selectedInsight.file_path,
+      fileName: selectedInsight.file_name,
+    });
 
-    if (!extractedText || extractedText.length < 30) {
-      alert("No readable report text was extracted yet.");
+    if (reportTextResult.errorMessage) {
+      alert(reportTextResult.errorMessage);
+
+      if (reportTextResult.requiresLogin) {
+        window.location.href = "/login";
+      }
+
+      return;
+    }
+
+    const extractedText = reportTextResult.extractedText;
+
+    if (!extractedText) {
       return;
     }
 
