@@ -5,18 +5,14 @@ import { generateIntelligenceFromText } from "../../lib/extractedTextIntelligenc
 import PageBackActions from "../components/PageBackActions";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../lib/supabase";
-import { detectLabMarkers } from "../../lib/labMarkerDetector";
+import {
+  prepareReportMarkerRuntime,
+} from "@/lib/services/intelligence/report-marker-runtime.service";
 import {
   buildReportIntelligenceResult,
   type GeneratedIntelligenceResult,
 } from "@/lib/services/intelligence/report-intelligence-result.service";
 import ExecutiveSummaryCard from "./components/ExecutiveSummaryCard";
-import {
-  getHistoricalMedicalMarkers,
-  saveMedicalReportMarkers,
-  type HistoricalMedicalMarker,
-} from "@/lib/repositories/report-markers.repository";
-
 import {
   getGeneratedResultByInsightId,
   getLatestGeneratedResultByInsightIds,
@@ -580,35 +576,14 @@ if (!userData.user) {
       return;
     }
 
-    const detectedMarkers = detectLabMarkers(extractedText);
-
-    if (selectedInsight.report_id) {
-      const validMarkers = detectedMarkers
-        .filter((marker) => marker.value !== null)
-        .map((marker) => ({
-          userId: userData.user.id,
-          reportId: selectedInsight.report_id as number,
-          markerName: marker.marker,
-          markerValue: marker.value as number,
-          markerUnit: marker.unit,
-        }));
-
-      try {
-        await saveMedicalReportMarkers(validMarkers);
-      } catch (error) {
-        console.error("Could not save medical report markers", error);
-      }
-    }
-
-    let historicalMarkerRows: HistoricalMedicalMarker[] = [];
-
-    try {
-      historicalMarkerRows = await getHistoricalMedicalMarkers(
-        userData.user.id
-      );
-    } catch (error) {
-      console.error("Could not load historical medical markers", error);
-    }
+    const {
+      detectedMarkers,
+      historicalMarkerRows,
+    } = await prepareReportMarkerRuntime({
+      userId: userData.user.id,
+      reportId: selectedInsight.report_id,
+      extractedText,
+    });
 
     const {
       generatedResultPayload,
