@@ -4,7 +4,6 @@ import Link from "next/link";
 import { generateIntelligenceFromText } from "../../lib/extractedTextIntelligence";
 import PageBackActions from "../components/PageBackActions";
 import { useEffect, useRef, useState } from "react";
-import { supabase } from "../../lib/supabase";
 import {
   prepareReportMarkerRuntime,
 } from "@/lib/services/intelligence/report-marker-runtime.service";
@@ -58,6 +57,9 @@ import {
 import {
   loadSavedReportIntelligence,
 } from "@/lib/services/intelligence/saved-report-intelligence-runtime.service";
+import {
+  getIntelligenceSession,
+} from "@/lib/services/intelligence/intelligence-session-runtime.service";
 import {
   createUploadedReportSignedUrl,
   getUploadedReportsByIds,
@@ -288,14 +290,14 @@ export default function IntelligencePage() {
     const currentLanguage = getIntelligenceStoredLanguage();
     const currentIsArabic = currentLanguage === "ar";
 
-    const { data: userData, error: userError } = await supabase.auth.getUser();
+    const sessionResult = await getIntelligenceSession();
 
-    if (userError || !userData.user) {
+    if (!sessionResult.success) {
       window.location.href = "/login";
       return;
     }
 
-    const userId = userData.user.id;
+    const userId = sessionResult.userId;
 
     let assessmentData: Assessment[] = [];
 
@@ -464,15 +466,15 @@ try {
     }
   }
   async function openSavedGeneratedResult(insightId: number) {
-    const { data: userData } = await supabase.auth.getUser();
+    const sessionResult = await getIntelligenceSession();
 
-    if (!userData.user) {
-      alert("User session expired. Please log in again.");
+    if (!sessionResult.success) {
+      alert(sessionResult.errorMessage);
       return;
     }
 
     const savedResultRuntime = await loadSavedReportIntelligence({
-      userId: userData.user.id,
+      userId: sessionResult.userId,
       insightId,
     });
 
@@ -516,15 +518,15 @@ try {
     setActiveGeneratedInsightId(null);
     setGeneratedResult(null);
 
-    const { data: userData } = await supabase.auth.getUser();
+    const sessionResult = await getIntelligenceSession();
 
-    if (!userData.user) {
-      alert("User session expired. Please log in again.");
+    if (!sessionResult.success) {
+      alert(sessionResult.errorMessage);
       return;
     }
 
     const reportTextResult = await loadReportTextRuntime({
-      userId: userData.user.id,
+      userId: sessionResult.userId,
       insightId: selectedInsight.id,
       reportId: selectedInsight.report_id,
       filePath: selectedInsight.file_path,
@@ -551,7 +553,7 @@ try {
       detectedMarkers,
       historicalMarkerRows,
     } = await prepareReportMarkerRuntime({
-      userId: userData.user.id,
+      userId: sessionResult.userId,
       reportId: selectedInsight.report_id,
       extractedText,
     });
@@ -588,7 +590,7 @@ try {
     });
 
     const persistenceResult = await persistReportIntelligence({
-      userId: userData.user.id,
+      userId: sessionResult.userId,
       insightId,
       reportId: selectedInsight.report_id,
       intelligence,
