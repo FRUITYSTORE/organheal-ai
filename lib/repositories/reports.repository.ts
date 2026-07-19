@@ -65,4 +65,20 @@ export async function getUploadedReportsByIds(
   }
 
   return (data || []) as UploadedReportSummary[];
+}export async function getUploadedReportExtractedText(
+  userId: string,
+  reportId: string
+): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("uploaded_lab_files")
+    .select("extracted_text")
+    .eq("user_id", userId)
+    .eq("id", reportId)
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data?.extracted_text ?? null;
 }
