@@ -46,7 +46,7 @@ export async function countUploadedReports(userId: string): Promise<number> {
 
 export async function getUploadedReportsByIds(
   userId: string,
-  reportIds: string[]
+  reportIds: number[]
 ): Promise<UploadedReportSummary[]> {
   if (reportIds.length === 0) {
     return [];
@@ -67,7 +67,7 @@ export async function getUploadedReportsByIds(
   return (data || []) as UploadedReportSummary[];
 }export async function getUploadedReportExtractedText(
   userId: string,
-  reportId: string
+  reportId: number
 ): Promise<string | null> {
   const { data, error } = await supabase
     .from("uploaded_lab_files")
