@@ -22,10 +22,10 @@ import {
   getLatestGeneratedResultByInsightIds,
   getRecentHealthInsights,
   saveGeneratedIntelligenceResult,
+  updateHealthInsight,
 } from "@/lib/repositories/insight.repository";
 import {
   buildHealthInsightUpdate,
-  updateHealthInsight,  
 } from "@/lib/services/intelligence/intelligence-persistence.service";
 import HealthStoryCard from "./components/HealthStoryCard";
 import ActionPlanCard from "./components/ActionPlanCard";
@@ -56,7 +56,10 @@ import type {
 import {
   healthIntelligencePresenter,
 } from "@/lib/health-intelligence/presentation/health-intelligence.presenter";
-import { getUploadedReportsByIds } from "@/lib/repositories/reports.repository";
+import {
+  getUploadedReportExtractedText,
+  getUploadedReportsByIds,
+} from "@/lib/repositories/reports.repository";
 
 type Assessment = {
   organ_name: string;
@@ -377,18 +380,10 @@ try {
 }
 
     const reportIds = (insights || [])
-      .map((item) => item.report_id)
-      .filter(Boolean);
+  .map((item) => item.report_id)
+  .filter((reportId): reportId is number => reportId !== null);
 
-    let reports: {
-      id: number;
-      file_name: string;
-      file_path: string;
-      created_at: string;
-      extraction_status: string | null;
-      extracted_text: string | null;
-      extracted_at: string | null;
-    }[] = [];
+    let reports: Awaited<ReturnType<typeof getUploadedReportsByIds>> = [];
 
     if (reportIds.length > 0) {
   try {
@@ -523,7 +518,12 @@ try {
     setGeneratedResult(null);
 
     let extractedText: string | null = null;
+const { data: userData } = await supabase.auth.getUser();
 
+if (!userData.user) {
+  alert("User session expired. Please log in again.");
+  return;
+}
     if (selectedInsight.report_id && selectedInsight.file_path) {
       try {
         const { data: sessionData, error: sessionError } =
@@ -565,14 +565,15 @@ try {
     }
 
     if (!extractedText && selectedInsight.report_id) {
-      const { data: reportData } = await supabase
-        .from("uploaded_lab_files")
-        .select("extracted_text")
-        .eq("id", selectedInsight.report_id)
-        .single();
-
-      extractedText = reportData?.extracted_text || null;
-    }
+  try {
+   extractedText = await getUploadedReportExtractedText(
+  userData.user.id,
+  selectedInsight.report_id
+);
+  } catch {
+    extractedText = null;
+  }
+}
 
     if (!extractedText || extractedText.length < 30) {
       alert("No readable report text was extracted yet.");
@@ -580,12 +581,6 @@ try {
     }
 
     const detectedMarkers = detectLabMarkers(extractedText);
-    const { data: userData } = await supabase.auth.getUser();
-
-    if (!userData.user) {
-      alert("User session expired. Please log in again.");
-      return;
-    }
 
     if (selectedInsight.report_id) {
       const validMarkers = detectedMarkers
