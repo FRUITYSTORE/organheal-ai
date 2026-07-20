@@ -175,13 +175,15 @@ export async function getLatestGeneratedResultByInsightIds(
   return data as SavedGeneratedIntelligenceResult | null;
 }
 export async function updateHealthInsight(
+  userId: string,
   insightId: number,
   update: Record<string, unknown>
 ): Promise<void> {
   const { error } = await supabase
     .from("health_insights")
     .update(update)
-    .eq("id", insightId);
+    .eq("id", insightId)
+    .eq("user_id", userId);
 
   if (error) {
     throw new Error(error.message);

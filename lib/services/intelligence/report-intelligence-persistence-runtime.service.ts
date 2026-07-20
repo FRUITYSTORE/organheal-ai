@@ -29,7 +29,7 @@ export async function persistReportIntelligence({
   generatedResult,
 }: PersistReportIntelligenceInput): Promise<PersistReportIntelligenceResult> {
   try {
-    await updateHealthInsight(insightId, intelligence);
+    await updateHealthInsight(userId, insightId, intelligence);
   } catch (error) {
     return {
       success: false,
