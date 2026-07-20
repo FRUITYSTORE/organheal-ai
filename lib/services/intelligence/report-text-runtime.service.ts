@@ -26,6 +26,29 @@ export async function loadReportTextRuntime({
 }: LoadReportTextRuntimeInput): Promise<LoadReportTextRuntimeResult> {
   let extractedText: string | null = null;
 
+  if (reportId) {
+    try {
+      extractedText = await getUploadedReportExtractedText(
+        userId,
+        reportId
+      );
+    } catch (error) {
+      console.error(
+        "Could not load saved extracted report text",
+        error
+      );
+      extractedText = null;
+    }
+  }
+
+  if (extractedText && extractedText.trim().length >= 30) {
+    return {
+      extractedText: extractedText.trim(),
+      errorMessage: null,
+      requiresLogin: false,
+    };
+  }
+
   if (reportId && filePath) {
     try {
       const { data: sessionData, error: sessionError } =
@@ -66,7 +89,7 @@ export async function loadReportTextRuntime({
 
       extractedText =
         typeof extractionResult.text === "string"
-          ? extractionResult.text
+          ? extractionResult.text.trim()
           : null;
     } catch (error) {
       console.error("Extraction failed", error);
@@ -76,18 +99,6 @@ export async function loadReportTextRuntime({
         errorMessage: "Extraction failed.",
         requiresLogin: false,
       };
-    }
-  }
-
-  if (!extractedText && reportId) {
-    try {
-      extractedText = await getUploadedReportExtractedText(
-        userId,
-        reportId
-      );
-    } catch (error) {
-      console.error("Could not load saved extracted report text", error);
-      extractedText = null;
     }
   }
 
