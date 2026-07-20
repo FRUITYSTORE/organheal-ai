@@ -89,3 +89,53 @@ export function getIntelligenceReportStatistics<
     completedExtractionCount,
   };
 }
+export type IntelligenceReportListItem = {
+  id: number;
+};
+
+type GetIntelligenceReportListViewInput<
+  TInsight extends IntelligenceReportListItem
+> = {
+  healthInsights: TInsight[];
+  visibleReportsCount: number;
+  reportsPageSize: number;
+  focusedReportInsight: TInsight | null;
+};
+
+export type IntelligenceReportListView<
+  TInsight extends IntelligenceReportListItem
+> = {
+  visibleHealthInsights: TInsight[];
+  compactHealthInsights: TInsight[];
+  hasOlderReports: boolean;
+  canShowLessReports: boolean;
+};
+
+export function getIntelligenceReportListView<
+  TInsight extends IntelligenceReportListItem
+>({
+  healthInsights,
+  visibleReportsCount,
+  reportsPageSize,
+  focusedReportInsight,
+}: GetIntelligenceReportListViewInput<TInsight>): IntelligenceReportListView<TInsight> {
+  const visibleHealthInsights = healthInsights.slice(
+    0,
+    visibleReportsCount
+  );
+
+  const compactHealthInsights = focusedReportInsight
+    ? visibleHealthInsights.filter(
+        (item) => item.id !== focusedReportInsight.id
+      )
+    : visibleHealthInsights;
+
+  return {
+    visibleHealthInsights,
+    compactHealthInsights,
+    hasOlderReports:
+      healthInsights.length > visibleReportsCount,
+    canShowLessReports:
+      visibleReportsCount > reportsPageSize,
+  };
+}
