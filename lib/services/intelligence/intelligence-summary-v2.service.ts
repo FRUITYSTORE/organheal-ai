@@ -61,6 +61,7 @@ export async function getCombinedIntelligenceSummary(
       healthIntelligence,
     },
     healthInsights: patientSummary.healthInsights,
+    uploadedReports: patientSummary.uploadedReports,
     summary: unifiedRuntime.summary,
   };
 }

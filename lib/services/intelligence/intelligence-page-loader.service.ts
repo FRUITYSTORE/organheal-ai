@@ -57,6 +57,7 @@ export type IntelligencePageLoaderResult =
 type IntelligenceSummaryApiPayload = {
   intelligenceSummary?: LegacyIntelligenceSummary;
   healthInsights?: HealthInsightSummary[];
+  uploadedReports?: UploadedReportSummary[];
   summary?:
     | HealthRuntimeModuleResult<HealthIntelligenceSummaryData>
     | null;
@@ -153,12 +154,27 @@ export async function loadIntelligencePage(
 
   const insights = summaryResult.value.healthInsights ?? [];
 
-  const reportIds = insights
-    .map((insight) => insight.report_id)
-    .filter(
-      (reportId): reportId is number =>
-        reportId !== null
-    );
+  const reportIds = Array.from(
+    new Set(
+      insights
+        .map((insight) => insight.report_id)
+        .filter(
+          (reportId): reportId is number =>
+            reportId !== null
+        )
+    )
+  );
+
+  const availableReports =
+    summaryResult.value.uploadedReports ?? [];
+
+  const availableReportIds = new Set(
+    availableReports.map((report) => report.id)
+  );
+
+  const missingReportIds = reportIds.filter(
+    (reportId) => !availableReportIds.has(reportId)
+  );
 
   const insightIds = insights.map(
     (insight) => insight.id
@@ -168,8 +184,11 @@ export async function loadIntelligencePage(
     reportsResult,
     latestGeneratedResultResult,
   ] = await Promise.allSettled([
-    reportIds.length > 0
-      ? getUploadedReportsByIds(userId, reportIds)
+    missingReportIds.length > 0
+      ? getUploadedReportsByIds(
+          userId,
+          missingReportIds
+        )
       : Promise.resolve([] as UploadedReportSummary[]),
     insightIds.length > 0
       ? getLatestGeneratedResultByInsightIds(
@@ -181,10 +200,15 @@ export async function loadIntelligencePage(
         ),
   ]);
 
-  const reports =
+  const additionalReports =
     reportsResult.status === "fulfilled"
       ? reportsResult.value
       : [];
+
+  const reports = [
+    ...availableReports,
+    ...additionalReports,
+  ];
 
   const latestGeneratedResult =
     latestGeneratedResultResult.status === "fulfilled"
