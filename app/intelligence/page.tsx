@@ -54,6 +54,9 @@ import {
 import {
   getIntelligenceReportRequest,
 } from "@/lib/services/intelligence/intelligence-report-request.service";
+import {
+  getFocusedReportInsight,
+} from "@/lib/selectors/intelligence-page.selectors";
 
 type Assessment = {
   organ_name: string;
@@ -556,23 +559,11 @@ export default function IntelligencePage() {
     ? getIntelligenceReportRequest(window.location.search).requestedReportId
     : 0;
 
-  const focusedReportInsight =
-    healthInsights.find((item) => {
-      if (!requestedReportIdForFocus || Number.isNaN(requestedReportIdForFocus)) {
-        return false;
-      }
-
-      return (
-        Number(item.report_id) === requestedReportIdForFocus ||
-        Number(item.id) === requestedReportIdForFocus
-      );
-    }) ||
-    (activeGeneratedInsightId
-      ? healthInsights.find((item) => item.id === activeGeneratedInsightId)
-      : null) ||
-    healthInsights.find((item) => item.ai_status !== "Generated") ||
-    healthInsights[0] ||
-    null;
+  const focusedReportInsight = getFocusedReportInsight({
+  healthInsights,
+  requestedReportId: requestedReportIdForFocus,
+  activeGeneratedInsightId,
+});
 
   const focusedReportIsGenerated = Boolean(
     focusedReportInsight &&
