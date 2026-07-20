@@ -50,3 +50,42 @@ export function getFocusedReportInsight<
     null
   );
 }
+export type IntelligenceReportStatisticsItem = {
+  ai_status: string | null;
+  extraction_status?: string | null;
+};
+
+export type IntelligenceReportStatistics = {
+  totalReportInsights: number;
+  generatedReportsCount: number;
+  pendingReportsCount: number;
+  completedExtractionCount: number;
+};
+
+export function getIntelligenceReportStatistics<
+  TInsight extends IntelligenceReportStatisticsItem
+>(
+  healthInsights: TInsight[]
+): IntelligenceReportStatistics {
+  const totalReportInsights = healthInsights.length;
+
+  const generatedReportsCount = healthInsights.filter(
+    (item) => item.ai_status === "Generated"
+  ).length;
+
+  const pendingReportsCount = Math.max(
+    totalReportInsights - generatedReportsCount,
+    0
+  );
+
+  const completedExtractionCount = healthInsights.filter(
+    (item) => item.extraction_status === "Completed"
+  ).length;
+
+  return {
+    totalReportInsights,
+    generatedReportsCount,
+    pendingReportsCount,
+    completedExtractionCount,
+  };
+}
