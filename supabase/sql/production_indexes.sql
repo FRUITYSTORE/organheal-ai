@@ -28,3 +28,8 @@ on generated_intelligence_results(user_id, insight_id);
 
 create index if not exists idx_health_history_user_created
 on health_history(user_id, created_at desc);
+create index if not exists idx_generated_results_user_created
+on generated_intelligence_results(user_id, created_at desc);
+
+create index if not exists idx_medical_report_markers_user_created
+on medical_report_markers(user_id, created_at asc);
