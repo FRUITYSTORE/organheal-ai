@@ -56,6 +56,7 @@ import {
 } from "@/lib/services/intelligence/intelligence-report-request.service";
 import {
   getFocusedReportInsight,
+  getIntelligenceReportStatistics,
 } from "@/lib/selectors/intelligence-page.selectors";
 
 type Assessment = {
@@ -496,14 +497,12 @@ export default function IntelligencePage() {
 
   const visibleHealthInsights = healthInsights.slice(0, visibleReportsCount);
 
-  const totalReportInsights = healthInsights.length;
-  const generatedReportsCount = healthInsights.filter(
-    (item) => item.ai_status === "Generated"
-  ).length;
-  const pendingReportsCount = Math.max(totalReportInsights - generatedReportsCount, 0);
-  const completedExtractionCount = healthInsights.filter(
-    (item) => item.extraction_status === "Completed"
-  ).length;
+ const {
+  totalReportInsights,
+  generatedReportsCount,
+  pendingReportsCount,
+  completedExtractionCount,
+} = getIntelligenceReportStatistics(healthInsights);
   const hasOpenGeneratedResult = Boolean(generatedResult && activeGeneratedInsightId);
 
   const intelligenceNextStep =
