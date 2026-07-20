@@ -4,7 +4,7 @@ import {
 } from "next/server";
 
 import {
-  getIntelligenceSummaryV2,
+  getCombinedIntelligenceSummary,
 } from "@/lib/services/intelligence/intelligence-summary-v2.service";
 
 type IntelligenceSummaryRequest = {
@@ -33,7 +33,7 @@ export async function POST(
     }
 
     const result =
-      await getIntelligenceSummaryV2(
+      await getCombinedIntelligenceSummary(
         body.userId,
         body.language === "ar"
           ? "ar"

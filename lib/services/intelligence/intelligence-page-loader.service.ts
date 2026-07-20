@@ -14,7 +14,7 @@ import type {
 import type {
   HealthRuntimeModuleResult,
 } from "@/lib/health-intelligence/runtime/health-intelligence-runtime";
-import {
+import type {
   getIntelligenceSummary,
 } from "@/lib/services/intelligence/intelligence.service";
 
@@ -30,10 +30,12 @@ export type IntelligencePageInsight =
     uploaded_at: string;
   };
 
+type LegacyIntelligenceSummary = Awaited<
+  ReturnType<typeof getIntelligenceSummary>
+>;
+
 export type IntelligencePageLoaderData = {
-  intelligenceSummary: Awaited<
-    ReturnType<typeof getIntelligenceSummary>
-  >;
+  intelligenceSummary: LegacyIntelligenceSummary;
   intelligenceSummaryV2:
     | HealthRuntimeModuleResult<HealthIntelligenceSummaryData>
     | null;
@@ -54,6 +56,7 @@ export type IntelligencePageLoaderResult =
     };
 
 type IntelligenceSummaryApiPayload = {
+  intelligenceSummary?: LegacyIntelligenceSummary;
   summary?:
     | HealthRuntimeModuleResult<HealthIntelligenceSummaryData>
     | null;
@@ -81,46 +84,33 @@ function mergeInsightsWithReports(
   });
 }
 
-async function loadUnifiedIntelligenceSummary(
+async function loadIntelligenceSummaries(
   userId: string,
   language: IntelligencePageLanguage
-): Promise<
-  | HealthRuntimeModuleResult<HealthIntelligenceSummaryData>
-  | null
-> {
-  try {
-    const response = await fetch(
-      "/api/intelligence-summary",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId,
-          language,
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(
-        "Could not load the unified intelligence summary."
-      );
+): Promise<IntelligenceSummaryApiPayload> {
+  const response = await fetch(
+    "/api/intelligence-summary",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        userId,
+        language,
+      }),
     }
+  );
 
-    const payload =
-      (await response.json()) as IntelligenceSummaryApiPayload;
-
-    return payload.summary ?? null;
-  } catch (error) {
-    console.error(
-      "Unified intelligence summary error:",
-      error
+  if (!response.ok) {
+    throw new Error(
+      "Could not load the intelligence summaries."
     );
-
-    return null;
   }
+
+  return (
+    await response.json()
+  ) as IntelligenceSummaryApiPayload;
 }
 
 export async function loadIntelligencePage(
@@ -128,22 +118,30 @@ export async function loadIntelligencePage(
   language: IntelligencePageLanguage
 ): Promise<IntelligencePageLoaderResult> {
   const [
-    intelligenceSummaryResult,
-    intelligenceSummaryV2Result,
+    summariesResult,
     insightsResult,
   ] = await Promise.allSettled([
-    getIntelligenceSummary(userId),
-    loadUnifiedIntelligenceSummary(userId, language),
+    loadIntelligenceSummaries(userId, language),
     getRecentHealthInsights(userId, 20),
   ]);
 
-  if (intelligenceSummaryResult.status === "rejected") {
+  if (summariesResult.status === "rejected") {
     return {
       success: false,
       errorMessage:
-        intelligenceSummaryResult.reason instanceof Error
-          ? `Database error: ${intelligenceSummaryResult.reason.message}`
+        summariesResult.reason instanceof Error
+          ? `Database error: ${summariesResult.reason.message}`
           : "Database error",
+    };
+  }
+
+  if (!summariesResult.value.intelligenceSummary) {
+    return {
+      success: false,
+      errorMessage:
+        language === "ar"
+          ? "تعذر تحميل ملخص الذكاء الصحي."
+          : "Could not load the health intelligence summary.",
     };
   }
 
@@ -158,12 +156,10 @@ export async function loadIntelligencePage(
   }
 
   const intelligenceSummary =
-    intelligenceSummaryResult.value;
+    summariesResult.value.intelligenceSummary;
 
   const intelligenceSummaryV2 =
-    intelligenceSummaryV2Result.status === "fulfilled"
-      ? intelligenceSummaryV2Result.value
-      : null;
+    summariesResult.value.summary ?? null;
 
   const insights = insightsResult.value;
 

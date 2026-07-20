@@ -1,9 +1,11 @@
 import "server-only";
 
 import {
+  buildHealthIntelligence,
+} from "@/lib/health-intelligence/health-intelligence.service";
+import {
   buildUnifiedHealthRuntime,
 } from "@/lib/health-intelligence/runtime/unified-health-runtime";
-
 import {
   getPatientSummary,
 } from "@/lib/services/shared/patient-summary.service";
@@ -23,15 +25,41 @@ export async function getIntelligenceSummaryV2(
   const unifiedRuntime =
     await buildUnifiedHealthRuntime({
       userId,
-      patient:
-        patientSummary,
+      patient: patientSummary,
       language,
-      audience:
-        "general",
+      audience: "general",
     });
 
   return {
-    summary:
-      unifiedRuntime.summary,
+    summary: unifiedRuntime.summary,
+  };
+}
+
+export async function getCombinedIntelligenceSummary(
+  userId: string,
+  language:
+    IntelligenceSummaryLanguage = "en"
+) {
+  const patientSummary =
+    await getPatientSummary(userId);
+
+  const healthIntelligence =
+    buildHealthIntelligence(patientSummary);
+
+  const unifiedRuntime =
+    await buildUnifiedHealthRuntime({
+      userId,
+      patient: patientSummary,
+      language,
+      audience: "general",
+    });
+
+  return {
+    intelligenceSummary: {
+      assessments: patientSummary.assessments,
+      latestCheckIn: patientSummary.latestCheckIn,
+      healthIntelligence,
+    },
+    summary: unifiedRuntime.summary,
   };
 }
