@@ -56,6 +56,7 @@ import {
 } from "@/lib/services/intelligence/intelligence-report-request.service";
 import {
   getFocusedReportInsight,
+  getIntelligenceReportListView,
   getIntelligenceReportStatistics,
 } from "@/lib/selectors/intelligence-page.selectors";
 
@@ -495,8 +496,6 @@ export default function IntelligencePage() {
     });
   }
 
-  const visibleHealthInsights = healthInsights.slice(0, visibleReportsCount);
-
  const {
   totalReportInsights,
   generatedReportsCount,
@@ -550,9 +549,6 @@ export default function IntelligencePage() {
           buttonText: text("Go to Reports", "اذهب إلى التقارير"),
         };
 
-  const hasOlderReports = healthInsights.length > visibleReportsCount;
-  const canShowLessReports = visibleReportsCount > REPORTS_PAGE_SIZE;
-
   const requestedReportIdForFocus =
   typeof window !== "undefined"
     ? getIntelligenceReportRequest(window.location.search).requestedReportId
@@ -562,6 +558,18 @@ export default function IntelligencePage() {
   healthInsights,
   requestedReportId: requestedReportIdForFocus,
   activeGeneratedInsightId,
+});
+
+const {
+  visibleHealthInsights,
+  compactHealthInsights,
+  hasOlderReports,
+  canShowLessReports,
+} = getIntelligenceReportListView({
+  healthInsights,
+  visibleReportsCount,
+  reportsPageSize: REPORTS_PAGE_SIZE,
+  focusedReportInsight,
 });
 
   const focusedReportIsGenerated = Boolean(
@@ -575,10 +583,6 @@ export default function IntelligencePage() {
       generatedResult &&
       activeGeneratedInsightId === focusedReportInsight.id
   );
-
-  const compactHealthInsights = focusedReportInsight
-    ? visibleHealthInsights.filter((item) => item.id !== focusedReportInsight.id)
-    : visibleHealthInsights;
 
   return (
     <main
