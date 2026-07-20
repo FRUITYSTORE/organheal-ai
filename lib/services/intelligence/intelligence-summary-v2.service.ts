@@ -60,6 +60,7 @@ export async function getCombinedIntelligenceSummary(
       latestCheckIn: patientSummary.latestCheckIn,
       healthIntelligence,
     },
+    healthInsights: patientSummary.healthInsights,
     summary: unifiedRuntime.summary,
   };
 }

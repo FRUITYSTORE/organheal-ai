@@ -1,6 +1,5 @@
 import {
   getLatestGeneratedResultByInsightIds,
-  getRecentHealthInsights,
   type HealthInsightSummary,
   type SavedGeneratedIntelligenceResult,
 } from "@/lib/repositories/insight.repository";
@@ -57,6 +56,7 @@ export type IntelligencePageLoaderResult =
 
 type IntelligenceSummaryApiPayload = {
   intelligenceSummary?: LegacyIntelligenceSummary;
+  healthInsights?: HealthInsightSummary[];
   summary?:
     | HealthRuntimeModuleResult<HealthIntelligenceSummaryData>
     | null;
@@ -117,25 +117,24 @@ export async function loadIntelligencePage(
   userId: string,
   language: IntelligencePageLanguage
 ): Promise<IntelligencePageLoaderResult> {
-  const [
-    summariesResult,
-    insightsResult,
-  ] = await Promise.allSettled([
-    loadIntelligenceSummaries(userId, language),
-    getRecentHealthInsights(userId, 20),
-  ]);
+  const summariesResult =
+    await Promise.allSettled([
+      loadIntelligenceSummaries(userId, language),
+    ]);
 
-  if (summariesResult.status === "rejected") {
+  const summaryResult = summariesResult[0];
+
+  if (summaryResult.status === "rejected") {
     return {
       success: false,
       errorMessage:
-        summariesResult.reason instanceof Error
-          ? `Database error: ${summariesResult.reason.message}`
+        summaryResult.reason instanceof Error
+          ? `Database error: ${summaryResult.reason.message}`
           : "Database error",
     };
   }
 
-  if (!summariesResult.value.intelligenceSummary) {
+  if (!summaryResult.value.intelligenceSummary) {
     return {
       success: false,
       errorMessage:
@@ -145,23 +144,14 @@ export async function loadIntelligencePage(
     };
   }
 
-  if (insightsResult.status === "rejected") {
-    return {
-      success: false,
-      errorMessage:
-        language === "ar"
-          ? "تعذر تحميل نتائج الذكاء الصحي."
-          : "Could not load health intelligence results.",
-    };
-  }
 
   const intelligenceSummary =
-    summariesResult.value.intelligenceSummary;
+    summaryResult.value.intelligenceSummary;
 
   const intelligenceSummaryV2 =
-    summariesResult.value.summary ?? null;
+    summaryResult.value.summary ?? null;
 
-  const insights = insightsResult.value;
+  const insights = summaryResult.value.healthInsights ?? [];
 
   const reportIds = insights
     .map((insight) => insight.report_id)
