@@ -127,37 +127,27 @@ export async function loadIntelligencePage(
   userId: string,
   language: IntelligencePageLanguage
 ): Promise<IntelligencePageLoaderResult> {
-  let intelligenceSummary: Awaited<
-    ReturnType<typeof getIntelligenceSummary>
-  >;
+  const [
+    intelligenceSummaryResult,
+    intelligenceSummaryV2Result,
+    insightsResult,
+  ] = await Promise.allSettled([
+    getIntelligenceSummary(userId),
+    loadUnifiedIntelligenceSummary(userId, language),
+    getRecentHealthInsights(userId, 20),
+  ]);
 
-  try {
-    intelligenceSummary =
-      await getIntelligenceSummary(userId);
-  } catch (error) {
+  if (intelligenceSummaryResult.status === "rejected") {
     return {
       success: false,
       errorMessage:
-        error instanceof Error
-          ? `Database error: ${error.message}`
+        intelligenceSummaryResult.reason instanceof Error
+          ? `Database error: ${intelligenceSummaryResult.reason.message}`
           : "Database error",
     };
   }
 
-  const intelligenceSummaryV2 =
-    await loadUnifiedIntelligenceSummary(
-      userId,
-      language
-    );
-
-  let insights: HealthInsightSummary[];
-
-  try {
-    insights = await getRecentHealthInsights(
-      userId,
-      20
-    );
-  } catch {
+  if (insightsResult.status === "rejected") {
     return {
       success: false,
       errorMessage:
@@ -167,6 +157,16 @@ export async function loadIntelligencePage(
     };
   }
 
+  const intelligenceSummary =
+    intelligenceSummaryResult.value;
+
+  const intelligenceSummaryV2 =
+    intelligenceSummaryV2Result.status === "fulfilled"
+      ? intelligenceSummaryV2Result.value
+      : null;
+
+  const insights = insightsResult.value;
+
   const reportIds = insights
     .map((insight) => insight.report_id)
     .filter(
@@ -174,44 +174,42 @@ export async function loadIntelligencePage(
         reportId !== null
     );
 
-  let reports: UploadedReportSummary[] = [];
+  const insightIds = insights.map(
+    (insight) => insight.id
+  );
 
-  if (reportIds.length > 0) {
-    try {
-      reports = await getUploadedReportsByIds(
-        userId,
-        reportIds
-      );
-    } catch {
-      reports = [];
-    }
-  }
+  const [
+    reportsResult,
+    latestGeneratedResultResult,
+  ] = await Promise.allSettled([
+    reportIds.length > 0
+      ? getUploadedReportsByIds(userId, reportIds)
+      : Promise.resolve([] as UploadedReportSummary[]),
+    insightIds.length > 0
+      ? getLatestGeneratedResultByInsightIds(
+          userId,
+          insightIds
+        )
+      : Promise.resolve(
+          null as SavedGeneratedIntelligenceResult | null
+        ),
+  ]);
+
+  const reports =
+    reportsResult.status === "fulfilled"
+      ? reportsResult.value
+      : [];
+
+  const latestGeneratedResult =
+    latestGeneratedResultResult.status === "fulfilled"
+      ? latestGeneratedResultResult.value
+      : null;
 
   const mergedInsights =
     mergeInsightsWithReports(
       insights,
       reports
     );
-
-  let latestGeneratedResult:
-    | SavedGeneratedIntelligenceResult
-    | null = null;
-
-  const insightIds = mergedInsights.map(
-    (insight) => insight.id
-  );
-
-  if (insightIds.length > 0) {
-    try {
-      latestGeneratedResult =
-        await getLatestGeneratedResultByInsightIds(
-          userId,
-          insightIds
-        );
-    } catch {
-      latestGeneratedResult = null;
-    }
-  }
 
   return {
     success: true,
