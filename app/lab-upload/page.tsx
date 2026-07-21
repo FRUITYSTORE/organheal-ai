@@ -130,7 +130,14 @@ export default function LabUploadPage() {
       return;
     }
 
-    setUploadedFiles((data || []) as UploadedFile[]);
+    const loadedFiles = (data || []) as UploadedFile[];
+
+    setUploadedFiles(loadedFiles);
+
+    const newestFile = loadedFiles[0] || null;
+
+    setLatestUploadedFileName(newestFile?.file_name || "");
+    setLatestUploadedReportId(newestFile?.id || null);
 
     const params = new URLSearchParams(window.location.search);
     const wasUploadedFromHomepage = params.get("uploaded") === "1";
@@ -477,30 +484,69 @@ export default function LabUploadPage() {
 
   async function deleteFile(file: UploadedFile) {
     const confirmDelete = window.confirm(
-      text(`Delete "${file.file_name}"?`, `هل تريد حذف "${file.file_name}"؟`)
+      text(
+        `Delete "${file.file_name}" permanently?`,
+        `هل تريد حذف "${file.file_name}" نهائيًا؟`
+      )
     );
 
     if (!confirmDelete) return;
+
+    const { data: userData, error: userError } =
+      await supabase.auth.getUser();
+
+    if (userError || !userData.user) {
+      setMessage(
+        text(
+          "Please login again before deleting this report.",
+          "يرجى تسجيل الدخول مرة أخرى قبل حذف هذا التقرير."
+        )
+      );
+      setUploadStep("error");
+      return;
+    }
+
+    const user = userData.user;
 
     const { error: storageError } = await supabase.storage
       .from("lab-reports")
       .remove([file.file_path]);
 
     if (storageError) {
-      setMessage("Storage delete error: " + storageError.message);
+      setMessage(
+        "Storage delete error: " +
+          storageError.message
+      );
       setUploadStep("error");
       return;
     }
 
-    await supabase.from("health_insights").delete().eq("report_id", file.id);
+    const { error: insightDeleteError } = await supabase
+      .from("health_insights")
+      .delete()
+      .eq("report_id", file.id)
+      .eq("user_id", user.id);
+
+    if (insightDeleteError) {
+      setMessage(
+        "Insight delete error: " +
+          insightDeleteError.message
+      );
+      setUploadStep("error");
+      return;
+    }
 
     const { error: databaseError } = await supabase
       .from("uploaded_lab_files")
       .delete()
-      .eq("id", file.id);
+      .eq("id", file.id)
+      .eq("user_id", user.id);
 
     if (databaseError) {
-      setMessage("Database delete error: " + databaseError.message);
+      setMessage(
+        "Database delete error: " +
+          databaseError.message
+      );
       setUploadStep("error");
       return;
     }
@@ -511,6 +557,7 @@ export default function LabUploadPage() {
         `تم حذف "${file.file_name}" بنجاح.`
       )
     );
+
     setUploadStep("saved");
     await fetchUploadedFiles();
   }
@@ -1416,12 +1463,29 @@ export default function LabUploadPage() {
                       {text("Analyze This Report", "تحليل هذا التقرير")}
                     </Link>
 
+
                     <button
                       type="button"
                       className="secondaryBtn"
                       onClick={() => openFile(focusedUploadFile.file_path)}
                     >
                       {text("Open File", "فتح الملف")}
+                    </button>
+
+                    <button
+                      type="button"
+                      className="secondaryBtn"
+                      onClick={() => deleteFile(focusedUploadFile)}
+                      aria-label={text(
+                        `Delete ${focusedUploadFile.file_name}`,
+                        `حذف ${focusedUploadFile.file_name}`
+                      )}
+                      style={{
+                        color: "#b91c1c",
+                        borderColor: "rgba(185, 28, 28, 0.32)",
+                      }}
+                    >
+                      {text("Delete Report", "حذف التقرير")}
                     </button>
 
                     <Link href="/reports" className="secondaryBtn">
