@@ -961,38 +961,6 @@ const visibleCompactReports = showAllReports
             </section>
           </>
         )}
-
-        <section className="ohActionPanel">
-          <div className="ohCardHeader" style={{ marginBottom: 0 }}>
-            <div>
-              <p className="ohMetricLabel">{text("Clear journey", "مسار واضح")}</p>
-
-              <h2 className="ohCardTitle">
-                {text(
-                  "Reports are for documents, intelligence is for analysis, and Health Plan is for follow-up.",
-                  "التقارير للمستندات، الذكاء للتحليل، وخطة الصحة للمتابعة."
-                )}
-              </h2>
-
-              <p className="ohCardText">
-                {text(
-                  "This keeps your flow simple: upload a report, analyze it, review the result, then continue to your health plan.",
-                  "هذا يجعل المسار بسيطًا: ارفع تقريرًا، حلّله، راجع النتيجة، ثم تابع إلى خطة الصحة."
-                )}
-              </p>
-            </div>
-
-            <div className="ohButtonRow">
-              <Link href="/lab-upload" className="secondaryBtn">
-                {text("Upload Report", "رفع تقرير")}
-              </Link>
-
-              <Link href="/health-plan" className="primaryBtn">
-                {text("Open Health Plan", "فتح خطة الصحة")}
-              </Link>
-            </div>
-          </div>
-        </section>
       </div>
     </main>
   );
