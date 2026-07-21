@@ -2,13 +2,15 @@ import {
   NextRequest,
   NextResponse,
 } from "next/server";
+import {
+  createClient,
+} from "@supabase/supabase-js";
 
 import {
   getCombinedIntelligenceSummary,
 } from "@/lib/services/intelligence/intelligence-summary-v2.service";
 
 type IntelligenceSummaryRequest = {
-  userId?: string;
   language?: "en" | "ar";
 };
 
@@ -16,33 +18,138 @@ export async function POST(
   request: NextRequest
 ) {
   try {
-    const body =
-      (await request.json()) as
-        IntelligenceSummaryRequest;
+    const authorizationHeader =
+      request.headers.get("authorization") || "";
 
-    if (!body.userId) {
+    const token =
+      authorizationHeader.startsWith("Bearer ")
+        ? authorizationHeader
+            .replace("Bearer ", "")
+            .trim()
+        : "";
+
+    if (!token) {
       return NextResponse.json(
         {
           error:
-            "User ID is required to build the intelligence summary.",
+            "Authentication is required to build the intelligence summary.",
         },
         {
-          status: 400,
+          status: 401,
         }
       );
     }
 
-    const result =
-      await getCombinedIntelligenceSummary(
-        body.userId,
-        body.language === "ar"
-          ? "ar"
-          : "en"
+    const supabaseUrl =
+      process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+    const supabaseKey =
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error(
+        "Supabase environment variables are missing."
+      );
+    }
+
+    const authenticatedSupabase =
+      createClient(
+        supabaseUrl,
+        supabaseKey,
+        {
+          global: {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+          auth: {
+            persistSession: false,
+            autoRefreshToken: false,
+          },
+        }
       );
 
-    return NextResponse.json(
-      result
-    );
+    const {
+      data: authData,
+      error: authError,
+    } =
+      await authenticatedSupabase.auth.getUser(
+        token
+      );
+
+    if (authError || !authData.user) {
+      return NextResponse.json(
+        {
+          error:
+            "Your session is invalid or has expired.",
+        },
+        {
+          status: 401,
+        }
+      );
+    }
+
+    const body =
+      (await request.json()) as
+        IntelligenceSummaryRequest;
+
+    const userId = authData.user.id;
+    const language =
+      body.language === "ar"
+        ? "ar"
+        : "en";
+
+    const [
+      combinedSummary,
+      healthInsightsResult,
+      uploadedReportsResult,
+    ] = await Promise.all([
+      getCombinedIntelligenceSummary(
+        userId,
+        language
+      ),
+      authenticatedSupabase
+        .from("health_insights")
+        .select(
+          "id, report_id, insight_title, summary, key_findings, recommendations, doctor_brief, ai_status, risk_level, next_best_action, report_type, created_at"
+        )
+        .eq("user_id", userId)
+        .order("created_at", {
+          ascending: false,
+        })
+        .limit(20),
+      authenticatedSupabase
+        .from("uploaded_lab_files")
+        .select(
+          "id, file_name, file_path, report_type, extraction_status, extracted_text, created_at, extracted_at"
+        )
+        .eq("user_id", userId)
+        .order("created_at", {
+          ascending: false,
+        })
+        .limit(20),
+    ]);
+
+    if (healthInsightsResult.error) {
+      throw new Error(
+        healthInsightsResult.error.message
+      );
+    }
+
+    if (uploadedReportsResult.error) {
+      throw new Error(
+        uploadedReportsResult.error.message
+      );
+    }
+
+    return NextResponse.json({
+      ...combinedSummary,
+      healthInsights:
+        healthInsightsResult.data || [],
+      uploadedReports:
+        uploadedReportsResult.data || [],
+    });
   } catch (error) {
     console.error(
       "Intelligence summary error:",

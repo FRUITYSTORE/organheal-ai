@@ -216,11 +216,28 @@ export default function LabUploadPage() {
     addFiles(Array.from(event.dataTransfer.files || []));
   }
 
-  function removeSelectedFile(index: number) {
-    setSelectedFiles((current) => current.filter((_, itemIndex) => itemIndex !== index));
+  function getSelectedFileKey(file: File) {
+    return `${file.name}-${file.size}-${file.lastModified}`;
   }
 
-  async function uploadFile() {
+  function removeSelectedFile(fileToRemove: File) {
+    if (uploading) {
+      return;
+    }
+
+    setSelectedFiles((current) =>
+      current.filter(
+        (file) =>
+          getSelectedFileKey(file) !==
+          getSelectedFileKey(fileToRemove)
+      )
+    );
+
+    setMessage("");
+    setUploadStep("idle");
+  }
+
+  async function uploadFile(analyzeAfterSave = false) {
     if (selectedFiles.length === 0) {
       setMessage(
         text(
@@ -327,8 +344,25 @@ export default function LabUploadPage() {
         return;
       }
 
-      if (insertedFile) {
-        await supabase.from("health_insights").insert([
+      if (!insertedFile) {
+        await supabase.storage
+          .from("lab-reports")
+          .remove([savedFilePath]);
+
+        setMessage(
+          text(
+            "The uploaded report could not be saved. Please try again.",
+            "تعذر حفظ التقرير المرفوع. يرجى المحاولة مرة أخرى."
+          )
+        );
+        setUploading(false);
+        setUploadStep("error");
+        return;
+      }
+
+      const { error: insightError } = await supabase
+        .from("health_insights")
+        .insert([
           {
             user_id: user.id,
             report_id: insertedFile.id,
@@ -347,6 +381,27 @@ export default function LabUploadPage() {
               "Analyze this report to generate structured report intelligence.",
           },
         ]);
+
+      if (insightError) {
+        await supabase
+          .from("uploaded_lab_files")
+          .delete()
+          .eq("id", insertedFile.id)
+          .eq("user_id", user.id);
+
+        await supabase.storage
+          .from("lab-reports")
+          .remove([savedFilePath]);
+
+        setMessage(
+          text(
+            "The report could not be prepared for analysis. Nothing was saved. Please try again.",
+            "تعذر تجهيز التقرير للتحليل. لم يتم حفظ شيء. يرجى المحاولة مرة أخرى."
+          )
+        );
+        setUploading(false);
+        setUploadStep("error");
+        return;
       }
 
       uploadedCount++;
@@ -1051,8 +1106,11 @@ export default function LabUploadPage() {
 
               {selectedFiles.length > 0 && (
                 <div className="ohTimeline">
-                  {selectedFiles.map((file, index) => (
-                    <div className="ohTimelineItem" key={`${file.name}-${index}`}>
+                  {selectedFiles.map((file) => (
+                    <div
+                      className="ohTimelineItem"
+                      key={getSelectedFileKey(file)}
+                    >
                       <span className="ohTimelineDot" />
 
                       <div>
@@ -1065,7 +1123,12 @@ export default function LabUploadPage() {
                       <button
                         type="button"
                         className="secondaryBtn"
-                        onClick={() => removeSelectedFile(index)}
+                        onClick={() => removeSelectedFile(file)}
+                        disabled={uploading}
+                        aria-label={text(
+                          `Remove ${file.name}`,
+                          `إزالة ${file.name}`
+                        )}
                       >
                         {text("Remove", "إزالة")}
                       </button>
@@ -1077,24 +1140,74 @@ export default function LabUploadPage() {
               <div className="ohButtonRow">
                 <button
                   type="button"
-                  className="primaryBtn"
-                  onClick={uploadFile}
-                  disabled={uploading}
+                  className="secondaryBtn"
+                  onClick={() => uploadFile(false)}
+                  disabled={
+                    uploading ||
+                    selectedFiles.length === 0
+                  }
                 >
-                  {uploading ? text("Saving...", "جاري الحفظ...") : text("Save Report", "حفظ التقرير")}
+                  {uploading
+                    ? text(
+                        "Saving...",
+                        "جاري الحفظ..."
+                      )
+                    : text(
+                        "Save Report",
+                        "حفظ التقرير"
+                      )}
                 </button>
 
-                <Link href="/reports" className="secondaryBtn">
-                  {text("Reports Library", "مكتبة التقارير")}
-                </Link>
+                {selectedFiles.length > 0 ? (
+                  <button
+                    type="button"
+                    className="primaryBtn"
+                    onClick={() => uploadFile(true)}
+                    disabled={uploading}
+                  >
+                    {uploading
+                      ? text(
+                          "Saving and preparing...",
+                          "جاري الحفظ والتجهيز..."
+                        )
+                      : text(
+                          "Save & Analyze",
+                          "حفظ وتحليل"
+                        )}
+                  </button>
+                ) : latestUploadedReportId ? (
+                  <Link
+                    href={getReportAnalysisHref(
+                      latestUploadedReportId
+                    )}
+                    className="primaryBtn"
+                  >
+                    {text(
+                      "Analyze Last Saved Report",
+                      "تحليل آخر تقرير محفوظ"
+                    )}
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    className="secondaryBtn"
+                    disabled
+                  >
+                    {text(
+                      "Select a Report to Analyze",
+                      "اختر تقريرًا للتحليل"
+                    )}
+                  </button>
+                )}
 
                 <Link
-                  href={getReportAnalysisHref(latestUploadedReportId)}
-                  className={latestUploadedReportId ? "primaryBtn" : "secondaryBtn"}
+                  href="/reports"
+                  className="secondaryBtn"
                 >
-                  {latestUploadedReportId
-                    ? text("Analyze This Report", "تحليل هذا التقرير")
-                    : text("Analyze Report", "تحليل التقرير")}
+                  {text(
+                    "Reports Library",
+                    "مكتبة التقارير"
+                  )}
                 </Link>
               </div>
 

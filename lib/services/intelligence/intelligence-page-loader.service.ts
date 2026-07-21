@@ -1,4 +1,7 @@
 import {
+  supabase,
+} from "@/lib/supabase";
+import {
   getLatestGeneratedResultByInsightIds,
   type HealthInsightSummary,
   type SavedGeneratedIntelligenceResult,
@@ -89,23 +92,48 @@ async function loadIntelligenceSummaries(
   userId: string,
   language: IntelligencePageLanguage
 ): Promise<IntelligenceSummaryApiPayload> {
+  const {
+    data: sessionData,
+    error: sessionError,
+  } = await supabase.auth.getSession();
+
+  const accessToken =
+    sessionData.session?.access_token;
+
+  if (sessionError || !accessToken) {
+    throw new Error(
+      "Your session has expired. Please sign in again."
+    );
+  }
+
   const response = await fetch(
     "/api/intelligence-summary",
     {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization:
+          `Bearer ${accessToken}`,
       },
       body: JSON.stringify({
-        userId,
         language,
       }),
     }
   );
 
   if (!response.ok) {
+    const errorPayload =
+      (await response
+        .json()
+        .catch(() => null)) as
+        | {
+            error?: string;
+          }
+        | null;
+
     throw new Error(
-      "Could not load the intelligence summaries."
+      errorPayload?.error ||
+        "Could not load the intelligence summaries."
     );
   }
 

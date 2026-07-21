@@ -189,3 +189,43 @@ export async function updateHealthInsight(
     throw new Error(error.message);
   }
 }
+export type PersistReportIntelligenceAtomicInput = {
+  insightId: number;
+  reportId: number | null;
+  medicalCategory: string | null;
+  aiStatus: string | null;
+  riskLevel: string | null;
+  summary: string | null;
+  keyFindings: string | null;
+  riskSignals: string | null;
+  recommendations: string | null;
+  doctorBrief: string | null;
+  nextBestAction: string | null;
+  generatedResult: unknown;
+};
+
+export async function persistReportIntelligenceAtomic(
+  input: PersistReportIntelligenceAtomicInput
+): Promise<void> {
+  const { error } = await supabase.rpc(
+    "persist_report_intelligence",
+    {
+      p_insight_id: input.insightId,
+      p_report_id: input.reportId,
+      p_medical_category: input.medicalCategory,
+      p_ai_status: input.aiStatus,
+      p_risk_level: input.riskLevel,
+      p_summary: input.summary,
+      p_key_findings: input.keyFindings,
+      p_risk_signals: input.riskSignals,
+      p_recommendations: input.recommendations,
+      p_doctor_brief: input.doctorBrief,
+      p_next_best_action: input.nextBestAction,
+      p_generated_result: input.generatedResult,
+    }
+  );
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}

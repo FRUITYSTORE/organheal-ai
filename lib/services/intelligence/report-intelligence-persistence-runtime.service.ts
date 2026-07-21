@@ -1,6 +1,5 @@
 import {
-  saveGeneratedIntelligenceResult,
-  updateHealthInsight,
+  persistReportIntelligenceAtomic,
 } from "@/lib/repositories/insight.repository";
 
 type PersistReportIntelligenceInput = {
@@ -21,29 +20,52 @@ export type PersistReportIntelligenceResult =
       error: unknown;
     };
 
+function getNullableString(
+  value: unknown
+): string | null {
+  return typeof value === "string"
+    ? value
+    : null;
+}
+
 export async function persistReportIntelligence({
-  userId,
   insightId,
   reportId,
   intelligence,
   generatedResult,
 }: PersistReportIntelligenceInput): Promise<PersistReportIntelligenceResult> {
   try {
-    await updateHealthInsight(userId, insightId, intelligence);
-  } catch (error) {
-    return {
-      success: false,
-      stage: "health-insight",
-      error,
-    };
-  }
-
-  try {
-    await saveGeneratedIntelligenceResult({
-      userId,
+    await persistReportIntelligenceAtomic({
       insightId,
       reportId,
-      result: generatedResult,
+      medicalCategory: getNullableString(
+        intelligence.medical_category
+      ),
+      aiStatus: getNullableString(
+        intelligence.ai_status
+      ),
+      riskLevel: getNullableString(
+        intelligence.risk_level
+      ),
+      summary: getNullableString(
+        intelligence.summary
+      ),
+      keyFindings: getNullableString(
+        intelligence.key_findings
+      ),
+      riskSignals: getNullableString(
+        intelligence.risk_signals
+      ),
+      recommendations: getNullableString(
+        intelligence.recommendations
+      ),
+      doctorBrief: getNullableString(
+        intelligence.doctor_brief
+      ),
+      nextBestAction: getNullableString(
+        intelligence.next_best_action
+      ),
+      generatedResult,
     });
   } catch (error) {
     return {
