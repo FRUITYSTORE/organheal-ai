@@ -674,9 +674,15 @@ export default function Home() {
               </p>
 
               <div className="ohButtonRow" style={{ marginTop: "24px" }}>
-                <Link href="/signup" className="primaryBtn">
-                  {text("Create Free Account", "إنشاء حساب مجاني")}
-                </Link>
+                {isLoggedIn ? (
+                  <Link href="/dashboard" className="primaryBtn">
+                    {text("Open Dashboard", "فتح لوحة التحكم")}
+                  </Link>
+                ) : (
+                  <Link href="/signup" className="primaryBtn">
+                    {text("Create Free Account", "إنشاء حساب مجاني")}
+                  </Link>
+                )}
 
                 <Link href="/features" className="secondaryBtn">
                   {text("Explore Platform Features", "استكشاف ميزات المنصة")}
