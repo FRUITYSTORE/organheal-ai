@@ -22,6 +22,8 @@ type InsightCard = {
   label: string;
   title: string;
   description: string;
+  href: string;
+  actionLabel: string;
 };
 
 function getStoredLanguage(): Language {
@@ -208,6 +210,8 @@ export default function Home() {
         "Understand common values such as LDL, HDL, HbA1c, creatinine, vitamin D, and liver enzymes.",
         "افهم مؤشرات مثل LDL، HDL، HbA1c، الكرياتينين، فيتامين D، وإنزيمات الكبد."
       ),
+      href: "/library",
+      actionLabel: text("Explore Health Topics", "استكشف المواضيع الصحية"),
     },
     {
       label: "REPORT",
@@ -216,6 +220,8 @@ export default function Home() {
         "Learn how to read abnormal flags, reference ranges, summary language, and trend comments.",
         "تعلّم قراءة العلامات غير الطبيعية، القيم المرجعية، لغة الملخص، وملاحظات الاتجاهات."
       ),
+      href: "/library/reports",
+      actionLabel: text("Learn About Reports", "تعلّم فهم التقارير"),
     },
     {
       label: "VISIT",
@@ -224,6 +230,8 @@ export default function Home() {
         "Prepare better questions and organize important results before your appointment.",
         "حضّر أسئلة أفضل ونظّم النتائج المهمة قبل موعدك."
       ),
+      href: "/library/doctor-prep",
+      actionLabel: text("Prepare for Your Visit", "استعد لزيارة الطبيب"),
     },
   ];
 
@@ -882,6 +890,15 @@ export default function Home() {
                   {insight.title}
                 </h3>
                 <p className="ohCardText">{insight.description}</p>
+
+                <div
+                  className="ohButtonRow"
+                  style={{ marginTop: "auto", paddingTop: "16px" }}
+                >
+                  <Link href={insight.href} className="secondaryBtn">
+                    {insight.actionLabel}
+                  </Link>
+                </div>
               </article>
             ))}
           </div>
