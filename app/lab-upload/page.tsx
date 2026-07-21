@@ -1204,41 +1204,33 @@ export default function LabUploadPage() {
               )}
 
               <div className="ohButtonRow">
-                <button
-                  type="button"
-                  className="secondaryBtn"
-                  onClick={() => uploadFile(false)}
-                  disabled={
-                    uploading ||
-                    selectedFiles.length === 0
-                  }
-                >
-                  {uploading
-                    ? text(
-                        "Saving...",
-                        "جاري الحفظ..."
-                      )
-                    : text(
-                        "Save Report",
-                        "حفظ التقرير"
-                      )}
-                </button>
-
                 {selectedFiles.length > 0 ? (
                   <button
                     type="button"
                     className="primaryBtn"
-                    onClick={() => uploadFile(true)}
+                    onClick={() =>
+                      uploadFile(selectedFiles.length === 1)
+                    }
                     disabled={uploading}
                   >
                     {uploading
+                      ? selectedFiles.length === 1
+                        ? text(
+                            "Saving and preparing...",
+                            "جاري الحفظ والتجهيز..."
+                          )
+                        : text(
+                            "Saving reports...",
+                            "جاري حفظ التقارير..."
+                          )
+                      : selectedFiles.length === 1
                       ? text(
-                          "Saving and preparing...",
-                          "جاري الحفظ والتجهيز..."
-                        )
-                      : text(
                           "Save & Analyze",
                           "حفظ وتحليل"
+                        )
+                      : text(
+                          "Save Reports",
+                          "حفظ التقارير"
                         )}
                   </button>
                 ) : latestUploadedReportId ? (
@@ -1260,8 +1252,8 @@ export default function LabUploadPage() {
                     disabled
                   >
                     {text(
-                      "Select a Report to Analyze",
-                      "اختر تقريرًا للتحليل"
+                      "Select a Report",
+                      "اختر تقريرًا"
                     )}
                   </button>
                 )}
