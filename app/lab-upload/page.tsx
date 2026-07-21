@@ -995,11 +995,17 @@ export default function LabUploadPage() {
               <div className="ohDivider" />
 
               <Link
-                href={latestUploadedReportId ? getReportAnalysisHref(latestUploadedReportId) : stats.total === 0 ? "/reports" : "/intelligence"}
+                href={
+                  stats.total === 0
+                    ? "#medical-upload-panel"
+                    : latestUploadedReportId
+                    ? getReportAnalysisHref(latestUploadedReportId)
+                    : "/intelligence"
+                }
                 className="primaryBtn"
               >
                 {stats.total === 0
-                  ? text("Reports Library", "مكتبة التقارير")
+                  ? text("Upload Report", "رفع تقرير")
                   : text("Analyze Report", "تحليل التقرير")}
               </Link>
             </div>
