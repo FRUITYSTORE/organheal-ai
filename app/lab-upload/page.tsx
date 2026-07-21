@@ -1709,10 +1709,21 @@ export default function LabUploadPage() {
 
         .labUploadFinalV3 h2,
         .labUploadFinalV3 h3,
-        .labUploadFinalV3 strong {
-          color: #0f172a !important;
-          font-weight: 950 !important;
-        }
+.labUploadFinalV3 strong {
+  color: #0f172a !important;
+  font-weight: 950 !important;
+}
+
+.labUploadFinalV3 .uploadFocusPanel h3,
+.labUploadFinalV3 .uploadFocusPanel .ohCardTitle,
+.labUploadFinalV3 .uploadFocusPanel strong {
+  color: #ffffff !important;
+}
+
+.labUploadFinalV3 .uploadFocusPanel .ohMetricLabel,
+.labUploadFinalV3 .uploadFocusPanel .ohCardText {
+  color: rgba(226,232,240,.92) !important;
+}
 
         .labUploadFinalV3 p,
         .labUploadFinalV3 small,
