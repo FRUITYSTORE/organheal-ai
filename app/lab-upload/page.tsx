@@ -1505,25 +1505,7 @@ export default function LabUploadPage() {
                   </div>
                 </div>
 
-                <aside className="uploadFocusPanel">
-                  <p className="ohMetricLabel">
-                    {text("Clear next step", "الخطوة التالية بوضوح")}
-                  </p>
 
-                  <h3 className="ohCardTitle">
-                    {text(
-                      "Upload is only the first step.",
-                      "الرفع هو الخطوة الأولى فقط."
-                    )}
-                  </h3>
-
-                  <p className="ohCardText">
-                    {text(
-                      "After saving a report, the main action should be Analyze This Report. Reports Library is only for history and review.",
-                      "بعد حفظ التقرير، الإجراء الرئيسي يجب أن يكون تحليل هذا التقرير. مكتبة التقارير فقط للسجل والمراجعة."
-                    )}
-                  </p>
-                </aside>
               </div>
 
               <div className="compactUploadHistory">
