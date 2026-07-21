@@ -1597,47 +1597,7 @@ export default function LabUploadPage() {
           </div>
         </section>
 
-        <section className="ohCard">
-          <div className="ohCardHeader">
-            <div>
-              <p className="ohMetricLabel">
-                {text("Recommended Path", "المسار المقترح")}
-              </p>
 
-              <h2 className="ohCardTitle">
-                {text(
-                  "From upload to health analysis",
-                  "من الرفع إلى التحليل الصحي"
-                )}
-              </h2>
-
-              <p className="ohCardText">
-                {text(
-                  "Save the report, analyze it when ready, then continue to your follow-up plan.",
-                  "احفظ التقرير، شغّل الاستخراج عند الحاجة، حلّل آخر تقرير، ثم انتقل إلى خطة المتابعة."
-                )}
-              </p>
-            </div>
-          </div>
-
-          <div className="ohButtonRow">
-            <Link href="/reports" className="secondaryBtn">
-              {text("Reports", "التقارير")}
-            </Link>
-
-            <Link href={getReportAnalysisHref(latestUploadedReportId)} className="primaryBtn">
-              {text("Analyze Report", "تحليل التقرير")}
-            </Link>
-
-            <Link href="/health-plan" className="secondaryBtn">
-              {text("Health Plan", "الخطة")}
-            </Link>
-
-            <Link href="/dashboard" className="secondaryBtn">
-              {text("Dashboard", "لوحة التحكم")}
-            </Link>
-          </div>
-        </section>
       </div>
       <style>{`
         /* ORGANHEAL_LAB_UPLOAD_FINAL_V3 */
