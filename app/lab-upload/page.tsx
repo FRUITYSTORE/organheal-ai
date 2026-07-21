@@ -267,6 +267,10 @@ export default function LabUploadPage() {
       return;
     }
 
+    const filesToUpload = [...selectedFiles];
+    const shouldAnalyzeSingleReport =
+      analyzeAfterSave && filesToUpload.length === 1;
+
     setUploading(true);
     setUploadStep("uploading");
     setMessage("");
@@ -287,8 +291,9 @@ export default function LabUploadPage() {
 
     const user = userData.user;
     let uploadedCount = 0;
+    let lastUploadedReportId: number | null = null;
 
-    for (const file of selectedFiles) {
+    for (const file of filesToUpload) {
       const safeName = getSafeStorageFileName(file.name);
       const filePath = `${user.id}/${Date.now()}-${safeName}`;
 
@@ -412,6 +417,7 @@ export default function LabUploadPage() {
       }
 
       uploadedCount++;
+      lastUploadedReportId = insertedFile.id;
       setLatestUploadedFileName(file.name);
       setLatestUploadedReportId(insertedFile.id);
     }
@@ -419,14 +425,30 @@ export default function LabUploadPage() {
     setSelectedFiles([]);
     setUploading(false);
     setUploadStep("saved");
-    setMessage(
-      text(
-        `${uploadedCount} report(s) uploaded successfully. Next step: analyze this report now.`,
-        `تم رفع ${uploadedCount} تقرير بنجاح. الخطوة التالية: حلّل هذا التقرير الآن.`
-      )
-    );
+
+    if (analyzeAfterSave && filesToUpload.length > 1) {
+      setMessage(
+        text(
+          `${uploadedCount} reports were saved successfully. Choose the report you want to analyze from the list below.`,
+          `تم حفظ ${uploadedCount} تقارير بنجاح. اختر التقرير الذي تريد تحليله من القائمة أدناه.`
+        )
+      );
+    } else {
+      setMessage(
+        text(
+          `${uploadedCount} report(s) uploaded successfully.`,
+          `تم رفع ${uploadedCount} تقرير بنجاح.`
+        )
+      );
+    }
 
     await fetchUploadedFiles();
+
+    if (shouldAnalyzeSingleReport && lastUploadedReportId !== null) {
+      window.location.assign(
+        getReportAnalysisHref(lastUploadedReportId)
+      );
+    }
   }
 
   async function runExtraction(file: UploadedFile) {
