@@ -687,16 +687,6 @@ const visibleCompactReports = showAllReports
                 <Link href="/lab-upload" className="primaryBtn">
                   {text("Upload Report", "رفع تقرير")}
                 </Link>
-
-                <Link href={featuredReport ? getAnalysisHref(featuredReport) : "/lab-upload"} className="secondaryBtn">
-                  {featuredReport?.hasSavedAnalysis
-                    ? text("Review Latest Analysis", "مراجعة آخر تحليل")
-                    : text("Analyze Next Report", "تحليل التقرير التالي")}
-                </Link>
-
-                <Link href="/health-plan" className="secondaryBtn">
-                  {text("Health Plan", "خطة الصحة")}
-                </Link>
               </div>
             </div>
 
