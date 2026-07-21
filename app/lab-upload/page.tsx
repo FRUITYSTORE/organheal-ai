@@ -959,15 +959,6 @@ export default function LabUploadPage() {
                 <Link href="/reports" className="secondaryBtn">
                   {text("Reports Library", "مكتبة التقارير")}
                 </Link>
-
-                <Link
-                  href={getReportAnalysisHref(latestUploadedReportId)}
-                  className={latestUploadedReportId ? "primaryBtn" : "secondaryBtn"}
-                >
-                  {latestUploadedReportId
-                    ? text("Analyze This Report", "تحليل هذا التقرير")
-                    : text("Analyze Report", "تحليل التقرير")}
-                </Link>
               </div>
             </div>
 
