@@ -108,12 +108,6 @@ export default function FeaturedReportCard({
             ) : null}
           </div>
         </div>
-
-        <aside className="featuredStatusPanel">
-          <p className="ohMetricLabel">{labels.sideLabel}</p>
-          <h3 className="ohCardTitle">{labels.sideTitle}</h3>
-          <p className="ohCardText">{labels.sideText}</p>
-        </aside>
       </div>
     </section>
   );

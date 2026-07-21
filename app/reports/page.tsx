@@ -377,10 +377,7 @@ const visibleCompactReports = showAllReports
         }
 
         .featuredReportGrid {
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) minmax(280px, 0.52fr);
-          gap: 20px;
-          align-items: stretch;
+          display: block;
         }
 
         .featuredStatusPanel {
