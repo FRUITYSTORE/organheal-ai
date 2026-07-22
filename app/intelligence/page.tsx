@@ -277,6 +277,11 @@ export default function IntelligencePage() {
 
     const currentLanguage =
       getIntelligenceStoredLanguage();
+      const requestedReportId =
+  typeof window !== "undefined"
+    ? getIntelligenceReportRequest(window.location.search)
+        .requestedReportId
+    : undefined;
     const currentIsArabic =
       currentLanguage === "ar";
 
@@ -289,10 +294,11 @@ export default function IntelligencePage() {
     }
 
     const pageResult =
-      await loadIntelligencePage(
-        sessionResult.userId,
-        currentLanguage
-      );
+  await loadIntelligencePage(
+    sessionResult.userId,
+    currentLanguage,
+    requestedReportId
+  );
 
     if (!pageResult.success) {
       setMessage(pageResult.errorMessage);

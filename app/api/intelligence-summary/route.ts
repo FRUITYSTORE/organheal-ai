@@ -12,6 +12,7 @@ import {
 
 type IntelligenceSummaryRequest = {
   language?: "en" | "ar";
+  reportId?: number;
 };
 
 export async function POST(
@@ -99,37 +100,61 @@ export async function POST(
       body.language === "ar"
         ? "ar"
         : "en";
+const requestedReportId =
+  typeof body.reportId === "number" &&
+  body.reportId > 0
+    ? body.reportId
+    : null;
+    let healthInsightsQuery = authenticatedSupabase
+  .from("health_insights")
+  .select(
+    "id, report_id, insight_title, summary, key_findings, recommendations, doctor_brief, ai_status, risk_level, next_best_action, report_type, created_at"
+  )
+  .eq("user_id", userId);
 
-    const [
-      combinedSummary,
-      healthInsightsResult,
-      uploadedReportsResult,
-    ] = await Promise.all([
-      getCombinedIntelligenceSummary(
-        userId,
-        language
-      ),
-      authenticatedSupabase
-        .from("health_insights")
-        .select(
-          "id, report_id, insight_title, summary, key_findings, recommendations, doctor_brief, ai_status, risk_level, next_best_action, report_type, created_at"
-        )
-        .eq("user_id", userId)
-        .order("created_at", {
-          ascending: false,
-        })
-        .limit(20),
-      authenticatedSupabase
-        .from("uploaded_lab_files")
-        .select(
-          "id, file_name, file_path, report_type, extraction_status, extracted_text, created_at, extracted_at"
-        )
-        .eq("user_id", userId)
-        .order("created_at", {
-          ascending: false,
-        })
-        .limit(20),
-    ]);
+let uploadedReportsQuery = authenticatedSupabase
+  .from("uploaded_lab_files")
+  .select(
+    "id, file_name, file_path, report_type, extraction_status, extracted_text, created_at, extracted_at"
+  )
+  .eq("user_id", userId);
+
+if (requestedReportId) {
+  healthInsightsQuery = healthInsightsQuery.eq(
+    "report_id",
+    requestedReportId
+  );
+
+  uploadedReportsQuery = uploadedReportsQuery.eq(
+    "id",
+    requestedReportId
+  );
+} else {
+  healthInsightsQuery = healthInsightsQuery
+    .order("created_at", {
+      ascending: false,
+    })
+    .limit(20);
+
+  uploadedReportsQuery = uploadedReportsQuery
+    .order("created_at", {
+      ascending: false,
+    })
+    .limit(20);
+}
+
+const [
+  combinedSummary,
+  healthInsightsResult,
+  uploadedReportsResult,
+] = await Promise.all([
+  getCombinedIntelligenceSummary(
+    userId,
+    language
+  ),
+  healthInsightsQuery,
+  uploadedReportsQuery,
+]);
 
     if (healthInsightsResult.error) {
       throw new Error(

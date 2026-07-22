@@ -3,6 +3,10 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import {
+  getReportsLibrary,
+  type ReportsLibraryCard,
+} from "@/lib/services/reports/reports.service";
 
 type Language = "en" | "ar";
 
@@ -12,11 +16,6 @@ type TrustCard = {
   description: string;
 };
 
-type StepCard = {
-  number: string;
-  title: string;
-  description: string;
-};
 
 type InsightCard = {
   label: string;
@@ -53,6 +52,9 @@ export default function Home() {
   const [heroAnswer, setHeroAnswer] = useState("");
   const [heroLoading, setHeroLoading] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [latestReport, setLatestReport] =
+    useState<ReportsLibraryCard | null>(null);
+  const [continuationLoading, setContinuationLoading] = useState(false);
 
   const isArabic = language === "ar";
 
@@ -81,9 +83,46 @@ export default function Home() {
     return isArabic ? ar : en;
   }
 
+  function formatHomeDate(value?: string | null) {
+    if (!value) {
+      return text("Date unavailable", "التاريخ غير متوفر");
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return text("Date unavailable", "التاريخ غير متوفر");
+    }
+
+    return new Intl.DateTimeFormat(isArabic ? "ar" : "en", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    }).format(date);
+  }
+
   async function checkUser() {
     const { data } = await supabase.auth.getUser();
-    setIsLoggedIn(Boolean(data.user));
+    const user = data.user;
+
+    setIsLoggedIn(Boolean(user));
+
+    if (!user) {
+      setLatestReport(null);
+      setContinuationLoading(false);
+      return;
+    }
+
+    setContinuationLoading(true);
+
+    try {
+      const reports = await getReportsLibrary(user.id, 1);
+      setLatestReport(reports[0] ?? null);
+    } catch {
+      setLatestReport(null);
+    } finally {
+      setContinuationLoading(false);
+    }
   }
 
   async function signOut() {
@@ -167,73 +206,60 @@ export default function Home() {
     },
   ];
 
-  const steps: StepCard[] = [
-    {
-      number: "01",
-      title: text("Build your health profile", "ابنِ ملفك الصحي"),
-      description: text(
-        "Start with guided information that helps organize your health context.",
-        "ابدأ بمعلومات موجهة تساعد على تنظيم سياقك الصحي."
-      ),
-    },
-    {
-      number: "02",
-      title: text("Add reports and signals", "أضف التقارير والمؤشرات"),
-      description: text(
-        "Connect lab reports, medical documents, check-ins, and health priorities.",
-        "اربط تقارير المختبر، المستندات الطبية، التحديثات، والأولويات الصحية."
-      ),
-    },
-    {
-      number: "03",
-      title: text("Generate health understanding", "ولّد فهمًا صحيًا"),
-      description: text(
-        "Turn health data into clearer summaries, learning points, and doctor-review questions.",
-        "حوّل البيانات الصحية إلى ملخصات أوضح، نقاط تعليمية، وأسئلة لمراجعة الطبيب."
-      ),
-    },
-    {
-      number: "04",
-      title: text("Continue with clarity", "تابع بوضوح"),
-      description: text(
-        "Use your workspace to keep reports, learning, summaries, and follow-up context organized.",
-        "استخدم مساحتك لتنظيم التقارير والتعلّم والملخصات وسياق المتابعة."
-      ),
-    },
-  ];
-
   const insightCards: InsightCard[] = [
-    {
-      label: "LAB",
-      title: text("Lab marker learning", "تعلّم مؤشرات المختبر"),
-      description: text(
-        "Understand common values such as LDL, HDL, HbA1c, creatinine, vitamin D, and liver enzymes.",
-        "افهم مؤشرات مثل LDL، HDL، HbA1c، الكرياتينين، فيتامين D، وإنزيمات الكبد."
-      ),
-      href: "/library",
-      actionLabel: text("Explore Health Topics", "استكشف المواضيع الصحية"),
-    },
-    {
-      label: "REPORT",
-      title: text("Report understanding", "فهم التقارير"),
-      description: text(
-        "Learn how to read abnormal flags, reference ranges, summary language, and trend comments.",
-        "تعلّم قراءة العلامات غير الطبيعية، القيم المرجعية، لغة الملخص، وملاحظات الاتجاهات."
-      ),
-      href: "/library/reports",
-      actionLabel: text("Learn About Reports", "تعلّم فهم التقارير"),
-    },
-    {
-      label: "VISIT",
-      title: text("Doctor-visit preparation", "التحضير لزيارة الطبيب"),
-      description: text(
-        "Prepare better questions and organize important results before your appointment.",
-        "حضّر أسئلة أفضل ونظّم النتائج المهمة قبل موعدك."
-      ),
-      href: "/library/doctor-prep",
-      actionLabel: text("Prepare for Your Visit", "استعد لزيارة الطبيب"),
-    },
-  ];
+  {
+    label: "LAB",
+    title: text(
+      "Lab Tests & Biomarkers",
+      "تحاليل المختبر والمؤشرات"
+    ),
+    description: text(
+      "Understand blood tests, biomarkers, normal ranges, and what common laboratory values may indicate.",
+      "تعرّف على تحاليل الدم والمؤشرات الحيوية والقيم الطبيعية وما قد تعنيه النتائج الشائعة."
+    ),
+    href: "/library",
+    actionLabel: text("Browse Lab Topics", "استكشف التحاليل"),
+  },
+  {
+    label: "ORGAN",
+    title: text(
+      "Organ Health Library",
+      "مكتبة صحة الأعضاء"
+    ),
+    description: text(
+      "Explore heart, kidney, liver, lung, brain, and metabolic health in patient-friendly language.",
+      "استكشف صحة القلب والكلى والكبد والرئة والدماغ والتمثيل الغذائي بلغة مبسطة."
+    ),
+    href: "/library/organs",
+    actionLabel: text("Explore Organs", "استكشف الأعضاء"),
+  },
+  {
+    label: "REPORT",
+    title: text(
+      "Medical Reports",
+      "فهم التقارير الطبية"
+    ),
+    description: text(
+      "Learn how laboratory and medical reports are structured before reviewing your own results.",
+      "تعرّف على طريقة قراءة التقارير الطبية قبل مراجعة نتائجك الشخصية."
+    ),
+    href: "/library/reports",
+    actionLabel: text("Learn Reports", "تعلّم التقارير"),
+  },
+  {
+    label: "VISIT",
+    title: text(
+      "Doctor Visit Preparation",
+      "التحضير لزيارة الطبيب"
+    ),
+    description: text(
+      "Organize questions, understand findings, and prepare for a more productive appointment.",
+      "نظّم أسئلتك وافهم نتائجك واستعد لموعد طبي أكثر فائدة."
+    ),
+    href: "/library/doctor-prep",
+    actionLabel: text("Prepare Visit", "استعد للزيارة"),
+  },
+];
 
   return (
     <main
@@ -483,27 +509,49 @@ export default function Home() {
 
         .publicHomePage .homePreviewGrid {
           display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 16px;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 18px;
         }
 
         .publicHomePage .homePreviewCard {
           display: flex;
           flex-direction: column;
           gap: 12px;
-          min-height: 100%;
+          min-height: 280px;
           border-top: 5px solid #14b8a6;
         }
 
-        .publicHomePage .homeLearningStrip {
+        .publicHomePage .homePreviewCard .ohButtonRow {
+          width: 100%;
+        }
+
+        .publicHomePage .homePreviewCard .secondaryBtn {
+          min-width: 170px;
+          justify-content: center;
+        }
+
+        .publicHomePage .homeSignOutBtn {
+          color: #ffffff;
+          background: #334155;
+          border-color: #334155;
+          box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);
+        }
+
+        .publicHomePage .homeSignOutBtn:hover {
+          color: #ffffff;
+          background: #1e293b;
+          border-color: #1e293b;
+          transform: translateY(-1px);
+        }
+
+        .publicHomePage .homeLearningFooter {
           display: grid;
-          grid-template-columns: minmax(0, 0.65fr) minmax(0, 1fr);
-          gap: 18px;
+          grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr);
+          gap: 24px;
           align-items: center;
-          border-radius: 28px;
-          padding: 24px;
-          background: linear-gradient(135deg, rgba(239, 246, 255, 0.9), rgba(240, 253, 250, 0.94));
-          border: 1px solid rgba(37, 99, 235, 0.14);
+          margin-top: 24px;
+          padding-top: 24px;
+          border-top: 1px solid rgba(15, 118, 110, 0.16);
         }
 
         .publicHomePage .homeLearningCloud {
@@ -609,9 +657,851 @@ export default function Home() {
           }
         }
 
+        .publicHomePage .homeCommandHero {
+          padding: clamp(24px, 4vw, 48px);
+          border: 1px solid rgba(148, 163, 184, 0.18);
+          background:
+            radial-gradient(circle at 8% 8%, rgba(20, 184, 166, 0.17), transparent 30%),
+            radial-gradient(circle at 92% 12%, rgba(37, 99, 235, 0.14), transparent 32%),
+            linear-gradient(145deg, #ffffff 0%, #f8fbff 52%, #f0fdfa 100%);
+          box-shadow: 0 34px 90px rgba(15, 23, 42, 0.1);
+        }
+
+        .publicHomePage .homeCommandGrid {
+          position: relative;
+          z-index: 1;
+          display: grid;
+          grid-template-columns: minmax(0, 0.92fr) minmax(420px, 1.08fr);
+          gap: clamp(30px, 5vw, 72px);
+          align-items: center;
+        }
+
+        .publicHomePage .homeCommandIntro {
+          min-width: 0;
+        }
+
+        .publicHomePage .homeCommandBadge {
+          display: inline-flex;
+          align-items: center;
+          gap: 9px;
+          padding: 8px 12px;
+          border: 1px solid rgba(15, 118, 110, 0.2);
+          border-radius: 999px;
+          background: rgba(240, 253, 250, 0.82);
+          color: #0f766e;
+          font-size: 0.78rem;
+          font-weight: 900;
+          letter-spacing: 0.04em;
+          text-transform: uppercase;
+        }
+
+        .publicHomePage .homeCommandBadgeDot {
+          width: 8px;
+          height: 8px;
+          border-radius: 999px;
+          background: #14b8a6;
+          box-shadow: 0 0 0 6px rgba(20, 184, 166, 0.12);
+        }
+
+        .publicHomePage .homeCommandTitle {
+          max-width: 760px;
+          margin-top: 22px;
+          font-size: clamp(2.75rem, 5.4vw, 5.6rem);
+          line-height: 0.98;
+          letter-spacing: -0.055em;
+        }
+
+        .publicHomePage .homeCommandLead {
+          max-width: 700px;
+          margin-top: 22px;
+          font-size: clamp(1rem, 1.35vw, 1.18rem);
+          line-height: 1.8;
+        }
+
+        .publicHomePage .homePrimaryActions {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: stretch;
+          gap: 12px;
+          margin-top: 28px;
+        }
+
+        .publicHomePage .homeUploadAction {
+          display: inline-flex;
+          align-items: center;
+          justify-content: flex-start;
+          gap: 12px;
+          min-width: min(100%, 300px);
+          padding: 13px 18px;
+        }
+
+        .publicHomePage .homeUploadAction span:last-child {
+          display: grid;
+          gap: 2px;
+          text-align: start;
+        }
+
+        .publicHomePage .homeUploadAction small {
+          color: rgba(255, 255, 255, 0.78);
+          font-size: 0.72rem;
+          font-weight: 700;
+        }
+
+        .publicHomePage .homeActionIcon {
+          display: grid;
+          width: 36px;
+          height: 36px;
+          flex: 0 0 36px;
+          place-items: center;
+          border-radius: 12px;
+          background: rgba(255, 255, 255, 0.16);
+          font-size: 1.2rem;
+        }
+
+        .publicHomePage .homeSecondaryAction {
+          display: inline-flex;
+          min-height: 62px;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .publicHomePage .homePrimaryActions {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 12px;
+          align-items: stretch;
+        }
+
+        .publicHomePage .homePrimaryActions .homeSecondaryAction {
+          min-height: 52px;
+          justify-content: center;
+        }
+
+        .publicHomePage .homeContinuationCard {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          gap: 24px;
+          align-items: center;
+          padding: 24px 26px;
+          border: 1px solid rgba(20, 184, 166, 0.22);
+          border-radius: 24px;
+          background:
+            linear-gradient(
+              135deg,
+              rgba(240, 253, 250, 0.96),
+              rgba(255, 255, 255, 0.98)
+            );
+          box-shadow: 0 18px 44px rgba(15, 23, 42, 0.06);
+        }
+
+        .publicHomePage .homeContinuationMain {
+          display: grid;
+          gap: 8px;
+          min-width: 0;
+        }
+
+        .publicHomePage .homeContinuationEyebrow {
+          margin: 0;
+          color: #0f766e;
+          font-size: 0.76rem;
+          font-weight: 900;
+          letter-spacing: 0.09em;
+          text-transform: uppercase;
+        }
+
+        .publicHomePage .homeContinuationTitle {
+          margin: 0;
+          color: var(--oh-text);
+          font-size: clamp(1.2rem, 2vw, 1.55rem);
+          line-height: 1.25;
+          overflow-wrap: anywhere;
+        }
+
+        .publicHomePage .homeContinuationMeta {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px 14px;
+          color: var(--oh-muted);
+          font-size: 0.9rem;
+          font-weight: 700;
+        }
+
+        .publicHomePage .homeContinuationStatus {
+          color: #0f766e;
+        }
+
+        .publicHomePage .homeContinuationDescription {
+          max-width: 760px;
+          margin: 2px 0 0;
+          color: var(--oh-muted);
+          line-height: 1.65;
+        }
+
+        .publicHomePage .homeContinuationAction {
+          min-width: 190px;
+          justify-content: center;
+          white-space: nowrap;
+        }
+
+        .publicHomePage .homePrivacyPromise {
+          display: flex;
+          gap: 12px;
+          margin-top: 24px;
+          padding: 15px;
+          border: 1px solid rgba(15, 118, 110, 0.16);
+          border-radius: 18px;
+          background: rgba(255, 255, 255, 0.72);
+        }
+
+        .publicHomePage .homePrivacyIcon {
+          display: grid;
+          width: 32px;
+          height: 32px;
+          flex: 0 0 32px;
+          place-items: center;
+          border-radius: 10px;
+          background: #dcfce7;
+          color: #15803d;
+          font-weight: 950;
+        }
+
+        .publicHomePage .homePrivacyPromise strong {
+          color: #0f172a;
+          font-size: 0.91rem;
+        }
+
+        .publicHomePage .homePrivacyPromise p {
+          margin: 4px 0 0;
+          color: #526077;
+          font-size: 0.78rem;
+          line-height: 1.55;
+        }
+
+        .publicHomePage .homeJourneyPreview {
+          display: grid;
+          grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr;
+          align-items: center;
+          gap: 8px;
+          margin-top: 26px;
+        }
+
+        .publicHomePage .homeJourneyItem {
+          display: grid;
+          gap: 3px;
+          min-width: 0;
+        }
+
+        .publicHomePage .homeJourneyItem span {
+          color: #0f766e;
+          font-size: 0.68rem;
+          font-weight: 950;
+        }
+
+        .publicHomePage .homeJourneyItem strong {
+          color: #334155;
+          font-size: 0.78rem;
+          line-height: 1.3;
+        }
+
+        .publicHomePage .homeJourneyConnector {
+          color: #94a3b8;
+          font-size: 0.86rem;
+          font-weight: 900;
+        }
+
+        [dir="rtl"] .publicHomePage .homeJourneyConnector {
+          transform: rotate(180deg);
+        }
+
+        .publicHomePage .homeAICommandCard {
+          position: relative;
+          min-width: 0;
+          overflow: hidden;
+          padding: clamp(22px, 3vw, 32px);
+          border: 1px solid rgba(99, 102, 241, 0.2);
+          border-radius: 30px;
+          background:
+            radial-gradient(circle at 90% 4%, rgba(45, 212, 191, 0.18), transparent 29%),
+            linear-gradient(150deg, #0f172a 0%, #152238 58%, #102c32 100%);
+          color: #ffffff;
+          box-shadow: 0 32px 76px rgba(15, 23, 42, 0.24);
+        }
+
+        .publicHomePage .homeAICommandHeader {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 18px;
+        }
+
+        .publicHomePage .homeAICommandEyebrow {
+          margin: 0;
+          color: #5eead4;
+          font-size: 0.72rem;
+          font-weight: 950;
+          letter-spacing: 0.12em;
+        }
+
+        .publicHomePage .homeAICommandHeader h2 {
+          margin: 9px 0 0;
+          max-width: 520px;
+          color: #ffffff;
+          font-size: clamp(1.55rem, 2.4vw, 2.3rem);
+          line-height: 1.15;
+          letter-spacing: -0.035em;
+        }
+
+        .publicHomePage .homeAILiveBadge {
+          display: inline-flex;
+          flex: 0 0 auto;
+          align-items: center;
+          gap: 7px;
+          padding: 7px 10px;
+          border: 1px solid rgba(94, 234, 212, 0.22);
+          border-radius: 999px;
+          background: rgba(15, 118, 110, 0.22);
+          color: #ccfbf1;
+          font-size: 0.7rem;
+          font-weight: 900;
+        }
+
+        .publicHomePage .homeAILiveBadge span {
+          width: 7px;
+          height: 7px;
+          border-radius: 999px;
+          background: #5eead4;
+          box-shadow: 0 0 0 5px rgba(94, 234, 212, 0.12);
+        }
+
+        .publicHomePage .homeAICommandDescription {
+          margin: 17px 0 0;
+          color: #cbd5e1;
+          font-size: 0.91rem;
+          line-height: 1.7;
+        }
+
+        .publicHomePage .homeAISuggestions {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          margin-top: 18px;
+        }
+
+        .publicHomePage .homeAISuggestion {
+          appearance: none;
+          padding: 8px 11px;
+          border: 1px solid rgba(148, 163, 184, 0.23);
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.07);
+          color: #e2e8f0;
+          font: inherit;
+          font-size: 0.75rem;
+          font-weight: 800;
+          cursor: pointer;
+          transition:
+            border-color 160ms ease,
+            background 160ms ease,
+            transform 160ms ease;
+        }
+
+        .publicHomePage .homeAISuggestion:hover {
+          transform: translateY(-1px);
+          border-color: rgba(94, 234, 212, 0.46);
+          background: rgba(20, 184, 166, 0.14);
+        }
+
+        .publicHomePage .homeAIComposer {
+          margin-top: 18px;
+          padding: 10px;
+          border: 1px solid rgba(148, 163, 184, 0.22);
+          border-radius: 20px;
+          background: rgba(255, 255, 255, 0.97);
+        }
+
+        .publicHomePage .homeAITextarea {
+          min-height: 112px;
+          resize: vertical;
+          border: 0;
+          box-shadow: none;
+          background: transparent;
+          font-weight: 650;
+          line-height: 1.55;
+        }
+
+        .publicHomePage .homeAITextarea:focus {
+          border: 0;
+          box-shadow: none;
+        }
+
+        .publicHomePage .homeAIComposerActions {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          padding-top: 9px;
+          border-top: 1px solid rgba(148, 163, 184, 0.16);
+        }
+
+        .publicHomePage .homeAttachAction {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          color: #475569;
+          font-size: 0.77rem;
+          font-weight: 900;
+        }
+
+        .publicHomePage .homeAttachAction span {
+          font-size: 1.1rem;
+          color: #0f766e;
+        }
+
+        .publicHomePage .homeAskAction {
+          min-height: 42px;
+          padding: 10px 15px;
+        }
+
+        .publicHomePage .homeAskAction:disabled {
+          cursor: not-allowed;
+          opacity: 0.55;
+        }
+
+        .publicHomePage .homeAIAnswer {
+          margin-top: 16px;
+          padding: 16px;
+          border: 1px solid rgba(94, 234, 212, 0.2);
+          border-radius: 18px;
+          background: rgba(15, 118, 110, 0.13);
+        }
+
+        .publicHomePage .homeAIAnswerHeader {
+          display: flex;
+          align-items: center;
+          gap: 9px;
+        }
+
+        .publicHomePage .homeAIAnswerHeader span {
+          display: grid;
+          width: 30px;
+          height: 30px;
+          place-items: center;
+          border-radius: 10px;
+          background: #14b8a6;
+          color: #042f2e;
+          font-size: 0.68rem;
+          font-weight: 950;
+        }
+
+        .publicHomePage .homeAIAnswer p {
+          margin: 11px 0 0;
+          color: #e2e8f0;
+          font-size: 0.85rem;
+          line-height: 1.7;
+          white-space: pre-wrap;
+        }
+
+        .publicHomePage .homeAIOutcomePanel {
+          margin-top: 18px;
+          padding: 15px;
+          border: 1px solid rgba(148, 163, 184, 0.18);
+          border-radius: 18px;
+          background: rgba(255, 255, 255, 0.05);
+        }
+
+        .publicHomePage .homeAIOutcomePanel > p {
+          margin: 0;
+          color: #94a3b8;
+          font-size: 0.7rem;
+          font-weight: 900;
+          letter-spacing: 0.05em;
+          text-transform: uppercase;
+        }
+
+        .publicHomePage .homeAIOutcomeGrid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 8px;
+          margin-top: 11px;
+        }
+
+        .publicHomePage .homeAIOutcomeGrid span {
+          display: flex;
+          align-items: center;
+          gap: 7px;
+          padding: 8px 10px;
+          border-radius: 12px;
+          background: rgba(255, 255, 255, 0.06);
+          color: #e2e8f0;
+          font-size: 0.73rem;
+          font-weight: 800;
+        }
+
+        .publicHomePage .homeAIOutcomeGrid span::before {
+          content: "✓";
+          color: #5eead4;
+          font-weight: 950;
+        }
+
+        .publicHomePage .homeAIPrivacyNote {
+          margin: 14px 0 0;
+          color: #94a3b8;
+          font-size: 0.7rem;
+          line-height: 1.55;
+          text-align: center;
+        }
+
+        .publicHomePage .homeMissionSection {
+          position: relative;
+          overflow: hidden;
+          padding: clamp(24px, 4vw, 40px);
+          border: 1px solid rgba(148, 163, 184, 0.18);
+          border-radius: 30px;
+          background:
+            radial-gradient(circle at 96% 0%, rgba(37, 99, 235, 0.1), transparent 28%),
+            linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+          box-shadow: 0 24px 70px rgba(15, 23, 42, 0.07);
+        }
+
+        .publicHomePage .homeMissionHeader {
+          display: flex;
+          align-items: flex-end;
+          justify-content: space-between;
+          gap: 24px;
+          margin-bottom: 26px;
+        }
+
+        .publicHomePage .homeMissionTitle {
+          max-width: 800px;
+          margin: 8px 0 0;
+          color: #0f172a;
+          font-size: clamp(1.8rem, 3.4vw, 3.15rem);
+          line-height: 1.08;
+          letter-spacing: -0.045em;
+        }
+
+        .publicHomePage .homeMissionLead {
+          max-width: 760px;
+          margin: 13px 0 0;
+          color: #64748b;
+          font-size: 0.96rem;
+          line-height: 1.7;
+        }
+
+        .publicHomePage .homeMissionAIStatus {
+          display: flex;
+          flex: 0 0 auto;
+          align-items: center;
+          gap: 11px;
+          padding: 12px 14px;
+          border: 1px solid rgba(20, 184, 166, 0.18);
+          border-radius: 16px;
+          background: #f0fdfa;
+        }
+
+        .publicHomePage .homeMissionAIStatus > span {
+          width: 10px;
+          height: 10px;
+          border-radius: 999px;
+          background: #14b8a6;
+          box-shadow: 0 0 0 7px rgba(20, 184, 166, 0.12);
+        }
+
+        .publicHomePage .homeMissionAIStatus div {
+          display: grid;
+          gap: 2px;
+        }
+
+        .publicHomePage .homeMissionAIStatus strong {
+          color: #115e59;
+          font-size: 0.78rem;
+        }
+
+        .publicHomePage .homeMissionAIStatus small {
+          color: #64748b;
+          font-size: 0.68rem;
+          font-weight: 700;
+        }
+
+        .publicHomePage .homeMissionGrid {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 14px;
+        }
+
+        .publicHomePage .homeMissionCard {
+          position: relative;
+          display: flex;
+          min-height: 264px;
+          gap: 15px;
+          overflow: hidden;
+          padding: 20px;
+          border: 1px solid rgba(148, 163, 184, 0.2);
+          border-radius: 22px;
+          background: #ffffff;
+          box-shadow: 0 12px 32px rgba(15, 23, 42, 0.045);
+          transition:
+            transform 180ms ease,
+            border-color 180ms ease,
+            box-shadow 180ms ease;
+        }
+
+        .publicHomePage .homeMissionCard:hover {
+          transform: translateY(-4px);
+          border-color: rgba(20, 184, 166, 0.42);
+          box-shadow: 0 20px 44px rgba(15, 23, 42, 0.09);
+        }
+
+        .publicHomePage .homeMissionCard.featured {
+          border-color: rgba(20, 184, 166, 0.28);
+          background:
+            radial-gradient(circle at 100% 0%, rgba(20, 184, 166, 0.14), transparent 35%),
+            linear-gradient(145deg, #f0fdfa 0%, #ffffff 70%);
+        }
+
+        .publicHomePage .homeMissionIcon {
+          display: grid;
+          width: 42px;
+          height: 42px;
+          flex: 0 0 42px;
+          place-items: center;
+          border-radius: 14px;
+          background: #e6fffb;
+          color: #0f766e;
+          font-size: 0.72rem;
+          font-weight: 950;
+          letter-spacing: -0.02em;
+        }
+
+        .publicHomePage .homeMissionContent {
+          display: flex;
+          min-width: 0;
+          flex: 1;
+          flex-direction: column;
+        }
+
+        .publicHomePage .homeMissionType {
+          color: #0f766e;
+          font-size: 0.64rem;
+          font-weight: 950;
+          letter-spacing: 0.08em;
+        }
+
+        .publicHomePage .homeMissionContent h3 {
+          margin: 9px 0 0;
+          color: #0f172a;
+          font-size: 1.06rem;
+          line-height: 1.35;
+          letter-spacing: -0.02em;
+        }
+
+        .publicHomePage .homeMissionContent p {
+          margin: 10px 0 0;
+          color: #64748b;
+          font-size: 0.79rem;
+          line-height: 1.62;
+        }
+
+        .publicHomePage .homeMissionAction {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+          margin-top: auto;
+          padding-top: 18px;
+          color: #0f766e;
+          font-size: 0.76rem;
+          font-weight: 950;
+        }
+
+        [dir="rtl"] .publicHomePage .homeMissionAction span {
+          transform: rotate(180deg);
+        }
+
+        .publicHomePage .homeMissionFuture {
+          display: grid;
+          grid-template-columns: auto 1fr auto;
+          align-items: center;
+          gap: 15px;
+          margin-top: 18px;
+          padding: 16px 18px;
+          border: 1px solid rgba(99, 102, 241, 0.16);
+          border-radius: 20px;
+          background:
+            radial-gradient(circle at 95% 50%, rgba(99, 102, 241, 0.1), transparent 27%),
+            #f8fafc;
+        }
+
+        .publicHomePage .homeMissionFutureIcon {
+          display: grid;
+          width: 42px;
+          height: 42px;
+          place-items: center;
+          border-radius: 14px;
+          background: #eef2ff;
+          color: #4f46e5;
+          font-size: 0.8rem;
+        }
+
+        .publicHomePage .homeMissionFuture strong {
+          color: #1e293b;
+          font-size: 0.88rem;
+        }
+
+        .publicHomePage .homeMissionFuture p {
+          margin: 4px 0 0;
+          color: #64748b;
+          font-size: 0.75rem;
+          line-height: 1.55;
+        }
+
+        .publicHomePage .homeMissionComingSoon {
+          padding: 7px 10px;
+          border-radius: 999px;
+          background: #eef2ff;
+          color: #4338ca;
+          font-size: 0.68rem;
+          font-weight: 950;
+          white-space: nowrap;
+        }
+
+        @media (max-width: 1050px) {
+          .publicHomePage .homeMissionGrid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+
+          .publicHomePage .homeMissionHeader {
+            align-items: flex-start;
+            flex-direction: column;
+          }
+        }
+
+        @media (max-width: 680px) {
+          .publicHomePage .homeMissionGrid {
+            grid-template-columns: 1fr;
+          }
+
+          .publicHomePage .homeMissionCard {
+            min-height: 230px;
+          }
+
+          .publicHomePage .homeMissionFuture {
+            grid-template-columns: auto 1fr;
+          }
+
+          .publicHomePage .homeMissionComingSoon {
+            grid-column: 1 / -1;
+            width: fit-content;
+          }
+        }
+        .publicHomePage .homeMissionGridCompact {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .publicHomePage .homeMissionGridCompact .homeMissionCard {
+          min-height: 224px;
+        }
+
+        .publicHomePage .homeMissionGridCompact .homeMissionContent p {
+          max-width: 500px;
+        }
+
+        @media (max-width: 760px) {
+          .publicHomePage .homeMissionGridCompact {
+            grid-template-columns: 1fr;
+          }
+
+          .publicHomePage .homeMissionGridCompact .homeMissionCard {
+            min-height: 210px;
+          }
+        }
+        .publicHomePage .homeSignOutBtn {
+          color: #ffffff;
+          background: #334155;
+          border-color: #334155;
+          box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);
+        }
+
+        .publicHomePage .homeSignOutBtn:hover {
+          color: #ffffff;
+          background: #1e293b;
+          border-color: #1e293b;
+          transform: translateY(-1px);
+        }
+
         @media (max-width: 1100px) {
-          .publicHomePage .homeHero .ohHeroGrid,
-          .publicHomePage .homeLearningStrip {
+          .publicHomePage .homeCommandGrid,
+          .publicHomePage .homeLearningFooter {
+            grid-template-columns: 1fr;
+          }
+
+          .publicHomePage .homePreviewGrid {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        @media (max-width: 720px) {
+          .publicHomePage .homeContinuationCard {
+            grid-template-columns: 1fr;
+            align-items: stretch;
+          }
+
+          .publicHomePage .homeContinuationAction {
+            width: 100%;
+          }
+          .publicHomePage .homePrimaryActions,
+          .publicHomePage .homeAIComposerActions {
+            align-items: stretch;
+            flex-direction: column;
+          }
+
+          .publicHomePage .homeUploadAction,
+          .publicHomePage .homeSecondaryAction,
+          .publicHomePage .homeAskAction {
+            width: 100%;
+          }
+
+          .publicHomePage .homeJourneyPreview {
+            grid-template-columns: 1fr;
+            gap: 7px;
+          }
+
+          .publicHomePage .homeJourneyConnector {
+            display: none;
+          }
+
+          .publicHomePage .homeJourneyItem {
+            grid-template-columns: auto 1fr;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+          }
+
+          .publicHomePage .homeAICommandHeader {
+            flex-direction: column;
+          }
+
+          .publicHomePage .homeAIOutcomeGrid {
+            grid-template-columns: 1fr;
+          }
+        }
+        .publicHomePage .homeSignOutBtn {
+          color: #ffffff;
+          background: #334155;
+          border-color: #334155;
+          box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);
+        }
+
+        .publicHomePage .homeSignOutBtn:hover {
+          color: #ffffff;
+          background: #1e293b;
+          border-color: #1e293b;
+          transform: translateY(-1px);
+        }
+
+        @media (max-width: 1100px) {
+          .publicHomePage .homeCommandGrid,
+          .publicHomePage .homeLearningFooter {
             grid-template-columns: 1fr;
           }
 
@@ -647,7 +1537,12 @@ export default function Home() {
             font-size: clamp(2.15rem, 11vw, 3rem);
           }
 
-          .publicHomePage .ohButtonRow {
+          .publicHomePage .ohButtonRow,
+          .publicHomePage .homePrimaryActions {
+            width: 100%;
+          }
+
+          .publicHomePage .homePrimaryActions > a {
             width: 100%;
           }
 
@@ -660,143 +1555,413 @@ export default function Home() {
       `}</style>
 
       <div className="ohContainer ohStack large" style={{ padding: "32px 0 64px" }}>
-        <section className="ohHero homeHero">
-          <div className="ohHeroGrid">
-            <div>
-              <p className="ohEyebrow">
-                {text("Personal Health Analysis Platform", "منصة ذكاء صحي شخصي")}
-              </p>
+        <section className="ohHero homeHero homeCommandHero">
+          <div className="homeCommandGrid">
+            <div className="homeCommandIntro">
+              <div className="homeCommandBadge">
+                <span className="homeCommandBadgeDot" aria-hidden="true" />
+                {isLoggedIn
+                  ? text(
+                      "Welcome back to your health workspace",
+                      "مرحبًا بعودتك إلى مساحتك الصحية"
+                    )
+                  : text(
+                      "Your private AI health workspace",
+                      "مساحتك الصحية الخاصة المدعومة بالذكاء الاصطناعي"
+                    )}
+              </div>
 
-              <h1 className="ohTitle">
-                {text(
-                  "Understand your health clearly before your next step.",
-                  "افهم صحتك بوضوح قبل خطوتك التالية."
-                )}
+              <h1 className="ohTitle homeCommandTitle">
+                {isLoggedIn
+                  ? text(
+                      "Continue where you left off.",
+                      "تابع من حيث توقفت."
+                    )
+                  : text(
+                      "Turn your health reports into clear next steps.",
+                      "حوّل تقاريرك الصحية إلى خطوات واضحة."
+                    )}
               </h1>
 
-              <p className="ohLead">
-                {text(
-                  "OrganHeal helps you organize assessments, lab reports, medical documents, learning, and doctor-ready preparation inside one clearer health workspace.",
-                  "يساعدك OrganHeal على تنظيم التقييمات، تقارير المختبر، المستندات الطبية، التعلّم، والتحضير للطبيب داخل مساحة صحية أوضح."
-                )}
+              <p className="ohLead homeCommandLead">
+                {isLoggedIn
+                  ? text(
+                      "Review your reports, continue your latest intelligence journey, or upload a new document for analysis.",
+                      "راجع تقاريرك، وتابع أحدث رحلة ذكاء صحي، أو ارفع مستندًا جديدًا للتحليل."
+                    )
+                  : text(
+                      "Upload a lab report or medical document. OrganHeal AI helps organize the findings, explain what matters, and guide you toward your next health decision.",
+                      "ارفع تقرير مختبر أو مستندًا طبيًا. يساعدك OrganHeal AI على تنظيم النتائج، وفهم ما يهم، والوصول إلى قرارك الصحي التالي."
+                    )}
               </p>
 
-              <div className="ohButtonRow" style={{ marginTop: "24px" }}>
+              <div className="homePrimaryActions">
                 {isLoggedIn ? (
-                  <Link href="/dashboard" className="primaryBtn">
-                    {text("Open Dashboard", "فتح لوحة التحكم")}
-                  </Link>
+                  <>
+                    <Link href="/dashboard" className="primaryBtn homeUploadAction">
+                      <span className="homeActionIcon" aria-hidden="true">→</span>
+                      <span>
+                        <strong>
+                          {text("Open Dashboard", "فتح لوحة التحكم")}
+                        </strong>
+                        <small>
+                          {text(
+                            "Continue your health workspace",
+                            "تابع مساحتك الصحية"
+                          )}
+                        </small>
+                      </span>
+                    </Link>
+
+                    <Link href="/reports" className="secondaryBtn homeSecondaryAction">
+                      {text("My Reports", "تقاريري")}
+                    </Link>
+
+                    <Link href="/intelligence" className="secondaryBtn homeSecondaryAction">
+                      {text("Intelligence", "الذكاء الصحي")}
+                    </Link>
+
+                    <Link href="/lab-upload" className="secondaryBtn homeSecondaryAction">
+                      {text("Upload New Report", "رفع تقرير جديد")}
+                    </Link>
+                  </>
                 ) : (
-                  <Link href="/signup" className="primaryBtn">
-                    {text("Create Free Account", "إنشاء حساب مجاني")}
-                  </Link>
+                  <>
+                    <Link href="/lab-upload" className="primaryBtn homeUploadAction">
+                      <span className="homeActionIcon" aria-hidden="true">↑</span>
+                      <span>
+                        <strong>
+                          {text("Upload & Analyze Report", "رفع التقرير وتحليله")}
+                        </strong>
+                        <small>
+                          {text(
+                            "PDF, image, or medical document",
+                            "PDF أو صورة أو مستند طبي"
+                          )}
+                        </small>
+                      </span>
+                    </Link>
+
+                    <Link href="/signup" className="secondaryBtn homeSecondaryAction">
+                      {text("Create Private Workspace", "إنشاء مساحة خاصة")}
+                    </Link>
+                  </>
                 )}
+              </div>
 
-                <Link href="/features" className="secondaryBtn">
-                  {text("Explore Platform Features", "استكشاف ميزات المنصة")}
-                </Link>
+              <div className="homePrivacyPromise">
+                <span className="homePrivacyIcon" aria-hidden="true">✓</span>
 
-                <Link href="/library" className="secondaryBtn">
-                  {text("Open Health Learning Hub", "فتح مركز التعلّم الصحي")}
-                </Link>
+                <div>
+                  <strong>
+                    {text("Private by design", "الخصوصية جزء من التصميم")}
+                  </strong>
+
+                  <p>
+                    {text(
+                      "Your reports, conversations, and health workspace are connected to your account and are not visible to other users.",
+                      "تقاريرك ومحادثاتك ومساحتك الصحية مرتبطة بحسابك ولا تظهر للمستخدمين الآخرين."
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              <div className="homeJourneyPreview" aria-label={text(
+                "Report analysis journey",
+                "رحلة تحليل التقرير"
+              )}>
+                <div className="homeJourneyItem">
+                  <span>01</span>
+                  <strong>{text("Upload", "ارفع")}</strong>
+                </div>
+
+                <div className="homeJourneyConnector" aria-hidden="true">→</div>
+
+                <div className="homeJourneyItem">
+                  <span>02</span>
+                  <strong>{text("AI Analysis", "تحليل ذكي")}</strong>
+                </div>
+
+                <div className="homeJourneyConnector" aria-hidden="true">→</div>
+
+                <div className="homeJourneyItem">
+                  <span>03</span>
+                  <strong>{text("Health Intelligence", "ذكاء صحي")}</strong>
+                </div>
+
+                <div className="homeJourneyConnector" aria-hidden="true">→</div>
+
+                <div className="homeJourneyItem">
+                  <span>04</span>
+                  <strong>{text("Next Action", "الخطوة التالية")}</strong>
+                </div>
               </div>
             </div>
 
-            <aside className="homeHeroShowcase" aria-label={text("OrganHeal live preview", "معاينة OrganHeal")}>
-              <div className="ohCard homeAskCard">
-                <div className="ohCardHeader">
-                  <div>
-                    <p className="ohMetricLabel">
-                      {text("Ask OrganHeal", "اسأل OrganHeal")}
-                    </p>
+            <aside
+              className="homeAICommandCard"
+              aria-label={text(
+                "Ask OrganHeal AI",
+                "اسأل OrganHeal AI"
+              )}
+            >
+              <div className="homeAICommandHeader">
+                <div>
+                  <p className="homeAICommandEyebrow">
+                    {text("ASK ORGANHEAL AI", "اسأل ORGANHEAL AI")}
+                  </p>
 
-                    <h2 className="ohCardTitle" style={{ marginTop: "8px" }}>
-                      {text("Try a quick educational question", "جرّب سؤالًا تثقيفيًا سريعًا")}
-                    </h2>
-                  </div>
-
-                  <span className="ohStatusBadge good">
-                    {text("Available", "متاح")}
-                  </span>
+                  <h2>
+                    {text(
+                      "What do you need help with today?",
+                      "بماذا تحتاج المساعدة اليوم؟"
+                    )}
+                  </h2>
                 </div>
 
-                <p className="ohCardText">
-                  {text(
-                    "Ask a general health education question before building your private health workspace.",
-                    "اسأل سؤالًا صحيًا تثقيفيًا عامًا قبل بناء مساحتك الصحية الخاصة."
-                  )}
-                </p>
+                <span className="homeAILiveBadge">
+                  <span aria-hidden="true" />
+                  {text("AI ready", "الذكاء جاهز")}
+                </span>
+              </div>
 
-                <div className="ohStack" style={{ gap: "12px", marginTop: "16px" }}>
-                  <input
-                    className="homeHeroInput"
-                    type="text"
-                    value={heroQuestion}
-                    onChange={(event) => setHeroQuestion(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") askHeroAI();
-                    }}
-                    placeholder={text(
-                      "Example: What should I ask my doctor about LDL?",
-                      "مثال: ماذا أسأل الطبيب عن LDL؟"
-                    )}
-                  />
+              <p className="homeAICommandDescription">
+                {text(
+                  "Start with a question. OrganHeal can help you understand a result, prepare for a visit, or guide you to the right part of your health workspace.",
+                  "ابدأ بسؤال. يستطيع OrganHeal مساعدتك على فهم نتيجة، أو التحضير لزيارة، أو توجيهك إلى الجزء المناسب من مساحتك الصحية."
+                )}
+              </p>
+
+              <div className="homeAISuggestions">
+                {[
+                  text(
+                    "Explain my blood test",
+                    "اشرح فحص الدم الخاص بي"
+                  ),
+                  text(
+                    "What should I ask my doctor?",
+                    "ماذا يجب أن أسأل طبيبي؟"
+                  ),
+                  text(
+                    "Compare my latest reports",
+                    "قارن أحدث تقاريري"
+                  ),
+                  text(
+                    "Show my top health priority",
+                    "أظهر أهم أولوية صحية لدي"
+                  ),
+                ].map((suggestion) => (
+                  <button
+                    type="button"
+                    className="homeAISuggestion"
+                    key={suggestion}
+                    onClick={() => setHeroQuestion(suggestion)}
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+
+              <div className="homeAIComposer">
+                <textarea
+                  className="homeHeroInput homeAITextarea"
+                  value={heroQuestion}
+                  onChange={(event) => setHeroQuestion(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (
+                      event.key === "Enter" &&
+                      !event.shiftKey
+                    ) {
+                      event.preventDefault();
+                      askHeroAI();
+                    }
+                  }}
+                  placeholder={text(
+                    "Ask about a result, report, symptom question, or your next step...",
+                    "اسأل عن نتيجة أو تقرير أو سؤال صحي أو خطوتك التالية..."
+                  )}
+                  rows={4}
+                />
+
+                <div className="homeAIComposerActions">
+                  <Link href="/lab-upload" className="homeAttachAction">
+                    <span aria-hidden="true">＋</span>
+                    {text("Attach report", "إرفاق تقرير")}
+                  </Link>
 
                   <button
                     type="button"
-                    className="primaryBtn"
+                    className="primaryBtn homeAskAction"
                     onClick={askHeroAI}
-                    disabled={heroLoading}
+                    disabled={heroLoading || !heroQuestion.trim()}
                   >
                     {heroLoading
                       ? text("Thinking...", "جاري التفكير...")
-                      : text("Ask OrganHeal", "اسأل OrganHeal")}
+                      : text("Ask OrganHeal AI", "اسأل OrganHeal AI")}
                   </button>
                 </div>
+              </div>
 
-                {heroAnswer && (
-                  <div className="homeSafetyStrip" style={{ marginTop: "16px" }}>
-                    <span className="homeSafetyMark" aria-hidden="true">AI</span>
-                    <div>
-                      <strong>
-                        {text("Quick educational answer", "إجابة تثقيفية سريعة")}
-                      </strong>
-                      <br />
-                      {heroAnswer}
-                    </div>
+              {heroAnswer && (
+                <div className="homeAIAnswer">
+                  <div className="homeAIAnswerHeader">
+                    <span aria-hidden="true">AI</span>
+                    <strong>
+                      {text("OrganHeal response", "إجابة OrganHeal")}
+                    </strong>
                   </div>
+
+                  <p>{heroAnswer}</p>
+                </div>
+              )}
+
+              <div className="homeAIOutcomePanel">
+                <p>
+                  {text(
+                    "Your connected OrganHeal journey",
+                    "رحلتك المترابطة داخل OrganHeal"
+                  )}
+                </p>
+
+                <div className="homeAIOutcomeGrid">
+                  <span>{text("Report organized", "تنظيم التقرير")}</span>
+                  <span>{text("Key findings", "النتائج المهمة")}</span>
+                  <span>{text("Doctor questions", "أسئلة الطبيب")}</span>
+                  <span>{text("Next best action", "أفضل خطوة تالية")}</span>
+                </div>
+              </div>
+
+              <p className="homeAIPrivacyNote">
+                {text(
+                  "OrganHeal provides educational health intelligence and does not replace licensed medical care.",
+                  "يقدم OrganHeal ذكاءً صحيًا تثقيفيًا ولا يستبدل الرعاية الطبية المرخصة."
                 )}
-              </div>
-
-              <div className="homeMotionStage" aria-hidden="true">
-                <div className="homeMotionOrbit" />
-
-                <div className="homePulseCore">
-                  <div>
-                    <strong>OH</strong>
-                    <span>{text("Clarity", "وضوح")}</span>
-                  </div>
-                </div>
-
-                <div className="homeFloatingCard one">
-                  <p className="homeSignalLabel">{text("Reports", "التقارير")}</p>
-                  <p className="homeSignalText">{text("Markers organized", "تنظيم المؤشرات")}</p>
-                </div>
-
-                <div className="homeFloatingCard two">
-                  <p className="homeSignalLabel">{text("Doctor prep", "تحضير الطبيب")}</p>
-                  <p className="homeSignalText">{text("Questions prepared", "أسئلة جاهزة")}</p>
-                </div>
-
-                <div className="homeFloatingCard three">
-                  <p className="homeSignalLabel">{text("Learning", "التعلّم")}</p>
-                  <p className="homeSignalText">{text("Health topics connected", "مواضيع صحية مترابطة")}</p>
-                </div>
-              </div>
+              </p>
             </aside>
           </div>
         </section>
+        {isLoggedIn && (
+          <section
+            className="homeContinuationCard"
+            aria-label={text(
+              "Continue where you left off",
+              "تابع من حيث توقفت"
+            )}
+          >
+            <div className="homeContinuationMain">
+              <p className="homeContinuationEyebrow">
+                {text(
+                  "Continue where you left off",
+                  "تابع من حيث توقفت"
+                )}
+              </p>
 
+              {continuationLoading ? (
+                <>
+                  <h2 className="homeContinuationTitle">
+                    {text(
+                      "Loading your latest health activity...",
+                      "جاري تحميل أحدث نشاط صحي..."
+                    )}
+                  </h2>
+
+                  <p className="homeContinuationDescription">
+                    {text(
+                      "OrganHeal is connecting your latest report and intelligence status.",
+                      "يقوم OrganHeal بربط أحدث تقرير بحالة الذكاء الصحي."
+                    )}
+                  </p>
+                </>
+              ) : latestReport ? (
+                <>
+                  <h2 className="homeContinuationTitle">
+                    {latestReport.fileName}
+                  </h2>
+
+                  <div className="homeContinuationMeta">
+                    <span>
+                      {formatHomeDate(latestReport.uploadedAt)}
+                    </span>
+
+                    <span>{latestReport.reportType}</span>
+
+                    <span className="homeContinuationStatus">
+                      {latestReport.hasSavedAnalysis
+                        ? text(
+                            "Intelligence ready",
+                            "الذكاء الصحي جاهز"
+                          )
+                        : latestReport.extractionStatus === "Processing"
+                          ? text(
+                              "Report processing",
+                              "التقرير قيد المعالجة"
+                            )
+                          : text(
+                              "Ready for analysis",
+                              "جاهز للتحليل"
+                            )}
+                    </span>
+                  </div>
+
+                  <p className="homeContinuationDescription">
+                    {latestReport.nextBestAction ||
+                      (latestReport.hasSavedAnalysis
+                        ? text(
+                            "Return to your saved intelligence and continue reviewing the important findings and next steps.",
+                            "ارجع إلى الذكاء الصحي المحفوظ وتابع مراجعة النتائج المهمة والخطوات التالية."
+                          )
+                        : text(
+                            "Continue to Intelligence to organize this report, understand the important findings, and identify your next action.",
+                            "تابع إلى الذكاء الصحي لتنظيم هذا التقرير وفهم النتائج المهمة وتحديد خطوتك التالية."
+                          ))}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h2 className="homeContinuationTitle">
+                    {text(
+                      "Start with your first health report.",
+                      "ابدأ بأول تقرير صحي."
+                    )}
+                  </h2>
+
+                  <p className="homeContinuationDescription">
+                    {text(
+                      "Upload a medical document to begin building your private health workspace.",
+                      "ارفع مستندًا طبيًا لبدء بناء مساحتك الصحية الخاصة."
+                    )}
+                  </p>
+                </>
+              )}
+            </div>
+
+            {!continuationLoading && (
+              <Link
+                href={
+                  latestReport
+                    ? "/intelligence"
+                    : "/lab-upload"
+                }
+                className="primaryBtn homeContinuationAction"
+              >
+                {latestReport
+                  ? latestReport.hasSavedAnalysis
+                    ? text(
+                        "Continue Intelligence",
+                        "متابعة الذكاء الصحي"
+                      )
+                    : text(
+                        "Analyze Report",
+                        "تحليل التقرير"
+                      )
+                  : text(
+                      "Upload Report",
+                      "رفع تقرير"
+                    )}
+              </Link>
+            )}
+          </section>
+        )}
         <section className="homeSafetyStrip">
           <span className="homeSafetyMark">OH</span>
           <div>
@@ -811,6 +1976,179 @@ export default function Home() {
           </div>
         </section>
 
+        <section className="homeMissionSection">
+          <div className="homeMissionHeader">
+            <div>
+              <p className="ohMetricLabel">
+                {text("START WITH YOUR GOAL", "ابدأ بهدفك")}
+              </p>
+
+              <h2 className="homeMissionTitle">
+                {text(
+                  "Choose what you need. OrganHeal guides the next step.",
+                  "اختر ما تحتاجه، وسيقودك OrganHeal إلى الخطوة التالية."
+                )}
+              </h2>
+
+              <p className="homeMissionLead">
+                {text(
+                  "You do not need to understand the whole platform. Start with the outcome you want today.",
+                  "لست بحاجة إلى معرفة جميع أجزاء المنصة. ابدأ بالنتيجة التي تريدها اليوم."
+                )}
+              </p>
+            </div>
+
+            <div className="homeMissionAIStatus">
+              <span aria-hidden="true" />
+
+              <div>
+                <strong>
+                  {text("AI-guided journey", "رحلة موجهة بالذكاء الاصطناعي")}
+                </strong>
+
+                <small>
+                  {text(
+                    "One goal. One clear path.",
+                    "هدف واحد ومسار واضح."
+                  )}
+                </small>
+              </div>
+            </div>
+          </div>
+
+          <div className="homeMissionGrid homeMissionGridCompact">
+            <Link href="/lab-upload" className="homeMissionCard featured">
+              <span className="homeMissionIcon" aria-hidden="true">01</span>
+
+              <div className="homeMissionContent">
+                <span className="homeMissionType">
+                  {text("REPORT INTELLIGENCE", "ذكاء التقارير")}
+                </span>
+
+                <h3>
+                  {text(
+                    "Understand my report",
+                    "أريد فهم تقريري"
+                  )}
+                </h3>
+
+                <p>
+                  {text(
+                    "Upload a lab report or medical document and turn it into organized findings, clear explanations, and useful next questions.",
+                    "ارفع تقرير مختبر أو مستندًا طبيًا وحوّله إلى نتائج منظمة وشرح واضح وأسئلة مفيدة."
+                  )}
+                </p>
+
+                <span className="homeMissionAction">
+                  {text("Upload and analyze", "ارفع وابدأ التحليل")}
+                  <span aria-hidden="true">→</span>
+                </span>
+              </div>
+            </Link>
+
+            <Link href="/assistant" className="homeMissionCard">
+              <span className="homeMissionIcon" aria-hidden="true">AI</span>
+
+              <div className="homeMissionContent">
+                <span className="homeMissionType">
+                  {text("PERSONAL AI GUIDANCE", "إرشاد شخصي بالذكاء الاصطناعي")}
+                </span>
+
+                <h3>
+                  {text(
+                    "Ask about my health",
+                    "أريد السؤال عن صحتي"
+                  )}
+                </h3>
+
+                <p>
+                  {text(
+                    "Ask a health question and let OrganHeal guide you toward the right explanation, report, assessment, or next action.",
+                    "اطرح سؤالًا صحيًا ودع OrganHeal يوجهك إلى الشرح أو التقرير أو التقييم أو الخطوة المناسبة."
+                  )}
+                </p>
+
+                <span className="homeMissionAction">
+                  {text("Open AI assistant", "افتح المساعد الذكي")}
+                  <span aria-hidden="true">→</span>
+                </span>
+              </div>
+            </Link>
+
+            <Link href="/library/doctor-prep" className="homeMissionCard">
+              <span className="homeMissionIcon" aria-hidden="true">02</span>
+
+              <div className="homeMissionContent">
+                <span className="homeMissionType">
+                  {text("DOCTOR PREPARATION", "التحضير للطبيب")}
+                </span>
+
+                <h3>
+                  {text(
+                    "Prepare for my appointment",
+                    "أريد الاستعداد لموعدي"
+                  )}
+                </h3>
+
+                <p>
+                  {text(
+                    "Organize important findings and prepare focused questions before speaking with your clinician.",
+                    "نظّم النتائج المهمة وحضّر أسئلة مركزة قبل التحدث مع المختص."
+                  )}
+                </p>
+
+                <span className="homeMissionAction">
+                  {text("Prepare my visit", "حضّر زيارتي")}
+                  <span aria-hidden="true">→</span>
+                </span>
+              </div>
+            </Link>
+
+            <Link
+              href={isLoggedIn ? "/history" : "/assessment"}
+              className="homeMissionCard"
+            >
+              <span className="homeMissionIcon" aria-hidden="true">03</span>
+
+              <div className="homeMissionContent">
+                <span className="homeMissionType">
+                  {text("HEALTH JOURNEY", "الرحلة الصحية")}
+                </span>
+
+                <h3>
+                  {isLoggedIn
+                    ? text(
+                        "Continue my health journey",
+                        "أريد متابعة رحلتي الصحية"
+                      )
+                    : text(
+                        "Find where I should start",
+                        "أريد معرفة من أين أبدأ"
+                      )}
+                </h3>
+
+                <p>
+                  {isLoggedIn
+                    ? text(
+                        "Review your saved reports, health history, and meaningful changes over time.",
+                        "راجع تقاريرك المحفوظة وسجلك الصحي والتغيرات المهمة مع الوقت."
+                      )
+                    : text(
+                        "Complete a guided assessment to identify the health area that may deserve attention first.",
+                        "أكمل تقييمًا موجهًا لتحديد المجال الصحي الذي قد يستحق اهتمامك أولًا."
+                      )}
+                </p>
+
+                <span className="homeMissionAction">
+                  {isLoggedIn
+                    ? text("Continue my journey", "تابع رحلتي")
+                    : text("Start assessment", "ابدأ التقييم")}
+                  <span aria-hidden="true">→</span>
+                </span>
+              </div>
+            </Link>
+          </div>
+        </section>
         <section className="ohMetricGrid">
           {trustCards.map((card) => (
             <article className="ohMetricCard" key={card.title}>
@@ -823,60 +2161,24 @@ export default function Home() {
           ))}
         </section>
 
-        <section id="how-it-works" className="ohCard">
-          <div className="ohCardHeader">
-            <div>
-              <p className="ohMetricLabel">
-                {text("How OrganHeal Works", "كيف يعمل OrganHeal؟")}
-              </p>
-
-              <h2 className="ohCardTitle">
-                {text(
-                  "One clear journey from information to preparation.",
-                  "رحلة واضحة من المعلومات إلى التحضير."
-                )}
-              </h2>
-
-              <p className="ohCardText">
-                {text(
-                  "OrganHeal is built around a practical journey: profile, reports, understanding, and organized follow-up context.",
-                  "OrganHeal مبني حول رحلة عملية: ملف صحي، تقارير، فهم واضح، وسياق متابعة منظم."
-                )}
-              </p>
-            </div>
-          </div>
-
-          <div className="ohGrid cols4">
-            {steps.map((step) => (
-              <article className="ohCard" key={step.number}>
-                <p className="ohMetricLabel">{step.number}</p>
-                <h3 className="ohCardTitle" style={{ fontSize: "1.1rem", marginTop: "10px" }}>
-                  {step.title}
-                </h3>
-                <p className="ohCardText">{step.description}</p>
-              </article>
-            ))}
-          </div>
-        </section>
-
         <section className="homePreviewPanel">
           <div className="ohCardHeader">
             <div>
               <p className="ohMetricLabel">
-                {text("What OrganHeal helps you understand", "ما الذي يساعدك OrganHeal على فهمه")}
+                {text("Health Learning Hub", "مركز التعلّم الصحي")}
               </p>
 
               <h2 className="ohCardTitle">
                 {text(
-                  "Reports, learning, and doctor preparation in one connected experience.",
-                  "التقارير والتعلّم والتحضير للطبيب داخل تجربة مترابطة."
+                  "Explore trusted health knowledge in one connected place.",
+                  "استكشف المعرفة الصحية الموثوقة في مكان واحد مترابط."
                 )}
               </h2>
 
               <p className="ohCardText">
                 {text(
-                  "Start with available platform areas, then continue inside your private workspace when you create an account.",
-                  "ابدأ بالمناطق المتاحة في المنصة، ثم أكمل داخل مساحتك الخاصة عند إنشاء الحساب."
+                  "Learn about lab markers, organ health, medical reports, and doctor-visit preparation before or after using OrganHeal AI.",
+                  "تعلّم عن مؤشرات المختبر وصحة الأعضاء والتقارير الطبية والتحضير لزيارة الطبيب قبل أو بعد استخدام OrganHeal AI."
                 )}
               </p>
             </div>
@@ -903,54 +2205,37 @@ export default function Home() {
             ))}
           </div>
 
-          <div className="ohButtonRow" style={{ marginTop: "22px" }}>
-            <Link href="/features" className="primaryBtn">
-              {text("Explore Features", "استكشف الميزات")}
-            </Link>
+          <div className="homeLearningFooter">
+            <div>
+              <p className="ohMetricLabel">
+                {text("Popular health topics", "مواضيع صحية شائعة")}
+              </p>
 
-            <Link href="/library" className="secondaryBtn">
-              {text("Open Learning Hub", "فتح مركز التعلّم")}
-            </Link>
-          </div>
-        </section>
+              <h3 className="ohCardTitle" style={{ fontSize: "1.22rem" }}>
+                {text(
+                  "Continue learning by marker, organ system, or report topic.",
+                  "تابع التعلّم حسب المؤشر أو جهاز الجسم أو موضوع التقرير."
+                )}
+              </h3>
 
-        <section className="homeLearningStrip">
-          <div>
-            <p className="ohMetricLabel">
-              {text("Health learning starts here", "التعلّم الصحي يبدأ هنا")}
-            </p>
+              <div className="ohButtonRow" style={{ marginTop: "18px" }}>
+                <Link href="/library" className="primaryBtn">
+                  {text("Open Health Learning Hub", "فتح مركز التعلّم الصحي")}
+                </Link>
 
-            <h2 className="ohCardTitle">
-              {text(
-                "Find articles by marker, organ system, or report topic.",
-                "اعثر على مقالات حسب المؤشر أو العضو أو موضوع التقرير."
-              )}
-            </h2>
-
-            <p className="ohCardText">
-              {text(
-                "The Health Learning Hub helps visitors understand common lab markers, organ systems, report language, and doctor-visit preparation.",
-                "يساعد مركز التعلّم الصحي الزوار على فهم مؤشرات المختبر الشائعة، أجهزة الجسم، لغة التقارير، والتحضير لزيارة الطبيب."
-              )}
-            </p>
-
-            <div className="ohButtonRow" style={{ marginTop: "18px" }}>
-              <Link href="/library" className="primaryBtn">
-                {text("Open Health Learning Hub", "فتح مركز التعلّم الصحي")}
-              </Link>
-
-              <Link href="/blog" className="secondaryBtn">
-                {text("Search Articles", "البحث في المقالات")}
-              </Link>
+                <Link href="/blog" className="secondaryBtn">
+                  {text("Search Articles", "البحث في المقالات")}
+                </Link>
+              </div>
             </div>
-          </div>
 
-          <div className="homeLearningCloud">
-            {["LDL", "HDL", "HbA1c", "Creatinine", "eGFR", "ALT", "AST", "Blood Pressure"].map((item) => (
-              <span className="homeLearningChip" key={item}>
-                {item}
-              </span>
-            ))}
+            <div className="homeLearningCloud">
+              {["LDL", "HDL", "HbA1c", "Creatinine", "eGFR", "ALT", "AST", "Blood Pressure"].map((item) => (
+                <span className="homeLearningChip" key={item}>
+                  {item}
+                </span>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -958,21 +2243,39 @@ export default function Home() {
           <div className="ohCardHeader" style={{ marginBottom: 0 }}>
             <div>
               <p className="ohMetricLabel">
-                {text("Start your private health workspace", "ابدأ مساحتك الصحية الخاصة")}
+                {isLoggedIn
+                  ? text(
+                      "Continue your private health workspace",
+                      "تابع مساحتك الصحية الخاصة"
+                    )
+                  : text(
+                      "Start your private health workspace",
+                      "ابدأ مساحتك الصحية الخاصة"
+                    )}
               </p>
 
               <h2 className="ohCardTitle" style={{ fontSize: "1.7rem" }}>
-                {text(
-                  "Create your account and organize your health journey with more clarity.",
-                  "أنشئ حسابك ونظّم رحلتك الصحية بوضوح أكبر."
-                )}
+                {isLoggedIn
+                  ? text(
+                      "Continue organizing your reports, insights, and next health steps.",
+                      "تابع تنظيم تقاريرك ورؤاك وخطواتك الصحية القادمة."
+                    )
+                  : text(
+                      "Create your account and organize your health journey with more clarity.",
+                      "أنشئ حسابك ونظّم رحلتك الصحية بوضوح أكبر."
+                    )}
               </h2>
 
               <p className="ohCardText">
-                {text(
-                  "Save assessments, reports, educational context, and health preparation inside your OrganHeal workspace.",
-                  "احفظ التقييمات، التقارير، السياق التعليمي، والتحضير الصحي داخل مساحة OrganHeal الخاصة بك."
-                )}
+                {isLoggedIn
+                  ? text(
+                      "Return to your dashboard to review saved reports, health context, and meaningful updates.",
+                      "ارجع إلى لوحة التحكم لمراجعة التقارير المحفوظة والسياق الصحي والتحديثات المهمة."
+                    )
+                  : text(
+                      "Save assessments, reports, educational context, and health preparation inside your OrganHeal workspace.",
+                      "احفظ التقييمات، التقارير، السياق التعليمي، والتحضير الصحي داخل مساحة OrganHeal الخاصة بك."
+                    )}
               </p>
             </div>
 
@@ -983,7 +2286,11 @@ export default function Home() {
                     {text("Open Dashboard", "فتح لوحة التحكم")}
                   </Link>
 
-                  <button type="button" className="secondaryBtn" onClick={signOut}>
+                  <button
+                    type="button"
+                    className="secondaryBtn homeSignOutBtn"
+                    onClick={signOut}
+                  >
                     {text("Sign Out", "تسجيل الخروج")}
                   </button>
                 </>

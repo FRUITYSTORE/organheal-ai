@@ -90,7 +90,8 @@ function mergeInsightsWithReports(
 
 async function loadIntelligenceSummaries(
   userId: string,
-  language: IntelligencePageLanguage
+  language: IntelligencePageLanguage,
+  requestedReportId?: number
 ): Promise<IntelligenceSummaryApiPayload> {
   const {
     data: sessionData,
@@ -116,8 +117,13 @@ async function loadIntelligenceSummaries(
           `Bearer ${accessToken}`,
       },
       body: JSON.stringify({
-        language,
-      }),
+  language,
+  reportId:
+    requestedReportId &&
+    requestedReportId > 0
+      ? requestedReportId
+      : undefined,
+}),
     }
   );
 
@@ -144,11 +150,16 @@ async function loadIntelligenceSummaries(
 
 export async function loadIntelligencePage(
   userId: string,
-  language: IntelligencePageLanguage
+  language: IntelligencePageLanguage,
+  requestedReportId?: number
 ): Promise<IntelligencePageLoaderResult> {
   const summariesResult =
     await Promise.allSettled([
-      loadIntelligenceSummaries(userId, language),
+      loadIntelligenceSummaries(
+  userId,
+  language,
+  requestedReportId
+),
     ]);
 
   const summaryResult = summariesResult[0];
@@ -183,15 +194,22 @@ export async function loadIntelligencePage(
   const insights = summaryResult.value.healthInsights ?? [];
 
   const reportIds = Array.from(
-    new Set(
-      insights
-        .map((insight) => insight.report_id)
-        .filter(
-          (reportId): reportId is number =>
-            reportId !== null
-        )
-    )
-  );
+  new Set(
+    insights
+      .map((insight) => insight.report_id)
+      .filter(
+        (reportId): reportId is number =>
+          reportId !== null
+      )
+  )
+);
+
+if (
+  requestedReportId &&
+  !reportIds.includes(requestedReportId)
+) {
+  reportIds.unshift(requestedReportId);
+}
 
   const availableReports =
     summaryResult.value.uploadedReports ?? [];

@@ -77,13 +77,16 @@ function getReportTypeLabel(type?: string | null) {
   return type;
 }
 
-export async function getReportsLibrary(userId: string): Promise<ReportsLibraryCard[]> {
+export async function getReportsLibrary(
+  userId: string,
+  limit = 50
+): Promise<ReportsLibraryCard[]> {
   const { data: uploadedData, error: uploadedError } = await supabase
     .from("uploaded_lab_files")
     .select("id, file_name, file_path, report_type, extraction_status, extracted_text, created_at")
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
-    .limit(50);
+    .limit(limit);
 
   if (uploadedError) {
     throw new Error(uploadedError.message);
