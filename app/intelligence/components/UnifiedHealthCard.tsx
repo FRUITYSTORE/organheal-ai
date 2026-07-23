@@ -1,4 +1,4 @@
-type UnifiedHealthCardProps = {
+﻿type UnifiedHealthCardProps = {
   unifiedHealth: unknown;
 };
 
@@ -12,7 +12,6 @@ type UnifiedHealthSignal = {
   status?: string;
   riskLevel?: string;
   priority?: string;
-  confidence?: string;
   insight?: string;
   summary?: string;
   description?: string;
@@ -26,32 +25,13 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function getText(value: unknown): string {
-  if (typeof value === "string") return value;
-  if (typeof value === "number") return String(value);
+  if (typeof value === "string") return value.trim();
+
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return String(value);
+  }
+
   return "";
-}
-
-function getTextList(value: unknown): string[] {
-  if (!Array.isArray(value)) return [];
-
-  return value
-    .map((item) => {
-      if (typeof item === "string") return item;
-      if (typeof item === "number") return String(item);
-
-      if (isRecord(item)) {
-        return (
-          getText(item.title) ||
-          getText(item.name) ||
-          getText(item.label) ||
-          getText(item.summary) ||
-          getText(item.description)
-        );
-      }
-
-      return "";
-    })
-    .filter((item) => item.trim().length > 0);
 }
 
 function normalizeUnifiedHealthSignals(
@@ -68,7 +48,6 @@ function normalizeUnifiedHealthSignals(
       status: getText(item.status),
       riskLevel: getText(item.riskLevel),
       priority: getText(item.priority),
-      confidence: getText(item.confidence),
       insight: getText(item.insight),
       summary: getText(item.summary),
       description: getText(item.description),
@@ -81,8 +60,8 @@ function normalizeUnifiedHealthSignals(
   if (!isRecord(unifiedHealth)) return [];
 
   const possibleItems =
-    unifiedHealth.items ||
     unifiedHealth.signals ||
+    unifiedHealth.items ||
     unifiedHealth.insights ||
     unifiedHealth.healthSignals ||
     unifiedHealth.unifiedSignals ||
@@ -103,7 +82,6 @@ function normalizeUnifiedHealthSignals(
     status: getText(item.status),
     riskLevel: getText(item.riskLevel),
     priority: getText(item.priority),
-    confidence: getText(item.confidence),
     insight: getText(item.insight),
     summary: getText(item.summary),
     description: getText(item.description),
@@ -113,239 +91,149 @@ function normalizeUnifiedHealthSignals(
   }));
 }
 
-function getUnifiedHealthSummary(unifiedHealth: unknown): string {
-  if (typeof unifiedHealth === "string") return unifiedHealth;
+function normalizeSeverity(value: string): string {
+  const normalized = value.trim().toLowerCase();
 
-  if (!isRecord(unifiedHealth)) return "";
+  if (normalized === "high") return "High";
+  if (normalized === "moderate" || normalized === "medium") {
+    return "Moderate";
+  }
+  if (normalized === "low") return "Low";
 
-  return (
-    getText(unifiedHealth.summary) ||
-    getText(unifiedHealth.overview) ||
-    getText(unifiedHealth.narrative) ||
-    getText(unifiedHealth.description) ||
-    getText(unifiedHealth.healthSummary)
-  );
+  return value.trim();
 }
 
-function getUnifiedHealthStatus(unifiedHealth: unknown): string {
-  if (!isRecord(unifiedHealth)) return "";
+function getSeverityClasses(value: string): string {
+  const severity = normalizeSeverity(value);
 
-  return (
-    getText(unifiedHealth.status) ||
-    getText(unifiedHealth.overallStatus) ||
-    getText(unifiedHealth.healthStatus) ||
-    getText(unifiedHealth.currentState)
-  );
-}
+  if (severity === "High") {
+    return "border-red-200 bg-red-50 text-red-700";
+  }
 
-function getUnifiedHealthScore(unifiedHealth: unknown): string {
-  if (!isRecord(unifiedHealth)) return "";
+  if (severity === "Moderate") {
+    return "border-amber-200 bg-amber-50 text-amber-700";
+  }
 
-  return (
-    getText(unifiedHealth.score) ||
-    getText(unifiedHealth.overallScore) ||
-    getText(unifiedHealth.healthScore) ||
-    getText(unifiedHealth.intelligenceScore)
-  );
-}
-
-function getUnifiedHealthConfidence(unifiedHealth: unknown): string {
-  if (!isRecord(unifiedHealth)) return "";
-
-  return (
-    getText(unifiedHealth.confidence) ||
-    getText(unifiedHealth.confidenceLevel) ||
-    getText(unifiedHealth.signalStrength) ||
-    getText(unifiedHealth.reliability)
-  );
+  return "border-emerald-200 bg-emerald-50 text-emerald-700";
 }
 
 export default function UnifiedHealthCard({
   unifiedHealth,
 }: UnifiedHealthCardProps) {
-  const signals = normalizeUnifiedHealthSignals(unifiedHealth);
-  const summary = getUnifiedHealthSummary(unifiedHealth);
-  const status = getUnifiedHealthStatus(unifiedHealth);
-  const score = getUnifiedHealthScore(unifiedHealth);
-  const confidence = getUnifiedHealthConfidence(unifiedHealth);
+  const signals = normalizeUnifiedHealthSignals(unifiedHealth).slice(0, 3);
 
-  const topPriorities = isRecord(unifiedHealth)
-    ? getTextList(
-        unifiedHealth.topPriorities ||
-          unifiedHealth.priorityAreas ||
-          unifiedHealth.keyPriorities
-      )
-    : [];
+  if (signals.length === 0) {
+    return null;
+  }
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-blue-600">
-            Unified Intelligence
-          </p>
+    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+      <div className="border-b border-slate-200 pb-6">
+        <p className="text-sm font-semibold uppercase tracking-[0.12em] text-blue-600">
+          Your Health Priorities
+        </p>
 
-          <h2 className="mt-1 text-2xl font-bold text-slate-900">
-            Health Analysis Summary
-          </h2>
+        <h2 className="mt-2 text-2xl font-bold text-slate-900 md:text-3xl">
+          Focus on what matters most
+        </h2>
 
-          <p className="mt-2 text-sm leading-6 text-slate-600">
-            A unified view of the patient&apos;s current health signals,
-            detected patterns, risk direction, and priority focus areas.
-          </p>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          {score && (
-            <span className="w-fit rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-200">
-              Score: {score}
-            </span>
-          )}
-
-          {status && (
-            <span className="w-fit rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-200">
-              Status: {status}
-            </span>
-          )}
-
-          {confidence && (
-            <span className="w-fit rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-200">
-              Confidence: {confidence}
-            </span>
-          )}
-        </div>
+        <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600 md:text-base">
+          Based on your uploaded report and available health information,
+          these are the areas that deserve the clearest attention and
+          follow-up.
+        </p>
       </div>
 
-      {summary && (
-        <div className="mb-5 rounded-xl border border-blue-100 bg-blue-50 p-4">
-          <p className="text-sm leading-6 text-slate-700">{summary}</p>
-        </div>
-      )}
+      <div className="mt-6 grid gap-5">
+        {signals.map((item, index) => {
+          const title =
+            item.title ||
+            item.name ||
+            item.organ ||
+            item.system ||
+            item.category ||
+            `Health Priority ${index + 1}`;
 
-      {topPriorities.length > 0 && (
-        <div className="mb-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Top Priorities
-          </p>
+          const explanation =
+            item.insight ||
+            item.interpretation ||
+            item.summary ||
+            item.description;
 
-          <div className="mt-3 flex flex-wrap gap-2">
-            {topPriorities.map((priority, index) => (
-              <span
-                key={`${priority}-${index}`}
-                className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200"
-              >
-                {priority}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
+          const recommendedFocus = item.recommendation || item.action;
 
-      {signals.length > 0 ? (
-        <div className="grid gap-4">
-          {signals.map((item, index) => {
-            const title =
-              item.title ||
-              item.name ||
-              item.organ ||
-              item.system ||
-              item.category ||
-              `Unified Health Signal ${index + 1}`;
+          const severity =
+            normalizeSeverity(item.riskLevel || item.status || "") ||
+            "Priority";
 
-            const explanation =
-              item.insight ||
-              item.interpretation ||
-              item.summary ||
-              item.description;
+          return (
+            <article
+              key={item.id ?? `${title}-${index}`}
+              className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50"
+            >
+              <div className="flex flex-col gap-4 border-b border-slate-200 bg-white p-5 md:flex-row md:items-start md:justify-between md:p-6">
+                <div className="flex min-w-0 items-start gap-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-900 text-sm font-bold text-white">
+                    {index + 1}
+                  </div>
 
-            const suggestedFocus = item.recommendation || item.action;
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                      Priority {index + 1}
+                    </p>
 
-            const contextParts = [
-              item.organ,
-              item.system,
-              item.category,
-            ].filter(
-              (value): value is string =>
-                typeof value === "string" && value.trim().length > 0
-            );
-
-            return (
-              <div
-                key={item.id ?? index}
-                className="rounded-xl border border-slate-200 bg-slate-50 p-4"
-              >
-                <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-                  <div>
-                    <h3 className="text-base font-semibold text-slate-900">
+                    <h3 className="mt-1 text-xl font-bold text-slate-900">
                       {title}
                     </h3>
-
-                    {contextParts.length > 0 && (
-                      <p className="mt-1 text-sm text-slate-500">
-                        {contextParts.join(" â€¢ ")}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    {item.priority && (
-                      <span className="w-fit rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200">
-                        Priority: {item.priority}
-                      </span>
-                    )}
-
-                    {item.riskLevel && (
-                      <span className="w-fit rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200">
-                        Risk: {item.riskLevel}
-                      </span>
-                    )}
                   </div>
                 </div>
 
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {item.status && (
-                    <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200">
-                      Status: {item.status}
-                    </span>
-                  )}
+                <span
+                  className={`w-fit rounded-full border px-3 py-1.5 text-xs font-semibold ${getSeverityClasses(
+                    severity
+                  )}`}
+                >
+                  {severity === "Priority"
+                    ? "Priority area"
+                    : `${severity} priority`}
+                </span>
+              </div>
 
-                  {item.confidence && (
-                    <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200">
-                      Confidence: {item.confidence}
-                    </span>
-                  )}
-                </div>
-
+              <div className="grid gap-5 p-5 md:p-6">
                 {explanation && (
-                  <p className="mt-3 text-sm leading-6 text-slate-700">
-                    {explanation}
-                  </p>
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                      Why this matters
+                    </p>
+
+                    <p className="mt-2 text-sm leading-7 text-slate-700 md:text-base">
+                      {explanation}
+                    </p>
+                  </div>
                 )}
 
-                {suggestedFocus && (
-                  <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Suggested Focus
+                {recommendedFocus && (
+                  <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-blue-700">
+                      Recommended focus
                     </p>
-                    <p className="mt-1 text-sm leading-6 text-slate-700">
-                      {suggestedFocus}
+
+                    <p className="mt-2 text-sm leading-7 text-slate-700">
+                      {recommendedFocus}
                     </p>
                   </div>
                 )}
               </div>
-            );
-          })}
-        </div>
-      ) : (
-        <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-5">
-          <p className="text-sm text-slate-600">
-            Unified health analysis will appear here after OrganHeal
-            combines report findings, lab trends, risks, and health strategy
-            into one summary.
-          </p>
-        </div>
-      )}
+            </article>
+          );
+        })}
+      </div>
+
+      <p className="mt-6 text-xs leading-6 text-slate-500">
+        These priorities are educational interpretations of the available
+        information and should be reviewed alongside the original report and
+        professional medical advice.
+      </p>
     </section>
   );
 }
-

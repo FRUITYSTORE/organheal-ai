@@ -9,8 +9,6 @@ import FeaturedReportCard from "@/app/components/reports/FeaturedReportCard";
 import CompactReportRow from "@/app/components/reports/CompactReportRow";
 import StatusBadge from "@/app/components/ui/StatusBadge";
 import { getReportsLibrary } from "@/lib/services/reports/reports.service";
-{}
-
 type Language = "en" | "ar";
 
 type UploadedReport = {
@@ -124,6 +122,8 @@ export default function ReportsPage() {
     "all" | "needs-analysis" | "saved" | "failed"
   >("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [isSelectingForIntelligence, setIsSelectingForIntelligence] =
+    useState(false);
 
   const isArabic = language === "ar";
 
@@ -132,6 +132,11 @@ export default function ReportsPage() {
   }
 
   useEffect(() => {
+    const selectMode =
+      new URLSearchParams(window.location.search).get("select");
+
+    setIsSelectingForIntelligence(selectMode === "intelligence");
+
     function syncLanguage() {
       const savedLanguage =
         (localStorage.getItem("organheal-language") as Language | null) || "en";
@@ -260,6 +265,53 @@ const visibleCompactReports = showAllReports
         .reportsFocusPage a {
           color: inherit;
           text-decoration: none;
+        }
+
+        .reportSelectionNotice {
+          padding: 20px 22px;
+          border: 1px solid rgba(15, 118, 110, 0.22);
+          border-radius: 18px;
+          background:
+            linear-gradient(
+              135deg,
+              rgba(240, 253, 250, 0.98),
+              rgba(248, 250, 252, 0.98)
+            );
+          box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+        }
+
+        .reportSelectionNoticeContent {
+          display: grid;
+          gap: 6px;
+        }
+
+        .reportSelectionNoticeLabel {
+          margin: 0;
+          color: #0f766e;
+          font-size: 0.76rem;
+          font-weight: 800;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+
+        .reportSelectionNoticeTitle {
+          margin: 0;
+          color: #0f172a;
+          font-size: clamp(1.08rem, 2vw, 1.32rem);
+          line-height: 1.35;
+        }
+
+        .reportSelectionNoticeText {
+          margin: 0;
+          max-width: 720px;
+          color: #475569;
+          line-height: 1.65;
+        }
+
+        @media (max-width: 720px) {
+          .reportSelectionNotice {
+            padding: 18px;
+          }
         }
 
         .reportsHero {
@@ -651,6 +703,35 @@ const visibleCompactReports = showAllReports
       `}</style>
 
       <div className="ohContainer ohStack large" style={{ padding: "28px 0 56px" }}>
+        {isSelectingForIntelligence && (
+          <section
+            className="reportSelectionNotice"
+            aria-labelledby="report-selection-title"
+          >
+            <div className="reportSelectionNoticeContent">
+              <p className="reportSelectionNoticeLabel">
+                {text("Report selection", "اختيار التقرير")}
+              </p>
+
+              <h2
+                id="report-selection-title"
+                className="reportSelectionNoticeTitle"
+              >
+                {text(
+                  "Select a report to analyze",
+                  "اختر تقريرًا لتحليله"
+                )}
+              </h2>
+
+              <p className="reportSelectionNoticeText">
+                {text(
+                  "Choose one of your uploaded reports below to open its AI Intelligence analysis.",
+                  "اختر أحد تقاريرك المرفوعة أدناه لفتح تحليله في صفحة الذكاء الصحي."
+                )}
+              </p>
+            </div>
+          </section>
+        )}
         <Link
           href="/dashboard"
           className="ohMetricHint"

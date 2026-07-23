@@ -12,6 +12,7 @@ import { useEffect, useRef, useState } from "react";
 import type {
   GeneratedIntelligenceResult,
 } from "@/lib/services/intelligence/report-intelligence-result.service";
+import { presentUnifiedHealth } from "@/lib/presentation/intelligence/unified-health.presenter";
 import ExecutiveSummaryCard from "./components/ExecutiveSummaryCard";
 import HealthStoryCard from "./components/HealthStoryCard";
 import ActionPlanCard from "./components/ActionPlanCard";
@@ -278,21 +279,31 @@ export default function IntelligencePage() {
     setLoading(true);
     setMessage("");
 
-    const currentLanguage =
-      getIntelligenceStoredLanguage();
-      const requestedReportId =
-  typeof window !== "undefined"
-    ? getIntelligenceReportRequest(window.location.search)
-        .requestedReportId
-    : undefined;
-    const currentIsArabic =
-      currentLanguage === "ar";
+    const currentLanguage = getIntelligenceStoredLanguage();
+
+    const reportRequest =
+      typeof window !== "undefined"
+        ? getIntelligenceReportRequest(window.location.search)
+        : null;
+
+    const requestedReportId = reportRequest?.requestedReportId;
+
+    const hasSelectedReport =
+      Boolean(reportRequest?.hasRequestedReport) ||
+      Boolean(reportRequest?.hasRequestedInsight);
+
+    const currentIsArabic = currentLanguage === "ar";
 
     const sessionResult =
       await getIntelligenceSession();
 
     if (!sessionResult.success) {
       window.location.href = "/login";
+      return;
+    }
+
+    if (!hasSelectedReport) {
+      window.location.replace("/reports?select=intelligence");
       return;
     }
 
@@ -552,6 +563,10 @@ const {
       focusedReportInsight.extraction_status === "Completed"
   );
 
+  const unifiedHealthPresentation = generatedResult?.unifiedHealth
+    ? presentUnifiedHealth(generatedResult.unifiedHealth)
+    : null;
+
   const focusedReportHasVisibleResult = Boolean(
     focusedReportInsight &&
       generatedResult &&
@@ -681,6 +696,258 @@ const {
           margin-top: 20px;
           display: grid;
           gap: 16px;
+        }
+
+        .intelligenceResultLayer {
+          display: grid;
+          gap: 18px;
+          padding: 22px;
+          border: 1px solid rgba(15, 23, 42, 0.08);
+          border-radius: 28px;
+          background:
+            radial-gradient(
+              circle at 92% 5%,
+              rgba(20, 184, 166, 0.09),
+              transparent 30%
+            ),
+            #ffffff;
+          box-shadow: 0 18px 50px rgba(15, 23, 42, 0.06);
+        }
+
+        .intelligenceActionLayer {
+          background:
+            radial-gradient(
+              circle at 92% 5%,
+              rgba(37, 99, 235, 0.09),
+              transparent 30%
+            ),
+            linear-gradient(180deg, #ffffff, #f8fbff);
+        }
+
+        .intelligenceLayerHeader {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 20px;
+          padding-bottom: 17px;
+          border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+        }
+
+        .intelligenceLayerEyebrow {
+          margin: 0 0 7px;
+          color: #0f766e;
+          font-size: 0.75rem;
+          font-weight: 950;
+          letter-spacing: 0.09em;
+          text-transform: uppercase;
+        }
+
+        .intelligenceLayerTitle {
+          margin: 0;
+          color: #0f172a;
+          font-size: clamp(1.28rem, 2vw, 1.68rem);
+          font-weight: 950;
+          letter-spacing: -0.025em;
+        }
+
+        .intelligenceLayerDescription {
+          max-width: 760px;
+          margin: 8px 0 0;
+          color: #64748b;
+          font-weight: 650;
+          line-height: 1.7;
+        }
+
+        .intelligenceLayerNumber {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          flex: 0 0 44px;
+          width: 44px;
+          height: 44px;
+          border-radius: 15px;
+          background: #ecfdf5;
+          color: #047857;
+          font-size: 0.83rem;
+          font-weight: 950;
+        }
+
+        .intelligenceLayerContent {
+          display: grid;
+          gap: 16px;
+        }
+
+        .intelligenceDisclosure {
+          overflow: hidden;
+          border: 1px solid rgba(15, 23, 42, 0.09);
+          border-radius: 27px;
+          background: #ffffff;
+          box-shadow: 0 16px 46px rgba(15, 23, 42, 0.055);
+        }
+
+        .intelligenceDisclosure[open] {
+          box-shadow: 0 22px 60px rgba(15, 23, 42, 0.085);
+        }
+
+        .intelligenceDisclosureSummary {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 20px;
+          padding: 22px;
+          cursor: pointer;
+          list-style: none;
+          user-select: none;
+        }
+
+        .intelligenceDisclosureSummary::-webkit-details-marker {
+          display: none;
+        }
+
+        .intelligenceDisclosureSummary:hover {
+          background: rgba(248, 250, 252, 0.9);
+        }
+
+        .intelligenceDisclosureLead {
+          display: flex;
+          align-items: flex-start;
+          gap: 14px;
+          min-width: 0;
+        }
+
+        .intelligenceDisclosureIcon {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          flex: 0 0 45px;
+          width: 45px;
+          height: 45px;
+          border-radius: 15px;
+          background: linear-gradient(135deg, #0f172a, #115e59);
+          color: #ffffff;
+          font-size: 0.81rem;
+          font-weight: 950;
+        }
+
+        .intelligenceDisclosureTitle {
+          display: block;
+          color: #0f172a;
+          font-size: 1.08rem;
+          font-weight: 950;
+        }
+
+        .intelligenceDisclosureDescription {
+          display: block;
+          max-width: 760px;
+          margin-top: 6px;
+          color: #64748b;
+          font-size: 0.88rem;
+          font-weight: 650;
+          line-height: 1.55;
+        }
+
+        .intelligenceDisclosureChevron {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          flex: 0 0 40px;
+          width: 40px;
+          height: 40px;
+          border-radius: 999px;
+          background: #f1f5f9;
+          color: #334155;
+          font-size: 1rem;
+          font-weight: 950;
+          transition:
+            transform 180ms ease,
+            background 180ms ease,
+            color 180ms ease;
+        }
+
+        .intelligenceDisclosure[open]
+          .intelligenceDisclosureChevron {
+          transform: rotate(180deg);
+          background: #ecfdf5;
+          color: #047857;
+        }
+
+        .intelligenceDisclosureContent {
+          display: grid;
+          gap: 16px;
+          padding: 20px 22px 22px;
+          border-top: 1px solid rgba(15, 23, 42, 0.07);
+        }
+
+        .intelligenceActionFooter {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+          padding: 17px 18px;
+          border-radius: 21px;
+          background: linear-gradient(135deg, #0f172a, #115e59);
+          color: #ffffff;
+        }
+
+        .intelligenceActionFooter strong {
+          display: block;
+          font-size: 0.98rem;
+        }
+
+        .intelligenceActionFooter span {
+          display: block;
+          max-width: 650px;
+          margin-top: 4px;
+          color: rgba(226, 232, 240, 0.82);
+          font-size: 0.84rem;
+          line-height: 1.5;
+        }
+
+        .intelligenceActionLink {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          flex: 0 0 auto;
+          min-height: 44px;
+          padding: 0 17px;
+          border-radius: 999px;
+          background: #ffffff;
+          color: #0f766e !important;
+          font-size: 0.86rem;
+          font-weight: 950;
+        }
+
+        @media (max-width: 720px) {
+          .intelligenceResultLayer {
+            padding: 17px;
+            border-radius: 23px;
+          }
+
+          .intelligenceLayerHeader {
+            gap: 12px;
+          }
+
+          .intelligenceDisclosureSummary {
+            align-items: flex-start;
+            padding: 18px;
+          }
+
+          .intelligenceDisclosureDescription {
+            display: none;
+          }
+
+          .intelligenceDisclosureContent {
+            padding: 17px;
+          }
+
+          .intelligenceActionFooter {
+            align-items: stretch;
+            flex-direction: column;
+          }
+
+          .intelligenceActionLink {
+            width: 100%;
+          }
         }
 
         @media (max-width: 980px) {
@@ -941,72 +1208,301 @@ const {
 
             {focusedReportHasVisibleResult && generatedResult && (
               <div className="focusedResultStack">
-                <PatientReportPdfCard
-                  fileName={focusedReportInsight.file_name || "Medical report"}
-                  uploadedAtText={formatDate(focusedReportInsight.uploaded_at || focusedReportInsight.created_at)}
-                  summary={focusedReportInsight.summary}
-                  keyFindings={focusedReportInsight.key_findings}
-                  riskSignals={focusedReportInsight.risk_signals}
-                  recommendations={focusedReportInsight.recommendations}
-                  healthStory={generatedResult.healthStory}
-                  executiveSummary={generatedResult.executiveSummary}
-                  patientPresentation={unifiedPatientPresentationV2}
-                />
+                <section
+                  className="intelligenceResultLayer"
+                  aria-labelledby="intelligence-overview-title"
+                >
+                  <div className="intelligenceLayerHeader">
+                    <div>
+                      <p className="intelligenceLayerEyebrow">
+                        {text(
+                          "Health intelligence overview",
+                          "نظرة الذكاء الصحي"
+                        )}
+                      </p>
 
-                <DoctorBriefReportCard
-                  fileName={focusedReportInsight.file_name || "Medical report"}
-                  reportTypeLabel={getReportTypeLabel(focusedReportInsight.report_type)}
-                  uploadedAtText={formatDate(focusedReportInsight.uploaded_at || focusedReportInsight.created_at)}
-                  summary={focusedReportInsight.summary}
-                  keyFindings={focusedReportInsight.key_findings}
-                  riskSignals={focusedReportInsight.risk_signals}
-                  recommendations={focusedReportInsight.recommendations}
-                  doctorBrief={
-  unifiedDoctorBriefV2 ??
-  focusedReportInsight.doctor_brief
-}
-                  executiveSummary={generatedResult.executiveSummary}
-                />
+                      <h2
+                        className="intelligenceLayerTitle"
+                        id="intelligence-overview-title"
+                      >
+                        {text(
+                          "Understand what matters first",
+                          "افهم ما يهم أولًا"
+                        )}
+                      </h2>
 
-                <GeneratedReportDetailsCard
-                  medicalCategory={focusedReportInsight.medical_category}
-                  summary={focusedReportInsight.summary}
-                  keyFindings={focusedReportInsight.key_findings}
-                  riskSignals={focusedReportInsight.risk_signals}
-                  recommendations={focusedReportInsight.recommendations}
-                  doctorBrief={
-  unifiedDoctorBriefV2 ??
-  focusedReportInsight.doctor_brief
-}
-                />
+                      <p className="intelligenceLayerDescription">
+                        {text(
+                          "A prioritized explanation of the report, its most important health signals, and how they connect to your wider health context.",
+                          "شرح مرتب حسب الأولوية للتقرير، وأهم إشاراته الصحية، وكيف ترتبط بسياقك الصحي الكامل."
+                        )}
+                      </p>
+                    </div>
 
-                {generatedResult.executiveSummary && (
-                  <ExecutiveSummaryCard summary={generatedResult.executiveSummary} />
-                )}
+                    <span
+                      className="intelligenceLayerNumber"
+                      aria-hidden="true"
+                    >
+                      01
+                    </span>
+                  </div>
 
-                {generatedResult.healthStory && (
-                  <HealthStoryCard story={generatedResult.healthStory} />
-                )}
+                  <div className="intelligenceLayerContent">
+                    {generatedResult.executiveSummary && (
+                      <ExecutiveSummaryCard
+                        summary={generatedResult.executiveSummary}
+                      />
+                    )}
 
-                {generatedResult.strategy && (
-                  <PersonalHealthStrategyCard strategy={generatedResult.strategy} />
-                )}
+                    {generatedResult.healthStory && (
+                      <HealthStoryCard
+                        story={generatedResult.healthStory}
+                      />
+                    )}
 
-                {generatedResult.actionPlan && (
-                  <ActionPlanCard actionPlan={generatedResult.actionPlan} />
-                )}
+                    {unifiedHealthPresentation && (
+                      <UnifiedHealthCard
+                        unifiedHealth={unifiedHealthPresentation}
+                      />
+                    )}
+                  </div>
+                </section>
 
-                {generatedResult.unifiedHealth && (
-                  <UnifiedHealthCard unifiedHealth={generatedResult.unifiedHealth} />
-                )}
+                <section
+                  className="intelligenceResultLayer intelligenceActionLayer"
+                  aria-labelledby="intelligence-action-title"
+                >
+                  <div className="intelligenceLayerHeader">
+                    <div>
+                      <p className="intelligenceLayerEyebrow">
+                        {text("Action center", "مركز الإجراءات")}
+                      </p>
 
-                <TimelineCard timeline={generatedResult.timeline} />
-                <LabTrendsCard labTrends={generatedResult.labTrends} />
-                <LongitudinalRiskCard
-                  longitudinalRisk={generatedResult.longitudinalRisk}
-                />
-                <CrossSourceCard crossSource={generatedResult.crossSource} />
-                <DigitalTwinCard digitalTwin={generatedResult.digitalTwin} />
+                      <h2
+                        className="intelligenceLayerTitle"
+                        id="intelligence-action-title"
+                      >
+                        {text(
+                          "Move from understanding to action",
+                          "انتقل من الفهم إلى الإجراء"
+                        )}
+                      </h2>
+
+                      <p className="intelligenceLayerDescription">
+                        {text(
+                          "Prioritized guidance that translates the report into practical follow-up and a clearer next step.",
+                          "إرشادات مرتبة حسب الأولوية تحوّل التقرير إلى متابعة عملية وخطوة تالية أوضح."
+                        )}
+                      </p>
+                    </div>
+
+                    <span
+                      className="intelligenceLayerNumber"
+                      aria-hidden="true"
+                    >
+                      02
+                    </span>
+                  </div>
+
+                  <div className="intelligenceLayerContent">
+                    {generatedResult.strategy && (
+                      <PersonalHealthStrategyCard
+                        strategy={generatedResult.strategy}
+                      />
+                    )}
+
+                    {generatedResult.actionPlan && (
+                      <ActionPlanCard
+                        actionPlan={generatedResult.actionPlan}
+                      />
+                    )}
+
+                    <div className="intelligenceActionFooter">
+                      <div>
+                        <strong>
+                          {text(
+                            "Continue with your personalized health plan",
+                            "تابع إلى خطتك الصحية الشخصية"
+                          )}
+                        </strong>
+
+                        <span>
+                          {text(
+                            "Use this intelligence to guide priorities, follow-up, and ongoing health actions.",
+                            "استخدم هذا التحليل لتوجيه الأولويات والمتابعة والإجراءات الصحية القادمة."
+                          )}
+                        </span>
+                      </div>
+
+                      <Link
+                        href="/health-plan"
+                        className="intelligenceActionLink"
+                      >
+                        {text(
+                          "Open Health Plan",
+                          "افتح خطة الصحة"
+                        )}
+                      </Link>
+                    </div>
+                  </div>
+                </section>
+
+                <details className="intelligenceDisclosure">
+                  <summary className="intelligenceDisclosureSummary">
+                    <span className="intelligenceDisclosureLead">
+                      <span
+                        className="intelligenceDisclosureIcon"
+                        aria-hidden="true"
+                      >
+                        03
+                      </span>
+
+                      <span>
+                        <span className="intelligenceDisclosureTitle">
+                          {text(
+                            "Report Evidence & Clinical Detail",
+                            "أدلة التقرير والتفاصيل السريرية"
+                          )}
+                        </span>
+
+                        <span className="intelligenceDisclosureDescription">
+                          {text(
+                            "Patient explanation, doctor-ready brief, extracted findings, risks, and recommendations.",
+                            "شرح المريض، ملخص الطبيب، النتائج المستخرجة، المخاطر، والتوصيات."
+                          )}
+                        </span>
+                      </span>
+                    </span>
+
+                    <span
+                      className="intelligenceDisclosureChevron"
+                      aria-hidden="true"
+                    >
+                      ↓
+                    </span>
+                  </summary>
+
+                  <div className="intelligenceDisclosureContent">
+                    <PatientReportPdfCard
+                      fileName={
+                        focusedReportInsight.file_name ||
+                        "Medical report"
+                      }
+                      uploadedAtText={formatDate(
+                        focusedReportInsight.uploaded_at ||
+                          focusedReportInsight.created_at
+                      )}
+                      summary={focusedReportInsight.summary}
+                      keyFindings={focusedReportInsight.key_findings}
+                      riskSignals={focusedReportInsight.risk_signals}
+                      recommendations={focusedReportInsight.recommendations}
+                      healthStory={generatedResult.healthStory}
+                      executiveSummary={generatedResult.executiveSummary}
+                      patientPresentation={unifiedPatientPresentationV2}
+                    />
+
+                    <DoctorBriefReportCard
+                      fileName={
+                        focusedReportInsight.file_name ||
+                        "Medical report"
+                      }
+                      reportTypeLabel={getReportTypeLabel(
+                        focusedReportInsight.report_type
+                      )}
+                      uploadedAtText={formatDate(
+                        focusedReportInsight.uploaded_at ||
+                          focusedReportInsight.created_at
+                      )}
+                      summary={focusedReportInsight.summary}
+                      keyFindings={focusedReportInsight.key_findings}
+                      riskSignals={focusedReportInsight.risk_signals}
+                      recommendations={focusedReportInsight.recommendations}
+                      doctorBrief={
+                        unifiedDoctorBriefV2 ??
+                        focusedReportInsight.doctor_brief
+                      }
+                      executiveSummary={generatedResult.executiveSummary}
+                    />
+
+                    <GeneratedReportDetailsCard
+                      medicalCategory={
+                        focusedReportInsight.medical_category
+                      }
+                      summary={focusedReportInsight.summary}
+                      keyFindings={focusedReportInsight.key_findings}
+                      riskSignals={focusedReportInsight.risk_signals}
+                      recommendations={focusedReportInsight.recommendations}
+                      doctorBrief={
+                        unifiedDoctorBriefV2 ??
+                        focusedReportInsight.doctor_brief
+                      }
+                    />
+                  </div>
+                </details>
+
+                <details className="intelligenceDisclosure">
+                  <summary className="intelligenceDisclosureSummary">
+                    <span className="intelligenceDisclosureLead">
+                      <span
+                        className="intelligenceDisclosureIcon"
+                        aria-hidden="true"
+                      >
+                        04
+                      </span>
+
+                      <span>
+                        <span className="intelligenceDisclosureTitle">
+                          {text(
+                            "Advanced Health Intelligence",
+                            "الذكاء الصحي المتقدم"
+                          )}
+                        </span>
+
+                        <span className="intelligenceDisclosureDescription">
+                          {text(
+                            "Timeline, laboratory trends, longitudinal risk, cross-source intelligence, digital twin, and forecast.",
+                            "الخط الزمني، اتجاهات المختبر، المخاطر طويلة المدى، الذكاء متعدد المصادر، التوأم الرقمي، والتوقعات."
+                          )}
+                        </span>
+                      </span>
+                    </span>
+
+                    <span
+                      className="intelligenceDisclosureChevron"
+                      aria-hidden="true"
+                    >
+                      ↓
+                    </span>
+                  </summary>
+
+                  <div className="intelligenceDisclosureContent">
+                    <TimelineCard
+                      timeline={generatedResult.timeline}
+                    />
+
+                    <LabTrendsCard
+                      labTrends={generatedResult.labTrends}
+                    />
+
+                    <LongitudinalRiskCard
+                      longitudinalRisk={
+                        generatedResult.longitudinalRisk
+                      }
+                    />
+
+                    <CrossSourceCard
+                      crossSource={generatedResult.crossSource}
+                    />
+
+                    <DigitalTwinCard
+                      digitalTwin={generatedResult.digitalTwin}
+                    />
+
+                    <ForecastCard
+                      forecast={generatedResult.forecast}
+                    />
+                  </div>
+                </details>
               </div>
             )}
           </section>
@@ -1014,110 +1510,6 @@ const {
 
         {!loading && healthEngine && !focusedReportInsight && (
           <section className="ohStack">
-          </section>
-        )}
-
-        {!loading && (
-          <section className="ohCard" id="report-intelligence-list">
-            <div className="ohCardHeader">
-              <div>
-                <p className="ohMetricLabel">
-                  {text("Other report intelligence", "تحليلات تقارير أخرى")}
-                </p>
-
-                <h2 className="ohCardTitle">
-                  {text(
-                    "Open another report if needed",
-                    "افتح تقريرًا آخر عند الحاجة"
-                  )}
-                </h2>
-
-                <p className="ohCardText">
-                  {text(
-                    "The selected report is shown above. Older report actions stay here in a compact list.",
-                    "التقرير المحدد يظهر بالأعلى. أما إجراءات التقارير الأخرى فتبقى هنا بشكل مختصر."
-                  )}
-                </p>
-              </div>
-
-              <span className="ohStatusBadge neutral">
-                {visibleHealthInsights.length}/{healthInsights.length}
-              </span>
-            </div>
-
-            <MedicalReportList hasReports={healthInsights.length > 0}>
-              {visibleHealthInsights.map((item) => {
-                const isGenerated =
-                  item.ai_status === "Generated" &&
-                  item.extraction_status === "Completed";
-
-
-                const isExpandedReport = expandedReportId === item.id;
-
-                return (
-                  <MedicalReportCard
-                    key={item.id}
-                    fileName={item.file_name || "Medical report"}
-                    reportTypeLabel={getReportTypeLabel(item.report_type)}
-                    uploadedAtText={formatDate(item.uploaded_at || item.created_at)}
-                    extractionStatus={item.extraction_status || "Pending"}
-                    isGenerated={isGenerated}
-                    isExpanded={isExpandedReport}
-                    canOpen={Boolean(item.file_path)}
-                    onOpen={() => openMedicalReport(item.file_path)}
-                    onGenerate={() => {
-                      generateReportIntelligence(item.id);
-                    }}
-                    onViewGenerated={() => openSavedGeneratedResult(item.id)}
-                    onHideGenerated={() => {
-                      setExpandedReportId(null);
-
-                      if (activeGeneratedInsightId === item.id) {
-                        setGeneratedResult(null);
-                        setActiveGeneratedInsightId(null);
-                      }
-                    }}
-                   />
-                );
-              })}
-            </MedicalReportList>
-
-            {healthInsights.length > REPORTS_PAGE_SIZE && (
-              <div
-                className="ohButtonRow"
-                style={{
-                  justifyContent: "center",
-                  marginTop: "18px",
-                }}
-              >
-                {hasOlderReports && (
-                  <button
-                    className="secondaryBtn"
-                    onClick={() =>
-                      setVisibleReportsCount((currentCount) =>
-                        Math.min(currentCount + REPORTS_PAGE_SIZE, healthInsights.length)
-                      )
-                    }
-                  >
-                    {text("Show Older Reports", "عرض تقارير أقدم")}
-                  </button>
-                )}
-
-                {canShowLessReports && (
-                  <button
-                    className="secondaryBtn"
-                    onClick={() => {
-                      setVisibleReportsCount(REPORTS_PAGE_SIZE);
-                      setExpandedReportId(null);
-                      setGeneratedResult(null);
-                      setActiveGeneratedInsightId(null);
-                    }}
-                  >
-                    {text("Show Less", "عرض أقل")}
-                  </button>
-                )}
-              </div>
-            )}
           </section>
         )}
 

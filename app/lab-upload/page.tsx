@@ -429,10 +429,11 @@ export default function LabUploadPage() {
         .labUploadPageV4 {
           min-height: 100vh;
           background:
-            radial-gradient(circle at 12% 5%, rgba(6, 182, 212, 0.18), transparent 28%),
-            radial-gradient(circle at 88% 18%, rgba(15, 118, 110, 0.22), transparent 34%),
-            linear-gradient(180deg, #dbeafe 0%, #e2e8f0 45%, #f8fafc 100%);
+            radial-gradient(circle at 8% 0%, rgba(14, 165, 233, 0.1), transparent 26%),
+            radial-gradient(circle at 92% 12%, rgba(13, 148, 136, 0.1), transparent 30%),
+            linear-gradient(180deg, #f8fbff 0%, #f1f5f9 46%, #ffffff 100%);
           color: #0f172a;
+          font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
 
         .labUploadPageV4 a {
@@ -446,14 +447,21 @@ export default function LabUploadPage() {
 
         .labUploadHero {
           overflow: hidden;
-          padding: 38px;
-          border-radius: 34px;
-          border: 1px solid rgba(255, 255, 255, 0.16);
+          padding: 44px;
+          border-radius: 30px;
+          border: 1px solid rgba(15, 118, 110, 0.18);
           background:
-            radial-gradient(circle at 86% 10%, rgba(20, 184, 166, 0.4), transparent 36%),
-            linear-gradient(135deg, #061826 0%, #0f172a 42%, #0f766e 100%);
+            radial-gradient(circle at 88% 12%, rgba(45, 212, 191, 0.22), transparent 34%),
+            linear-gradient(135deg, #071525 0%, #0f2435 50%, #0f766e 100%);
           color: #ffffff;
-          box-shadow: 0 34px 90px rgba(15, 23, 42, 0.3);
+          box-shadow: 0 24px 64px rgba(15, 23, 42, 0.2);
+        }
+
+        .labUploadHero .ohHeroGrid {
+          display: grid;
+          grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.65fr);
+          gap: 42px;
+          align-items: center;
         }
 
         .labUploadHero :is(h1, h2, h3, p, span, strong) {
@@ -461,30 +469,72 @@ export default function LabUploadPage() {
         }
 
         .labUploadHero .ohTitle {
-          font-size: clamp(2.55rem, 5vw, 4.4rem);
-          line-height: 1.03;
-          letter-spacing: -0.05em;
+          max-width: 700px;
+          margin: 0;
+          font-size: clamp(2.35rem, 4vw, 3.65rem);
+          line-height: 1.04;
+          letter-spacing: -0.035em;
+          font-family: inherit;
+          font-weight: 850;
+        }
+
+        .labUploadHero .ohLead {
+          max-width: 680px;
+          margin-top: 18px;
+          color: rgba(226, 232, 240, 0.9);
+          font-size: 1.04rem;
+          line-height: 1.75;
+        }
+
+        .labUploadHero .ohEyebrow {
+          color: #99f6e4;
+          letter-spacing: 0.12em;
+        }
+
+        .heroPurposeCard {
+          padding: 24px;
+          border: 1px solid rgba(153, 246, 228, 0.22);
+          border-radius: 22px;
+          background: rgba(6, 78, 59, 0.34);
+          backdrop-filter: blur(10px);
+          box-shadow: 0 18px 44px rgba(2, 6, 23, 0.18);
+        }
+
+        .heroPurposeCard .ohMetricLabel {
+          color: #99f6e4;
+        }
+
+        .heroPurposeCard .ohCardTitle {
+          margin-top: 8px;
+          color: #ffffff;
+          font-size: 1.2rem;
+          line-height: 1.4;
+        }
+
+        .heroPurposeCard .ohCardText {
+          color: rgba(226, 232, 240, 0.86);
+          line-height: 1.7;
         }
 
         .uploadJourney {
           display: grid;
           grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 14px;
-          padding: 18px;
-          border: 1px solid rgba(15, 23, 42, 0.1);
-          border-radius: 26px;
-          background: rgba(255, 255, 255, 0.92);
-          box-shadow: 0 18px 44px rgba(15, 23, 42, 0.08);
+          gap: 12px;
+          padding: 14px;
+          border: 1px solid rgba(15, 23, 42, 0.08);
+          border-radius: 24px;
+          background: rgba(255, 255, 255, 0.94);
+          box-shadow: 0 12px 34px rgba(15, 23, 42, 0.06);
         }
 
         .uploadJourneyItem {
           display: grid;
-          grid-template-columns: 44px minmax(0, 1fr);
+          grid-template-columns: 40px minmax(0, 1fr);
           gap: 12px;
-          min-height: 108px;
-          padding: 16px;
-          border: 1px solid rgba(148, 163, 184, 0.24);
-          border-radius: 20px;
+          min-height: 96px;
+          padding: 15px;
+          border: 1px solid rgba(148, 163, 184, 0.2);
+          border-radius: 18px;
           background: #f8fafc;
         }
 
@@ -504,11 +554,11 @@ export default function LabUploadPage() {
         }
 
         .uploadJourneyNumber {
-          width: 44px;
-          height: 44px;
+          width: 40px;
+          height: 40px;
           display: grid;
           place-items: center;
-          border-radius: 15px;
+          border-radius: 13px;
           background: #e2e8f0;
           color: #475569;
           font-weight: 900;
@@ -556,8 +606,8 @@ export default function LabUploadPage() {
 
         .uploadWorkspace {
           display: grid;
-          grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.62fr);
-          gap: 20px;
+          grid-template-columns: minmax(0, 1.32fr) minmax(280px, 0.58fr);
+          gap: 22px;
           align-items: start;
         }
 
@@ -565,19 +615,19 @@ export default function LabUploadPage() {
         .supportedCard,
         .savedReceipt {
           padding: 24px;
-          border: 1px solid rgba(15, 23, 42, 0.12);
-          border-radius: 30px;
+          border: 1px solid rgba(15, 23, 42, 0.09);
+          border-radius: 26px;
           background: #ffffff;
-          box-shadow: 0 22px 58px rgba(15, 23, 42, 0.1);
+          box-shadow: 0 16px 42px rgba(15, 23, 42, 0.07);
         }
 
         .uploadCardHeader {
-          padding: 18px;
-          margin-bottom: 18px;
-          border-radius: 22px;
-          background: linear-gradient(135deg, #061826, #0f766e);
+          padding: 20px;
+          margin-bottom: 20px;
+          border-radius: 20px;
+          background: linear-gradient(135deg, #071525, #0f766e);
           color: #ffffff;
-          box-shadow: 0 16px 38px rgba(15, 23, 42, 0.18);
+          box-shadow: 0 12px 30px rgba(15, 23, 42, 0.14);
         }
 
         .uploadCardHeader :is(h2, p, span, strong) {
@@ -588,26 +638,34 @@ export default function LabUploadPage() {
           display: grid;
           place-items: center;
           gap: 12px;
-          min-height: 240px;
-          padding: 24px;
-          border: 2px dashed rgba(15, 118, 110, 0.45);
-          border-radius: 26px;
+          min-height: 220px;
+          padding: 26px;
+          border: 1.5px dashed rgba(15, 118, 110, 0.42);
+          border-radius: 22px;
           background:
-            radial-gradient(circle at 50% 22%, rgba(20, 184, 166, 0.18), transparent 25%),
-            linear-gradient(180deg, #ffffff, #ecfeff);
+            radial-gradient(circle at 50% 20%, rgba(20, 184, 166, 0.11), transparent 30%),
+            linear-gradient(180deg, #ffffff, #f0fdfa);
           text-align: center;
           cursor: pointer;
+          transition: border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+        }
+
+        .uploadDropzone:hover {
+          border-color: #0f766e;
+          transform: translateY(-1px);
+          box-shadow: 0 12px 30px rgba(15, 118, 110, 0.08);
         }
 
         .uploadDropzoneIcon {
-          width: 72px;
-          height: 72px;
+          width: 64px;
+          height: 64px;
           display: grid;
           place-items: center;
-          border-radius: 22px;
-          border: 1px solid rgba(15, 118, 110, 0.16);
+          border-radius: 18px;
+          border: 1px solid rgba(15, 118, 110, 0.14);
           background: #ccfbf1;
           color: #0f766e;
+          font-size: 0.9rem;
           font-weight: 950;
         }
 
@@ -690,10 +748,10 @@ export default function LabUploadPage() {
         }
 
         .supportedItem {
-          padding: 16px;
-          border: 1px solid rgba(15, 23, 42, 0.1);
-          border-inline-start: 6px solid #0f766e;
-          border-radius: 18px;
+          padding: 15px;
+          border: 1px solid rgba(15, 23, 42, 0.08);
+          border-inline-start: 4px solid #0f766e;
+          border-radius: 16px;
           background: #ffffff;
         }
 
@@ -752,9 +810,14 @@ export default function LabUploadPage() {
         }
 
         @media (max-width: 980px) {
+          .labUploadHero .ohHeroGrid,
           .uploadWorkspace,
           .uploadJourney {
             grid-template-columns: 1fr;
+          }
+
+          .labUploadHero {
+            padding: 34px;
           }
         }
 
@@ -773,6 +836,119 @@ export default function LabUploadPage() {
 
           .uploadFileRow {
             grid-template-columns: 1fr;
+          }
+        }
+
+        /* LAB_UPLOAD_VISUAL_STABILIZATION_V6 */
+        .labUploadPageV4 {
+          background:
+            radial-gradient(circle at 8% 0%, rgba(14, 165, 233, 0.08), transparent 27%),
+            radial-gradient(circle at 92% 12%, rgba(13, 148, 136, 0.08), transparent 31%),
+            linear-gradient(180deg, #f8fafc 0%, #f1f5f9 48%, #ffffff 100%) !important;
+        }
+
+        .labUploadPageV4 .labUploadHero {
+          width: 100% !important;
+          min-height: auto !important;
+          padding: 44px !important;
+          border-radius: 30px !important;
+          background:
+            radial-gradient(circle at 88% 10%, rgba(45, 212, 191, 0.22), transparent 34%),
+            linear-gradient(135deg, #071525 0%, #10283a 52%, #0f766e 100%) !important;
+          box-shadow: 0 24px 64px rgba(15, 23, 42, 0.2) !important;
+        }
+
+        .labUploadPageV4 .labUploadHero .ohHeroGrid {
+          display: grid !important;
+          grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.62fr) !important;
+          gap: 48px !important;
+          align-items: center !important;
+        }
+
+        .labUploadPageV4 .labUploadHero .ohTitle {
+          max-width: 690px !important;
+          margin: 0 !important;
+          font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+            BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+          font-size: clamp(2.35rem, 4vw, 3.65rem) !important;
+          font-weight: 850 !important;
+          line-height: 1.05 !important;
+          letter-spacing: -0.04em !important;
+          color: #ffffff !important;
+        }
+
+        .labUploadPageV4 .labUploadHero .ohLead {
+          max-width: 660px !important;
+          margin-top: 18px !important;
+          font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+            BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+          font-size: 1.03rem !important;
+          font-weight: 500 !important;
+          line-height: 1.75 !important;
+          color: rgba(226, 232, 240, 0.9) !important;
+        }
+
+        .labUploadPageV4 .labUploadHero .ohEyebrow {
+          font-family: Inter, ui-sans-serif, system-ui, sans-serif !important;
+          color: #99f6e4 !important;
+          letter-spacing: 0.12em !important;
+        }
+
+        .labUploadPageV4 .heroPurposeCard {
+          width: 100% !important;
+          min-height: 230px !important;
+          display: flex !important;
+          flex-direction: column !important;
+          justify-content: center !important;
+          padding: 28px !important;
+          border: 1px solid rgba(153, 246, 228, 0.25) !important;
+          border-radius: 24px !important;
+          background: rgba(6, 78, 59, 0.38) !important;
+          box-shadow: 0 18px 44px rgba(2, 6, 23, 0.18) !important;
+        }
+
+        .labUploadPageV4 .heroPurposeCard .ohMetricLabel {
+          color: #99f6e4 !important;
+        }
+
+        .labUploadPageV4 .heroPurposeCard .ohCardTitle {
+          margin: 8px 0 10px !important;
+          font-family: Inter, ui-sans-serif, system-ui, sans-serif !important;
+          font-size: 1.35rem !important;
+          font-weight: 800 !important;
+          line-height: 1.4 !important;
+          color: #ffffff !important;
+        }
+
+        .labUploadPageV4 .heroPurposeCard .ohCardText {
+          font-family: Inter, ui-sans-serif, system-ui, sans-serif !important;
+          font-size: 0.96rem !important;
+          line-height: 1.7 !important;
+          color: rgba(226, 232, 240, 0.88) !important;
+        }
+
+        @media (max-width: 980px) {
+          .labUploadPageV4 .labUploadHero .ohHeroGrid {
+            grid-template-columns: 1fr !important;
+            gap: 28px !important;
+          }
+
+          .labUploadPageV4 .labUploadHero {
+            padding: 34px !important;
+          }
+
+          .labUploadPageV4 .heroPurposeCard {
+            min-height: auto !important;
+          }
+        }
+
+        @media (max-width: 640px) {
+          .labUploadPageV4 .labUploadHero {
+            padding: 26px !important;
+          }
+
+          .labUploadPageV4 .labUploadHero .ohTitle {
+            font-size: clamp(2.15rem, 11vw, 3rem) !important;
           }
         }
       `}</style>
@@ -812,7 +988,7 @@ export default function LabUploadPage() {
               </div>
             </div>
 
-            <aside className="uploadCardHeader" style={{ marginBottom: 0 }}>
+            <aside className="heroPurposeCard">
               <p className="ohMetricLabel">
                 {text("One clear purpose", "هدف واحد واضح")}
               </p>

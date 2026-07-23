@@ -162,7 +162,7 @@ export default function MedicalReportCard({
 
         <div className="ohButtonRow">
           {canOpen && (
-            <button className="secondaryBtn" type="button" onClick={onOpen}>
+            <button className="inline-flex min-h-12 items-center justify-center rounded-full border border-teal-700 bg-white px-7 py-3 font-semibold text-teal-800 shadow-sm transition hover:bg-teal-50 hover:text-teal-900 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2" type="button" onClick={onOpen}>
               {text("Open", "فتح التقرير")}
             </button>
           )}

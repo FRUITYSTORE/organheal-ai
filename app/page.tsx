@@ -1927,10 +1927,25 @@ export default function Home() {
               ) : latestReport ? (
                 <>
                   <h2 className="homeContinuationTitle">
-                    {latestReport.fileName}
+                    {latestReport.hasSavedAnalysis
+                      ? text(
+                          "Review your latest health intelligence.",
+                          "\u0631\u0627\u062c\u0639 \u0623\u062d\u062f\u062b \u0630\u0643\u0627\u0621 \u0635\u062d\u064a \u0644\u062f\u064a\u0643."
+                        )
+                      : latestReport.extractionStatus === "Processing"
+                        ? text(
+                            "Your latest report is still processing.",
+                            "\u0644\u0627 \u064a\u0632\u0627\u0644 \u0623\u062d\u062f\u062b \u062a\u0642\u0631\u064a\u0631 \u0644\u062f\u064a\u0643 \u0642\u064a\u062f \u0627\u0644\u0645\u0639\u0627\u0644\u062c\u0629."
+                          )
+                        : text(
+                            "Your latest report is ready for analysis.",
+                            "\u0623\u062d\u062f\u062b \u062a\u0642\u0631\u064a\u0631 \u0644\u062f\u064a\u0643 \u062c\u0627\u0647\u0632 \u0644\u0644\u062a\u062d\u0644\u064a\u0644."
+                          )}
                   </h2>
 
                   <div className="homeContinuationMeta">
+                    <span>{latestReport.fileName}</span>
+
                     <span>
                       {formatHomeDate(latestReport.uploadedAt)}
                     </span>
@@ -1991,26 +2006,33 @@ export default function Home() {
               <Link
                 href={
                   latestReport
-                    ? latestReport.hasSavedAnalysis
-                      ? `/intelligence?reportId=${latestReport.reportId}`
-                      : `/intelligence?reportId=${latestReport.reportId}&auto=1`
+                    ? latestReport.extractionStatus === "Processing"
+                      ? "/reports"
+                      : latestReport.hasSavedAnalysis
+                        ? `/intelligence?reportId=${latestReport.reportId}`
+                        : `/intelligence?reportId=${latestReport.reportId}&auto=1`
                     : "/lab-upload"
                 }
                 className="primaryBtn homeContinuationAction"
               >
                 {latestReport
-                  ? latestReport.hasSavedAnalysis
+                  ? latestReport.extractionStatus === "Processing"
                     ? text(
-                        "Continue Intelligence",
-                        "متابعة الذكاء الصحي"
+                        "View Report Status",
+                        "\u0639\u0631\u0636 \u062d\u0627\u0644\u0629 \u0627\u0644\u062a\u0642\u0631\u064a\u0631"
                       )
-                    : text(
-                        "Analyze Report",
-                        "تحليل التقرير"
-                      )
+                    : latestReport.hasSavedAnalysis
+                      ? text(
+                          "Review Intelligence",
+                          "\u0645\u0631\u0627\u062c\u0639\u0629 \u0627\u0644\u0630\u0643\u0627\u0621 \u0627\u0644\u0635\u062d\u064a"
+                        )
+                      : text(
+                          "Analyze Latest Report",
+                          "\u062a\u062d\u0644\u064a\u0644 \u0623\u062d\u062f\u062b \u062a\u0642\u0631\u064a\u0631"
+                        )
                   : text(
-                      "Upload Report",
-                      "رفع تقرير"
+                      "Upload First Report",
+                      "\u0631\u0641\u0639 \u0623\u0648\u0644 \u062a\u0642\u0631\u064a\u0631"
                     )}
               </Link>
             )}
