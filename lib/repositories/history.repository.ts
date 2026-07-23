@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type HealthHistorySummary = {
   id: string;
@@ -19,9 +20,10 @@ export type AddHealthHistoryInput = {
 
 export async function getRecentHealthHistory(
   userId: string,
-  limit = 10
+  limit = 10,
+  client: SupabaseClient = supabase
 ): Promise<HealthHistorySummary[]> {
-  const { data, error } = await supabase
+  const { data, error } = await client
     .from("health_history")
     .select("id, module_name, score, status, notes, created_at")
     .eq("user_id", userId)

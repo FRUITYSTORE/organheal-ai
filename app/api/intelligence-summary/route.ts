@@ -9,6 +9,9 @@ import {
 import {
   getCombinedIntelligenceSummary,
 } from "@/lib/services/intelligence/intelligence-summary-v2.service";
+import {
+  getFocusedIntelligenceSummary,
+} from "@/lib/services/intelligence/focused-intelligence-summary.service";
 
 type IntelligenceSummaryRequest = {
   language?: "en" | "ar";
@@ -96,85 +99,54 @@ export async function POST(
         IntelligenceSummaryRequest;
 
     const userId = authData.user.id;
+
     const language =
       body.language === "ar"
         ? "ar"
         : "en";
-const requestedReportId =
-  typeof body.reportId === "number" &&
-  body.reportId > 0
-    ? body.reportId
-    : null;
-    let healthInsightsQuery = authenticatedSupabase
-  .from("health_insights")
-  .select(
-    "id, report_id, insight_title, summary, key_findings, recommendations, doctor_brief, ai_status, risk_level, next_best_action, report_type, created_at"
-  )
-  .eq("user_id", userId);
 
-let uploadedReportsQuery = authenticatedSupabase
-  .from("uploaded_lab_files")
-  .select(
-    "id, file_name, file_path, report_type, extraction_status, extracted_text, created_at, extracted_at"
-  )
-  .eq("user_id", userId);
+    const requestedReportId =
+      typeof body.reportId === "number" &&
+      Number.isInteger(body.reportId) &&
+      body.reportId > 0
+        ? body.reportId
+        : null;
 
-if (requestedReportId) {
-  healthInsightsQuery = healthInsightsQuery.eq(
-    "report_id",
-    requestedReportId
-  );
-
-  uploadedReportsQuery = uploadedReportsQuery.eq(
-    "id",
-    requestedReportId
-  );
-} else {
-  healthInsightsQuery = healthInsightsQuery
-    .order("created_at", {
-      ascending: false,
-    })
-    .limit(20);
-
-  uploadedReportsQuery = uploadedReportsQuery
-    .order("created_at", {
-      ascending: false,
-    })
-    .limit(20);
-}
-
-const [
-  combinedSummary,
-  healthInsightsResult,
-  uploadedReportsResult,
-] = await Promise.all([
-  getCombinedIntelligenceSummary(
+    if (requestedReportId !== null) {
+      const focusedSummary =
+  await getFocusedIntelligenceSummary(
     userId,
-    language
-  ),
-  healthInsightsQuery,
-  uploadedReportsQuery,
-]);
+    requestedReportId,
+    language,
+    authenticatedSupabase
+  );
 
-    if (healthInsightsResult.error) {
-      throw new Error(
-        healthInsightsResult.error.message
+      if (!focusedSummary) {
+        return NextResponse.json(
+          {
+            error:
+              "The requested report was not found in your account.",
+          },
+          {
+            status: 404,
+          }
+        );
+      }
+
+      return NextResponse.json(
+        focusedSummary
       );
     }
 
-    if (uploadedReportsResult.error) {
-      throw new Error(
-        uploadedReportsResult.error.message
+    const combinedSummary =
+      await getCombinedIntelligenceSummary(
+        userId,
+        language
       );
-    }
 
-    return NextResponse.json({
-      ...combinedSummary,
-      healthInsights:
-        healthInsightsResult.data || [],
-      uploadedReports:
-        uploadedReportsResult.data || [],
-    });
+    return NextResponse.json(
+      combinedSummary
+    );
   } catch (error) {
     console.error(
       "Intelligence summary error:",

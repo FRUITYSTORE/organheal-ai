@@ -9,8 +9,13 @@ import {
 } from "@/lib/repositories/insight.repository";
 import { getRecentHealthHistory } from "@/lib/repositories/history.repository";
 import { PatientSummary } from "@/lib/models/patient";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabase";
 
-export async function getPatientSummary(userId: string): Promise<PatientSummary> {
+export async function getPatientSummary(
+  userId: string,
+  client: SupabaseClient = supabase
+): Promise<PatientSummary> {
   const [
     assessments,
     recentCheckIns,
@@ -19,12 +24,12 @@ export async function getPatientSummary(userId: string): Promise<PatientSummary>
     generatedResults,
     historyItems,
   ] = await Promise.all([
-    getRecentAssessments(userId, 20),
-    getRecentCheckIns(userId, 20),
-    getRecentUploadedReports(userId, 20),
-    getRecentHealthInsights(userId, 20),
-    getRecentGeneratedResults(userId, 20),
-    getRecentHealthHistory(userId, 20),
+    getRecentAssessments(userId, 20, client),
+    getRecentCheckIns(userId, 20, client),
+    getRecentUploadedReports(userId, 20, client),
+    getRecentHealthInsights(userId, 20, client),
+    getRecentGeneratedResults(userId, 20, client),
+    getRecentHealthHistory(userId, 20, client),
   ]);
 
   const latestCheckIn =

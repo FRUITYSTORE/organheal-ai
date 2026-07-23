@@ -222,7 +222,10 @@ export default function IntelligencePage() {
           return item.id === requestedInsightId;
         }
 
-        return item.report_id === requestedReportId || item.id === requestedReportId;
+        return (
+  Number(item.report_id) === requestedReportId ||
+  Number(item.id) === requestedReportId
+);
       });
 
       if (!requestedInsight) {

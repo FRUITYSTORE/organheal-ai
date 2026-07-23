@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type UploadedReportSummary = {
   id: number;
@@ -13,9 +14,10 @@ export type UploadedReportSummary = {
 
 export async function getRecentUploadedReports(
   userId: string,
-  limit = 50
+  limit = 50,
+  client: SupabaseClient = supabase
 ): Promise<UploadedReportSummary[]> {
-  const { data, error } = await supabase
+  const { data, error } = await client
     .from("uploaded_lab_files")
     .select(
       "id, file_name, file_path, report_type, extraction_status, extracted_text, created_at, extracted_at"
@@ -46,13 +48,14 @@ export async function countUploadedReports(userId: string): Promise<number> {
 
 export async function getUploadedReportsByIds(
   userId: string,
-  reportIds: number[]
+  reportIds: number[],
+  client: SupabaseClient = supabase
 ): Promise<UploadedReportSummary[]> {
   if (reportIds.length === 0) {
     return [];
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await client
     .from("uploaded_lab_files")
     .select(
       "id, file_name, file_path, report_type, extraction_status, extracted_text, created_at, extracted_at"
@@ -65,7 +68,9 @@ export async function getUploadedReportsByIds(
   }
 
   return (data || []) as UploadedReportSummary[];
-}export async function getUploadedReportExtractedText(
+}
+
+export async function getUploadedReportExtractedText(
   userId: string,
   reportId: number
 ): Promise<string | null> {

@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type HealthInsightSummary = {
   id: number;
@@ -17,9 +18,10 @@ export type HealthInsightSummary = {
 
 export async function getRecentHealthInsights(
   userId: string,
-  limit = 20
+  limit = 20,
+  client: SupabaseClient = supabase
 ): Promise<HealthInsightSummary[]> {
-  const { data, error } = await supabase
+  const { data, error } = await client
     .from("health_insights")
     .select(
       "id, report_id, insight_title, summary, key_findings, recommendations, doctor_brief, ai_status, risk_level, next_best_action, report_type, created_at"
@@ -83,9 +85,10 @@ export type GeneratedResultSummary = {
 
 export async function getRecentGeneratedResults(
   userId: string,
-  limit = 20
+  limit = 20,
+  client: SupabaseClient = supabase
 ): Promise<GeneratedResultSummary[]> {
-  const { data, error } = await supabase
+  const { data, error } = await client
     .from("generated_intelligence_results")
     .select("insight_id, report_id, updated_at")
     .eq("user_id", userId)
@@ -228,4 +231,43 @@ export async function persistReportIntelligenceAtomic(
   if (error) {
     throw new Error(error.message);
   }
+}
+export async function getHealthInsightsByReportId(
+  userId: string,
+  reportId: number,
+  client: SupabaseClient = supabase
+): Promise<HealthInsightSummary[]> {
+  const { data, error } = await client
+    .from("health_insights")
+    .select(
+      "id, report_id, insight_title, summary, key_findings, recommendations, doctor_brief, ai_status, risk_level, next_best_action, report_type, created_at"
+    )
+    .eq("user_id", userId)
+    .eq("report_id", reportId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data || []) as HealthInsightSummary[];
+}
+
+export async function getGeneratedResultsByReportId(
+  userId: string,
+  reportId: number,
+  client: SupabaseClient = supabase
+): Promise<GeneratedResultSummary[]> {
+  const { data, error } = await client
+    .from("generated_intelligence_results")
+    .select("insight_id, report_id, updated_at")
+    .eq("user_id", userId)
+    .eq("report_id", reportId)
+    .order("updated_at", { ascending: false });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data || []) as GeneratedResultSummary[];
 }

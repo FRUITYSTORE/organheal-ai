@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type DailyCheckInSummary = {
   mood: string;
@@ -8,14 +9,15 @@ export type DailyCheckInSummary = {
 
 export async function getRecentCheckIns(
   userId: string,
-  limit = 20
+  limit = 20,
+  client: SupabaseClient = supabase
 ): Promise<DailyCheckInSummary[]> {
   const safeLimit = Math.max(
     1,
     Math.min(limit, 100)
   );
 
-  const { data, error } = await supabase
+  const { data, error } = await client
     .from("daily_checkins")
     .select(
       "mood, wellness_score, created_at"
