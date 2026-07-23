@@ -261,6 +261,64 @@ export default function Home() {
   },
 ];
 
+  const homeHealthFocus = !isLoggedIn
+    ? null
+    : continuationLoading
+      ? {
+          title: text(
+            "Loading your latest health activity.",
+            "\u062c\u0627\u0631\u064a \u062a\u062d\u0645\u064a\u0644 \u0623\u062d\u062f\u062b \u0646\u0634\u0627\u0637\u0643 \u0627\u0644\u0635\u062d\u064a."
+          ),
+          description: text(
+            "OrganHeal is connecting your latest report and intelligence status.",
+            "\u064a\u0642\u0648\u0645 OrganHeal \u0628\u0631\u0628\u0637 \u0623\u062d\u062f\u062b \u062a\u0642\u0631\u064a\u0631 \u0628\u062d\u0627\u0644\u0629 \u0627\u0644\u0630\u0643\u0627\u0621 \u0627\u0644\u0635\u062d\u064a."
+          ),
+        }
+      : !latestReport
+        ? {
+            title: text(
+              "Start with your first health report.",
+              "\u0627\u0628\u062f\u0623 \u0628\u0623\u0648\u0644 \u062a\u0642\u0631\u064a\u0631 \u0635\u062d\u064a."
+            ),
+            description: text(
+              "Upload a medical document to begin building your private health intelligence workspace.",
+              "\u0627\u0631\u0641\u0639 \u0645\u0633\u062a\u0646\u062f\u064b\u0627 \u0637\u0628\u064a\u064b\u0627 \u0644\u0628\u062f\u0621 \u0628\u0646\u0627\u0621 \u0645\u0633\u0627\u062d\u0629 \u0630\u0643\u0627\u0626\u0643 \u0627\u0644\u0635\u062d\u064a \u0627\u0644\u062e\u0627\u0635\u0629."
+            ),
+          }
+        : latestReport.extractionStatus === "Processing"
+          ? {
+              title: text(
+                "Your latest report is being prepared.",
+                "\u062c\u0627\u0631\u064a \u062a\u062c\u0647\u064a\u0632 \u0623\u062d\u062f\u062b \u062a\u0642\u0631\u064a\u0631 \u0644\u062f\u064a\u0643."
+              ),
+              description: text(
+                "OrganHeal is processing the document before health intelligence can be generated.",
+                "\u064a\u0642\u0648\u0645 OrganHeal \u0628\u0645\u0639\u0627\u0644\u062c\u0629 \u0627\u0644\u0645\u0633\u062a\u0646\u062f \u0642\u0628\u0644 \u0625\u0646\u0634\u0627\u0621 \u0627\u0644\u0630\u0643\u0627\u0621 \u0627\u0644\u0635\u062d\u064a."
+              ),
+            }
+          : latestReport.hasSavedAnalysis
+            ? {
+                title: text(
+                  "Your latest health intelligence is ready.",
+                  "\u0623\u062d\u062f\u062b \u0630\u0643\u0627\u0621 \u0635\u062d\u064a \u0644\u062f\u064a\u0643 \u062c\u0627\u0647\u0632."
+                ),
+                description:
+                  latestReport.nextBestAction ||
+                  text(
+                    "Review the important findings and continue with your recommended next health step.",
+                    "\u0631\u0627\u062c\u0639 \u0627\u0644\u0646\u062a\u0627\u0626\u062c \u0627\u0644\u0645\u0647\u0645\u0629 \u0648\u062a\u0627\u0628\u0639 \u062e\u0637\u0648\u062a\u0643 \u0627\u0644\u0635\u062d\u064a\u0629 \u0627\u0644\u062a\u0627\u0644\u064a\u0629 \u0627\u0644\u0645\u0648\u0635\u0649 \u0628\u0647\u0627."
+                  ),
+              }
+            : {
+                title: text(
+                  "Your latest report is ready for analysis.",
+                  "\u0623\u062d\u062f\u062b \u062a\u0642\u0631\u064a\u0631 \u0644\u062f\u064a\u0643 \u062c\u0627\u0647\u0632 \u0644\u0644\u062a\u062d\u0644\u064a\u0644."
+                ),
+                description: text(
+                  "Generate health intelligence from the report and identify the next action that matters.",
+                  "\u0623\u0646\u0634\u0626 \u0630\u0643\u0627\u0621\u064b \u0635\u062d\u064a\u064b\u0627 \u0645\u0646 \u0627\u0644\u062a\u0642\u0631\u064a\u0631 \u0648\u062d\u062f\u062f \u0627\u0644\u062e\u0637\u0648\u0629 \u0627\u0644\u062a\u0627\u0644\u064a\u0629 \u0627\u0644\u0623\u0647\u0645."
+                ),
+              };
   return (
     <main
       className="ohPageShell publicHomePage"
@@ -1573,25 +1631,19 @@ export default function Home() {
 
               <h1 className="ohTitle homeCommandTitle">
                 {isLoggedIn
-                  ? text(
-                      "Continue where you left off.",
-                      "تابع من حيث توقفت."
-                    )
+                  ? homeHealthFocus?.title
                   : text(
                       "Turn your health reports into clear next steps.",
-                      "حوّل تقاريرك الصحية إلى خطوات واضحة."
+                      "\u062d\u0648\u0651\u0644 \u062a\u0642\u0627\u0631\u064a\u0631\u0643 \u0627\u0644\u0635\u062d\u064a\u0629 \u0625\u0644\u0649 \u062e\u0637\u0648\u0627\u062a \u0648\u0627\u0636\u062d\u0629."
                     )}
               </h1>
 
               <p className="ohLead homeCommandLead">
                 {isLoggedIn
-                  ? text(
-                      "Review your reports, continue your latest intelligence journey, or upload a new document for analysis.",
-                      "راجع تقاريرك، وتابع أحدث رحلة ذكاء صحي، أو ارفع مستندًا جديدًا للتحليل."
-                    )
+                  ? homeHealthFocus?.description
                   : text(
                       "Upload a lab report or medical document. OrganHeal AI helps organize the findings, explain what matters, and guide you toward your next health decision.",
-                      "ارفع تقرير مختبر أو مستندًا طبيًا. يساعدك OrganHeal AI على تنظيم النتائج، وفهم ما يهم، والوصول إلى قرارك الصحي التالي."
+                      "\u0627\u0631\u0641\u0639 \u062a\u0642\u0631\u064a\u0631 \u0645\u062e\u062a\u0628\u0631 \u0623\u0648 \u0645\u0633\u062a\u0646\u062f\u064b\u0627 \u0637\u0628\u064a\u064b\u0627. \u064a\u0633\u0627\u0639\u062f\u0643 OrganHeal AI \u0639\u0644\u0649 \u062a\u0646\u0638\u064a\u0645 \u0627\u0644\u0646\u062a\u0627\u0626\u062c\u060c \u0648\u0641\u0647\u0645 \u0645\u0627 \u064a\u0647\u0645\u060c \u0648\u0627\u0644\u0648\u0635\u0648\u0644 \u0625\u0644\u0649 \u0642\u0631\u0627\u0631\u0643 \u0627\u0644\u0635\u062d\u064a \u0627\u0644\u062a\u0627\u0644\u064a."
                     )}
               </p>
 
