@@ -1939,7 +1939,9 @@ export default function Home() {
               <Link
                 href={
                   latestReport
-                    ? "/intelligence"
+                    ? latestReport.hasSavedAnalysis
+                      ? `/intelligence?reportId=${latestReport.reportId}`
+                      : `/intelligence?reportId=${latestReport.reportId}&auto=1`
                     : "/lab-upload"
                 }
                 className="primaryBtn homeContinuationAction"
