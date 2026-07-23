@@ -1,48 +1,34 @@
 "use client";
 
 import type { ChangeEvent, DragEvent } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import PageBackActions from "../components/PageBackActions";
 import { supabase } from "@/lib/supabase";
 
 type Language = "en" | "ar";
-type UploadStep = "idle" | "uploading" | "saved" | "extracting" | "error";
-type ReportFilter = "all" | "pending" | "processing" | "completed" | "failed";
-type ReportType = "lab" | "radiology" | "clinical" | "prescription" | "medical";
-
-type UploadedFile = {
-  id: number;
-  file_name: string;
-  file_path: string;
-  file_url: string | null;
-  created_at: string;
-  analysis_status: string | null;
-  extracted_text: string | null;
-  ai_summary: string | null;
-  extraction_status: string | null;
-  extracted_at: string | null;
-  report_type?: string | null;
-};
+type UploadStep = "idle" | "uploading" | "saved" | "error";
+type ReportType =
+  | "lab"
+  | "radiology"
+  | "clinical"
+  | "prescription"
+  | "medical";
 
 const MAX_FILES = 10;
 const MAX_FILE_SIZE_MB = 20;
 
 export default function LabUploadPage() {
   const [language, setLanguage] = useState<Language>("en");
-  const isArabic = language === "ar";
-
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [latestUploadedFileName, setLatestUploadedFileName] = useState("");
-  const [latestUploadedReportId, setLatestUploadedReportId] = useState<number | null>(null);
+  const [savedFileNames, setSavedFileNames] = useState<string[]>([]);
   const [message, setMessage] = useState("");
   const [uploadStep, setUploadStep] = useState<UploadStep>("idle");
   const [uploading, setUploading] = useState(false);
-  const [extractingReportId, setExtractingReportId] = useState<number | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [reportFilter, setReportFilter] = useState<ReportFilter>("all");
   const [reportType, setReportType] = useState<ReportType>("lab");
+
+  const isArabic = language === "ar";
 
   useEffect(() => {
     function syncLanguage() {
@@ -55,7 +41,6 @@ export default function LabUploadPage() {
     }
 
     syncLanguage();
-    fetchUploadedFiles();
     loadPendingHeroFile();
 
     window.addEventListener("storage", syncLanguage);
@@ -65,7 +50,6 @@ export default function LabUploadPage() {
       window.removeEventListener("storage", syncLanguage);
       window.removeEventListener("organheal-language-change", syncLanguage);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function text(en: string, ar: string) {
@@ -85,69 +69,25 @@ export default function LabUploadPage() {
       setLatestUploadedFileName(uploadedFileName);
       setMessage(
         currentIsArabic
-          ? `تم اختيار الملف "${uploadedFileName}" من الصفحة الرئيسية. ارفعه هنا لحفظه بأمان والمتابعة إلى الاستخراج أو التحليل الصحي.`
-          : `Your file "${uploadedFileName}" was selected from the homepage. Upload it here to save it securely and continue to extraction or intelligence review.`
+          ? `تم اختيار الملف "${uploadedFileName}" من الصفحة الرئيسية. اختر الملف من جهازك هنا لحفظه داخل حسابك.`
+          : `Your file "${uploadedFileName}" was selected from the homepage. Choose it from your device here to save it to your account.`
       );
       sessionStorage.removeItem("organheal-latest-uploaded-lab-file");
       return;
     }
 
-    const savedFileName = sessionStorage.getItem("organheal-pending-lab-file");
+    const pendingFileName = sessionStorage.getItem(
+      "organheal-pending-lab-file"
+    );
 
-    if (savedFileName) {
-      setLatestUploadedFileName(savedFileName);
+    if (pendingFileName) {
+      setLatestUploadedFileName(pendingFileName);
       setMessage(
         currentIsArabic
-          ? `تم اختيار "${savedFileName}" من الصفحة الرئيسية. يرجى رفعه هنا للمتابعة.`
-          : `You selected "${savedFileName}" from the homepage. Please upload it here to continue.`
+          ? `تم اختيار "${pendingFileName}" من الصفحة الرئيسية. اختره من جهازك للمتابعة.`
+          : `You selected "${pendingFileName}" from the homepage. Choose it from your device to continue.`
       );
       sessionStorage.removeItem("organheal-pending-lab-file");
-    }
-  }
-
-  function getReportAnalysisHref(reportId?: number | null) {
-    return reportId ? `/intelligence?reportId=${reportId}&auto=1` : "/intelligence";
-  }
-
-  async function fetchUploadedFiles() {
-    const { data: userData, error: userError } = await supabase.auth.getUser();
-
-    if (userError || !userData.user) {
-      setUploadedFiles([]);
-      return;
-    }
-
-    const { data, error } = await supabase
-      .from("uploaded_lab_files")
-      .select(
-        "id, file_name, file_path, file_url, created_at, analysis_status, extracted_text, ai_summary, extraction_status, extracted_at, report_type"
-      )
-      .eq("user_id", userData.user.id)
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      setMessage("Database error: " + error.message);
-      return;
-    }
-
-    const loadedFiles = (data || []) as UploadedFile[];
-
-    setUploadedFiles(loadedFiles);
-
-    const newestFile = loadedFiles[0] || null;
-
-    setLatestUploadedFileName(newestFile?.file_name || "");
-    setLatestUploadedReportId(newestFile?.id || null);
-
-    const params = new URLSearchParams(window.location.search);
-    const wasUploadedFromHomepage = params.get("uploaded") === "1";
-
-    if (wasUploadedFromHomepage && data && data.length > 0) {
-      setLatestUploadedFileName(data[0].file_name);
-      setLatestUploadedReportId(data[0].id);
-      setMessage(
-        `Your file "${data[0].file_name}" is saved. You can prepare the report, open the report, or continue to Analyze Report.`
-      );
     }
   }
 
@@ -175,6 +115,10 @@ export default function LabUploadPage() {
     return safeName || "medical-report";
   }
 
+  function getSelectedFileKey(file: File) {
+    return `${file.name}-${file.size}-${file.lastModified}`;
+  }
+
   function addFiles(files: File[]) {
     const validFiles: File[] = [];
     const rejectedFiles: string[] = [];
@@ -197,24 +141,29 @@ export default function LabUploadPage() {
 
     const combinedFiles = [...selectedFiles, ...validFiles].slice(0, MAX_FILES);
     setSelectedFiles(combinedFiles);
+    setSavedFileNames([]);
 
     if (rejectedFiles.length > 0) {
       setMessage(
         text(
-          `Some files were not added: ${rejectedFiles.join(", ")}. Supported files: PDF, PNG, JPG, JPEG.`,
-          `لم تتم إضافة بعض الملفات: ${rejectedFiles.join(", ")}. الملفات المدعومة: PDF, PNG, JPG, JPEG.`
+          `Some files were not added: ${rejectedFiles.join(
+            ", "
+          )}. Supported files: PDF, PNG, JPG, JPEG.`,
+          `لم تتم إضافة بعض الملفات: ${rejectedFiles.join(
+            ", "
+          )}. الملفات المدعومة: PDF وPNG وJPG وJPEG.`
         )
       );
       setUploadStep("error");
-    } else if (combinedFiles.length > 0) {
-      setMessage("");
-      setUploadStep("idle");
+      return;
     }
+
+    setMessage("");
+    setUploadStep("idle");
   }
 
   function handleFileInput(event: ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(event.target.files || []);
-    addFiles(files);
+    addFiles(Array.from(event.target.files || []));
     event.target.value = "";
   }
 
@@ -223,28 +172,30 @@ export default function LabUploadPage() {
     addFiles(Array.from(event.dataTransfer.files || []));
   }
 
-  function getSelectedFileKey(file: File) {
-    return `${file.name}-${file.size}-${file.lastModified}`;
-  }
-
   function removeSelectedFile(fileToRemove: File) {
-    if (uploading) {
-      return;
-    }
+    if (uploading) return;
 
     setSelectedFiles((current) =>
       current.filter(
         (file) =>
-          getSelectedFileKey(file) !==
-          getSelectedFileKey(fileToRemove)
+          getSelectedFileKey(file) !== getSelectedFileKey(fileToRemove)
       )
     );
-
     setMessage("");
     setUploadStep("idle");
   }
 
-  async function uploadFile(analyzeAfterSave = false) {
+  function resetUpload() {
+    if (uploading) return;
+
+    setSelectedFiles([]);
+    setSavedFileNames([]);
+    setLatestUploadedFileName("");
+    setMessage("");
+    setUploadStep("idle");
+  }
+
+  async function uploadFiles() {
     if (selectedFiles.length === 0) {
       setMessage(
         text(
@@ -267,13 +218,10 @@ export default function LabUploadPage() {
       return;
     }
 
-    const filesToUpload = [...selectedFiles];
-    const shouldAnalyzeSingleReport =
-      analyzeAfterSave && filesToUpload.length === 1;
-
     setUploading(true);
     setUploadStep("uploading");
     setMessage("");
+    setSavedFileNames([]);
 
     const { data: userData, error: userError } = await supabase.auth.getUser();
 
@@ -290,8 +238,8 @@ export default function LabUploadPage() {
     }
 
     const user = userData.user;
-    let uploadedCount = 0;
-    let lastUploadedReportId: number | null = null;
+    const filesToUpload = [...selectedFiles];
+    const uploadedNames: string[] = [];
 
     for (const file of filesToUpload) {
       const safeName = getSafeStorageFileName(file.name);
@@ -303,15 +251,15 @@ export default function LabUploadPage() {
           upsert: false,
         });
 
-      if (uploadError) {
-        setMessage("Upload error: " + uploadError.message);
-        setUploading(false);
-        setUploadStep("error");
-        return;
-      }
-
-      if (!uploadData?.path) {
-        setMessage("Upload error: Supabase did not return a saved file path.");
+      if (uploadError || !uploadData?.path) {
+        setMessage(
+          uploadError
+            ? `Upload error: ${uploadError.message}`
+            : text(
+                "Upload failed because no saved file path was returned.",
+                "فشل الرفع لأن مسار الملف المحفوظ لم يتم إرجاعه."
+              )
+        );
         setUploading(false);
         setUploadStep("error");
         return;
@@ -324,8 +272,17 @@ export default function LabUploadPage() {
           .from("lab-reports")
           .createSignedUrl(savedFilePath, 60 * 60);
 
-      if (signedUrlError) {
-        setMessage("Signed URL error: " + signedUrlError.message);
+      if (signedUrlError || !signedUrlData?.signedUrl) {
+        await supabase.storage.from("lab-reports").remove([savedFilePath]);
+
+        setMessage(
+          signedUrlError
+            ? `Signed URL error: ${signedUrlError.message}`
+            : text(
+                "The uploaded report could not be prepared for secure access.",
+                "تعذر تجهيز التقرير المرفوع للوصول الآمن."
+              )
+        );
         setUploading(false);
         setUploadStep("error");
         return;
@@ -341,7 +298,7 @@ export default function LabUploadPage() {
           report_type: reportType,
           analysis_status: "uploaded",
           ai_summary:
-            "Medical report uploaded successfully. Text extraction and health analysis review are available from OrganHeal.",
+            "Medical report uploaded successfully. Report intelligence can be generated from the Reports Library.",
           extraction_status: "Pending",
           extracted_text: null,
           extracted_at: null,
@@ -349,23 +306,16 @@ export default function LabUploadPage() {
         .select("id")
         .single();
 
-      if (databaseError) {
-        setMessage("Database error: " + databaseError.message);
-        setUploading(false);
-        setUploadStep("error");
-        return;
-      }
-
-      if (!insertedFile) {
-        await supabase.storage
-          .from("lab-reports")
-          .remove([savedFilePath]);
+      if (databaseError || !insertedFile) {
+        await supabase.storage.from("lab-reports").remove([savedFilePath]);
 
         setMessage(
-          text(
-            "The uploaded report could not be saved. Please try again.",
-            "تعذر حفظ التقرير المرفوع. يرجى المحاولة مرة أخرى."
-          )
+          databaseError
+            ? `Database error: ${databaseError.message}`
+            : text(
+                "The uploaded report could not be saved. Please try again.",
+                "تعذر حفظ التقرير المرفوع. يرجى المحاولة مرة أخرى."
+              )
         );
         setUploading(false);
         setUploadStep("error");
@@ -383,14 +333,14 @@ export default function LabUploadPage() {
             ai_status: "Pending",
             risk_level: "pending",
             summary:
-              "Report uploaded successfully and ready for extraction and intelligence review.",
+              "Report uploaded successfully and ready for intelligence review.",
             key_findings: "Pending extraction.",
             risk_signals: "Pending extraction.",
             recommendations:
-              "Analyze this report to generate a patient-friendly summary and doctor-ready brief.",
+              "Open this report from Reports Library to generate report intelligence.",
             doctor_brief: "Pending intelligence generation.",
             next_best_action:
-              "Analyze this report to generate structured report intelligence.",
+              "Open Reports Library and analyze this report.",
           },
         ]);
 
@@ -401,9 +351,7 @@ export default function LabUploadPage() {
           .eq("id", insertedFile.id)
           .eq("user_id", user.id);
 
-        await supabase.storage
-          .from("lab-reports")
-          .remove([savedFilePath]);
+        await supabase.storage.from("lab-reports").remove([savedFilePath]);
 
         setMessage(
           text(
@@ -416,513 +364,415 @@ export default function LabUploadPage() {
         return;
       }
 
-      uploadedCount++;
-      lastUploadedReportId = insertedFile.id;
-      setLatestUploadedFileName(file.name);
-      setLatestUploadedReportId(insertedFile.id);
+      uploadedNames.push(file.name);
     }
 
     setSelectedFiles([]);
+    setSavedFileNames(uploadedNames);
+    setLatestUploadedFileName(uploadedNames.at(-1) || "");
     setUploading(false);
     setUploadStep("saved");
-
-    if (analyzeAfterSave && filesToUpload.length > 1) {
-      setMessage(
-        text(
-          `${uploadedCount} reports were saved successfully. Choose the report you want to analyze from the list below.`,
-          `تم حفظ ${uploadedCount} تقارير بنجاح. اختر التقرير الذي تريد تحليله من القائمة أدناه.`
-        )
-      );
-    } else {
-      setMessage(
-        text(
-          `${uploadedCount} report(s) uploaded successfully.`,
-          `تم رفع ${uploadedCount} تقرير بنجاح.`
-        )
-      );
-    }
-
-    await fetchUploadedFiles();
-
-    if (shouldAnalyzeSingleReport && lastUploadedReportId !== null) {
-      window.location.assign(
-        getReportAnalysisHref(lastUploadedReportId)
-      );
-    }
-  }
-
-  async function runExtraction(file: UploadedFile) {
-    setExtractingReportId(file.id);
-    setUploadStep("extracting");
-    setMessage("");
-
-    const { data: sessionData } = await supabase.auth.getSession();
-    const accessToken = sessionData.session?.access_token;
-
-    if (!accessToken) {
-      setMessage(
-        text(
-          "Session expired. Please login again.",
-          "انتهت الجلسة. يرجى تسجيل الدخول مرة أخرى."
-        )
-      );
-      setExtractingReportId(null);
-      setUploadStep("error");
-      return;
-    }
-
-    const response = await fetch("/api/extract-pdf", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({
-        reportId: file.id,
-        filePath: file.file_path,
-      }),
-    });
-
-    const result = await response.json();
-
-    if (!response.ok || !result?.success) {
-      setMessage(result?.error || "Extraction failed. Please try again.");
-      setExtractingReportId(null);
-      setUploadStep("error");
-      await fetchUploadedFiles();
-      return;
-    }
-
     setMessage(
       text(
-        "Report text extracted successfully. You can now analyze this report.",
-        "تم استخراج نص التقرير بنجاح. يمكنك الآن تحليل هذا التقرير."
+        `${uploadedNames.length} report(s) saved successfully. Continue to Reports Library to open, manage, or analyze them.`,
+        `تم حفظ ${uploadedNames.length} تقرير بنجاح. تابع إلى مكتبة التقارير لفتحها أو إدارتها أو تحليلها.`
       )
     );
-    setExtractingReportId(null);
-    setUploadStep("saved");
-    await fetchUploadedFiles();
   }
 
-  async function deleteFile(file: UploadedFile) {
-    const confirmDelete = window.confirm(
-      text(
-        `Delete "${file.file_name}" permanently?`,
-        `هل تريد حذف "${file.file_name}" نهائيًا؟`
-      )
-    );
+  const journeyStep =
+    uploadStep === "saved"
+      ? 3
+      : uploading || uploadStep === "uploading"
+      ? 2
+      : 1;
 
-    if (!confirmDelete) return;
-
-    const { data: userData, error: userError } =
-      await supabase.auth.getUser();
-
-    if (userError || !userData.user) {
-      setMessage(
-        text(
-          "Please login again before deleting this report.",
-          "يرجى تسجيل الدخول مرة أخرى قبل حذف هذا التقرير."
-        )
-      );
-      setUploadStep("error");
-      return;
-    }
-
-    const user = userData.user;
-
-    const { error: storageError } = await supabase.storage
-      .from("lab-reports")
-      .remove([file.file_path]);
-
-    if (storageError) {
-      setMessage(
-        "Storage delete error: " +
-          storageError.message
-      );
-      setUploadStep("error");
-      return;
-    }
-
-    const { error: insightDeleteError } = await supabase
-      .from("health_insights")
-      .delete()
-      .eq("report_id", file.id)
-      .eq("user_id", user.id);
-
-    if (insightDeleteError) {
-      setMessage(
-        "Insight delete error: " +
-          insightDeleteError.message
-      );
-      setUploadStep("error");
-      return;
-    }
-
-    const { error: databaseError } = await supabase
-      .from("uploaded_lab_files")
-      .delete()
-      .eq("id", file.id)
-      .eq("user_id", user.id);
-
-    if (databaseError) {
-      setMessage(
-        "Database delete error: " +
-          databaseError.message
-      );
-      setUploadStep("error");
-      return;
-    }
-
-    setMessage(
-      text(
-        `"${file.file_name}" deleted successfully.`,
-        `تم حذف "${file.file_name}" بنجاح.`
-      )
-    );
-
-    setUploadStep("saved");
-    await fetchUploadedFiles();
-  }
-
-  async function openFile(filePath: string) {
-    const { data, error } = await supabase.storage
-      .from("lab-reports")
-      .createSignedUrl(filePath, 60 * 60);
-
-    if (error) {
-      setMessage("File open error: " + error.message);
-      setUploadStep("error");
-      return;
-    }
-
-    window.open(data.signedUrl, "_blank");
-  }
-
-  function getExtractionLabel(status: string | null) {
-    const cleanStatus = status || "Pending";
-
-    if (isArabic) {
-      if (cleanStatus === "Completed") return "مكتمل";
-      if (cleanStatus === "Processing") return "جاري الاستخراج";
-      if (cleanStatus === "Failed") return "فشل";
-      return "بانتظار";
-    }
-
-    if (cleanStatus === "Completed") return "Completed";
-    if (cleanStatus === "Processing") return "Processing";
-    if (cleanStatus === "Failed") return "Failed";
-    return "Pending";
-  }
-
-  function getExtractionTone(status: string | null) {
-    const cleanStatus = status || "Pending";
-
-    if (cleanStatus === "Completed") return "good";
-    if (cleanStatus === "Processing") return "moderate";
-    if (cleanStatus === "Failed") return "risk";
-    return "neutral";
-  }
-
-  function getReportTypeLabel(type: string | null | undefined) {
-    if (isArabic) {
-      if (type === "lab") return "مختبر";
-      if (type === "radiology") return "أشعة";
-      if (type === "clinical") return "تقرير سريري";
-      if (type === "prescription") return "وصفة طبية";
-      return "تقرير طبي";
-    }
-
-    if (type === "lab") return "Laboratory";
-    if (type === "radiology") return "Radiology";
-    if (type === "clinical") return "Clinical Summary";
-    if (type === "prescription") return "Prescription";
-    return "Medical Report";
-  }
-
-  function formatDate(value: string | null) {
-    if (!value) return text("Not available", "غير متاح");
-
-    return new Date(value).toLocaleString(isArabic ? "ar-AE" : "en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  }
-
-  const filteredFiles = uploadedFiles.filter((file) => {
-    const matchesSearch = file.file_name
-      .toLowerCase()
-      .includes(searchTerm.trim().toLowerCase());
-
-    const cleanStatus = (file.extraction_status || "Pending").toLowerCase();
-
-    const matchesFilter =
-      reportFilter === "all" || cleanStatus === reportFilter;
-
-    return matchesSearch && matchesFilter;
-  });
-
-  const latestFiles = filteredFiles.slice(0, 8);
-
-  const focusedUploadFile = latestFiles[0] || null;
-
-  const compactUploadFiles = focusedUploadFile
-    ? latestFiles.filter((file) => file.id !== focusedUploadFile.id)
-    : [];
-
-  const stats = useMemo(() => {
-    const completed = uploadedFiles.filter(
-      (file) => file.extraction_status === "Completed"
-    ).length;
-
-    const processing = uploadedFiles.filter(
-      (file) => file.extraction_status === "Processing"
-    ).length;
-
-    const failed = uploadedFiles.filter(
-      (file) => file.extraction_status === "Failed"
-    ).length;
-
-    const pending = uploadedFiles.filter(
-      (file) =>
-        !file.extraction_status || file.extraction_status === "Pending"
-    ).length;
-
-    return {
-      total: uploadedFiles.length,
-      completed,
-      processing,
-      pending,
-      failed,
-    };
-  }, [uploadedFiles]);
-
-  const canShowNextStep =
-    uploadStep === "saved" || uploadedFiles.length > 0 || latestUploadedFileName;
+  const journeyItems = [
+    {
+      number: 1,
+      title: text("Select", "الاختيار"),
+      description: text(
+        "Choose one or more supported medical reports.",
+        "اختر تقريرًا طبيًا واحدًا أو أكثر من الملفات المدعومة."
+      ),
+    },
+    {
+      number: 2,
+      title: text("Save", "الحفظ"),
+      description: text(
+        "Store the reports securely inside your account.",
+        "احفظ التقارير بأمان داخل حسابك."
+      ),
+    },
+    {
+      number: 3,
+      title: text("Continue in Reports", "المتابعة في التقارير"),
+      description: text(
+        "Open Reports Library to manage or analyze the saved reports.",
+        "افتح مكتبة التقارير لإدارة التقارير المحفوظة أو تحليلها."
+      ),
+    },
+  ];
 
   return (
-    <main className="ohPageShell labUploadFocusPage labUploadFinalV3" dir={isArabic ? "rtl" : "ltr"}>
+    <main
+      className="ohPageShell labUploadPageV4"
+      dir={isArabic ? "rtl" : "ltr"}
+      lang={isArabic ? "ar" : "en"}
+    >
       <style>{`
-        .labUploadFocusPage,
-        .labUploadFocusPage * {
+        .labUploadPageV4,
+        .labUploadPageV4 * {
           box-sizing: border-box;
         }
 
-        .labUploadFocusPage a {
+        .labUploadPageV4 {
+          min-height: 100vh;
+          background:
+            radial-gradient(circle at 12% 5%, rgba(6, 182, 212, 0.18), transparent 28%),
+            radial-gradient(circle at 88% 18%, rgba(15, 118, 110, 0.22), transparent 34%),
+            linear-gradient(180deg, #dbeafe 0%, #e2e8f0 45%, #f8fafc 100%);
+          color: #0f172a;
+        }
+
+        .labUploadPageV4 a {
           color: inherit;
           text-decoration: none;
         }
 
-        .labUploadFocusPage .ohCard,
-        .labUploadFocusPage .ohMetricCard {
-          border-color: rgba(15, 23, 42, 0.11);
-          box-shadow: 0 18px 42px rgba(15, 23, 42, 0.07);
+        .labUploadPageV4 .ohContainer {
+          max-width: 1180px;
         }
 
-        .labUploadFocusPage .primaryBtn {
-          background: linear-gradient(135deg, #0f766e, #14b8a6);
-          color: white;
-          border: 0;
-          box-shadow: 0 14px 34px rgba(20, 184, 166, 0.28);
-        }
-
-        .labUploadFocusPage .secondaryBtn {
-          background: white;
-          color: #0f766e;
-          border: 1px solid rgba(15, 118, 110, 0.24);
-        }
-
-        .labUploadFocusPage input,
-        .labUploadFocusPage select {
-          background: #ffffff;
-          color: #0f172a;
-          border: 1px solid rgba(15, 23, 42, 0.18);
-          font-weight: 800;
-        }
-
-        .latestUploadFocus {
+        .labUploadHero {
           overflow: hidden;
-          border-top: 6px solid #0f766e;
+          padding: 38px;
+          border-radius: 34px;
+          border: 1px solid rgba(255, 255, 255, 0.16);
           background:
-            radial-gradient(circle at 88% 8%, rgba(20, 184, 166, 0.14), transparent 30%),
-            #ffffff;
+            radial-gradient(circle at 86% 10%, rgba(20, 184, 166, 0.4), transparent 36%),
+            linear-gradient(135deg, #061826 0%, #0f172a 42%, #0f766e 100%);
+          color: #ffffff;
+          box-shadow: 0 34px 90px rgba(15, 23, 42, 0.3);
         }
 
-        .uploadFocusGrid {
+        .labUploadHero :is(h1, h2, h3, p, span, strong) {
+          color: #ffffff;
+        }
+
+        .labUploadHero .ohTitle {
+          font-size: clamp(2.55rem, 5vw, 4.4rem);
+          line-height: 1.03;
+          letter-spacing: -0.05em;
+        }
+
+        .uploadJourney {
           display: grid;
-          grid-template-columns: minmax(0, 1fr) minmax(280px, 0.48fr);
-          gap: 20px;
-          align-items: stretch;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 14px;
+          padding: 18px;
+          border: 1px solid rgba(15, 23, 42, 0.1);
+          border-radius: 26px;
+          background: rgba(255, 255, 255, 0.92);
+          box-shadow: 0 18px 44px rgba(15, 23, 42, 0.08);
         }
 
-        .uploadFocusPanel {
-          border-radius: 24px;
-          padding: 20px;
-          background: linear-gradient(135deg, #0f172a, #115e59);
-          color: white;
-          min-height: 100%;
-        }
-
-        .uploadFocusPanel .ohMetricLabel,
-        .uploadFocusPanel .ohCardText {
-          color: rgba(226, 232, 240, 0.86);
-        }
-
-        .uploadFocusPanel .ohCardTitle {
-          color: white;
-        }
-
-        .uploadStatusLine {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-          align-items: center;
-          margin-top: 14px;
-        }
-
-        .uploadPill {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          border-radius: 999px;
-          padding: 8px 11px;
-          border: 1px solid rgba(15, 23, 42, 0.08);
+        .uploadJourneyItem {
+          display: grid;
+          grid-template-columns: 44px minmax(0, 1fr);
+          gap: 12px;
+          min-height: 108px;
+          padding: 16px;
+          border: 1px solid rgba(148, 163, 184, 0.24);
+          border-radius: 20px;
           background: #f8fafc;
-          color: #334155;
-          font-size: 0.78rem;
-          font-weight: 900;
-          line-height: 1;
-          white-space: nowrap;
         }
 
-        .uploadPill.good {
-          background: rgba(16, 185, 129, 0.11);
-          color: #047857;
-          border-color: rgba(16, 185, 129, 0.24);
+        .uploadJourneyItem.current {
+          border-color: rgba(15, 118, 110, 0.45);
+          background: linear-gradient(
+            145deg,
+            rgba(204, 251, 241, 0.8),
+            rgba(239, 246, 255, 0.9)
+          );
+          box-shadow: 0 14px 34px rgba(15, 118, 110, 0.12);
         }
 
-        .uploadPill.moderate {
-          background: rgba(245, 158, 11, 0.13);
-          color: #b45309;
-          border-color: rgba(245, 158, 11, 0.28);
+        .uploadJourneyItem.completed {
+          border-color: rgba(13, 148, 136, 0.22);
+          background: rgba(240, 253, 250, 0.9);
         }
 
-        .uploadPill.risk {
-          background: rgba(239, 68, 68, 0.1);
-          color: #b91c1c;
-          border-color: rgba(239, 68, 68, 0.22);
-        }
-
-        .compactUploadHistory {
-          margin-top: 22px;
-        }
-
-        .compactUploadTable {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-        }
-
-        .compactUploadHeader,
-        .compactUploadRow {
+        .uploadJourneyNumber {
+          width: 44px;
+          height: 44px;
           display: grid;
-          grid-template-columns: minmax(230px, 1.25fr) minmax(140px, 0.7fr) minmax(170px, 0.8fr) minmax(150px, 0.55fr);
+          place-items: center;
+          border-radius: 15px;
+          background: #e2e8f0;
+          color: #475569;
+          font-weight: 900;
+        }
+
+        .uploadJourneyItem.current .uploadJourneyNumber {
+          background: #0f766e;
+          color: #ffffff;
+        }
+
+        .uploadJourneyItem.completed .uploadJourneyNumber {
+          background: #ccfbf1;
+          color: #0f766e;
+        }
+
+        .uploadJourneyTitle {
+          display: block;
+          margin-bottom: 5px;
+          color: #0f172a;
+          font-size: 0.98rem;
+          font-weight: 900;
+        }
+
+        .uploadJourneyDescription {
+          margin: 0;
+          color: #64748b;
+          font-size: 0.82rem;
+          line-height: 1.5;
+        }
+
+        .uploadJourneyState {
+          display: inline-flex;
+          margin-top: 9px;
+          color: #64748b;
+          font-size: 0.72rem;
+          font-weight: 850;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+
+        .uploadJourneyItem.current .uploadJourneyState,
+        .uploadJourneyItem.completed .uploadJourneyState {
+          color: #0f766e;
+        }
+
+        .uploadWorkspace {
+          display: grid;
+          grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.62fr);
+          gap: 20px;
+          align-items: start;
+        }
+
+        .uploadCard,
+        .supportedCard,
+        .savedReceipt {
+          padding: 24px;
+          border: 1px solid rgba(15, 23, 42, 0.12);
+          border-radius: 30px;
+          background: #ffffff;
+          box-shadow: 0 22px 58px rgba(15, 23, 42, 0.1);
+        }
+
+        .uploadCardHeader {
+          padding: 18px;
+          margin-bottom: 18px;
+          border-radius: 22px;
+          background: linear-gradient(135deg, #061826, #0f766e);
+          color: #ffffff;
+          box-shadow: 0 16px 38px rgba(15, 23, 42, 0.18);
+        }
+
+        .uploadCardHeader :is(h2, p, span, strong) {
+          color: #ffffff;
+        }
+
+        .uploadDropzone {
+          display: grid;
+          place-items: center;
+          gap: 12px;
+          min-height: 240px;
+          padding: 24px;
+          border: 2px dashed rgba(15, 118, 110, 0.45);
+          border-radius: 26px;
+          background:
+            radial-gradient(circle at 50% 22%, rgba(20, 184, 166, 0.18), transparent 25%),
+            linear-gradient(180deg, #ffffff, #ecfeff);
+          text-align: center;
+          cursor: pointer;
+        }
+
+        .uploadDropzoneIcon {
+          width: 72px;
+          height: 72px;
+          display: grid;
+          place-items: center;
+          border-radius: 22px;
+          border: 1px solid rgba(15, 118, 110, 0.16);
+          background: #ccfbf1;
+          color: #0f766e;
+          font-weight: 950;
+        }
+
+        .uploadFileList {
+          display: grid;
+          gap: 10px;
+          margin-top: 16px;
+        }
+
+        .uploadFileRow {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
           gap: 12px;
           align-items: center;
-        }
-
-        .compactUploadHeader {
-          padding: 0 14px;
-          color: var(--oh-muted);
-          font-size: 0.74rem;
-          font-weight: 950;
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-        }
-
-        .compactUploadRow {
           padding: 14px;
-          border-radius: 20px;
-          border: 1px solid rgba(15, 23, 42, 0.08);
-          background: white;
-          box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
+          border: 1px solid rgba(15, 23, 42, 0.09);
+          border-radius: 18px;
+          background: #f8fafc;
         }
 
-        .compactUploadRow.completed {
-          border-inline-start: 5px solid #10b981;
-        }
-
-        .compactUploadRow.pending {
-          border-inline-start: 5px solid #f59e0b;
-        }
-
-        .compactUploadName {
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-          min-width: 0;
-        }
-
-        .compactUploadName strong {
-          color: var(--oh-text);
-          font-size: 0.96rem;
+        .uploadFileRow strong {
+          display: block;
           overflow: hidden;
+          color: #0f172a;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
 
-        .compactUploadName span {
-          color: var(--oh-muted);
+        .uploadFileRow span {
+          display: block;
+          margin-top: 4px;
+          color: #64748b;
           font-size: 0.82rem;
           font-weight: 750;
         }
 
-        .compactUploadActions {
+        .uploadNotice {
           display: flex;
-          justify-content: flex-end;
-          gap: 8px;
-          flex-wrap: wrap;
+          gap: 12px;
+          padding: 17px;
+          border-radius: 20px;
+          border: 1px solid rgba(15, 118, 110, 0.15);
+          background: #f0fdfa;
+          color: #134e4a;
         }
 
-        .compactUploadAction {
+        .uploadNotice.error {
+          border-color: rgba(185, 28, 28, 0.2);
+          background: #fef2f2;
+          color: #991b1b;
+        }
+
+        .savedReceipt {
+          border-top: 6px solid #10b981;
+          background:
+            radial-gradient(circle at 90% 10%, rgba(16, 185, 129, 0.11), transparent 30%),
+            #ffffff;
+        }
+
+        .savedFileList {
+          display: grid;
+          gap: 8px;
+          margin: 16px 0 0;
+          padding: 0;
+          list-style: none;
+        }
+
+        .savedFileList li {
+          padding: 11px 13px;
+          border-radius: 14px;
+          background: #f0fdf4;
+          color: #166534;
+          font-weight: 800;
+        }
+
+        .supportedList {
+          display: grid;
+          gap: 10px;
+          margin-top: 18px;
+        }
+
+        .supportedItem {
+          padding: 16px;
+          border: 1px solid rgba(15, 23, 42, 0.1);
+          border-inline-start: 6px solid #0f766e;
+          border-radius: 18px;
+          background: #ffffff;
+        }
+
+        .supportedItem strong {
+          display: block;
+          color: #0f172a;
+        }
+
+        .supportedItem p {
+          margin: 5px 0 0;
+          color: #64748b;
+          font-size: 0.86rem;
+          line-height: 1.55;
+        }
+
+        .labUploadPageV4 input,
+        .labUploadPageV4 select {
+          width: 100%;
+          min-height: 46px;
+          padding: 0 14px;
+          border: 1px solid rgba(15, 23, 42, 0.2);
+          border-radius: 14px;
+          background: #ffffff;
+          color: #0f172a;
+          font-weight: 800;
+        }
+
+        .labUploadPageV4 .primaryBtn,
+        .labUploadPageV4 .secondaryBtn {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          min-height: 38px;
-          padding: 0 13px;
+          min-height: 44px;
+          padding: 0 17px;
           border-radius: 999px;
           font-weight: 950;
-          font-size: 0.82rem;
-          border: 1px solid rgba(15, 118, 110, 0.18);
-          cursor: pointer;
+          text-decoration: none;
         }
 
-        .compactUploadAction.primary {
-          background: #0f766e;
-          color: white;
-          border-color: #0f766e;
+        .labUploadPageV4 .primaryBtn {
+          border: 0;
+          background: linear-gradient(135deg, #0f766e, #14b8a6);
+          color: #ffffff;
+          box-shadow: 0 14px 34px rgba(20, 184, 166, 0.25);
         }
 
-        .compactUploadAction.secondary {
-          background: white;
+        .labUploadPageV4 .secondaryBtn {
+          border: 1px solid rgba(15, 118, 110, 0.25);
+          background: #ffffff;
           color: #0f766e;
         }
 
+        .labUploadPageV4 button:disabled {
+          cursor: not-allowed;
+          opacity: 0.58;
+        }
+
         @media (max-width: 980px) {
-          .uploadFocusGrid,
-          .compactUploadHeader,
-          .compactUploadRow {
+          .uploadWorkspace,
+          .uploadJourney {
             grid-template-columns: 1fr;
           }
+        }
 
-          .compactUploadHeader {
-            display: none;
+        @media (max-width: 640px) {
+          .labUploadHero {
+            padding: 26px;
+            border-radius: 26px;
           }
 
-          .compactUploadActions {
-            justify-content: flex-start;
+          .uploadCard,
+          .supportedCard,
+          .savedReceipt {
+            padding: 18px;
+            border-radius: 24px;
+          }
+
+          .uploadFileRow {
+            grid-template-columns: 1fr;
           }
         }
       `}</style>
@@ -930,30 +780,30 @@ export default function LabUploadPage() {
       <div className="ohContainer ohStack large" style={{ padding: "28px 0 56px" }}>
         <PageBackActions />
 
-        <section className="ohHero">
+        <section className="labUploadHero">
           <div className="ohHeroGrid">
             <div>
               <p className="ohEyebrow">
-                {text("Medical Report Upload Command Center", "مركز رفع التقارير الطبية")}
+                {text("Medical Report Upload", "رفع التقارير الطبية")}
               </p>
 
               <h1 className="ohTitle">
                 {text(
-                  "Upload your medical report and start health analysis",
-                  "ارفع تقريرك الطبي وابدأ التحليل الصحي"
+                  "Upload and save your medical reports securely.",
+                  "ارفع تقاريرك الطبية واحفظها بأمان."
                 )}
               </h1>
 
               <p className="ohLead">
                 {text(
-                  "Upload lab reports, radiology reports, discharge summaries, prescriptions, or medical documents. After saving, analyze the report in one guided step.",
-                  "ارفع تقارير المختبر، الأشعة، ملخصات الخروج، الوصفات، أو المستندات الطبية. بعد الحفظ حلّل التقرير بخطوة واضحة واحدة."
+                  "Choose your reports, save them to your account, then continue to Reports Library to open, organize, or analyze them.",
+                  "اختر تقاريرك واحفظها في حسابك، ثم تابع إلى مكتبة التقارير لفتحها أو تنظيمها أو تحليلها."
                 )}
               </p>
 
               <div className="ohButtonRow" style={{ marginTop: "24px" }}>
                 <a href="#medical-upload-panel" className="primaryBtn">
-                  {text("Upload Report", "رفع تقرير")}
+                  {text("Choose Reports", "اختيار التقارير")}
                 </a>
 
                 <Link href="/reports" className="secondaryBtn">
@@ -962,143 +812,142 @@ export default function LabUploadPage() {
               </div>
             </div>
 
-            <div className="ohCard">
-              <div className="ohCardHeader">
-                <div>
-                  <p className="ohMetricLabel">
-                    {text("Next Best Step", "الخطوة التالية الأفضل")}
-                  </p>
-                  <h2 className="ohCardTitle" style={{ marginTop: "8px" }}>
-                    {stats.total === 0
-                      ? text("Upload your first report", "ارفع أول تقرير")
-                      : text("Analyze latest report", "حلّل آخر تقرير")}
-                  </h2>
-                </div>
-
-                <span className="ohStatusBadge neutral">
-                  {stats.total} {text("saved", "محفوظ")}
-                </span>
-              </div>
-
-              <p className="ohCardText">
-                {stats.total === 0
-                  ? text(
-                      "After upload, the report will appear in Reports Library. Use Analyze Report to generate results.",
-                      "بعد الرفع، سيظهر التقرير في مكتبة التقارير وتحليل التقرير."
-                    )
-                  : text(
-                      "You have saved reports. The next step is to generate or review health analysis.",
-                      "لديك تقارير محفوظة. الخطوة التالية هي توليد أو مراجعة التحليل الصحي."
-                    )}
+            <aside className="uploadCardHeader" style={{ marginBottom: 0 }}>
+              <p className="ohMetricLabel">
+                {text("One clear purpose", "هدف واحد واضح")}
               </p>
 
-              <div className="ohDivider" />
+              <h2 className="ohCardTitle">
+                {text(
+                  "This page only uploads and saves reports.",
+                  "هذه الصفحة مخصصة فقط لرفع التقارير وحفظها."
+                )}
+              </h2>
 
-              <Link
-                href={
-                  stats.total === 0
-                    ? "#medical-upload-panel"
-                    : latestUploadedReportId
-                    ? getReportAnalysisHref(latestUploadedReportId)
-                    : "/intelligence"
-                }
-                className="primaryBtn"
-              >
-                {stats.total === 0
-                  ? text("Upload Report", "رفع تقرير")
-                  : text("Analyze Report", "تحليل التقرير")}
-              </Link>
-            </div>
+              <p className="ohCardText">
+                {text(
+                  "Report search, file management, analysis, and saved results stay in Reports Library.",
+                  "البحث وإدارة الملفات والتحليل والنتائج المحفوظة تبقى داخل مكتبة التقارير."
+                )}
+              </p>
+            </aside>
           </div>
         </section>
 
-        <section className="ohMetricGrid">
-          <article className="ohMetricCard">
-            <span className="ohMetricLabel">
-              {text("Total Reports", "كل التقارير")}
-            </span>
-            <span className="ohMetricValue">{stats.total}</span>
-            <span className="ohMetricHint">
-              {text("Saved in your account", "محفوظة في حسابك")}
-            </span>
-          </article>
+        <section
+          className="uploadJourney"
+          aria-label={text("Report upload journey", "رحلة رفع التقرير")}
+        >
+          {journeyItems.map((item) => {
+            const isCompleted = item.number < journeyStep;
+            const isCurrent = item.number === journeyStep;
 
-          <article className="ohMetricCard">
-            <span className="ohMetricLabel">
-              {text("Extraction Completed", "استخراج مكتمل")}
-            </span>
-            <span className="ohMetricValue">{stats.completed}</span>
-            <span className="ohMetricHint">
-              {text("Ready for analysis", "جاهزة للتحليل")}
-            </span>
-          </article>
+            return (
+              <article
+                className={`uploadJourneyItem ${
+                  isCompleted ? "completed" : isCurrent ? "current" : "upcoming"
+                }`}
+                key={item.number}
+              >
+                <span className="uploadJourneyNumber" aria-hidden="true">
+                  {isCompleted ? "✓" : item.number}
+                </span>
 
-          <article className="ohMetricCard">
-            <span className="ohMetricLabel">
-              {text("Pending / Processing", "بانتظار / جاري")}
-            </span>
-            <span className="ohMetricValue">{stats.pending + stats.processing}</span>
-            <span className="ohMetricHint">
-              {text("Need analysis or review", "تحتاج تحليلًا أو مراجعة")}
-            </span>
-          </article>
-
-          <article className="ohMetricCard">
-            <span className="ohMetricLabel">
-              {text("Failed", "فشل")}
-            </span>
-            <span className="ohMetricValue">{stats.failed}</span>
-            <span className="ohMetricHint">
-              {text("Can be retried", "يمكن إعادة المحاولة")}
-            </span>
-          </article>
+                <div>
+                  <strong className="uploadJourneyTitle">{item.title}</strong>
+                  <p className="uploadJourneyDescription">{item.description}</p>
+                  <span className="uploadJourneyState">
+                    {isCompleted
+                      ? text("Completed", "مكتمل")
+                      : isCurrent
+                      ? text("Current step", "الخطوة الحالية")
+                      : text("Upcoming", "لاحقًا")}
+                  </span>
+                </div>
+              </article>
+            );
+          })}
         </section>
 
-        <section className="ohGrid cols2" id="medical-upload-panel">
-          <article className="ohCard">
-            <div className="ohCardHeader">
-              <div>
-                <p className="ohMetricLabel">
-                  {text("Upload File", "رفع ملف")}
-                </p>
+        {uploadStep === "saved" && (
+          <section className="savedReceipt" aria-live="polite">
+            <p className="ohMetricLabel">
+              {text("Upload completed", "اكتمل الرفع")}
+            </p>
 
-                <h2 className="ohCardTitle">
-                  {text(
-                    "Drop your report or choose it from your device",
-                    "اسحب التقرير أو اختره من جهازك"
-                  )}
-                </h2>
+            <h2 className="ohCardTitle">
+              {text(
+                "Your reports are saved in Reports Library.",
+                "تم حفظ تقاريرك في مكتبة التقارير."
+              )}
+            </h2>
 
-                <p className="ohCardText">
-                  {text(
-                    `Supports PDF, PNG, JPG, and JPEG. You can upload up to ${MAX_FILES} files at a time. Maximum file size is ${MAX_FILE_SIZE_MB} MB.`,
-                    `يدعم PDF و PNG و JPG و JPEG. يمكنك رفع حتى ${MAX_FILES} ملفات في كل مرة. الحد الأقصى لحجم الملف ${MAX_FILE_SIZE_MB} MB.`
-                  )}
-                </p>
-              </div>
+            <p className="ohCardText">{message}</p>
 
-              <span className={`ohStatusBadge ${uploadStep === "error" ? "risk" : "neutral"}`}>
-                {uploadStep === "uploading"
-                  ? text("Uploading", "جاري الرفع")
-                  : uploadStep === "extracting"
-                  ? text("Extracting", "جاري الاستخراج")
-                  : uploadStep === "saved"
-                  ? text("Saved", "محفوظ")
-                  : uploadStep === "error"
-                  ? text("Needs Attention", "يحتاج انتباه")
-                  : text("Ready", "جاهز")}
-              </span>
+            {savedFileNames.length > 0 && (
+              <ul className="savedFileList">
+                {savedFileNames.map((fileName) => (
+                  <li key={fileName}>{fileName}</li>
+                ))}
+              </ul>
+            )}
+
+            <div className="ohButtonRow" style={{ marginTop: "20px" }}>
+              <Link href="/reports" className="primaryBtn">
+                {text("Open Reports Library", "فتح مكتبة التقارير")}
+              </Link>
+
+              <button
+                type="button"
+                className="secondaryBtn"
+                onClick={resetUpload}
+              >
+                {text("Upload More Reports", "رفع تقارير أخرى")}
+              </button>
+            </div>
+          </section>
+        )}
+
+        <section className="uploadWorkspace" id="medical-upload-panel">
+          <article className="uploadCard">
+            <div className="uploadCardHeader">
+              <p className="ohMetricLabel">
+                {text("Upload reports", "رفع التقارير")}
+              </p>
+
+              <h2 className="ohCardTitle">
+                {text(
+                  "Choose files and save them to your account.",
+                  "اختر الملفات واحفظها في حسابك."
+                )}
+              </h2>
+
+              <p className="ohCardText">
+                {text(
+                  `PDF, PNG, JPG, and JPEG are supported. Maximum ${MAX_FILES} files per upload and ${MAX_FILE_SIZE_MB} MB per file.`,
+                  `الملفات المدعومة PDF وPNG وJPG وJPEG. الحد الأقصى ${MAX_FILES} ملفات في كل عملية و${MAX_FILE_SIZE_MB} MB لكل ملف.`
+                )}
+              </p>
             </div>
 
             <div className="ohStack">
               <div className="formGroup">
-                <label>{text("Report Type", "نوع التقرير")}</label>
+                <label htmlFor="report-type">
+                  {text("Report Type", "نوع التقرير")}
+                </label>
+
                 <select
+                  id="report-type"
                   value={reportType}
-                  onChange={(event) => setReportType(event.target.value as ReportType)}
+                  onChange={(event) =>
+                    setReportType(event.target.value as ReportType)
+                  }
+                  disabled={uploading}
                 >
                   <option value="lab">{text("Laboratory", "مختبر")}</option>
-                  <option value="radiology">{text("Radiology", "أشعة")}</option>
+                  <option value="radiology">
+                    {text("Radiology", "أشعة")}
+                  </option>
                   <option value="clinical">
                     {text("Clinical Summary", "تقرير سريري")}
                   </option>
@@ -1112,78 +961,57 @@ export default function LabUploadPage() {
               </div>
 
               <label
+                className="uploadDropzone"
                 onDragOver={(event) => event.preventDefault()}
                 onDrop={handleDrop}
-                style={{
-                  display: "grid",
-                  placeItems: "center",
-                  gap: "12px",
-                  minHeight: "240px",
-                  border: "2px dashed var(--oh-border-strong)",
-                  borderRadius: "24px",
-                  background:
-                    "linear-gradient(180deg, rgba(15,118,110,0.06), rgba(37,99,235,0.04))",
-                  cursor: "pointer",
-                  padding: "24px",
-                  textAlign: "center",
-                }}
               >
                 <input
                   type="file"
                   multiple
                   accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg"
                   onChange={handleFileInput}
+                  disabled={uploading}
                   style={{ display: "none" }}
                 />
 
-                <span
-                  style={{
-                    width: "72px",
-                    height: "72px",
-                    borderRadius: "22px",
-                    display: "grid",
-                    placeItems: "center",
-                    background: "var(--oh-primary-soft)",
-                    color: "var(--oh-primary-dark)",
-                    fontWeight: 900,
-                    border: "1px solid rgba(15, 118, 110, 0.16)",
-                  }}
-                >
-                  PDF
-                </span>
+                <span className="uploadDropzoneIcon">PDF</span>
 
                 <strong>
                   {selectedFiles.length > 0
-                    ? `${selectedFiles.length} file${selectedFiles.length > 1 ? "s" : ""} selected`
+                    ? text(
+                        `${selectedFiles.length} file(s) selected`,
+                        `تم اختيار ${selectedFiles.length} ملف`
+                      )
                     : latestUploadedFileName
                     ? latestUploadedFileName
                     : text(
-                        "Drop up to 10 files or click to upload",
-                        "اسحب حتى 10 ملفات أو اضغط للاختيار"
+                        "Drop reports here or click to choose",
+                        "اسحب التقارير هنا أو اضغط للاختيار"
                       )}
                 </strong>
 
                 <span className="ohCardText">
                   {selectedFiles.length > 0
                     ? selectedFiles.map((file) => file.name).join(", ")
-                    : text("PDF, PNG, JPG, JPEG supported", "يدعم PDF, PNG, JPG, JPEG")}
+                    : text(
+                        "Files are not saved until you press Save Reports.",
+                        "لن يتم حفظ الملفات حتى تضغط حفظ التقارير."
+                      )}
                 </span>
               </label>
 
               {selectedFiles.length > 0 && (
-                <div className="ohTimeline">
+                <div className="uploadFileList">
                   {selectedFiles.map((file) => (
                     <div
-                      className="ohTimelineItem"
+                      className="uploadFileRow"
                       key={getSelectedFileKey(file)}
                     >
-                      <span className="ohTimelineDot" />
-
                       <div>
-                        <p className="ohTimelineTitle">{file.name}</p>
-                        <p className="ohTimelineMeta">
+                        <strong>{file.name}</strong>
+                        <span>
                           {(file.size / (1024 * 1024)).toFixed(2)} MB
-                        </p>
+                        </span>
                       </div>
 
                       <button
@@ -1204,390 +1032,108 @@ export default function LabUploadPage() {
               )}
 
               <div className="ohButtonRow">
-                {selectedFiles.length > 0 ? (
-                  <button
-                    type="button"
-                    className="primaryBtn"
-                    onClick={() =>
-                      uploadFile(selectedFiles.length === 1)
-                    }
-                    disabled={uploading}
-                  >
-                    {uploading
-                      ? selectedFiles.length === 1
-                        ? text(
-                            "Saving and preparing...",
-                            "جاري الحفظ والتجهيز..."
-                          )
-                        : text(
-                            "Saving reports...",
-                            "جاري حفظ التقارير..."
-                          )
-                      : selectedFiles.length === 1
-                      ? text(
-                          "Save & Analyze",
-                          "حفظ وتحليل"
-                        )
-                      : text(
-                          "Save Reports",
-                          "حفظ التقارير"
-                        )}
-                  </button>
-                ) : latestUploadedReportId ? (
-                  <Link
-                    href={getReportAnalysisHref(
-                      latestUploadedReportId
-                    )}
-                    className="primaryBtn"
-                  >
-                    {text(
-                      "Analyze Last Saved Report",
-                      "تحليل آخر تقرير محفوظ"
-                    )}
-                  </Link>
-                ) : (
-                  <button
-                    type="button"
-                    className="secondaryBtn"
-                    disabled
-                  >
-                    {text(
-                      "Select a Report",
-                      "اختر تقريرًا"
-                    )}
-                  </button>
-                )}
-
-                <Link
-                  href="/reports"
-                  className="secondaryBtn"
+                <button
+                  type="button"
+                  className="primaryBtn"
+                  onClick={uploadFiles}
+                  disabled={uploading || selectedFiles.length === 0}
                 >
-                  {text(
-                    "Reports Library",
-                    "مكتبة التقارير"
-                  )}
+                  {uploading
+                    ? text("Saving Reports...", "جاري حفظ التقارير...")
+                    : text("Save Reports", "حفظ التقارير")}
+                </button>
+
+                <Link href="/reports" className="secondaryBtn">
+                  {text("Reports Library", "مكتبة التقارير")}
                 </Link>
               </div>
 
-              {message && (
-                <div className="ohTrustNotice">
+              {message && uploadStep !== "saved" && (
+                <div
+                  className={`uploadNotice ${
+                    uploadStep === "error" ? "error" : ""
+                  }`}
+                  role={uploadStep === "error" ? "alert" : "status"}
+                >
                   <span aria-hidden="true">
                     {uploadStep === "error" ? "⚠️" : "ℹ️"}
                   </span>
+
                   <div>
                     <strong>
                       {uploadStep === "error"
                         ? text("Upload notice", "تنبيه الرفع")
-                        : text("Upload status", "حالة الرفع")}
+                        : text("Upload information", "معلومات الرفع")}
                     </strong>
                     <br />
                     {message}
-
-                    {canShowNextStep && (
-                      <div className="ohButtonRow" style={{ marginTop: "14px" }}>
-                        <Link
-                          href={getReportAnalysisHref(latestUploadedReportId)}
-                          className="primaryBtn"
-                        >
-                          {text("Analyze This Report", "تحليل هذا التقرير")}
-                        </Link>
-
-                        <Link href="/reports" className="secondaryBtn">
-                          {text("Reports Library", "مكتبة التقارير")}
-                        </Link>
-                      </div>
-                    )}
                   </div>
                 </div>
               )}
             </div>
           </article>
 
-          <article className="ohCard">
-            <div className="ohCardHeader">
-              <div>
-                <p className="ohMetricLabel">
-                  {text("What can you upload?", "ماذا يمكنك رفعه؟")}
-                </p>
+          <aside className="supportedCard">
+            <p className="ohMetricLabel">
+              {text("Supported documents", "المستندات المدعومة")}
+            </p>
 
-                <h2 className="ohCardTitle">
-                  {text("Supported medical documents", "المستندات الطبية المدعومة")}
-                </h2>
-              </div>
+            <h2 className="ohCardTitle">
+              {text(
+                "Medical documents you can save.",
+                "المستندات الطبية التي يمكنك حفظها."
+              )}
+            </h2>
 
-              <span className="ohStatusBadge neutral">
-                PDF / Image
-              </span>
-            </div>
-
-            <div className="ohTimeline">
+            <div className="supportedList">
               {[
                 {
                   title: text("Laboratory results", "نتائج المختبر"),
-                  meta: text("CBC, lipids, kidney, liver, glucose, hormones.", "CBC، الدهون، الكلى، الكبد، السكر، الهرمونات."),
+                  description: text(
+                    "CBC, lipids, kidney, liver, glucose, and hormones.",
+                    "CBC، الدهون، الكلى، الكبد، السكر، والهرمونات."
+                  ),
                 },
                 {
                   title: text("Radiology reports", "تقارير الأشعة"),
-                  meta: text("X-ray, ultrasound, CT, MRI written reports.", "الأشعة السينية، السونار، CT، MRI المكتوبة."),
+                  description: text(
+                    "Written X-ray, ultrasound, CT, and MRI reports.",
+                    "تقارير الأشعة السينية، السونار، CT، وMRI المكتوبة."
+                  ),
                 },
                 {
                   title: text("Clinical summaries", "الملخصات السريرية"),
-                  meta: text("Discharge summaries, visit notes, referrals.", "ملخصات الخروج، ملاحظات الزيارة، التحويلات."),
+                  description: text(
+                    "Discharge summaries, visit notes, and referrals.",
+                    "ملخصات الخروج، ملاحظات الزيارة، والتحويلات."
+                  ),
                 },
                 {
                   title: text("Prescriptions", "الوصفات الطبية"),
-                  meta: text("Medication lists and treatment plans.", "قوائم الأدوية وخطط العلاج."),
+                  description: text(
+                    "Medication lists and treatment plans.",
+                    "قوائم الأدوية وخطط العلاج."
+                  ),
                 },
               ].map((item) => (
-                <div className="ohTimelineItem" key={item.title}>
-                  <span className="ohTimelineDot" />
-                  <div>
-                    <p className="ohTimelineTitle">{item.title}</p>
-                    <p className="ohTimelineMeta">{item.meta}</p>
-                  </div>
-                  <span className="ohStatusBadge good">
-                    {text("OK", "مناسب")}
-                  </span>
+                <div className="supportedItem" key={item.title}>
+                  <strong>{item.title}</strong>
+                  <p>{item.description}</p>
                 </div>
               ))}
             </div>
-          </article>
-        </section>        <section className="ohCard latestUploadFocus">
-          <div className="ohCardHeader">
-            <div>
-              <p className="ohMetricLabel">
-                {text("Latest uploaded report", "آخر تقرير مرفوع")}
-              </p>
-
-              <h2 className="ohCardTitle">
-                {text(
-                  "Analyze the newest report first.",
-                  "حلّل أحدث تقرير أولًا."
-                )}
-              </h2>
-
-              <p className="ohCardText">
-                {text(
-                  "The latest report appears here as the main action. Older uploads stay compact below.",
-                  "يظهر أحدث تقرير هنا كإجراء رئيسي. أما التقارير السابقة فتبقى مختصرة بالأسفل."
-                )}
-              </p>
-            </div>
-
-            <span className="ohStatusBadge neutral">
-              {filteredFiles.length} {text("shown", "ظاهر")}
-            </span>
-          </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "minmax(0, 1fr) minmax(180px, 260px)",
-              gap: "12px",
-              marginBottom: "18px",
-            }}
-          >
-            <input
-              type="text"
-              placeholder={text("Search by file name", "ابحث باسم الملف")}
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-            />
-
-            <select
-              value={reportFilter}
-              onChange={(event) => setReportFilter(event.target.value as ReportFilter)}
-            >
-              <option value="all">{text("All", "الكل")}</option>
-              <option value="pending">{text("Pending", "بانتظار")}</option>
-              <option value="processing">{text("Processing", "قيد المعالجة")}</option>
-              <option value="completed">{text("Completed", "مكتمل")}</option>
-              <option value="failed">{text("Failed", "فشل")}</option>
-            </select>
-          </div>
-
-          {uploadedFiles.length === 0 ? (
-            <div className="ohEmptyState">
-              <h2>{text("No saved reports yet", "لا توجد تقارير محفوظة بعد")}</h2>
-              <p>
-                {text(
-                  "Upload your first medical report so it appears here.",
-                  "ارفع أول تقرير طبي حتى يظهر هنا."
-                )}
-              </p>
-            </div>
-          ) : latestFiles.length === 0 ? (
-            <div className="ohEmptyState">
-              <h2>{text("No matching results", "لا توجد نتائج مطابقة")}</h2>
-              <p>
-                {text(
-                  "Change the search term or current filter.",
-                  "غيّر البحث أو الفلتر الحالي."
-                )}
-              </p>
-            </div>
-          ) : focusedUploadFile ? (
-            <>
-              <div className="uploadFocusGrid">
-                <div>
-                  <p className="ohMetricLabel">
-                    {getReportTypeLabel(focusedUploadFile.report_type)}
-                  </p>
-
-                  <h3 className="ohCardTitle" style={{ fontSize: "1.55rem" }}>
-                    {focusedUploadFile.file_name}
-                  </h3>
-
-                  <p className="ohCardText">
-                    {focusedUploadFile.extraction_status === "Completed"
-                      ? text(
-                          "Text is ready. Analyze this report to generate the patient and doctor-ready summaries.",
-                          "النص جاهز. حلّل هذا التقرير لتوليد ملخص المريض والملخص الجاهز للطبيب."
-                        )
-                      : text(
-                          "This report is saved. Analyze it now; extraction will run internally when needed.",
-                          "هذا التقرير محفوظ. حلّله الآن؛ سيتم تجهيز التقرير داخليًا عند الحاجة."
-                        )}
-                  </p>
-
-                  <div className="uploadStatusLine">
-                    <span className="uploadPill">
-                      {text("Uploaded", "تم الرفع")}: {formatDate(focusedUploadFile.created_at)}
-                    </span>
-
-                    <span className={`uploadPill ${getExtractionTone(focusedUploadFile.extraction_status)}`}>
-                      {text("Status", "الحالة")}: {getExtractionLabel(focusedUploadFile.extraction_status)}
-                    </span>
-
-                    <span className={`uploadPill ${
-                      focusedUploadFile.extraction_status === "Failed" ? "risk" : "moderate"
-                    }`}>
-                      {text("Next", "التالي")}: {text("Analyze report", "تحليل التقرير")}
-                    </span>
-                  </div>
-
-                  <div className="ohButtonRow" style={{ marginTop: "20px" }}>
-                    <Link
-                      href={getReportAnalysisHref(focusedUploadFile.id)}
-                      className="primaryBtn"
-                    >
-                      {text("Analyze This Report", "تحليل هذا التقرير")}
-                    </Link>
-
-
-                    <button
-                      type="button"
-                      className="secondaryBtn"
-                      onClick={() => openFile(focusedUploadFile.file_path)}
-                    >
-                      {text("Open File", "فتح الملف")}
-                    </button>
-
-                    <button
-                      type="button"
-                      className="secondaryBtn"
-                      onClick={() => deleteFile(focusedUploadFile)}
-                      aria-label={text(
-                        `Delete ${focusedUploadFile.file_name}`,
-                        `حذف ${focusedUploadFile.file_name}`
-                      )}
-                      style={{
-                        color: "#b91c1c",
-                        borderColor: "rgba(185, 28, 28, 0.32)",
-                      }}
-                    >
-                      {text("Delete Report", "حذف التقرير")}
-                    </button>
-
-                    <Link href="/reports" className="secondaryBtn">
-                      {text("Reports Library", "مكتبة التقارير")}
-                    </Link>
-                  </div>
-                </div>
-
-
-              </div>
-
-              <div className="compactUploadHistory">
-                <div className="ohCardHeader">
-                  <div>
-                    <p className="ohMetricLabel">
-                      {text("Previous uploads", "الرفعات السابقة")}
-                    </p>
-
-                    <h3 className="ohCardTitle">
-                      {text("Compact upload history", "سجل رفع مختصر")}
-                    </h3>
-                  </div>
-
-                  <span className="ohStatusBadge neutral">
-                    {compactUploadFiles.length}
-                  </span>
-                </div>
-
-                {compactUploadFiles.length === 0 ? (
-                  <div className="ohEmptyState">
-                    <h2>{text("No older uploads", "لا توجد رفعات سابقة")}</h2>
-                    <p>{text("The latest report is shown above.", "آخر تقرير ظاهر بالأعلى.")}</p>
-                  </div>
-                ) : (
-                  <div className="compactUploadTable">
-                    <div className="compactUploadHeader">
-                      <span>{text("Report", "التقرير")}</span>
-                      <span>{text("Status", "الحالة")}</span>
-                      <span>{text("Uploaded", "تاريخ الرفع")}</span>
-                      <span>{text("Action", "الإجراء")}</span>
-                    </div>
-
-                    {compactUploadFiles.map((file) => (
-                      <article
-                        className={`compactUploadRow ${
-                          file.extraction_status === "Completed" ? "completed" : "pending"
-                        }`}
-                        key={file.id}
-                      >
-                        <div className="compactUploadName">
-                          <strong>{file.file_name}</strong>
-                          <span>{getReportTypeLabel(file.report_type)}</span>
-                        </div>
-
-                        <span className={`uploadPill ${getExtractionTone(file.extraction_status)}`}>
-                          {getExtractionLabel(file.extraction_status)}
-                        </span>
-
-                        <span className="ohCardText">
-                          {formatDate(file.created_at)}
-                        </span>
-
-                        <div className="compactUploadActions">
-                          <Link
-                            href={getReportAnalysisHref(file.id)}
-                            className="compactUploadAction primary"
-                          >
-                            {text("Analyze", "تحليل")}
-                          </Link>
-
-                          <button
-                            type="button"
-                            className="compactUploadAction secondary"
-                            onClick={() => openFile(file.file_path)}
-                          >
-                            {text("File", "الملف")}
-                          </button>
-                        </div>
-                      </article>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </>
-          ) : null}
+          </aside>
         </section>
-<section className="ohTrustNotice">
+
+        <section className="ohTrustNotice">
           <span aria-hidden="true">🛡️</span>
+
           <div>
             <strong>
-              {text("Privacy and medical safety reminder", "تذكير الخصوصية والسلامة الطبية")}
+              {text(
+                "Privacy and medical safety reminder",
+                "تذكير الخصوصية والسلامة الطبية"
+              )}
             </strong>
             <br />
             {text(
@@ -1596,296 +1142,7 @@ export default function LabUploadPage() {
             )}
           </div>
         </section>
-
-
       </div>
-      <style>{`
-        /* ORGANHEAL_LAB_UPLOAD_FINAL_V3 */
-
-        .labUploadFinalV3 {
-          min-height: 100vh !important;
-          background:
-            radial-gradient(circle at 12% 5%, rgba(6, 182, 212, 0.22), transparent 28%),
-            radial-gradient(circle at 88% 18%, rgba(15, 118, 110, 0.26), transparent 34%),
-            linear-gradient(180deg, #dbeafe 0%, #e2e8f0 45%, #f8fafc 100%) !important;
-          color: #0f172a !important;
-        }
-
-        .labUploadFinalV3 .ohContainer {
-          max-width: 1180px !important;
-        }
-
-        .labUploadFinalV3 .ohHero,
-        .labUploadFinalV3 .ohContainer > section:first-of-type {
-          background:
-            radial-gradient(circle at 86% 10%, rgba(20, 184, 166, 0.42), transparent 36%),
-            linear-gradient(135deg, #061826 0%, #0f172a 42%, #0f766e 100%) !important;
-          color: #ffffff !important;
-          border-radius: 34px !important;
-          border: 1px solid rgba(255, 255, 255, 0.16) !important;
-          box-shadow: 0 34px 90px rgba(15, 23, 42, 0.34) !important;
-          padding: 38px !important;
-        }
-
-        .labUploadFinalV3 .ohHero :is(h1,h2,h3,p,span,strong,small),
-        .labUploadFinalV3 .ohContainer > section:first-of-type :is(h1,h2,h3,p,span,strong,small) {
-          color: #ffffff !important;
-        }
-
-        .labUploadFinalV3 h1 {
-          font-size: clamp(2.55rem, 5vw, 4.4rem) !important;
-          line-height: 1.03 !important;
-          letter-spacing: -0.05em !important;
-        }
-
-        .labUploadFinalV3 h2,
-        .labUploadFinalV3 h3,
-.labUploadFinalV3 strong {
-  color: #0f172a !important;
-  font-weight: 950 !important;
-}
-
-.labUploadFinalV3 .uploadFocusPanel h3,
-.labUploadFinalV3 .uploadFocusPanel .ohCardTitle,
-.labUploadFinalV3 .uploadFocusPanel strong {
-  color: #ffffff !important;
-}
-
-.labUploadFinalV3 .uploadFocusPanel .ohMetricLabel,
-.labUploadFinalV3 .uploadFocusPanel .ohCardText {
-  color: rgba(226,232,240,.92) !important;
-}
-
-        .labUploadFinalV3 p,
-        .labUploadFinalV3 small,
-        .labUploadFinalV3 li {
-          color: #334155 !important;
-          font-weight: 740 !important;
-          line-height: 1.7 !important;
-        }
-
-        .labUploadFinalV3 .ohMetricGrid > * {
-          min-height: 145px !important;
-          border: 0 !important;
-          border-radius: 24px !important;
-          color: #ffffff !important;
-          box-shadow: 0 24px 62px rgba(15, 23, 42, 0.24) !important;
-        }
-
-        .labUploadFinalV3 .ohMetricGrid > *:nth-child(1) {
-          background: linear-gradient(135deg, #1d4ed8, #0f766e) !important;
-        }
-
-        .labUploadFinalV3 .ohMetricGrid > *:nth-child(2) {
-          background: linear-gradient(135deg, #0f766e, #06b6d4) !important;
-        }
-
-        .labUploadFinalV3 .ohMetricGrid > *:nth-child(3) {
-          background: linear-gradient(135deg, #047857, #10b981) !important;
-        }
-
-        .labUploadFinalV3 .ohMetricGrid > *:nth-child(4) {
-          background: linear-gradient(135deg, #b45309, #f59e0b) !important;
-        }
-
-        .labUploadFinalV3 .ohMetricGrid > * * {
-          color: #ffffff !important;
-        }
-
-        .labUploadFinalV3 .ohCard,
-        .labUploadFinalV3 .ohActionPanel,
-        .labUploadFinalV3 article,
-        .labUploadFinalV3 form {
-          background: #ffffff !important;
-          color: #0f172a !important;
-          border: 1px solid rgba(15, 23, 42, 0.14) !important;
-          border-radius: 30px !important;
-          box-shadow: 0 22px 58px rgba(15, 23, 42, 0.13) !important;
-        }
-
-        .labUploadFinalV3 .ohCard *,
-        .labUploadFinalV3 .ohActionPanel *,
-        .labUploadFinalV3 article *,
-        .labUploadFinalV3 form * {
-          opacity: 1 !important;
-        }
-
-        .labUploadFinalV3 .ohCardHeader {
-          background: linear-gradient(135deg, #061826, #0f766e) !important;
-          border-radius: 22px !important;
-          padding: 18px !important;
-          border: 0 !important;
-          margin-bottom: 18px !important;
-          box-shadow: 0 16px 38px rgba(15, 23, 42, 0.18) !important;
-        }
-
-        .labUploadFinalV3 .ohCardHeader,
-        .labUploadFinalV3 .ohCardHeader * {
-          color: #ffffff !important;
-        }
-
-        /* Upload box */
-        .labUploadFinalV3 input[type="file"] {
-          width: 100% !important;
-          min-height: 210px !important;
-          padding: 84px 24px 24px !important;
-          border: 2px dashed rgba(15, 118, 110, 0.52) !important;
-          border-radius: 28px !important;
-          background:
-            radial-gradient(circle at 50% 24%, rgba(20, 184, 166, 0.24), transparent 24%),
-            linear-gradient(180deg, #f8fafc, #ecfeff) !important;
-          color: #0f172a !important;
-          font-weight: 950 !important;
-          box-shadow:
-            inset 0 0 0 1px rgba(15, 118, 110, 0.10),
-            0 16px 36px rgba(15, 23, 42, 0.08) !important;
-          cursor: pointer !important;
-        }
-
-        .labUploadFinalV3 label:has(input[type="file"]),
-        .labUploadFinalV3 div:has(> input[type="file"]) {
-          display: block !important;
-          padding: 24px !important;
-          border-radius: 30px !important;
-          background: linear-gradient(180deg, #ffffff, #f8fafc) !important;
-          border: 1px solid rgba(15, 23, 42, 0.14) !important;
-          box-shadow: 0 18px 44px rgba(15, 23, 42, 0.12) !important;
-        }
-
-        /* Search and filter */
-        .labUploadFinalV3 input[type="search"],
-        .labUploadFinalV3 input[placeholder*="Search"],
-        .labUploadFinalV3 input[placeholder*="search"],
-        .labUploadFinalV3 input[placeholder*="file"],
-        .labUploadFinalV3 select {
-          min-height: 46px !important;
-          padding: 0 14px !important;
-          border-radius: 14px !important;
-          background: #ffffff !important;
-          color: #0f172a !important;
-          border: 1px solid rgba(15, 23, 42, 0.24) !important;
-          box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08) !important;
-          font-weight: 850 !important;
-        }
-
-        .labUploadFinalV3 input[placeholder*="Search"],
-        .labUploadFinalV3 input[placeholder*="search"],
-        .labUploadFinalV3 input[placeholder*="file"] {
-          width: min(100%, 760px) !important;
-          min-width: 360px !important;
-        }
-
-        .labUploadFinalV3 select {
-          min-width: 190px !important;
-        }
-
-        .labUploadFinalV3 input::placeholder {
-          color: #64748b !important;
-          opacity: 1 !important;
-        }
-
-        /* Dark helper boxes like Clear Next Step */
-        .labUploadFinalV3 .ohContainer > section div[style*="#061826"],
-        .labUploadFinalV3 .ohContainer > section div[style*="#0f766e"],
-        .labUploadFinalV3 .ohContainer > section div[style*="linear-gradient"],
-        .labUploadFinalV3 aside div[style*="#061826"],
-        .labUploadFinalV3 aside div[style*="#0f766e"],
-        .labUploadFinalV3 aside div[style*="linear-gradient"] {
-          padding: 24px !important;
-          border-radius: 24px !important;
-          background: linear-gradient(135deg, #061826, #0f766e) !important;
-          box-shadow: 0 18px 44px rgba(15, 23, 42, 0.18) !important;
-        }
-
-        .labUploadFinalV3 .ohContainer > section div[style*="#061826"] *,
-        .labUploadFinalV3 .ohContainer > section div[style*="#0f766e"] *,
-        .labUploadFinalV3 .ohContainer > section div[style*="linear-gradient"] *,
-        .labUploadFinalV3 aside div[style*="#061826"] *,
-        .labUploadFinalV3 aside div[style*="#0f766e"] *,
-        .labUploadFinalV3 aside div[style*="linear-gradient"] * {
-          color: #ffffff !important;
-          opacity: 1 !important;
-        }
-
-        /* Supported documents on the right */
-        .labUploadFinalV3 .ohTimelineItem,
-        .labUploadFinalV3 [class*="TimelineItem"],
-        .labUploadFinalV3 aside article,
-        .labUploadFinalV3 aside .ohCard {
-          min-height: 96px !important;
-          padding: 18px !important;
-          border-radius: 20px !important;
-          background: #ffffff !important;
-          color: #0f172a !important;
-          border: 1px solid rgba(15, 23, 42, 0.12) !important;
-          border-inline-start: 7px solid #0f766e !important;
-          box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08) !important;
-        }
-
-        .labUploadFinalV3 .ohTimelineItem strong,
-        .labUploadFinalV3 [class*="TimelineItem"] strong,
-        .labUploadFinalV3 aside article strong,
-        .labUploadFinalV3 aside .ohCard strong {
-          font-size: 1rem !important;
-          color: #0f172a !important;
-          font-weight: 950 !important;
-        }
-
-        .labUploadFinalV3 .ohTimelineItem p,
-        .labUploadFinalV3 [class*="TimelineItem"] p,
-        .labUploadFinalV3 aside article p,
-        .labUploadFinalV3 aside .ohCard p {
-          color: #475569 !important;
-          font-weight: 740 !important;
-        }
-
-        /* Buttons */
-        .labUploadFinalV3 .primaryBtn,
-        .labUploadFinalV3 button[type="submit"],
-        .labUploadFinalV3 a[href*="reports"],
-        .labUploadFinalV3 a[href*="intelligence"] {
-          display: inline-flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          min-height: 42px !important;
-          padding: 0 16px !important;
-          border-radius: 999px !important;
-          background: linear-gradient(135deg, #06b6d4, #14b8a6) !important;
-          color: #061826 !important;
-          border: 0 !important;
-          font-weight: 950 !important;
-          box-shadow: 0 16px 40px rgba(6, 182, 212, 0.34) !important;
-          text-decoration: none !important;
-        }
-
-        .labUploadFinalV3 .primaryBtn *,
-        .labUploadFinalV3 button[type="submit"] *,
-        .labUploadFinalV3 a[href*="reports"] *,
-        .labUploadFinalV3 a[href*="intelligence"] * {
-          color: #061826 !important;
-        }
-
-        .labUploadFinalV3 .secondaryBtn,
-        .labUploadFinalV3 a[href*="file"] {
-          display: inline-flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          min-height: 40px !important;
-          padding: 0 16px !important;
-          border-radius: 999px !important;
-          background: #ffffff !important;
-          color: #0f766e !important;
-          border: 1px solid rgba(15, 118, 110, 0.34) !important;
-          font-weight: 950 !important;
-          box-shadow: 0 12px 28px rgba(15, 23, 42, 0.10) !important;
-          text-decoration: none !important;
-        }
-      `}</style></main>
+    </main>
   );
 }
-
-
-
-
-
-
