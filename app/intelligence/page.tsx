@@ -1051,7 +1051,7 @@ const {
                   item.ai_status === "Generated" &&
                   item.extraction_status === "Completed";
 
-                const isActiveGeneratedReport = activeGeneratedInsightId === item.id;
+
                 const isExpandedReport = expandedReportId === item.id;
 
                 return (
@@ -1077,125 +1077,7 @@ const {
                         setActiveGeneratedInsightId(null);
                       }
                     }}
-                  >
-                    {isExpandedReport && (
-                      <>
-                        {isActiveGeneratedReport && generatedResult && (
-                          <>
-                            <PatientReportPdfCard
-                              fileName={item.file_name || "Medical report"}
-                              uploadedAtText={formatDate(item.uploaded_at || item.created_at)}
-                              summary={item.summary}
-                              keyFindings={item.key_findings}
-                              riskSignals={item.risk_signals}
-                              recommendations={item.recommendations}
-                              healthStory={generatedResult.healthStory}
-                              executiveSummary={generatedResult.executiveSummary}
-                              patientPresentation={unifiedPatientPresentationV2}
-                            />
-
-                            <DoctorBriefReportCard
-                              fileName={item.file_name || "Medical report"}
-                              reportTypeLabel={getReportTypeLabel(item.report_type)}
-                              uploadedAtText={formatDate(item.uploaded_at || item.created_at)}
-                              summary={item.summary}
-                              keyFindings={item.key_findings}
-                              riskSignals={item.risk_signals}
-                              recommendations={item.recommendations}
-                              doctorBrief={
-  unifiedDoctorBriefV2 ??
-  item.doctor_brief
-}
-                              executiveSummary={generatedResult.executiveSummary}
-                            />
-
-                            <GeneratedReportDetailsCard
-                              medicalCategory={item.medical_category}
-                              summary={item.summary}
-                              keyFindings={item.key_findings}
-                              riskSignals={item.risk_signals}
-                              recommendations={item.recommendations}
-                              doctorBrief={
-  unifiedDoctorBriefV2 ??
-  item.doctor_brief
-}
-                            />
-
-                            {generatedResult.executiveSummary && (
-                              <ExecutiveSummaryCard summary={generatedResult.executiveSummary} />
-                            )}
-
-                            {generatedResult.healthStory && (
-                              <HealthStoryCard story={generatedResult.healthStory} />
-                            )}
-
-                            {generatedResult.strategy && (
-                              <PersonalHealthStrategyCard strategy={generatedResult.strategy} />
-                            )}
-
-                            {generatedResult.actionPlan && (
-                              <ActionPlanCard actionPlan={generatedResult.actionPlan} />
-                            )}
-
-                            {generatedResult.unifiedHealth && (
-                              <UnifiedHealthCard unifiedHealth={generatedResult.unifiedHealth} />
-                            )}
-
-                            <TimelineCard timeline={generatedResult.timeline} />
-                            <LabTrendsCard labTrends={generatedResult.labTrends} />
-
-                            <LongitudinalRiskCard
-                              longitudinalRisk={generatedResult.longitudinalRisk}
-                            />
-
-                            <CrossSourceCard crossSource={generatedResult.crossSource} />
-
-                            <DigitalTwinCard digitalTwin={generatedResult.digitalTwin} />
-
-                            <ForecastCard forecast={generatedResult.forecast} />
-
-                            <div className="ohCard">
-                              <div className="ohCardHeader">
-                                <div>
-                                  <p className="ohMetricLabel">
-                                    {text("Next Step", "الخطوة التالية")}
-                                  </p>
-
-                                  <h2 className="ohCardTitle">
-                                    {text(
-                                      "Continue your health journey",
-                                      "تابع رحلتك الصحية"
-                                    )}
-                                  </h2>
-
-                                  <p className="ohCardText">
-                                    {text(
-                                      "Your report intelligence is now available. You can return to your reports library, continue your follow-up plan, or go back to your dashboard overview.",
-                                      "أصبح تحليل التقرير متاحًا الآن. يمكنك العودة إلى مكتبة التقارير، متابعة خطة الصحة، أو الرجوع إلى لوحة التحكم."
-                                    )}
-                                  </p>
-                                </div>
-                              </div>
-
-                              <div className="ohButtonRow">
-                                <Link href="/reports" className="secondaryBtn">
-                                  {text("Reports Library", "مكتبة التقارير")}
-                                </Link>
-
-                                <Link href="/health-plan" className="primaryBtn">
-                                  {text("Open Health Plan", "افتح خطة الصحة")}
-                                </Link>
-
-                                <Link href="/dashboard" className="secondaryBtn">
-                                  {text("Dashboard", "لوحة التحكم")}
-                                </Link>
-                              </div>
-                            </div>
-                          </>
-                        )}
-                      </>
-                    )}
-                  </MedicalReportCard>
+                   />
                 );
               })}
             </MedicalReportList>
