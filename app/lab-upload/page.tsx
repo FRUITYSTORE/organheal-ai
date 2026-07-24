@@ -22,6 +22,8 @@ export default function LabUploadPage() {
   const [language, setLanguage] = useState<Language>("en");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [latestUploadedFileName, setLatestUploadedFileName] = useState("");
+  const [latestUploadedReportId, setLatestUploadedReportId] =
+    useState<number | null>(null);
   const [savedFileNames, setSavedFileNames] = useState<string[]>([]);
   const [message, setMessage] = useState("");
   const [uploadStep, setUploadStep] = useState<UploadStep>("idle");
@@ -191,6 +193,7 @@ export default function LabUploadPage() {
     setSelectedFiles([]);
     setSavedFileNames([]);
     setLatestUploadedFileName("");
+    setLatestUploadedReportId(null);
     setMessage("");
     setUploadStep("idle");
   }
@@ -222,6 +225,7 @@ export default function LabUploadPage() {
     setUploadStep("uploading");
     setMessage("");
     setSavedFileNames([]);
+    setLatestUploadedReportId(null);
 
     const { data: userData, error: userError } = await supabase.auth.getUser();
 
@@ -365,6 +369,7 @@ export default function LabUploadPage() {
       }
 
       uploadedNames.push(file.name);
+      setLatestUploadedReportId(insertedFile.id);
     }
 
     setSelectedFiles([]);
@@ -374,8 +379,8 @@ export default function LabUploadPage() {
     setUploadStep("saved");
     setMessage(
       text(
-        `${uploadedNames.length} report(s) saved successfully. Continue to Reports Library to open, manage, or analyze them.`,
-        `تم حفظ ${uploadedNames.length} تقرير بنجاح. تابع إلى مكتبة التقارير لفتحها أو إدارتها أو تحليلها.`
+        `${uploadedNames.length} report(s) saved successfully. Continue to analyze the latest saved report, or open Reports Library to manage all reports.`,
+        `تم حفظ ${uploadedNames.length} تقرير بنجاح. تابع لتحليل آخر تقرير محفوظ، أو افتح مكتبة التقارير لإدارة جميع التقارير.`
       )
     );
   }
@@ -1069,8 +1074,20 @@ export default function LabUploadPage() {
             )}
 
             <div className="ohButtonRow" style={{ marginTop: "20px" }}>
-              <Link href="/reports" className="primaryBtn">
-                {text("Open Reports Library", "فتح مكتبة التقارير")}
+              {latestUploadedReportId && (
+                <Link
+                  href={`/intelligence?reportId=${latestUploadedReportId}&auto=1`}
+                  className="primaryBtn"
+                >
+                  {text(
+                    "Continue to Analysis",
+                    "المتابعة إلى التحليل"
+                  )}
+                </Link>
+              )}
+
+              <Link href="/reports" className="secondaryBtn">
+                {text("Reports Library", "مكتبة التقارير")}
               </Link>
 
               <button
@@ -1084,7 +1101,8 @@ export default function LabUploadPage() {
           </section>
         )}
 
-        <section className="uploadWorkspace" id="medical-upload-panel">
+        {uploadStep !== "saved" && (
+          <section className="uploadWorkspace" id="medical-upload-panel">
           <article className="uploadCard">
             <div className="uploadCardHeader">
               <p className="ohMetricLabel">
@@ -1224,7 +1242,7 @@ export default function LabUploadPage() {
                 </Link>
               </div>
 
-              {message && uploadStep !== "saved" && (
+              {message && (
                 <div
                   className={`uploadNotice ${
                     uploadStep === "error" ? "error" : ""
@@ -1299,7 +1317,8 @@ export default function LabUploadPage() {
               ))}
             </div>
           </aside>
-        </section>
+          </section>
+        )}
 
         <section className="ohTrustNotice">
           <span aria-hidden="true">🛡️</span>

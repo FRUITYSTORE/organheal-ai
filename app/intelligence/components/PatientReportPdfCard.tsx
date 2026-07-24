@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useRef } from "react";
+import { type ReactNode, useEffect, useRef } from "react";
 import type {
   PatientIntelligencePresentation,
 } from "@/lib/health-intelligence/presentation/patient-intelligence.presenter";
@@ -291,6 +291,24 @@ export default function PatientReportPdfCard({
   const isArabic = useArabicUi();
   const patientReportRef = useRef<HTMLElement>(null);
 
+  useEffect(() => {
+    const handlePatientPdfDownload = () => {
+      void downloadPatientPdf();
+    };
+
+    window.addEventListener(
+      "organheal:download-patient-pdf",
+      handlePatientPdfDownload
+    );
+
+    return () => {
+      window.removeEventListener(
+        "organheal:download-patient-pdf",
+        handlePatientPdfDownload
+      );
+    };
+  }, []);
+
   const generatedAtText = new Date().toLocaleString(isArabic ? "ar" : undefined);
   const labMarkers = extractLabMarkers(
     summary,
@@ -351,68 +369,111 @@ export default function PatientReportPdfCard({
   ];
 
   async function downloadPatientPdf() {
-    if (!patientReportRef.current) return;
+    let temporaryContainer: HTMLDivElement | null = null;
 
-    const html2pdfModule = await import("html2pdf.js");
-    const html2pdf = html2pdfModule.default || html2pdfModule;
+    try {
+      if (!patientReportRef.current) {
+        throw new Error("Patient report element is not available.");
+      }
 
-    const reportElement = patientReportRef.current.cloneNode(true) as HTMLElement;
+      const html2pdfModule = await import("html2pdf.js");
+      const html2pdf = html2pdfModule.default || html2pdfModule;
 
-    reportElement
-      .querySelectorAll(".patientReportActions, .patientReportDownloadButton, .patientReportTip")
-      .forEach((element) => element.remove());
+      const reportElement =
+        patientReportRef.current.cloneNode(true) as HTMLElement;
 
-    reportElement.style.background = "#ffffff";
-    reportElement.style.color = "#111827";
-    reportElement.style.padding = "22px 24px";
-    reportElement.style.border = "none";
-    reportElement.style.boxShadow = "none";
-    reportElement.style.direction = isArabic ? "rtl" : "ltr";
-    reportElement.style.textAlign = isArabic ? "right" : "left";
-    reportElement.style.fontFamily = isArabic
-      ? "Tahoma, Arial, sans-serif"
-      : "Arial, sans-serif";
+      reportElement
+        .querySelectorAll(
+          ".patientReportActions, .patientReportDownloadButton, .patientReportTip"
+        )
+        .forEach((element) => element.remove());
 
-    reportElement.querySelectorAll("*").forEach((element) => {
-      const htmlElement = element as HTMLElement;
-
-      htmlElement.style.color = "#111827";
-      htmlElement.style.fontFamily = isArabic
+      reportElement.style.background = "#ffffff";
+      reportElement.style.color = "#111827";
+      reportElement.style.padding = "22px 24px";
+      reportElement.style.border = "none";
+      reportElement.style.boxShadow = "none";
+      reportElement.style.direction = isArabic ? "rtl" : "ltr";
+      reportElement.style.textAlign = isArabic ? "right" : "left";
+      reportElement.style.fontFamily = isArabic
         ? "Tahoma, Arial, sans-serif"
         : "Arial, sans-serif";
-      htmlElement.style.unicodeBidi = "isolate";
-      htmlElement.style.letterSpacing = "normal";
-      htmlElement.style.wordSpacing = "normal";
-      htmlElement.style.textTransform = "none";
-      htmlElement.style.fontVariant = "normal";
-    });
 
-    applyProfessionalPdfLayout(reportElement, isArabic);
+      reportElement.querySelectorAll("*").forEach((element) => {
+        const htmlElement = element as HTMLElement;
 
-    const safeFileName = fileName.replace(/[^a-z0-9]/gi, "-").toLowerCase();
+        htmlElement.style.color = "#111827";
+        htmlElement.style.fontFamily = isArabic
+          ? "Tahoma, Arial, sans-serif"
+          : "Arial, sans-serif";
+        htmlElement.style.unicodeBidi = "isolate";
+        htmlElement.style.letterSpacing = "normal";
+        htmlElement.style.wordSpacing = "normal";
+        htmlElement.style.textTransform = "none";
+        htmlElement.style.fontVariant = "normal";
+      });
 
-    await html2pdf()
-      .set({
-        pagebreak: {
-          mode: ["css", "legacy"],
-          avoid: [
-            "h1",
-            "h2",
-            "h3",
-            "p",
-            "li",
-            ".organhealPdfKeepTogether",
-            ".organhealPdfSection",
-          ],
-        },
-        margin: [16, 18, 16, 18],
-        filename: `OrganHeal-Patient-Report-${safeFileName}.pdf`,
-        image: { type: "jpeg", quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-      })
-      .from(reportElement)
-      .save();
+      applyProfessionalPdfLayout(reportElement, isArabic);
+
+      temporaryContainer = document.createElement("div");
+      temporaryContainer.setAttribute("aria-hidden", "true");
+
+      Object.assign(temporaryContainer.style, {
+        position: "fixed",
+        left: "-100000px",
+        top: "0",
+        width: "794px",
+        background: "#ffffff",
+        zIndex: "-1",
+        pointerEvents: "none",
+      });
+
+      temporaryContainer.appendChild(reportElement);
+      document.body.appendChild(temporaryContainer);
+
+      const safeFileName =
+        fileName.replace(/[^a-z0-9]/gi, "-").toLowerCase() || "report";
+
+      await html2pdf()
+        .set({
+          pagebreak: {
+            mode: ["css", "legacy"],
+            avoid: [
+              "h1",
+              "h2",
+              "h3",
+              "p",
+              "li",
+              ".organhealPdfKeepTogether",
+              ".organhealPdfSection",
+            ],
+          },
+          margin: [16, 18, 16, 18],
+          filename: `OrganHeal-Patient-Report-${safeFileName}.pdf`,
+          image: { type: "jpeg", quality: 0.98 },
+          html2canvas: {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: "#ffffff",
+          },
+          jsPDF: {
+            unit: "mm",
+            format: "a4",
+            orientation: "portrait",
+          },
+        })
+        .from(reportElement)
+        .save();
+    } catch (error) {
+      console.error("Patient PDF failed:", error);
+      window.alert(
+        isArabic
+          ? "تعذر إنشاء تقرير المريض PDF. يرجى المحاولة مرة أخرى."
+          : "The Patient PDF could not be generated. Please try again."
+      );
+    } finally {
+      temporaryContainer?.remove();
+    }
   }
 
   return (
@@ -505,7 +566,7 @@ export default function PatientReportPdfCard({
           </div>
 
           <div className="patientReportActions patientReportHeaderActions">
-            <button
+            <button id="patient-analysis-pdf-download"
               className="primaryBtn patientReportDownloadButton"
               type="button"
               onClick={downloadPatientPdf}
@@ -664,5 +725,3 @@ export default function PatientReportPdfCard({
     </>
   );
 }
-
-

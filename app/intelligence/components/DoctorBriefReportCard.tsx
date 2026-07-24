@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useRef } from "react";
+import { type ReactNode, useEffect, useRef } from "react";
 import { text, useArabicUi } from "./ArabicUiHelper";
 import type {
   DoctorIntelligencePresentation,
@@ -295,6 +295,24 @@ export default function DoctorBriefReportCard({
   const isArabic = useArabicUi();
   const printRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    const handleDoctorBriefPdfDownload = () => {
+      void downloadDoctorBriefPdf();
+    };
+
+    window.addEventListener(
+      "organheal:download-doctor-brief-pdf",
+      handleDoctorBriefPdfDownload
+    );
+
+    return () => {
+      window.removeEventListener(
+        "organheal:download-doctor-brief-pdf",
+        handleDoctorBriefPdfDownload
+      );
+    };
+  }, []);
+
   const generatedAtText = new Date().toLocaleString(isArabic ? "ar" : undefined);
   const labMarkers = extractLabMarkers(
     summary,
@@ -382,16 +400,26 @@ function printDoctorBriefOnly() {
     printWindow.document.close();
   }
 
-  async function downloadDoctorBriefPdf() {
-    if (!printRef.current) return;
+ async function downloadDoctorBriefPdf() {
+  let temporaryContainer: HTMLDivElement | null = null;
+
+  try {
+    if (!printRef.current) {
+      throw new Error("Doctor brief element is not available.");
+    }
+
+    console.log("Doctor PDF generation started.");
 
     const html2pdfModule = await import("html2pdf.js");
     const html2pdf = html2pdfModule.default || html2pdfModule;
 
-    const reportElement = printRef.current.cloneNode(true) as HTMLElement;
+    const reportElement =
+      printRef.current.cloneNode(true) as HTMLElement;
 
     reportElement
-      .querySelectorAll(".doctorBriefPrintActions, .doctorBriefPrintButton, .doctorBriefPrintTip")
+      .querySelectorAll(
+        ".doctorBriefPrintActions, .doctorBriefPrintButton, .doctorBriefPrintTip"
+      )
       .forEach((element) => element.remove());
 
     reportElement.style.background = "#ffffff";
@@ -421,7 +449,24 @@ function printDoctorBriefOnly() {
 
     applyProfessionalPdfLayout(reportElement, isArabic);
 
-    const safeFileName = fileName.replace(/[^a-z0-9]/gi, "-").toLowerCase();
+    temporaryContainer = document.createElement("div");
+    temporaryContainer.setAttribute("aria-hidden", "true");
+
+    Object.assign(temporaryContainer.style, {
+      position: "fixed",
+      left: "-100000px",
+      top: "0",
+      width: "794px",
+      background: "#ffffff",
+      zIndex: "-1",
+      pointerEvents: "none",
+    });
+
+    temporaryContainer.appendChild(reportElement);
+    document.body.appendChild(temporaryContainer);
+
+    const normalizedFileName =
+      fileName.replace(/[^a-z0-9]/gi, "-").toLowerCase() || "report";
 
     await html2pdf()
       .set({
@@ -438,14 +483,38 @@ function printDoctorBriefOnly() {
           ],
         },
         margin: [16, 18, 16, 18],
-        filename: `OrganHeal-Doctor-Brief-${safeFileName}.pdf`,
-        image: { type: "jpeg", quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+        filename: `OrganHeal-Doctor-Brief-${normalizedFileName}.pdf`,
+        image: {
+          type: "jpeg",
+          quality: 0.98,
+        },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: "#ffffff",
+          logging: true,
+        },
+        jsPDF: {
+          unit: "mm",
+          format: "a4",
+          orientation: "portrait",
+        },
       })
       .from(reportElement)
       .save();
+
+    console.log("Doctor PDF downloaded successfully.");
+  } catch (error) {
+    console.error("Doctor PDF failed:", error);
+    window.alert(
+      isArabic
+        ? "تعذر إنشاء ملخص الطبيب PDF. يرجى المحاولة مرة أخرى."
+        : "The Doctor Brief PDF could not be generated. Please try again."
+    );
+  } finally {
+    temporaryContainer?.remove();
   }
+}
 
   return (
     <>
@@ -549,7 +618,7 @@ function printDoctorBriefOnly() {
               {isArabic ? "طباعة ملخص الطبيب" : "Print Doctor Brief"}
             </button>
 
-            <button
+            <button id="doctor-brief-pdf-download"
               className="primaryBtn doctorBriefPrintButton"
               type="button"
               onClick={downloadDoctorBriefPdf}
@@ -799,5 +868,3 @@ function printDoctorBriefOnly() {
     </>
   );
 }
-
-

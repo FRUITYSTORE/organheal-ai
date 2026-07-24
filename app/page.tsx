@@ -319,6 +319,34 @@ export default function Home() {
                   "\u0623\u0646\u0634\u0626 \u0630\u0643\u0627\u0621\u064b \u0635\u062d\u064a\u064b\u0627 \u0645\u0646 \u0627\u0644\u062a\u0642\u0631\u064a\u0631 \u0648\u062d\u062f\u062f \u0627\u0644\u062e\u0637\u0648\u0629 \u0627\u0644\u062a\u0627\u0644\u064a\u0629 \u0627\u0644\u0623\u0647\u0645."
                 ),
               };
+  const continueJourneyHref = !latestReport
+    ? "/lab-upload"
+    : latestReport.extractionStatus === "Processing"
+      ? "/reports"
+      : latestReport.hasSavedAnalysis
+        ? `/intelligence?reportId=${latestReport.reportId}`
+        : `/intelligence?reportId=${latestReport.reportId}&auto=1`;
+
+  const continueJourneyDescription = !latestReport
+    ? text(
+        "Upload your first health report",
+        "ارفع أول تقرير صحي"
+      )
+    : latestReport.extractionStatus === "Processing"
+      ? text(
+          "Check your latest report status",
+          "تحقق من حالة أحدث تقرير"
+        )
+      : latestReport.hasSavedAnalysis
+        ? text(
+            "Review your latest health intelligence",
+            "راجع أحدث ذكاء صحي لديك"
+          )
+        : text(
+            "Analyze your latest health report",
+            "حلّل أحدث تقرير صحي لديك"
+          );
+
   return (
     <main
       className="ohPageShell publicHomePage"
@@ -833,6 +861,14 @@ export default function Home() {
         .publicHomePage .homePrimaryActions .homeSecondaryAction {
           min-height: 52px;
           justify-content: center;
+        }
+
+        .publicHomePage .homeUtilityAction {
+          min-width: auto;
+          min-height: 46px !important;
+          padding: 10px 14px;
+          font-size: 0.86rem;
+          box-shadow: none;
         }
 
         .publicHomePage .homeContinuationCard {
@@ -1650,31 +1686,50 @@ export default function Home() {
               <div className="homePrimaryActions">
                 {isLoggedIn ? (
                   <>
-                    <Link href="/dashboard" className="primaryBtn homeUploadAction">
-                      <span className="homeActionIcon" aria-hidden="true">→</span>
+                    <Link
+                      href={continueJourneyHref}
+                      className="primaryBtn homeUploadAction"
+                    >
+                      <span
+                        className="homeActionIcon"
+                        aria-hidden="true"
+                      >
+                        →
+                      </span>
+
                       <span>
                         <strong>
-                          {text("Open Dashboard", "فتح لوحة التحكم")}
-                        </strong>
-                        <small>
                           {text(
-                            "Continue your health workspace",
-                            "تابع مساحتك الصحية"
+                            "Continue Health Journey",
+                            "متابعة رحلتك الصحية"
                           )}
+                        </strong>
+
+                        <small>
+                          {continueJourneyDescription}
                         </small>
                       </span>
                     </Link>
 
-                    <Link href="/reports" className="secondaryBtn homeSecondaryAction">
-                      {text("My Reports", "تقاريري")}
+                    <Link
+                      href="/reports"
+                      className="secondaryBtn homeSecondaryAction homeUtilityAction"
+                    >
+                      {text("Reports", "التقارير")}
                     </Link>
 
-                    <Link href="/intelligence" className="secondaryBtn homeSecondaryAction">
-                      {text("Intelligence", "الذكاء الصحي")}
+                    <Link
+                      href="/lab-upload"
+                      className="secondaryBtn homeSecondaryAction homeUtilityAction"
+                    >
+                      {text("Upload Report", "رفع تقرير")}
                     </Link>
 
-                    <Link href="/lab-upload" className="secondaryBtn homeSecondaryAction">
-                      {text("Upload New Report", "رفع تقرير جديد")}
+                    <Link
+                      href="/dashboard"
+                      className="secondaryBtn homeSecondaryAction homeUtilityAction"
+                    >
+                      {text("Dashboard", "لوحة التحكم")}
                     </Link>
                   </>
                 ) : (

@@ -590,6 +590,17 @@ const {
           text-decoration: none;
         }
 
+        .analysisDocumentsHeader {
+          margin-bottom: 18px;
+        }
+
+        .analysisDocumentAnchor {
+          scroll-margin-top: 110px;
+        }
+
+        .analysisDocumentAnchor + .analysisDocumentAnchor {
+          margin-top: 18px;
+        }
         .selectedReportFocus {
           border-top: 6px solid #0f766e;
           background:
@@ -1167,11 +1178,75 @@ const {
                   <button
                     type="button"
                     className="intelligenceSecondaryAction"
-                    onClick={() => openMedicalReport(focusedReportInsight.file_path)}
+                    onClick={() =>
+                      openMedicalReport(
+                        focusedReportInsight.file_path
+                      )
+                    }
                     disabled={!focusedReportInsight.file_path}
                   >
-                    {text("Open File", "فتح الملف")}
+                    {text(
+                      "Open Original Report",
+                      "فتح التقرير الأصلي"
+                    )}
                   </button>
+                  {focusedReportIsGenerated && (
+                    <>
+                      <button
+                        type="button"
+                        className="intelligenceSecondaryAction"
+                        onClick={() => {
+  const downloadButton = document.getElementById(
+    "patient-analysis-pdf-download"
+  ) as HTMLButtonElement | null;
+
+  if (!downloadButton) {
+    console.error("Patient PDF download button was not found.");
+    window.alert(
+      isArabicUi
+        ? "تقرير المريض غير جاهز للتنزيل بعد."
+        : "The Patient PDF is not ready to download yet."
+    );
+    return;
+  }
+
+  downloadButton.click();
+}}
+                      >
+                        {text(
+                          "Patient Analysis PDF",
+                          "تقرير تحليل المريض PDF"
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        className="intelligenceSecondaryAction"
+                        onClick={() => {
+  const downloadButton = document.getElementById(
+    "doctor-brief-pdf-download"
+  ) as HTMLButtonElement | null;
+
+  if (!downloadButton) {
+    console.error("Doctor Brief PDF download button was not found.");
+    window.alert(
+      isArabicUi
+        ? "ملخص الطبيب غير جاهز للتنزيل بعد."
+        : "The Doctor Brief PDF is not ready to download yet."
+    );
+    return;
+  }
+
+  downloadButton.click();
+}}
+                      >
+                        {text(
+                          "Doctor Brief PDF",
+                          "ملخص الطبيب PDF"
+                        )}
+                      </button>
+                    </>
+                  )}
 
                   <Link href="/reports" className="intelligenceSecondaryAction">
                     {text("Back to Reports", "العودة للتقارير")}
@@ -1383,46 +1458,97 @@ const {
                   </summary>
 
                   <div className="intelligenceDisclosureContent">
-                    <PatientReportPdfCard
-                      fileName={
-                        focusedReportInsight.file_name ||
-                        "Medical report"
-                      }
-                      uploadedAtText={formatDate(
-                        focusedReportInsight.uploaded_at ||
-                          focusedReportInsight.created_at
-                      )}
-                      summary={focusedReportInsight.summary}
-                      keyFindings={focusedReportInsight.key_findings}
-                      riskSignals={focusedReportInsight.risk_signals}
-                      recommendations={focusedReportInsight.recommendations}
-                      healthStory={generatedResult.healthStory}
-                      executiveSummary={generatedResult.executiveSummary}
-                      patientPresentation={unifiedPatientPresentationV2}
-                    />
+                    <div className="analysisDocumentsHeader">
+                      <p className="ohMetricLabel">
+                        {text(
+                          "Analysis documents",
+                          "مستندات التحليل"
+                        )}
+                      </p>
 
-                    <DoctorBriefReportCard
-                      fileName={
-                        focusedReportInsight.file_name ||
-                        "Medical report"
-                      }
-                      reportTypeLabel={getReportTypeLabel(
-                        focusedReportInsight.report_type
-                      )}
-                      uploadedAtText={formatDate(
-                        focusedReportInsight.uploaded_at ||
-                          focusedReportInsight.created_at
-                      )}
-                      summary={focusedReportInsight.summary}
-                      keyFindings={focusedReportInsight.key_findings}
-                      riskSignals={focusedReportInsight.risk_signals}
-                      recommendations={focusedReportInsight.recommendations}
-                      doctorBrief={
-                        unifiedDoctorBriefV2 ??
-                        focusedReportInsight.doctor_brief
-                      }
-                      executiveSummary={generatedResult.executiveSummary}
-                    />
+                      <h3 className="ohCardTitle">
+                        {text(
+                          "Reports generated by OrganHeal AI",
+                          "تقارير أنشأها OrganHeal AI"
+                        )}
+                      </h3>
+
+                      <p className="ohCardText">
+                        {text(
+                          "Download a patient-friendly explanation or prepare a concise clinical brief for your doctor.",
+                          "نزّل شرحًا مبسطًا للمريض أو جهّز ملخصًا سريريًا موجزًا للطبيب."
+                        )}
+                      </p>
+                    </div>
+
+                                       <div
+                      id="patient-analysis-pdf"
+                      className="analysisDocumentAnchor"
+                    >
+                      <PatientReportPdfCard
+                        fileName={
+                          focusedReportInsight.file_name ||
+                          "Medical report"
+                        }
+                        uploadedAtText={formatDate(
+                          focusedReportInsight.uploaded_at ||
+                            focusedReportInsight.created_at
+                        )}
+                        summary={focusedReportInsight.summary}
+                        keyFindings={
+                          focusedReportInsight.key_findings
+                        }
+                        riskSignals={
+                          focusedReportInsight.risk_signals
+                        }
+                        recommendations={
+                          focusedReportInsight.recommendations
+                        }
+                        healthStory={generatedResult.healthStory}
+                        executiveSummary={
+                          generatedResult.executiveSummary
+                        }
+                        patientPresentation={
+                          unifiedPatientPresentationV2
+                        }
+                      />
+                    </div>
+
+                    <div
+                      id="doctor-brief-pdf"
+                      className="analysisDocumentAnchor"
+                    >
+                      <DoctorBriefReportCard
+                        fileName={
+                          focusedReportInsight.file_name ||
+                          "Medical report"
+                        }
+                        reportTypeLabel={getReportTypeLabel(
+                          focusedReportInsight.report_type
+                        )}
+                        uploadedAtText={formatDate(
+                          focusedReportInsight.uploaded_at ||
+                            focusedReportInsight.created_at
+                        )}
+                        summary={focusedReportInsight.summary}
+                        keyFindings={
+                          focusedReportInsight.key_findings
+                        }
+                        riskSignals={
+                          focusedReportInsight.risk_signals
+                        }
+                        recommendations={
+                          focusedReportInsight.recommendations
+                        }
+                        doctorBrief={
+                          unifiedDoctorBriefV2 ??
+                          focusedReportInsight.doctor_brief
+                        }
+                        executiveSummary={
+                          generatedResult.executiveSummary
+                        }
+                      />
+                    </div>
 
                     <GeneratedReportDetailsCard
                       medicalCategory={

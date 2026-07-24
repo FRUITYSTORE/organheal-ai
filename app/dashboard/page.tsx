@@ -2683,14 +2683,13 @@ const nextStep: NextStep = !hasAssessments && !hasReports
         ) : (
           <>
           
+          <DashboardNextActionSection
+            {...dashboardViewState.nextAction}
+          />
            <DashboardJourneySection
   {...dashboardViewState.journey}
 />
  
-<DashboardOverviewSection
-  {...dashboardViewState.overview}
-/>
-
 {healthIntelligence && (
   <section className="healthIntelligenceCommandCenter">
     <div className="healthCommandCenterHeader">
@@ -2725,6 +2724,12 @@ const nextStep: NextStep = !hasAssessments && !hasReports
     {...dashboardViewState.healthDirection}
   />
 )}
+
+{dashboardViewState.healthIntelligenceCard && (
+  <DashboardIntelligenceCard
+    {...dashboardViewState.healthIntelligenceCard}
+  />
+)}
 {dashboardViewState.healthEvidence && (
   <HealthEvidenceCard
     {...dashboardViewState.healthEvidence}
@@ -2744,19 +2749,14 @@ const nextStep: NextStep = !hasAssessments && !hasReports
 )}
 
 
-<DashboardNextActionSection
-  {...dashboardViewState.nextAction}
-/>
-
-{dashboardViewState.healthIntelligenceCard && (
-  <DashboardIntelligenceCard
-    {...dashboardViewState.healthIntelligenceCard}
-  />
-)}
-    </div>
+</div>
   </section>
 )}
 
+
+          <DashboardOverviewSection
+            {...dashboardViewState.overview}
+          />
             {!hasAnyData && (
               <section className="dashboardCommandPanel" style={{ marginTop: "20px" }}>
                 <span>{isArabic ? "بداية جديدة" : "Fresh start"}</span>
