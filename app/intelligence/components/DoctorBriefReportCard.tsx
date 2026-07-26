@@ -1,10 +1,10 @@
 "use client";
 
 import { type ReactNode, useEffect, useRef } from "react";
-import { text, useArabicUi } from "./ArabicUiHelper";
 import type {
   DoctorIntelligencePresentation,
 } from "../../../lib/health-intelligence/presentation/doctor-intelligence.presenter";
+import { text, useArabicUi } from "./ArabicUiHelper";
 
 type ExecutiveSummary = {
   currentScore?: number;
@@ -29,6 +29,76 @@ type DoctorBriefReportCardProps = {
   executiveSummary: ExecutiveSummary | null | undefined;
 };
 
+type LabMarker = {
+  name: string;
+  value: string;
+  unit: string;
+  status: string;
+  ref: string;
+};
+
+function DoctorBriefOrganHealLogo() {
+  return (
+    <svg
+      width={54}
+      height={54}
+      viewBox="0 0 512 512"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-label="OrganHeal logo"
+      role="img"
+      style={{ flexShrink: 0 }}
+    >
+      <defs>
+        <linearGradient
+          id="doctorBriefOhGradient"
+          x1="90"
+          y1="380"
+          x2="420"
+          y2="110"
+        >
+          <stop offset="0%" stopColor="#22C55E" />
+          <stop offset="50%" stopColor="#14B8A6" />
+          <stop offset="100%" stopColor="#3B82F6" />
+        </linearGradient>
+      </defs>
+
+      <path
+        d="M126 338 L126 190 L205 116 L282 91 L393 154"
+        fill="none"
+        stroke="url(#doctorBriefOhGradient)"
+        strokeWidth={28}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+
+      <path
+        d="M394 354 L302 406 L217 399 L126 338"
+        fill="none"
+        stroke="url(#doctorBriefOhGradient)"
+        strokeWidth={28}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+
+      <circle cx="393" cy="154" r="18" fill="#3B82F6" />
+      <circle cx="126" cy="338" r="18" fill="#22C55E" />
+      <circle cx="394" cy="354" r="18" fill="#3B82F6" />
+
+      <text
+        x="256"
+        y="295"
+        textAnchor="middle"
+        fontFamily="Arial, Helvetica, sans-serif"
+        fontSize="120"
+        fontWeight="900"
+        fill="#0F172A"
+      >
+        OH
+      </text>
+    </svg>
+  );
+}
+
 function arabicValue(value: unknown) {
   const clean = text(value, "");
   if (!clean) return "غير متاح";
@@ -39,28 +109,25 @@ function arabicValue(value: unknown) {
     "Medical Report": "تقرير طبي",
     "Radiology Report": "تقرير أشعة",
     "Discharge Summary": "ملخص خروج",
-
     "Liver Health": "صحة الكبد",
     "Kidney Health": "صحة الكلى",
     "Heart Health": "صحة القلب",
     "Lung Health": "صحة الرئتين",
     "Brain Health": "صحة الدماغ",
     "Metabolic Health": "الصحة الأيضية",
-
     Liver: "الكبد",
     Kidney: "الكلى",
     Heart: "القلب",
     Lung: "الرئة",
     Brain: "الدماغ",
     Metabolic: "الأيض",
-
     "Preventive Health Monitoring": "متابعة صحية وقائية",
     "Preventive Monitoring Pattern": "نمط متابعة وقائية",
     "General Health Monitoring Pattern": "نمط متابعة صحية عامة",
-
     Low: "منخفض",
     Moderate: "متوسط",
     High: "مرتفع",
+    Normal: "طبيعي",
     "N/A": "غير متاح",
   };
 
@@ -78,22 +145,72 @@ function englishStatusToArabic(value: string) {
   return value;
 }
 
-function extractLabMarkers(...values: Array<string | null | undefined>) {
-  const combined = values.filter(Boolean).join("\n");
+function extractLabMarkers(
+  ...values: Array<string | null | undefined>
+): LabMarker[] {
+  const combined = values
+    .filter((value): value is string => Boolean(value?.trim()))
+    .join("\n");
 
-  const matches = Array.from(
-    combined.matchAll(
-      /([A-Za-z][A-Za-z0-9 %()\/.-]{1,40}):\s*([0-9.]+)\s*([A-Za-z/%µ]+)?\s*\((Normal|High|Low|Moderate)\)\s*\|\s*Ref:\s*([^\n.]+)/gi
-    )
-  );
+  const markerPattern =
+    /([A-Za-z][A-Za-z0-9 %()\/.+-]{1,50}):\s*([<>]?\s*[0-9]+(?:\.[0-9]+)?)\s*([^|()\n]*?)\s*\((Normal|High|Low|Moderate)\)\s*\|\s*Ref:\s*(.*?)(?=\s*\|\s*[A-Za-z][A-Za-z0-9 %()\/.+-]{1,50}:\s*[<>]?\s*[0-9]|\n|$)/gi;
 
-  return matches.map((match) => ({
-    name: match[1].trim(),
-    value: match[2].trim(),
-    unit: (match[3] || "").trim(),
-    status: match[4].trim(),
-    ref: match[5].replace(/\(default\)/gi, "").trim(),
-  }));
+  const matches = Array.from(combined.matchAll(markerPattern));
+  const uniqueMarkers = new Map<string, LabMarker>();
+
+  for (const match of matches) {
+    const marker: LabMarker = {
+      name: match[1].trim(),
+      value: match[2].replace(/\s+/g, "").trim(),
+      unit: (match[3] || "").trim(),
+      status: match[4].trim(),
+      ref: (match[5] || "")
+        .replace(/\(default\)/gi, "")
+        .replace(/\s*\|\s*$/g, "")
+        .trim(),
+    };
+
+    const key = `${marker.name.toLowerCase()}|${marker.value}|${marker.unit.toLowerCase()}`;
+
+    if (!uniqueMarkers.has(key)) {
+      uniqueMarkers.set(key, marker);
+    }
+  }
+
+  return Array.from(uniqueMarkers.values());
+}
+
+function isMeaningfulText(value: unknown) {
+  if (typeof value !== "string") {
+    return false;
+  }
+
+  const normalized = value
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase()
+    .replace(/[.:-]+$/g, "");
+
+  const emptyValues = new Set([
+    "",
+    "n/a",
+    "na",
+    "none",
+    "null",
+    "undefined",
+    "not available",
+    "not applicable",
+    "no data",
+    "no information available",
+    "غير متاح",
+    "لا يوجد",
+  ]);
+
+  return !emptyValues.has(normalized);
+}
+
+function normalizedText(value: unknown) {
+  return text(value, "").replace(/\s+/g, " ").trim().toLowerCase();
 }
 
 function ArabicParagraph({ children }: { children: ReactNode }) {
@@ -101,7 +218,7 @@ function ArabicParagraph({ children }: { children: ReactNode }) {
     <p
       className="ohCardText"
       style={{
-        lineHeight: 1.9,
+        lineHeight: 1.85,
         whiteSpace: "pre-line",
         direction: "rtl",
         textAlign: "right",
@@ -119,7 +236,7 @@ function EnglishParagraph({ children }: { children: ReactNode }) {
     <p
       className="ohCardText"
       style={{
-        lineHeight: 1.8,
+        lineHeight: 1.75,
         whiteSpace: "pre-line",
       }}
     >
@@ -135,16 +252,37 @@ function getScoreTone(score?: number) {
   return "risk";
 }
 
-function applyProfessionalPdfLayout(reportElement: HTMLElement, isArabic: boolean) {
+function createDoctorBriefReportId(
+  fileName: string,
+  uploadedAtText: string
+) {
+  const source = `doctor|${fileName}|${uploadedAtText}`;
+  let hash = 0;
+
+  for (let index = 0; index < source.length; index += 1) {
+    hash = (hash * 31 + source.charCodeAt(index)) >>> 0;
+  }
+
+  const reference = hash
+    .toString(36)
+    .toUpperCase()
+    .padStart(7, "0");
+
+  return `OH-D-${reference}`;
+}
+
+function applyProfessionalPdfLayout(
+  reportElement: HTMLElement,
+  isArabic: boolean
+) {
   const style = document.createElement("style");
 
   style.textContent = `
-    /* ORGANHEAL_ARABIC_PDF_PAGEBREAK_PATCH */
     .organhealPdfPage {
       box-sizing: border-box !important;
       width: 100% !important;
       max-width: 100% !important;
-      padding: 18px 18px !important;
+      padding: 18px !important;
       overflow: visible !important;
     }
 
@@ -174,61 +312,53 @@ function applyProfessionalPdfLayout(reportElement: HTMLElement, isArabic: boolea
       page-break-after: avoid !important;
       break-inside: avoid !important;
       page-break-inside: avoid !important;
-      margin-top: 18px !important;
-      margin-bottom: 10px !important;
-      line-height: 1.35 !important;
     }
 
     .organhealPdfPage p,
-    .organhealPdfPage li,
-    .organhealPdfPage strong {
-      break-inside: avoid !important;
-      page-break-inside: avoid !important;
-      orphans: 3 !important;
-      widows: 3 !important;
-    }
-
-    .organhealPdfPage div {
-      orphans: 3 !important;
-      widows: 3 !important;
-    }
-
-    .organhealPdfKeepTogether {
-      break-inside: avoid !important;
-      page-break-inside: avoid !important;
-      break-before: auto !important;
-      page-break-before: auto !important;
-      break-after: auto !important;
-      page-break-after: auto !important;
-    }
-
-    .organhealPdfSection {
-      break-inside: avoid !important;
-      page-break-inside: avoid !important;
-      margin-bottom: 16px !important;
-      padding-bottom: 6px !important;
-    }
-
-    .organhealPdfSoftSection {
+    .organhealPdfPage li {
       break-inside: auto !important;
       page-break-inside: auto !important;
-      margin-bottom: 18px !important;
+      orphans: 3 !important;
+      widows: 3 !important;
+    }
+
+    .doctorBriefLabTable thead {
+      display: table-header-group !important;
+    }
+
+    .doctorBriefLabTable tbody {
+      display: table-row-group !important;
+    }
+
+    .doctorBriefLabTable tr {
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
+    }
+
+    .doctorBriefDocumentHeader,
+    .ohMetricCard,
+    .doctorBriefClinicalIntro,
+    .doctorBriefSectionHeading {
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
     }
   `;
 
   reportElement.prepend(style);
   reportElement.classList.add("organhealPdfPage");
 
-  reportElement.style.boxSizing = "border-box";
-  reportElement.style.width = "100%";
-  reportElement.style.maxWidth = "100%";
-  reportElement.style.padding = "22px 24px";
-  reportElement.style.overflow = "visible";
-  reportElement.style.direction = isArabic ? "rtl" : "ltr";
-  reportElement.style.textAlign = isArabic ? "right" : "left";
-  reportElement.style.fontFamily = isArabic
-    ? "Tahoma, Arial, sans-serif"
-    : "Arial, sans-serif";
+  Object.assign(reportElement.style, {
+    boxSizing: "border-box",
+    width: "100%",
+    maxWidth: "100%",
+    padding: "22px 24px",
+    overflow: "visible",
+    direction: isArabic ? "rtl" : "ltr",
+    textAlign: isArabic ? "right" : "left",
+    fontFamily: isArabic
+      ? "Tahoma, Arial, sans-serif"
+      : "Arial, sans-serif",
+  });
 
   reportElement.querySelectorAll("h1, h2, h3").forEach((element) => {
     const htmlElement = element as HTMLElement;
@@ -240,43 +370,108 @@ function applyProfessionalPdfLayout(reportElement: HTMLElement, isArabic: boolea
     htmlElement.style.marginTop = "18px";
     htmlElement.style.marginBottom = "10px";
     htmlElement.style.lineHeight = "1.35";
-    htmlElement.style.letterSpacing = "normal";
-    htmlElement.style.wordSpacing = "normal";
-    htmlElement.style.textTransform = "none";
-    htmlElement.classList.add("organhealPdfKeepTogether");
   });
 
   reportElement.querySelectorAll("p, li").forEach((element) => {
     const htmlElement = element as HTMLElement;
 
-    htmlElement.style.breakInside = "avoid";
-    htmlElement.style.pageBreakInside = "avoid";
+    htmlElement.style.breakInside = "auto";
+    htmlElement.style.pageBreakInside = "auto";
     htmlElement.style.orphans = "3";
     htmlElement.style.widows = "3";
-    htmlElement.style.lineHeight = "1.85";
-    htmlElement.style.letterSpacing = "normal";
-    htmlElement.style.wordSpacing = "normal";
-    htmlElement.style.textTransform = "none";
   });
 
-  reportElement.querySelectorAll("h3").forEach((heading) => {
-    const nextElement = heading.nextElementSibling as HTMLElement | null;
-
-    if (nextElement) {
-      nextElement.style.breakBefore = "avoid";
-      nextElement.style.pageBreakBefore = "avoid";
-    }
-  });
-
-  reportElement.querySelectorAll("div").forEach((element) => {
+  reportElement.querySelectorAll(".ohStack").forEach((element) => {
     const htmlElement = element as HTMLElement;
-    const textLength = (htmlElement.textContent || "").trim().length;
 
-    if (textLength > 0 && textLength < 900) {
-      htmlElement.classList.add("organhealPdfSection");
-    } else {
-      htmlElement.classList.add("organhealPdfSoftSection");
+    htmlElement.style.display = "block";
+    htmlElement.style.breakInside = "auto";
+    htmlElement.style.pageBreakInside = "auto";
+  });
+
+  reportElement.querySelectorAll(".ohStack > article").forEach((element) => {
+    const htmlElement = element as HTMLElement;
+
+    htmlElement.style.display = "block";
+    htmlElement.style.breakInside = "auto";
+    htmlElement.style.pageBreakInside = "auto";
+    htmlElement.style.marginBottom = "18px";
+  });
+
+  reportElement.querySelectorAll(".doctorBriefDocumentHeader").forEach(
+    (element) => {
+      const htmlElement = element as HTMLElement;
+
+      Object.assign(htmlElement.style, {
+        display: "flex",
+        alignItems: "flex-start",
+        justifyContent: "space-between",
+        gap: "22px",
+        padding: "18px 20px",
+        marginBottom: "20px",
+        border: "1px solid #dbe4ee",
+        borderTop: "4px solid #153f63",
+        borderRadius: "14px",
+        background: "#f8fafc",
+        breakInside: "avoid",
+        pageBreakInside: "avoid",
+      });
     }
+  );
+
+  reportElement.querySelectorAll(".doctorBriefBrandIdentity").forEach(
+    (element) => {
+      const htmlElement = element as HTMLElement;
+
+      Object.assign(htmlElement.style, {
+        display: "flex",
+        alignItems: "center",
+        gap: "13px",
+      });
+    }
+  );
+
+  reportElement.querySelectorAll(".doctorBriefReferenceGrid").forEach(
+    (element) => {
+      const htmlElement = element as HTMLElement;
+
+      Object.assign(htmlElement.style, {
+        display: "grid",
+        gridTemplateColumns: "repeat(2, minmax(130px, 1fr))",
+        gap: "10px 18px",
+        minWidth: "320px",
+      });
+    }
+  );
+
+  reportElement.querySelectorAll(".doctorBriefReferenceItem").forEach(
+    (element) => {
+      const htmlElement = element as HTMLElement;
+
+      Object.assign(htmlElement.style, {
+        display: "flex",
+        flexDirection: "column",
+        gap: "3px",
+      });
+    }
+  );
+
+  reportElement.querySelectorAll("table").forEach((element) => {
+    const htmlElement = element as HTMLElement;
+
+    htmlElement.style.breakInside = "auto";
+    htmlElement.style.pageBreakInside = "auto";
+  });
+
+  reportElement.querySelectorAll("thead").forEach((element) => {
+    (element as HTMLElement).style.display = "table-header-group";
+  });
+
+  reportElement.querySelectorAll("tr").forEach((element) => {
+    const htmlElement = element as HTMLElement;
+
+    htmlElement.style.breakInside = "avoid";
+    htmlElement.style.pageBreakInside = "avoid";
   });
 }
 
@@ -293,7 +488,377 @@ export default function DoctorBriefReportCard({
   executiveSummary,
 }: DoctorBriefReportCardProps) {
   const isArabic = useArabicUi();
-  const printRef = useRef<HTMLDivElement>(null);
+  const printRef = useRef<HTMLElement>(null);
+
+  const generatedAtText = new Date().toLocaleString(
+    isArabic ? "ar" : undefined
+  );
+
+  const doctorBriefReportId = createDoctorBriefReportId(
+    fileName,
+    uploadedAtText
+  );
+
+  const labMarkers = extractLabMarkers(
+    summary,
+    keyFindings,
+    riskSignals,
+    recommendations,
+    doctorBrief
+  );
+
+  const abnormalLabMarkers = labMarkers.filter(
+    (marker) => marker.status.toLowerCase() !== "normal"
+  );
+
+  const mainFocus = arabicValue(executiveSummary?.prioritySystem);
+  const reportType = arabicValue(reportTypeLabel);
+  const scoreTone = getScoreTone(executiveSummary?.currentScore);
+  const forecastTone = getScoreTone(executiveSummary?.forecastScore);
+
+ const rawDoctorBrief =
+  typeof doctorBrief === "string" ? doctorBrief.trim() : "";
+
+const doctorBriefLooksLikeLegacyDocument =
+  /doctor[-\s]?ready report summary/i.test(rawDoctorBrief) ||
+  /structured medical intelligence summary prepared for clinical review/i.test(
+    rawDoctorBrief
+  );
+
+const clinicalSummary =
+  doctorPresentation?.clinicalSummary ??
+  summary ??
+  (!doctorBriefLooksLikeLegacyDocument ? doctorBrief : null) ??
+  null;
+
+  const evidenceSummary =
+    doctorPresentation?.evidenceSummary ?? null;
+
+  const momentumSummary =
+    doctorPresentation?.momentumSummary ?? null;
+
+  const decisionSummary =
+    doctorPresentation?.decisionSummary ?? null;
+
+  const shouldShowKeyFindings =
+    isMeaningfulText(keyFindings) &&
+    normalizedText(keyFindings) !== normalizedText(clinicalSummary);
+
+  const labSummaryText = isArabic
+    ? `تم رصد ${labMarkers.length} مؤشرًا مخبريًا، منها ${abnormalLabMarkers.length} مؤشر غير طبيعي يحتاج إلى مراجعة سريرية ضمن سياق حالة المريض.`
+    : `${labMarkers.length} laboratory marker(s) were identified, including ${abnormalLabMarkers.length} abnormal marker(s) requiring clinical review in the context of the patient.`;
+
+    
+  const optionalSections = [
+    {
+      key: "evidence",
+      titleEn: "6. Evidence Summary",
+      titleAr: "٦. ملخص الأدلة",
+      value: evidenceSummary,
+    },
+    {
+      key: "momentum",
+      titleEn: "7. Momentum Summary",
+      titleAr: "٧. ملخص التقدم",
+      value: momentumSummary,
+    },
+    {
+      key: "decision",
+      titleEn: "8. Decision Summary",
+      titleAr: "٨. ملخص القرار",
+      value: decisionSummary,
+    },
+  ].filter((section) => isMeaningfulText(section.value));
+
+  async function downloadDoctorBriefPdf() {
+    let temporaryContainer: HTMLDivElement | null = null;
+
+    try {
+      if (!printRef.current) {
+        throw new Error("Doctor brief element is not available.");
+      }
+
+      const html2pdfModule = await import("html2pdf.js");
+      const html2pdf = html2pdfModule.default || html2pdfModule;
+
+      const reportElement =
+        printRef.current.cloneNode(true) as HTMLElement;
+
+      reportElement
+        .querySelectorAll(
+          ".doctorBriefPrintActions, .doctorBriefPrintButton"
+        )
+        .forEach((element) => element.remove());
+
+      Object.assign(reportElement.style, {
+        background: "#ffffff",
+        color: "#111827",
+        padding: "22px 24px",
+        border: "none",
+        boxShadow: "none",
+        direction: isArabic ? "rtl" : "ltr",
+        textAlign: isArabic ? "right" : "left",
+        fontFamily: isArabic
+          ? "Tahoma, Arial, sans-serif"
+          : "Arial, sans-serif",
+      });
+
+      reportElement.querySelectorAll("*").forEach((element) => {
+        const htmlElement = element as HTMLElement;
+
+        htmlElement.style.fontFamily = isArabic
+          ? "Tahoma, Arial, sans-serif"
+          : "Arial, sans-serif";
+        htmlElement.style.unicodeBidi = "isolate";
+        htmlElement.style.letterSpacing = "normal";
+        htmlElement.style.wordSpacing = "normal";
+        htmlElement.style.textTransform = "none";
+        htmlElement.style.fontVariant = "normal";
+      });
+
+      applyProfessionalPdfLayout(reportElement, isArabic);
+
+      temporaryContainer = document.createElement("div");
+      temporaryContainer.setAttribute("aria-hidden", "true");
+
+      Object.assign(temporaryContainer.style, {
+        position: "fixed",
+        left: "-100000px",
+        top: "0",
+        width: "794px",
+        background: "#ffffff",
+        zIndex: "-1",
+        pointerEvents: "none",
+      });
+
+      temporaryContainer.appendChild(reportElement);
+      document.body.appendChild(temporaryContainer);
+
+      const normalizedFileName =
+        fileName.replace(/[^a-z0-9]/gi, "-").toLowerCase() ||
+        "report";
+
+      const pdfWorker = html2pdf()
+        .set({
+          pagebreak: {
+            mode: ["css", "legacy"],
+            avoid: [
+              "h1",
+              "h2",
+              "h3",
+              "tr",
+              ".doctorBriefDocumentHeader",
+              ".doctorBriefClinicalIntro",
+              ".ohMetricCard",
+            ],
+          },
+          margin: [16, 18, 20, 18],
+          filename: `OrganHeal-Doctor-Brief-${normalizedFileName}-${Date.now()}.pdf`,
+          image: {
+            type: "jpeg",
+            quality: 0.98,
+          },
+          html2canvas: {
+            scale: 2,
+            useCORS: true,
+            allowTaint: false,
+            backgroundColor: "#ffffff",
+            logging: false,
+          },
+          jsPDF: {
+            unit: "mm",
+            format: "a4",
+            orientation: "portrait",
+          },
+        })
+        .from(reportElement)
+        .toPdf();
+
+      await pdfWorker.get("pdf").then((pdf: any) => {
+        const totalPages = pdf.internal.getNumberOfPages();
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+
+        for (
+          let pageNumber = 1;
+          pageNumber <= totalPages;
+          pageNumber += 1
+        ) {
+          pdf.setPage(pageNumber);
+
+          pdf.setDrawColor(219, 228, 238);
+          pdf.setLineWidth(0.25);
+          pdf.line(
+            18,
+            pageHeight - 13,
+            pageWidth - 18,
+            pageHeight - 13
+          );
+
+          pdf.setFont("helvetica", "normal");
+          pdf.setFontSize(7.5);
+          pdf.setTextColor(100, 116, 139);
+
+          pdf.text(
+            "OrganHeal AI · Clinical Intelligence Brief",
+            18,
+            pageHeight - 8
+          );
+
+          pdf.text(
+            `Report ID: ${doctorBriefReportId}`,
+            pageWidth / 2,
+            pageHeight - 8,
+            { align: "center" }
+          );
+
+          pdf.text(
+            `Page ${pageNumber} of ${totalPages}`,
+            pageWidth - 18,
+            pageHeight - 8,
+            { align: "right" }
+          );
+        }
+      });
+
+      await pdfWorker.save();
+    } catch (error) {
+      console.error("Doctor PDF failed:", error);
+      window.alert(
+        isArabic
+          ? "تعذر إنشاء ملخص الطبيب PDF. يرجى المحاولة مرة أخرى."
+          : "The Doctor Brief PDF could not be generated. Please try again."
+      );
+    } finally {
+      temporaryContainer?.remove();
+    }
+  }
+
+  function printDoctorBriefOnly() {
+    if (!printRef.current) {
+      window.print();
+      return;
+    }
+
+    const printWindow = window.open(
+      "",
+      "_blank",
+      "width=900,height=700"
+    );
+
+    if (!printWindow) {
+      window.print();
+      return;
+    }
+
+    const direction = isArabic ? "rtl" : "ltr";
+    const align = isArabic ? "right" : "left";
+    const title = isArabic
+      ? "ملخص الذكاء السريري للطبيب"
+      : "Clinical Intelligence Brief";
+
+    printWindow.document.open();
+    printWindow.document.write(`
+      <!doctype html>
+      <html dir="${direction}">
+        <head>
+          <meta charset="utf-8" />
+          <title>${title}</title>
+          <style>
+            @page { size: A4; margin: 14mm; }
+
+            body {
+              font-family: ${
+                isArabic
+                  ? "Tahoma, Arial, sans-serif"
+                  : "Arial, sans-serif"
+              };
+              color: #111827;
+              background: #ffffff;
+              direction: ${direction};
+              text-align: ${align};
+              line-height: 1.65;
+            }
+
+            .doctorBriefPrintButton,
+            .doctorBriefPrintActions {
+              display: none !important;
+            }
+
+            .doctorBriefDocumentHeader {
+              display: flex;
+              align-items: flex-start;
+              justify-content: space-between;
+              gap: 22px;
+              padding: 18px 20px;
+              margin-bottom: 20px;
+              border: 1px solid #dbe4ee;
+              border-top: 4px solid #153f63;
+              border-radius: 14px;
+              background: #f8fafc;
+            }
+
+            .doctorBriefBrandIdentity {
+              display: flex;
+              align-items: center;
+              gap: 13px;
+            }
+
+            .doctorBriefReferenceGrid {
+              display: grid;
+              grid-template-columns: repeat(2, minmax(130px, 1fr));
+              gap: 10px 18px;
+              min-width: 320px;
+            }
+
+            .doctorBriefReferenceItem {
+              display: flex;
+              flex-direction: column;
+              gap: 3px;
+            }
+
+            .doctorBriefLabTable {
+              width: 100%;
+              border-collapse: collapse;
+            }
+
+            .doctorBriefLabTable th,
+            .doctorBriefLabTable td {
+              padding: 9px 10px;
+              border: 1px solid #dbe4ee;
+              text-align: ${align};
+              vertical-align: top;
+            }
+
+            .doctorBriefLabTable th {
+              background: #f1f5f9;
+            }
+
+            .ohCard {
+              padding: 0 !important;
+              border: none !important;
+              box-shadow: none !important;
+              background: #ffffff !important;
+            }
+
+            * {
+              box-sizing: border-box;
+              unicode-bidi: isolate;
+            }
+          </style>
+        </head>
+        <body>
+          ${printRef.current.innerHTML}
+          <script>
+            window.onload = function () {
+              window.print();
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  }
 
   useEffect(() => {
     const handleDoctorBriefPdfDownload = () => {
@@ -311,210 +876,18 @@ export default function DoctorBriefReportCard({
         handleDoctorBriefPdfDownload
       );
     };
-  }, []);
-
-  const generatedAtText = new Date().toLocaleString(isArabic ? "ar" : undefined);
-  const labMarkers = extractLabMarkers(
+  }, [
+    isArabic,
+    fileName,
+    uploadedAtText,
     summary,
     keyFindings,
     riskSignals,
     recommendations,
-    doctorBrief
-  );
-
-  const mainFocus = arabicValue(executiveSummary?.prioritySystem);
-  const reportType = arabicValue(reportTypeLabel);
-  const scoreTone = getScoreTone(executiveSummary?.currentScore);
-  const forecastTone = getScoreTone(executiveSummary?.forecastScore);
-
-
-  const clinicalSummary =
-    doctorPresentation?.clinicalSummary ?? doctorBrief ?? null;
-  
-  const evidenceSummary =
-    doctorPresentation?.evidenceSummary ?? null;
-
-  const momentumSummary =
-    doctorPresentation?.momentumSummary ?? null;
-
-  const decisionSummary =
-    doctorPresentation?.decisionSummary ?? null;
-function printDoctorBriefOnly() {
-    if (!printRef.current) {
-      window.print();
-      return;
-    }
-
-    const printWindow = window.open("", "_blank", "width=900,height=700");
-
-    if (!printWindow) {
-      window.print();
-      return;
-    }
-
-    const direction = isArabic ? "rtl" : "ltr";
-    const align = isArabic ? "right" : "left";
-    const title = isArabic ? "ملخص الطبيب" : "Doctor Brief";
-
-    printWindow.document.open();
-    printWindow.document.write(`
-      <!doctype html>
-      <html dir="${direction}">
-        <head>
-          <title>${title}</title>
-          <style>
-            @page { size: A4; margin: 14mm; }
-            body {
-              font-family: ${isArabic ? "Tahoma, Arial, sans-serif" : "Arial, sans-serif"};
-              color: #111827;
-              background: #ffffff;
-              direction: ${direction};
-              text-align: ${align};
-              line-height: 1.7;
-            }
-            .doctorBriefPrintButton,
-            .doctorBriefPrintTip,
-            .doctorBriefPrintActions { display: none !important; }
-            .ohCard,
-            .ohMetricCard,
-            .ohActionPanel,
-            .ohTrustNotice {
-              border: none !important;
-              box-shadow: none !important;
-              background: #ffffff !important;
-            }
-            .ohCard {
-              padding: 0 !important;
-            }
-            * { unicode-bidi: isolate; }
-          </style>
-        </head>
-        <body>
-          ${printRef.current.innerHTML}
-          <script>
-            window.onload = function () { window.print(); };
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-  }
-
- async function downloadDoctorBriefPdf() {
-  let temporaryContainer: HTMLDivElement | null = null;
-
-  try {
-    if (!printRef.current) {
-      throw new Error("Doctor brief element is not available.");
-    }
-
-    console.log("Doctor PDF generation started.");
-
-    const html2pdfModule = await import("html2pdf.js");
-    const html2pdf = html2pdfModule.default || html2pdfModule;
-
-    const reportElement =
-      printRef.current.cloneNode(true) as HTMLElement;
-
-    reportElement
-      .querySelectorAll(
-        ".doctorBriefPrintActions, .doctorBriefPrintButton, .doctorBriefPrintTip"
-      )
-      .forEach((element) => element.remove());
-
-    reportElement.style.background = "#ffffff";
-    reportElement.style.color = "#111827";
-    reportElement.style.padding = "22px 24px";
-    reportElement.style.border = "none";
-    reportElement.style.boxShadow = "none";
-    reportElement.style.direction = isArabic ? "rtl" : "ltr";
-    reportElement.style.textAlign = isArabic ? "right" : "left";
-    reportElement.style.fontFamily = isArabic
-      ? "Tahoma, Arial, sans-serif"
-      : "Arial, sans-serif";
-
-    reportElement.querySelectorAll("*").forEach((element) => {
-      const htmlElement = element as HTMLElement;
-
-      htmlElement.style.color = "#111827";
-      htmlElement.style.fontFamily = isArabic
-        ? "Tahoma, Arial, sans-serif"
-        : "Arial, sans-serif";
-      htmlElement.style.unicodeBidi = "isolate";
-      htmlElement.style.letterSpacing = "normal";
-      htmlElement.style.wordSpacing = "normal";
-      htmlElement.style.textTransform = "none";
-      htmlElement.style.fontVariant = "normal";
-    });
-
-    applyProfessionalPdfLayout(reportElement, isArabic);
-
-    temporaryContainer = document.createElement("div");
-    temporaryContainer.setAttribute("aria-hidden", "true");
-
-    Object.assign(temporaryContainer.style, {
-      position: "fixed",
-      left: "-100000px",
-      top: "0",
-      width: "794px",
-      background: "#ffffff",
-      zIndex: "-1",
-      pointerEvents: "none",
-    });
-
-    temporaryContainer.appendChild(reportElement);
-    document.body.appendChild(temporaryContainer);
-
-    const normalizedFileName =
-      fileName.replace(/[^a-z0-9]/gi, "-").toLowerCase() || "report";
-
-    await html2pdf()
-      .set({
-        pagebreak: {
-          mode: ["css", "legacy"],
-          avoid: [
-            "h1",
-            "h2",
-            "h3",
-            "p",
-            "li",
-            ".organhealPdfKeepTogether",
-            ".organhealPdfSection",
-          ],
-        },
-        margin: [16, 18, 16, 18],
-        filename: `OrganHeal-Doctor-Brief-${normalizedFileName}.pdf`,
-        image: {
-          type: "jpeg",
-          quality: 0.98,
-        },
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-          backgroundColor: "#ffffff",
-          logging: true,
-        },
-        jsPDF: {
-          unit: "mm",
-          format: "a4",
-          orientation: "portrait",
-        },
-      })
-      .from(reportElement)
-      .save();
-
-    console.log("Doctor PDF downloaded successfully.");
-  } catch (error) {
-    console.error("Doctor PDF failed:", error);
-    window.alert(
-      isArabic
-        ? "تعذر إنشاء ملخص الطبيب PDF. يرجى المحاولة مرة أخرى."
-        : "The Doctor Brief PDF could not be generated. Please try again."
-    );
-  } finally {
-    temporaryContainer?.remove();
-  }
-}
+    doctorBrief,
+    doctorPresentation,
+    executiveSummary,
+  ]);
 
   return (
     <>
@@ -539,6 +912,208 @@ function printDoctorBriefOnly() {
           word-break: normal !important;
         }
 
+        .doctorBriefDocumentHeader {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 22px;
+          padding: 18px 20px;
+          margin-bottom: 20px;
+          border: 1px solid #dbe4ee;
+          border-top: 4px solid #153f63;
+          border-radius: 14px;
+          background: #f8fafc;
+          break-inside: avoid;
+          page-break-inside: avoid;
+        }
+
+        .doctorBriefBrandIdentity {
+          display: flex;
+          align-items: center;
+          gap: 13px;
+        }
+
+        .doctorBriefPlatformName {
+          margin: 0;
+          color: #0f172a;
+          font-size: 1.22rem;
+          font-weight: 850;
+          line-height: 1.1;
+        }
+
+        .doctorBriefPlatformTagline {
+          display: block;
+          margin-top: 4px;
+          color: #64748b;
+          font-size: 0.63rem;
+          font-weight: 800;
+          line-height: 1.25;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+        }
+
+        .doctorBriefDocumentType {
+          margin: 13px 0 0;
+          color: #153f63;
+          font-size: 0.96rem;
+          font-weight: 800;
+          line-height: 1.35;
+        }
+
+        .doctorBriefDocumentSubtitle {
+          margin: 5px 0 0;
+          color: #64748b;
+          font-size: 0.79rem;
+          line-height: 1.5;
+        }
+
+        .doctorBriefReferenceGrid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(130px, 1fr));
+          gap: 10px 18px;
+          min-width: 320px;
+        }
+
+        .doctorBriefReferenceItem {
+          display: flex;
+          flex-direction: column;
+          gap: 3px;
+        }
+
+        .doctorBriefReferenceLabel {
+          color: #64748b;
+          font-size: 0.7rem;
+          font-weight: 700;
+          line-height: 1.3;
+          text-transform: uppercase;
+        }
+
+        .doctorBriefReferenceValue {
+          color: #111827;
+          font-size: 0.82rem;
+          font-weight: 700;
+          line-height: 1.45;
+          overflow-wrap: anywhere;
+        }
+
+        .doctorBriefConfidentiality {
+          display: inline-flex;
+          width: fit-content;
+          margin-top: 12px;
+          padding: 5px 9px;
+          border: 1px solid #cbd5e1;
+          border-radius: 999px;
+          background: #ffffff;
+          color: #475569;
+          font-size: 0.7rem;
+          font-weight: 700;
+        }
+
+        .doctorBriefClinicalIntro {
+          margin-bottom: 18px;
+          padding: 16px 18px;
+          border: 1px solid #dbe4ee;
+          border-left: 4px solid #153f63;
+          border-radius: 12px;
+          background: #f8fafc;
+        }
+
+        .doctorBriefLabTableWrapper {
+          width: 100%;
+          margin-top: 14px;
+          overflow: visible;
+          background: #ffffff;
+          break-inside: auto;
+          page-break-inside: auto;
+        }
+
+        .doctorBriefLabTable {
+          width: 100%;
+          border-collapse: collapse;
+          table-layout: fixed;
+          border: 1px solid #dbe4ee;
+        }
+
+        .doctorBriefLabTable th {
+          padding: 10px 12px;
+          background: #f1f5f9;
+          color: #334155;
+          font-size: 0.74rem;
+          font-weight: 800;
+          text-align: left;
+          border: 1px solid #dbe4ee;
+        }
+
+        .doctorBriefLabTable td {
+          padding: 10px 12px;
+          color: #1e293b;
+          font-size: 0.76rem;
+          line-height: 1.45;
+          vertical-align: middle;
+          border: 1px solid #e8edf3;
+          overflow-wrap: anywhere;
+        }
+
+        .doctorBriefLabTable thead {
+          display: table-header-group;
+        }
+
+        .doctorBriefLabTable tbody {
+          display: table-row-group;
+        }
+
+        .doctorBriefLabTable tr {
+          break-inside: avoid;
+          page-break-inside: avoid;
+        }
+
+        .doctorBriefLabName {
+          font-weight: 800;
+          color: #0f172a !important;
+        }
+
+        .doctorBriefLabStatus {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 58px;
+          padding: 4px 8px;
+          border-radius: 999px;
+          font-size: 0.68rem;
+          font-weight: 800;
+          line-height: 1.2;
+        }
+
+        .doctorBriefLabStatus-high {
+          background: #fff1f2;
+          color: #be123c;
+          border: 1px solid #fecdd3;
+        }
+
+        .doctorBriefLabStatus-low {
+          background: #fff7ed;
+          color: #c2410c;
+          border: 1px solid #fed7aa;
+        }
+
+        .doctorBriefLabStatus-normal {
+          background: #ecfdf5;
+          color: #047857;
+          border: 1px solid #a7f3d0;
+        }
+
+        .doctorBriefLabStatus-neutral {
+          background: #f1f5f9;
+          color: #475569;
+          border: 1px solid #cbd5e1;
+        }
+
+        .doctorBriefReportArea .doctorBriefHeaderActions {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
         .doctorBriefReportArea[lang="ar"],
         .doctorBriefReportArea[lang="ar"] * {
           letter-spacing: normal !important;
@@ -550,19 +1125,26 @@ function printDoctorBriefOnly() {
           unicode-bidi: isolate;
         }
 
-        .doctorBriefReportArea[lang="ar"] h1,
-        .doctorBriefReportArea[lang="ar"] h2,
-        .doctorBriefReportArea[lang="ar"] h3 {
-          letter-spacing: normal !important;
-          word-spacing: normal !important;
-          text-transform: none !important;
-          line-height: 1.35 !important;
+        .doctorBriefReportArea[lang="ar"] .doctorBriefReferenceLabel,
+        .doctorBriefReportArea[lang="ar"] .doctorBriefPlatformTagline {
+          letter-spacing: normal;
+          text-transform: none;
         }
 
-        .doctorBriefReportArea .doctorBriefHeaderActions {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
+        .doctorBriefReportArea[lang="ar"] .doctorBriefLabTable th,
+        .doctorBriefReportArea[lang="ar"] .doctorBriefLabTable td {
+          text-align: right;
+        }
+
+        @media (max-width: 820px) {
+          .doctorBriefDocumentHeader {
+            flex-direction: column;
+          }
+
+          .doctorBriefReferenceGrid {
+            width: 100%;
+            min-width: 0;
+          }
         }
 
         @media (max-width: 720px) {
@@ -584,53 +1166,125 @@ function printDoctorBriefOnly() {
         lang={isArabic ? "ar" : "en"}
         style={{
           textAlign: isArabic ? "right" : "left",
-          fontFamily: isArabic ? "Tahoma, Arial, sans-serif" : undefined,
+          fontFamily: isArabic
+            ? "Tahoma, Arial, sans-serif"
+            : undefined,
           unicodeBidi: "isolate",
         }}
       >
-        <div className="ohCardHeader">
+        <header className="doctorBriefDocumentHeader">
           <div>
-            <p className="ohMetricLabel">OrganHeal AI</p>
+            <div className="doctorBriefBrandIdentity">
+              <DoctorBriefOrganHealLogo />
 
-            <h2 className="ohCardTitle" style={{ marginTop: "8px" }}>
-              {isArabic ? "ملخص طبي جاهز للطبيب" : "Doctor-Ready Report Summary"}
-            </h2>
+              <div>
+                <p className="doctorBriefPlatformName">OrganHeal</p>
+                <span className="doctorBriefPlatformTagline">
+                  {isArabic
+                    ? "ذكاء صحي مدعوم بالذكاء الاصطناعي"
+                    : "AI Health Intelligence"}
+                </span>
+              </div>
+            </div>
 
-            <p className="ohCardText">
+            <p className="doctorBriefDocumentType">
               {isArabic
-                ? "ملخص منظم للمراجعة السريرية، مبني من بيانات التقرير الأساسية، ومخصص للتحضير للنقاش مع مختص صحي مرخص."
-                : "Structured medical intelligence summary prepared for clinical review and doctor discussion."}
+                ? "ملخص الذكاء السريري للطبيب"
+                : "Clinical Intelligence Brief"}
             </p>
 
-            <p className="ohMetricHint" style={{ marginTop: "10px" }}>
-              <strong>{isArabic ? "تاريخ الإنشاء:" : "Generated:"}</strong>
-              <br />
-              {generatedAtText}
+            <p className="doctorBriefDocumentSubtitle">
+              {isArabic
+                ? "ملخص سريري منظم لدعم المراجعة الطبية ومناقشة النتائج."
+                : "A structured clinical summary prepared to support medical review and discussion."}
             </p>
+
+            <span className="doctorBriefConfidentiality">
+              {isArabic
+                ? "وثيقة دعم سريري"
+                : "Clinical Support Document"}
+            </span>
           </div>
 
-          <div className="doctorBriefPrintActions doctorBriefHeaderActions">
-            <button
-              className="secondaryBtn doctorBriefPrintButton"
-              type="button"
-              onClick={printDoctorBriefOnly}
-            >
-              {isArabic ? "طباعة ملخص الطبيب" : "Print Doctor Brief"}
-            </button>
+          <div className="doctorBriefReferenceGrid">
+            <div className="doctorBriefReferenceItem">
+              <span className="doctorBriefReferenceLabel">
+                {isArabic ? "رقم التقرير" : "Report ID"}
+              </span>
+              <span className="doctorBriefReferenceValue">
+                {doctorBriefReportId}
+              </span>
+            </div>
 
-            <button id="doctor-brief-pdf-download"
-              className="primaryBtn doctorBriefPrintButton"
-              type="button"
-              onClick={downloadDoctorBriefPdf}
+            <div className="doctorBriefReferenceItem">
+              <span className="doctorBriefReferenceLabel">
+                {isArabic ? "الإصدار" : "Version"}
+              </span>
+              <span className="doctorBriefReferenceValue">1.0</span>
+            </div>
+
+            <div className="doctorBriefReferenceItem">
+              <span className="doctorBriefReferenceLabel">
+                {isArabic ? "تاريخ الإنشاء" : "Generated"}
+              </span>
+              <span className="doctorBriefReferenceValue">
+                {generatedAtText}
+              </span>
+            </div>
+
+            <div className="doctorBriefReferenceItem">
+              <span className="doctorBriefReferenceLabel">
+                {isArabic ? "اللغة" : "Language"}
+              </span>
+              <span className="doctorBriefReferenceValue">
+                {isArabic ? "العربية" : "English"}
+              </span>
+            </div>
+
+            <div
+              className="doctorBriefReferenceItem"
+              style={{ gridColumn: "1 / -1" }}
             >
-              {isArabic ? "تنزيل PDF" : "Download PDF"}
-            </button>
+              <span className="doctorBriefReferenceLabel">
+                {isArabic ? "المصدر" : "Source Report"}
+              </span>
+              <span className="doctorBriefReferenceValue">
+                {fileName}
+              </span>
+            </div>
           </div>
+        </header>
+
+        <div
+          className="doctorBriefPrintActions doctorBriefHeaderActions"
+          style={{
+            alignItems: isArabic ? "flex-start" : "flex-end",
+            marginBottom: "18px",
+          }}
+        >
+          <button
+            className="secondaryBtn doctorBriefPrintButton"
+            type="button"
+            onClick={printDoctorBriefOnly}
+          >
+            {isArabic ? "طباعة ملخص الطبيب" : "Print Doctor Brief"}
+          </button>
+
+          <button
+            id="doctor-brief-pdf-download"
+            className="primaryBtn doctorBriefPrintButton"
+            type="button"
+            onClick={downloadDoctorBriefPdf}
+          >
+            {isArabic ? "تنزيل PDF" : "Download PDF"}
+          </button>
         </div>
 
         <div className="ohMetricGrid" style={{ marginTop: "18px" }}>
           <article className="ohMetricCard">
-            <span className="ohMetricLabel">{isArabic ? "التقرير" : "Report"}</span>
+            <span className="ohMetricLabel">
+              {isArabic ? "التقرير" : "Report"}
+            </span>
             <span className="ohMetricHint">{fileName}</span>
           </article>
 
@@ -655,7 +1309,9 @@ function printDoctorBriefOnly() {
               {isArabic ? "نظام الأولوية" : "Priority System"}
             </span>
             <span className="ohMetricHint">
-              {isArabic ? mainFocus : executiveSummary?.prioritySystem || "N/A"}
+              {isArabic
+                ? mainFocus
+                : executiveSummary?.prioritySystem || "N/A"}
             </span>
           </article>
 
@@ -679,176 +1335,201 @@ function printDoctorBriefOnly() {
         </div>
 
         <div className="ohDivider" />
+<p
+  style={{
+    fontSize: "11px",
+    fontWeight: 700,
+    color: "#b91c1c",
+    margin: "8px 0",
+  }}
+>
+</p>
+        <div className="doctorBriefClinicalIntro">
+          <strong>
+            {isArabic ? "نظرة سريرية سريعة" : "Clinical Snapshot"}
+          </strong>
 
-        {isArabic ? (
-          <div className="ohStack">
-            <article>
-              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
-                ١. ملخص سريري
-              </h3>
+          <p className="ohCardText" style={{ marginBottom: 0 }}>
+            {labSummaryText}
+          </p>
+        </div>
+
+        <div className="ohStack">
+          <article>
+            <h3
+              className="ohCardTitle doctorBriefSectionHeading"
+              style={{ fontSize: "1.18rem" }}
+            >
+              {isArabic ? "١. الملخص السريري" : "1. Clinical Summary"}
+            </h3>
+
+            {isArabic ? (
               <ArabicParagraph>
-                تم إنشاء هذا الملخص كمراجعة تثقيفية منظمة للتقرير المرفوع.
-                نوع التقرير: {reportType}. محور المراجعة الرئيسي: {mainFocus}.
-                لا يمثل هذا الملخص تشخيصًا نهائيًا، بل يساعد في ترتيب المعلومات قبل مراجعة الطبيب.
+                {text(
+                  clinicalSummary,
+                  "ملخص سريري غير متاح حاليًا."
+                )}
               </ArabicParagraph>
-            </article>
+            ) : (
+              <EnglishParagraph>
+                {text(
+                  clinicalSummary,
+                  "Clinical summary is not currently available."
+                )}
+              </EnglishParagraph>
+            )}
+          </article>
 
+          {labMarkers.length > 0 && (
             <article>
-              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
-                ٢. مؤشرات مختبرية أو سريرية مهمة
+              <h3
+                className="ohCardTitle doctorBriefSectionHeading"
+                style={{ fontSize: "1.18rem" }}
+              >
+                {isArabic
+                  ? "٢. النتائج المختبرية ذات الصلة"
+                  : "2. Relevant Laboratory Findings"}
               </h3>
 
-              {labMarkers.length > 0 ? (
-                <div className="ohMetricGrid" style={{ marginTop: "12px" }}>
-                  {labMarkers.map((marker, index) => (
-                    <div className="ohMetricCard" key={`${marker.name}-${index}`}>
-                      <span className="ohMetricLabel">{marker.name}</span>
-                      <span className="ohMetricHint">
-                        القيمة: {marker.value} {marker.unit}
-                      </span>
-                      <span className="ohMetricHint">
-                        الحالة: {englishStatusToArabic(marker.status)}
-                      </span>
-                      {marker.ref && (
-                        <span className="ohMetricHint">
-                          المرجع: {marker.ref}
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <ArabicParagraph>
-                  لا توجد مؤشرات منظمة كافية يمكن استخراجها من النص الحالي. يُنصح بالرجوع للتقرير الأصلي عند المراجعة.
-                </ArabicParagraph>
-              )}
-            </article>
+              <div className="doctorBriefLabTableWrapper">
+                <table className="doctorBriefLabTable">
+                  <thead>
+                    <tr>
+                      <th>{isArabic ? "الفحص" : "Test"}</th>
+                      <th>{isArabic ? "النتيجة" : "Result"}</th>
+                      <th>{isArabic ? "الحالة" : "Status"}</th>
+                      <th>{isArabic ? "المرجع" : "Reference"}</th>
+                    </tr>
+                  </thead>
 
-            <article>
-              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
-                ٣. إشارات خطر تحتاج مراجعة
-              </h3>
-              <ArabicParagraph>
-                في حال وجود أعراض، أو تكرار نتائج غير طبيعية، أو اختلاف واضح عن النتائج السابقة، يجب مراجعة طبيب مرخص.
-                عدم ظهور مؤشر خطير واضح لا يعني إلغاء الحاجة للمتابعة الطبية عند وجود أعراض.
-              </ArabicParagraph>
-            </article>
+                  <tbody>
+                    {labMarkers.map((marker, markerIndex) => {
+                      const normalizedStatus =
+                        marker.status.toLowerCase();
 
-            <article>
-              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
-                ٤. المتابعة الموصى بها
-              </h3>
-              <ArabicParagraph>
-                راجع المؤشرات مع مقدم رعاية صحية مرخص، وكرر الفحوصات ذات العلاقة حسب الخطة الطبية.
-                يفضل مقارنة هذه النتائج مع فحوصات سابقة ولاحقة لفهم الاتجاه الصحي بشكل أفضل.
-              </ArabicParagraph>
-            </article>
+                      const statusClass =
+                        normalizedStatus.includes("high")
+                          ? "high"
+                          : normalizedStatus.includes("low")
+                            ? "low"
+                            : normalizedStatus.includes("normal")
+                              ? "normal"
+                              : "neutral";
 
-            <article className="ohTrustNotice">
-              <span aria-hidden="true">🩺</span>
-              <div style={{ width: "100%" }}>
-                <strong>٥. ملخص المراجعة السريرية</strong>
-                <ArabicParagraph>
-                  {text(clinicalSummary, "غير متاح")}
-                </ArabicParagraph>
+                      return (
+                        <tr key={`${marker.name}-${markerIndex}`}>
+                          <td className="doctorBriefLabName">
+                            {marker.name}
+                          </td>
+
+                          <td>
+                            <strong>
+                              {marker.value}
+                              {marker.unit ? ` ${marker.unit}` : ""}
+                            </strong>
+                          </td>
+
+                          <td>
+                            <span
+                              className={`doctorBriefLabStatus doctorBriefLabStatus-${statusClass}`}
+                            >
+                              {isArabic
+                                ? englishStatusToArabic(marker.status)
+                                : marker.status}
+                            </span>
+                          </td>
+
+                          <td>
+                            {marker.ref ||
+                              (isArabic ? "غير متاح" : "N/A")}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             </article>
+          )}
 
+          {shouldShowKeyFindings && (
             <article>
-              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
-                ٦. ملخص الأدلة
+              <h3
+                className="ohCardTitle doctorBriefSectionHeading"
+                style={{ fontSize: "1.18rem" }}
+              >
+                {isArabic
+                  ? "٣. أهم النتائج السريرية"
+                  : "3. Key Clinical Findings"}
               </h3>
-              <ArabicParagraph>
-                {text(evidenceSummary, "غير متاح")}
-              </ArabicParagraph>
-            </article>
 
-            <article>
-              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
-                ٧. ملخص التقدم
-              </h3>
-              <ArabicParagraph>
-                {text(momentumSummary, "غير متاح")}
-              </ArabicParagraph>
+              {isArabic ? (
+                <ArabicParagraph>{keyFindings}</ArabicParagraph>
+              ) : (
+                <EnglishParagraph>{keyFindings}</EnglishParagraph>
+              )}
             </article>
+          )}
 
+          {isMeaningfulText(riskSignals) && (
             <article>
-              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
-                ٨. ملخص القرار
+              <h3
+                className="ohCardTitle doctorBriefSectionHeading"
+                style={{ fontSize: "1.18rem" }}
+              >
+                {isArabic
+                  ? "٤. إشارات الخطر أو الانتباه"
+                  : "4. Risk and Attention Signals"}
               </h3>
-              <ArabicParagraph>
-                {text(decisionSummary, "غير متاح")}
-              </ArabicParagraph>
-            </article>
 
-            <article>
-              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
-                ملاحظة مهمة
-              </h3>
-              <ArabicParagraph>
-                هذا الملخص مخصص لدعم المراجعة الطبية ولا يستبدل التقييم السريري أو حكم الطبيب.
-              </ArabicParagraph>
+              {isArabic ? (
+                <ArabicParagraph>{riskSignals}</ArabicParagraph>
+              ) : (
+                <EnglishParagraph>{riskSignals}</EnglishParagraph>
+              )}
             </article>
-          </div>
-        ) : (
-          <div className="ohStack">
-            <article>
-              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
-                1. Clinical Summary
-              </h3>
-              <EnglishParagraph>{text(summary, "N/A")}</EnglishParagraph>
-            </article>
+          )}
 
+          {isMeaningfulText(recommendations) && (
             <article>
-              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
-                2. Key Clinical Findings
+              <h3
+                className="ohCardTitle doctorBriefSectionHeading"
+                style={{ fontSize: "1.18rem" }}
+              >
+                {isArabic
+                  ? "٥. المتابعة المقترحة"
+                  : "5. Suggested Follow-Up"}
               </h3>
-              <EnglishParagraph>{text(keyFindings, "N/A")}</EnglishParagraph>
-            </article>
 
-            <article>
-              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
-                3. Important Risk Signals
-              </h3>
-              <EnglishParagraph>{text(riskSignals, "N/A")}</EnglishParagraph>
+              {isArabic ? (
+                <ArabicParagraph>{recommendations}</ArabicParagraph>
+              ) : (
+                <EnglishParagraph>{recommendations}</EnglishParagraph>
+              )}
             </article>
+          )}
 
-            <article>
-              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
-                4. Recommended Follow-Up
+          {optionalSections.map((section) => (
+            <article key={section.key}>
+              <h3
+                className="ohCardTitle doctorBriefSectionHeading"
+                style={{ fontSize: "1.18rem" }}
+              >
+                {isArabic ? section.titleAr : section.titleEn}
               </h3>
-              <EnglishParagraph>{text(recommendations, "N/A")}</EnglishParagraph>
-            </article>
 
-            <article>
-              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
-                5. Clinical Review Note
-              </h3>
-              <EnglishParagraph>{text(clinicalSummary, "N/A")}</EnglishParagraph>
+              {isArabic ? (
+                <ArabicParagraph>
+                  {text(section.value, "غير متاح")}
+                </ArabicParagraph>
+              ) : (
+                <EnglishParagraph>
+                  {text(section.value, "N/A")}
+                </EnglishParagraph>
+              )}
             </article>
-
-            <article>
-              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
-                6. Evidence Summary
-              </h3>
-              <EnglishParagraph>{text(evidenceSummary, "N/A")}</EnglishParagraph>
-            </article>
-
-            <article>
-              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
-                7. Momentum Summary
-              </h3>
-              <EnglishParagraph>{text(momentumSummary, "N/A")}</EnglishParagraph>
-            </article>
-
-            <article>
-              <h3 className="ohCardTitle" style={{ fontSize: "1.18rem" }}>
-                8. Decision Summary
-              </h3>
-              <EnglishParagraph>{text(decisionSummary, "N/A")}</EnglishParagraph>
-            </article>
-          </div>
-        )}
+          ))}
+        </div>
 
         <div className="ohDivider" />
 
@@ -860,8 +1541,8 @@ function printDoctorBriefOnly() {
             </strong>
             <br />
             {isArabic
-              ? "هذا الملخص للتنظيم والتحضير فقط، ولا يستبدل التشخيص أو الخطة العلاجية من مختص صحي مرخص."
-              : "This summary is for organization and preparation only. It does not replace diagnosis or treatment planning by a licensed healthcare professional."}
+              ? "هذا الملخص مخصص لدعم تنظيم المعلومات والتحضير للمراجعة الطبية، ولا يستبدل التقييم السريري أو التشخيص أو الخطة العلاجية من مختص صحي مرخص."
+              : "This brief supports information organization and preparation for medical review. It does not replace clinical evaluation, diagnosis, or treatment planning by a licensed healthcare professional."}
           </div>
         </div>
       </section>

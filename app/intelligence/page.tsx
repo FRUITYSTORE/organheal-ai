@@ -1505,7 +1505,7 @@ const {
                           focusedReportInsight.recommendations
                         }
                         healthStory={generatedResult.healthStory}
-                        executiveSummary={
+                           executiveSummary={
                           generatedResult.executiveSummary
                         }
                         patientPresentation={
@@ -1544,6 +1544,7 @@ const {
                           unifiedDoctorBriefV2 ??
                           focusedReportInsight.doctor_brief
                         }
+                        doctorPresentation={unifiedDoctorPresentationV2}
                         executiveSummary={
                           generatedResult.executiveSummary
                         }
