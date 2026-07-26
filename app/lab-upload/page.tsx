@@ -392,32 +392,40 @@ export default function LabUploadPage() {
       ? 2
       : 1;
 
-  const journeyItems = [
-    {
-      number: 1,
-      title: text("Select", "الاختيار"),
-      description: text(
-        "Choose one or more supported medical reports.",
-        "اختر تقريرًا طبيًا واحدًا أو أكثر من الملفات المدعومة."
-      ),
-    },
-    {
-      number: 2,
-      title: text("Save", "الحفظ"),
-      description: text(
-        "Store the reports securely inside your account.",
-        "احفظ التقارير بأمان داخل حسابك."
-      ),
-    },
-    {
-      number: 3,
-      title: text("Continue in Reports", "المتابعة في التقارير"),
-      description: text(
-        "Open Reports Library to manage or analyze the saved reports.",
-        "افتح مكتبة التقارير لإدارة التقارير المحفوظة أو تحليلها."
-      ),
-    },
-  ];
+ const journeyItems = [
+  {
+    number: 1,
+    title: text("Upload", "الرفع"),
+    description: text(
+      "Choose one or more supported medical reports.",
+      "اختر تقريرًا طبيًا واحدًا أو أكثر من الملفات المدعومة."
+    ),
+  },
+  {
+    number: 2,
+    title: text("Save", "الحفظ"),
+    description: text(
+      "Store the selected reports securely inside your account.",
+      "احفظ التقارير المختارة بأمان داخل حسابك."
+    ),
+  },
+  {
+    number: 3,
+    title: text("Analyze", "التحليل"),
+    description: text(
+      "Continue with the latest saved report to generate its health intelligence.",
+      "تابع باستخدام آخر تقرير محفوظ لإنشاء التحليل الصحي الذكي."
+    ),
+  },
+  {
+    number: 4,
+    title: text("Reports Library", "مكتبة التقارير"),
+    description: text(
+      "Return anytime to open, manage, or review your saved reports.",
+      "ارجع في أي وقت لفتح تقاريرك المحفوظة أو إدارتها أو مراجعتها."
+    ),
+  },
+];
 
   return (
     <main
@@ -523,7 +531,7 @@ export default function LabUploadPage() {
 
         .uploadJourney {
           display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
+         grid-template-columns: repeat(4, minmax(0, 1fr));
           gap: 12px;
           padding: 14px;
           border: 1px solid rgba(15, 23, 42, 0.08);
@@ -813,7 +821,34 @@ export default function LabUploadPage() {
           cursor: not-allowed;
           opacity: 0.58;
         }
+.savedReceiptActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-top: 22px;
+}
 
+.savedPrimaryAction {
+  min-width: 190px;
+}
+
+.savedTertiaryAction {
+  min-height: 42px;
+  padding: 0 6px;
+  border: 0;
+  background: transparent;
+  color: #64748b;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.savedTertiaryAction:hover {
+  color: #0f766e;
+  text-decoration: underline;
+}
         @media (max-width: 980px) {
           .labUploadHero .ohHeroGrid,
           .uploadWorkspace,
@@ -865,7 +900,7 @@ export default function LabUploadPage() {
 
         .labUploadPageV4 .labUploadHero .ohHeroGrid {
           display: grid !important;
-          grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.62fr) !important;
+          grid-template-columns: minmax(0, 1fr) !important;
           gap: 48px !important;
           align-items: center !important;
         }
@@ -883,7 +918,7 @@ export default function LabUploadPage() {
         }
 
         .labUploadPageV4 .labUploadHero .ohLead {
-          max-width: 660px !important;
+          max-width: 720px !important;
           margin-top: 18px !important;
           font-family: Inter, ui-sans-serif, system-ui, -apple-system,
             BlinkMacSystemFont, "Segoe UI", sans-serif !important;
@@ -977,41 +1012,17 @@ export default function LabUploadPage() {
 
               <p className="ohLead">
                 {text(
-                  "Choose your reports, save them to your account, then continue to Reports Library to open, organize, or analyze them.",
-                  "اختر تقاريرك واحفظها في حسابك، ثم تابع إلى مكتبة التقارير لفتحها أو تنظيمها أو تحليلها."
-                )}
+  "Choose your reports, save them securely, then continue directly to analysis. Your saved reports remain available anytime in Reports Library.",
+  "اختر تقاريرك واحفظها بأمان، ثم تابع مباشرة إلى التحليل. تبقى تقاريرك المحفوظة متاحة في أي وقت داخل مكتبة التقارير."
+)}
               </p>
 
               <div className="ohButtonRow" style={{ marginTop: "24px" }}>
-                <a href="#medical-upload-panel" className="primaryBtn">
-                  {text("Choose Reports", "اختيار التقارير")}
-                </a>
-
-                <Link href="/reports" className="secondaryBtn">
-                  {text("Reports Library", "مكتبة التقارير")}
-                </Link>
-              </div>
+  <a href="#medical-upload-panel" className="primaryBtn">
+    {text("Choose Reports", "اختيار التقارير")}
+  </a>
+</div>
             </div>
-
-            <aside className="heroPurposeCard">
-              <p className="ohMetricLabel">
-                {text("One clear purpose", "هدف واحد واضح")}
-              </p>
-
-              <h2 className="ohCardTitle">
-                {text(
-                  "This page only uploads and saves reports.",
-                  "هذه الصفحة مخصصة فقط لرفع التقارير وحفظها."
-                )}
-              </h2>
-
-              <p className="ohCardText">
-                {text(
-                  "Report search, file management, analysis, and saved results stay in Reports Library.",
-                  "البحث وإدارة الملفات والتحليل والنتائج المحفوظة تبقى داخل مكتبة التقارير."
-                )}
-              </p>
-            </aside>
           </div>
         </section>
 
@@ -1073,31 +1084,31 @@ export default function LabUploadPage() {
               </ul>
             )}
 
-            <div className="ohButtonRow" style={{ marginTop: "20px" }}>
-              {latestUploadedReportId && (
-                <Link
-                  href={`/intelligence?reportId=${latestUploadedReportId}&auto=1`}
-                  className="primaryBtn"
-                >
-                  {text(
-                    "Continue to Analysis",
-                    "المتابعة إلى التحليل"
-                  )}
-                </Link>
-              )}
+           <div className="savedReceiptActions">
+  {latestUploadedReportId && (
+    <Link
+      href={`/intelligence?reportId=${latestUploadedReportId}&auto=1`}
+      className="primaryBtn savedPrimaryAction"
+    >
+      {text(
+        "Analyze Latest Report",
+        "تحليل آخر تقرير"
+      )}
+    </Link>
+  )}
 
-              <Link href="/reports" className="secondaryBtn">
-                {text("Reports Library", "مكتبة التقارير")}
-              </Link>
+  <Link href="/reports" className="secondaryBtn">
+    {text("Open Reports Library", "فتح مكتبة التقارير")}
+  </Link>
 
-              <button
-                type="button"
-                className="secondaryBtn"
-                onClick={resetUpload}
-              >
-                {text("Upload More Reports", "رفع تقارير أخرى")}
-              </button>
-            </div>
+  <button
+    type="button"
+    className="savedTertiaryAction"
+    onClick={resetUpload}
+  >
+    {text("Upload More Reports", "رفع تقارير أخرى")}
+  </button>
+</div>
           </section>
         )}
 
@@ -1225,22 +1236,18 @@ export default function LabUploadPage() {
                 </div>
               )}
 
-              <div className="ohButtonRow">
-                <button
-                  type="button"
-                  className="primaryBtn"
-                  onClick={uploadFiles}
-                  disabled={uploading || selectedFiles.length === 0}
-                >
-                  {uploading
-                    ? text("Saving Reports...", "جاري حفظ التقارير...")
-                    : text("Save Reports", "حفظ التقارير")}
-                </button>
-
-                <Link href="/reports" className="secondaryBtn">
-                  {text("Reports Library", "مكتبة التقارير")}
-                </Link>
-              </div>
+             <div className="ohButtonRow">
+  <button
+    type="button"
+    className="primaryBtn"
+    onClick={uploadFiles}
+    disabled={uploading || selectedFiles.length === 0}
+  >
+    {uploading
+      ? text("Saving Reports...", "جاري حفظ التقارير...")
+      : text("Save Reports", "حفظ التقارير")}
+  </button>
+</div>
 
               {message && (
                 <div
