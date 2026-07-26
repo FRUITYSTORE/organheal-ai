@@ -647,7 +647,127 @@ await pdfWorker.save();
 
   return (
     <>
-      <style>{`
+          <style>{`
+          .patientReportPreviewShell {
+  overflow: hidden;
+  border: 1px solid rgba(15, 23, 42, 0.09);
+  border-radius: 22px;
+  background: #ffffff;
+  box-shadow: 0 12px 34px rgba(15, 23, 42, 0.05);
+}
+
+.patientReportPreviewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px;
+}
+
+.patientReportPreviewIdentity {
+  min-width: 0;
+}
+
+.patientReportPreviewEyebrow {
+  margin: 0;
+  color: #0f766e;
+  font-size: 0.7rem;
+  font-weight: 950;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.patientReportPreviewTitle {
+  margin: 6px 0 0;
+  color: #0f172a;
+  font-size: 1.12rem;
+  font-weight: 950;
+  line-height: 1.35;
+}
+
+.patientReportPreviewDescription {
+  max-width: 680px;
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 0.84rem;
+  line-height: 1.6;
+}
+
+.patientReportPreviewActions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.patientReportPreviewDetails {
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.patientReportPreviewSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 15px 20px;
+  cursor: pointer;
+  list-style: none;
+  color: #334155;
+  font-size: 0.82rem;
+  font-weight: 900;
+  background: #f8fafc;
+}
+
+.patientReportPreviewSummary::-webkit-details-marker {
+  display: none;
+}
+
+.patientReportPreviewSummary:hover {
+  background: #f0fdfa;
+}
+
+.patientReportPreviewChevron {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 999px;
+  background: #e2e8f0;
+  color: #475569;
+  transition: transform 180ms ease;
+}
+
+.patientReportPreviewDetails[open]
+  .patientReportPreviewChevron {
+  transform: rotate(180deg);
+  background: #ccfbf1;
+  color: #0f766e;
+}
+
+.patientReportPreviewContent {
+  padding: 18px;
+  background: #f8fafc;
+}
+
+.patientReportPreviewContent .patientReportPdfArea {
+  margin: 0;
+}
+
+@media (max-width: 720px) {
+  .patientReportPreviewHeader {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .patientReportPreviewActions {
+    width: 100%;
+  }
+
+  .patientReportPreviewActions button {
+    width: 100%;
+    justify-content: center;
+  }
+}
         .patientReportPdfArea {
           unicode-bidi: isolate;
         }
@@ -970,7 +1090,56 @@ await pdfWorker.save();
           }
         }
       `}</style>
+<section className="patientReportPreviewShell">
+  <div className="patientReportPreviewHeader">
+    <div className="patientReportPreviewIdentity">
+      <p className="patientReportPreviewEyebrow">
+        {isArabic ? "تقرير المريض" : "Patient Report"}
+      </p>
 
+      <h3 className="patientReportPreviewTitle">
+        {isArabic
+          ? "تقرير الذكاء الصحي للمريض"
+          : "Patient Health Intelligence Report"}
+      </h3>
+
+      <p className="patientReportPreviewDescription">
+        {isArabic
+          ? "نسخة مبسطة للمريض تلخص أهم النتائج والخطوات التالية. يمكنك تنزيلها مباشرة أو فتح المعاينة الكاملة."
+          : "A patient-friendly summary of the important findings and next steps. Download it directly or open the full preview."}
+      </p>
+    </div>
+
+    <div className="patientReportPreviewActions">
+      <button
+        id="patient-analysis-pdf-download"
+        className="primaryBtn"
+        type="button"
+        onClick={downloadPatientPdf}
+      >
+        {isArabic ? "تنزيل PDF" : "Download PDF"}
+      </button>
+    </div>
+  </div>
+
+  <details className="patientReportPreviewDetails">
+    <summary className="patientReportPreviewSummary">
+      <span>
+        {isArabic
+          ? "معاينة التقرير الكامل"
+          : "Preview full patient report"}
+      </span>
+
+      <span
+        className="patientReportPreviewChevron"
+        aria-hidden="true"
+      >
+        ↓
+      </span>
+    </summary>
+
+    <div className="patientReportPreviewContent"></div>
+     
       <section
         ref={patientReportRef}
         className="ohCard patientReportPdfArea arabicPdfSafeMargins organhealPdfPage"
@@ -1087,15 +1256,7 @@ await pdfWorker.save();
 </div>
           </div>
 
-          <div className="patientReportActions patientReportHeaderActions">
-            <button id="patient-analysis-pdf-download"
-              className="primaryBtn patientReportDownloadButton"
-              type="button"
-              onClick={downloadPatientPdf}
-            >
-              {isArabic ? "تنزيل تقرير المريض PDF" : "Download Patient PDF"}
-            </button>
-          </div>
+         
         </div>
 
         <div className="ohMetricGrid" style={{ marginTop: "18px" }}>
@@ -1284,7 +1445,10 @@ await pdfWorker.save();
               : "This report is for education and organization only. It does not replace diagnosis, treatment, or review by a licensed healthcare professional."}
           </div>
         </div>
-      </section>
+    </section>
+
+    </details>
+</section>
     </>
   );
 }

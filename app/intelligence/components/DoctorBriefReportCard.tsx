@@ -892,6 +892,121 @@ const clinicalSummary =
   return (
     <>
       <style>{`
+      .doctorBriefPreviewShell {
+  overflow: hidden;
+  border: 1px solid rgba(15, 23, 42, 0.09);
+  border-radius: 22px;
+  background: #ffffff;
+  box-shadow: 0 12px 34px rgba(15, 23, 42, 0.05);
+}
+
+.doctorBriefPreviewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px;
+}
+
+.doctorBriefPreviewIdentity {
+  min-width: 0;
+}
+
+.doctorBriefPreviewEyebrow {
+  margin: 0;
+  color: #153f63;
+  font-size: 0.7rem;
+  font-weight: 950;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.doctorBriefPreviewTitle {
+  margin: 6px 0 0;
+  color: #0f172a;
+  font-size: 1.12rem;
+  font-weight: 950;
+  line-height: 1.35;
+}
+
+.doctorBriefPreviewDescription {
+  max-width: 680px;
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 0.84rem;
+  line-height: 1.6;
+}
+
+.doctorBriefPreviewActions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.doctorBriefPreviewDetails {
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.doctorBriefPreviewSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 15px 20px;
+  cursor: pointer;
+  list-style: none;
+  color: #334155;
+  font-size: 0.82rem;
+  font-weight: 900;
+  background: #f8fafc;
+}
+
+.doctorBriefPreviewSummary::-webkit-details-marker {
+  display: none;
+}
+
+.doctorBriefPreviewSummary:hover {
+  background: #f0fdfa;
+}
+
+.doctorBriefPreviewChevron {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 999px;
+  background: #e2e8f0;
+  color: #475569;
+  transition: transform 180ms ease;
+}
+
+.doctorBriefPreviewDetails[open]
+  .doctorBriefPreviewChevron {
+  transform: rotate(180deg);
+  background: #ccfbf1;
+  color: #0f766e;
+}
+
+.doctorBriefPreviewDetails > .doctorBriefReportArea {
+  margin: 18px;
+}
+
+@media (max-width: 720px) {
+  .doctorBriefPreviewHeader {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .doctorBriefPreviewActions {
+    width: 100%;
+  }
+
+  .doctorBriefPreviewActions button {
+    width: 100%;
+    justify-content: center;
+  }
+}
         .doctorBriefReportArea {
           unicode-bidi: isolate;
         }
@@ -1158,7 +1273,61 @@ const clinicalSummary =
           }
         }
       `}</style>
+<section className="doctorBriefPreviewShell">
+  <div className="doctorBriefPreviewHeader">
+    <div className="doctorBriefPreviewIdentity">
+      <p className="doctorBriefPreviewEyebrow">
+        {isArabic ? "ملخص الطبيب" : "Doctor Brief"}
+      </p>
 
+      <h3 className="doctorBriefPreviewTitle">
+        {isArabic
+          ? "ملخص الذكاء السريري للطبيب"
+          : "Clinical Intelligence Brief"}
+      </h3>
+
+      <p className="doctorBriefPreviewDescription">
+        {isArabic
+          ? "ملخص سريري منظم لدعم مراجعة الطبيب. يمكنك تنزيله أو طباعته مباشرة، أو فتح المعاينة الكاملة."
+          : "A concise clinical brief prepared for medical review. Download or print it directly, or open the full preview."}
+      </p>
+    </div>
+
+    <div className="doctorBriefPreviewActions">
+      <button
+        type="button"
+        className="secondaryBtn"
+        onClick={printDoctorBriefOnly}
+      >
+        {isArabic ? "طباعة" : "Print"}
+      </button>
+
+      <button
+        id="doctor-brief-pdf-download"
+        type="button"
+        className="primaryBtn"
+        onClick={downloadDoctorBriefPdf}
+      >
+        {isArabic ? "تنزيل PDF" : "Download PDF"}
+      </button>
+    </div>
+  </div>
+
+  <details className="doctorBriefPreviewDetails">
+    <summary className="doctorBriefPreviewSummary">
+      <span>
+        {isArabic
+          ? "معاينة ملخص الطبيب الكامل"
+          : "Preview full doctor brief"}
+      </span>
+
+      <span
+        className="doctorBriefPreviewChevron"
+        aria-hidden="true"
+      >
+        ↓
+      </span>
+    </summary>
       <section
         ref={printRef}
         className="ohCard doctorBriefReportArea arabicPdfSafeMargins organhealPdfPage"
@@ -1254,31 +1423,6 @@ const clinicalSummary =
             </div>
           </div>
         </header>
-
-        <div
-          className="doctorBriefPrintActions doctorBriefHeaderActions"
-          style={{
-            alignItems: isArabic ? "flex-start" : "flex-end",
-            marginBottom: "18px",
-          }}
-        >
-          <button
-            className="secondaryBtn doctorBriefPrintButton"
-            type="button"
-            onClick={printDoctorBriefOnly}
-          >
-            {isArabic ? "طباعة ملخص الطبيب" : "Print Doctor Brief"}
-          </button>
-
-          <button
-            id="doctor-brief-pdf-download"
-            className="primaryBtn doctorBriefPrintButton"
-            type="button"
-            onClick={downloadDoctorBriefPdf}
-          >
-            {isArabic ? "تنزيل PDF" : "Download PDF"}
-          </button>
-        </div>
 
         <div className="ohMetricGrid" style={{ marginTop: "18px" }}>
           <article className="ohMetricCard">
@@ -1546,6 +1690,8 @@ const clinicalSummary =
           </div>
         </div>
       </section>
+        </details>
+</section>
     </>
   );
 }

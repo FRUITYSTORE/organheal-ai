@@ -58,11 +58,7 @@ import {
 import {
   getFocusedReportInsight,
   getIntelligenceReportListView,
-  getIntelligenceReportStatistics,
 } from "@/lib/selectors/intelligence-page.selectors";
-import {
-  getIntelligenceNextStep,
-} from "@/lib/selectors/intelligence-page-view-model";
 
 type Assessment = {
   organ_name: string;
@@ -519,21 +515,6 @@ export default function IntelligencePage() {
     });
   }
 
- const {
-  totalReportInsights,
-  generatedReportsCount,
-  pendingReportsCount,
-  completedExtractionCount,
-} = getIntelligenceReportStatistics(healthInsights);
-  const hasOpenGeneratedResult = Boolean(generatedResult && activeGeneratedInsightId);
-
-  const intelligenceNextStep = getIntelligenceNextStep({
-    totalReportInsights,
-    hasOpenGeneratedResult,
-    generatedReportsCount,
-    text,
-  });
-
   const requestedReportIdForFocus =
   typeof window !== "undefined"
     ? getIntelligenceReportRequest(window.location.search).requestedReportId
@@ -590,6 +571,25 @@ const {
           text-decoration: none;
         }
 
+        .intelligenceCompactHero {
+  padding: 26px 30px;
+}
+
+.intelligenceCompactHero .ohHeroGrid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.intelligenceCompactHero .ohTitle {
+  max-width: 820px;
+  margin-top: 8px;
+  font-size: clamp(2rem, 3.2vw, 3rem);
+}
+
+.intelligenceCompactHero .ohLead {
+  max-width: 820px;
+  margin-top: 12px;
+}
+
         .analysisDocumentsHeader {
           margin-bottom: 18px;
         }
@@ -610,11 +610,11 @@ const {
         }
 
         .selectedReportGrid {
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) minmax(280px, 0.48fr);
-          gap: 20px;
-          align-items: stretch;
-        }
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  align-items: stretch;
+}
 
         .selectedReportPanel {
           border-radius: 24px;
@@ -974,102 +974,25 @@ const {
         <section className="ohHero">
           <div className="ohHeroGrid">
             <div>
-              <p className="ohEyebrow">
-                {text("OrganHeal Report Analysis", "تحليل التقارير في OrganHeal")}
-              </p>
+             <p className="ohEyebrow">
+  {text("Selected Report Analysis", "تحليل التقرير المحدد")}
+</p>
 
-              <h1 className="ohTitle">
-                {text("Report Analysis Center", "مركز تحليل التقارير")}
-              </h1>
+<h1 className="ohTitle">
+  {text("Understand this report clearly.", "افهم هذا التقرير بوضوح.")}
+</h1>
 
-              <p className="ohLead">
-                {text(
-                  "A focused view for your health profile, medical reports, top opportunities, and doctor-ready intelligence.",
-                  "صفحة مركزة لملفك الصحي، تقاريرك الطبية، أهم الفرص الصحية، والملخصات الجاهزة للطبيب."
-                )}
-              </p>
+<p className="ohLead">
+  {text(
+    "Review one selected medical report, generate its health intelligence, and move from the important findings to your next action.",
+    "راجع تقريرًا طبيًا واحدًا، وأنشئ الذكاء الصحي الخاص به، وانتقل من أهم النتائج إلى خطوتك التالية."
+  )}
+</p>
 
-              <div className="ohButtonRow" style={{ marginTop: "24px" }}>
-                <Link href="/lab-upload" className="primaryBtn">
-                  {text("Upload Report", "رفع تقرير")}
-                </Link>
+             </div>
 
-                <Link href="/reports" className="secondaryBtn">
-                  {text("Reports Library", "مكتبة التقارير")}
-                </Link>
-
-                <Link href="/health-plan" className="secondaryBtn">
-                  {text("Health Plan", "خطة الصحة")}
-                </Link>
-              </div>
-            </div>
-
-            <div className="ohCard">
-              <div className="ohCardHeader">
-                <div>
-                  <p className="ohMetricLabel">{intelligenceNextStep.label}</p>
-
-                  <h2 className="ohCardTitle" style={{ marginTop: "8px" }}>
-                    {intelligenceNextStep.title}
-                  </h2>
-                </div>
-
-                <span className="ohStatusBadge neutral">
-                  {totalReportInsights} {text("reports", "تقارير")}
-                </span>
-              </div>
-
-              <p className="ohCardText">{intelligenceNextStep.description}</p>
-
-              <div className="ohDivider" />
-
-              <Link href={intelligenceNextStep.href} className="primaryBtn">
-                {intelligenceNextStep.buttonText}
-              </Link>
-            </div>
+            
           </div>
-        </section>
-
-        <section className="ohMetricGrid">
-          <article className="ohMetricCard">
-            <span className="ohMetricLabel">
-              {text("Report Insights", "ذكاء التقارير")}
-            </span>
-            <span className="ohMetricValue">{totalReportInsights}</span>
-            <span className="ohMetricHint">
-              {text("available report records", "سجلات تقارير متاحة")}
-            </span>
-          </article>
-
-          <article className="ohMetricCard">
-            <span className="ohMetricLabel">
-              {text("Generated", "مولّد")}
-            </span>
-            <span className="ohMetricValue">{generatedReportsCount}</span>
-            <span className="ohMetricHint">
-              {text("ready for review", "جاهز للمراجعة")}
-            </span>
-          </article>
-
-          <article className="ohMetricCard">
-            <span className="ohMetricLabel">
-              {text("Pending", "بانتظار")}
-            </span>
-            <span className="ohMetricValue">{pendingReportsCount}</span>
-            <span className="ohMetricHint">
-              {text("need generation", "تحتاج توليد")}
-            </span>
-          </article>
-
-          <article className="ohMetricCard">
-            <span className="ohMetricLabel">
-              {text("Extraction Completed", "استخراج مكتمل")}
-            </span>
-            <span className="ohMetricValue">{completedExtractionCount}</span>
-            <span className="ohMetricHint">
-              {text("ready for analysis", "جاهز للتحليل")}
-            </span>
-          </article>
         </section>
 
         {loading && (
@@ -1260,25 +1183,6 @@ const {
                 </div>
               </div>
 
-              <aside className="selectedReportPanel">
-                <p className="ohMetricLabel">
-                  {text("What happens here", "ماذا يحدث هنا")}
-                </p>
-
-                <h3 className="ohCardTitle">
-                  {text(
-                    "Generate or review one selected report.",
-                    "توليد أو مراجعة تحليل تقرير واحد محدد."
-                  )}
-                </h3>
-
-                <p className="ohCardText">
-                  {text(
-                    "Reports stay organized in the Reports Library. This page focuses only on analyzing the selected report and showing the result clearly.",
-                    "تبقى التقارير منظمة في مكتبة التقارير. هذه الصفحة تركز فقط على تحليل التقرير المحدد وعرض النتيجة بوضوح."
-                  )}
-                </p>
-              </aside>
             </div>
 
             {focusedReportHasVisibleResult && generatedResult && (
