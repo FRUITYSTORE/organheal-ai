@@ -22,8 +22,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function getText(value: unknown): string {
-  if (typeof value === "string") return value;
-  if (typeof value === "number") return String(value);
+  if (typeof value === "string") return value.trim();
+
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return String(value);
+  }
+
   return "";
 }
 
@@ -73,7 +77,9 @@ function normalizeTimelineItems(timeline: unknown): TimelineItem[] {
 }
 
 function getTimelineSummary(timeline: unknown): string {
-  if (typeof timeline === "string") return timeline;
+  if (typeof timeline === "string") {
+    return timeline.trim();
+  }
 
   if (!isRecord(timeline)) return "";
 
@@ -85,104 +91,265 @@ function getTimelineSummary(timeline: unknown): string {
   );
 }
 
-export default function TimelineCard({ timeline }: TimelineCardProps) {
+export default function TimelineCard({
+  timeline,
+}: TimelineCardProps) {
   const timelineItems = normalizeTimelineItems(timeline);
   const timelineSummary = getTimelineSummary(timeline);
 
+  const hasTimelineIntelligence =
+    Boolean(timelineSummary) || timelineItems.length > 0;
+
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <div className="mb-5">
-        <p className="text-sm font-semibold uppercase tracking-wide text-blue-600">
-          Health Timeline
+    <section className="healthTimelineResult">
+      <style>{`
+        .healthTimelineResult,
+        .healthTimelineResult * {
+          box-sizing: border-box;
+        }
+
+        .healthTimelineResult {
+          padding: 20px;
+          border: 1px solid rgba(15, 23, 42, 0.08);
+          border-radius: 18px;
+          background: #ffffff;
+        }
+
+        .healthTimelineHeader {
+          padding-bottom: 16px;
+          border-bottom: 1px solid rgba(15, 23, 42, 0.07);
+        }
+
+        .healthTimelineEyebrow {
+          margin: 0;
+          color: #0f766e;
+          font-size: 0.68rem;
+          font-weight: 950;
+          letter-spacing: 0.09em;
+          text-transform: uppercase;
+        }
+
+        .healthTimelineTitle {
+          margin: 6px 0 0;
+          color: #0f172a;
+          font-size: 1.18rem;
+          font-weight: 950;
+          line-height: 1.3;
+        }
+
+        .healthTimelineDescription {
+          max-width: 720px;
+          margin: 7px 0 0;
+          color: #64748b;
+          font-size: 0.82rem;
+          line-height: 1.6;
+        }
+
+        .healthTimelineSignal {
+          margin-top: 16px;
+          padding: 15px 16px;
+          border: 1px solid rgba(15, 118, 110, 0.15);
+          border-left: 4px solid #0f766e;
+          border-radius: 14px;
+          background: #f0fdfa;
+        }
+
+        .healthTimelineSignalLabel {
+          margin: 0;
+          color: #0f766e;
+          font-size: 0.66rem;
+          font-weight: 950;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+
+        .healthTimelineSignalText {
+          margin: 7px 0 0;
+          color: #334155;
+          font-size: 0.9rem;
+          font-weight: 750;
+          line-height: 1.65;
+        }
+
+        .healthTimelineEvents {
+          display: grid;
+          gap: 10px;
+          margin-top: 16px;
+        }
+
+        .healthTimelineEvent {
+          padding: 14px 15px;
+          border: 1px solid rgba(148, 163, 184, 0.2);
+          border-radius: 14px;
+          background: #f8fafc;
+        }
+
+        .healthTimelineEventHeader {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 12px;
+        }
+
+        .healthTimelineEventTitle {
+          margin: 0;
+          color: #0f172a;
+          font-size: 0.9rem;
+          font-weight: 900;
+          line-height: 1.4;
+        }
+
+        .healthTimelineEventDate {
+          flex: 0 0 auto;
+          padding: 5px 8px;
+          border-radius: 999px;
+          background: #ffffff;
+          color: #64748b;
+          font-size: 0.68rem;
+          font-weight: 800;
+          border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        .healthTimelineEventDescription {
+          margin: 8px 0 0;
+          color: #475569;
+          font-size: 0.8rem;
+          line-height: 1.6;
+        }
+
+        .healthTimelineMeta {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 7px;
+          margin-top: 10px;
+        }
+
+        .healthTimelineMeta span {
+          padding: 5px 8px;
+          border-radius: 999px;
+          background: #ffffff;
+          border: 1px solid rgba(148, 163, 184, 0.2);
+          color: #64748b;
+          font-size: 0.67rem;
+          font-weight: 750;
+        }
+
+        .healthTimelineEmpty {
+          margin-top: 16px;
+          padding: 14px 15px;
+          border: 1px dashed rgba(148, 163, 184, 0.4);
+          border-radius: 14px;
+          background: #f8fafc;
+          color: #64748b;
+          font-size: 0.82rem;
+          line-height: 1.6;
+        }
+
+        @media (max-width: 640px) {
+          .healthTimelineResult {
+            padding: 16px;
+          }
+
+          .healthTimelineEventHeader {
+            flex-direction: column;
+          }
+        }
+      `}</style>
+
+      <header className="healthTimelineHeader">
+        <p className="healthTimelineEyebrow">
+          Health direction
         </p>
 
-        <h2 className="mt-1 text-2xl font-bold text-slate-900">
-          Timeline
-        </h2>
+        <h3 className="healthTimelineTitle">
+          Recent health movement
+        </h3>
 
-        <p className="mt-2 text-sm leading-6 text-slate-600">
-          A chronological view of the patient&apos;s detected health events,
-          patterns, and report-based intelligence signals.
+        <p className="healthTimelineDescription">
+          A longitudinal view of meaningful changes detected across the
+          available health history.
         </p>
-      </div>
+      </header>
 
       {timelineSummary && (
-        <div className="mb-5 rounded-xl border border-blue-100 bg-blue-50 p-4">
-          <p className="text-sm leading-6 text-slate-700">
+        <div className="healthTimelineSignal">
+          <p className="healthTimelineSignalLabel">
+            Current timeline signal
+          </p>
+
+          <p className="healthTimelineSignalText">
             {timelineSummary}
           </p>
         </div>
       )}
 
-      {timelineItems.length > 0 ? (
-        <div className="space-y-4">
+      {timelineItems.length > 0 && (
+        <div className="healthTimelineEvents">
           {timelineItems.map((item, index) => {
             const title =
               item.title ||
               item.label ||
               item.category ||
               item.period ||
-              `Timeline Event ${index + 1}`;
+              `Health event ${index + 1}`;
 
             const description =
-              item.description || item.summary || item.insight;
+              item.description ||
+              item.summary ||
+              item.insight;
 
             return (
-              <div
-                key={item.id ?? index}
-                className="relative rounded-xl border border-slate-200 bg-slate-50 p-4"
+              <article
+                className="healthTimelineEvent"
+                key={item.id ?? `${title}-${index}`}
               >
-                <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-                  <div>
-                    <h3 className="text-base font-semibold text-slate-900">
-                      {title}
-                    </h3>
-
-                    {description && (
-                      <p className="mt-2 text-sm leading-6 text-slate-700">
-                        {description}
-                      </p>
-                    )}
-                  </div>
+                <div className="healthTimelineEventHeader">
+                  <h4 className="healthTimelineEventTitle">
+                    {title}
+                  </h4>
 
                   {(item.date || item.period) && (
-                    <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200">
+                    <span className="healthTimelineEventDate">
                       {item.date || item.period}
                     </span>
                   )}
                 </div>
 
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {item.status && (
-                    <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200">
-                      Status: {item.status}
-                    </span>
-                  )}
+                {description && (
+                  <p className="healthTimelineEventDescription">
+                    {description}
+                  </p>
+                )}
 
-                  {item.severity && (
-                    <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200">
-                      Severity: {item.severity}
-                    </span>
-                  )}
+                {(item.status ||
+                  item.severity ||
+                  item.source) && (
+                  <div className="healthTimelineMeta">
+                    {item.status && (
+                      <span>Status: {item.status}</span>
+                    )}
 
-                  {item.source && (
-                    <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200">
-                      Source: {item.source}
-                    </span>
-                  )}
-                </div>
-              </div>
+                    {item.severity && (
+                      <span>Severity: {item.severity}</span>
+                    )}
+
+                    {item.source && (
+                      <span>Source: {item.source}</span>
+                    )}
+                  </div>
+                )}
+              </article>
             );
           })}
         </div>
-      ) : (
-        <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-5">
-          <p className="text-sm text-slate-600">
-            Timeline intelligence will appear here after the report is analyzed.
-          </p>
+      )}
+
+      {!hasTimelineIntelligence && (
+        <div className="healthTimelineEmpty">
+          More longitudinal data is needed before OrganHeal can identify a
+          meaningful health direction.
         </div>
       )}
     </section>
   );
 }
-

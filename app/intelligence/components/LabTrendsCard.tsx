@@ -3,23 +3,16 @@ type LabTrendsCardProps = {
 };
 
 type LabTrendItem = {
-  id?: string | number;
   marker?: string;
-  markerName?: string;
   name?: string;
-  category?: string;
-  organ?: string;
-  unit?: string;
-  currentValue?: string;
-  previousValue?: string;
-  baselineValue?: string;
-  change?: string;
-  trend?: string;
-  direction?: string;
-  status?: string;
-  interpretation?: string;
+  title?: string;
+  earliestValue?: string | number;
+  latestValue?: string | number;
+  changeAmount?: string | number;
+  trendDirection?: string;
+  trendSummary?: string;
   summary?: string;
-  recommendation?: string;
+  status?: string;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -27,243 +20,391 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function getText(value: unknown): string {
-  if (typeof value === "string") return value;
-  if (typeof value === "number") return String(value);
+  if (typeof value === "string") return value.trim();
+
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return String(value);
+  }
+
   return "";
 }
 
 function normalizeLabTrendItems(labTrends: unknown): LabTrendItem[] {
-  if (Array.isArray(labTrends)) {
-    return labTrends.filter(isRecord).map((item, index) => ({
-      id: getText(item.id) || index,
-      marker: getText(item.marker),
-      markerName: getText(item.markerName),
-      name: getText(item.name),
-      category: getText(item.category),
-      organ: getText(item.organ),
-      unit: getText(item.unit),
-      currentValue: getText(item.currentValue),
-      previousValue: getText(item.previousValue),
-      baselineValue: getText(item.baselineValue),
-      change: getText(item.change),
-      trend: getText(item.trend),
-      direction: getText(item.direction),
-      status: getText(item.status),
-      interpretation: getText(item.interpretation),
-      summary: getText(item.summary),
-      recommendation: getText(item.recommendation),
-    }));
+  const source = Array.isArray(labTrends)
+    ? labTrends
+    : isRecord(labTrends)
+      ? labTrends.trends ||
+        labTrends.items ||
+        labTrends.markers ||
+        labTrends.labTrends ||
+        labTrends.results ||
+        []
+      : [];
+
+  if (!Array.isArray(source)) {
+    return [];
   }
 
-  if (!isRecord(labTrends)) return [];
-
-  const possibleItems =
-    labTrends.items ||
-    labTrends.trends ||
-    labTrends.labTrends ||
-    labTrends.markers ||
-    labTrends.markerTrends ||
-    labTrends.historicalTrends ||
-    labTrends.results;
-
-  if (!Array.isArray(possibleItems)) return [];
-
-  return possibleItems.filter(isRecord).map((item, index) => ({
-    id: getText(item.id) || index,
-    marker: getText(item.marker),
-    markerName: getText(item.markerName),
+  return source.filter(isRecord).map((item) => ({
+    marker:
+      getText(item.marker) ||
+      getText(item.markerName),
     name: getText(item.name),
-    category: getText(item.category),
-    organ: getText(item.organ),
-    unit: getText(item.unit),
-    currentValue: getText(item.currentValue),
-    previousValue: getText(item.previousValue),
-    baselineValue: getText(item.baselineValue),
-    change: getText(item.change),
-    trend: getText(item.trend),
-    direction: getText(item.direction),
-    status: getText(item.status),
-    interpretation: getText(item.interpretation),
+    title: getText(item.title),
+    earliestValue: getText(item.earliestValue),
+    latestValue: getText(item.latestValue),
+    changeAmount: getText(item.changeAmount),
+    trendDirection:
+      getText(item.trendDirection) ||
+      getText(item.direction),
+    trendSummary:
+      getText(item.trendSummary) ||
+      getText(item.summary),
     summary: getText(item.summary),
-    recommendation: getText(item.recommendation),
+    status: getText(item.status),
   }));
-}
-
-function getLabTrendsSummary(labTrends: unknown): string {
-  if (typeof labTrends === "string") return labTrends;
-
-  if (!isRecord(labTrends)) return "";
-
-  return (
-    getText(labTrends.summary) ||
-    getText(labTrends.overview) ||
-    getText(labTrends.narrative) ||
-    getText(labTrends.description)
-  );
 }
 
 function getHistoricalDepth(labTrends: unknown): string {
   if (!isRecord(labTrends)) return "";
 
   return (
-    getText(labTrends.historicalDepth) ||
     getText(labTrends.dataDepth) ||
     getText(labTrends.historyAvailable) ||
     getText(labTrends.timeRange)
   );
 }
 
-function formatValue(value: string, unit?: string): string {
-  if (!value) return "";
-  if (!unit) return value;
-  return `${value} ${unit}`;
+function getTrendTone(direction: string) {
+  const normalized = direction.toLowerCase();
+
+  if (
+    normalized.includes("improv") ||
+    normalized.includes("better")
+  ) {
+    return "good";
+  }
+
+  if (
+    normalized.includes("wors") ||
+    normalized.includes("declin")
+  ) {
+    return "risk";
+  }
+
+  return "neutral";
 }
 
-export default function LabTrendsCard({ labTrends }: LabTrendsCardProps) {
+export default function LabTrendsCard({
+  labTrends,
+}: LabTrendsCardProps) {
   const trendItems = normalizeLabTrendItems(labTrends);
-  const summary = getLabTrendsSummary(labTrends);
   const historicalDepth = getHistoricalDepth(labTrends);
 
+  const realTrends = trendItems.filter((item) => {
+    const hasValues =
+      Boolean(getText(item.earliestValue)) &&
+      Boolean(getText(item.latestValue));
+
+    const hasTrend =
+      Boolean(item.trendDirection) ||
+      Boolean(item.trendSummary);
+
+    return hasValues || hasTrend;
+  });
+
+  const trackedMarkers = trendItems
+    .map(
+      (item) =>
+        item.marker ||
+        item.name ||
+        item.title
+    )
+    .filter(Boolean);
+
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-blue-600">
-            Historical Intelligence
-          </p>
+    <section className="labHistoryResult">
+      <style>{`
+        .labHistoryResult,
+        .labHistoryResult * {
+          box-sizing: border-box;
+        }
 
-          <h2 className="mt-1 text-2xl font-bold text-slate-900">
-            Historical Lab Trends
-          </h2>
+        .labHistoryResult {
+          padding: 20px;
+          border: 1px solid rgba(15, 23, 42, 0.08);
+          border-radius: 18px;
+          background: #ffffff;
+        }
 
-          <p className="mt-2 text-sm leading-6 text-slate-600">
-            A historical view of laboratory marker movement based on saved
-            marker history, not only the current uploaded report.
-          </p>
-        </div>
+        .labHistoryHeader {
+          padding-bottom: 16px;
+          border-bottom: 1px solid rgba(15, 23, 42, 0.07);
+        }
+
+        .labHistoryEyebrow {
+          margin: 0;
+          color: #0f766e;
+          font-size: 0.68rem;
+          font-weight: 950;
+          letter-spacing: 0.09em;
+          text-transform: uppercase;
+        }
+
+        .labHistoryTitle {
+          margin: 6px 0 0;
+          color: #0f172a;
+          font-size: 1.18rem;
+          font-weight: 950;
+          line-height: 1.3;
+        }
+
+        .labHistoryDescription {
+          max-width: 720px;
+          margin: 7px 0 0;
+          color: #64748b;
+          font-size: 0.82rem;
+          line-height: 1.6;
+        }
+
+        .labHistoryDepth {
+          display: inline-flex;
+          width: fit-content;
+          margin-top: 12px;
+          padding: 6px 9px;
+          border-radius: 999px;
+          background: #f1f5f9;
+          color: #475569;
+          font-size: 0.68rem;
+          font-weight: 850;
+        }
+
+        .labTrendGrid {
+          display: grid;
+          gap: 10px;
+          margin-top: 16px;
+        }
+
+        .labTrendCard {
+          padding: 14px 15px;
+          border: 1px solid rgba(148, 163, 184, 0.2);
+          border-radius: 14px;
+          background: #f8fafc;
+        }
+
+        .labTrendCardHeader {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 12px;
+        }
+
+        .labTrendName {
+          margin: 0;
+          color: #0f172a;
+          font-size: 0.9rem;
+          font-weight: 900;
+        }
+
+        .labTrendDirection {
+          flex: 0 0 auto;
+          padding: 5px 8px;
+          border-radius: 999px;
+          font-size: 0.67rem;
+          font-weight: 900;
+        }
+
+        .labTrendDirection.good {
+          background: #ecfdf5;
+          color: #047857;
+        }
+
+        .labTrendDirection.risk {
+          background: #fef2f2;
+          color: #b91c1c;
+        }
+
+        .labTrendDirection.neutral {
+          background: #f1f5f9;
+          color: #475569;
+        }
+
+        .labTrendValues {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px 14px;
+          margin-top: 10px;
+          color: #475569;
+          font-size: 0.78rem;
+          font-weight: 750;
+        }
+
+        .labTrendSummary {
+          margin: 9px 0 0;
+          color: #64748b;
+          font-size: 0.8rem;
+          line-height: 1.6;
+        }
+
+        .labHistoryTracked {
+          margin-top: 16px;
+          padding: 14px 15px;
+          border: 1px solid rgba(37, 99, 235, 0.12);
+          border-radius: 14px;
+          background: #f8fbff;
+        }
+
+        .labHistoryTrackedLabel {
+          margin: 0;
+          color: #1d4ed8;
+          font-size: 0.66rem;
+          font-weight: 950;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+
+        .labHistoryTrackedText {
+          margin: 7px 0 0;
+          color: #475569;
+          font-size: 0.8rem;
+          line-height: 1.6;
+        }
+
+        .labHistoryEmpty {
+          margin-top: 16px;
+          padding: 14px 15px;
+          border: 1px dashed rgba(148, 163, 184, 0.4);
+          border-radius: 14px;
+          background: #f8fafc;
+          color: #64748b;
+          font-size: 0.82rem;
+          line-height: 1.6;
+        }
+
+        @media (max-width: 640px) {
+          .labHistoryResult {
+            padding: 16px;
+          }
+
+          .labTrendCardHeader {
+            flex-direction: column;
+          }
+        }
+      `}</style>
+
+      <header className="labHistoryHeader">
+        <p className="labHistoryEyebrow">
+          Laboratory history
+        </p>
+
+        <h3 className="labHistoryTitle">
+          Historical marker movement
+        </h3>
+
+        <p className="labHistoryDescription">
+          Trends are shown only when OrganHeal has enough saved values to
+          compare the same laboratory marker over time.
+        </p>
 
         {historicalDepth && (
-          <span className="w-fit rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-200">
+          <span className="labHistoryDepth">
             History: {historicalDepth}
           </span>
         )}
-      </div>
+      </header>
 
-      {summary && (
-        <div className="mb-5 rounded-xl border border-blue-100 bg-blue-50 p-4">
-          <p className="text-sm leading-6 text-slate-700">{summary}</p>
-        </div>
-      )}
-
-      {trendItems.length > 0 ? (
-        <div className="grid gap-4">
-          {trendItems.map((item, index) => {
-            const markerName =
-              item.markerName ||
+      {realTrends.length > 0 && (
+        <div className="labTrendGrid">
+          {realTrends.map((item, index) => {
+            const name =
               item.marker ||
               item.name ||
-              `Lab Marker ${index + 1}`;
+              item.title ||
+              `Laboratory marker ${index + 1}`;
 
-            const movement = item.trend || item.direction || item.change;
-            const explanation = item.interpretation || item.summary;
+            const direction =
+              item.trendDirection || "Stable";
 
             return (
-              <div
-                key={item.id ?? index}
-                className="rounded-xl border border-slate-200 bg-slate-50 p-4"
+              <article
+                className="labTrendCard"
+                key={`${name}-${index}`}
               >
-                <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-                  <div>
-                    <h3 className="text-base font-semibold text-slate-900">
-                      {markerName}
-                    </h3>
+                <div className="labTrendCardHeader">
+                  <h4 className="labTrendName">
+                    {name}
+                  </h4>
 
-                    {(item.category || item.organ) && (
-                      <p className="mt-1 text-sm text-slate-500">
-                        {item.category || item.organ}
-                      </p>
+                  <span
+                    className={`labTrendDirection ${getTrendTone(
+                      direction
+                    )}`}
+                  >
+                    {direction}
+                  </span>
+                </div>
+
+                {(item.earliestValue ||
+                  item.latestValue ||
+                  item.changeAmount) && (
+                  <div className="labTrendValues">
+                    {item.earliestValue && (
+                      <span>
+                        Earlier: {item.earliestValue}
+                      </span>
+                    )}
+
+                    {item.latestValue && (
+                      <span>
+                        Latest: {item.latestValue}
+                      </span>
+                    )}
+
+                    {item.changeAmount && (
+                      <span>
+                        Change: {item.changeAmount}
+                      </span>
                     )}
                   </div>
-
-                  {item.status && (
-                    <span className="w-fit rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200">
-                      Status: {item.status}
-                    </span>
-                  )}
-                </div>
-
-                <div className="mt-4 grid gap-3 md:grid-cols-3">
-                  {item.baselineValue && (
-                    <div className="rounded-lg border border-slate-200 bg-white p-3">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                        Baseline
-                      </p>
-                      <p className="mt-1 text-sm font-semibold text-slate-800">
-                        {formatValue(item.baselineValue, item.unit)}
-                      </p>
-                    </div>
-                  )}
-
-                  {item.previousValue && (
-                    <div className="rounded-lg border border-slate-200 bg-white p-3">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                        Previous
-                      </p>
-                      <p className="mt-1 text-sm font-semibold text-slate-800">
-                        {formatValue(item.previousValue, item.unit)}
-                      </p>
-                    </div>
-                  )}
-
-                  {item.currentValue && (
-                    <div className="rounded-lg border border-slate-200 bg-white p-3">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                        Current
-                      </p>
-                      <p className="mt-1 text-sm font-semibold text-slate-800">
-                        {formatValue(item.currentValue, item.unit)}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {movement && (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200">
-                      Trend: {movement}
-                    </span>
-                  </div>
                 )}
 
-                {explanation && (
-                  <p className="mt-3 text-sm leading-6 text-slate-700">
-                    {explanation}
+                {(item.trendSummary ||
+                  item.summary) && (
+                  <p className="labTrendSummary">
+                    {item.trendSummary ||
+                      item.summary}
                   </p>
                 )}
-
-                {item.recommendation && (
-                  <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Suggested Focus
-                    </p>
-                    <p className="mt-1 text-sm leading-6 text-slate-700">
-                      {item.recommendation}
-                    </p>
-                  </div>
-                )}
-              </div>
+              </article>
             );
           })}
         </div>
-      ) : (
-        <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-5">
-          <p className="text-sm text-slate-600">
-            Historical lab trends will appear here once saved marker history is
-            available for comparison.
-          </p>
-        </div>
       )}
+
+      {realTrends.length === 0 &&
+        trackedMarkers.length > 0 && (
+          <div className="labHistoryTracked">
+            <p className="labHistoryTrackedLabel">
+              Markers currently tracked
+            </p>
+
+            <p className="labHistoryTrackedText">
+              {trackedMarkers.length} laboratory marker
+              {trackedMarkers.length === 1 ? "" : "s"} are available, but
+              repeated historical values are still needed before a reliable
+              trend can be calculated.
+            </p>
+          </div>
+        )}
+
+      {realTrends.length === 0 &&
+        trackedMarkers.length === 0 && (
+          <div className="labHistoryEmpty">
+            No comparable laboratory history is available yet. Add future
+            reports with repeated markers to build meaningful trends over
+            time.
+          </div>
+        )}
     </section>
   );
 }
-

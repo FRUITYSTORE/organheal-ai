@@ -117,6 +117,70 @@ function getIntelligenceStoredLanguage(): IntelligenceUiLanguage {
 
   return savedLanguage.toLowerCase().startsWith("ar") ? "ar" : "en";
 }
+function isAdvancedRecord(
+  value: unknown
+): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function getAdvancedText(
+  value: unknown,
+  keys: string[]
+): string {
+  if (!isAdvancedRecord(value)) return "";
+
+  for (const key of keys) {
+    const candidate = value[key];
+
+    if (typeof candidate === "string" && candidate.trim()) {
+      return candidate.trim();
+    }
+
+    if (
+      typeof candidate === "number" &&
+      Number.isFinite(candidate)
+    ) {
+      return String(candidate);
+    }
+  }
+
+  return "";
+}
+
+function hasAdvancedResult(
+  value: unknown,
+  arrayKeys: string[],
+  textKeys: string[]
+): boolean {
+  if (Array.isArray(value)) {
+    return value.length > 0;
+  }
+
+  if (!isAdvancedRecord(value)) {
+    return false;
+  }
+
+  const hasItems = arrayKeys.some((key) => {
+    const candidate = value[key];
+
+    return Array.isArray(candidate) && candidate.length > 0;
+  });
+
+  if (hasItems) {
+    return true;
+  }
+
+  return textKeys.some((key) => {
+    const candidate = value[key];
+
+    return (
+      (typeof candidate === "string" &&
+        candidate.trim().length > 0) ||
+      (typeof candidate === "number" &&
+        Number.isFinite(candidate))
+    );
+  });
+}
 
 export default function IntelligencePage() {
   const [loading, setLoading] = useState(true);
@@ -553,6 +617,104 @@ const {
       generatedResult &&
       activeGeneratedInsightId === focusedReportInsight.id
   );
+const hasLongitudinalRiskResult = hasAdvancedResult(
+  generatedResult?.longitudinalRisk,
+  [
+    "items",
+    "risks",
+    "riskItems",
+    "riskSignals",
+    "longitudinalRisks",
+    "patterns",
+    "trends",
+  ],
+  [
+    "summary",
+    "overview",
+    "narrative",
+    "description",
+    "overallRiskLevel",
+    "overallRisk",
+    "riskLevel",
+    "level",
+  ]
+);
+
+const hasCrossSourceResult = hasAdvancedResult(
+  generatedResult?.crossSource,
+  [
+    "items",
+    "findings",
+    "connections",
+    "patterns",
+    "insights",
+    "crossSource",
+    "crossSourceInsights",
+    "crossSourceFindings",
+  ],
+  [
+    "summary",
+    "overview",
+    "narrative",
+    "description",
+  ]
+);
+
+const crossSourceConfidence = getAdvancedText(
+  generatedResult?.crossSource,
+  [
+    "confidence",
+    "confidenceLevel",
+    "reliability",
+    "signalStrength",
+  ]
+);
+
+const hasDigitalHealthModelResult = hasAdvancedResult(
+  generatedResult?.digitalTwin,
+  [
+    "items",
+    "signals",
+    "systems",
+    "organs",
+    "organSignals",
+    "digitalTwin",
+    "twinSignals",
+    "healthModel",
+  ],
+  [
+    "summary",
+    "overview",
+    "narrative",
+    "description",
+  ]
+);
+
+const hasForecastResult = hasAdvancedResult(
+  generatedResult?.forecast,
+  [
+    "items",
+    "forecasts",
+    "predictions",
+    "projections",
+    "riskForecasts",
+    "healthForecasts",
+    "forecastItems",
+    "nextSteps",
+  ],
+  [
+    "summary",
+    "overview",
+    "narrative",
+    "description",
+  ]
+);
+
+const hasDevelopingAdvancedModels =
+  !hasLongitudinalRiskResult ||
+  !hasCrossSourceResult ||
+  !hasDigitalHealthModelResult ||
+  !hasForecastResult;
 
   return (
     <main
@@ -702,7 +864,105 @@ const {
           border: 1px solid rgba(15, 118, 110, 0.2);
           cursor: pointer;
         }
+.selectedReportActions {
+  display: grid;
+  gap: 18px;
+  margin-top: 20px;
+}
 
+.selectedReportActionGroup {
+  display: grid;
+  gap: 10px;
+}
+
+.selectedReportActionGroup + .selectedReportActionGroup {
+  padding-top: 16px;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.selectedReportActionLabel {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.7rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.selectedReportActionGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  max-width: 760px;
+}
+
+.selectedReportActionButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 16px;
+  border: 1px solid rgba(15, 118, 110, 0.18);
+  border-radius: 14px;
+  background: #ffffff;
+  color: #0f766e !important;
+  font-size: 0.82rem;
+  font-weight: 900;
+  line-height: 1.2;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.selectedReportActionButton:hover {
+  background: #f0fdfa;
+  border-color: rgba(15, 118, 110, 0.3);
+  transform: translateY(-1px);
+}
+
+.selectedReportActionButton.primary {
+  border-color: transparent;
+  background: linear-gradient(
+    135deg,
+    #0f766e,
+    #14b8a6
+  );
+  color: #ffffff !important;
+  box-shadow: 0 10px 24px rgba(20, 184, 166, 0.2);
+}
+
+.selectedReportActionButton.primary:hover {
+  background: linear-gradient(
+    135deg,
+    #0d6963,
+    #0f9f92
+  );
+}
+
+.selectedReportActionButton.document {
+  background: #f0fdfa;
+}
+
+.selectedReportActionButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@media (max-width: 820px) {
+  .selectedReportActionGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .selectedReportActionGrid {
+    grid-template-columns: 1fr;
+  }
+}
         .focusedResultStack {
           margin-top: 20px;
           display: grid;
@@ -927,8 +1187,83 @@ const {
           font-size: 0.86rem;
           font-weight: 950;
         }
+.advancedIntelligenceIntro {
+  padding: 4px 2px 2px;
+}
 
-        @media (max-width: 720px) {
+.advancedIntelligenceGrid {
+  display: grid;
+  gap: 12px;
+}
+
+.advancedIntelligenceCard {
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 18px;
+  background: #ffffff;
+}
+
+.advancedIntelligenceCard > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 17px 18px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.advancedIntelligenceCard > summary::-webkit-details-marker {
+  display: none;
+}
+
+.advancedIntelligenceCard > summary:hover {
+  background: #f8fafc;
+}
+
+.advancedIntelligenceCard > summary > span:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.advancedIntelligenceCard > summary strong {
+  color: #0f172a;
+  font-size: 0.95rem;
+}
+
+.advancedIntelligenceCard > summary small {
+  color: #64748b;
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.advancedIntelligenceCard > summary > span:last-child {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #475569;
+  transition: transform 180ms ease;
+}
+
+.advancedIntelligenceCard[open]
+  > summary
+  > span:last-child {
+  transform: rotate(180deg);
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.advancedIntelligenceCardBody {
+  display: grid;
+  gap: 14px;
+  padding: 16px 18px 18px;
+  border-top: 1px solid rgba(15, 23, 42, 0.07);
+  background: #f8fafc;
+}
+          @media (max-width: 720px) {
           .intelligenceResultLayer {
             padding: 17px;
             border-radius: 23px;
@@ -960,7 +1295,63 @@ const {
             width: 100%;
           }
         }
+.advancedIntelligenceDeveloping {
+  display: grid;
+  gap: 15px;
+  padding: 18px;
+  border: 1px dashed rgba(15, 118, 110, 0.26);
+  border-radius: 16px;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(240, 253, 250, 0.9),
+      rgba(248, 250, 252, 0.96)
+    );
+}
 
+.advancedIntelligenceDevelopingEyebrow {
+  margin: 0;
+  color: #0f766e;
+  font-size: 0.67rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.advancedIntelligenceDevelopingTitle {
+  margin: 6px 0 0;
+  color: #0f172a;
+  font-size: 0.98rem;
+  font-weight: 950;
+  line-height: 1.4;
+}
+
+.advancedIntelligenceDevelopingText {
+  max-width: 760px;
+  margin: 7px 0 0;
+  color: #64748b;
+  font-size: 0.8rem;
+  line-height: 1.65;
+}
+
+.advancedIntelligenceDevelopingItems {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.advancedIntelligenceDevelopingItems span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 29px;
+  padding: 0 10px;
+  border: 1px solid rgba(15, 118, 110, 0.13);
+  border-radius: 999px;
+  background: #ffffff;
+  color: #475569;
+  font-size: 0.69rem;
+  font-weight: 850;
+}
         @media (max-width: 980px) {
           .selectedReportGrid {
             grid-template-columns: 1fr;
@@ -971,7 +1362,7 @@ const {
       <div className="ohContainer ohStack large" style={{ padding: "28px 0 56px" }}>
         <PageBackActions />
 
-        <section className="ohHero">
+        <section className="ohHero intelligenceCompactHero">
           <div className="ohHeroGrid">
             <div>
              <p className="ohEyebrow">
@@ -1081,110 +1472,139 @@ const {
                   </span>
                 </div>
 
-                <div className="ohButtonRow" style={{ marginTop: "20px" }}>
-                  <button
-                    type="button"
-                    className="intelligencePrimaryAction"
-                    onClick={() => {
-                      if (focusedReportIsGenerated) {
-                        openSavedGeneratedResult(focusedReportInsight.id);
-                      } else {
-                        generateReportIntelligence(focusedReportInsight.id);
-                      }
-                    }}
-                  >
-                    {focusedReportIsGenerated
-                      ? text("View Analysis", "عرض التحليل")
-                      : text("Analyze Report", "تحليل التقرير")}
-                  </button>
+          <div className="selectedReportActions">
+  <div className="selectedReportActionGroup">
+    <p className="selectedReportActionLabel">
+      {text("Report Actions", "إجراءات التقرير")}
+    </p>
 
-                  <button
-                    type="button"
-                    className="intelligenceSecondaryAction"
-                    onClick={() =>
-                      openMedicalReport(
-                        focusedReportInsight.file_path
-                      )
-                    }
-                    disabled={!focusedReportInsight.file_path}
-                  >
-                    {text(
-                      "Open Original Report",
-                      "فتح التقرير الأصلي"
-                    )}
-                  </button>
-                  {focusedReportIsGenerated && (
-                    <>
-                      <button
-                        type="button"
-                        className="intelligenceSecondaryAction"
-                        onClick={() => {
-  const downloadButton = document.getElementById(
-    "patient-analysis-pdf-download"
-  ) as HTMLButtonElement | null;
+    <div className="selectedReportActionGrid">
+      <button
+        type="button"
+        className="selectedReportActionButton primary"
+        onClick={() => {
+          if (focusedReportIsGenerated) {
+            openSavedGeneratedResult(focusedReportInsight.id);
+          } else {
+            generateReportIntelligence(focusedReportInsight.id);
+          }
+        }}
+      >
+        {focusedReportIsGenerated
+          ? text("View Analysis", "عرض التحليل")
+          : text("Analyze Report", "تحليل التقرير")}
+      </button>
 
-  if (!downloadButton) {
-    console.error("Patient PDF download button was not found.");
-    window.alert(
-      isArabicUi
-        ? "تقرير المريض غير جاهز للتنزيل بعد."
-        : "The Patient PDF is not ready to download yet."
-    );
-    return;
-  }
+      <button
+        type="button"
+        className="selectedReportActionButton"
+        onClick={() =>
+          openMedicalReport(
+            focusedReportInsight.file_path
+          )
+        }
+        disabled={!focusedReportInsight.file_path}
+      >
+        {text(
+          "Open Original Report",
+          "فتح التقرير الأصلي"
+        )}
+      </button>
 
-  downloadButton.click();
-}}
-                      >
-                        {text(
-                          "Patient Analysis PDF",
-                          "تقرير تحليل المريض PDF"
-                        )}
-                      </button>
+      {focusedReportIsGenerated && (
+        <Link
+          href="/health-plan"
+          className="selectedReportActionButton"
+        >
+          {text(
+            "Open Health Plan",
+            "فتح خطة الصحة"
+          )}
+        </Link>
+      )}
+    </div>
+  </div>
 
-                      <button
-                        type="button"
-                        className="intelligenceSecondaryAction"
-                        onClick={() => {
-  const downloadButton = document.getElementById(
-    "doctor-brief-pdf-download"
-  ) as HTMLButtonElement | null;
+  {focusedReportIsGenerated && (
+    <div className="selectedReportActionGroup">
+      <p className="selectedReportActionLabel">
+        {text(
+          "Report Documents",
+          "مستندات التقرير"
+        )}
+      </p>
 
-  if (!downloadButton) {
-    console.error("Doctor Brief PDF download button was not found.");
-    window.alert(
-      isArabicUi
-        ? "ملخص الطبيب غير جاهز للتنزيل بعد."
-        : "The Doctor Brief PDF is not ready to download yet."
-    );
-    return;
-  }
+      <div className="selectedReportActionGrid">
+        <button
+          type="button"
+          className="selectedReportActionButton document"
+          onClick={() => {
+            const downloadButton =
+              document.getElementById(
+                "patient-analysis-pdf-download"
+              ) as HTMLButtonElement | null;
 
-  downloadButton.click();
-}}
-                      >
-                        {text(
-                          "Doctor Brief PDF",
-                          "ملخص الطبيب PDF"
-                        )}
-                      </button>
-                    </>
-                  )}
+            if (!downloadButton) {
+              window.alert(
+                isArabicUi
+                  ? "تقرير المريض غير جاهز للتنزيل بعد."
+                  : "The Patient Report PDF is not ready yet."
+              );
+              return;
+            }
 
-                  <Link href="/reports" className="intelligenceSecondaryAction">
-                    {text("Back to Reports", "العودة للتقارير")}
-                  </Link>
+            downloadButton.click();
+          }}
+        >
+          {text(
+            "Patient Report PDF",
+            "تقرير المريض PDF"
+          )}
+        </button>
 
-                  {focusedReportIsGenerated && (
-                    <Link href="/health-plan" className="intelligenceSecondaryAction">
-                      {text("Health Plan", "خطة الصحة")}
-                    </Link>
-                  )}
-                </div>
+        <button
+          type="button"
+          className="selectedReportActionButton document"
+          onClick={() => {
+            const downloadButton =
+              document.getElementById(
+                "doctor-brief-pdf-download"
+              ) as HTMLButtonElement | null;
+
+            if (!downloadButton) {
+              window.alert(
+                isArabicUi
+                  ? "ملخص الطبيب غير جاهز للتنزيل بعد."
+                  : "The Doctor Brief PDF is not ready yet."
+              );
+              return;
+            }
+
+            downloadButton.click();
+          }}
+        >
+          {text(
+            "Doctor Brief PDF",
+            "ملخص الطبيب PDF"
+          )}
+        </button>
+
+        <Link
+          href="/reports"
+          className="selectedReportActionButton"
+        >
+          {text(
+            "Back to Reports",
+            "العودة إلى التقارير"
+          )}
+        </Link>
+      </div>
+    </div>
+  )}
+
+  </div>
               </div>
-
             </div>
-
             {focusedReportHasVisibleResult && generatedResult && (
               <div className="focusedResultStack">
                 <section
@@ -1507,32 +1927,184 @@ const {
                   </summary>
 
                   <div className="intelligenceDisclosureContent">
-                    <TimelineCard
-                      timeline={generatedResult.timeline}
-                    />
+  <div className="advancedIntelligenceIntro">
+    <p className="intelligenceLayerEyebrow">
+      {text(
+        "Advanced intelligence status",
+        "حالة الذكاء الصحي المتقدم"
+      )}
+    </p>
 
-                    <LabTrendsCard
-                      labTrends={generatedResult.labTrends}
-                    />
+    <h3 className="intelligenceLayerTitle">
+      {text(
+        "Deeper intelligence grows with your health history",
+        "يصبح الذكاء المتقدم أقوى مع نمو تاريخك الصحي"
+      )}
+    </h3>
 
-                    <LongitudinalRiskCard
-                      longitudinalRisk={
-                        generatedResult.longitudinalRisk
-                      }
-                    />
+    <p className="intelligenceLayerDescription">
+      {text(
+        "Some advanced models already have useful signals, while others become more meaningful as OrganHeal collects enough longitudinal and connected health data.",
+        "بعض نماذج الذكاء المتقدم لديها إشارات مفيدة الآن، بينما تصبح النماذج الأخرى أكثر معنى مع توفر بيانات صحية تاريخية ومترابطة بشكل كافٍ."
+      )}
+    </p>
+  </div>
 
-                    <CrossSourceCard
-                      crossSource={generatedResult.crossSource}
-                    />
+  <div className="advancedIntelligenceGrid">
+    <details className="advancedIntelligenceCard">
+      <summary>
+        <span>
+          <strong>{text("Health Timeline", "الخط الزمني الصحي")}</strong>
+          <small>
+            {text(
+              "Current direction and recent movement",
+              "الاتجاه الحالي والحركة الأخيرة"
+            )}
+          </small>
+        </span>
+        <span aria-hidden="true">↓</span>
+      </summary>
 
-                    <DigitalTwinCard
-                      digitalTwin={generatedResult.digitalTwin}
-                    />
+      <div className="advancedIntelligenceCardBody">
+        <TimelineCard timeline={generatedResult.timeline} />
+      </div>
+    </details>
 
-                    <ForecastCard
-                      forecast={generatedResult.forecast}
-                    />
-                  </div>
+    <details className="advancedIntelligenceCard">
+      <summary>
+        <span>
+          <strong>{text("Laboratory History", "تاريخ التحاليل")}</strong>
+          <small>
+            {text(
+              "Markers tracked across available reports",
+              "المؤشرات التي تتم متابعتها عبر التقارير المتاحة"
+            )}
+          </small>
+        </span>
+        <span aria-hidden="true">↓</span>
+      </summary>
+
+      <div className="advancedIntelligenceCardBody">
+        <LabTrendsCard labTrends={generatedResult.labTrends} />
+      </div>
+    </details>
+
+    <details className="advancedIntelligenceCard">
+      <summary>
+        <span>
+          <strong>
+            {text(
+              "Connected & Longitudinal Intelligence",
+              "الذكاء المترابط وطويل المدى"
+            )}
+          </strong>
+          <small>
+            {text(
+              "Risk, cross-source intelligence, digital twin, and forecast",
+              "المخاطر والذكاء متعدد المصادر والتوأم الرقمي والتوقعات"
+            )}
+          </small>
+        </span>
+        <span aria-hidden="true">↓</span>
+      </summary>
+
+     <div className="advancedIntelligenceCardBody">
+  {hasLongitudinalRiskResult && (
+    <LongitudinalRiskCard
+      longitudinalRisk={generatedResult.longitudinalRisk}
+    />
+  )}
+
+  {hasCrossSourceResult && (
+    <CrossSourceCard
+      crossSource={generatedResult.crossSource}
+    />
+  )}
+
+  {hasDigitalHealthModelResult && (
+    <DigitalTwinCard
+      digitalTwin={generatedResult.digitalTwin}
+    />
+  )}
+
+  {hasForecastResult && (
+    <ForecastCard
+      forecast={generatedResult.forecast}
+    />
+  )}
+
+  {hasDevelopingAdvancedModels && (
+    <div className="advancedIntelligenceDeveloping">
+      <div>
+        <p className="advancedIntelligenceDevelopingEyebrow">
+          {text(
+            "Developing with your health history",
+            "يتطور مع نمو تاريخك الصحي"
+          )}
+        </p>
+
+        <h4 className="advancedIntelligenceDevelopingTitle">
+          {text(
+            "More intelligence unlocks as your data grows",
+            "يتم تفعيل المزيد من الذكاء مع نمو بياناتك"
+          )}
+        </h4>
+
+        <p className="advancedIntelligenceDevelopingText">
+          {text(
+            "OrganHeal will strengthen longitudinal risk, connected intelligence, personal health modeling, and forward-looking projections as more reliable historical data becomes available.",
+            "سيعمل OrganHeal على تقوية تحليل المخاطر طويلة المدى، والذكاء المترابط، والنموذج الصحي الشخصي، والتوقعات المستقبلية مع توفر المزيد من البيانات التاريخية الموثوقة."
+          )}
+        </p>
+      </div>
+
+      <div className="advancedIntelligenceDevelopingItems">
+        {!hasLongitudinalRiskResult && (
+          <span>
+            {text(
+              "Longitudinal Risk",
+              "المخاطر طويلة المدى"
+            )}
+          </span>
+        )}
+
+        {!hasCrossSourceResult && (
+          <span>
+            {text(
+              crossSourceConfidence
+                ? `Connected Intelligence · ${crossSourceConfidence} confidence`
+                : "Connected Intelligence",
+              crossSourceConfidence
+                ? `الذكاء المترابط · ثقة ${crossSourceConfidence}`
+                : "الذكاء المترابط"
+            )}
+          </span>
+        )}
+
+        {!hasDigitalHealthModelResult && (
+          <span>
+            {text(
+              "Personal Health Model",
+              "النموذج الصحي الشخصي"
+            )}
+          </span>
+        )}
+
+        {!hasForecastResult && (
+          <span>
+            {text(
+              "Forward-Looking Intelligence",
+              "الذكاء المستقبلي"
+            )}
+          </span>
+        )}
+      </div>
+    </div>
+  )}
+</div>
+    </details>
+  </div>
+</div>
                 </details>
               </div>
             )}
@@ -1555,48 +2127,6 @@ const {
               "Health intelligence is an educational interpretation of your assessments, check-ins, and uploaded reports. It does not replace diagnosis, treatment, emergency care, or a licensed clinician.",
               "التحليل الصحي هو تفسير تعليمي للتقييمات، Check-Ins، والتقارير المرفوعة. لا يستبدل التشخيص أو العلاج أو الرعاية الطارئة أو الطبيب المختص."
             )}
-          </div>
-        </section>
-
-        <section className="ohCard">
-          <div className="ohCardHeader">
-            <div>
-              <p className="ohMetricLabel">
-                {text("Continue your journey", "تابع رحلتك")}
-              </p>
-
-              <h2 className="ohCardTitle">
-                {text(
-                  "Move from intelligence to action",
-                  "انتقل من الذكاء إلى التنفيذ"
-                )}
-              </h2>
-
-              <p className="ohCardText">
-                {text(
-                  "After reviewing intelligence, continue to your health plan, reports library, or dashboard command center.",
-                  "بعد مراجعة الذكاء، تابع إلى الخطة الصحية، مكتبة التقارير، أو مركز لوحة التحكم."
-                )}
-              </p>
-            </div>
-          </div>
-
-          <div className="ohButtonRow">
-            <Link href="/health-plan" className="primaryBtn">
-              {text("Health Plan", "الخطة الصحية")}
-            </Link>
-
-            <Link href="/reports" className="secondaryBtn">
-              {text("Reports", "التقارير")}
-            </Link>
-
-            <Link href="/lab-upload" className="secondaryBtn">
-              {text("Upload Report", "رفع تقرير")}
-            </Link>
-
-            <Link href="/dashboard" className="secondaryBtn">
-              {text("Dashboard", "لوحة التحكم")}
-            </Link>
           </div>
         </section>
       </div>

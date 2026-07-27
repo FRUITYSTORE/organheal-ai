@@ -29,8 +29,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function getText(value: unknown): string {
-  if (typeof value === "string") return value;
-  if (typeof value === "number") return String(value);
+  if (typeof value === "string") return value.trim();
+
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return String(value);
+  }
+
   return "";
 }
 
@@ -97,7 +101,9 @@ function normalizeForecastItems(forecast: unknown): ForecastItem[] {
 }
 
 function getForecastSummary(forecast: unknown): string {
-  if (typeof forecast === "string") return forecast;
+  if (typeof forecast === "string") {
+    return forecast.trim();
+  }
 
   if (!isRecord(forecast)) return "";
 
@@ -131,163 +137,456 @@ function getForecastConfidence(forecast: unknown): string {
   );
 }
 
-export default function ForecastCard({ forecast }: ForecastCardProps) {
+function getTone(value: string) {
+  const normalized = value.toLowerCase();
+
+  if (
+    normalized.includes("high") ||
+    normalized.includes("strong") ||
+    normalized.includes("stable") ||
+    normalized.includes("improv")
+  ) {
+    return "good";
+  }
+
+  if (
+    normalized.includes("moderate") ||
+    normalized.includes("medium") ||
+    normalized.includes("mixed")
+  ) {
+    return "moderate";
+  }
+
+  if (
+    normalized.includes("low") ||
+    normalized.includes("weak") ||
+    normalized.includes("declin") ||
+    normalized.includes("wors")
+  ) {
+    return "risk";
+  }
+
+  return "neutral";
+}
+
+export default function ForecastCard({
+  forecast,
+}: ForecastCardProps) {
   const forecastItems = normalizeForecastItems(forecast);
   const summary = getForecastSummary(forecast);
   const horizon = getForecastHorizon(forecast);
   const confidence = getForecastConfidence(forecast);
 
+  const hasForecastData =
+    Boolean(summary) ||
+    Boolean(horizon) ||
+    Boolean(confidence) ||
+    forecastItems.length > 0;
+
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+    <section className="healthForecastResult">
+      <style>{`
+        .healthForecastResult,
+        .healthForecastResult * {
+          box-sizing: border-box;
+        }
+
+        .healthForecastResult {
+          padding: 20px;
+          border: 1px solid rgba(15, 23, 42, 0.08);
+          border-radius: 18px;
+          background: #ffffff;
+        }
+
+        .healthForecastHeader {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 18px;
+          padding-bottom: 16px;
+          border-bottom: 1px solid rgba(15, 23, 42, 0.07);
+        }
+
+        .healthForecastEyebrow {
+          margin: 0;
+          color: #0f766e;
+          font-size: 0.68rem;
+          font-weight: 950;
+          letter-spacing: 0.09em;
+          text-transform: uppercase;
+        }
+
+        .healthForecastTitle {
+          margin: 6px 0 0;
+          color: #0f172a;
+          font-size: 1.18rem;
+          font-weight: 950;
+          line-height: 1.3;
+        }
+
+        .healthForecastDescription {
+          max-width: 720px;
+          margin: 7px 0 0;
+          color: #64748b;
+          font-size: 0.82rem;
+          line-height: 1.6;
+        }
+
+        .healthForecastBadges {
+          display: flex;
+          flex: 0 0 auto;
+          flex-wrap: wrap;
+          justify-content: flex-end;
+          gap: 7px;
+        }
+
+        .healthForecastBadge {
+          padding: 7px 10px;
+          border-radius: 999px;
+          background: #f1f5f9;
+          color: #475569;
+          font-size: 0.68rem;
+          font-weight: 900;
+          white-space: nowrap;
+        }
+
+        .healthForecastBadge.good {
+          background: #ecfdf5;
+          color: #047857;
+        }
+
+        .healthForecastBadge.moderate {
+          background: #fffbeb;
+          color: #b45309;
+        }
+
+        .healthForecastBadge.risk {
+          background: #fef2f2;
+          color: #b91c1c;
+        }
+
+        .healthForecastBadge.neutral {
+          background: #f1f5f9;
+          color: #475569;
+        }
+
+        .healthForecastSignal {
+          margin-top: 16px;
+          padding: 15px 16px;
+          border: 1px solid rgba(15, 118, 110, 0.15);
+          border-left: 4px solid #0f766e;
+          border-radius: 14px;
+          background: #f0fdfa;
+        }
+
+        .healthForecastSignalLabel {
+          margin: 0;
+          color: #0f766e;
+          font-size: 0.66rem;
+          font-weight: 950;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+
+        .healthForecastSignalText {
+          margin: 7px 0 0;
+          color: #334155;
+          font-size: 0.88rem;
+          line-height: 1.65;
+        }
+
+        .healthForecastGrid {
+          display: grid;
+          gap: 10px;
+          margin-top: 16px;
+        }
+
+        .healthForecastItem {
+          padding: 14px 15px;
+          border: 1px solid rgba(148, 163, 184, 0.2);
+          border-radius: 14px;
+          background: #f8fafc;
+        }
+
+        .healthForecastItemHeader {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 12px;
+        }
+
+        .healthForecastItemTitle {
+          margin: 0;
+          color: #0f172a;
+          font-size: 0.9rem;
+          font-weight: 900;
+          line-height: 1.4;
+        }
+
+        .healthForecastContext {
+          margin: 4px 0 0;
+          color: #64748b;
+          font-size: 0.72rem;
+          line-height: 1.45;
+        }
+
+        .healthForecastRisk {
+          flex: 0 0 auto;
+          padding: 5px 8px;
+          border-radius: 999px;
+          background: #ffffff;
+          border: 1px solid rgba(148, 163, 184, 0.2);
+          color: #475569;
+          font-size: 0.67rem;
+          font-weight: 850;
+        }
+
+        .healthForecastMeta {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 7px;
+          margin-top: 10px;
+        }
+
+        .healthForecastMeta span {
+          padding: 5px 8px;
+          border-radius: 999px;
+          background: #ffffff;
+          border: 1px solid rgba(148, 163, 184, 0.2);
+          color: #64748b;
+          font-size: 0.67rem;
+          font-weight: 750;
+        }
+
+        .healthForecastExplanation {
+          margin: 10px 0 0;
+          color: #475569;
+          font-size: 0.8rem;
+          line-height: 1.6;
+        }
+
+        .healthForecastRecommendation {
+          margin-top: 10px;
+          padding: 11px 12px;
+          border: 1px solid rgba(37, 99, 235, 0.12);
+          border-radius: 12px;
+          background: #f8fbff;
+        }
+
+        .healthForecastRecommendation strong {
+          display: block;
+          color: #1d4ed8;
+          font-size: 0.68rem;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+        }
+
+        .healthForecastRecommendation p {
+          margin: 5px 0 0;
+          color: #475569;
+          font-size: 0.78rem;
+          line-height: 1.6;
+        }
+
+        .healthForecastEmpty {
+          margin-top: 16px;
+          padding: 14px 15px;
+          border: 1px dashed rgba(148, 163, 184, 0.4);
+          border-radius: 14px;
+          background: #f8fafc;
+          color: #64748b;
+          font-size: 0.82rem;
+          line-height: 1.6;
+        }
+
+        @media (max-width: 640px) {
+          .healthForecastResult {
+            padding: 16px;
+          }
+
+          .healthForecastHeader,
+          .healthForecastItemHeader {
+            flex-direction: column;
+          }
+
+          .healthForecastBadges {
+            justify-content: flex-start;
+          }
+        }
+      `}</style>
+
+      <header className="healthForecastHeader">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-blue-600">
-            Predictive Intelligence
+          <p className="healthForecastEyebrow">
+            Forward-looking intelligence
           </p>
 
-          <h2 className="mt-1 text-2xl font-bold text-slate-900">
-            Forecast
-          </h2>
+          <h3 className="healthForecastTitle">
+            Possible future health direction
+          </h3>
 
-          <p className="mt-2 text-sm leading-6 text-slate-600">
-            A forward-looking view of possible health direction based on current
-            markers, detected risks, and available longitudinal signals.
+          <p className="healthForecastDescription">
+            Forecast signals describe possible future direction from the
+            available health history. They are projections, not diagnoses or
+            guarantees of future outcomes.
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          {horizon && (
-            <span className="w-fit rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-200">
-              Horizon: {horizon}
-            </span>
-          )}
+        {(horizon || confidence) && (
+          <div className="healthForecastBadges">
+            {horizon && (
+              <span className="healthForecastBadge neutral">
+                Horizon: {horizon}
+              </span>
+            )}
 
-          {confidence && (
-            <span className="w-fit rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-200">
-              Confidence: {confidence}
-            </span>
-          )}
-        </div>
-      </div>
+            {confidence && (
+              <span
+                className={`healthForecastBadge ${getTone(
+                  confidence
+                )}`}
+              >
+                Confidence: {confidence}
+              </span>
+            )}
+          </div>
+        )}
+      </header>
 
       {summary && (
-        <div className="mb-5 rounded-xl border border-blue-100 bg-blue-50 p-4">
-          <p className="text-sm leading-6 text-slate-700">{summary}</p>
+        <div className="healthForecastSignal">
+          <p className="healthForecastSignalLabel">
+            Current forecast signal
+          </p>
+
+          <p className="healthForecastSignalText">
+            {summary}
+          </p>
         </div>
       )}
 
-      {forecastItems.length > 0 ? (
-        <div className="grid gap-4">
+      {forecastItems.length > 0 && (
+        <div className="healthForecastGrid">
           {forecastItems.map((item, index) => {
             const title =
               item.title ||
               item.scenario ||
               item.organ ||
               item.system ||
-              `Forecast Signal ${index + 1}`;
+              `Forecast signal ${index + 1}`;
 
-            const riskLevel = item.riskLevel || item.risk;
-            const timeframe = item.timeframe || item.horizon;
+            const riskLevel =
+              item.riskLevel ||
+              item.risk;
+
+            const timeframe =
+              item.timeframe ||
+              item.horizon;
+
             const explanation =
-              item.insight || item.summary || item.description;
+              item.insight ||
+              item.summary ||
+              item.description;
 
-            const contextParts = [
+            const context = [
               item.organ,
               item.system,
               item.category,
-            ].filter(
-              (value): value is string =>
-                typeof value === "string" && value.trim().length > 0
-            );
+            ]
+              .filter(Boolean)
+              .join(" • ");
 
-            const suggestedFocus = item.recommendation || item.action;
+            const suggestedFocus =
+              item.recommendation ||
+              item.action;
 
             return (
-              <div
-                key={item.id ?? index}
-                className="rounded-xl border border-slate-200 bg-slate-50 p-4"
+              <article
+                className="healthForecastItem"
+                key={item.id ?? `${title}-${index}`}
               >
-                <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                <div className="healthForecastItemHeader">
                   <div>
-                    <h3 className="text-base font-semibold text-slate-900">
+                    <h4 className="healthForecastItemTitle">
                       {title}
-                    </h3>
+                    </h4>
 
-                    {contextParts.length > 0 && (
-                      <p className="mt-1 text-sm text-slate-500">
-                        {contextParts.join(" â€¢ ")}
+                    {context && (
+                      <p className="healthForecastContext">
+                        {context}
                       </p>
                     )}
                   </div>
 
                   {riskLevel && (
-                    <span className="w-fit rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200">
+                    <span className="healthForecastRisk">
                       Risk: {riskLevel}
                     </span>
                   )}
                 </div>
 
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {timeframe && (
-                    <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200">
-                      Timeframe: {timeframe}
-                    </span>
-                  )}
+                {(timeframe ||
+                  item.probability ||
+                  item.confidence ||
+                  item.direction ||
+                  item.projectedChange) && (
+                  <div className="healthForecastMeta">
+                    {timeframe && (
+                      <span>
+                        Timeframe: {timeframe}
+                      </span>
+                    )}
 
-                  {item.probability && (
-                    <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200">
-                      Probability: {item.probability}
-                    </span>
-                  )}
+                    {item.probability && (
+                      <span>
+                        Probability: {item.probability}
+                      </span>
+                    )}
 
-                  {item.confidence && (
-                    <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200">
-                      Confidence: {item.confidence}
-                    </span>
-                  )}
+                    {item.confidence && (
+                      <span>
+                        Confidence: {item.confidence}
+                      </span>
+                    )}
 
-                  {item.direction && (
-                    <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200">
-                      Direction: {item.direction}
-                    </span>
-                  )}
+                    {item.direction && (
+                      <span>
+                        Direction: {item.direction}
+                      </span>
+                    )}
 
-                  {item.projectedChange && (
-                    <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200">
-                      Projected Change: {item.projectedChange}
-                    </span>
-                  )}
-                </div>
+                    {item.projectedChange && (
+                      <span>
+                        Projected change: {item.projectedChange}
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 {explanation && (
-                  <p className="mt-3 text-sm leading-6 text-slate-700">
+                  <p className="healthForecastExplanation">
                     {explanation}
                   </p>
                 )}
 
                 {suggestedFocus && (
-                  <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Suggested Focus
-                    </p>
-                    <p className="mt-1 text-sm leading-6 text-slate-700">
-                      {suggestedFocus}
-                    </p>
+                  <div className="healthForecastRecommendation">
+                    <strong>Suggested focus</strong>
+                    <p>{suggestedFocus}</p>
                   </div>
                 )}
-              </div>
+              </article>
             );
           })}
         </div>
-      ) : (
-        <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-5">
-          <p className="text-sm text-slate-600">
-            Forecast intelligence will appear here after OrganHeal generates a
-            forward-looking health projection from available data.
-          </p>
+      )}
+
+      {!hasForecastData && (
+        <div className="healthForecastEmpty">
+          More longitudinal health history is needed before OrganHeal can
+          produce a meaningful forward-looking projection.
         </div>
       )}
     </section>
   );
 }
-

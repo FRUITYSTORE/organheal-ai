@@ -23,12 +23,18 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function getText(value: unknown): string {
-  if (typeof value === "string") return value;
-  if (typeof value === "number") return String(value);
+  if (typeof value === "string") return value.trim();
+
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return String(value);
+  }
+
   return "";
 }
 
-function normalizeDigitalTwinSignals(digitalTwin: unknown): DigitalTwinSignal[] {
+function normalizeDigitalTwinSignals(
+  digitalTwin: unknown
+): DigitalTwinSignal[] {
   if (Array.isArray(digitalTwin)) {
     return digitalTwin.filter(isRecord).map((item, index) => ({
       id: getText(item.id) || index,
@@ -79,7 +85,9 @@ function normalizeDigitalTwinSignals(digitalTwin: unknown): DigitalTwinSignal[] 
 }
 
 function getDigitalTwinSummary(digitalTwin: unknown): string {
-  if (typeof digitalTwin === "string") return digitalTwin;
+  if (typeof digitalTwin === "string") {
+    return digitalTwin.trim();
+  }
 
   if (!isRecord(digitalTwin)) return "";
 
@@ -113,6 +121,35 @@ function getDigitalTwinConfidence(digitalTwin: unknown): string {
   );
 }
 
+function getTone(value: string) {
+  const normalized = value.toLowerCase();
+
+  if (
+    normalized.includes("high") ||
+    normalized.includes("strong") ||
+    normalized.includes("stable")
+  ) {
+    return "good";
+  }
+
+  if (
+    normalized.includes("moderate") ||
+    normalized.includes("medium")
+  ) {
+    return "moderate";
+  }
+
+  if (
+    normalized.includes("low") ||
+    normalized.includes("weak") ||
+    normalized.includes("risk")
+  ) {
+    return "risk";
+  }
+
+  return "neutral";
+}
+
 export default function DigitalTwinCard({
   digitalTwin,
 }: DigitalTwinCardProps) {
@@ -121,128 +158,384 @@ export default function DigitalTwinCard({
   const status = getDigitalTwinStatus(digitalTwin);
   const confidence = getDigitalTwinConfidence(digitalTwin);
 
+  const hasModelData =
+    Boolean(summary) ||
+    Boolean(status) ||
+    Boolean(confidence) ||
+    signals.length > 0;
+
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+    <section className="digitalHealthModelResult">
+      <style>{`
+        .digitalHealthModelResult,
+        .digitalHealthModelResult * {
+          box-sizing: border-box;
+        }
+
+        .digitalHealthModelResult {
+          padding: 20px;
+          border: 1px solid rgba(15, 23, 42, 0.08);
+          border-radius: 18px;
+          background: #ffffff;
+        }
+
+        .digitalHealthModelHeader {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 18px;
+          padding-bottom: 16px;
+          border-bottom: 1px solid rgba(15, 23, 42, 0.07);
+        }
+
+        .digitalHealthModelEyebrow {
+          margin: 0;
+          color: #0f766e;
+          font-size: 0.68rem;
+          font-weight: 950;
+          letter-spacing: 0.09em;
+          text-transform: uppercase;
+        }
+
+        .digitalHealthModelTitle {
+          margin: 6px 0 0;
+          color: #0f172a;
+          font-size: 1.18rem;
+          font-weight: 950;
+          line-height: 1.3;
+        }
+
+        .digitalHealthModelDescription {
+          max-width: 720px;
+          margin: 7px 0 0;
+          color: #64748b;
+          font-size: 0.82rem;
+          line-height: 1.6;
+        }
+
+        .digitalHealthModelBadges {
+          display: flex;
+          flex: 0 0 auto;
+          flex-wrap: wrap;
+          justify-content: flex-end;
+          gap: 7px;
+        }
+
+        .digitalHealthModelBadge {
+          padding: 7px 10px;
+          border-radius: 999px;
+          font-size: 0.68rem;
+          font-weight: 900;
+          white-space: nowrap;
+        }
+
+        .digitalHealthModelBadge.good {
+          background: #ecfdf5;
+          color: #047857;
+        }
+
+        .digitalHealthModelBadge.moderate {
+          background: #fffbeb;
+          color: #b45309;
+        }
+
+        .digitalHealthModelBadge.risk {
+          background: #fef2f2;
+          color: #b91c1c;
+        }
+
+        .digitalHealthModelBadge.neutral {
+          background: #f1f5f9;
+          color: #475569;
+        }
+
+        .digitalHealthModelSignal {
+          margin-top: 16px;
+          padding: 15px 16px;
+          border: 1px solid rgba(15, 118, 110, 0.15);
+          border-left: 4px solid #0f766e;
+          border-radius: 14px;
+          background: #f0fdfa;
+        }
+
+        .digitalHealthModelSignalLabel {
+          margin: 0;
+          color: #0f766e;
+          font-size: 0.66rem;
+          font-weight: 950;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+
+        .digitalHealthModelSignalText {
+          margin: 7px 0 0;
+          color: #334155;
+          font-size: 0.88rem;
+          line-height: 1.65;
+        }
+
+        .digitalHealthModelGrid {
+          display: grid;
+          gap: 10px;
+          margin-top: 16px;
+        }
+
+        .digitalHealthModelItem {
+          padding: 14px 15px;
+          border: 1px solid rgba(148, 163, 184, 0.2);
+          border-radius: 14px;
+          background: #f8fafc;
+        }
+
+        .digitalHealthModelItemHeader {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 12px;
+        }
+
+        .digitalHealthModelItemTitle {
+          margin: 0;
+          color: #0f172a;
+          font-size: 0.9rem;
+          font-weight: 900;
+          line-height: 1.4;
+        }
+
+        .digitalHealthModelItemContext {
+          margin: 4px 0 0;
+          color: #64748b;
+          font-size: 0.72rem;
+          line-height: 1.45;
+        }
+
+        .digitalHealthModelRisk {
+          flex: 0 0 auto;
+          padding: 5px 8px;
+          border-radius: 999px;
+          background: #ffffff;
+          border: 1px solid rgba(148, 163, 184, 0.2);
+          color: #475569;
+          font-size: 0.67rem;
+          font-weight: 850;
+        }
+
+        .digitalHealthModelMeta {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 7px;
+          margin-top: 10px;
+        }
+
+        .digitalHealthModelMeta span {
+          padding: 5px 8px;
+          border-radius: 999px;
+          background: #ffffff;
+          border: 1px solid rgba(148, 163, 184, 0.2);
+          color: #64748b;
+          font-size: 0.67rem;
+          font-weight: 750;
+        }
+
+        .digitalHealthModelExplanation {
+          margin: 10px 0 0;
+          color: #475569;
+          font-size: 0.8rem;
+          line-height: 1.6;
+        }
+
+        .digitalHealthModelRecommendation {
+          margin-top: 10px;
+          padding: 11px 12px;
+          border: 1px solid rgba(37, 99, 235, 0.12);
+          border-radius: 12px;
+          background: #f8fbff;
+        }
+
+        .digitalHealthModelRecommendation strong {
+          display: block;
+          color: #1d4ed8;
+          font-size: 0.68rem;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+        }
+
+        .digitalHealthModelRecommendation p {
+          margin: 5px 0 0;
+          color: #475569;
+          font-size: 0.78rem;
+          line-height: 1.6;
+        }
+
+        .digitalHealthModelEmpty {
+          margin-top: 16px;
+          padding: 14px 15px;
+          border: 1px dashed rgba(148, 163, 184, 0.4);
+          border-radius: 14px;
+          background: #f8fafc;
+          color: #64748b;
+          font-size: 0.82rem;
+          line-height: 1.6;
+        }
+
+        @media (max-width: 640px) {
+          .digitalHealthModelResult {
+            padding: 16px;
+          }
+
+          .digitalHealthModelHeader,
+          .digitalHealthModelItemHeader {
+            flex-direction: column;
+          }
+
+          .digitalHealthModelBadges {
+            justify-content: flex-start;
+          }
+        }
+      `}</style>
+
+      <header className="digitalHealthModelHeader">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-blue-600">
-            Personal Health Model
+          <p className="digitalHealthModelEyebrow">
+            Personal health model
           </p>
 
-          <h2 className="mt-1 text-2xl font-bold text-slate-900">
-            Digital Health Twin
-          </h2>
+          <h3 className="digitalHealthModelTitle">
+            Current modeled health state
+          </h3>
 
-          <p className="mt-2 text-sm leading-6 text-slate-600">
-            A structured representation of the patient&apos;s current health
-            signals, organ patterns, and intelligence model state.
+          <p className="digitalHealthModelDescription">
+            OrganHeal builds a structured health model from the signals that
+            are currently available. The model becomes more complete as more
+            reliable health data is added over time.
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          {status && (
-            <span className="w-fit rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-200">
-              Status: {status}
-            </span>
-          )}
+        {(status || confidence) && (
+          <div className="digitalHealthModelBadges">
+            {status && (
+              <span
+                className={`digitalHealthModelBadge ${getTone(
+                  status
+                )}`}
+              >
+                Status: {status}
+              </span>
+            )}
 
-          {confidence && (
-            <span className="w-fit rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-200">
-              Confidence: {confidence}
-            </span>
-          )}
-        </div>
-      </div>
+            {confidence && (
+              <span
+                className={`digitalHealthModelBadge ${getTone(
+                  confidence
+                )}`}
+              >
+                Confidence: {confidence}
+              </span>
+            )}
+          </div>
+        )}
+      </header>
 
       {summary && (
-        <div className="mb-5 rounded-xl border border-blue-100 bg-blue-50 p-4">
-          <p className="text-sm leading-6 text-slate-700">{summary}</p>
+        <div className="digitalHealthModelSignal">
+          <p className="digitalHealthModelSignalLabel">
+            Current model summary
+          </p>
+
+          <p className="digitalHealthModelSignalText">
+            {summary}
+          </p>
         </div>
       )}
 
-      {signals.length > 0 ? (
-        <div className="grid gap-4">
+      {signals.length > 0 && (
+        <div className="digitalHealthModelGrid">
           {signals.map((item, index) => {
             const title =
               item.title ||
               item.organ ||
               item.system ||
               item.category ||
-              `Digital Twin Signal ${index + 1}`;
+              `Health model signal ${index + 1}`;
 
             const explanation =
-              item.insight || item.summary || item.description || item.signal;
+              item.insight ||
+              item.summary ||
+              item.description ||
+              item.signal;
+
+            const context = [
+              item.organ,
+              item.system,
+              item.category,
+            ]
+              .filter(Boolean)
+              .join(" • ");
 
             return (
-              <div
-                key={item.id ?? index}
-                className="rounded-xl border border-slate-200 bg-slate-50 p-4"
+              <article
+                className="digitalHealthModelItem"
+                key={item.id ?? `${title}-${index}`}
               >
-                <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                <div className="digitalHealthModelItemHeader">
                   <div>
-                    <h3 className="text-base font-semibold text-slate-900">
+                    <h4 className="digitalHealthModelItemTitle">
                       {title}
-                    </h3>
+                    </h4>
 
-                    {(item.organ || item.system || item.category) && (
-                      <p className="mt-1 text-sm text-slate-500">
-                        {[item.organ, item.system, item.category]
-                          .filter((value) => value && value.trim().length > 0)
-                          .join(" â€¢ ")}
+                    {context && (
+                      <p className="digitalHealthModelItemContext">
+                        {context}
                       </p>
                     )}
                   </div>
 
                   {item.riskLevel && (
-                    <span className="w-fit rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200">
+                    <span className="digitalHealthModelRisk">
                       Risk: {item.riskLevel}
                     </span>
                   )}
                 </div>
 
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {item.status && (
-                    <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200">
-                      Status: {item.status}
-                    </span>
-                  )}
+                {(item.status || item.confidence) && (
+                  <div className="digitalHealthModelMeta">
+                    {item.status && (
+                      <span>Status: {item.status}</span>
+                    )}
 
-                  {item.confidence && (
-                    <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200">
-                      Confidence: {item.confidence}
-                    </span>
-                  )}
-                </div>
+                    {item.confidence && (
+                      <span>
+                        Confidence: {item.confidence}
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 {explanation && (
-                  <p className="mt-3 text-sm leading-6 text-slate-700">
+                  <p className="digitalHealthModelExplanation">
                     {explanation}
                   </p>
                 )}
 
                 {item.recommendation && (
-                  <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Suggested Focus
-                    </p>
-                    <p className="mt-1 text-sm leading-6 text-slate-700">
-                      {item.recommendation}
-                    </p>
+                  <div className="digitalHealthModelRecommendation">
+                    <strong>Suggested focus</strong>
+                    <p>{item.recommendation}</p>
                   </div>
                 )}
-              </div>
+              </article>
             );
           })}
         </div>
-      ) : (
-        <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-5">
-          <p className="text-sm text-slate-600">
-            Digital health twin intelligence will appear here after OrganHeal
-            builds a structured model from the available health data.
-          </p>
+      )}
+
+      {!hasModelData && (
+        <div className="digitalHealthModelEmpty">
+          A fuller personal health model requires more connected and
+          longitudinal data. OrganHeal will strengthen this model as your
+          health history grows.
         </div>
       )}
     </section>
   );
 }
-

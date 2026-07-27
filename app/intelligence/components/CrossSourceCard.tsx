@@ -25,8 +25,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function getText(value: unknown): string {
-  if (typeof value === "string") return value;
-  if (typeof value === "number") return String(value);
+  if (typeof value === "string") return value.trim();
+
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return String(value);
+  }
+
   return "";
 }
 
@@ -35,10 +39,12 @@ function getTextList(value: unknown): string[] {
 
   return value
     .map((item) => getText(item))
-    .filter((item) => item.trim().length > 0);
+    .filter((item) => item.length > 0);
 }
 
-function normalizeCrossSourceItems(crossSource: unknown): CrossSourceItem[] {
+function normalizeCrossSourceItems(
+  crossSource: unknown
+): CrossSourceItem[] {
   if (Array.isArray(crossSource)) {
     return crossSource.filter(isRecord).map((item, index) => ({
       id: getText(item.id) || index,
@@ -93,7 +99,9 @@ function normalizeCrossSourceItems(crossSource: unknown): CrossSourceItem[] {
 }
 
 function getCrossSourceSummary(crossSource: unknown): string {
-  if (typeof crossSource === "string") return crossSource;
+  if (typeof crossSource === "string") {
+    return crossSource.trim();
+  }
 
   if (!isRecord(crossSource)) return "";
 
@@ -116,131 +124,397 @@ function getCrossSourceConfidence(crossSource: unknown): string {
   );
 }
 
-export default function CrossSourceCard({ crossSource }: CrossSourceCardProps) {
-  const crossSourceItems = normalizeCrossSourceItems(crossSource);
-  const summary = getCrossSourceSummary(crossSource);
-  const confidence = getCrossSourceConfidence(crossSource);
+function getConfidenceTone(value: string) {
+  const normalized = value.toLowerCase();
+
+  if (
+    normalized.includes("high") ||
+    normalized.includes("strong")
+  ) {
+    return "good";
+  }
+
+  if (
+    normalized.includes("moderate") ||
+    normalized.includes("medium")
+  ) {
+    return "moderate";
+  }
+
+  if (
+    normalized.includes("low") ||
+    normalized.includes("weak")
+  ) {
+    return "risk";
+  }
+
+  return "neutral";
+}
+
+export default function CrossSourceCard({
+  crossSource,
+}: CrossSourceCardProps) {
+  const crossSourceItems =
+    normalizeCrossSourceItems(crossSource);
+
+  const summary =
+    getCrossSourceSummary(crossSource);
+
+  const confidence =
+    getCrossSourceConfidence(crossSource);
+
+  const hasCrossSourceIntelligence =
+    Boolean(summary) ||
+    Boolean(confidence) ||
+    crossSourceItems.length > 0;
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+    <section className="crossSourceResult">
+      <style>{`
+        .crossSourceResult,
+        .crossSourceResult * {
+          box-sizing: border-box;
+        }
+
+        .crossSourceResult {
+          padding: 20px;
+          border: 1px solid rgba(15, 23, 42, 0.08);
+          border-radius: 18px;
+          background: #ffffff;
+        }
+
+        .crossSourceHeader {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 18px;
+          padding-bottom: 16px;
+          border-bottom: 1px solid rgba(15, 23, 42, 0.07);
+        }
+
+        .crossSourceEyebrow {
+          margin: 0;
+          color: #0f766e;
+          font-size: 0.68rem;
+          font-weight: 950;
+          letter-spacing: 0.09em;
+          text-transform: uppercase;
+        }
+
+        .crossSourceTitle {
+          margin: 6px 0 0;
+          color: #0f172a;
+          font-size: 1.18rem;
+          font-weight: 950;
+          line-height: 1.3;
+        }
+
+        .crossSourceDescription {
+          max-width: 720px;
+          margin: 7px 0 0;
+          color: #64748b;
+          font-size: 0.82rem;
+          line-height: 1.6;
+        }
+
+        .crossSourceConfidence {
+          flex: 0 0 auto;
+          padding: 7px 10px;
+          border-radius: 999px;
+          font-size: 0.7rem;
+          font-weight: 900;
+          white-space: nowrap;
+        }
+
+        .crossSourceConfidence.good {
+          background: #ecfdf5;
+          color: #047857;
+        }
+
+        .crossSourceConfidence.moderate {
+          background: #fffbeb;
+          color: #b45309;
+        }
+
+        .crossSourceConfidence.risk {
+          background: #fef2f2;
+          color: #b91c1c;
+        }
+
+        .crossSourceConfidence.neutral {
+          background: #f1f5f9;
+          color: #475569;
+        }
+
+        .crossSourceSignal {
+          margin-top: 16px;
+          padding: 15px 16px;
+          border: 1px solid rgba(15, 118, 110, 0.15);
+          border-left: 4px solid #0f766e;
+          border-radius: 14px;
+          background: #f0fdfa;
+        }
+
+        .crossSourceSignalLabel {
+          margin: 0;
+          color: #0f766e;
+          font-size: 0.66rem;
+          font-weight: 950;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+
+        .crossSourceSignalText {
+          margin: 7px 0 0;
+          color: #334155;
+          font-size: 0.88rem;
+          line-height: 1.65;
+        }
+
+        .crossSourceGrid {
+          display: grid;
+          gap: 10px;
+          margin-top: 16px;
+        }
+
+        .crossSourceItem {
+          padding: 14px 15px;
+          border: 1px solid rgba(148, 163, 184, 0.2);
+          border-radius: 14px;
+          background: #f8fafc;
+        }
+
+        .crossSourceItemHeader {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 12px;
+        }
+
+        .crossSourceItemTitle {
+          margin: 0;
+          color: #0f172a;
+          font-size: 0.9rem;
+          font-weight: 900;
+          line-height: 1.4;
+        }
+
+        .crossSourceRisk {
+          flex: 0 0 auto;
+          padding: 5px 8px;
+          border-radius: 999px;
+          background: #ffffff;
+          border: 1px solid rgba(148, 163, 184, 0.2);
+          color: #475569;
+          font-size: 0.67rem;
+          font-weight: 850;
+        }
+
+        .crossSourceSources {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 7px;
+          margin-top: 10px;
+        }
+
+        .crossSourceSources span {
+          padding: 5px 8px;
+          border-radius: 999px;
+          background: #ffffff;
+          border: 1px solid rgba(148, 163, 184, 0.2);
+          color: #64748b;
+          font-size: 0.67rem;
+          font-weight: 750;
+        }
+
+        .crossSourceExplanation {
+          margin: 10px 0 0;
+          color: #475569;
+          font-size: 0.8rem;
+          line-height: 1.6;
+        }
+
+        .crossSourceItemConfidence {
+          display: inline-flex;
+          margin-top: 10px;
+          padding: 5px 8px;
+          border-radius: 999px;
+          background: #eff6ff;
+          color: #1d4ed8;
+          font-size: 0.67rem;
+          font-weight: 800;
+        }
+
+        .crossSourceRecommendation {
+          margin-top: 10px;
+          padding: 11px 12px;
+          border: 1px solid rgba(37, 99, 235, 0.12);
+          border-radius: 12px;
+          background: #f8fbff;
+        }
+
+        .crossSourceRecommendation strong {
+          display: block;
+          color: #1d4ed8;
+          font-size: 0.68rem;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+        }
+
+        .crossSourceRecommendation p {
+          margin: 5px 0 0;
+          color: #475569;
+          font-size: 0.78rem;
+          line-height: 1.6;
+        }
+
+        .crossSourceEmpty {
+          margin-top: 16px;
+          padding: 14px 15px;
+          border: 1px dashed rgba(148, 163, 184, 0.4);
+          border-radius: 14px;
+          background: #f8fafc;
+          color: #64748b;
+          font-size: 0.82rem;
+          line-height: 1.6;
+        }
+
+        @media (max-width: 640px) {
+          .crossSourceResult {
+            padding: 16px;
+          }
+
+          .crossSourceHeader,
+          .crossSourceItemHeader {
+            flex-direction: column;
+          }
+        }
+      `}</style>
+
+      <header className="crossSourceHeader">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-blue-600">
-            Multi-Source Intelligence
+          <p className="crossSourceEyebrow">
+            Connected intelligence
           </p>
 
-          <h2 className="mt-1 text-2xl font-bold text-slate-900">
-            Cross Source Intelligence
-          </h2>
+          <h3 className="crossSourceTitle">
+            Cross-source health connections
+          </h3>
 
-          <p className="mt-2 text-sm leading-6 text-slate-600">
-            Connects signals across reports, laboratory markers, radiology
-            findings, clinical patterns, and health history.
+          <p className="crossSourceDescription">
+            OrganHeal connects signals only when meaningful relationships can
+            be identified across the available reports, laboratory data, and
+            health history.
           </p>
         </div>
 
         {confidence && (
-          <span className="w-fit rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-200">
+          <span
+            className={`crossSourceConfidence ${getConfidenceTone(
+              confidence
+            )}`}
+          >
             Confidence: {confidence}
           </span>
         )}
-      </div>
+      </header>
 
       {summary && (
-        <div className="mb-5 rounded-xl border border-blue-100 bg-blue-50 p-4">
-          <p className="text-sm leading-6 text-slate-700">{summary}</p>
+        <div className="crossSourceSignal">
+          <p className="crossSourceSignalLabel">
+            Current connected signal
+          </p>
+
+          <p className="crossSourceSignalText">
+            {summary}
+          </p>
         </div>
       )}
 
-      {crossSourceItems.length > 0 ? (
-        <div className="grid gap-4">
+      {crossSourceItems.length > 0 && (
+        <div className="crossSourceGrid">
           {crossSourceItems.map((item, index) => {
             const title =
               item.title ||
               item.pattern ||
               item.connection ||
               item.finding ||
-              `Cross Source Signal ${index + 1}`;
+              `Connected signal ${index + 1}`;
 
             const explanation =
-              item.insight || item.interpretation || item.summary;
+              item.insight ||
+              item.interpretation ||
+              item.summary;
 
             const sources =
               item.sources && item.sources.length > 0
                 ? item.sources
-                : [item.primarySource, item.secondarySource, item.source].filter(
-                    Boolean
+                : [
+                    item.primarySource,
+                    item.secondarySource,
+                    item.source,
+                  ].filter(
+                    (value): value is string =>
+                      Boolean(value)
                   );
 
             return (
-              <div
-                key={item.id ?? index}
-                className="rounded-xl border border-slate-200 bg-slate-50 p-4"
+              <article
+                className="crossSourceItem"
+                key={item.id ?? `${title}-${index}`}
               >
-                <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-                  <div>
-                    <h3 className="text-base font-semibold text-slate-900">
-                      {title}
-                    </h3>
-
-                    {sources.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {sources.map((source, sourceIndex) => (
-                          <span
-                            key={`${source}-${sourceIndex}`}
-                            className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200"
-                          >
-                            {source}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                <div className="crossSourceItemHeader">
+                  <h4 className="crossSourceItemTitle">
+                    {title}
+                  </h4>
 
                   {item.risk && (
-                    <span className="w-fit rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200">
+                    <span className="crossSourceRisk">
                       Risk: {item.risk}
                     </span>
                   )}
                 </div>
 
+                {sources.length > 0 && (
+                  <div className="crossSourceSources">
+                    {sources.map((source, sourceIndex) => (
+                      <span key={`${source}-${sourceIndex}`}>
+                        {source}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
                 {explanation && (
-                  <p className="mt-3 text-sm leading-6 text-slate-700">
+                  <p className="crossSourceExplanation">
                     {explanation}
                   </p>
                 )}
 
                 {item.confidence && (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200">
-                      Confidence: {item.confidence}
-                    </span>
-                  </div>
+                  <span className="crossSourceItemConfidence">
+                    Confidence: {item.confidence}
+                  </span>
                 )}
 
                 {item.recommendation && (
-                  <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Suggested Focus
-                    </p>
-                    <p className="mt-1 text-sm leading-6 text-slate-700">
-                      {item.recommendation}
-                    </p>
+                  <div className="crossSourceRecommendation">
+                    <strong>Suggested focus</strong>
+                    <p>{item.recommendation}</p>
                   </div>
                 )}
-              </div>
+              </article>
             );
           })}
         </div>
-      ) : (
-        <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-5">
-          <p className="text-sm text-slate-600">
-            Cross source intelligence will appear here after OrganHeal connects
-            signals across available health data sources.
-          </p>
+      )}
+
+      {!hasCrossSourceIntelligence && (
+        <div className="crossSourceEmpty">
+          More connected health data is needed before OrganHeal can identify
+          a reliable cross-source relationship.
         </div>
       )}
     </section>
   );
 }
-
