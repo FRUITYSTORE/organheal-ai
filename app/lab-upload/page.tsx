@@ -378,11 +378,11 @@ export default function LabUploadPage() {
     setUploading(false);
     setUploadStep("saved");
     setMessage(
-      text(
-        `${uploadedNames.length} report(s) saved successfully. Continue to analyze the latest saved report, or open Reports Library to manage all reports.`,
-        `تم حفظ ${uploadedNames.length} تقرير بنجاح. تابع لتحليل آخر تقرير محفوظ، أو افتح مكتبة التقارير لإدارة جميع التقارير.`
-      )
-    );
+  text(
+    `${uploadedNames.length} report(s) saved successfully and ready for the next step.`,
+    `تم حفظ ${uploadedNames.length} تقرير بنجاح وأصبحت جاهزة للخطوة التالية.`
+  )
+);
   }
 
   const journeyStep =

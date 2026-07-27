@@ -7,9 +7,15 @@ import PageBackActions from "../components/PageBackActions";
 
 type Language = "en" | "ar";
 
+type MessageAction = {
+  label: string;
+  href: string;
+};
+
 type Message = {
   sender: "user" | "ai";
   text: string;
+  action?: MessageAction;
 };
 
 type AssistantResponse = {
@@ -106,23 +112,41 @@ export default function AssistantPage() {
     return isArabic ? ar : en;
   }
 
-  const suggestedQuestions = useMemo(
-    () =>
-      isArabic
-        ? [
-            "ما هي أهم خطوة صحية تالية لي؟",
-            "اشرح لي نمط المخاطر الصحي عندي.",
-            "ماذا تعني نتائجي الصحية بشكل مبسط؟",
-            "ماذا يجب أن أناقش مع الطبيب؟",
-          ]
-        : [
-            "What is my next best health action?",
-            "Explain my current risk pattern.",
-            "What do my health results mean in simple words?",
-            "What should I discuss with my doctor?",
-          ],
-    [isArabic]
-  );
+ const suggestedQuestions = useMemo(() => {
+  if (!healthContext) {
+    return isArabic
+      ? [
+          "كيف أبدأ ببناء ملفي الصحي في OrganHeal؟",
+          "ما نوع التقرير الطبي الذي يمكنني رفعه؟",
+          "كيف يساعدني التقييم الصحي؟",
+          "ما أفضل خطوة أبدأ بها الآن؟",
+        ]
+      : [
+          "How should I start building my health profile in OrganHeal?",
+          "What type of medical report can I upload?",
+          "How can a health assessment help me?",
+          "What is the best step for me to start with?",
+        ];
+  }
+
+  const priority =
+    healthContext.priorityOrgan ||
+    (isArabic ? "صحتي العامة" : "my overall health");
+
+  return isArabic
+    ? [
+        `ما الذي يجب أن أركز عليه الآن بخصوص ${priority}؟`,
+        "اشرح لي نمط المخاطر الصحي الحالي بطريقة مبسطة.",
+        "ما هي أهم خطوة صحية تالية بناءً على بياناتي الحالية؟",
+        "ما أهم الأسئلة التي يجب أن أناقشها مع الطبيب؟",
+      ]
+    : [
+        `What should I focus on now regarding ${priority}?`,
+        "Explain my current health risk pattern in simple terms.",
+        "What is my most important next health action based on my current data?",
+        "What are the most important questions I should discuss with my doctor?",
+      ];
+}, [healthContext, isArabic]);
 
   const contextStatus = healthContext
     ? text("Assistant is using your health context", "المساعد يستخدم بياناتك الصحية")
@@ -131,7 +155,58 @@ export default function AssistantPage() {
   const priorityArea =
     healthContext?.priorityOrgan ||
     text("General Health", "الصحة العامة");
+function getAssistantAction(question: string): MessageAction | undefined {
+  const normalizedQuestion = question.toLowerCase();
 
+  if (
+    normalizedQuestion.includes("doctor") ||
+    normalizedQuestion.includes("brief") ||
+    normalizedQuestion.includes("طبيب") ||
+    normalizedQuestion.includes("دكتور")
+  ) {
+    return {
+      label: text("Review Reports", "مراجعة التقارير"),
+      href: "/reports",
+    };
+  }
+
+  if (
+    normalizedQuestion.includes("report") ||
+    normalizedQuestion.includes("lab") ||
+    normalizedQuestion.includes("تقرير") ||
+    normalizedQuestion.includes("فحص") ||
+    normalizedQuestion.includes("مختبر")
+  ) {
+    return {
+      label: text("Open Reports", "فتح التقارير"),
+      href: "/reports",
+    };
+  }
+
+  if (
+    normalizedQuestion.includes("next") ||
+    normalizedQuestion.includes("action") ||
+    normalizedQuestion.includes("improve") ||
+    normalizedQuestion.includes("plan") ||
+    normalizedQuestion.includes("الخطوة") ||
+    normalizedQuestion.includes("تحسين") ||
+    normalizedQuestion.includes("خطة")
+  ) {
+    return {
+      label: text("Open Health Plan", "فتح الخطة الصحية"),
+      href: "/health-plan",
+    };
+  }
+
+  if (!healthContext) {
+    return {
+      label: text("Upload Report", "رفع تقرير"),
+      href: "/lab-upload",
+    };
+  }
+
+  return undefined;
+}
   async function sendMessage(customQuestion?: string) {
     const userMessage = customQuestion || input;
 
@@ -148,10 +223,16 @@ export default function AssistantPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          message: userMessage,
-          language,
-          healthContext,
-        }),
+  message: userMessage,
+  language,
+  healthContext,
+  conversation: messages
+    .slice(-6)
+    .map((message) => ({
+      role: message.sender === "ai" ? "assistant" : "user",
+      content: message.text,
+    })),
+}),
       });
 
       const data = (await result.json()) as AssistantResponse;
@@ -161,17 +242,20 @@ export default function AssistantPage() {
       }
 
       setMessages((current) => [
-        ...current,
-        {
-          sender: "ai",
-          text:
-            data.response ||
-            text(
-              "OrganHeal AI is temporarily unavailable.",
-              "OrganHeal AI غير متاح مؤقتًا."
-            ),
-        },
-      ]);
+  ...current,
+  {
+    sender: "ai",
+    text:
+      data.response ||
+      text(
+        "OrganHeal AI is temporarily unavailable.",
+        "OrganHeal AI غير متاح مؤقتًا."
+      ),
+    action: data.response
+      ? getAssistantAction(userMessage)
+      : undefined,
+  },
+]);
     } catch (error) {
       console.error(error);
 
@@ -334,19 +418,19 @@ export default function AssistantPage() {
                 )}
               </p>
 
-              <div className="ohButtonRow" style={{ marginTop: "24px" }}>
-                <Link href="/dashboard" className="primaryBtn">
-                  {text("Dashboard", "لوحة التحكم")}
-                </Link>
+            <div className="ohButtonRow" style={{ marginTop: "24px" }}>
+  <Link href="/dashboard" className="primaryBtn">
+    {text("Dashboard", "لوحة التحكم")}
+  </Link>
 
-                <Link href="/reports" className="secondaryBtn">
-                  {text("Report Analysis", "تحليل التقارير")}
-                </Link>
+  <Link href="/reports" className="secondaryBtn">
+    {text("Reports", "التقارير")}
+  </Link>
 
-                <Link href="/reports" className="secondaryBtn">
-                  {text("Reports", "التقارير")}
-                </Link>
-              </div>
+  <Link href="/health-plan" className="secondaryBtn">
+    {text("Health Plan", "الخطة الصحية")}
+  </Link>
+</div>
             </div>
 
             <div className="ohCard">
@@ -370,29 +454,67 @@ export default function AssistantPage() {
                 </span>
               </div>
 
-              <p className="ohCardText">
-                {healthContext
-                  ? text(
-                      `Priority area: ${priorityArea}`,
-                      `منطقة الأولوية: ${priorityArea}`
-                    )
-                  : text(
-                      "Complete an assessment or upload a report to unlock more personalized guidance.",
-                      "أكمل تقييمًا صحيًا أو ارفع تقريرًا للحصول على إرشاد أكثر تخصيصًا."
-                    )}
-              </p>
+              {healthContext ? (
+  <div className="ohStack" style={{ gap: "10px" }}>
+    <p className="ohCardText">
+      {text(
+        `Priority area: ${priorityArea}`,
+        `منطقة الأولوية: ${priorityArea}`
+      )}
+    </p>
+
+    {typeof healthContext.overallScore === "number" && (
+      <p className="ohCardText">
+        {text(
+          `Overall score: ${healthContext.overallScore}/100`,
+          `النتيجة العامة: ${healthContext.overallScore}/100`
+        )}
+      </p>
+    )}
+
+    {healthContext.riskPattern && (
+      <p className="ohCardText">
+        {text(
+          `Risk pattern: ${healthContext.riskPattern}`,
+          `نمط المخاطر: ${healthContext.riskPattern}`
+        )}
+      </p>
+    )}
+  </div>
+) : (
+  <p className="ohCardText">
+    {text(
+      "Complete an assessment or upload a report to unlock more personalized guidance.",
+      "أكمل تقييمًا صحيًا أو ارفع تقريرًا للحصول على إرشاد أكثر تخصيصًا."
+    )}
+  </p>
+)}
 
               <div className="ohDivider" />
 
               <div className="ohButtonRow">
-                <Link href="/assessment" className="secondaryBtn">
-                  {text("Start Assessment", "ابدأ التقييم")}
-                </Link>
+  {healthContext ? (
+    <>
+      <Link href="/reports" className="secondaryBtn">
+        {text("Review Reports", "مراجعة التقارير")}
+      </Link>
 
-                <Link href="/lab-upload" className="secondaryBtn">
-                  {text("Upload Report", "رفع تقرير")}
-                </Link>
-              </div>
+      <Link href="/health-plan" className="secondaryBtn">
+        {text("Open Health Plan", "فتح الخطة الصحية")}
+      </Link>
+    </>
+  ) : (
+    <>
+      <Link href="/assessment" className="secondaryBtn">
+        {text("Start Assessment", "ابدأ التقييم")}
+      </Link>
+
+      <Link href="/lab-upload" className="secondaryBtn">
+        {text("Upload Report", "رفع تقرير")}
+      </Link>
+    </>
+  )}
+</div>
             </div>
           </div>
         </section>
@@ -498,19 +620,33 @@ export default function AssistantPage() {
           </div>
 
           <div className="assistantChatWindow">
-            {messages.map((message, index) => (
-              <div
-                key={`${message.sender}-${index}`}
-                className={`assistantMessage ${message.sender === "ai" ? "ai" : "user"}`}
-              >
-                <strong>
-                  {message.sender === "ai"
-                    ? "OrganHeal AI"
-                    : text("You", "أنت")}
-                </strong>
-                <p>{message.text}</p>
-              </div>
-            ))}
+          {messages.map((message, index) => (
+  <div
+    key={`${message.sender}-${index}`}
+    className={`assistantMessage ${
+      message.sender === "ai" ? "ai" : "user"
+    }`}
+  >
+    <strong>
+      {message.sender === "ai"
+        ? "OrganHeal AI"
+        : text("You", "أنت")}
+    </strong>
+
+    <p>{message.text}</p>
+
+    {message.sender === "ai" && message.action && (
+      <div style={{ marginTop: "12px" }}>
+        <Link
+          href={message.action.href}
+          className="secondaryBtn"
+        >
+          {message.action.label}
+        </Link>
+      </div>
+    )}
+  </div>
+))}
 
             {isSending && (
               <div className="assistantMessage ai">

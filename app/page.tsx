@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { getHealthContext } from "@/lib/getHealthContext";
 import {
   getReportsLibrary,
   type ReportsLibraryCard,
@@ -48,10 +49,22 @@ function IconMark({ label }: { label: string }) {
 
 export default function Home() {
   const [language, setLanguage] = useState<Language>("en");
-  const [heroQuestion, setHeroQuestion] = useState("");
-  const [heroAnswer, setHeroAnswer] = useState("");
-  const [heroLoading, setHeroLoading] = useState(false);
+ const [heroQuestion, setHeroQuestion] = useState("");
+const [heroAnswer, setHeroAnswer] = useState("");
+
+const [heroConversation, setHeroConversation] = useState<
+  Array<{
+    role: "user" | "assistant";
+    content: string;
+  }>
+>([]);
+const [heroAction, setHeroAction] = useState<{
+  label: string;
+  href: string;
+} | null>(null);
+const [heroLoading, setHeroLoading] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+const [heroHealthContext, setHeroHealthContext] = useState<Record<string, unknown> | null>(null);
   const [latestReport, setLatestReport] =
     useState<ReportsLibraryCard | null>(null);
   const [continuationLoading, setContinuationLoading] = useState(false);
@@ -108,13 +121,21 @@ export default function Home() {
     setIsLoggedIn(Boolean(user));
 
     if (!user) {
-      setLatestReport(null);
-      setContinuationLoading(false);
-      return;
-    }
+  setLatestReport(null);
+  setHeroHealthContext(null);
+  setContinuationLoading(false);
+  return;
+}
 
     setContinuationLoading(true);
-
+try {
+  const context = await getHealthContext(language === "ar");
+  setHeroHealthContext(
+    context ? (context as Record<string, unknown>) : null
+  );
+} catch {
+  setHeroHealthContext(null);
+}
     try {
       const reports = await getReportsLibrary(user.id, 1);
       setLatestReport(reports[0] ?? null);
@@ -130,46 +151,157 @@ export default function Home() {
     setIsLoggedIn(false);
     window.location.href = "/";
   }
+function getHeroAssistantAction(question: string) {
+  const normalizedQuestion = question.toLowerCase();
 
-  async function askHeroAI() {
-    if (!heroQuestion.trim() || heroLoading) return;
+  if (
+    normalizedQuestion.includes("doctor") ||
+    normalizedQuestion.includes("brief") ||
+    normalizedQuestion.includes("طبيب") ||
+    normalizedQuestion.includes("دكتور")
+  ) {
+    return {
+      label: text("Review Reports", "مراجعة التقارير"),
+      href: "/reports",
+    };
+  }
 
-    setHeroLoading(true);
-    setHeroAnswer("");
+  if (
+    normalizedQuestion.includes("report") ||
+    normalizedQuestion.includes("lab") ||
+    normalizedQuestion.includes("تقرير") ||
+    normalizedQuestion.includes("فحص") ||
+    normalizedQuestion.includes("مختبر")
+  ) {
+    return {
+      label: text("Open Reports", "فتح التقارير"),
+      href: "/reports",
+    };
+  }
 
-    try {
-      const result = await fetch("/api/assistant", {
+  if (
+    normalizedQuestion.includes("next") ||
+    normalizedQuestion.includes("action") ||
+    normalizedQuestion.includes("improve") ||
+    normalizedQuestion.includes("plan") ||
+    normalizedQuestion.includes("الخطوة") ||
+    normalizedQuestion.includes("تحسين") ||
+    normalizedQuestion.includes("خطة")
+  ) {
+    return {
+      label: text("Open Health Plan", "فتح الخطة الصحية"),
+      href: "/health-plan",
+    };
+  }
+
+  if (!isLoggedIn) {
+    return {
+      label: text("Upload Report", "رفع تقرير"),
+      href: "/lab-upload",
+    };
+  }
+
+  return null;
+}
+ async function askHeroAI() {
+  const currentQuestion =
+    heroQuestion.trim();
+
+  if (!currentQuestion || heroLoading) {
+    return;
+  }
+
+  setHeroLoading(true);
+  setHeroAction(null);
+
+  /*
+   * Keep the current answer visible while the next answer loads
+   * to prevent the homepage layout from collapsing/blinking.
+   *
+   * Clear only the input so the user can naturally type the next
+   * conversational message.
+   */
+  setHeroQuestion("");
+
+  const conversationForRequest =
+    heroConversation.slice(-6);
+
+  try {
+    const result = await fetch(
+      "/api/assistant",
+      {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          message: heroQuestion,
+          message: currentQuestion,
           language,
-          healthContext: null,
+          healthContext:
+            isLoggedIn
+              ? heroHealthContext
+              : null,
+          conversation:
+            conversationForRequest,
         }),
-      });
+      }
+    );
 
-      const data = await result.json();
+    const data = await result.json();
 
-      setHeroAnswer(
-        data.response ||
-          text(
-            "I could not generate an answer right now.",
-            "لم أستطع إنشاء إجابة الآن."
-          )
+    const responseText =
+      data.response ||
+      text(
+        "I could not generate an answer right now.",
+        "لم أستطع إنشاء إجابة الآن."
       );
-    } catch {
-      setHeroAnswer(
-        text(
-          "A temporary error occurred while connecting to the assistant.",
-          "حدث خطأ مؤقت أثناء الاتصال بالمساعد."
+
+    setHeroAnswer(responseText);
+
+    /*
+     * Preserve the conversational pair so the next request can
+     * resolve references, clarification answers, and follow-ups.
+     */
+    if (data.response) {
+      setHeroConversation((current) =>
+        [
+          ...current,
+          {
+            role: "user" as const,
+            content: currentQuestion,
+          },
+          {
+            role: "assistant" as const,
+            content: responseText,
+          },
+        ].slice(-8)
+      );
+
+      setHeroAction(
+        getHeroAssistantAction(
+          currentQuestion
         )
       );
-    } finally {
-      setHeroLoading(false);
     }
+  } catch {
+    setHeroAnswer(
+      text(
+        "A temporary error occurred while connecting to the assistant.",
+        "حدث خطأ مؤقت أثناء الاتصال بالمساعد."
+      )
+    );
+
+    setHeroAction(null);
+
+    /*
+     * Restore the question after a failed request so the user
+     * does not lose what they typed.
+     */
+    setHeroQuestion(currentQuestion);
+  } finally {
+    setHeroLoading(false);
   }
+}
 
   const trustCards: TrustCard[] = [
     {
@@ -759,7 +891,7 @@ export default function Home() {
           display: grid;
           grid-template-columns: minmax(0, 0.92fr) minmax(420px, 1.08fr);
           gap: clamp(30px, 5vw, 72px);
-          align-items: center;
+          align-items: start;
         }
 
         .publicHomePage .homeCommandIntro {
@@ -1910,17 +2042,29 @@ export default function Home() {
               </div>
 
               {heroAnswer && (
-                <div className="homeAIAnswer">
-                  <div className="homeAIAnswerHeader">
-                    <span aria-hidden="true">AI</span>
-                    <strong>
-                      {text("OrganHeal response", "إجابة OrganHeal")}
-                    </strong>
-                  </div>
+  <div className="homeAIAnswer">
+    <div className="homeAIAnswerHeader">
+      <span aria-hidden="true">AI</span>
 
-                  <p>{heroAnswer}</p>
-                </div>
-              )}
+      <strong>
+        {text("OrganHeal response", "إجابة OrganHeal")}
+      </strong>
+    </div>
+
+    <p>{heroAnswer}</p>
+
+    {heroAction && (
+      <div style={{ marginTop: "14px" }}>
+        <Link
+          href={heroAction.href}
+          className="secondaryBtn"
+        >
+          {heroAction.label}
+        </Link>
+      </div>
+    )}
+  </div>
+)}
 
               <div className="homeAIOutcomePanel">
                 <p>
