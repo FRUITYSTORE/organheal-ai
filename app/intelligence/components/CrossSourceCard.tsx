@@ -1,5 +1,10 @@
+import {
+  createIntelligenceText,
+} from "@/lib/presentation/intelligence/intelligence-ui-text";
+
 type CrossSourceCardProps = {
   crossSource: unknown;
+  isArabic: boolean;
 };
 
 type CrossSourceItem = {
@@ -20,14 +25,25 @@ type CrossSourceItem = {
   recommendation?: string;
 };
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
+function isRecord(
+  value: unknown
+): value is Record<string, unknown> {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value)
+  );
 }
 
 function getText(value: unknown): string {
-  if (typeof value === "string") return value.trim();
+  if (typeof value === "string") {
+    return value.trim();
+  }
 
-  if (typeof value === "number" && Number.isFinite(value)) {
+  if (
+    typeof value === "number" &&
+    Number.isFinite(value)
+  ) {
     return String(value);
   }
 
@@ -35,7 +51,9 @@ function getText(value: unknown): string {
 }
 
 function getTextList(value: unknown): string[] {
-  if (!Array.isArray(value)) return [];
+  if (!Array.isArray(value)) {
+    return [];
+  }
 
   return value
     .map((item) => getText(item))
@@ -46,7 +64,48 @@ function normalizeCrossSourceItems(
   crossSource: unknown
 ): CrossSourceItem[] {
   if (Array.isArray(crossSource)) {
-    return crossSource.filter(isRecord).map((item, index) => ({
+    return crossSource
+      .filter(isRecord)
+      .map((item, index) => ({
+        id: getText(item.id) || index,
+        title: getText(item.title),
+        pattern: getText(item.pattern),
+        connection: getText(item.connection),
+        source: getText(item.source),
+        primarySource: getText(item.primarySource),
+        secondarySource: getText(item.secondarySource),
+        sources: getTextList(item.sources),
+        finding: getText(item.finding),
+        insight: getText(item.insight),
+        summary: getText(item.summary),
+        interpretation: getText(item.interpretation),
+        risk: getText(item.risk),
+        confidence: getText(item.confidence),
+        recommendation: getText(item.recommendation),
+      }));
+  }
+
+  if (!isRecord(crossSource)) {
+    return [];
+  }
+
+  const possibleItems =
+    crossSource.items ||
+    crossSource.findings ||
+    crossSource.connections ||
+    crossSource.patterns ||
+    crossSource.insights ||
+    crossSource.crossSource ||
+    crossSource.crossSourceInsights ||
+    crossSource.crossSourceFindings;
+
+  if (!Array.isArray(possibleItems)) {
+    return [];
+  }
+
+  return possibleItems
+    .filter(isRecord)
+    .map((item, index) => ({
       id: getText(item.id) || index,
       title: getText(item.title),
       pattern: getText(item.pattern),
@@ -63,47 +122,18 @@ function normalizeCrossSourceItems(
       confidence: getText(item.confidence),
       recommendation: getText(item.recommendation),
     }));
-  }
-
-  if (!isRecord(crossSource)) return [];
-
-  const possibleItems =
-    crossSource.items ||
-    crossSource.findings ||
-    crossSource.connections ||
-    crossSource.patterns ||
-    crossSource.insights ||
-    crossSource.crossSource ||
-    crossSource.crossSourceInsights ||
-    crossSource.crossSourceFindings;
-
-  if (!Array.isArray(possibleItems)) return [];
-
-  return possibleItems.filter(isRecord).map((item, index) => ({
-    id: getText(item.id) || index,
-    title: getText(item.title),
-    pattern: getText(item.pattern),
-    connection: getText(item.connection),
-    source: getText(item.source),
-    primarySource: getText(item.primarySource),
-    secondarySource: getText(item.secondarySource),
-    sources: getTextList(item.sources),
-    finding: getText(item.finding),
-    insight: getText(item.insight),
-    summary: getText(item.summary),
-    interpretation: getText(item.interpretation),
-    risk: getText(item.risk),
-    confidence: getText(item.confidence),
-    recommendation: getText(item.recommendation),
-  }));
 }
 
-function getCrossSourceSummary(crossSource: unknown): string {
+function getCrossSourceSummary(
+  crossSource: unknown
+): string {
   if (typeof crossSource === "string") {
     return crossSource.trim();
   }
 
-  if (!isRecord(crossSource)) return "";
+  if (!isRecord(crossSource)) {
+    return "";
+  }
 
   return (
     getText(crossSource.summary) ||
@@ -113,8 +143,12 @@ function getCrossSourceSummary(crossSource: unknown): string {
   );
 }
 
-function getCrossSourceConfidence(crossSource: unknown): string {
-  if (!isRecord(crossSource)) return "";
+function getCrossSourceConfidence(
+  crossSource: unknown
+): string {
+  if (!isRecord(crossSource)) {
+    return "";
+  }
 
   return (
     getText(crossSource.confidence) ||
@@ -125,25 +159,32 @@ function getCrossSourceConfidence(crossSource: unknown): string {
 }
 
 function getConfidenceTone(value: string) {
-  const normalized = value.toLowerCase();
+  const normalized = value
+    .trim()
+    .toLowerCase();
 
   if (
     normalized.includes("high") ||
-    normalized.includes("strong")
+    normalized.includes("strong") ||
+    normalized.includes("مرتفع") ||
+    normalized.includes("قوي")
   ) {
     return "good";
   }
 
   if (
     normalized.includes("moderate") ||
-    normalized.includes("medium")
+    normalized.includes("medium") ||
+    normalized.includes("متوسط")
   ) {
     return "moderate";
   }
 
   if (
     normalized.includes("low") ||
-    normalized.includes("weak")
+    normalized.includes("weak") ||
+    normalized.includes("منخفض") ||
+    normalized.includes("ضعيف")
   ) {
     return "risk";
   }
@@ -153,7 +194,12 @@ function getConfidenceTone(value: string) {
 
 export default function CrossSourceCard({
   crossSource,
+  isArabic,
 }: CrossSourceCardProps) {
+  const text = createIntelligenceText(
+    isArabic ? "ar" : "en"
+  );
+
   const crossSourceItems =
     normalizeCrossSourceItems(crossSource);
 
@@ -169,7 +215,11 @@ export default function CrossSourceCard({
     crossSourceItems.length > 0;
 
   return (
-    <section className="crossSourceResult">
+    <section
+      className="crossSourceResult"
+      dir={isArabic ? "rtl" : "ltr"}
+      lang={isArabic ? "ar" : "en"}
+    >
       <style>{`
         .crossSourceResult,
         .crossSourceResult * {
@@ -250,7 +300,7 @@ export default function CrossSourceCard({
           margin-top: 16px;
           padding: 15px 16px;
           border: 1px solid rgba(15, 118, 110, 0.15);
-          border-left: 4px solid #0f766e;
+          border-inline-start: 4px solid #0f766e;
           border-radius: 14px;
           background: #f0fdfa;
         }
@@ -394,17 +444,24 @@ export default function CrossSourceCard({
       <header className="crossSourceHeader">
         <div>
           <p className="crossSourceEyebrow">
-            Connected intelligence
+            {text(
+              "Connected intelligence",
+              "الذكاء الصحي المترابط"
+            )}
           </p>
 
           <h3 className="crossSourceTitle">
-            Cross-source health connections
+            {text(
+              "Cross-source health connections",
+              "الروابط الصحية بين مصادر البيانات"
+            )}
           </h3>
 
           <p className="crossSourceDescription">
-            OrganHeal connects signals only when meaningful relationships can
-            be identified across the available reports, laboratory data, and
-            health history.
+            {text(
+              "OrganHeal connects signals only when meaningful relationships can be identified across the available reports, laboratory data, and health history.",
+              "يربط OrganHeal بين المؤشرات فقط عندما يمكن تحديد علاقات ذات معنى عبر التقارير والبيانات المخبرية والتاريخ الصحي المتاح."
+            )}
           </p>
         </div>
 
@@ -414,7 +471,10 @@ export default function CrossSourceCard({
               confidence
             )}`}
           >
-            Confidence: {confidence}
+            {text(
+              `Confidence: ${confidence}`,
+              `درجة الثقة: ${confidence}`
+            )}
           </span>
         )}
       </header>
@@ -422,7 +482,10 @@ export default function CrossSourceCard({
       {summary && (
         <div className="crossSourceSignal">
           <p className="crossSourceSignalLabel">
-            Current connected signal
+            {text(
+              "Current connected signal",
+              "الإشارة المترابطة الحالية"
+            )}
           </p>
 
           <p className="crossSourceSignalText">
@@ -439,7 +502,10 @@ export default function CrossSourceCard({
               item.pattern ||
               item.connection ||
               item.finding ||
-              `Connected signal ${index + 1}`;
+              text(
+                `Connected signal ${index + 1}`,
+                `إشارة مترابطة ${index + 1}`
+              );
 
             const explanation =
               item.insight ||
@@ -461,7 +527,10 @@ export default function CrossSourceCard({
             return (
               <article
                 className="crossSourceItem"
-                key={item.id ?? `${title}-${index}`}
+                key={
+                  item.id ??
+                  `${title}-${index}`
+                }
               >
                 <div className="crossSourceItemHeader">
                   <h4 className="crossSourceItemTitle">
@@ -470,18 +539,25 @@ export default function CrossSourceCard({
 
                   {item.risk && (
                     <span className="crossSourceRisk">
-                      Risk: {item.risk}
+                      {text(
+                        `Risk: ${item.risk}`,
+                        `المخاطر: ${item.risk}`
+                      )}
                     </span>
                   )}
                 </div>
 
                 {sources.length > 0 && (
                   <div className="crossSourceSources">
-                    {sources.map((source, sourceIndex) => (
-                      <span key={`${source}-${sourceIndex}`}>
-                        {source}
-                      </span>
-                    ))}
+                    {sources.map(
+                      (source, sourceIndex) => (
+                        <span
+                          key={`${source}-${sourceIndex}`}
+                        >
+                          {source}
+                        </span>
+                      )
+                    )}
                   </div>
                 )}
 
@@ -493,14 +569,25 @@ export default function CrossSourceCard({
 
                 {item.confidence && (
                   <span className="crossSourceItemConfidence">
-                    Confidence: {item.confidence}
+                    {text(
+                      `Confidence: ${item.confidence}`,
+                      `درجة الثقة: ${item.confidence}`
+                    )}
                   </span>
                 )}
 
                 {item.recommendation && (
                   <div className="crossSourceRecommendation">
-                    <strong>Suggested focus</strong>
-                    <p>{item.recommendation}</p>
+                    <strong>
+                      {text(
+                        "Suggested focus",
+                        "التركيز المقترح"
+                      )}
+                    </strong>
+
+                    <p>
+                      {item.recommendation}
+                    </p>
                   </div>
                 )}
               </article>
@@ -511,8 +598,10 @@ export default function CrossSourceCard({
 
       {!hasCrossSourceIntelligence && (
         <div className="crossSourceEmpty">
-          More connected health data is needed before OrganHeal can identify
-          a reliable cross-source relationship.
+          {text(
+            "More connected health data is needed before OrganHeal can identify a reliable cross-source relationship.",
+            "يحتاج OrganHeal إلى المزيد من البيانات الصحية المترابطة قبل تحديد علاقة موثوقة بين مصادر البيانات المختلفة."
+          )}
         </div>
       )}
     </section>

@@ -1,5 +1,10 @@
+import {
+  createIntelligenceText,
+} from "@/lib/presentation/intelligence/intelligence-ui-text";
+
 type ForecastCardProps = {
   forecast: unknown;
+  isArabic: boolean;
 };
 
 type ForecastItem = {
@@ -171,7 +176,12 @@ function getTone(value: string) {
 
 export default function ForecastCard({
   forecast,
+  isArabic,
 }: ForecastCardProps) {
+  const text = createIntelligenceText(
+    isArabic ? "ar" : "en"
+  );
+
   const forecastItems = normalizeForecastItems(forecast);
   const summary = getForecastSummary(forecast);
   const horizon = getForecastHorizon(forecast);
@@ -184,7 +194,11 @@ export default function ForecastCard({
     forecastItems.length > 0;
 
   return (
-    <section className="healthForecastResult">
+    <section
+  className="healthForecastResult"
+  dir={isArabic ? "rtl" : "ltr"}
+  lang={isArabic ? "ar" : "en"}
+>
       <style>{`
         .healthForecastResult,
         .healthForecastResult * {
@@ -274,7 +288,7 @@ export default function ForecastCard({
           margin-top: 16px;
           padding: 15px 16px;
           border: 1px solid rgba(15, 118, 110, 0.15);
-          border-left: 4px solid #0f766e;
+          border-inline-start: 4px solid #0f766e;
           border-radius: 14px;
           background: #f0fdfa;
         }
@@ -418,37 +432,50 @@ export default function ForecastCard({
       <header className="healthForecastHeader">
         <div>
           <p className="healthForecastEyebrow">
-            Forward-looking intelligence
-          </p>
+  {text(
+    "Forward-looking intelligence",
+    "الذكاء الصحي المستقبلي"
+  )}
+</p>
 
-          <h3 className="healthForecastTitle">
-            Possible future health direction
-          </h3>
+<h3 className="healthForecastTitle">
+  {text(
+    "Possible future health direction",
+    "الاتجاه الصحي المحتمل مستقبلًا"
+  )}
+</h3>
 
-          <p className="healthForecastDescription">
-            Forecast signals describe possible future direction from the
-            available health history. They are projections, not diagnoses or
-            guarantees of future outcomes.
-          </p>
+<p className="healthForecastDescription">
+  {text(
+    "Forecast signals describe possible future direction from the available health history. They are projections, not diagnoses or guarantees of future outcomes.",
+    "تصف إشارات التوقع الاتجاه الصحي المحتمل اعتمادًا على التاريخ الصحي المتاح. وهي توقعات وليست تشخيصًا أو ضمانًا لنتائج مستقبلية."
+  )}
+</p>
         </div>
 
         {(horizon || confidence) && (
           <div className="healthForecastBadges">
             {horizon && (
-              <span className="healthForecastBadge neutral">
-                Horizon: {horizon}
-              </span>
-            )}
+  <span className="healthForecastBadge neutral">
+    {text(
+      `Horizon: ${horizon}`,
+      `الفترة المستقبلية: ${horizon}`
+    )}
+  </span>
+)}
 
-            {confidence && (
-              <span
-                className={`healthForecastBadge ${getTone(
-                  confidence
-                )}`}
-              >
-                Confidence: {confidence}
-              </span>
-            )}
+           {confidence && (
+  <span
+    className={`healthForecastBadge ${getTone(
+      confidence
+    )}`}
+  >
+    {text(
+      `Confidence: ${confidence}`,
+      `درجة الثقة: ${confidence}`
+    )}
+  </span>
+)}
           </div>
         )}
       </header>
@@ -456,8 +483,11 @@ export default function ForecastCard({
       {summary && (
         <div className="healthForecastSignal">
           <p className="healthForecastSignalLabel">
-            Current forecast signal
-          </p>
+  {text(
+    "Current forecast signal",
+    "إشارة التوقع الحالية"
+  )}
+</p>
 
           <p className="healthForecastSignalText">
             {summary}
@@ -473,7 +503,10 @@ export default function ForecastCard({
               item.scenario ||
               item.organ ||
               item.system ||
-              `Forecast signal ${index + 1}`;
+              text(
+  `Forecast signal ${index + 1}`,
+  `إشارة توقع ${index + 1}`
+);
 
             const riskLevel =
               item.riskLevel ||
@@ -519,10 +552,13 @@ export default function ForecastCard({
                   </div>
 
                   {riskLevel && (
-                    <span className="healthForecastRisk">
-                      Risk: {riskLevel}
-                    </span>
-                  )}
+  <span className="healthForecastRisk">
+    {text(
+      `Risk: ${riskLevel}`,
+      `المخاطر: ${riskLevel}`
+    )}
+  </span>
+)}
                 </div>
 
                 {(timeframe ||
@@ -531,35 +567,50 @@ export default function ForecastCard({
                   item.direction ||
                   item.projectedChange) && (
                   <div className="healthForecastMeta">
-                    {timeframe && (
-                      <span>
-                        Timeframe: {timeframe}
-                      </span>
-                    )}
+                   {timeframe && (
+  <span>
+    {text(
+      `Timeframe: ${timeframe}`,
+      `الفترة الزمنية: ${timeframe}`
+    )}
+  </span>
+)}
 
                     {item.probability && (
-                      <span>
-                        Probability: {item.probability}
-                      </span>
-                    )}
+  <span>
+    {text(
+      `Probability: ${item.probability}`,
+      `الاحتمال: ${item.probability}`
+    )}
+  </span>
+)}
 
                     {item.confidence && (
-                      <span>
-                        Confidence: {item.confidence}
-                      </span>
-                    )}
+  <span>
+    {text(
+      `Confidence: ${item.confidence}`,
+      `درجة الثقة: ${item.confidence}`
+    )}
+  </span>
+)}
 
                     {item.direction && (
-                      <span>
-                        Direction: {item.direction}
-                      </span>
-                    )}
+  <span>
+    {text(
+      `Direction: ${item.direction}`,
+      `الاتجاه: ${item.direction}`
+    )}
+  </span>
+)}
 
-                    {item.projectedChange && (
-                      <span>
-                        Projected change: {item.projectedChange}
-                      </span>
-                    )}
+                   {item.projectedChange && (
+  <span>
+    {text(
+      `Projected change: ${item.projectedChange}`,
+      `التغير المتوقع: ${item.projectedChange}`
+    )}
+  </span>
+)}
                   </div>
                 )}
 
@@ -571,7 +622,12 @@ export default function ForecastCard({
 
                 {suggestedFocus && (
                   <div className="healthForecastRecommendation">
-                    <strong>Suggested focus</strong>
+                    <strong>
+  {text(
+    "Suggested focus",
+    "التركيز المقترح"
+  )}
+</strong>
                     <p>{suggestedFocus}</p>
                   </div>
                 )}
@@ -583,9 +639,11 @@ export default function ForecastCard({
 
       {!hasForecastData && (
         <div className="healthForecastEmpty">
-          More longitudinal health history is needed before OrganHeal can
-          produce a meaningful forward-looking projection.
-        </div>
+  {text(
+    "More longitudinal health history is needed before OrganHeal can produce a meaningful forward-looking projection.",
+    "يحتاج OrganHeal إلى المزيد من التاريخ الصحي طويل المدى قبل إنشاء توقع مستقبلي ذي معنى."
+  )}
+</div>
       )}
     </section>
   );

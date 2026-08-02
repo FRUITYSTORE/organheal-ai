@@ -8,6 +8,7 @@
     prioritySystem: string;
     nextBestAction: string;
   };
+  isArabic: boolean;
 };
 
 function getScoreTone(score: number) {
@@ -17,42 +18,64 @@ function getScoreTone(score: number) {
   return "risk";
 }
 
-function getHealthState(score: number) {
+function getHealthState(
+  score: number,
+  isArabic: boolean
+) {
   if (score >= 80) {
     return {
-      label: "Strong overall position",
-      description:
-        "Your current health signals appear generally strong. Continue monitoring the priority highlighted in this analysis.",
+      label: isArabic
+        ? "وضع صحي عام قوي"
+        : "Strong overall position",
+      description: isArabic
+        ? "تبدو مؤشراتك الصحية الحالية قوية بشكل عام. استمر في متابعة الأولوية المحددة في هذا التحليل."
+        : "Your current health signals appear generally strong. Continue monitoring the priority highlighted in this analysis.",
     };
   }
 
   if (score >= 60) {
     return {
-      label: "Stable with areas to improve",
-      description:
-        "Your overall picture appears reasonably stable, with specific signals that deserve focused follow-up.",
+      label: isArabic
+        ? "وضع مستقر مع مجالات للتحسين"
+        : "Stable with areas to improve",
+      description: isArabic
+        ? "تبدو صورتك الصحية العامة مستقرة نسبيًا، مع وجود مؤشرات محددة تستحق المتابعة المركزة."
+        : "Your overall picture appears reasonably stable, with specific signals that deserve focused follow-up.",
     };
   }
 
   return {
-    label: "Needs focused attention",
-    description:
-      "This analysis identified health signals that should be reviewed carefully and followed with the recommended next step.",
+    label: isArabic
+      ? "يحتاج إلى اهتمام مركز"
+      : "Needs focused attention",
+    description: isArabic
+      ? "حدد هذا التحليل مؤشرات صحية تحتاج إلى مراجعة دقيقة ومتابعة الخطوة التالية الموصى بها."
+      : "This analysis identified health signals that should be reviewed carefully and followed with the recommended next step.",
   };
 }
 
 export default function ExecutiveSummaryCard({
   summary,
+  isArabic,
 }: ExecutiveSummaryCardProps) {
   const scoreTone = getScoreTone(summary.currentScore);
   const forecastTone = getScoreTone(summary.forecastScore);
   const confidenceTone = getScoreTone(summary.confidenceScore);
-  const healthState = getHealthState(summary.currentScore);
+  const healthState = getHealthState(
+    summary.currentScore,
+    isArabic
+  );
+
+  function text(en: string, ar: string) {
+    return isArabic ? ar : en;
+  }
 
   return (
     <section
       className="ohCard"
       aria-labelledby="current-health-summary-title"
+      dir={isArabic ? "rtl" : "ltr"}
+      lang={isArabic ? "ar" : "en"}
       style={{
         overflow: "hidden",
         padding: 0,
@@ -76,7 +99,12 @@ export default function ExecutiveSummaryCard({
           }}
         >
           <div style={{ flex: "1 1 520px" }}>
-            <p className="ohMetricLabel">Personal health intelligence</p>
+            <p className="ohMetricLabel">
+              {text(
+                "Personal health intelligence",
+                "الذكاء الصحي الشخصي"
+              )}
+            </p>
 
             <h2
               id="current-health-summary-title"
@@ -87,7 +115,10 @@ export default function ExecutiveSummaryCard({
                 fontSize: "clamp(1.55rem, 3vw, 2.2rem)",
               }}
             >
-              Your Health Today
+              {text(
+                "Your Health Today",
+                "صحتك اليوم"
+              )}
             </h2>
 
             <strong
@@ -125,9 +156,15 @@ export default function ExecutiveSummaryCard({
           >
             <span
               className="ohMetricLabel"
-              style={{ display: "block", marginBottom: "6px" }}
+              style={{
+                display: "block",
+                marginBottom: "6px",
+              }}
             >
-              Current score
+              {text(
+                "Current score",
+                "الدرجة الحالية"
+              )}
             </span>
 
             <span
@@ -149,11 +186,17 @@ export default function ExecutiveSummaryCard({
         <div
           className="ohMetricGrid"
           style={{
-            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+            gridTemplateColumns:
+              "repeat(auto-fit, minmax(180px, 1fr))",
           }}
         >
           <article className="ohMetricCard">
-            <span className="ohMetricLabel">Highest priority</span>
+            <span className="ohMetricLabel">
+              {text(
+                "Highest priority",
+                "الأولوية الأعلى"
+              )}
+            </span>
 
             <strong
               style={{
@@ -167,7 +210,12 @@ export default function ExecutiveSummaryCard({
           </article>
 
           <article className="ohMetricCard">
-            <span className="ohMetricLabel">Health trend</span>
+            <span className="ohMetricLabel">
+              {text(
+                "Health trend",
+                "الاتجاه الصحي"
+              )}
+            </span>
 
             <strong
               style={{
@@ -181,7 +229,12 @@ export default function ExecutiveSummaryCard({
           </article>
 
           <article className="ohMetricCard">
-            <span className="ohMetricLabel">90-day outlook</span>
+            <span className="ohMetricLabel">
+              {text(
+                "90-day outlook",
+                "توقعات 90 يومًا"
+              )}
+            </span>
 
             <span
               className={`ohStatusBadge ${forecastTone}`}
@@ -195,7 +248,12 @@ export default function ExecutiveSummaryCard({
           </article>
 
           <article className="ohMetricCard">
-            <span className="ohMetricLabel">Analysis confidence</span>
+            <span className="ohMetricLabel">
+              {text(
+                "Analysis confidence",
+                "ثقة التحليل"
+              )}
+            </span>
 
             <span
               className={`ohStatusBadge ${confidenceTone}`}
@@ -209,9 +267,14 @@ export default function ExecutiveSummaryCard({
 
             <span
               className="ohMetricHint"
-              style={{ display: "block", marginTop: "8px" }}
+              style={{
+                display: "block",
+                marginTop: "8px",
+              }}
             >
-              {summary.confidenceScore}/100 confidence
+              {isArabic
+                ? `درجة الثقة ${summary.confidenceScore}/100`
+                : `${summary.confidenceScore}/100 confidence`}
             </span>
           </article>
         </div>
@@ -225,12 +288,20 @@ export default function ExecutiveSummaryCard({
             padding: "20px",
           }}
         >
-          <span aria-hidden="true" style={{ fontSize: "1.25rem" }}>
+          <span
+            aria-hidden="true"
+            style={{ fontSize: "1.25rem" }}
+          >
             🎯
           </span>
 
           <div>
-            <strong>What should you do next?</strong>
+            <strong>
+              {text(
+                "Most important next step",
+                "أهم خطوة تالية"
+              )}
+            </strong>
 
             <p
               style={{

@@ -1,5 +1,6 @@
 type TimelineCardProps = {
   timeline: unknown;
+  isArabic: boolean;
 };
 
 type TimelineItem = {
@@ -93,7 +94,11 @@ function getTimelineSummary(timeline: unknown): string {
 
 export default function TimelineCard({
   timeline,
+  isArabic,
 }: TimelineCardProps) {
+  function text(en: string, ar: string) {
+    return isArabic ? ar : en;
+  }
   const timelineItems = normalizeTimelineItems(timeline);
   const timelineSummary = getTimelineSummary(timeline);
 
@@ -101,7 +106,11 @@ export default function TimelineCard({
     Boolean(timelineSummary) || timelineItems.length > 0;
 
   return (
-    <section className="healthTimelineResult">
+    <section
+  className="healthTimelineResult"
+  dir={isArabic ? "rtl" : "ltr"}
+  lang={isArabic ? "ar" : "en"}
+>
       <style>{`
         .healthTimelineResult,
         .healthTimelineResult * {
@@ -257,24 +266,35 @@ export default function TimelineCard({
       `}</style>
 
       <header className="healthTimelineHeader">
-        <p className="healthTimelineEyebrow">
-          Health direction
-        </p>
+       <p className="healthTimelineEyebrow">
+  {text(
+    "Health direction",
+    "الاتجاه الصحي"
+  )}
+</p>
 
-        <h3 className="healthTimelineTitle">
-          Recent health movement
-        </h3>
+<h3 className="healthTimelineTitle">
+  {text(
+    "Recent health movement",
+    "التغيرات الصحية الأخيرة"
+  )}
+</h3>
 
-        <p className="healthTimelineDescription">
-          A longitudinal view of meaningful changes detected across the
-          available health history.
-        </p>
+<p className="healthTimelineDescription">
+  {text(
+    "A longitudinal view of meaningful changes detected across the available health history.",
+    "نظرة زمنية على التغيرات المهمة التي تم رصدها عبر التاريخ الصحي المتاح."
+  )}
+</p>
       </header>
 
       {timelineSummary && (
         <div className="healthTimelineSignal">
           <p className="healthTimelineSignalLabel">
-            Current timeline signal
+            {text(
+  "Current timeline signal",
+  "إشارة الخط الزمني الحالية"
+)}
           </p>
 
           <p className="healthTimelineSignalText">
@@ -291,7 +311,10 @@ export default function TimelineCard({
               item.label ||
               item.category ||
               item.period ||
-              `Health event ${index + 1}`;
+              text(
+  `Health event ${index + 1}`,
+  `حدث صحي ${index + 1}`
+)
 
             const description =
               item.description ||
@@ -325,17 +348,23 @@ export default function TimelineCard({
                   item.severity ||
                   item.source) && (
                   <div className="healthTimelineMeta">
-                    {item.status && (
-                      <span>Status: {item.status}</span>
-                    )}
+                   {item.status && (
+  <span>
+    {text("Status", "الحالة")}: {item.status}
+  </span>
+)}
 
-                    {item.severity && (
-                      <span>Severity: {item.severity}</span>
-                    )}
+{item.severity && (
+  <span>
+    {text("Severity", "الشدة")}: {item.severity}
+  </span>
+)}
 
-                    {item.source && (
-                      <span>Source: {item.source}</span>
-                    )}
+{item.source && (
+  <span>
+    {text("Source", "المصدر")}: {item.source}
+  </span>
+)}
                   </div>
                 )}
               </article>
@@ -346,8 +375,10 @@ export default function TimelineCard({
 
       {!hasTimelineIntelligence && (
         <div className="healthTimelineEmpty">
-          More longitudinal data is needed before OrganHeal can identify a
-          meaningful health direction.
+          {text(
+  "More longitudinal data is needed before OrganHeal can identify a meaningful health direction.",
+  "يحتاج OrganHeal إلى المزيد من البيانات التاريخية قبل تحديد اتجاه صحي ذي معنى."
+)}
         </div>
       )}
     </section>

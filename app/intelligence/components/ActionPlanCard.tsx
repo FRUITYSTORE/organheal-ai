@@ -4,6 +4,7 @@ type ActionPlanCardProps = {
     thisMonth: string[];
     next90Days: string[];
   };
+  isArabic: boolean;
 };
 
 function PlanSection({
@@ -11,31 +12,52 @@ function PlanSection({
   badge,
   items,
   number,
+  isArabic,
 }: {
   title: string;
   badge: string;
   items: string[];
   number: string;
+  isArabic: boolean;
 }) {
+  const actionCount = isArabic
+    ? `${items.length} ${
+        items.length === 1 ? "إجراء" : "إجراءات"
+      }`
+    : `${items.length} ${
+        items.length === 1 ? "action" : "actions"
+      }`;
+
   return (
     <details className="actionPreviewCard">
       <summary className="actionPreviewSummary">
         <div className="actionPreviewIdentity">
-          <span className="actionPreviewNumber" aria-hidden="true">
+          <span
+            className="actionPreviewNumber"
+            aria-hidden="true"
+          >
             {number}
           </span>
 
           <div>
-            <span className="actionPreviewBadge">{badge}</span>
-            <h3 className="actionPreviewTitle">{title}</h3>
+            <span className="actionPreviewBadge">
+              {badge}
+            </span>
+
+            <h3 className="actionPreviewTitle">
+              {title}
+            </h3>
 
             <span className="actionPreviewCount">
-              {items.length} {items.length === 1 ? "action" : "actions"}
+              {actionCount}
             </span>
           </div>
         </div>
 
-        <span className="actionPreviewChevron" aria-hidden="true">
+        <span
+          className="actionPreviewChevron"
+          aria-hidden="true"
+        >
           ↓
         </span>
       </summary>
@@ -48,14 +70,20 @@ function PlanSection({
                 className="actionPreviewItem"
                 key={`${title}-${index}`}
               >
-                <span className="actionPreviewDot" aria-hidden="true" />
+                <span
+                  className="actionPreviewDot"
+                  aria-hidden="true"
+                />
+
                 <p>{item}</p>
               </div>
             ))}
           </div>
         ) : (
           <p className="actionPreviewEmpty">
-            No specific actions are available for this period.
+            {isArabic
+              ? "لا توجد إجراءات محددة متاحة لهذه الفترة."
+              : "No specific actions are available for this period."}
           </p>
         )}
       </div>
@@ -65,9 +93,18 @@ function PlanSection({
 
 export default function ActionPlanCard({
   actionPlan,
+  isArabic,
 }: ActionPlanCardProps) {
+  function text(en: string, ar: string) {
+    return isArabic ? ar : en;
+  }
+
   return (
-    <section className="actionPlanPreview">
+    <section
+      className="actionPlanPreview"
+      dir={isArabic ? "rtl" : "ltr"}
+      lang={isArabic ? "ar" : "en"}
+    >
       <style>{`
         .actionPlanPreview,
         .actionPlanPreview * {
@@ -230,7 +267,8 @@ export default function ActionPlanCard({
           transition: transform 180ms ease;
         }
 
-        .actionPreviewCard[open] .actionPreviewChevron {
+        .actionPreviewCard[open]
+          .actionPreviewChevron {
           transform: rotate(180deg);
           background: #eff6ff;
           color: #1d4ed8;
@@ -289,44 +327,76 @@ export default function ActionPlanCard({
       <div className="actionPreviewHeader">
         <div>
           <p className="actionPreviewEyebrow">
-            Personal Action Plan
+            {text(
+              "Personal Action Plan",
+              "خطة العمل الشخصية"
+            )}
           </p>
 
           <h2 className="actionPreviewHeading">
-            Your next actions at a glance
+            {text(
+              "Your next actions at a glance",
+              "خطواتك التالية بنظرة سريعة"
+            )}
           </h2>
 
           <p className="actionPreviewDescription">
-            Review your immediate, monthly, and longer-term direction.
-            Open a period when you need the full action list.
+            {text(
+              "Review your immediate, monthly, and longer-term direction. Open a period when you need the full action list.",
+              "راجع خطواتك الفورية والشهرية وطويلة المدى. افتح أي فترة لعرض قائمة الإجراءات كاملة."
+            )}
           </p>
         </div>
 
         <span className="actionPreviewStatus">
-          Actionable
+          {text(
+            "Actionable",
+            "قابلة للتنفيذ"
+          )}
         </span>
       </div>
 
       <div className="actionPreviewGrid">
         <PlanSection
           number="01"
-          title="This Week"
-          badge="Immediate focus"
+          title={text(
+            "This Week",
+            "هذا الأسبوع"
+          )}
+          badge={text(
+            "Immediate focus",
+            "التركيز الفوري"
+          )}
           items={actionPlan.thisWeek}
+          isArabic={isArabic}
         />
 
         <PlanSection
           number="02"
-          title="This Month"
-          badge="Build consistency"
+          title={text(
+            "This Month",
+            "هذا الشهر"
+          )}
+          badge={text(
+            "Build consistency",
+            "بناء الاستمرارية"
+          )}
           items={actionPlan.thisMonth}
+          isArabic={isArabic}
         />
 
         <PlanSection
           number="03"
-          title="Next 90 Days"
-          badge="Longer direction"
+          title={text(
+            "Next 90 Days",
+            "الـ90 يومًا القادمة"
+          )}
+          badge={text(
+            "Longer direction",
+            "الاتجاه طويل المدى"
+          )}
           items={actionPlan.next90Days}
+          isArabic={isArabic}
         />
       </div>
     </section>

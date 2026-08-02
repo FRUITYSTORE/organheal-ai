@@ -748,17 +748,17 @@ const visibleCompactReports = showAllReports
               </p>
 
               <h1 className="ohTitle">
-                {text(
-                  "Your reports, analysis results, and next health step.",
-                  "تقاريرك، نتائج التحليل، والخطوة الصحية التالية."
-                )}
+               {text(
+  "Your personal health record. Organized. Explained. Ready.",
+  "سجلك الصحي الشخصي. منظم، مفهوم، وجاهز."
+)}
               </h1>
 
               <p className="ohLead">
-                {text(
-                  "Reports are for documents and results. Intelligence is for analyzing one selected report. Health Plan is for follow-up.",
-                  "التقارير للمستندات والنتائج. صفحة الذكاء لتحليل تقرير محدد. وخطة الصحة للمتابعة."
-                )}
+               {text(
+  "Keep every medical report in one secure place. Review previous results, open AI analyses, and continue your health journey whenever you need.",
+  "احتفظ بجميع تقاريرك الطبية في مكان آمن واحد. راجع نتائجك السابقة، وافتح تحليلات الذكاء الاصطناعي، وتابع رحلتك الصحية في أي وقت."
+)}
               </p>
 
               <div className="ohButtonRow" style={{ marginTop: "22px" }}>
@@ -783,9 +783,9 @@ const visibleCompactReports = showAllReports
 
               <p className="ohCardText">
                 {text(
-                  "The page now highlights one report, while older reports stay compact below.",
-                  "تعرض الصفحة تقريرًا واحدًا بشكل واضح، بينما تبقى التقارير السابقة مختصرة بالأسفل."
-                )}
+  "Your latest report is highlighted first, while your previous reports remain organized below for quick access.",
+  "يظهر أحدث تقرير لديك أولًا، بينما تبقى التقارير السابقة منظمة بالأسفل للوصول السريع."
+)}
               </p>
 
               <div className="ohButtonRow" style={{ marginTop: "18px" }}>
@@ -812,21 +812,21 @@ const visibleCompactReports = showAllReports
   />
 
   <StatCard
-    label={text("Saved analysis", "تحليل محفوظ")}
+    label={text("Ready insights", "رؤى جاهزة")}
     value={savedCount}
-    hint={text("ready for review", "جاهز للمراجعة")}
+    hint={text("available to review", "جاهزة للمراجعة")}
   />
 
   <StatCard
-    label={text("Need analysis", "تحتاج تحليل")}
+    label={text("Awaiting analysis", "بانتظار التحليل")}
     value={needAnalysisCount}
-    hint={text("next action required", "تحتاج خطوة تالية")}
+    hint={text("ready for your next step", "جاهزة لخطوتك التالية")}
   />
 
   <StatCard
-    label={text("Text extracted", "استخراج مكتمل")}
+    label={text("Reports processed", "تقارير تمت معالجتها")}
     value={extractionCompletedCount}
-    hint={text("ready for analysis", "جاهزة للتحليل")}
+    hint={text("prepared for intelligence", "مهيأة للتحليل الذكي")}
   />
 </section>
 
@@ -930,7 +930,10 @@ const visibleCompactReports = showAllReports
       risk: text("Risk", "الخطورة"),
       viewAnalysis: text("View Analysis", "عرض التحليل"),
       analyzeReport: text("Analyze Report", "تحليل التقرير"),
-      openFile: text("Open File", "فتح الملف"),
+      openFile: text(
+  "Open Original Report",
+  "فتح التقرير الأصلي"
+),
       healthPlan: text("Health Plan", "خطة الصحة"),
       sideLabel: text("What this page is for", "وظيفة هذه الصفحة"),
       sideTitle: text(
@@ -949,21 +952,21 @@ const visibleCompactReports = showAllReports
               <div className="ohCardHeader">
                 <div>
                   <p className="ohMetricLabel">
-                    {text("Compact report history", "سجل التقارير المختصر")}
+                    {text("Your report history", "سجل تقاريرك الصحية")}
                   </p>
 
                   <h2 className="ohCardTitle">
                     {text(
-                      "Older reports stay short and easy to reopen.",
-                      "التقارير السابقة تبقى مختصرة وسهلة الفتح."
-                    )}
+  "Every report remains available whenever you need it.",
+  "كل تقاريرك تبقى متاحة لك في أي وقت."
+)}
                   </h2>
 
                   <p className="ohCardText">
                     {text(
-                      "Use one click to analyze, review, or open the original file.",
-                      "استخدم ضغطة واحدة للتحليل، المراجعة، أو فتح الملف الأصلي."
-                    )}
+  "Review previous reports, reopen the original document, or continue your health journey with AI-powered analysis.",
+  "راجع تقاريرك السابقة، وافتح الملف الأصلي، أو تابع رحلتك الصحية من خلال التحليل المدعوم بالذكاء الاصطناعي."
+)}
                   </p>
                 </div>
 

@@ -23,11 +23,7 @@ import CrossSourceCard from "./components/CrossSourceCard";
 import DigitalTwinCard from "./components/DigitalTwinCard";
 import ForecastCard from "./components/ForecastCard";
 import UnifiedHealthCard from "./components/UnifiedHealthCard";
-import MedicalReportCard from "./components/MedicalReportCard";
-import MedicalReportList from "./components/MedicalReportList";
 import HealthPassportCard from "./components/HealthPassportCard";
-import TopOpportunitiesCard from "./components/TopOpportunitiesCard";
-import DoctorReadySummaryCard from "./components/DoctorReadySummaryCard";
 import GeneratedReportDetailsCard from "./components/GeneratedReportDetailsCard";
 import PersonalHealthStrategyCard from "./components/PersonalHealthStrategyCard";
 import DoctorBriefReportCard from "./components/DoctorBriefReportCard";
@@ -716,6 +712,16 @@ const hasDevelopingAdvancedModels =
   !hasDigitalHealthModelResult ||
   !hasForecastResult;
 
+const hasReportEvidence = Boolean(
+  focusedReportInsight &&
+    (
+      focusedReportInsight.summary?.trim() ||
+      focusedReportInsight.key_findings?.trim() ||
+      focusedReportInsight.risk_signals?.trim() ||
+      focusedReportInsight.recommendations?.trim()
+    )
+);
+
   return (
     <main
       className="ohPageShell intelligenceFocusPage"
@@ -1048,6 +1054,118 @@ const hasDevelopingAdvancedModels =
           gap: 16px;
         }
 
+        .intelligenceEvidenceStatus {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 13px 15px;
+  border-radius: 16px;
+  border: 1px solid rgba(15, 118, 110, 0.18);
+  background: #f0fdfa;
+}
+
+.intelligenceEvidenceStatus.developing {
+  border-color: rgba(245, 158, 11, 0.24);
+  background: #fffbeb;
+}
+
+.intelligenceEvidenceStatusMark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: #ccfbf1;
+  color: #0f766e;
+  font-size: 0.78rem;
+  font-weight: 950;
+}
+
+.intelligenceEvidenceStatus.developing
+  .intelligenceEvidenceStatusMark {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.intelligenceEvidenceStatus strong {
+  display: block;
+  color: #0f172a;
+  font-size: 0.86rem;
+}
+
+.intelligenceEvidenceStatus p {
+  margin: 3px 0 0;
+  color: #64748b;
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+.intelligenceHealthStatus {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) repeat(2, minmax(150px, 0.55fr));
+  gap: 12px;
+  align-items: stretch;
+  padding: 15px;
+  border: 1px solid rgba(37, 99, 235, 0.16);
+  border-radius: 18px;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(239, 246, 255, 0.96),
+      rgba(240, 253, 250, 0.92)
+    );
+}
+
+.intelligenceHealthStatusMain,
+.intelligenceHealthStatusMetric {
+  display: grid;
+  align-content: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 10px 12px;
+}
+
+.intelligenceHealthStatusMetric {
+  border-inline-start: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.intelligenceHealthStatusLabel {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.intelligenceHealthStatusValue {
+  margin: 0;
+  color: #0f172a;
+  font-size: 0.94rem;
+  font-weight: 950;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.intelligenceHealthStatusMain
+  .intelligenceHealthStatusValue {
+  color: #0f766e;
+  font-size: 1.04rem;
+}
+
+@media (max-width: 720px) {
+  .intelligenceHealthStatus {
+    grid-template-columns: 1fr;
+  }
+
+  .intelligenceHealthStatusMetric {
+    border-inline-start: 0;
+    border-top: 1px solid rgba(15, 23, 42, 0.08);
+  }
+}
+
         .intelligenceDisclosure {
           overflow: hidden;
           border: 1px solid rgba(15, 23, 42, 0.09);
@@ -1365,27 +1483,29 @@ const hasDevelopingAdvancedModels =
         <section className="ohHero intelligenceCompactHero">
           <div className="ohHeroGrid">
             <div>
-             <p className="ohEyebrow">
-  {text("Selected Report Analysis", "تحليل التقرير المحدد")}
-</p>
+              <p className="ohEyebrow">
+                {text(
+                  "Your Health Intelligence",
+                  "ذكاؤك الصحي"
+                )}
+              </p>
 
-<h1 className="ohTitle">
-  {text("Understand this report clearly.", "افهم هذا التقرير بوضوح.")}
-</h1>
+              <h1 className="ohTitle">
+                {text(
+                  "Understand what matters—and what to do next.",
+                  "افهم ما يهم وما يجب فعله بعد ذلك."
+                )}
+              </h1>
 
-<p className="ohLead">
-  {text(
-    "Review one selected medical report, generate its health intelligence, and move from the important findings to your next action.",
-    "راجع تقريرًا طبيًا واحدًا، وأنشئ الذكاء الصحي الخاص به، وانتقل من أهم النتائج إلى خطوتك التالية."
-  )}
-</p>
-
-             </div>
-
-            
+              <p className="ohLead">
+                {text(
+                  "OrganHeal connects the selected report with your wider health context to highlight important findings, supporting evidence, practical next steps, and doctor-ready summaries.",
+                  "يربط OrganHeal التقرير المحدد بسياقك الصحي الأوسع ليعرض النتائج المهمة، والأدلة الداعمة، والخطوات العملية التالية، والملخصات المناسبة لمناقشتها مع الطبيب."
+                )}
+              </p>
+            </div>
           </div>
         </section>
-
         {loading && (
           <section className="ohCard">
             <p className="ohEyebrow">
@@ -1434,19 +1554,34 @@ const hasDevelopingAdvancedModels =
                 </p>
 
                 <h2 className="ohCardTitle" style={{ fontSize: "1.65rem" }}>
-                  {focusedReportInsight.file_name || "Medical report"}
-                </h2>
+  {focusedReportInsight.file_name || text("Medical report", "تقرير طبي")}
+</h2>
 
-                <p className="ohCardText">
+{focusedReportIsGenerated && (
+  <p
+    className="ohMetricLabel"
+    style={{
+      marginTop: "8px",
+      color: "#047857",
+    }}
+  >
+    {text(
+      "Latest saved analysis available",
+      "آخر تحليل محفوظ متاح"
+    )}
+  </p>
+)}
+
+<p className="ohCardText">
                   {focusedReportIsGenerated
                     ? text(
                         "This report already has saved analysis. Review the result below or continue to your health plan.",
                         "هذا التقرير لديه تحليل مولد. راجع النتيجة بالأسفل أو تابع إلى خطة الصحة."
                       )
                     : text(
-                        "This report is ready for report intelligence. OrganHeal will extract the report text first, then generate a clearer summary.",
-                        "هذا التقرير جاهز للتحليل. سيستخرج OrganHeal نص التقرير أولًا، ثم يولد ملخصًا أوضح."
-                      )}
+    "This report is ready for analysis. OrganHeal will identify the important findings, explain what they may mean, and organize your practical next steps.",
+    "هذا التقرير جاهز للتحليل. سيحدد OrganHeal النتائج المهمة، ويوضح ما قد تعنيه، وينظم خطواتك العملية التالية."
+  )}
                 </p>
 
                 <div className="intelligenceStatusLine">
@@ -1647,22 +1782,124 @@ const hasDevelopingAdvancedModels =
                   </div>
 
                   <div className="intelligenceLayerContent">
-                    {generatedResult.executiveSummary && (
-                      <ExecutiveSummaryCard
-                        summary={generatedResult.executiveSummary}
-                      />
+  <div
+    className={`intelligenceEvidenceStatus ${
+      hasReportEvidence ? "available" : "developing"
+    }`}
+  >
+    <span
+      className="intelligenceEvidenceStatusMark"
+      aria-hidden="true"
+    >
+      {hasReportEvidence ? "✓" : "…"}
+    </span>
+
+    <div>
+      <strong>
+        {hasReportEvidence
+          ? text(
+              "Report evidence available",
+              "أدلة التقرير متوفرة"
+            )
+          : text(
+              "Evidence is still developing",
+              "الأدلة ما زالت قيد الاكتمال"
+            )}
+      </strong>
+
+      <p>
+        {hasReportEvidence
+          ? text(
+              "This intelligence includes findings extracted from the selected report. Interpretations should still be reviewed in their clinical context.",
+              "يتضمن هذا التحليل نتائج مستخرجة من التقرير المحدد، مع ضرورة مراجعة التفسيرات ضمن سياقها السريري."
+            )
+          : text(
+              "The available report content is limited. Adding clearer reports or more health history may strengthen future intelligence.",
+              "محتوى التقرير المتاح محدود. قد تساعد إضافة تقارير أوضح أو تاريخ صحي إضافي على تقوية التحليل لاحقًا."
+            )}
+      </p>
+    </div>
+  </div>
+
+<div
+  className="intelligenceHealthStatus"
+  aria-label={text(
+    "Current report status",
+    "حالة التقرير الحالية"
+  )}
+>
+  <div className="intelligenceHealthStatusMain">
+    <p className="intelligenceHealthStatusLabel">
+      {text(
+        "Report risk level",
+        "مستوى خطورة التقرير"
+      )}
+    </p>
+
+    <p className="intelligenceHealthStatusValue">
+      {focusedReportInsight.risk_level ||
+        text(
+          "Not currently specified",
+          "غير محدد حاليًا"
+        )}
+    </p>
+  </div>
+
+  <div className="intelligenceHealthStatusMetric">
+    <p className="intelligenceHealthStatusLabel">
+      {text(
+        "Current score",
+        "الدرجة الحالية"
+      )}
+    </p>
+
+    <p className="intelligenceHealthStatusValue">
+      {typeof generatedResult.executiveSummary?.currentScore === "number"
+        ? `${generatedResult.executiveSummary.currentScore}/100`
+        : text(
+            "Not available",
+            "غير متاحة"
+          )}
+    </p>
+  </div>
+
+  <div className="intelligenceHealthStatusMetric">
+    <p className="intelligenceHealthStatusLabel">
+      {text(
+        "Priority system",
+        "الجهاز ذو الأولوية"
+      )}
+    </p>
+
+    <p className="intelligenceHealthStatusValue">
+      {generatedResult.executiveSummary?.prioritySystem ||
+        text(
+          "General health",
+          "الصحة العامة"
+        )}
+    </p>
+  </div>
+</div>
+
+  {generatedResult.executiveSummary && (
+                     <ExecutiveSummaryCard
+  summary={generatedResult.executiveSummary}
+  isArabic={isArabicUi}
+/>
                     )}
 
                     {generatedResult.healthStory && (
                       <HealthStoryCard
-                        story={generatedResult.healthStory}
-                      />
+  story={generatedResult.healthStory}
+  isArabic={isArabicUi}
+/>
                     )}
 
                     {unifiedHealthPresentation && (
                       <UnifiedHealthCard
-                        unifiedHealth={unifiedHealthPresentation}
-                      />
+  unifiedHealth={generatedResult.unifiedHealth}
+  isArabic={isArabicUi}
+/>
                     )}
                   </div>
                 </section>
@@ -1712,8 +1949,9 @@ const hasDevelopingAdvancedModels =
 
                     {generatedResult.actionPlan && (
                       <ActionPlanCard
-                        actionPlan={generatedResult.actionPlan}
-                      />
+  actionPlan={generatedResult.actionPlan}
+  isArabic={isArabicUi}
+/>
                     )}
 
                     <div className="intelligenceActionFooter">
@@ -1966,7 +2204,10 @@ const hasDevelopingAdvancedModels =
       </summary>
 
       <div className="advancedIntelligenceCardBody">
-        <TimelineCard timeline={generatedResult.timeline} />
+        <TimelineCard
+  timeline={generatedResult.timeline}
+  isArabic={isArabicUi}
+/>
       </div>
     </details>
 
@@ -1985,7 +2226,10 @@ const hasDevelopingAdvancedModels =
       </summary>
 
       <div className="advancedIntelligenceCardBody">
-        <LabTrendsCard labTrends={generatedResult.labTrends} />
+        <LabTrendsCard
+  labTrends={generatedResult.labTrends}
+  isArabic={isArabicUi}
+/>
       </div>
     </details>
 
@@ -2011,26 +2255,30 @@ const hasDevelopingAdvancedModels =
      <div className="advancedIntelligenceCardBody">
   {hasLongitudinalRiskResult && (
     <LongitudinalRiskCard
-      longitudinalRisk={generatedResult.longitudinalRisk}
-    />
+  longitudinalRisk={generatedResult.longitudinalRisk}
+  isArabic={isArabicUi}
+/>
   )}
 
   {hasCrossSourceResult && (
     <CrossSourceCard
-      crossSource={generatedResult.crossSource}
-    />
+  crossSource={generatedResult.crossSource}
+  isArabic={isArabicUi}
+/>
   )}
 
   {hasDigitalHealthModelResult && (
     <DigitalTwinCard
-      digitalTwin={generatedResult.digitalTwin}
-    />
+  digitalTwin={generatedResult.digitalTwin}
+  isArabic={isArabicUi}
+/>
   )}
 
   {hasForecastResult && (
     <ForecastCard
-      forecast={generatedResult.forecast}
-    />
+  forecast={generatedResult.forecast}
+  isArabic={isArabicUi}
+/>
   )}
 
   {hasDevelopingAdvancedModels && (
@@ -2111,12 +2359,7 @@ const hasDevelopingAdvancedModels =
           </section>
         )}
 
-        {!loading && healthEngine && !focusedReportInsight && (
-          <section className="ohStack">
-          </section>
-        )}
-
-        <section className="ohTrustNotice">
+          <section className="ohTrustNotice">
           <span aria-hidden="true">🛡️</span>
           <div>
             <strong>

@@ -1,5 +1,10 @@
+import {
+  createIntelligenceText,
+} from "@/lib/presentation/intelligence/intelligence-ui-text";
+
 type LabTrendsCardProps = {
   labTrends: unknown;
+  isArabic: boolean;
 };
 
 type LabTrendItem = {
@@ -15,21 +20,34 @@ type LabTrendItem = {
   status?: string;
 };
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
+function isRecord(
+  value: unknown
+): value is Record<string, unknown> {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value)
+  );
 }
 
 function getText(value: unknown): string {
-  if (typeof value === "string") return value.trim();
+  if (typeof value === "string") {
+    return value.trim();
+  }
 
-  if (typeof value === "number" && Number.isFinite(value)) {
+  if (
+    typeof value === "number" &&
+    Number.isFinite(value)
+  ) {
     return String(value);
   }
 
   return "";
 }
 
-function normalizeLabTrendItems(labTrends: unknown): LabTrendItem[] {
+function normalizeLabTrendItems(
+  labTrends: unknown
+): LabTrendItem[] {
   const source = Array.isArray(labTrends)
     ? labTrends
     : isRecord(labTrends)
@@ -45,28 +63,37 @@ function normalizeLabTrendItems(labTrends: unknown): LabTrendItem[] {
     return [];
   }
 
-  return source.filter(isRecord).map((item) => ({
-    marker:
-      getText(item.marker) ||
-      getText(item.markerName),
-    name: getText(item.name),
-    title: getText(item.title),
-    earliestValue: getText(item.earliestValue),
-    latestValue: getText(item.latestValue),
-    changeAmount: getText(item.changeAmount),
-    trendDirection:
-      getText(item.trendDirection) ||
-      getText(item.direction),
-    trendSummary:
-      getText(item.trendSummary) ||
-      getText(item.summary),
-    summary: getText(item.summary),
-    status: getText(item.status),
-  }));
+  return source
+    .filter(isRecord)
+    .map((item) => ({
+      marker:
+        getText(item.marker) ||
+        getText(item.markerName),
+      name: getText(item.name),
+      title: getText(item.title),
+      earliestValue:
+        getText(item.earliestValue),
+      latestValue:
+        getText(item.latestValue),
+      changeAmount:
+        getText(item.changeAmount),
+      trendDirection:
+        getText(item.trendDirection) ||
+        getText(item.direction),
+      trendSummary:
+        getText(item.trendSummary) ||
+        getText(item.summary),
+      summary: getText(item.summary),
+      status: getText(item.status),
+    }));
 }
 
-function getHistoricalDepth(labTrends: unknown): string {
-  if (!isRecord(labTrends)) return "";
+function getHistoricalDepth(
+  labTrends: unknown
+): string {
+  if (!isRecord(labTrends)) {
+    return "";
+  }
 
   return (
     getText(labTrends.dataDepth) ||
@@ -76,18 +103,25 @@ function getHistoricalDepth(labTrends: unknown): string {
 }
 
 function getTrendTone(direction: string) {
-  const normalized = direction.toLowerCase();
+  const normalized = direction
+    .trim()
+    .toLowerCase();
 
   if (
     normalized.includes("improv") ||
-    normalized.includes("better")
+    normalized.includes("better") ||
+    normalized.includes("تحسن") ||
+    normalized.includes("أفضل")
   ) {
     return "good";
   }
 
   if (
     normalized.includes("wors") ||
-    normalized.includes("declin")
+    normalized.includes("declin") ||
+    normalized.includes("تدهور") ||
+    normalized.includes("انخفاض") ||
+    normalized.includes("أسوأ")
   ) {
     return "risk";
   }
@@ -97,21 +131,31 @@ function getTrendTone(direction: string) {
 
 export default function LabTrendsCard({
   labTrends,
+  isArabic,
 }: LabTrendsCardProps) {
-  const trendItems = normalizeLabTrendItems(labTrends);
-  const historicalDepth = getHistoricalDepth(labTrends);
+  const text = createIntelligenceText(
+    isArabic ? "ar" : "en"
+  );
 
-  const realTrends = trendItems.filter((item) => {
-    const hasValues =
-      Boolean(getText(item.earliestValue)) &&
-      Boolean(getText(item.latestValue));
+  const trendItems =
+    normalizeLabTrendItems(labTrends);
 
-    const hasTrend =
-      Boolean(item.trendDirection) ||
-      Boolean(item.trendSummary);
+  const historicalDepth =
+    getHistoricalDepth(labTrends);
 
-    return hasValues || hasTrend;
-  });
+  const realTrends = trendItems.filter(
+    (item) => {
+      const hasValues =
+        Boolean(getText(item.earliestValue)) &&
+        Boolean(getText(item.latestValue));
+
+      const hasTrend =
+        Boolean(item.trendDirection) ||
+        Boolean(item.trendSummary);
+
+      return hasValues || hasTrend;
+    }
+  );
 
   const trackedMarkers = trendItems
     .map(
@@ -123,7 +167,11 @@ export default function LabTrendsCard({
     .filter(Boolean);
 
   return (
-    <section className="labHistoryResult">
+    <section
+      className="labHistoryResult"
+      dir={isArabic ? "rtl" : "ltr"}
+      lang={isArabic ? "ar" : "en"}
+    >
       <style>{`
         .labHistoryResult,
         .labHistoryResult * {
@@ -294,21 +342,32 @@ export default function LabTrendsCard({
 
       <header className="labHistoryHeader">
         <p className="labHistoryEyebrow">
-          Laboratory history
+          {text(
+            "Laboratory history",
+            "تاريخ التحاليل"
+          )}
         </p>
 
         <h3 className="labHistoryTitle">
-          Historical marker movement
+          {text(
+            "Historical marker movement",
+            "تغير المؤشرات المخبرية مع الوقت"
+          )}
         </h3>
 
         <p className="labHistoryDescription">
-          Trends are shown only when OrganHeal has enough saved values to
-          compare the same laboratory marker over time.
+          {text(
+            "Trends are shown only when OrganHeal has enough saved values to compare the same laboratory marker over time.",
+            "تظهر الاتجاهات فقط عندما تتوفر لدى OrganHeal قيم محفوظة كافية لمقارنة المؤشر المخبري نفسه مع مرور الوقت."
+          )}
         </p>
 
         {historicalDepth && (
           <span className="labHistoryDepth">
-            History: {historicalDepth}
+            {text(
+              `History: ${historicalDepth}`,
+              `الفترة التاريخية: ${historicalDepth}`
+            )}
           </span>
         )}
       </header>
@@ -320,10 +379,14 @@ export default function LabTrendsCard({
               item.marker ||
               item.name ||
               item.title ||
-              `Laboratory marker ${index + 1}`;
+              text(
+                `Laboratory marker ${index + 1}`,
+                `مؤشر مخبري ${index + 1}`
+              );
 
             const direction =
-              item.trendDirection || "Stable";
+              item.trendDirection ||
+              text("Stable", "مستقر");
 
             return (
               <article
@@ -350,19 +413,28 @@ export default function LabTrendsCard({
                   <div className="labTrendValues">
                     {item.earliestValue && (
                       <span>
-                        Earlier: {item.earliestValue}
+                        {text(
+                          `Earlier: ${item.earliestValue}`,
+                          `القراءة السابقة: ${item.earliestValue}`
+                        )}
                       </span>
                     )}
 
                     {item.latestValue && (
                       <span>
-                        Latest: {item.latestValue}
+                        {text(
+                          `Latest: ${item.latestValue}`,
+                          `أحدث قراءة: ${item.latestValue}`
+                        )}
                       </span>
                     )}
 
                     {item.changeAmount && (
                       <span>
-                        Change: {item.changeAmount}
+                        {text(
+                          `Change: ${item.changeAmount}`,
+                          `مقدار التغير: ${item.changeAmount}`
+                        )}
                       </span>
                     )}
                   </div>
@@ -385,14 +457,28 @@ export default function LabTrendsCard({
         trackedMarkers.length > 0 && (
           <div className="labHistoryTracked">
             <p className="labHistoryTrackedLabel">
-              Markers currently tracked
+              {text(
+                "Markers currently tracked",
+                "المؤشرات التي تتم متابعتها حاليًا"
+              )}
             </p>
 
             <p className="labHistoryTrackedText">
-              {trackedMarkers.length} laboratory marker
-              {trackedMarkers.length === 1 ? "" : "s"} are available, but
-              repeated historical values are still needed before a reliable
-              trend can be calculated.
+              {isArabic
+                ? `يتوفر حاليًا ${trackedMarkers.length} ${
+                    trackedMarkers.length === 1
+                      ? "مؤشر مخبري"
+                      : "مؤشرات مخبرية"
+                  }، لكن لا تزال هناك حاجة إلى قراءات تاريخية متكررة قبل حساب اتجاه موثوق.`
+                : `${trackedMarkers.length} laboratory marker${
+                    trackedMarkers.length === 1
+                      ? ""
+                      : "s"
+                  } ${
+                    trackedMarkers.length === 1
+                      ? "is"
+                      : "are"
+                  } available, but repeated historical values are still needed before a reliable trend can be calculated.`}
             </p>
           </div>
         )}
@@ -400,9 +486,10 @@ export default function LabTrendsCard({
       {realTrends.length === 0 &&
         trackedMarkers.length === 0 && (
           <div className="labHistoryEmpty">
-            No comparable laboratory history is available yet. Add future
-            reports with repeated markers to build meaningful trends over
-            time.
+            {text(
+              "No comparable laboratory history is available yet. Add future reports with repeated markers to build meaningful trends over time.",
+              "لا يتوفر حتى الآن تاريخ مخبري قابل للمقارنة. أضف تقارير مستقبلية تتضمن المؤشرات نفسها لبناء اتجاهات صحية ذات معنى مع مرور الوقت."
+            )}
           </div>
         )}
     </section>

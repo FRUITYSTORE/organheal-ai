@@ -1,5 +1,10 @@
+import {
+  createIntelligenceText,
+} from "@/lib/presentation/intelligence/intelligence-ui-text";
+
 type DigitalTwinCardProps = {
   digitalTwin: unknown;
+  isArabic: boolean;
 };
 
 type DigitalTwinSignal = {
@@ -122,19 +127,25 @@ function getDigitalTwinConfidence(digitalTwin: unknown): string {
 }
 
 function getTone(value: string) {
-  const normalized = value.toLowerCase();
+  const normalized = value
+    .trim()
+    .toLowerCase();
 
   if (
     normalized.includes("high") ||
     normalized.includes("strong") ||
-    normalized.includes("stable")
+    normalized.includes("stable") ||
+    normalized.includes("مرتفع") ||
+    normalized.includes("قوي") ||
+    normalized.includes("مستقر")
   ) {
     return "good";
   }
 
   if (
     normalized.includes("moderate") ||
-    normalized.includes("medium")
+    normalized.includes("medium") ||
+    normalized.includes("متوسط")
   ) {
     return "moderate";
   }
@@ -142,7 +153,10 @@ function getTone(value: string) {
   if (
     normalized.includes("low") ||
     normalized.includes("weak") ||
-    normalized.includes("risk")
+    normalized.includes("risk") ||
+    normalized.includes("منخفض") ||
+    normalized.includes("ضعيف") ||
+    normalized.includes("مخاطر")
   ) {
     return "risk";
   }
@@ -152,7 +166,12 @@ function getTone(value: string) {
 
 export default function DigitalTwinCard({
   digitalTwin,
+  isArabic,
 }: DigitalTwinCardProps) {
+  const text = createIntelligenceText(
+    isArabic ? "ar" : "en"
+  );
+
   const signals = normalizeDigitalTwinSignals(digitalTwin);
   const summary = getDigitalTwinSummary(digitalTwin);
   const status = getDigitalTwinStatus(digitalTwin);
@@ -165,7 +184,11 @@ export default function DigitalTwinCard({
     signals.length > 0;
 
   return (
-    <section className="digitalHealthModelResult">
+    <section
+      className="digitalHealthModelResult"
+      dir={isArabic ? "rtl" : "ltr"}
+      lang={isArabic ? "ar" : "en"}
+    >
       <style>{`
         .digitalHealthModelResult,
         .digitalHealthModelResult * {
@@ -253,7 +276,7 @@ export default function DigitalTwinCard({
           margin-top: 16px;
           padding: 15px 16px;
           border: 1px solid rgba(15, 118, 110, 0.15);
-          border-left: 4px solid #0f766e;
+          border-inline-start: 4px solid #0f766e;
           border-radius: 14px;
           background: #f0fdfa;
         }
@@ -397,17 +420,24 @@ export default function DigitalTwinCard({
       <header className="digitalHealthModelHeader">
         <div>
           <p className="digitalHealthModelEyebrow">
-            Personal health model
+            {text(
+              "Personal health model",
+              "النموذج الصحي الشخصي"
+            )}
           </p>
 
           <h3 className="digitalHealthModelTitle">
-            Current modeled health state
+            {text(
+              "Current modeled health state",
+              "الحالة الصحية الحالية في النموذج"
+            )}
           </h3>
 
           <p className="digitalHealthModelDescription">
-            OrganHeal builds a structured health model from the signals that
-            are currently available. The model becomes more complete as more
-            reliable health data is added over time.
+            {text(
+              "OrganHeal builds a structured health model from the signals that are currently available. The model becomes more complete as more reliable health data is added over time.",
+              "يبني OrganHeal نموذجًا صحيًا منظمًا اعتمادًا على المؤشرات المتاحة حاليًا، ويصبح هذا النموذج أكثر اكتمالًا مع إضافة المزيد من البيانات الصحية الموثوقة مع مرور الوقت."
+            )}
           </p>
         </div>
 
@@ -419,7 +449,10 @@ export default function DigitalTwinCard({
                   status
                 )}`}
               >
-                Status: {status}
+                {text(
+                  `Status: ${status}`,
+                  `الحالة: ${status}`
+                )}
               </span>
             )}
 
@@ -429,7 +462,10 @@ export default function DigitalTwinCard({
                   confidence
                 )}`}
               >
-                Confidence: {confidence}
+                {text(
+                  `Confidence: ${confidence}`,
+                  `درجة الثقة: ${confidence}`
+                )}
               </span>
             )}
           </div>
@@ -439,7 +475,10 @@ export default function DigitalTwinCard({
       {summary && (
         <div className="digitalHealthModelSignal">
           <p className="digitalHealthModelSignalLabel">
-            Current model summary
+            {text(
+              "Current model summary",
+              "ملخص النموذج الحالي"
+            )}
           </p>
 
           <p className="digitalHealthModelSignalText">
@@ -456,7 +495,10 @@ export default function DigitalTwinCard({
               item.organ ||
               item.system ||
               item.category ||
-              `Health model signal ${index + 1}`;
+              text(
+                `Health model signal ${index + 1}`,
+                `إشارة النموذج الصحي ${index + 1}`
+              );
 
             const explanation =
               item.insight ||
@@ -492,7 +534,10 @@ export default function DigitalTwinCard({
 
                   {item.riskLevel && (
                     <span className="digitalHealthModelRisk">
-                      Risk: {item.riskLevel}
+                      {text(
+                        `Risk: ${item.riskLevel}`,
+                        `المخاطر: ${item.riskLevel}`
+                      )}
                     </span>
                   )}
                 </div>
@@ -500,12 +545,20 @@ export default function DigitalTwinCard({
                 {(item.status || item.confidence) && (
                   <div className="digitalHealthModelMeta">
                     {item.status && (
-                      <span>Status: {item.status}</span>
+                      <span>
+                        {text(
+                          `Status: ${item.status}`,
+                          `الحالة: ${item.status}`
+                        )}
+                      </span>
                     )}
 
                     {item.confidence && (
                       <span>
-                        Confidence: {item.confidence}
+                        {text(
+                          `Confidence: ${item.confidence}`,
+                          `درجة الثقة: ${item.confidence}`
+                        )}
                       </span>
                     )}
                   </div>
@@ -519,7 +572,12 @@ export default function DigitalTwinCard({
 
                 {item.recommendation && (
                   <div className="digitalHealthModelRecommendation">
-                    <strong>Suggested focus</strong>
+                    <strong>
+                      {text(
+                        "Suggested focus",
+                        "التركيز المقترح"
+                      )}
+                    </strong>
                     <p>{item.recommendation}</p>
                   </div>
                 )}
@@ -531,9 +589,10 @@ export default function DigitalTwinCard({
 
       {!hasModelData && (
         <div className="digitalHealthModelEmpty">
-          A fuller personal health model requires more connected and
-          longitudinal data. OrganHeal will strengthen this model as your
-          health history grows.
+          {text(
+            "A fuller personal health model requires more connected and longitudinal data. OrganHeal will strengthen this model as your health history grows.",
+            "يتطلب بناء نموذج صحي شخصي أكثر اكتمالًا المزيد من البيانات الصحية المترابطة والتاريخية. وسيعمل OrganHeal على تقوية هذا النموذج مع نمو تاريخك الصحي."
+          )}
         </div>
       )}
     </section>

@@ -395,34 +395,46 @@ export default function LabUploadPage() {
  const journeyItems = [
   {
     number: 1,
-    title: text("Upload", "الرفع"),
+    title: text(
+      "Upload Report",
+      "رفع التقرير"
+    ),
     description: text(
-      "Choose one or more supported medical reports.",
-      "اختر تقريرًا طبيًا واحدًا أو أكثر من الملفات المدعومة."
+      "Choose the medical report you want OrganHeal AI to review.",
+      "اختر التقرير الطبي الذي تريد من OrganHeal AI مراجعته."
     ),
   },
   {
     number: 2,
-    title: text("Save", "الحفظ"),
+    title: text(
+      "Save Securely",
+      "الحفظ الآمن"
+    ),
     description: text(
-      "Store the selected reports securely inside your account.",
-      "احفظ التقارير المختارة بأمان داخل حسابك."
+      "Your report is stored safely in your personal Reports Library.",
+      "يتم حفظ تقريرك بأمان داخل مكتبة تقاريرك الشخصية."
     ),
   },
   {
     number: 3,
-    title: text("Analyze", "التحليل"),
+    title: text(
+      "Understand Health",
+      "فهم صحتك"
+    ),
     description: text(
-      "Continue with the latest saved report to generate its health intelligence.",
-      "تابع باستخدام آخر تقرير محفوظ لإنشاء التحليل الصحي الذكي."
+      "Generate personalized health intelligence from your saved report.",
+      "أنشئ تحليلاً صحيًا شخصيًا اعتمادًا على تقريرك المحفوظ."
     ),
   },
   {
     number: 4,
-    title: text("Reports Library", "مكتبة التقارير"),
+    title: text(
+      "Continue Your Journey",
+      "تابع رحلتك الصحية"
+    ),
     description: text(
-      "Return anytime to open, manage, or review your saved reports.",
-      "ارجع في أي وقت لفتح تقاريرك المحفوظة أو إدارتها أو مراجعتها."
+      "Review reports, prepare for your doctor, and continue improving your health.",
+      "راجع تقاريرك، واستعد لمناقشة طبيبك، وواصل تحسين صحتك."
     ),
   },
 ];
@@ -888,10 +900,10 @@ export default function LabUploadPage() {
         }
 
         .labUploadPageV4 .labUploadHero {
-          width: 100% !important;
-          min-height: auto !important;
-          padding: 44px !important;
-          border-radius: 30px !important;
+  width: 100% !important;
+  min-height: auto !important;
+  padding: 34px 40px !important;
+  border-radius: 26px !important;
           background:
             radial-gradient(circle at 88% 10%, rgba(45, 212, 191, 0.22), transparent 34%),
             linear-gradient(135deg, #071525 0%, #10283a 52%, #0f766e 100%) !important;
@@ -899,10 +911,11 @@ export default function LabUploadPage() {
         }
 
         .labUploadPageV4 .labUploadHero .ohHeroGrid {
-          display: grid !important;
-          grid-template-columns: minmax(0, 1fr) !important;
-          gap: 48px !important;
-          align-items: center !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 24px !important;
+  align-items: center !important;
+}
         }
 
         .labUploadPageV4 .labUploadHero .ohTitle {
@@ -910,7 +923,7 @@ export default function LabUploadPage() {
           margin: 0 !important;
           font-family: Inter, ui-sans-serif, system-ui, -apple-system,
             BlinkMacSystemFont, "Segoe UI", sans-serif !important;
-          font-size: clamp(2.35rem, 4vw, 3.65rem) !important;
+          font-size: clamp(2.15rem, 3.6vw, 3.25rem) !important;
           font-weight: 850 !important;
           line-height: 1.05 !important;
           letter-spacing: -0.04em !important;
@@ -974,8 +987,8 @@ export default function LabUploadPage() {
           }
 
           .labUploadPageV4 .labUploadHero {
-            padding: 34px !important;
-          }
+  padding: 30px !important;
+}
 
           .labUploadPageV4 .heroPurposeCard {
             min-height: auto !important;
@@ -983,9 +996,9 @@ export default function LabUploadPage() {
         }
 
         @media (max-width: 640px) {
-          .labUploadPageV4 .labUploadHero {
-            padding: 26px !important;
-          }
+         .labUploadPageV4 .labUploadHero {
+  padding: 24px 20px !important;
+}
 
           .labUploadPageV4 .labUploadHero .ohTitle {
             font-size: clamp(2.15rem, 11vw, 3rem) !important;
@@ -1011,16 +1024,16 @@ export default function LabUploadPage() {
               </h1>
 
               <p className="ohLead">
-                {text(
-  "Choose your reports, save them securely, then continue directly to analysis. Your saved reports remain available anytime in Reports Library.",
-  "اختر تقاريرك واحفظها بأمان، ثم تابع مباشرة إلى التحليل. تبقى تقاريرك المحفوظة متاحة في أي وقت داخل مكتبة التقارير."
-)}
-              </p>
+  {text(
+    "Save your medical reports securely, then continue directly to analysis. Every saved report remains available in Reports Library.",
+    "احفظ تقاريرك الطبية بأمان، ثم تابع مباشرة إلى التحليل. يبقى كل تقرير محفوظ متاحًا داخل مكتبة التقارير."
+  )}
+</p>
 
               <div className="ohButtonRow" style={{ marginTop: "24px" }}>
   <a href="#medical-upload-panel" className="primaryBtn">
-    {text("Choose Reports", "اختيار التقارير")}
-  </a>
+  {text("Start Upload", "بدء الرفع")}
+</a>
 </div>
             </div>
           </div>
@@ -1281,42 +1294,42 @@ export default function LabUploadPage() {
 
             <h2 className="ohCardTitle">
               {text(
-                "Medical documents you can save.",
-                "المستندات الطبية التي يمكنك حفظها."
-              )}
+  "Supported medical documents",
+  "المستندات الطبية المدعومة"
+)}
             </h2>
 
             <div className="supportedList">
               {[
-                {
-                  title: text("Laboratory results", "نتائج المختبر"),
-                  description: text(
-                    "CBC, lipids, kidney, liver, glucose, and hormones.",
-                    "CBC، الدهون، الكلى، الكبد، السكر، والهرمونات."
-                  ),
-                },
-                {
-                  title: text("Radiology reports", "تقارير الأشعة"),
-                  description: text(
-                    "Written X-ray, ultrasound, CT, and MRI reports.",
-                    "تقارير الأشعة السينية، السونار، CT، وMRI المكتوبة."
-                  ),
-                },
-                {
-                  title: text("Clinical summaries", "الملخصات السريرية"),
-                  description: text(
-                    "Discharge summaries, visit notes, and referrals.",
-                    "ملخصات الخروج، ملاحظات الزيارة، والتحويلات."
-                  ),
-                },
-                {
-                  title: text("Prescriptions", "الوصفات الطبية"),
-                  description: text(
-                    "Medication lists and treatment plans.",
-                    "قوائم الأدوية وخطط العلاج."
-                  ),
-                },
-              ].map((item) => (
+  {
+    title: text("Laboratory", "المختبر"),
+    description: text(
+      "Blood tests, glucose, lipids, liver, kidney, and hormones.",
+      "تحاليل الدم، السكر، الدهون، الكبد، الكلى، والهرمونات."
+    ),
+  },
+  {
+    title: text("Radiology", "الأشعة"),
+    description: text(
+      "Written X-ray, ultrasound, CT, and MRI reports.",
+      "تقارير الأشعة السينية، السونار، CT، وMRI المكتوبة."
+    ),
+  },
+  {
+    title: text("Clinical Reports", "التقارير السريرية"),
+    description: text(
+      "Visit notes, discharge summaries, and referrals.",
+      "ملاحظات الزيارات، ملخصات الخروج، والتحويلات."
+    ),
+  },
+  {
+    title: text("Prescriptions", "الوصفات الطبية"),
+    description: text(
+      "Medication lists and treatment plans.",
+      "قوائم الأدوية وخطط العلاج."
+    ),
+  },
+].map((item) => (
                 <div className="supportedItem" key={item.title}>
                   <strong>{item.title}</strong>
                   <p>{item.description}</p>

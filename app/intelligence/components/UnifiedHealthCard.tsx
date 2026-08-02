@@ -1,5 +1,6 @@
 ﻿type UnifiedHealthCardProps = {
   unifiedHealth: unknown;
+  isArabic: boolean;
 };
 
 type UnifiedHealthSignal = {
@@ -125,7 +126,11 @@ function getSeverityClass(value: string) {
 
 export default function UnifiedHealthCard({
   unifiedHealth,
+  isArabic,
 }: UnifiedHealthCardProps) {
+  function text(en: string, ar: string) {
+    return isArabic ? ar : en;
+  }
   const signals = normalizeUnifiedHealthSignals(unifiedHealth).slice(0, 3);
 
   if (signals.length === 0) {
@@ -133,7 +138,11 @@ export default function UnifiedHealthCard({
   }
 
   return (
-    <section className="unifiedHealthPriorities">
+    <section
+  className="unifiedHealthPriorities"
+  dir={isArabic ? "rtl" : "ltr"}
+  lang={isArabic ? "ar" : "en"}
+>
       <style>{`
         .unifiedHealthPriorities,
         .unifiedHealthPriorities * {
@@ -351,17 +360,25 @@ export default function UnifiedHealthCard({
 
       <header className="unifiedHealthHeader">
         <p className="unifiedHealthEyebrow">
-          Your Health Priorities
-        </p>
+  {text(
+    "Unified Health Intelligence",
+    "الذكاء الصحي الموحد"
+  )}
+</p>
 
-        <h2 className="unifiedHealthTitle">
-          Focus on what matters most
-        </h2>
+<h2 className="unifiedHealthTitle">
+  {text(
+    "Your highest health priorities",
+    "أهم أولوياتك الصحية"
+  )}
+</h2>
 
-        <p className="unifiedHealthLead">
-          Based on your uploaded report and available health information,
-          these are the areas that deserve the clearest attention and follow-up.
-        </p>
+<p className="unifiedHealthLead">
+  {text(
+    "These priorities combine the available report findings and health information to highlight where your attention is most valuable.",
+    "تجمع هذه الأولويات بين نتائج التقرير والمعلومات الصحية المتاحة لإبراز الجوانب التي تستحق أكبر قدر من الاهتمام."
+  )}
+</p>
       </header>
 
       <div className="unifiedPriorityGrid">
@@ -407,7 +424,10 @@ export default function UnifiedHealthCard({
 
                   <div>
                     <p className="unifiedPriorityLabel">
-                      Priority {index + 1}
+                      {text(
+  `Priority ${index + 1}`,
+  `الأولوية ${index + 1}`
+)}
                     </p>
 
                     <h3 className="unifiedPriorityTitle">
@@ -421,9 +441,15 @@ export default function UnifiedHealthCard({
                     severity
                   )}`}
                 >
-                  {severity === "Priority"
-                    ? "Priority area"
-                    : `${severity} priority`}
+                  severity === "Priority"
+  ? text(
+      "Priority area",
+      "منطقة أولوية"
+    )
+  : text(
+      `${severity} priority`,
+      `أولوية ${severity}`
+    )
                 </span>
               </div>
 
@@ -431,7 +457,10 @@ export default function UnifiedHealthCard({
                 {explanation && (
                   <div>
                     <p className="unifiedPrioritySectionLabel">
-                      Why this matters
+                      {text(
+  "Why this matters",
+  "لماذا هذا مهم"
+)}
                     </p>
 
                     <p className="unifiedPriorityExplanation">
@@ -443,7 +472,10 @@ export default function UnifiedHealthCard({
                 {recommendedFocus && (
                   <div className="unifiedPriorityRecommendation">
                     <p className="unifiedPrioritySectionLabel">
-                      Recommended focus
+                      {text(
+  "Recommended focus",
+  "التركيز الموصى به"
+)}
                     </p>
 
                     <p>{recommendedFocus}</p>
@@ -456,7 +488,10 @@ export default function UnifiedHealthCard({
       </div>
 
       <p className="unifiedHealthDisclaimer">
-        These priorities are educational interpretations of the available
+        {text(
+  "These priorities are educational interpretations of the available information and should be reviewed alongside the original report and professional medical advice.",
+  "تمثل هذه الأولويات تفسيرًا تثقيفيًا للمعلومات المتاحة، ويجب مراجعتها مع التقرير الأصلي والمشورة الطبية المتخصصة."
+)}
         information and should be reviewed alongside the original report and
         professional medical advice.
       </p>

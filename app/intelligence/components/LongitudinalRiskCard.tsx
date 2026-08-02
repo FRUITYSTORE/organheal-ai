@@ -1,5 +1,10 @@
+import {
+  createIntelligenceText,
+} from "@/lib/presentation/intelligence/intelligence-ui-text";
+
 type LongitudinalRiskCardProps = {
   longitudinalRisk: unknown;
+  isArabic: boolean;
 };
 
 type RiskItem = {
@@ -21,23 +26,77 @@ type RiskItem = {
   recommendation?: string;
 };
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
+function isRecord(
+  value: unknown
+): value is Record<string, unknown> {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value)
+  );
 }
 
 function getText(value: unknown): string {
-  if (typeof value === "string") return value.trim();
+  if (typeof value === "string") {
+    return value.trim();
+  }
 
-  if (typeof value === "number" && Number.isFinite(value)) {
+  if (
+    typeof value === "number" &&
+    Number.isFinite(value)
+  ) {
     return String(value);
   }
 
   return "";
 }
 
-function normalizeRiskItems(longitudinalRisk: unknown): RiskItem[] {
+function normalizeRiskItems(
+  longitudinalRisk: unknown
+): RiskItem[] {
   if (Array.isArray(longitudinalRisk)) {
-    return longitudinalRisk.filter(isRecord).map((item, index) => ({
+    return longitudinalRisk
+      .filter(isRecord)
+      .map((item, index) => ({
+        id: getText(item.id) || index,
+        title: getText(item.title),
+        marker: getText(item.marker),
+        organ: getText(item.organ),
+        organSystem: getText(item.organSystem),
+        risk: getText(item.risk),
+        riskLevel: getText(item.riskLevel),
+        level: getText(item.level),
+        trend: getText(item.trend),
+        direction: getText(item.direction),
+        timeframe: getText(item.timeframe),
+        currentValue: getText(item.currentValue),
+        previousValue: getText(item.previousValue),
+        explanation: getText(item.explanation),
+        reason: getText(item.reason),
+        recommendation: getText(item.recommendation),
+      }));
+  }
+
+  if (!isRecord(longitudinalRisk)) {
+    return [];
+  }
+
+  const possibleItems =
+    longitudinalRisk.items ||
+    longitudinalRisk.risks ||
+    longitudinalRisk.riskItems ||
+    longitudinalRisk.riskSignals ||
+    longitudinalRisk.longitudinalRisks ||
+    longitudinalRisk.patterns ||
+    longitudinalRisk.trends;
+
+  if (!Array.isArray(possibleItems)) {
+    return [];
+  }
+
+  return possibleItems
+    .filter(isRecord)
+    .map((item, index) => ({
       id: getText(item.id) || index,
       title: getText(item.title),
       marker: getText(item.marker),
@@ -55,47 +114,18 @@ function normalizeRiskItems(longitudinalRisk: unknown): RiskItem[] {
       reason: getText(item.reason),
       recommendation: getText(item.recommendation),
     }));
-  }
-
-  if (!isRecord(longitudinalRisk)) return [];
-
-  const possibleItems =
-    longitudinalRisk.items ||
-    longitudinalRisk.risks ||
-    longitudinalRisk.riskItems ||
-    longitudinalRisk.riskSignals ||
-    longitudinalRisk.longitudinalRisks ||
-    longitudinalRisk.patterns ||
-    longitudinalRisk.trends;
-
-  if (!Array.isArray(possibleItems)) return [];
-
-  return possibleItems.filter(isRecord).map((item, index) => ({
-    id: getText(item.id) || index,
-    title: getText(item.title),
-    marker: getText(item.marker),
-    organ: getText(item.organ),
-    organSystem: getText(item.organSystem),
-    risk: getText(item.risk),
-    riskLevel: getText(item.riskLevel),
-    level: getText(item.level),
-    trend: getText(item.trend),
-    direction: getText(item.direction),
-    timeframe: getText(item.timeframe),
-    currentValue: getText(item.currentValue),
-    previousValue: getText(item.previousValue),
-    explanation: getText(item.explanation),
-    reason: getText(item.reason),
-    recommendation: getText(item.recommendation),
-  }));
 }
 
-function getRiskSummary(longitudinalRisk: unknown): string {
+function getRiskSummary(
+  longitudinalRisk: unknown
+): string {
   if (typeof longitudinalRisk === "string") {
     return longitudinalRisk.trim();
   }
 
-  if (!isRecord(longitudinalRisk)) return "";
+  if (!isRecord(longitudinalRisk)) {
+    return "";
+  }
 
   return (
     getText(longitudinalRisk.summary) ||
@@ -105,8 +135,12 @@ function getRiskSummary(longitudinalRisk: unknown): string {
   );
 }
 
-function getOverallRiskLevel(longitudinalRisk: unknown): string {
-  if (!isRecord(longitudinalRisk)) return "";
+function getOverallRiskLevel(
+  longitudinalRisk: unknown
+): string {
+  if (!isRecord(longitudinalRisk)) {
+    return "";
+  }
 
   return (
     getText(longitudinalRisk.overallRiskLevel) ||
@@ -117,25 +151,32 @@ function getOverallRiskLevel(longitudinalRisk: unknown): string {
 }
 
 function getRiskTone(value: string) {
-  const normalized = value.toLowerCase();
+  const normalized = value
+    .trim()
+    .toLowerCase();
 
   if (
     normalized.includes("high") ||
-    normalized.includes("severe")
+    normalized.includes("severe") ||
+    normalized.includes("مرتفع") ||
+    normalized.includes("شديد")
   ) {
     return "risk";
   }
 
   if (
     normalized.includes("moderate") ||
-    normalized.includes("medium")
+    normalized.includes("medium") ||
+    normalized.includes("متوسط")
   ) {
     return "moderate";
   }
 
   if (
     normalized.includes("low") ||
-    normalized.includes("stable")
+    normalized.includes("stable") ||
+    normalized.includes("منخفض") ||
+    normalized.includes("مستقر")
   ) {
     return "good";
   }
@@ -145,10 +186,20 @@ function getRiskTone(value: string) {
 
 export default function LongitudinalRiskCard({
   longitudinalRisk,
+  isArabic,
 }: LongitudinalRiskCardProps) {
-  const riskItems = normalizeRiskItems(longitudinalRisk);
-  const riskSummary = getRiskSummary(longitudinalRisk);
-  const overallRiskLevel = getOverallRiskLevel(longitudinalRisk);
+  const text = createIntelligenceText(
+    isArabic ? "ar" : "en"
+  );
+
+  const riskItems =
+    normalizeRiskItems(longitudinalRisk);
+
+  const riskSummary =
+    getRiskSummary(longitudinalRisk);
+
+  const overallRiskLevel =
+    getOverallRiskLevel(longitudinalRisk);
 
   const hasLongitudinalRisk =
     Boolean(riskSummary) ||
@@ -156,7 +207,11 @@ export default function LongitudinalRiskCard({
     riskItems.length > 0;
 
   return (
-    <section className="longitudinalRiskResult">
+    <section
+      className="longitudinalRiskResult"
+      dir={isArabic ? "rtl" : "ltr"}
+      lang={isArabic ? "ar" : "en"}
+    >
       <style>{`
         .longitudinalRiskResult,
         .longitudinalRiskResult * {
@@ -237,7 +292,7 @@ export default function LongitudinalRiskCard({
           margin-top: 16px;
           padding: 15px 16px;
           border: 1px solid rgba(15, 118, 110, 0.15);
-          border-left: 4px solid #0f766e;
+          border-inline-start: 4px solid #0f766e;
           border-radius: 14px;
           background: #f0fdfa;
         }
@@ -377,16 +432,24 @@ export default function LongitudinalRiskCard({
       <header className="longitudinalRiskHeader">
         <div>
           <p className="longitudinalRiskEyebrow">
-            Longitudinal risk
+            {text(
+              "Longitudinal risk",
+              "المخاطر طويلة المدى"
+            )}
           </p>
 
           <h3 className="longitudinalRiskTitle">
-            Risk direction over time
+            {text(
+              "Risk direction over time",
+              "اتجاه المخاطر مع مرور الوقت"
+            )}
           </h3>
 
           <p className="longitudinalRiskDescription">
-            Risk patterns are shown only when OrganHeal has enough historical
-            evidence to identify meaningful movement across time.
+            {text(
+              "Risk patterns are shown only when OrganHeal has enough historical evidence to identify meaningful movement across time.",
+              "تظهر أنماط المخاطر فقط عندما تتوفر لدى OrganHeal أدلة تاريخية كافية لتحديد تغير ذي معنى مع مرور الوقت."
+            )}
           </p>
         </div>
 
@@ -396,7 +459,10 @@ export default function LongitudinalRiskCard({
               overallRiskLevel
             )}`}
           >
-            Overall: {overallRiskLevel}
+            {text(
+              `Overall: ${overallRiskLevel}`,
+              `المستوى العام: ${overallRiskLevel}`
+            )}
           </span>
         )}
       </header>
@@ -404,7 +470,10 @@ export default function LongitudinalRiskCard({
       {riskSummary && (
         <div className="longitudinalRiskSignal">
           <p className="longitudinalRiskSignalLabel">
-            Current longitudinal signal
+            {text(
+              "Current longitudinal signal",
+              "الإشارة الحالية طويلة المدى"
+            )}
           </p>
 
           <p className="longitudinalRiskSignalText">
@@ -421,7 +490,10 @@ export default function LongitudinalRiskCard({
               item.marker ||
               item.organSystem ||
               item.organ ||
-              `Risk signal ${index + 1}`;
+              text(
+                `Risk signal ${index + 1}`,
+                `إشارة مخاطر ${index + 1}`
+              );
 
             const riskLevel =
               item.riskLevel ||
@@ -439,7 +511,10 @@ export default function LongitudinalRiskCard({
             return (
               <article
                 className="longitudinalRiskItem"
-                key={item.id ?? `${title}-${index}`}
+                key={
+                  item.id ??
+                  `${title}-${index}`
+                }
               >
                 <div className="longitudinalRiskItemHeader">
                   <div>
@@ -447,16 +522,21 @@ export default function LongitudinalRiskCard({
                       {title}
                     </h4>
 
-                    {(item.organSystem || item.organ) && (
+                    {(item.organSystem ||
+                      item.organ) && (
                       <p className="longitudinalRiskItemSystem">
-                        {item.organSystem || item.organ}
+                        {item.organSystem ||
+                          item.organ}
                       </p>
                     )}
                   </div>
 
                   {riskLevel && (
                     <span className="longitudinalRiskLevel">
-                      Risk: {riskLevel}
+                      {text(
+                        `Risk: ${riskLevel}`,
+                        `المخاطر: ${riskLevel}`
+                      )}
                     </span>
                   )}
                 </div>
@@ -467,24 +547,38 @@ export default function LongitudinalRiskCard({
                   item.currentValue) && (
                   <div className="longitudinalRiskMeta">
                     {trend && (
-                      <span>Trend: {trend}</span>
+                      <span>
+                        {text(
+                          `Trend: ${trend}`,
+                          `الاتجاه: ${trend}`
+                        )}
+                      </span>
                     )}
 
                     {item.timeframe && (
                       <span>
-                        Timeframe: {item.timeframe}
+                        {text(
+                          `Timeframe: ${item.timeframe}`,
+                          `الفترة الزمنية: ${item.timeframe}`
+                        )}
                       </span>
                     )}
 
                     {item.previousValue && (
                       <span>
-                        Previous: {item.previousValue}
+                        {text(
+                          `Previous: ${item.previousValue}`,
+                          `السابق: ${item.previousValue}`
+                        )}
                       </span>
                     )}
 
                     {item.currentValue && (
                       <span>
-                        Current: {item.currentValue}
+                        {text(
+                          `Current: ${item.currentValue}`,
+                          `الحالي: ${item.currentValue}`
+                        )}
                       </span>
                     )}
                   </div>
@@ -498,8 +592,16 @@ export default function LongitudinalRiskCard({
 
                 {item.recommendation && (
                   <div className="longitudinalRiskRecommendation">
-                    <strong>Suggested focus</strong>
-                    <p>{item.recommendation}</p>
+                    <strong>
+                      {text(
+                        "Suggested focus",
+                        "التركيز المقترح"
+                      )}
+                    </strong>
+
+                    <p>
+                      {item.recommendation}
+                    </p>
                   </div>
                 )}
               </article>
@@ -510,8 +612,10 @@ export default function LongitudinalRiskCard({
 
       {!hasLongitudinalRisk && (
         <div className="longitudinalRiskEmpty">
-          More historical health data is needed before OrganHeal can identify
-          a reliable longitudinal risk pattern.
+          {text(
+            "More historical health data is needed before OrganHeal can identify a reliable longitudinal risk pattern.",
+            "يحتاج OrganHeal إلى المزيد من البيانات الصحية التاريخية قبل تحديد نمط موثوق للمخاطر طويلة المدى."
+          )}
         </div>
       )}
     </section>
