@@ -2,6 +2,14 @@ import type {
   AssistantResponseHealthContext,
 } from "@/lib/health-intelligence/application/assistant-response/assistant-response.types";
 
+import {
+  detectJourneyIntent,
+} from "@/lib/health-intelligence/application/assistant-response/journey-intent";
+
+import {
+  getJourneyHandler,
+} from "@/lib/health-intelligence/application/assistant-response/journey-handlers/journey-handler.registry";
+
 export type BuildJourneyResponseInput = {
   lowerMessage: string;
   language: "en" | "ar";
@@ -10,24 +18,6 @@ export type BuildJourneyResponseInput = {
   nextAction: string;
 };
 
-function isJourneyQuestion(
-  lowerMessage: string
-): boolean {
-  return (
-    lowerMessage.includes("what changed") ||
-    lowerMessage.includes("what's changed") ||
-    lowerMessage.includes("recent changes") ||
-    lowerMessage.includes("latest update") ||
-    lowerMessage.includes("health journey") ||
-    lowerMessage.includes("my journey") ||
-    lowerMessage.includes("what happened recently") ||
-    lowerMessage.includes("آخر تغيير") ||
-    lowerMessage.includes("آخر تحديث") ||
-    lowerMessage.includes("ماذا تغير") ||
-    lowerMessage.includes("ما الذي تغير") ||
-    lowerMessage.includes("رحلتي الصحية")
-  );
-}
 
 function formatJourneyDate(
   value: string,
@@ -157,22 +147,85 @@ function getJourneyNextAction(
   return nextAction;
 }
 
+
+function getJourneyEventLabel(
+  event: NonNullable<
+    AssistantResponseHealthContext[
+      "patientJourneyEvents"
+    ]
+  >[number],
+  language: "en" | "ar"
+): string {
+  const isArabic =
+    language === "ar";
+
+  switch (event.type) {
+    case "check_in_completed":
+      return isArabic
+        ? "تم تسجيل Check-In صحي"
+        : "A health Check-In was recorded";
+
+    case "health_intelligence_generated":
+      return isArabic
+        ? "تم إنشاء ذكاء صحي جديد"
+        : "New health intelligence was generated";
+
+    case "health_history_updated":
+      return isArabic
+        ? "تم تحديث التاريخ الصحي"
+        : "Health history was updated";
+
+    case "report_uploaded":
+      return isArabic
+        ? "تم رفع تقرير طبي"
+        : "A medical report was uploaded";
+  }
+}
+
 export function buildJourneyResponse({
   lowerMessage,
   language,
   healthContext,
   nextAction,
 }: BuildJourneyResponseInput): string | null {
-  if (
-    !isJourneyQuestion(
+  const detectedIntent =
+    detectJourneyIntent(
       lowerMessage
-    )
+    );
+
+  if (
+    detectedIntent.intent ===
+    "unknown"
   ) {
     return null;
   }
 
+  const registeredHandler =
+  getJourneyHandler(
+    detectedIntent.intent
+  );
+
+if (registeredHandler) {
+  return registeredHandler({
+    intent:
+      detectedIntent.intent,
+
+    lowerMessage,
+
+    language,
+
+    healthContext,
+
+    nextAction,
+  });
+}
+
   const patientJourney =
     healthContext.patientJourney;
+
+    const patientJourneyEvents =
+  healthContext.patientJourneyEvents ??
+  [];
 
   const latestUpdate =
     patientJourney
@@ -194,6 +247,161 @@ export function buildJourneyResponse({
   const isArabic =
     language === "ar";
 
+    if (
+  detectedIntent.intent ===
+  "last_update"
+) {
+  if (!latestUpdate) {
+    return isArabic
+      ? `لا يوجد حتى الآن تحديث صحي مهم مسجل في رحلتك الصحية.
+
+${getFollowUpMessage(
+  followUpStatus,
+  language
+)}
+
+الخطوة التالية:
+${journeyNextAction}`
+      : `No meaningful health update has been recorded yet.
+
+${getFollowUpMessage(
+  followUpStatus,
+  language
+)}
+
+Suggested next step:
+${journeyNextAction}`;
+  }
+
+  return isArabic
+    ? `آخر تحديث مهم في رحلتك الصحية:
+
+${getSourceLabel(
+  latestUpdate.source,
+  language
+)}
+
+التاريخ:
+${formatJourneyDate(
+  latestUpdate.occurredAt,
+  language
+)}
+
+حالة المتابعة:
+${getFollowUpMessage(
+  followUpStatus,
+  language
+)}
+
+الخطوة التالية المقترحة:
+${journeyNextAction}`
+    : `Your latest meaningful health update:
+
+${getSourceLabel(
+  latestUpdate.source,
+  language
+)}
+
+Date:
+${formatJourneyDate(
+  latestUpdate.occurredAt,
+  language
+)}
+
+Follow-up status:
+${getFollowUpMessage(
+  followUpStatus,
+  language
+)}
+
+Suggested next step:
+${journeyNextAction}`;
+}
+
+   if (
+  detectedIntent.intent ===
+  "journey_summary"
+) {
+  if (!patientJourney) {
+    return isArabic
+      ? "لا تتوفر حاليًا بيانات كافية لبناء ملخص رحلتك الصحية."
+      : "There is not enough journey data to build your health journey summary.";
+  }
+
+  const journeyEvents =
+    patientJourneyEvents.slice(
+      0,
+      5
+    );
+
+  const eventsSummary =
+    journeyEvents.length > 0
+      ? journeyEvents
+          .map(
+            (event) =>
+              `• ${getJourneyEventLabel(
+                event,
+                language
+              )} — ${formatJourneyDate(
+                event.occurredAt,
+                language
+              )}`
+          )
+          .join("\n")
+      : isArabic
+        ? "لا توجد أحداث صحية حديثة مسجلة."
+        : "No recent health journey events are recorded.";
+
+  const latestReportDate =
+    patientJourney.latestReport
+      ?.created_at
+      ? formatJourneyDate(
+          patientJourney.latestReport.created_at,
+          language
+        )
+      : null;
+
+  return isArabic
+    ? `ملخص رحلتك الصحية الحالية:
+
+الأولوية الصحية:
+${patientJourney.currentPriority || "غير محددة حاليًا"}
+
+آخر تقرير:
+${latestReportDate || "لا يوجد تقرير محفوظ"}
+
+حالة المتابعة:
+${getFollowUpMessage(
+  followUpStatus,
+  language
+)}
+
+أحدث الأحداث:
+${eventsSummary}
+
+الخطوة التالية المقترحة:
+${journeyNextAction}`
+    : `Your current health journey summary:
+
+Health priority:
+${patientJourney.currentPriority || "Not currently identified"}
+
+Latest report:
+${latestReportDate || "No saved report"}
+
+Follow-up status:
+${getFollowUpMessage(
+  followUpStatus,
+  language
+)}
+
+Recent events:
+${eventsSummary}
+
+Suggested next step:
+${journeyNextAction}`;
+}
+
   if (!latestUpdate) {
     return isArabic
       ? `لا يوجد حتى الآن تغيير صحي مهم مسجل في رحلتك الصحية.
@@ -213,7 +421,7 @@ ${getFollowUpMessage(
 )}
 
 Suggested next step:
-{nextAction}`;
+${journeyNextAction}`;
   }
 
   const updateLabel =

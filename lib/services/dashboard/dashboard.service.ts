@@ -39,9 +39,9 @@ const patientJourney =
     healthIntelligence,
   });
 
-  const patientJourneyEvents =
+ const patientJourneyEvents =
   buildPatientJourneyEvents({
-    patientJourney,
+    patientSummary,
   });
 
     return {

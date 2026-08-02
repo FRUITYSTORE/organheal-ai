@@ -1,16 +1,21 @@
 import type {
-  PatientJourneySnapshot,
-} from "@/lib/application/journey/patient-journey-snapshot.service";
+  getPatientSummary,
+} from "@/lib/services/shared/patient-summary.service";
+
+type PatientSummary =
+  Awaited<ReturnType<typeof getPatientSummary>>;
 
 export type PatientJourneyEventType =
   | "report_uploaded"
   | "health_intelligence_generated"
-  | "check_in_completed";
+  | "check_in_completed"
+  | "health_history_updated";
 
 export type PatientJourneyEventSource =
   | "report"
   | "intelligence"
-  | "checkin";
+  | "checkin"
+  | "history";
 
 export type PatientJourneyEventImportance =
   | "low"
@@ -18,6 +23,8 @@ export type PatientJourneyEventImportance =
   | "high";
 
 export type PatientJourneyEvent = {
+  id: string;
+
   type:
     PatientJourneyEventType;
 
@@ -38,8 +45,8 @@ export type PatientJourneyEvent = {
 };
 
 export type BuildPatientJourneyEventsInput = {
-  patientJourney:
-    PatientJourneySnapshot;
+  patientSummary:
+    PatientSummary;
 };
 
 function isValidDate(
@@ -57,101 +64,165 @@ function isValidDate(
   );
 }
 
-export function buildPatientJourneyEvents({
-  patientJourney,
-}: BuildPatientJourneyEventsInput): PatientJourneyEvent[] {
-  const events:
-    PatientJourneyEvent[] = [];
-
-  if (
-    isValidDate(
-      patientJourney
-        .latestCheckIn
-        ?.created_at
+function buildCheckInEvents(
+  patientSummary: PatientSummary
+): PatientJourneyEvent[] {
+  return patientSummary.recentCheckIns
+    .filter((checkIn) =>
+      isValidDate(
+        checkIn.created_at
+      )
     )
-  ) {
-    events.push({
+    .map((checkIn, index) => ({
+      id:
+        `checkin-${checkIn.created_at}-${index}`,
+
       type:
-        "check_in_completed",
+        "check_in_completed" as const,
 
       occurredAt:
-        patientJourney
-          .latestCheckIn
-          .created_at,
+        checkIn.created_at,
 
       title:
-        "Health check-in completed",
+        "Health Check-In completed",
 
       description:
-        "A wellness check-in was added to the patient journey.",
+        `A wellness score of ${checkIn.wellness_score}/100 was recorded.`,
 
       source:
-        "checkin",
+        "checkin" as const,
 
       importance:
-        "medium",
-    });
-  }
+        "medium" as const,
+    }));
+}
 
-  if (
-    isValidDate(
-      patientJourney
-        .latestReport
-        ?.created_at
+function buildReportEvents(
+  patientSummary: PatientSummary
+): PatientJourneyEvent[] {
+  return patientSummary.uploadedReports
+    .filter((report) =>
+      isValidDate(
+        report.created_at
+      )
     )
-  ) {
-    events.push({
+    .map((report, index) => ({
+      id:
+        `report-${report.id ?? index}`,
+
       type:
-        "report_uploaded",
+        "report_uploaded" as const,
 
       occurredAt:
-        patientJourney
-          .latestReport
-          .created_at,
+        report.created_at,
 
       title:
         "Medical report uploaded",
 
       description:
-        "A medical report was added and is available for review.",
+        report.file_name
+          ? `${report.file_name} was added to the health journey.`
+          : "A medical report was added to the health journey.",
 
       source:
-        "report",
+        "report" as const,
 
       importance:
-        "high",
-    });
-  }
+        "high" as const,
+    }));
+}
 
-  if (
-    isValidDate(
-      patientJourney
-        .latestIntelligence
-        ?.created_at
+function buildIntelligenceEvents(
+  patientSummary: PatientSummary
+): PatientJourneyEvent[] {
+  return patientSummary.healthInsights
+    .filter((insight) =>
+      isValidDate(
+        insight.created_at
+      )
     )
-  ) {
-    events.push({
+    .map((insight, index) => ({
+      id:
+        `intelligence-${insight.id ?? index}`,
+
       type:
-        "health_intelligence_generated",
+        "health_intelligence_generated" as const,
 
       occurredAt:
-        patientJourney
-          .latestIntelligence
-          .created_at,
+        insight.created_at,
 
       title:
+        insight.insight_title?.trim() ||
         "Health intelligence generated",
 
       description:
-        "Updated health intelligence was generated from available evidence.",
+        "Updated health intelligence was generated from available health evidence.",
 
       source:
-        "intelligence",
+        "intelligence" as const,
 
       importance:
-        "high",
-    });
-  }
+        "high" as const,
+    }));
+}
+
+function buildHistoryEvents(
+  patientSummary: PatientSummary
+): PatientJourneyEvent[] {
+  return patientSummary.historyItems
+    .filter((item) =>
+      isValidDate(
+        item.created_at
+      )
+    )
+    .map((item, index) => ({
+      id:
+        `history-${item.id ?? index}`,
+
+      type:
+        "health_history_updated" as const,
+
+      occurredAt:
+        item.created_at,
+
+      title:
+        item.module_name
+          ? `${item.module_name} health record updated`
+          : "Health history updated",
+
+      description:
+        typeof item.score === "number"
+          ? `A health history score of ${item.score}/100 was recorded.`
+          : "A new item was added to the connected health history.",
+
+      source:
+        "history" as const,
+
+      importance:
+        "low" as const,
+    }));
+}
+
+export function buildPatientJourneyEvents({
+  patientSummary,
+}: BuildPatientJourneyEventsInput): PatientJourneyEvent[] {
+  const events = [
+    ...buildCheckInEvents(
+      patientSummary
+    ),
+
+    ...buildReportEvents(
+      patientSummary
+    ),
+
+    ...buildIntelligenceEvents(
+      patientSummary
+    ),
+
+    ...buildHistoryEvents(
+      patientSummary
+    ),
+  ];
 
   return events.sort(
     (left, right) =>

@@ -1,4 +1,8 @@
 import type {
+  PatientJourneyEvent,
+} from "@/lib/application/journey/patient-journey-events.service";
+
+import type {
   PatientJourneySnapshot,
 } from "@/lib/application/journey/patient-journey-snapshot.service";
 
@@ -52,6 +56,10 @@ export type AssistantResponseHealthContext = {
 
   patientJourney?:
     | PatientJourneySnapshot
+    | null;
+
+  patientJourneyEvents?:
+    | PatientJourneyEvent[]
     | null;
 };
 
