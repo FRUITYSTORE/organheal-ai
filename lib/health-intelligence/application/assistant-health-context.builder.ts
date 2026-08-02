@@ -15,6 +15,10 @@ import type {
   getPatientSummary,
 } from "@/lib/services/shared/patient-summary.service";
 
+import {
+  buildPatientJourneySnapshot,
+} from "@/lib/application/journey/patient-journey-snapshot.service";
+
 type HealthIntelligenceResult =
   ReturnType<typeof buildHealthIntelligence>;
 
@@ -25,9 +29,14 @@ type PatientSummary =
   Awaited<ReturnType<typeof getPatientSummary>>;
 
 export type BuildAssistantHealthContextInput = {
-  patientSummary: PatientSummary;
-  intelligence: HealthIntelligenceResult;
-  runtime: HealthRuntimeResult;
+  patientSummary:
+    PatientSummary;
+
+  intelligence:
+    HealthIntelligenceResult;
+
+  runtime:
+    HealthRuntimeResult;
 
   doctorBrief:
     | string
@@ -41,7 +50,7 @@ export type BuildAssistantHealthContextInput = {
 export function buildAssistantHealthContext({
   patientSummary,
   intelligence,
-  runtime,
+  runtime: _runtime,
   doctorBrief,
   latestReportContext,
 }: BuildAssistantHealthContextInput): AssistantResponseHealthContext {
@@ -52,7 +61,18 @@ export function buildAssistantHealthContext({
     intelligence.healthScore.data;
 
   const latestCheckIn =
-    patientSummary.latestCheckIn ?? null;
+    patientSummary.latestCheckIn ??
+    null;
+
+  const patientJourney =
+    buildPatientJourneySnapshot({
+      patientSummary,
+      healthIntelligence:
+        intelligence,
+    });
+
+  const primaryAction =
+    intelligence.recommendations.data.primaryAction;
 
   return {
     overallScore:
@@ -101,13 +121,15 @@ export function buildAssistantHealthContext({
     },
 
     recommendation:
-  intelligence.recommendations.data.primaryAction.description ||
-  intelligence.recommendations.data.primaryAction.title ||
-  null,
+      primaryAction.description ||
+      primaryAction.title ||
+      null,
 
     healthEngine:
       intelligence,
 
     latestReportContext,
+
+    patientJourney,
   };
 }

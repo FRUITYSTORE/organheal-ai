@@ -31,6 +31,10 @@ import {
   buildExplainableReasoning,
 } from "@/lib/health-intelligence/application/assistant-explainable-reasoning.service";
 
+import {
+  buildJourneyResponse,
+} from "@/lib/health-intelligence/application/assistant-response/journey-response";
+
 export function hasHealthContext(
   context?: AssistantResponseHealthContext | null
 ) {
@@ -55,8 +59,7 @@ export function buildPersonalizedResponse(
 ) {
   const isArabic = language === "ar";
   const lowerMessage = message.toLowerCase();
-
-const detectedIntent =
+  const detectedIntent =
   detectAssistantIntent(message);
 
   if (!hasHealthContext(healthContext) || !healthContext) {
@@ -69,30 +72,36 @@ const detectedIntent =
       : null;
 
   const priorityArea =
-    healthContext.priorityOrgan ||
-    (isArabic ? "الصحة العامة" : "General Health");
+  healthContext.priorityOrgan ||
+  (isArabic
+    ? "الصحة العامة"
+    : "General Health");
 
-  const strongestArea =
-    healthContext.strongestOrgan ||
-    (isArabic ? "الصحة العامة" : "General Health");
+const strongestArea =
+  healthContext.strongestOrgan ||
+  (isArabic
+    ? "الصحة العامة"
+    : "General Health");
 
-  const riskPattern =
-    healthContext.riskPattern ||
-    (isArabic ? "غير متوفر حاليًا" : "Not currently available");
+const riskPattern =
+  healthContext.riskPattern ||
+  (isArabic
+    ? "غير متوفر حاليًا"
+    : "Not currently available");
 
-  const nextAction =
-    healthContext.recommendation ||
-    (isArabic
-      ? "راجع أحدث بياناتك الصحية وحدد الخطوة التالية المناسبة."
-      : "Review your latest health information and identify the next appropriate step.");
+const nextAction =
+  healthContext.recommendation ||
+  (isArabic
+    ? "راجع أحدث بياناتك الصحية وحدد الخطوة التالية المناسبة."
+    : "Review your latest health information and identify the next appropriate step.");
 
-  const doctorBrief =
-    healthContext.doctorBrief ||
-    (isArabic
-      ? "لا يوجد ملخص طبي جاهز حاليًا."
-      : "No doctor brief is currently available.");
+const doctorBrief =
+  healthContext.doctorBrief ||
+  (isArabic
+    ? "لا يوجد ملخص طبي جاهز حاليًا."
+    : "No doctor brief is currently available.");
 
-  const healthAgeStatus =
+const healthAgeStatus =
     healthContext.healthAgeStatus ||
     (isArabic ? "غير متوفر حاليًا" : "Not currently available");
 
@@ -448,6 +457,18 @@ Next step:
 ${latestReport?.nextBestAction || nextAction}
 
 I cannot confirm a cause or diagnosis from the current information alone, but the available evidence can now be used to narrow the possibilities progressively as more relevant information is added.`;
+}
+
+const journeyResponse =
+  buildJourneyResponse({
+    lowerMessage,
+    language,
+    healthContext,
+    nextAction,
+  });
+
+if (journeyResponse) {
+  return journeyResponse;
 }
 
   if (

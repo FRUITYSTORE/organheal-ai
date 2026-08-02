@@ -13,9 +13,6 @@ export type AssistantLatestReportContext = {
   doctorBrief: string | null;
   nextBestAction: string | null;
   riskLevel: string | null;
-  patientJourney?:
-  | PatientJourneySnapshot
-  | null;
 };
 
 export type AssistantHealthScoreContext = {
@@ -43,11 +40,18 @@ export type AssistantResponseHealthContext = {
   doctorBrief?: string | null;
   recommendation?: string | null;
 
-  healthScore?: AssistantHealthScoreContext | null;
+  healthScore?:
+    | AssistantHealthScoreContext
+    | null;
+
   healthEngine?: unknown;
 
   latestReportContext?:
     | AssistantLatestReportContext
+    | null;
+
+  patientJourney?:
+    | PatientJourneySnapshot
     | null;
 };
 
