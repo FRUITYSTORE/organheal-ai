@@ -35,6 +35,14 @@ import {
   buildJourneyResponse,
 } from "@/lib/health-intelligence/application/assistant-response/journey-response";
 
+import {
+  detectClinicalIntent,
+} from "@/lib/health-intelligence/application/assistant-response/clinical-intent";
+
+import {
+  getClinicalHandler,
+} from "@/lib/health-intelligence/application/assistant-response/clinical-handlers/clinical-handler.registry";
+
 export function hasHealthContext(
   context?: AssistantResponseHealthContext | null
 ) {
@@ -469,6 +477,41 @@ const journeyResponse =
 
 if (journeyResponse) {
   return journeyResponse;
+}
+
+const clinicalIntent =
+  detectClinicalIntent(
+    message
+  );
+
+if (
+  clinicalIntent.intent !==
+  "unknown"
+) {
+  const clinicalHandler =
+    getClinicalHandler(
+      clinicalIntent.intent
+    );
+
+  if (clinicalHandler) {
+    const clinicalResponse =
+      clinicalHandler({
+        intent:
+          clinicalIntent.intent,
+
+        lowerMessage,
+
+        language,
+
+        healthContext,
+
+        nextAction,
+      });
+
+    if (clinicalResponse) {
+      return clinicalResponse;
+    }
+  }
 }
 
   if (

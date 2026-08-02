@@ -19,6 +19,14 @@ import {
   buildPatientJourneySnapshot,
 } from "@/lib/application/journey/patient-journey-snapshot.service";
 
+import {
+  buildPatientJourneyEvents,
+} from "@/lib/application/journey/patient-journey-events.service";
+
+import {
+  buildPatientClinicalContext,
+} from "@/lib/application/clinical/patient-clinical-context.service";
+
 type HealthIntelligenceResult =
   ReturnType<typeof buildHealthIntelligence>;
 
@@ -69,6 +77,16 @@ export function buildAssistantHealthContext({
       patientSummary,
       healthIntelligence:
         intelligence,
+    });
+
+  const patientJourneyEvents =
+    buildPatientJourneyEvents({
+      patientSummary,
+    });
+
+  const clinicalContext =
+    buildPatientClinicalContext({
+      patientSummary,
     });
 
   const primaryAction =
@@ -131,5 +149,9 @@ export function buildAssistantHealthContext({
     latestReportContext,
 
     patientJourney,
+
+    patientJourneyEvents,
+
+    clinicalContext,
   };
 }

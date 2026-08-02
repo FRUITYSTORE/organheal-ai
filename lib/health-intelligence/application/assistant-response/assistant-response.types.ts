@@ -6,6 +6,10 @@ import type {
   PatientJourneySnapshot,
 } from "@/lib/application/journey/patient-journey-snapshot.service";
 
+import type {
+  PatientClinicalContext,
+} from "@/lib/application/clinical/patient-clinical-context.service";
+
 export type AssistantLatestReportContext = {
   reportId: number;
   fileName: string;
@@ -61,6 +65,10 @@ export type AssistantResponseHealthContext = {
   patientJourneyEvents?:
     | PatientJourneyEvent[]
     | null;
+
+    clinicalContext?:
+  | PatientClinicalContext
+  | null;
 };
 
 export type AssistantResponseConversationMessage = {
