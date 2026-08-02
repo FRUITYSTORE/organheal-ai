@@ -997,30 +997,20 @@ const timelineItems = officialTimelineItems;
               </div>
 
               <div className="ohButtonRow">
-                <Link href="/dashboard" className="secondaryBtn">
-                  {text("Dashboard", "لوحة التحكم")}
-                </Link>
+  <Link
+    href="/health-plan"
+    className="primaryBtn"
+  >
+    {text("Continue Health Plan", "متابعة الخطة الصحية")}
+  </Link>
 
-                <Link href="/profile" className="secondaryBtn">
-                  {text("Profile", "الملف الشخصي")}
-                </Link>
-
-                <Link href="/checkin" className="secondaryBtn">
-                  Check-In
-                </Link>
-
-                <Link href="/reports" className="secondaryBtn">
-                  {text("Reports", "التقارير")}
-                </Link>
-
-                <Link href="/reports" className="secondaryBtn">
-                  {text("Analysis", "تحليل التقارير")}
-                </Link>
-
-                <Link href="/health-plan" className="primaryBtn">
-                  {text("Health Plan", "الخطة الصحية")}
-                </Link>
-              </div>
+  <Link
+    href="/dashboard"
+    className="secondaryBtn"
+  >
+    {text("Return to Dashboard", "العودة إلى لوحة التحكم")}
+  </Link>
+</div>
             </section>
           </>
         )}

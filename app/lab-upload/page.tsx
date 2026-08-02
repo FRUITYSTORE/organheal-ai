@@ -1087,7 +1087,23 @@ export default function LabUploadPage() {
               )}
             </h2>
 
-            <p className="ohCardText">{message}</p>
+            <p className="ohCardText">
+  {message}
+</p>
+
+<p
+  style={{
+    marginTop: "14px",
+    marginBottom: 0,
+    fontWeight: 700,
+    color: "#0f766e",
+  }}
+>
+  {text(
+    "Recommended next step: Generate health intelligence from your latest report.",
+    "الخطوة الموصى بها: أنشئ التحليل الصحي من آخر تقرير قمت برفعه."
+  )}
+</p>
 
             {savedFileNames.length > 0 && (
               <ul className="savedFileList">

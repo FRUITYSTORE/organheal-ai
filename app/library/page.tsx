@@ -847,9 +847,21 @@ export default function LibraryPage() {
                   ))}
                 </div>
 
-                <Link href="/blog" className="secondaryBtn" style={{ justifyContent: "center" }}>
-                  {text("Find Articles", "البحث عن مقالات")}
-                </Link>
+                <Link
+  href={
+    route.code === "ORG"
+      ? "/library/organs"
+      : route.code === "VIS"
+      ? "/library/doctor-prep"
+      : route.code === "REP"
+      ? "/library/reports"
+      : "/blog"
+  }
+  className="secondaryBtn"
+  style={{ justifyContent: "center" }}
+>
+  {text("Open Learning Path", "فتح مسار التعلّم")}
+</Link>
               </article>
             ))}
           </div>

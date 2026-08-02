@@ -766,59 +766,90 @@ export default function CheckInPage() {
                 </div>
               </article>
 
-              <article className="ohCard">
-                <div className="ohCardHeader">
-                  <div>
-                    <p className="ohMetricLabel">
-                      {text("After Saving", "بعد الحفظ")}
-                    </p>
+              {savedToday && (
+  <article className="ohCard">
+    <div className="ohCardHeader">
+      <div>
+        <p className="ohMetricLabel">
+          {text("After Saving", "بعد الحفظ")}
+        </p>
 
-                    <h2 className="ohCardTitle">
-                      {text("What should you do next?", "ما الخطوة التالية؟")}
-                    </h2>
-                  </div>
+        <h2 className="ohCardTitle">
+          {text(
+            "What should you do next?",
+            "ما الخطوة التالية؟"
+          )}
+        </h2>
+      </div>
 
-                  <span className={`ohStatusBadge ${scoreTone}`}>
-                    {scoreStatus}
-                  </span>
-                </div>
+      <span className={`ohStatusBadge ${scoreTone}`}>
+        {scoreStatus}
+      </span>
+    </div>
 
-                <div className="ohStack">
-                  <div className="ohMetricCard">
-                    <span className="ohMetricLabel">
-                      {text("Plan Impact Today", "تأثير اليوم على الخطة")}
-                    </span>
-                    <span className="ohMetricValue" style={{ fontSize: "1.25rem" }}>
-                      {planImpact}
-                    </span>
-                    <span className="ohMetricHint">{scoreGuidance}</span>
-                  </div>
+    <div className="ohStack">
+      <div className="ohMetricCard">
+        <span className="ohMetricLabel">
+          {text(
+            "Plan Impact Today",
+            "تأثير اليوم على الخطة"
+          )}
+        </span>
 
-                  <div className="ohMetricCard">
-                    <span className="ohMetricLabel">
-                      {text("Main Factor Today", "العامل الأهم اليوم")}
-                    </span>
-                    <span className="ohMetricValue" style={{ fontSize: "1.25rem" }}>
-                      {stressLevel >= 4
-                        ? text("Stress", "التوتر")
-                        : sleepQuality <= 2
-                        ? text("Sleep", "النوم")
-                        : energyLevel <= 2
-                        ? text("Energy", "الطاقة")
-                        : hydration <= 2
-                        ? text("Hydration", "الترطيب")
-                        : physicalActivity <= 2
-                        ? text("Activity", "النشاط")
-                        : text("Stable pattern", "نمط مستقر")}
-                    </span>
-                    <span className="ohMetricHint">{todaysPrimaryFocus}</span>
-                  </div>
+        <span
+          className="ohMetricValue"
+          style={{ fontSize: "1.25rem" }}
+        >
+          {planImpact}
+        </span>
 
-                  <Link href={nextAfterSaveHref} className="primaryBtn">
-                    {nextAfterSaveLabel}
-                  </Link>
-                </div>
-              </article>
+        <span className="ohMetricHint">
+          {scoreGuidance}
+        </span>
+      </div>
+
+      <div className="ohMetricCard">
+        <span className="ohMetricLabel">
+          {text(
+            "Main Factor Today",
+            "العامل الأهم اليوم"
+          )}
+        </span>
+
+        <span
+          className="ohMetricValue"
+          style={{ fontSize: "1.25rem" }}
+        >
+          {stressLevel >= 4
+            ? text("Stress", "التوتر")
+            : sleepQuality <= 2
+            ? text("Sleep", "النوم")
+            : energyLevel <= 2
+            ? text("Energy", "الطاقة")
+            : hydration <= 2
+            ? text("Hydration", "الترطيب")
+            : physicalActivity <= 2
+            ? text("Activity", "النشاط")
+            : text(
+                "Stable pattern",
+                "نمط مستقر"
+              )}
+        </span>
+
+        <span className="ohMetricHint">
+          {todaysPrimaryFocus}
+        </span>
+      </div>
+
+      <Link
+        href={nextAfterSaveHref}
+        className="primaryBtn"
+      >
+        {nextAfterSaveLabel}
+      </Link>
+    </div>
+  </article>
+)}
             </section>
 
             <section className="ohCard">

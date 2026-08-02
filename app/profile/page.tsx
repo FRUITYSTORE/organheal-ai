@@ -779,26 +779,14 @@ export default function ProfilePage() {
               </div>
 
               <div className="ohButtonRow">
-                <Link href="/dashboard" className="secondaryBtn">
-                  {text("Dashboard", "لوحة التحكم")}
-                </Link>
+  <Link href="/health-plan" className="primaryBtn">
+    {text("Continue Health Plan", "متابعة الخطة الصحية")}
+  </Link>
 
-                <Link href="/reports" className="secondaryBtn">
-                  {text("Reports", "التقارير")}
-                </Link>
-
-                <Link href="/reports" className="primaryBtn">
-                  {text("Analysis", "تحليل التقارير")}
-                </Link>
-
-                <Link href="/health-plan" className="secondaryBtn">
-                  {text("Health Plan", "الخطة الصحية")}
-                </Link>
-
-                <Link href="/checkin" className="secondaryBtn">
-                  Check-In
-                </Link>
-              </div>
+  <Link href="/dashboard" className="secondaryBtn">
+    {text("Return to Dashboard", "العودة إلى لوحة التحكم")}
+  </Link>
+</div>
             </section>
           </>
         )}

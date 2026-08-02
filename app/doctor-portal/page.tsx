@@ -604,33 +604,7 @@ const officialPriorityOrgan =
                 )}
               </p>
 
-                              <div
-                className="ohButtonRow"
-                style={{
-                  marginTop: "24px",
-                }}
-              >
-                <Link
-                  href="/reports"
-                  className="secondaryBtn"
-                >
-                  {text(
-                    "Reports",
-                    "التقارير"
-                  )}
-                </Link>
-
-                <Link
-                  href="/health-plan"
-                  className="secondaryBtn"
-                >
-                  {text(
-                    "Health Plan",
-                    "الخطة الصحية"
-                  )}
-                </Link>
-              </div>
-            </div>
+                            </div>
 
          <div className="ohCard">
   <div className="ohCardHeader">

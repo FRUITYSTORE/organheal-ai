@@ -1,164 +1,95 @@
 import { NextResponse } from "next/server";
+
 import {
-  assessQuestionEvidence,
-  assessReasoningReadiness,
-  decideReasoningPath,
-} from "@/lib/health-intelligence/application/assistant-decision.service";
-import {
-  buildConversationAwareMessage,
-} from "@/lib/health-intelligence/application/assistant-conversation.service";
-import {
-  buildPersonalizedResponse,
-  type AssistantResponseConversationMessage,
-  type AssistantResponseHealthContext,
+  runAssistantOrchestrator,
+  type AssistantOrchestratorLanguage,
+} from "@/lib/health-intelligence/application/assistant-orchestrator.service";
+
+import type {
+  AssistantResponseConversationMessage,
+  AssistantResponseHealthContext,
 } from "@/lib/health-intelligence/application/assistant-response.service";
+
+type AssistantRequestBody = {
+  message?: unknown;
+  language?: unknown;
+  healthContext?: unknown;
+  conversation?: unknown;
+};
 
 export async function POST(req: Request) {
   try {
+    const body =
+      (await req.json()) as AssistantRequestBody;
+
     const {
       message,
       language = "en",
       healthContext,
       conversation,
-    } = await req.json();
+    } = body;
 
-    if (!message || typeof message !== "string" || !message.trim()) {
+    if (
+      typeof message !== "string" ||
+      !message.trim()
+    ) {
       return NextResponse.json(
         {
           error: "Message is required",
         },
-        { status: 400 }
+        {
+          status: 400,
+        }
       );
     }
 
-    const normalizedLanguage: "en" | "ar" =
-      language === "ar" ? "ar" : "en";
+    const normalizedLanguage:
+      AssistantOrchestratorLanguage =
+        language === "ar"
+          ? "ar"
+          : "en";
 
-    const conversationAwareMessage =
-  buildConversationAwareMessage(
-    message.trim(),
-    Array.isArray(conversation)
-      ? (conversation as AssistantResponseConversationMessage[])
-      : []
-  );
+    const normalizedConversation =
+      Array.isArray(conversation)
+        ? (
+            conversation as
+              AssistantResponseConversationMessage[]
+          )
+        : [];
 
-const normalizedHealthContext =
-  healthContext as AssistantResponseHealthContext | null;
+    const normalizedHealthContext =
+      (
+        healthContext ??
+        null
+      ) as
+        | AssistantResponseHealthContext
+        | null;
 
-const reasoningReadiness =
-  assessReasoningReadiness(
-    normalizedHealthContext,
-    normalizedLanguage
-  );
-  const questionEvidence =
-  assessQuestionEvidence(
-    conversationAwareMessage,
-    normalizedHealthContext,
-    normalizedLanguage
-  );
+    const result =
+      runAssistantOrchestrator({
+        message,
+        language:
+          normalizedLanguage,
+        healthContext:
+          normalizedHealthContext,
+        conversation:
+          normalizedConversation,
+      });
 
-const reasoningDecision =
-  decideReasoningPath(
-    questionEvidence,
-    normalizedLanguage
-  );
-
-if (
-  reasoningDecision.mode === "clarify" &&
-  reasoningDecision.question
-) {
-  return NextResponse.json({
-    success: true,
-    response: reasoningDecision.question,
-    reasoning: {
-  mode: "clarify",
-
-  status: reasoningReadiness.status,
-  confidence: reasoningReadiness.confidence,
-
-  availableEvidence:
-    reasoningReadiness.availableEvidence,
-
-  missingInformation:
-    reasoningReadiness.missingInformation,
-
-  questionIntent:
-    questionEvidence.intent,
-
-  questionEvidenceStatus:
-    questionEvidence.status,
-
-  questionEvidenceConfidence:
-    questionEvidence.confidence,
-
-  questionAvailableEvidence:
-    questionEvidence.availableEvidence,
-
-  questionMissingInformation:
-    questionEvidence.missingInformation,
-
-  clarifyingQuestion:
-    reasoningDecision.question,
-
-  reason:
-    reasoningDecision.reason,
-},
-  });
-}
-
-const response = buildPersonalizedResponse(
-  conversationAwareMessage,
-  normalizedLanguage,
-  normalizedHealthContext,
-  Array.isArray(conversation)
-    ? (conversation as AssistantResponseConversationMessage[])
-    : []
-);
-
-return NextResponse.json({
-  success: true,
-  response,
- reasoning: {
-  mode: "answer",
-
-  status: reasoningReadiness.status,
-  confidence: reasoningReadiness.confidence,
-
-  availableEvidence:
-    reasoningReadiness.availableEvidence,
-
-  missingInformation:
-    reasoningReadiness.missingInformation,
-
-  questionIntent:
-    questionEvidence.intent,
-
-  questionEvidenceStatus:
-    questionEvidence.status,
-
-  questionEvidenceConfidence:
-    questionEvidence.confidence,
-
-  questionAvailableEvidence:
-    questionEvidence.availableEvidence,
-
-  questionMissingInformation:
-    questionEvidence.missingInformation,
-
-  clarifyingQuestion:
-    questionEvidence.clarifyingQuestion,
-
-  reason: null,
-},
-});
+    return NextResponse.json(result);
   } catch (error) {
-    console.error("Assistant API error:", error);
+    console.error(
+      "Assistant API error:",
+      error
+    );
 
     return NextResponse.json(
       {
         error: "Server error",
       },
-      { status: 500 }
+      {
+        status: 500,
+      }
     );
   }
 }

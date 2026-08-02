@@ -2,8 +2,13 @@ import type {
   AssistantResponseHealthContext,
 } from "@/lib/health-intelligence/application/assistant-response/assistant-response.types";
 
+import type {
+  AssistantIntent,
+} from "@/lib/health-intelligence/application/assistant-intent/assistant-intent";
+
 export type BuildReportResponseInput = {
   lowerMessage: string;
+  detectedIntent: AssistantIntent;
   isArabic: boolean;
   healthContext: AssistantResponseHealthContext;
   nextAction: string;
@@ -13,6 +18,7 @@ export type BuildReportResponseInput = {
 
 export function buildReportResponse({
   lowerMessage,
+  detectedIntent,
   isArabic,
   healthContext,
   nextAction,
@@ -23,7 +29,8 @@ export function buildReportResponse({
     healthContext.latestReportContext;
   
   const hasReportIntent =
-    lowerMessage.includes("report") ||
+  detectedIntent === "report" ||
+  lowerMessage.includes("report") ||
     lowerMessage.includes("lab") ||
     lowerMessage.includes("result") ||
     lowerMessage.includes("finding") ||
@@ -33,7 +40,8 @@ export function buildReportResponse({
     lowerMessage.includes("نتائج");
   
   const hasDoctorIntent =
-    lowerMessage.includes("doctor") ||
+  detectedIntent === "doctor" ||
+  lowerMessage.includes("doctor") ||
     lowerMessage.includes("visit") ||
     lowerMessage.includes("brief") ||
     lowerMessage.includes("طبيب") ||
@@ -51,7 +59,8 @@ export function buildReportResponse({
     lowerMessage.includes("ملخص");
   
   const hasReportActionIntent =
-    lowerMessage.includes("next") ||
+  detectedIntent === "next-step" ||
+  lowerMessage.includes("next") ||
     lowerMessage.includes("action") ||
     lowerMessage.includes("recommend") ||
     lowerMessage.includes("what should i do") ||

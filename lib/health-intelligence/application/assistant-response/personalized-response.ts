@@ -22,6 +22,15 @@ import type {
   AssistantResponseConversationMessage,
   AssistantResponseHealthContext,
 } from "@/lib/health-intelligence/application/assistant-response/assistant-response.types";
+
+import {
+  detectAssistantIntent,
+} from "@/lib/health-intelligence/application/assistant-intent/assistant-intent";
+
+import {
+  buildExplainableReasoning,
+} from "@/lib/health-intelligence/application/assistant-explainable-reasoning.service";
+
 export function hasHealthContext(
   context?: AssistantResponseHealthContext | null
 ) {
@@ -46,6 +55,9 @@ export function buildPersonalizedResponse(
 ) {
   const isArabic = language === "ar";
   const lowerMessage = message.toLowerCase();
+
+const detectedIntent =
+  detectAssistantIntent(message);
 
   if (!hasHealthContext(healthContext) || !healthContext) {
     return buildGeneralEducationalResponse(message, language);
@@ -194,6 +206,123 @@ const {
   },
   language
 );
+const leadingInterpretation =
+  evidenceBackedReasoning.leadingInterpretation;
+
+  const explainableReasoning =
+  buildExplainableReasoning({
+    leadingInterpretation,
+    language,
+  });
+
+const leadingInterpretationSummary =
+  explainableReasoning
+    ? isArabic
+      ? `التفسير الرئيسي الحالي:
+${explainableReasoning.title}
+
+درجة الثقة:
+${explainableReasoning.confidence}
+
+كيف تم تقييم الثقة:
+${explainableReasoning.confidenceExplanation}
+
+سبب هذا التفسير:
+${explainableReasoning.interpretation}
+
+الأدلة التي تمت مراجعتها:
+${
+  explainableReasoning.evidenceReviewed.length > 0
+    ? explainableReasoning.evidenceReviewed
+        .map(
+          (item) =>
+            `• ${item.statement} [${item.source}]`
+        )
+        .join("\n")
+    : "لم يتم تحديد أدلة داعمة منظمة."
+}
+
+الأدلة المتعارضة:
+${
+  explainableReasoning.conflictingEvidence.length > 0
+    ? explainableReasoning.conflictingEvidence
+        .map(
+          (item) =>
+            `• ${item.statement} [${item.source}]`
+        )
+        .join("\n")
+    : "لم يتم تحديد أدلة متعارضة."
+}
+
+الأدلة التي ما تزال مطلوبة:
+${
+  explainableReasoning.missingEvidence.length > 0
+    ? explainableReasoning.missingEvidence
+        .map((item) => `• ${item}`)
+        .join("\n")
+    : "لم يتم تحديد فجوات إضافية في الأدلة."
+}
+
+حدود التفسير:
+${explainableReasoning.limitations
+  .map((item) => `• ${item}`)
+  .join("\n")}
+
+الخطوة التالية لتحسين التفسير:
+${explainableReasoning.nextReasoningStep || "لا توجد خطوة تفسيرية إضافية محددة حاليًا."}`
+      : `Current leading interpretation:
+${explainableReasoning.title}
+
+Confidence:
+${explainableReasoning.confidence}
+
+How confidence was assessed:
+${explainableReasoning.confidenceExplanation}
+
+Why this interpretation may fit:
+${explainableReasoning.interpretation}
+
+Evidence reviewed:
+${
+  explainableReasoning.evidenceReviewed.length > 0
+    ? explainableReasoning.evidenceReviewed
+        .map(
+          (item) =>
+            `• ${item.statement} [${item.source}]`
+        )
+        .join("\n")
+    : "No structured supporting evidence was identified."
+}
+
+Conflicting evidence:
+${
+  explainableReasoning.conflictingEvidence.length > 0
+    ? explainableReasoning.conflictingEvidence
+        .map(
+          (item) =>
+            `• ${item.statement} [${item.source}]`
+        )
+        .join("\n")
+    : "No conflicting evidence was identified."
+}
+
+Evidence still needed:
+${
+  explainableReasoning.missingEvidence.length > 0
+    ? explainableReasoning.missingEvidence
+        .map((item) => `• ${item}`)
+        .join("\n")
+    : "No additional evidence gaps were identified."
+}
+
+Interpretation limitations:
+${explainableReasoning.limitations
+  .map((item) => `• ${item}`)
+  .join("\n")}
+
+Next step to strengthen the interpretation:
+${explainableReasoning.nextReasoningStep || "No additional reasoning step is currently identified."}`
+    : "";
       const reasoningStateMessage =
   evidenceCompletion.complete
     ? isArabic
@@ -209,28 +338,44 @@ const {
 جاهز لبدء تحليل الاحتمالات بشكل محدود ومدعوم بالأدلة.
 
 الأدلة المؤكدة المستخدمة:
-${evidenceBackedReasoning.confirmedEvidence
-  .map(
-    (item) =>
-      `• ${item.statement} [${item.source}]`
-  )
-  .join("\n")}
+${
+  evidenceBackedReasoning.confirmedEvidence.length > 0
+    ? evidenceBackedReasoning.confirmedEvidence
+        .map(
+          (item) =>
+            `• ${item.statement} [${item.source}]`
+        )
+        .join("\n")
+    : "لا توجد أدلة مؤكدة منظمة متاحة حاليًا."
+}
 
 حدود الاستنتاج:
-${evidenceBackedReasoning.uncertainty}`
+${evidenceBackedReasoning.uncertainty}${
+  leadingInterpretationSummary
+    ? `\n\n${leadingInterpretationSummary}`
+    : ""
+}`
       : `Evidence-backed reasoning state:
 Ready for bounded hypothesis reasoning.
 
 Confirmed evidence being used:
-${evidenceBackedReasoning.confirmedEvidence
-  .map(
-    (item) =>
-      `• ${item.statement} [${item.source}]`
-  )
-  .join("\n")}
+${
+  evidenceBackedReasoning.confirmedEvidence.length > 0
+    ? evidenceBackedReasoning.confirmedEvidence
+        .map(
+          (item) =>
+            `• ${item.statement} [${item.source}]`
+        )
+        .join("\n")
+    : "No structured confirmed evidence is currently available."
+}
 
 Reasoning boundary:
-${evidenceBackedReasoning.uncertainty}`
+${evidenceBackedReasoning.uncertainty}${
+  leadingInterpretationSummary
+    ? `\n\n${leadingInterpretationSummary}`
+    : ""
+}`
     : "";
   return isArabic
     ? `أعدت تقييم سؤالك السابق باستخدام المعلومة الجديدة التي قدمتها.
@@ -306,6 +451,8 @@ I cannot confirm a cause or diagnosis from the current information alone, but th
 }
 
   if (
+    detectedIntent.intent === "cause-reasoning" ||
+  detectedIntent.intent === "score" ||
     lowerMessage.includes("why") ||
     lowerMessage.includes("low") ||
     lowerMessage.includes("score") ||
@@ -345,6 +492,7 @@ This is educational health guidance and not a medical diagnosis.`;
   }
 
  if (
+  detectedIntent.intent === "next-step" ||
   lowerMessage.includes("next") ||
   lowerMessage.includes("action") ||
   lowerMessage.includes("next step") ||
@@ -376,7 +524,8 @@ Use this information to prepare for a clearer health decision.`;
   }
 
   if (
-    lowerMessage.includes("risk") ||
+  detectedIntent.intent === "risk" ||
+  lowerMessage.includes("risk") ||
     lowerMessage.includes("pattern") ||
     lowerMessage.includes("مخاطر") ||
     lowerMessage.includes("نمط")
@@ -405,21 +554,23 @@ ${nextAction}
 
 This may change as new reports, tests, or health updates are added.`;
   }
-  const reportResponse =
-    buildReportResponse({
-      lowerMessage,
-      isArabic,
-      healthContext,
-      nextAction,
-      doctorBrief,
-      priorityArea,
-    });
+ const reportResponse =
+  buildReportResponse({
+    lowerMessage,
+    detectedIntent: detectedIntent.intent,
+    isArabic,
+    healthContext,
+    nextAction,
+    doctorBrief,
+    priorityArea,
+  });
 
   if (reportResponse) {
     return reportResponse;
   }
   if (
-    lowerMessage.includes("health age") ||
+  detectedIntent.intent === "health-age" ||
+  lowerMessage.includes("health age") ||
     lowerMessage.includes("age") ||
     lowerMessage.includes("العمر")
   ) {
@@ -443,7 +594,8 @@ This information is part of your health context and is not a medical diagnosis.`
   }
 
   if (
-    lowerMessage.includes("improve") ||
+  detectedIntent.intent === "improvement" ||
+  lowerMessage.includes("improve") ||
     lowerMessage.includes("improvement") ||
     lowerMessage.includes("تحسين") ||
     lowerMessage.includes("أتطور")

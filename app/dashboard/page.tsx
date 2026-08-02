@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import DashboardOverviewGrid from "@/app/components/dashboard/DashboardOverviewGrid";
 import { getDashboardSummary } from "@/lib/services/dashboard/dashboard.service";
 import DashboardIntelligenceCard from "@/app/components/dashboard/DashboardIntelligenceCard";
 import HealthDirectionCard from "@/app/components/health-intelligence/HealthDirectionCard";
@@ -332,7 +331,7 @@ const [healthIntelligence, setHealthIntelligence] =
   isArabic
 );
 
-  
+
 const dashboardHealthScore =
   healthIntelligence?.healthScore.data.score ?? null;
 
@@ -823,7 +822,7 @@ const nextStep: NextStep = !hasAssessments && !hasReports
     grid-template-columns: 1fr;
   }
 }
-  
+
 .dashboardIntelligenceHeroContent {
   display: flex;
   flex-direction: column;
@@ -1055,7 +1054,7 @@ const nextStep: NextStep = !hasAssessments && !hasReports
 .dashboardCommandCenterPage p {
   text-wrap: pretty;
 }
-  
+
         .dashboardCommandCenterPage .dashboardCommandHero {
           background:
             radial-gradient(circle at 88% 10%, rgba(20, 184, 166, 0.36), transparent 34%),
@@ -2682,14 +2681,16 @@ const nextStep: NextStep = !hasAssessments && !hasReports
           </section>
         ) : (
           <>
-          
+
           <DashboardNextActionSection
             {...dashboardViewState.nextAction}
           />
            <DashboardJourneySection
   {...dashboardViewState.journey}
 />
- 
+<DashboardOverviewSection
+            {...dashboardViewState.overview}
+          />
 {healthIntelligence && (
   <section className="healthIntelligenceCommandCenter">
     <div className="healthCommandCenterHeader">
@@ -2753,11 +2754,7 @@ const nextStep: NextStep = !hasAssessments && !hasReports
   </section>
 )}
 
-
-          <DashboardOverviewSection
-            {...dashboardViewState.overview}
-          />
-            {!hasAnyData && (
+              {!hasAnyData && (
               <section className="dashboardCommandPanel" style={{ marginTop: "20px" }}>
                 <span>{isArabic ? "بداية جديدة" : "Fresh start"}</span>
                 <h2>

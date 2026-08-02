@@ -1,96 +1,161 @@
-import { buildHealthIntelligence } from "@/lib/health-intelligence/health-intelligence.service";
-import { buildHealthRuntime } from "@/lib/health-intelligence/runtime/health-intelligence-runtime.builder";
-import { presentDoctorIntelligence } from "@/lib/health-intelligence/presentation/doctor-intelligence.presenter";
-import { getPatientSummary } from "@/lib/services/shared/patient-summary.service";
-import { getReportsLibrary } from "@/lib/services/reports/reports.service";
-import { getHealthInsightsByReportId } from "@/lib/repositories/insight.repository";
-import { supabase } from "@/lib/supabase";
+import {
+  buildAssistantHealthContext,
+} from "@/lib/health-intelligence/application/assistant-health-context.builder";
 
-export async function getHealthContext(_isArabic = false) {
-  const { data: userData, error: userError } =
-    await supabase.auth.getUser();
+import type {
+  AssistantLatestReportContext,
+  AssistantResponseHealthContext,
+} from "@/lib/health-intelligence/application/assistant-response/assistant-response.types";
 
-  if (userError || !userData.user) {
-    return null;
-  }
+import {
+  buildHealthIntelligence,
+} from "@/lib/health-intelligence/health-intelligence.service";
 
-  const patientSummary = await getPatientSummary(
-  userData.user.id
-);
+import {
+  presentDoctorIntelligence,
+} from "@/lib/health-intelligence/presentation/doctor-intelligence.presenter";
 
-let latestReportContext:
-  | {
-      reportId: number;
-      fileName: string;
-      reportType: string;
-      uploadedAt: string | null;
-      summary: string | null;
-      keyFindings: string | null;
-      recommendations: string | null;
-      doctorBrief: string | null;
-      nextBestAction: string | null;
-      riskLevel: string | null;
+import {
+  buildHealthRuntime,
+} from "@/lib/health-intelligence/runtime/health-intelligence-runtime.builder";
+
+import {
+  getHealthInsightsByReportId,
+} from "@/lib/repositories/insight.repository";
+
+import {
+  getReportsLibrary,
+} from "@/lib/services/reports/reports.service";
+
+import {
+  getPatientSummary,
+} from "@/lib/services/shared/patient-summary.service";
+
+import {
+  supabase,
+} from "@/lib/supabase";
+
+async function getLatestReportContext(
+  userId: string
+): Promise<AssistantLatestReportContext | null> {
+  try {
+    const reports =
+      await getReportsLibrary(
+        userId,
+        1
+      );
+
+    const latestReport =
+      reports[0] ?? null;
+
+    if (!latestReport) {
+      return null;
     }
-  | null = null;
 
-try {
-  const reports = await getReportsLibrary(
-    userData.user.id,
-    1
-  );
+    const insights =
+      await getHealthInsightsByReportId(
+        userId,
+        latestReport.reportId
+      );
 
-  const latestReport = reports[0] ?? null;
+    const latestInsight =
+      insights[0] ?? null;
 
-  if (latestReport) {
-    const insights = await getHealthInsightsByReportId(
-      userData.user.id,
-      latestReport.reportId
-    );
+    return {
+      reportId:
+        latestReport.reportId,
 
-    const latestInsight = insights[0] ?? null;
+      fileName:
+        latestReport.fileName,
 
-    latestReportContext = {
-      reportId: latestReport.reportId,
-      fileName: latestReport.fileName,
-      reportType: latestReport.reportType,
-      uploadedAt: latestReport.uploadedAt,
+      reportType:
+        latestReport.reportType,
+
+      uploadedAt:
+        latestReport.uploadedAt,
+
       summary:
         latestInsight?.summary ||
         latestReport.summary ||
         null,
+
       keyFindings:
-        latestInsight?.key_findings || null,
+        latestInsight?.key_findings ||
+        null,
+
       recommendations:
-        latestInsight?.recommendations || null,
+        latestInsight?.recommendations ||
+        null,
+
       doctorBrief:
-        latestInsight?.doctor_brief || null,
+        latestInsight?.doctor_brief ||
+        null,
+
       nextBestAction:
         latestInsight?.next_best_action ||
         latestReport.nextBestAction ||
         null,
+
       riskLevel:
         latestInsight?.risk_level ||
         latestReport.riskLevel ||
         null,
     };
-  }
-} catch (error) {
-  console.error(
-    "Could not load latest report context:",
-    error
-  );
+  } catch (error) {
+    console.error(
+      "Could not load latest report context:",
+      error
+    );
 
-  latestReportContext = null;
+    return null;
+  }
 }
 
-  const intelligence =
-    buildHealthIntelligence(patientSummary);
+export async function getHealthContext(
+  isArabic = false
+): Promise<AssistantResponseHealthContext | null> {
+  const {
+    data: userData,
+    error: userError,
+  } = await supabase.auth.getUser();
 
-  const runtime = await buildHealthRuntime({
-    userId: userData.user.id,
-    patient: patientSummary,
-    language: _isArabic ? "ar" : "en",
-  });
+  if (
+    userError ||
+    !userData.user
+  ) {
+    return null;
+  }
+
+  const userId =
+    userData.user.id;
+
+  const patientSummary =
+    await getPatientSummary(
+      userId
+    );
+
+  const latestReportContext =
+    await getLatestReportContext(
+      userId
+    );
+
+  const intelligence =
+    buildHealthIntelligence(
+      patientSummary
+    );
+
+  const runtime =
+    await buildHealthRuntime({
+      userId,
+
+      patient:
+        patientSummary,
+
+      language:
+        isArabic
+          ? "ar"
+          : "en",
+    });
 
   const unifiedSummary =
     runtime.modules.summary.data;
@@ -99,45 +164,22 @@ try {
     unifiedSummary
       ? presentDoctorIntelligence(
           unifiedSummary,
-          _isArabic ? "ar" : "en"
+          isArabic
+            ? "ar"
+            : "en"
         )
       : null;
 
-  const overview =
-    intelligence.intelligenceOverview.data;
+  const doctorBrief =
+    doctorPresentation?.brief ??
+    intelligence.doctorBrief.data.brief ??
+    null;
 
-  return {
-    overallScore: intelligence.healthScore.data.score,
-    strongestOrgan: overview.strongestOrgan,
-    priorityOrgan:
-      intelligence.priority.data.priorityOrgan,
-    labScore: null,
-    dailyCheckInScore:
-      patientSummary.latestCheckIn?.wellness_score ?? null,
-
-    riskPattern:
-      intelligence.doctorBrief.data.riskPattern,
-
-    healthAge: null,
-    healthAgeStatus: overview.healthAgeStatus,
-
-    doctorBrief:
-      doctorPresentation?.brief ??
-      intelligence.doctorBrief.data.brief,
-
-    healthScore: {
-      score: intelligence.healthScore.data.score,
-      level: intelligence.healthScore.data.level,
-      confidence: intelligence.healthScore.confidence,
-      dataCompleteness:
-        intelligence.healthScore.data.dataCompleteness,
-    },
-
-    recommendation:
-      intelligence.recommendations.data.primaryAction,
-
-    healthEngine: intelligence,
-
-latestReportContext,
-  };
+  return buildAssistantHealthContext({
+    patientSummary,
+    intelligence,
+    runtime,
+    doctorBrief,
+    latestReportContext,
+  });
 }

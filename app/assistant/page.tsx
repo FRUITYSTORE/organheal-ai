@@ -4,6 +4,9 @@ import { type FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { getHealthContext } from "@/lib/getHealthContext";
 import PageBackActions from "../components/PageBackActions";
+import type {
+  AssistantResponseHealthContext,
+} from "@/lib/health-intelligence/application/assistant-response/assistant-response.types";
 
 type Language = "en" | "ar";
 
@@ -23,14 +26,6 @@ type AssistantResponse = {
   error?: string;
 };
 
-type HealthContext = {
-  priorityOrgan?: string | null;
-  overallScore?: number | null;
-  riskPattern?: string | null;
-  healthAge?: number | null;
-  doctorBrief?: string | null;
-  [key: string]: unknown;
-};
 
 function getStoredLanguage(): Language {
   if (typeof window === "undefined") return "en";
@@ -51,7 +46,10 @@ export default function AssistantPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isSending, setIsSending] = useState(false);
   const [isContextLoading, setIsContextLoading] = useState(true);
-  const [healthContext, setHealthContext] = useState<HealthContext | null>(null);
+  const [healthContext, setHealthContext] =
+  useState<AssistantResponseHealthContext | null>(
+    null
+  );
 
   const isArabic = language === "ar";
 
@@ -96,7 +94,7 @@ export default function AssistantPage() {
 
       try {
         const context = await getHealthContext(isArabic);
-        setHealthContext((context || null) as HealthContext | null);
+        setHealthContext(context);
       } catch (error) {
         console.error(error);
         setHealthContext(null);
@@ -492,31 +490,82 @@ function getAssistantAction(question: string): MessageAction | undefined {
 
               <div className="ohDivider" />
 
-              <div className="ohButtonRow">
-  {healthContext ? (
-    <>
-      <Link href="/reports" className="secondaryBtn">
-        {text("Review Reports", "مراجعة التقارير")}
-      </Link>
-
-      <Link href="/health-plan" className="secondaryBtn">
-        {text("Open Health Plan", "فتح الخطة الصحية")}
-      </Link>
-    </>
-  ) : (
-    <>
-      <Link href="/assessment" className="secondaryBtn">
-        {text("Start Assessment", "ابدأ التقييم")}
-      </Link>
-
-      <Link href="/lab-upload" className="secondaryBtn">
-        {text("Upload Report", "رفع تقرير")}
-      </Link>
-    </>
-  )}
-</div>
-            </div>
+              </div>
           </div>
+        </section>
+
+ <section className="ohCard">
+          <div className="ohCardHeader">
+            <div>
+              <p className="ohMetricLabel">
+                {text("Assistant conversation", "محادثة المساعد")}
+              </p>
+
+              <h2 className="ohCardTitle">
+                {text("Ask your question", "اكتب سؤالك")}
+              </h2>
+            </div>
+
+            <span className="ohStatusBadge neutral">
+              {text("Educational", "تعليمي")}
+            </span>
+          </div>
+
+          <div className="assistantChatWindow">
+          {messages.map((message, index) => (
+  <div
+    key={`${message.sender}-${index}`}
+    className={`assistantMessage ${
+      message.sender === "ai" ? "ai" : "user"
+    }`}
+  >
+    <strong>
+      {message.sender === "ai"
+        ? "OrganHeal AI"
+        : text("You", "أنت")}
+    </strong>
+
+    <p>{message.text}</p>
+
+    {message.sender === "ai" && message.action && (
+      <div style={{ marginTop: "12px" }}>
+        <Link
+          href={message.action.href}
+          className="secondaryBtn"
+        >
+          {message.action.label}
+        </Link>
+      </div>
+    )}
+  </div>
+))}
+
+            {isSending && (
+              <div className="assistantMessage ai">
+                <strong>OrganHeal AI</strong>
+                <p>{text("Thinking...", "جاري التفكير...")}</p>
+              </div>
+            )}
+          </div>
+
+          <div className="ohDivider" />
+
+          <form className="assistantInputForm" onSubmit={handleSubmit}>
+            <input
+              type="text"
+              placeholder={text(
+                "Ask about your score, risk pattern, report, or doctor brief...",
+                "اسأل عن نتيجتك، نمط المخاطر، التقرير، أو ملخص الطبيب..."
+              )}
+              value={input}
+              onChange={(event) => setInput(event.target.value)}
+              disabled={isSending}
+            />
+
+            <button className="primaryBtn" type="submit" disabled={isSending}>
+              {isSending ? "..." : text("Send", "إرسال")}
+            </button>
+          </form>
         </section>
 
         <section className="ohGrid cols2">
@@ -602,81 +651,7 @@ function getAssistantAction(question: string): MessageAction | undefined {
           </article>
         </section>
 
-        <section className="ohCard">
-          <div className="ohCardHeader">
-            <div>
-              <p className="ohMetricLabel">
-                {text("Assistant conversation", "محادثة المساعد")}
-              </p>
-
-              <h2 className="ohCardTitle">
-                {text("Ask your question", "اكتب سؤالك")}
-              </h2>
-            </div>
-
-            <span className="ohStatusBadge neutral">
-              {text("Educational", "تعليمي")}
-            </span>
-          </div>
-
-          <div className="assistantChatWindow">
-          {messages.map((message, index) => (
-  <div
-    key={`${message.sender}-${index}`}
-    className={`assistantMessage ${
-      message.sender === "ai" ? "ai" : "user"
-    }`}
-  >
-    <strong>
-      {message.sender === "ai"
-        ? "OrganHeal AI"
-        : text("You", "أنت")}
-    </strong>
-
-    <p>{message.text}</p>
-
-    {message.sender === "ai" && message.action && (
-      <div style={{ marginTop: "12px" }}>
-        <Link
-          href={message.action.href}
-          className="secondaryBtn"
-        >
-          {message.action.label}
-        </Link>
-      </div>
-    )}
-  </div>
-))}
-
-            {isSending && (
-              <div className="assistantMessage ai">
-                <strong>OrganHeal AI</strong>
-                <p>{text("Thinking...", "جاري التفكير...")}</p>
-              </div>
-            )}
-          </div>
-
-          <div className="ohDivider" />
-
-          <form className="assistantInputForm" onSubmit={handleSubmit}>
-            <input
-              type="text"
-              placeholder={text(
-                "Ask about your score, risk pattern, report, or doctor brief...",
-                "اسأل عن نتيجتك، نمط المخاطر، التقرير، أو ملخص الطبيب..."
-              )}
-              value={input}
-              onChange={(event) => setInput(event.target.value)}
-              disabled={isSending}
-            />
-
-            <button className="primaryBtn" type="submit" disabled={isSending}>
-              {isSending ? "..." : text("Send", "إرسال")}
-            </button>
-          </form>
-        </section>
-
-        <section className="ohTrustNotice">
+               <section className="ohTrustNotice">
           <span aria-hidden="true">🩺</span>
           <div>
             <strong>

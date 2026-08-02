@@ -767,7 +767,7 @@ try {
           color: #061826 !important;
           text-shadow: none !important;
         }
-     
+
         .hpScoreOverview {
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
@@ -1018,16 +1018,6 @@ primaryLabel={activeNextAction.button}
   }}
 />
 
-<TodaysHealthMission
-  isArabic={isArabic}
-  priorityOrgan={priorityOrganDisplay}
-  priorityScore={priorityScore}
-  primaryAction={
-  healthPlanView?.todaysMission.primaryAction ??
-  activeNextAction.detail
-}
-/>
-
         {message && (
           <section className="hpSafety">
             {message}
@@ -1087,65 +1077,122 @@ primaryLabel={activeNextAction.button}
   />
 )}
 
-        <article className="hpPanel">
-  <div className="hpPanelHeader">
-    <div className="hpPanelKicker">
-      {text("Reports and analysis", "التقارير والتحليل")}
-    </div>
+<section className="hpSafety">
+  <strong>
+    {text(
+      "Why this is your priority today",
+      "لماذا هذه هي أولويتك اليوم؟"
+    )}
+  </strong>
 
-    <h2 className="hpPanelTitle">
-      {hasGenerated
-        ? text("Analysis is saved", "التحليل محفوظ")
-        : text("Analysis is still needed", "التحليل ما زال مطلوبًا")}
-    </h2>
-  </div>
-
-  <p className="hpSignalText">
-    {latestInsight?.next_best_action ||
-      latestInsight?.summary ||
+  <p>
+    {healthPlanView?.healthScore.summary ??
       text(
-        "Analyze your latest report so this plan can become more specific and useful.",
-        "حلّل آخر تقرير حتى تصبح الخطة أكثر دقة وفائدة."
+        "Your current health information indicates that this area deserves the greatest attention right now.",
+        "تشير بياناتك الصحية الحالية إلى أن هذا الجانب يحتاج إلى أكبر قدر من الاهتمام في الوقت الحالي."
       )}
   </p>
+</section>
 
-  <div className="hpActions">
-    <Link href={latestAnalysisHref} className="hpPrimary">
-      {hasGenerated
-        ? text("Review Analysis", "مراجعة التحليل")
-        : text("Analyze Latest Report", "تحليل آخر تقرير")}
-    </Link>
-
-    <Link href="/reports" className="hpSecondary">
-      {text("Reports Library", "مكتبة التقارير")}
-    </Link>
-  </div>
-</article>
+        <TodaysHealthMission
+  isArabic={isArabic}
+  priorityOrgan={priorityOrganDisplay}
+  primaryAction={
+    healthPlanView?.todaysMission.primaryAction ??
+    activeNextAction.detail
+  }
+/>
 
         <WeeklyTasksPanel
-  kicker={text("Action tasks", "مهام المتابعة")}
-  title={`${completedCount} / ${activeTasks.length} ${text(
-  "completed",
-  "مكتملة"
-)}`}
-  description={text(
-    "Choose simple tasks. Progress is saved on this device.",
-    "اختر مهام بسيطة. يتم حفظ التقدم على هذا الجهاز."
-  )}
- tasks={activeTasks}
+          kicker={text("Action tasks", "مهام المتابعة")}
+          title={`${completedCount} / ${activeTasks.length} ${text(
+            "completed",
+            "مكتملة"
+          )}`}
+          description={text(
+            "Choose simple tasks. Progress is saved on this device.",
+            "اختر مهام بسيطة. يتم حفظ التقدم على هذا الجهاز."
+          )}
+          tasks={activeTasks}
+          completedTasks={completedTasks}
+          progressPercent={progressPercent}
+          doneLabel={text("Done", "تم")}
+          todoLabel={text("To do", "مطلوب")}
+          resetLabel={text(
+            "Reset Weekly Tasks",
+            "إعادة مهام الأسبوع"
+          )}
+          checkInLabel={text(
+            "Open Check-In",
+            "فتح Check-In"
+          )}
+          onToggleTask={toggleTask}
+          onResetTasks={() => {
+            setCompletedTasks([]);
+            localStorage.removeItem(taskStorageKey);
+          }}
+        />
 
-  completedTasks={completedTasks}
-  progressPercent={progressPercent}
-  doneLabel={text("Done", "تم")}
-  todoLabel={text("To do", "مطلوب")}
-  resetLabel={text("Reset Weekly Tasks", "إعادة مهام الأسبوع")}
-  checkInLabel={text("Open Check-In", "فتح Check-In")}
-  onToggleTask={toggleTask}
-  onResetTasks={() => {
-    setCompletedTasks([]);
-    localStorage.removeItem(taskStorageKey);
-  }}
-/>
+                <article className="hpPanel">
+          <div className="hpPanelHeader">
+            <div className="hpPanelKicker">
+              {text(
+                "Latest analysis guidance",
+                "توجيهات أحدث تحليل"
+              )}
+            </div>
+
+            <h2 className="hpPanelTitle">
+              {hasGenerated
+                ? text(
+                    "Use your saved analysis to guide this plan",
+                    "استخدم التحليل المحفوظ لتوجيه هذه الخطة"
+                  )
+                : text(
+                    "Complete report analysis to personalize this plan",
+                    "أكمل تحليل التقرير لتخصيص هذه الخطة"
+                  )}
+            </h2>
+
+            <p className="hpPanelText">
+              {hasGenerated
+                ? text(
+                    "The guidance below comes from your latest saved report analysis.",
+                    "التوجيه أدناه مستمد من أحدث تحليل محفوظ لتقريرك."
+                  )
+                : text(
+                    "Analyzing a report can make your priorities and weekly actions more specific.",
+                    "يمكن لتحليل التقرير أن يجعل أولوياتك ومهامك الأسبوعية أكثر تحديدًا."
+                  )}
+            </p>
+          </div>
+
+          <p className="hpSignalText">
+            {latestInsight?.next_best_action ||
+              latestInsight?.summary ||
+              text(
+                "No report-based guidance is available yet.",
+                "لا تتوفر حتى الآن توجيهات مبنية على تقرير."
+              )}
+          </p>
+
+          <div className="hpActions">
+            <Link
+              href={latestAnalysisHref}
+              className="hpPrimary"
+            >
+              {hasGenerated
+                ? text(
+                    "Open Latest Analysis",
+                    "فتح أحدث تحليل"
+                  )
+                : text(
+                    "Analyze Latest Report",
+                    "تحليل أحدث تقرير"
+                  )}
+            </Link>
+          </div>
+        </article>
 
         <FollowUpRoadmap
   sevenDayKicker={text("7-day follow-up plan", "خطة 7 أيام")}

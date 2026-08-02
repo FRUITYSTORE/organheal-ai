@@ -1,3 +1,11 @@
+import type {
+  AssistantIntent,
+} from "@/lib/health-intelligence/application/assistant-intent/assistant-intent.types";
+
+import {
+  mapAssistantIntentToReasoningIntent,
+} from "@/lib/health-intelligence/application/assistant-intent/map-assistant-intent-to-reasoning-intent";
+
 export type AssistantDecisionHealthContext = {
   overallScore?: number | null;
   priorityOrgan?: string | null;
@@ -219,17 +227,24 @@ export function assessQuestionEvidence(
     | AssistantDecisionHealthContext
     | null
     | undefined,
-  language: "en" | "ar"
+  language: "en" | "ar",
+  assistantIntent: AssistantIntent = "general"
 ): QuestionEvidenceReadiness {
   const isArabic = language === "ar";
   const lowerMessage =
     message.toLowerCase().trim();
+    const mappedReasoningIntent =
+  mapAssistantIntentToReasoningIntent(
+    assistantIntent
+  );
 
   const report =
     healthContext?.latestReportContext;
 
   const causeIntent =
-    lowerMessage.includes(
+  mappedReasoningIntent ===
+    "cause_reasoning" ||
+  lowerMessage.includes(
       "original clinical reasoning intent: cause_reasoning"
     ) ||
     lowerMessage.includes(
@@ -264,7 +279,9 @@ export function assessQuestionEvidence(
     );
 
   const doctorIntent =
-    lowerMessage.includes("doctor") ||
+  mappedReasoningIntent ===
+    "doctor_preparation" ||
+  lowerMessage.includes("doctor") ||
     lowerMessage.includes("clinician") ||
     lowerMessage.includes("visit") ||
     lowerMessage.includes("طبيب") ||
@@ -285,7 +302,9 @@ export function assessQuestionEvidence(
     );
 
   const reportIntent =
-    lowerMessage.includes("report") ||
+  mappedReasoningIntent ===
+    "report_summary" ||
+  lowerMessage.includes("report") ||
     lowerMessage.includes("finding") ||
     lowerMessage.includes("result") ||
     lowerMessage.includes("تقرير") ||

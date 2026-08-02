@@ -1,3 +1,11 @@
+import {
+  getRegisteredHypothesisGenerators,
+} from "./generators/hypothesis-generator.registry";
+
+import {
+  calculateHypothesisConfidence,
+} from "./confidence/hypothesis-confidence-calculator";
+
 export type EvidenceConfidence =
   | "low"
   | "moderate"
@@ -456,117 +464,6 @@ function normalizeMissingEvidence(
   return normalizedItems;
 }
 
-function determinePermittedConfidence(
-  requestedConfidence: EvidenceConfidence | undefined,
-  supportingEvidenceCount: number,
-  conflictingEvidenceCount: number,
-  missingEvidenceCount: number
-): {
-  confidence: EvidenceConfidence;
-  confidenceConstrained: boolean;
-  notes: string[];
-} {
-  const notes: string[] = [];
-
-  let permittedConfidence: EvidenceConfidence =
-    "low";
-
-  /*
-   * Confidence policy:
-   *
-   * High:
-   * - at least three supporting evidence items
-   * - no conflicting evidence
-   * - no missing evidence
-   *
-   * Moderate:
-   * - at least two supporting evidence items
-   * - no more than one conflicting evidence item
-   *
-   * Low:
-   * - all other accepted candidates
-   */
-
-  if (
-    supportingEvidenceCount >= 3 &&
-    conflictingEvidenceCount === 0 &&
-    missingEvidenceCount === 0
-  ) {
-    permittedConfidence = "high";
-
-    notes.push(
-      "The evidence structure permits high confidence."
-    );
-  } else if (
-    supportingEvidenceCount >= 2 &&
-    conflictingEvidenceCount <= 1
-  ) {
-    permittedConfidence = "moderate";
-
-    notes.push(
-      "The evidence structure permits moderate confidence."
-    );
-  } else {
-    notes.push(
-      "The evidence structure limits this candidate to low confidence."
-    );
-  }
-
-  const confidenceOrder: Record<
-    EvidenceConfidence,
-    number
-  > = {
-    low: 1,
-    moderate: 2,
-    high: 3,
-  };
-
-  const requested =
-    requestedConfidence ?? permittedConfidence;
-
-  const finalConfidence =
-    confidenceOrder[requested] <=
-    confidenceOrder[permittedConfidence]
-      ? requested
-      : permittedConfidence;
-
-  const confidenceConstrained =
-    Boolean(requestedConfidence) &&
-    finalConfidence !== requestedConfidence;
-
-  if (confidenceConstrained) {
-    notes.push(
-      `Requested confidence "${requestedConfidence}" was reduced to "${finalConfidence}" because the evidence did not support the requested level.`
-    );
-  } else if (requestedConfidence) {
-    notes.push(
-      `Requested confidence "${requestedConfidence}" was permitted by the available evidence structure.`
-    );
-  } else {
-    notes.push(
-      `Confidence was derived from the available evidence structure as "${finalConfidence}".`
-    );
-  }
-
-  if (conflictingEvidenceCount > 0) {
-    notes.push(
-      "Conflicting evidence reduced the strength of the candidate."
-    );
-  }
-
-  if (missingEvidenceCount > 0) {
-    notes.push(
-      "Missing evidence prevents the candidate from reaching maximum certainty."
-    );
-  }
-
-  return {
-    confidence: finalConfidence,
-    confidenceConstrained,
-    notes,
-  };
-}
-
 function buildRejectedEvaluation(
   reason: HypothesisEvaluationReason,
   candidate: HypothesisCandidateInput,
@@ -679,13 +576,21 @@ export function evaluateHypothesisCandidate(
     );
   }
 
-  const confidenceEvaluation =
-    determinePermittedConfidence(
-      candidate.requestedConfidence,
+ const confidenceEvaluation =
+  calculateHypothesisConfidence({
+    requestedConfidence:
+      candidate.requestedConfidence ??
+      null,
+
+    supportingEvidenceCount:
       supportingEvidence.length,
+
+    conflictingEvidenceCount:
       conflictingEvidence.length,
-      missingEvidence.length
-    );
+
+    missingEvidenceCount:
+      missingEvidence.length,
+  });
 
   const hypothesis: EvidenceBackedHypothesis = {
     id,
@@ -731,7 +636,7 @@ export function evaluateHypothesisCandidate(
         candidate.requestedConfidence ?? null,
 
       permittedConfidence:
-        hypothesis.confidence,
+  confidenceEvaluation.permittedConfidence,
 
       confidenceConstrained:
         confidenceEvaluation.confidenceConstrained,
@@ -1295,7 +1200,7 @@ function buildHealthFacts(
   input: EvidenceBackedReasoningInput,
   confirmedEvidence: ReasoningEvidence[]
 ): HealthFacts {
-  
+
   const readyForReasoning =
     input.symptoms.length > 0 &&
     Boolean(input.onset) &&
@@ -1340,7 +1245,7 @@ function buildHypothesisGenerationContext(
     allowed: boolean;
     reason: string;
   }
-): 
+):
 HypothesisGenerationContext {
   const facts =
     buildHealthFacts(
@@ -1454,15 +1359,20 @@ export function buildEvidenceBackedReasoning(
       hypothesisGate
     );
 
-  /*
-   * This stage establishes the canonical generation context.
-   *
-   * Registered generators are not executed from this function
-   * yet. That connection will be introduced separately so the
-   * public reasoning result remains backward compatible.
-   */
-  const hypotheses:
-    EvidenceBackedHypothesis[] = [];
+  const hypothesisReasoning =
+  composeHypothesisReasoning(
+    getRegisteredHypothesisGenerators(),
+    generationContext
+  );
+
+const hypotheses =
+  hypothesisReasoning.pipeline
+    .candidateSetEvaluation
+    .acceptedHypotheses;
+
+const leadingInterpretation =
+  hypothesisReasoning.pipeline
+    .leadingInterpretation;
 
   return {
     confirmedEvidence:
@@ -1470,7 +1380,7 @@ export function buildEvidenceBackedReasoning(
 
     hypotheses,
 
-    leadingInterpretation: null,
+    leadingInterpretation,
 
     uncertainty:
       generationContext
