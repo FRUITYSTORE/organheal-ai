@@ -1,8 +1,14 @@
+import type {
+  HealthTimelineEventType,
+  HealthTimelineSeverity,
+} from "@/lib/health-intelligence/engines/health-timeline.engine";
+
 export type HealthJourneyStageType =
   | "profile_started"
   | "assessment_completed"
   | "priority_identified"
   | "checkin_recorded"
+  | "followup_due"
   | "report_uploaded"
   | "analysis_generated"
   | "passport_updated"
@@ -72,25 +78,16 @@ export type HealthJourneyEngineInput = {
   language?: "en" | "ar";
 
   timelineEvents: Array<{
-    id: string;
-    type:
-      | "assessment"
-      | "checkin"
-      | "report"
-      | "analysis"
-      | "trend";
-    severity:
-      | "information"
-      | "success"
-      | "warning"
-      | "critical";
-    title: string;
-    description: string;
-    date: string;
-    organ: string | null;
-    score: number | null;
-    href: string | null;
-  }>;
+  id: string;
+  type: HealthTimelineEventType;
+  severity: HealthTimelineSeverity;
+  title: string;
+  description: string;
+  date: string;
+  organ: string | null;
+  score: number | null;
+  href: string | null;
+}>;
 
   passport: {
     overallScore: number;
@@ -137,6 +134,10 @@ function mapTimelineType(
 
   if (type === "checkin") {
     return "checkin_recorded";
+  }
+
+  if (type === "followup") {
+    return "followup_due";
   }
 
   if (type === "report") {
@@ -203,6 +204,15 @@ function getStageCopy(
       arDescription:
         "أضاف Check-In جديد سياقًا يوميًا إلى رحلتك الصحية.",
     },
+
+    followup_due: {
+  enTitle: "Health follow-up is due",
+  arTitle: "حان موعد المتابعة الصحية",
+  enDescription:
+    "A new Check-In is needed to refresh your current health journey.",
+  arDescription:
+    "يلزم إجراء Check-In جديد لتحديث رحلتك الصحية الحالية.",
+},
 
     report_uploaded: {
       enTitle: "Medical evidence added",
@@ -687,6 +697,11 @@ export function buildHealthJourney(
       en: "Continue regular check-ins to improve trend accuracy.",
       ar: "استمر في Check-Ins المنتظمة لتحسين دقة الاتجاهات.",
     },
+
+    followup_due: {
+  en: "Complete a new Check-In to refresh your current health status.",
+  ar: "أكمل Check-In جديدًا لتحديث حالتك الصحية الحالية.",
+},
 
     report_uploaded: {
       en: "Review the uploaded report and continue to health analysis.",

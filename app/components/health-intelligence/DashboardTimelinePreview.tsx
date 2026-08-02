@@ -38,6 +38,10 @@ function getEventTypeLabel(
     report: isArabic ? "تقرير" : "Report",
     analysis: isArabic ? "تحليل" : "Analysis",
     trend: isArabic ? "اتجاه" : "Trend",
+    followup:
+  isArabic
+    ? "متابعة"
+    : "Follow-Up",
   };
 
   return labels[type];

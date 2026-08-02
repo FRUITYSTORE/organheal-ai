@@ -1,6 +1,9 @@
 import { buildHealthIntelligence } from "@/lib/health-intelligence/health-intelligence.service";
 import { buildHealthPlanViewModel } from "@/lib/services/health-plan/health-plan-view.service";
 import { getPatientSummary } from "@/lib/services/shared/patient-summary.service";
+import {
+  buildPatientJourneySnapshot,
+} from "@/lib/application/journey/patient-journey-snapshot.service";
 
 export async function getHealthPlanSummary(userId: string) {
   const patientSummary = await getPatientSummary(userId);
@@ -12,6 +15,12 @@ export async function getHealthPlanSummary(userId: string) {
 
   const intelligence = buildHealthIntelligence(patientSummary);
 
+  const patientJourney =
+  buildPatientJourneySnapshot({
+    patientSummary,
+    healthIntelligence: intelligence,
+  });
+
   const healthPlanView = buildHealthPlanViewModel(
   intelligence.recommendations,
   intelligence.healthScore
@@ -20,6 +29,7 @@ export async function getHealthPlanSummary(userId: string) {
   return {
     priorityAssessment,
     latestCheckIn: patientSummary.latestCheckIn,
+    patientJourney,
     uploadedReports: patientSummary.uploadedReports.slice(0, 10),
     healthInsights: patientSummary.healthInsights.slice(0, 10),
     generatedResults: patientSummary.generatedResults.slice(0, 10),

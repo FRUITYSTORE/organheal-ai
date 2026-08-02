@@ -3,6 +3,12 @@ import { countUploadedReports } from "@/lib/repositories/reports.repository";
 import { getRecentGeneratedIntelligenceResults } from "@/lib/repositories/insight.repository";
 import { getPatientSummary } from "@/lib/services/shared/patient-summary.service";
 import { buildHealthIntelligence } from "@/lib/health-intelligence/health-intelligence.service";
+import {
+  buildPatientJourneySnapshot,
+} from "@/lib/application/journey/patient-journey-snapshot.service";
+import {
+  buildPatientJourneyEvents,
+} from "@/lib/application/journey/patient-journey-events.service";
 
 export async function getDashboardSummary(userId: string) {
   const [profile, uploadedReports, generatedResults, patientSummary] =
@@ -27,10 +33,25 @@ export async function getDashboardSummary(userId: string) {
   profile,
 });
 
+const patientJourney =
+  buildPatientJourneySnapshot({
+    patientSummary,
+    healthIntelligence,
+  });
+
+  const patientJourneyEvents =
+  buildPatientJourneyEvents({
+    patientJourney,
+  });
+
     return {
     profile,
 
     patientSummary,
+
+    patientJourneyEvents,
+
+    patientJourney,
 
     assessments:
       patientSummary.assessments,

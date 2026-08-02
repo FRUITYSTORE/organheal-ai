@@ -1,3 +1,7 @@
+import type {
+  PatientJourneySnapshot,
+} from "@/lib/application/journey/patient-journey-snapshot.service";
+
 export type AssistantLatestReportContext = {
   reportId: number;
   fileName: string;
@@ -9,6 +13,9 @@ export type AssistantLatestReportContext = {
   doctorBrief: string | null;
   nextBestAction: string | null;
   riskLevel: string | null;
+  patientJourney?:
+  | PatientJourneySnapshot
+  | null;
 };
 
 export type AssistantHealthScoreContext = {

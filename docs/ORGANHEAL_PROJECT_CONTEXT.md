@@ -1,4 +1,223 @@
-﻿# OrganHeal AI Project Context
+# OrganHeal AI — Current Project Context
+
+## Current Stable Checkpoint
+
+Date: 2026-08-02
+
+Repository:
+
+- Branch: `main`
+- Stable commit: `00516d4`
+- Commit message: `complete ask organheal ai reasoning architecture`
+- Remote: `origin/main`
+- Working tree confirmed clean after commit and push
+- Next.js 16.2.7 production build passed
+- TypeScript validation passed
+
+---
+
+## Current Product Position
+
+OrganHeal AI is being developed as a Personal Health Intelligence Operating System.
+
+The platform should connect:
+
+- patient profile
+- health assessments
+- uploaded reports
+- report analysis
+- health intelligence
+- health plan
+- daily check-ins
+- health history
+- Ask OrganHeal AI
+- doctor preparation
+- longitudinal follow-up
+
+The product must feel like one guided health journey rather than a collection of disconnected tools.
+
+---
+
+## Completed Phase Status
+
+### Phase 1 — Product-wide UX Consistency Audit
+
+Status: 100%
+
+Completed:
+
+- Homepage
+- Reports
+- Intelligence
+- Health Plan
+- Assistant page
+- Dashboard
+- Lab Upload
+- Check-In
+- History
+- Profile
+- Library
+- Doctor Portal
+- Cross-page journey review
+
+Key result:
+
+Each page now has a clearer primary purpose, with reduced duplicated calls to action and more coherent transitions across the product.
+
+---
+
+### Phase 2 — Ask OrganHeal AI Completion
+
+Status: 100%
+
+Stable commit:
+
+`00516d4`
+
+Ask OrganHeal AI now includes:
+
+- conversation-aware context
+- centralized intent detection
+- user-intent to reasoning-intent mapping
+- assistant orchestrator
+- health context builder
+- evidence readiness assessment
+- question-specific evidence assessment
+- clarify-or-answer decision flow
+- accumulated clinical evidence
+- hypothesis generation
+- hypothesis generator registry
+- evidence pattern generator
+- report evidence pattern generator
+- centralized confidence calculation
+- candidate evaluation
+- candidate ranking
+- leading interpretation
+- explainable reasoning
+- bilingual personalized responses
+
+Current architecture:
+
+User Question
+→ Conversation Context
+→ Intent Detection
+→ Intent Mapping
+→ Health Context Builder
+→ Evidence Assessment
+→ Reasoning Decision
+→ Hypothesis Generators
+→ Confidence Calculator
+→ Candidate Evaluation
+→ Ranking
+→ Leading Interpretation
+→ Explainable Reasoning
+→ Personalized Response
+
+Safety boundaries:
+
+- The assistant does not produce confirmed diagnoses.
+- Hypotheses remain bounded interpretations.
+- `diagnosticClaim` remains false.
+- Confidence cannot exceed the level supported by evidence.
+- Missing evidence and conflicting evidence remain visible.
+- Saved report findings and reported symptoms are not treated as proof of causation.
+- Clarifying questions are used when evidence is insufficient for causal reasoning.
+
+---
+
+## Current Phase
+
+### Phase 3 — Unified Patient Journey
+
+Status: 0%
+
+Primary objective:
+
+Create one shared patient journey state that links:
+
+Dashboard
+→ Check-In
+→ Updated Context
+→ History
+→ Health Plan
+→ Ask OrganHeal AI
+→ Doctor Portal
+
+Phase 3 must begin with an architecture and data-flow audit, not a visual redesign.
+
+The first question is:
+
+Which existing service or runtime output should become the shared source of truth for the patient journey?
+
+Potential existing sources to review:
+
+- Patient Summary service
+- Health Intelligence Runtime
+- Dashboard Decision service
+- History Decision service
+- `getHealthContext`
+- Health Plan projections
+- latest check-in data
+- latest report context
+- generated intelligence results
+
+Do not create a duplicate patient-journey service before reviewing these sources.
+
+---
+
+## Current Immediate Task
+
+Shared Patient Journey State Audit.
+
+Review:
+
+- `app/dashboard/page.tsx`
+- `app/checkin/page.tsx`
+- `app/history/page.tsx`
+- `app/health-plan/page.tsx`
+- `lib/getHealthContext.ts`
+- patient summary service
+- dashboard decision service
+- history decision service
+- health intelligence runtime builder
+
+Audit goals:
+
+1. Identify overlapping calculations.
+2. Identify the existing source closest to a unified journey state.
+3. Determine how a Check-In affects Dashboard, History, Health Plan, and Assistant.
+4. Define a minimal shared journey projection.
+5. Implement only one shared projection after the audit.
+
+---
+
+## Product and Engineering Rules
+
+- One scoped change at a time.
+- Review actual files before editing.
+- Use the latest user-provided file or log as authoritative unless superseded.
+- Prefer extending existing architecture over adding parallel services.
+- Do not introduce random UI sections.
+- Do not duplicate existing page responsibilities.
+- Preserve bilingual Arabic and English support.
+- Preserve UTF-8 encoding.
+- Do not store or reveal secret values.
+- Do not change the database schema without an approved plan.
+- Use exact replacements for large files.
+- Prefer full replacement for small files with many changes.
+- Run TypeScript, production build, diff check, and Git status after each scoped change.
+- Do not commit until verification succeeds and the change is approved.
+
+---
+
+## Historical Project Context
+
+The following content is preserved as historical context. When it conflicts with the Current Stable Checkpoint above, the current checkpoint takes precedence.
+
+---
+
+
+# OrganHeal AI Project Context
 
 ## Project Identity
 

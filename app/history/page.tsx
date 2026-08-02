@@ -524,15 +524,16 @@ const officialTimelineItems: TimelineItem[] =
   officialTimeline?.data.events.map(
     (event) => {
       const typeMap: Record<
-        typeof event.type,
-        TimelineItem["type"]
-      > = {
-        assessment: "Assessment",
-        checkin: "Check-In",
-        report: "Report",
-        analysis: "Analysis",
-        trend: "Trend",
-      };
+  typeof event.type,
+  TimelineItem["type"]
+> = {
+  assessment: "Assessment",
+  checkin: "Check-In",
+  report: "Report",
+  analysis: "Analysis",
+  trend: "Trend",
+  followup: "Check-In",
+};
 
       return {
         id: event.id,

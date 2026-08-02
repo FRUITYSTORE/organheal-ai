@@ -7,7 +7,8 @@ export type HealthTimelineEventType =
   | "checkin"
   | "report"
   | "analysis"
-  | "trend";
+  | "trend"
+  | "followup";
 
 export type HealthTimelineSeverity =
   | "information"
