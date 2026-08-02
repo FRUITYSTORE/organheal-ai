@@ -137,6 +137,88 @@ function buildCheckInEvents(
     }));
 }
 
+function buildFollowUpEvents(
+  patient: PatientSummary
+): HealthTimelineEvent[] {
+  const latestCheckIn =
+    patient.latestCheckIn;
+
+  if (
+    !latestCheckIn?.created_at ||
+    !isValidDate(
+      latestCheckIn.created_at
+    )
+  ) {
+    return [];
+  }
+
+  const followUpWindowDays = 7;
+
+  const latestCheckInTime =
+    new Date(
+      latestCheckIn.created_at
+    ).getTime();
+
+  const followUpDueTime =
+    latestCheckInTime +
+    followUpWindowDays *
+      24 *
+      60 *
+      60 *
+      1000;
+
+  if (
+    followUpDueTime >
+    Date.now()
+  ) {
+    return [];
+  }
+
+  const followUpDueAt =
+    new Date(
+      followUpDueTime
+    ).toISOString();
+
+  return [
+    {
+      id:
+        `followup-due-${followUpDueAt}`,
+
+      type:
+        "followup",
+
+      severity:
+        "warning",
+
+      title:
+        "Health follow-up is due",
+
+      description:
+        "Your last Check-In was more than 7 days ago. Complete a new Check-In to refresh your current health journey.",
+
+      date:
+        followUpDueAt,
+
+      organ:
+        null,
+
+      score:
+        latestCheckIn.wellness_score ??
+        null,
+
+      href:
+        "/checkin",
+
+      metadata: {
+        lastCheckInAt:
+          latestCheckIn.created_at,
+
+        followUpWindowDays,
+      },
+    },
+  ];
+}
+
 function buildReportEvents(
   patient: PatientSummary
 ): HealthTimelineEvent[] {
@@ -230,12 +312,13 @@ export function buildHealthTimeline({
   trend,
 }: BuildHealthTimelineInput): EngineResult<HealthTimelineData> {
   const events = [
-    ...buildAssessmentEvents(patient),
-    ...buildCheckInEvents(patient),
-    ...buildReportEvents(patient),
-    ...buildAnalysisEvents(patient),
-    ...buildTrendEvent(trend),
-  ].sort(
+  ...buildAssessmentEvents(patient),
+  ...buildCheckInEvents(patient),
+  ...buildFollowUpEvents(patient),
+  ...buildReportEvents(patient),
+  ...buildAnalysisEvents(patient),
+  ...buildTrendEvent(trend),
+].sort(
     (a, b) =>
       new Date(b.date).getTime() -
       new Date(a.date).getTime()
