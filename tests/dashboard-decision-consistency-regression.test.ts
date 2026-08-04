@@ -256,8 +256,7 @@ function createSummaryInput():
       generatedAt:
         GENERATED_AT,
     },
-  } as unknown as
-    BuildHealthIntelligenceSummaryInput;
+    };
 }
 
 describe(
