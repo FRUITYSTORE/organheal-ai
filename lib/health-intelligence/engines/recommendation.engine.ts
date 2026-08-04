@@ -1,6 +1,14 @@
 import { PatientSummary } from "@/lib/models/patient";
 import { ClinicalFinding } from "@/lib/health-intelligence/models/clinical-findings";
 import { EngineResult } from "@/lib/health-intelligence/models/engine-result";
+import {
+  buildRecommendationDecision,
+  type RecommendationDecision,
+  type RecommendationDecisionLayer,
+} from "@/lib/health-intelligence/engines/recommendation-decision.engine";
+import {
+  selectRecommendations,
+} from "@/lib/health-intelligence/engines/recommendation-selector.engine";
 
 export type RecommendationPriority = "urgent" | "high" | "routine";
 
@@ -24,9 +32,21 @@ export type HealthRecommendation = {
 
 export type RecommendationData = {
   todaysMission: string;
-  primaryAction: HealthRecommendation;
-  weeklyActions: HealthRecommendation[];
-  nextReviewDays: number;
+
+  decisionLayer:
+    RecommendationDecisionLayer;
+
+decisionReason:
+  RecommendationDecision["reason"];
+
+  primaryAction:
+    HealthRecommendation;
+
+  weeklyActions:
+    HealthRecommendation[];
+
+  nextReviewDays:
+    number;
 };
 
 function clampScore(score: number) {
@@ -221,6 +241,63 @@ const assessmentUrgency = clampScore(
     );
   }
 
+  if (
+  patient.uploadedReports.length >= 2 &&
+  patient.healthInsights.filter(
+    (insight) =>
+      typeof insight.report_id ===
+      "number"
+  ).length >= 2
+) {
+  const linkedReportIds =
+    new Set(
+      patient.healthInsights
+        .map(
+          (insight) =>
+            insight.report_id
+        )
+        .filter(
+          (
+            reportId
+          ): reportId is number =>
+            typeof reportId ===
+            "number"
+        )
+    );
+
+  if (
+    linkedReportIds.size >= 2
+  ) {
+    recommendations.push(
+      createRecommendation({
+        id:
+          "compare-latest-reports",
+
+        title:
+          "Compare your latest reports",
+
+        description:
+          "Review verified differences between your latest reports and understand what changed in the available structured health evidence.",
+
+        category:
+          "follow-up",
+
+        href:
+          "/assistant",
+
+        score:
+          78,
+
+        reasons: [
+          "At least two uploaded reports are available.",
+          "Health insights are linked to at least two different reports.",
+          "Longitudinal comparison data is available for review.",
+        ],
+      })
+    );
+  }
+}
+
   if (!patient.latestCheckIn) {
     recommendations.push(
       createRecommendation({
@@ -388,17 +465,28 @@ export function generateHealthRecommendations(
 ): EngineResult<RecommendationData> {
   const generatedAt = new Date().toISOString();
 
-  const recommendations = buildRecommendationCandidates(
+  const recommendationDecision =
+  buildRecommendationDecision({
+    patient,
+    findings,
+  });
+
+  const recommendations =
+  buildRecommendationCandidates(
     patient,
     findings
   );
 
-  const primaryAction = recommendations[0];
-  const weeklyActions = recommendations.slice(1, 5);
+const {
+  primaryAction,
+  weeklyActions,
+} =
+  selectRecommendations({
+    decision:
+      recommendationDecision,
 
-  if (weeklyActions.length === 0) {
-    weeklyActions.push(primaryAction);
-  }
+    recommendations,
+  });
 
   const confidence = calculateConfidence(patient);
 
@@ -411,13 +499,26 @@ export function generateHealthRecommendations(
     confidence,
     generatedAt,
     data: {
-      todaysMission: buildTodaysMission(
-        primaryAction,
-        patient
-      ),
+  todaysMission:
+    buildTodaysMission(
       primaryAction,
-      weeklyActions,
-      nextReviewDays: getNextReviewDays(primaryAction),
-    },
+      patient
+    ),
+
+  decisionLayer:
+    recommendationDecision.layer,
+
+  decisionReason:
+    recommendationDecision.reason,
+
+  primaryAction,
+
+  weeklyActions,
+
+  nextReviewDays:
+    getNextReviewDays(
+      primaryAction
+    ),
+},
   };
 }
