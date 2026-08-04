@@ -1,0 +1,537 @@
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
+
+vi.mock(
+  "@/lib/health-intelligence/application/assistant-orchestrator.service",
+  () => ({
+    runAssistantOrchestrator:
+      vi.fn(),
+  })
+);
+
+import {
+  runAssistantOrchestrator,
+} from "@/lib/health-intelligence/application/assistant-orchestrator.service";
+
+import {
+  POST,
+} from "@/app/api/assistant/route";
+
+const mockedRunAssistantOrchestrator =
+  vi.mocked(
+    runAssistantOrchestrator
+  );
+
+function createAssistantRequest(
+  body:
+    unknown
+): Request {
+  return new Request(
+    "http://localhost/api/assistant",
+    {
+      method:
+        "POST",
+
+      headers: {
+        "Content-Type":
+          "application/json",
+      },
+
+      body:
+        JSON.stringify(
+          body
+        ),
+    }
+  );
+}
+
+function createOrchestratorResult(
+  response:
+    string
+): ReturnType<
+  typeof runAssistantOrchestrator
+> {
+  return {
+    success:
+      true,
+
+    response,
+
+    reasoning: {
+      mode:
+        "answer",
+
+      status:
+        "sufficient",
+
+      confidence:
+        "high",
+
+      availableEvidence:
+        [],
+
+      missingInformation:
+        [],
+
+      questionIntent:
+        "general",
+
+      questionEvidenceStatus:
+        "sufficient",
+
+      questionEvidenceConfidence:
+        "high",
+
+      questionAvailableEvidence:
+        [],
+
+      questionMissingInformation:
+        [],
+
+      clarifyingQuestion:
+        null,
+
+      reason:
+        null,
+    },
+  };
+}
+
+describe(
+  "POST /api/assistant",
+  () => {
+    let consoleErrorSpy:
+      ReturnType<
+        typeof vi.spyOn
+      >;
+
+    beforeEach(
+      () => {
+        mockedRunAssistantOrchestrator
+          .mockReset();
+
+        consoleErrorSpy =
+          vi.spyOn(
+            console,
+            "error"
+          )
+          .mockImplementation(
+            () => undefined
+          );
+      }
+    );
+
+    afterEach(
+      () => {
+        consoleErrorSpy
+          .mockRestore();
+      }
+    );
+
+    it(
+      "returns 400 when message is missing",
+      async () => {
+        const response =
+          await POST(
+            createAssistantRequest({
+              language:
+                "en",
+            })
+          );
+
+        expect(
+          response.status
+        ).toBe(
+          400
+        );
+
+        await expect(
+          response.json()
+        ).resolves.toEqual({
+          error:
+            "Message is required",
+        });
+
+        expect(
+          mockedRunAssistantOrchestrator
+        ).not.toHaveBeenCalled();
+      }
+    );
+
+    it(
+      "returns 400 when message contains only whitespace",
+      async () => {
+        const response =
+          await POST(
+            createAssistantRequest({
+              message:
+                "   ",
+            })
+          );
+
+        expect(
+          response.status
+        ).toBe(
+          400
+        );
+
+        await expect(
+          response.json()
+        ).resolves.toEqual({
+          error:
+            "Message is required",
+        });
+
+        expect(
+          mockedRunAssistantOrchestrator
+        ).not.toHaveBeenCalled();
+      }
+    );
+
+    it(
+      "passes Arabic language to the orchestrator",
+      async () => {
+        const orchestratorResult =
+          createOrchestratorResult(
+            "إجابة صحية مخصصة"
+          );
+
+        mockedRunAssistantOrchestrator
+          .mockReturnValue(
+            orchestratorResult
+          );
+
+        const response =
+          await POST(
+            createAssistantRequest({
+              message:
+                "ما هي خطوتي التالية؟",
+
+              language:
+                "ar",
+
+              healthContext:
+                null,
+
+              conversation:
+                [],
+            })
+          );
+
+        expect(
+          response.status
+        ).toBe(
+          200
+        );
+
+        expect(
+          mockedRunAssistantOrchestrator
+        ).toHaveBeenCalledTimes(
+          1
+        );
+
+        expect(
+          mockedRunAssistantOrchestrator
+        ).toHaveBeenCalledWith({
+          message:
+            "ما هي خطوتي التالية؟",
+
+          language:
+            "ar",
+
+          healthContext:
+            null,
+
+          conversation:
+            [],
+        });
+
+        await expect(
+          response.json()
+        ).resolves.toEqual(
+          orchestratorResult
+        );
+      }
+    );
+
+    it(
+      "normalizes unsupported languages to English",
+      async () => {
+        const orchestratorResult =
+          createOrchestratorResult(
+            "English response"
+          );
+
+        mockedRunAssistantOrchestrator
+          .mockReturnValue(
+            orchestratorResult
+          );
+
+        const response =
+          await POST(
+            createAssistantRequest({
+              message:
+                "What should I do next?",
+
+              language:
+                "fr",
+            })
+          );
+
+        expect(
+          response.status
+        ).toBe(
+          200
+        );
+
+        expect(
+          mockedRunAssistantOrchestrator
+        ).toHaveBeenCalledWith({
+          message:
+            "What should I do next?",
+
+          language:
+            "en",
+
+          healthContext:
+            null,
+
+          conversation:
+            [],
+        });
+
+        await expect(
+          response.json()
+        ).resolves.toEqual(
+          orchestratorResult
+        );
+      }
+    );
+
+    it(
+      "normalizes a non-array conversation to an empty array",
+      async () => {
+        const orchestratorResult =
+          createOrchestratorResult(
+            "Normalized conversation"
+          );
+
+        mockedRunAssistantOrchestrator
+          .mockReturnValue(
+            orchestratorResult
+          );
+
+        const response =
+          await POST(
+            createAssistantRequest({
+              message:
+                "Review my progress",
+
+              language:
+                "en",
+
+              conversation: {
+                role:
+                  "user",
+
+                content:
+                  "Invalid conversation shape",
+              },
+            })
+          );
+
+        expect(
+          mockedRunAssistantOrchestrator
+        ).toHaveBeenCalledWith({
+          message:
+            "Review my progress",
+
+          language:
+            "en",
+
+          healthContext:
+            null,
+
+          conversation:
+            [],
+        });
+
+        await expect(
+          response.json()
+        ).resolves.toEqual(
+          orchestratorResult
+        );
+      }
+    );
+
+    it(
+      "passes health context and valid conversation without changing them",
+      async () => {
+        const healthContext = {
+          overallScore:
+            78,
+
+          priorityOrgan:
+            "Heart",
+
+          recommendation:
+            "Continue routine follow-up.",
+        };
+
+        const conversation = [
+          {
+            role:
+              "user" as const,
+
+            content:
+              "What changed?",
+          },
+
+          {
+            role:
+              "assistant" as const,
+
+            content:
+              "Your recent context was reviewed.",
+          },
+        ];
+
+        const orchestratorResult =
+          createOrchestratorResult(
+            "Your health context remains stable."
+          );
+
+        mockedRunAssistantOrchestrator
+          .mockReturnValue(
+            orchestratorResult
+          );
+
+        const response =
+          await POST(
+            createAssistantRequest({
+              message:
+                "What should I focus on?",
+
+              language:
+                "en",
+
+              healthContext,
+
+              conversation,
+            })
+          );
+
+        expect(
+          mockedRunAssistantOrchestrator
+        ).toHaveBeenCalledWith({
+          message:
+            "What should I focus on?",
+
+          language:
+            "en",
+
+          healthContext,
+
+          conversation,
+        });
+
+        expect(
+          response.status
+        ).toBe(
+          200
+        );
+
+        await expect(
+          response.json()
+        ).resolves.toEqual(
+          orchestratorResult
+        );
+      }
+    );
+
+    it(
+      "returns the orchestrator result without changing its contract",
+      async () => {
+        const orchestratorResult =
+          createOrchestratorResult(
+            "Review your latest health plan."
+          );
+
+        mockedRunAssistantOrchestrator
+          .mockReturnValue(
+            orchestratorResult
+          );
+
+        const response =
+          await POST(
+            createAssistantRequest({
+              message:
+                "Give me an overview",
+            })
+          );
+
+        expect(
+          response.status
+        ).toBe(
+          200
+        );
+
+        await expect(
+          response.json()
+        ).resolves.toEqual(
+          orchestratorResult
+        );
+      }
+    );
+
+    it(
+      "returns 500 when the orchestrator throws an error",
+      async () => {
+        mockedRunAssistantOrchestrator
+          .mockImplementation(
+            () => {
+              throw new Error(
+                "Orchestrator failure"
+              );
+            }
+          );
+
+        const response =
+          await POST(
+            createAssistantRequest({
+              message:
+                "Analyze my health context",
+            })
+          );
+
+        expect(
+          response.status
+        ).toBe(
+          500
+        );
+
+        await expect(
+          response.json()
+        ).resolves.toEqual({
+          error:
+            "Server error",
+        });
+
+        expect(
+          consoleErrorSpy
+        ).toHaveBeenCalledWith(
+          "Assistant API error:",
+          expect.any(
+            Error
+          )
+        );
+      }
+    );
+  }
+);
