@@ -557,11 +557,34 @@ const nextStep: NextStep = !hasAssessments && !hasReports
       href: "/health-plan",
     },
   ];
+    const resolvedDashboardIntelligence =
+    dashboardIntelligence &&
+    unifiedExperience &&
+    !isArabic
+      ? {
+          ...dashboardIntelligence,
+
+          hero: {
+            ...dashboardIntelligence.hero,
+
+            headline:
+              unifiedExperience.story.headline,
+
+            narrative:
+              unifiedExperience.story.narrative,
+
+            tone:
+              unifiedExperience.story.tone,
+          },
+        }
+      : dashboardIntelligence;
+
   const dashboardViewState =
     buildDashboardViewState({
       isArabic,
 
-      dashboardIntelligence,
+            dashboardIntelligence:
+        resolvedDashboardIntelligence,
 
       healthScore:
         dashboardHealthScore,
