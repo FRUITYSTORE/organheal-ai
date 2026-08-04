@@ -50,8 +50,9 @@ export function hasHealthContext(
     return false;
   }
 
-  return Boolean(
-    typeof context.overallScore === "number" ||
+    return Boolean(
+    context.unifiedExperience ||
+      typeof context.overallScore === "number" ||
       context.priorityOrgan ||
       context.riskPattern ||
       context.doctorBrief ||
@@ -97,7 +98,17 @@ const riskPattern =
     ? "غير متوفر حاليًا"
     : "Not currently available");
 
+const unifiedExperience =
+  healthContext.unifiedExperience ??
+  null;
+
+const unifiedPrimaryAction =
+  unifiedExperience?.primaryAction ??
+  null;
+
 const nextAction =
+  unifiedPrimaryAction?.description ||
+  unifiedPrimaryAction?.title ||
   healthContext.recommendation ||
   (isArabic
     ? "راجع أحدث بياناتك الصحية وحدد الخطوة التالية المناسبة."
@@ -394,6 +405,16 @@ ${evidenceBackedReasoning.uncertainty}${
     : ""
 }`
     : "";
+      const unifiedStory =
+    unifiedExperience?.story ??
+    null;
+
+  const healthStorySummary =
+    unifiedStory
+      ? `${unifiedStory.headline}
+
+${unifiedStory.narrative}`
+      : null;
   return isArabic
     ? `أعدت تقييم سؤالك السابق باستخدام المعلومة الجديدة التي قدمتها.
 
@@ -689,10 +710,26 @@ ${nextAction}
 ${overallScore !== null ? `Current health score: ${overallScore}/100.` : ""}`;
   }
 
-  return isArabic
+  const unifiedStory =
+    unifiedExperience?.story ??
+    null;
+
+  const healthStorySummary =
+    unifiedStory
+      ? `${unifiedStory.headline}
+
+${unifiedStory.narrative}`
+      : null;
+
+    return isArabic
     ? `بناءً على سياقك الصحي الحالي:
 
-${overallScore !== null ? `الدرجة العامة: ${overallScore}/100` : ""}
+${healthStorySummary
+  ? `قصتك الصحية الحالية:
+${healthStorySummary}
+
+`
+  : ""}${overallScore !== null ? `الدرجة العامة: ${overallScore}/100` : ""}
 منطقة الأولوية: ${priorityArea}
 أقوى منطقة: ${strongestArea}
 نمط المخاطر: ${riskPattern}
@@ -703,7 +740,12 @@ ${overallScore !== null ? `الدرجة العامة: ${overallScore}/100` : ""}
 هذا دعم صحي تثقيفي ولا يعتبر تشخيصًا طبيًا.`
     : `Based on your current health context:
 
-${overallScore !== null ? `Overall score: ${overallScore}/100` : ""}
+${healthStorySummary
+  ? `Your current health story:
+${healthStorySummary}
+
+`
+  : ""}${overallScore !== null ? `Overall score: ${overallScore}/100` : ""}
 Priority area: ${priorityArea}
 Strongest area: ${strongestArea}
 Risk pattern: ${riskPattern}
