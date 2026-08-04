@@ -322,7 +322,11 @@ const progressPercent =
 
     const userId = userData.user.id;
 try {
-  const summary = await getHealthPlanSummary(userId);
+  const summary =
+  await getHealthPlanSummary(
+    userId,
+    getStoredLanguage()
+  );
 
   setPriorityAssessment(summary.priorityAssessment as PriorityAssessment | null);
   setLatestCheckIn(summary.latestCheckIn as DailyCheckIn | null);
