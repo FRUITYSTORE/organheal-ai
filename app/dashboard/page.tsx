@@ -7,6 +7,9 @@ import { getDashboardSummary } from "@/lib/services/dashboard/dashboard.service"
 import DashboardIntelligenceCard from "@/app/components/dashboard/DashboardIntelligenceCard";
 import HealthDirectionCard from "@/app/components/health-intelligence/HealthDirectionCard";
 import { HealthIntelligenceResult } from "@/lib/health-intelligence/models/health-intelligence-result";
+import type {
+  UnifiedIntelligenceExperienceModel,
+} from "@/lib/application/unified-intelligence/unified-intelligence-experience.model";
 import HealthEvidenceCard from "@/app/components/health-intelligence/HealthEvidenceCard";
 import RecommendedKnowledgeCard from "@/app/components/health-intelligence/RecommendedKnowledgeCard";
 
@@ -146,6 +149,12 @@ export default function DashboardPage() {
     DashboardIntelligenceViewModel | null
   >(null);
 
+  const [
+    unifiedExperience,
+    setUnifiedExperience,
+  ] = useState<
+    UnifiedIntelligenceExperienceModel | null
+  >(null);
   useEffect(() => {
     function syncLanguage() {
       setLanguage(getStoredLanguage());
@@ -171,6 +180,7 @@ export default function DashboardPage() {
     setLoading(true);
     setMessage("");
   setDashboardIntelligence(null);
+  setUnifiedExperience(null);
 
     const { data: userData, error: userError } = await supabase.auth.getUser();
 
@@ -188,6 +198,9 @@ export default function DashboardPage() {
   setAssessments(dashboardSummary.assessments as Assessment[]);
   setDailyCheckIn(dashboardSummary.latestCheckIn as DailyCheckIn | null);
   setReportStats(dashboardSummary.reportStats);
+  setUnifiedExperience(
+    dashboardSummary.unifiedExperience
+  );
     try {
     const decisionResponse =
       await fetch(
@@ -250,6 +263,7 @@ export default function DashboardPage() {
     );
 
     setDashboardIntelligence(null);
+  setUnifiedExperience(null);
   }
   const intelligence =
   dashboardSummary.healthIntelligence;
@@ -408,6 +422,31 @@ const nextStep: NextStep = !hasAssessments && !hasReports
         buttonText: isArabic ? "افتح خطة المتابعة" : "Open Health Plan",
       };
 
+        const unifiedPrimaryAction =
+    unifiedExperience?.primaryAction ??
+    null;
+
+  const resolvedNextStep: NextStep =
+    unifiedPrimaryAction &&
+    !isArabic
+      ? {
+          tag:
+            "Recommended now",
+
+          label:
+            unifiedPrimaryAction.title,
+
+          description:
+            unifiedPrimaryAction.description,
+
+          href:
+            unifiedPrimaryAction.href,
+
+          buttonText:
+            "Open next step",
+        }
+      : nextStep;
+
   const overviewCards = [
     {
       label: isArabic ? "التقييمات" : "Assessments",
@@ -554,13 +593,13 @@ const nextStep: NextStep = !hasAssessments && !hasReports
       actionSummary:
         dashboardActionSummary,
 
-      journey: {
+           journey: {
         nextStep: {
           label:
-            nextStep.label,
+            resolvedNextStep.label,
 
           href:
-            nextStep.href,
+            resolvedNextStep.href,
         },
 
         hasAssessments,
@@ -569,8 +608,10 @@ const nextStep: NextStep = !hasAssessments && !hasReports
         hasCheckIn,
       },
 
-      nextAction: {
-        nextStep,
+            nextAction: {
+        nextStep:
+          resolvedNextStep,
+
         progressPercent,
         completedSteps,
         currentPriority,

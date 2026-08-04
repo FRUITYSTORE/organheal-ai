@@ -21,36 +21,12 @@ import {
 } from "@/lib/health-intelligence/runtime/health-intelligence-runtime";
 
 import {
-  buildHealthStory,
-} from "@/lib/health-intelligence/engines/health-story.engine";
+  composeHealthRuntimeModules,
+} from "@/lib/health-intelligence/runtime/health-runtime-module-composer";
 
 import {
   buildHealthEngineContext,
 } from "@/lib/health-intelligence/engines/shared/health-engine-context";
-
-import {
-  buildHealthMomentum,
-} from "@/lib/health-intelligence/engines/health-momentum.engine";
-
-import {
-  buildClinicalConfidence,
-} from "@/lib/health-intelligence/engines/clinical-confidence.engine";
-
-import {
-  buildEvidenceIntelligence,
-} from "@/lib/health-intelligence/engines/evidence-intelligence.engine";
-
-import {
-  buildNextDecision,
-} from "@/lib/health-intelligence/engines/next-decision.engine";
-
-import {
-  buildDecisionImpact,
-} from "@/lib/health-intelligence/engines/decision-impact.engine";
-
-import {
-  buildHealthIntelligenceSummary,
-} from "@/lib/health-intelligence/engines/health-intelligence-summary.engine";
 
 export type BuildHealthRuntimeInput = {
   userId: string;
@@ -264,45 +240,16 @@ export async function buildHealthRuntime(
     buildHealthEngineContext(
       context
     );
-
-  const story =
-    buildHealthStory(
-      engineContext
-    );
-      const momentum =
-    buildHealthMomentum(
-      engineContext
-    );
-
-    const clinicalConfidence =
-  buildClinicalConfidence(
-    engineContext
-  );
-const evidence =
-  buildEvidenceIntelligence(
-    engineContext
-  );
-  const nextDecision =
-  buildNextDecision({
-    engineContext,
-    evidence,
-    clinicalConfidence,
-    momentum,
-  });
-
-const decisionImpact =
-  buildDecisionImpact(
-    nextDecision
-  );
-
-const summary =
-  buildHealthIntelligenceSummary({
+  const {
     story,
     momentum,
     clinicalConfidence,
     evidence,
     nextDecision,
     decisionImpact,
+    summary,
+  } = composeHealthRuntimeModules({
+    engineContext,
   });
   const journey =
     buildHealthJourney(
