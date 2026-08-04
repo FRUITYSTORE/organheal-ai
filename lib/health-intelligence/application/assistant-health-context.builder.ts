@@ -27,6 +27,10 @@ import {
   buildPatientClinicalContext,
 } from "@/lib/application/clinical/patient-clinical-context.service";
 
+import {
+  buildUnifiedIntelligenceExperience,
+} from "@/lib/application/unified-intelligence/unified-intelligence-experience.service";
+
 type HealthIntelligenceResult =
   ReturnType<typeof buildHealthIntelligence>;
 
@@ -58,10 +62,11 @@ export type BuildAssistantHealthContextInput = {
 export function buildAssistantHealthContext({
   patientSummary,
   intelligence,
-  runtime: _runtime,
+  runtime,
   doctorBrief,
   latestReportContext,
 }: BuildAssistantHealthContextInput): AssistantResponseHealthContext {
+
   const overview =
     intelligence.intelligenceOverview.data;
 
@@ -88,6 +93,19 @@ export function buildAssistantHealthContext({
     buildPatientClinicalContext({
       patientSummary,
     });
+
+      const story =
+    runtime.modules.story.data;
+
+  const unifiedExperience =
+    story
+      ? buildUnifiedIntelligenceExperience({
+          intelligence,
+          story,
+          patientJourney,
+          clinicalContext,
+        })
+      : null;
 
   const primaryAction =
     intelligence.recommendations.data.primaryAction;
@@ -146,12 +164,14 @@ export function buildAssistantHealthContext({
     healthEngine:
       intelligence,
 
-    latestReportContext,
+        latestReportContext,
 
     patientJourney,
 
     patientJourneyEvents,
 
     clinicalContext,
+
+    unifiedExperience,
   };
 }

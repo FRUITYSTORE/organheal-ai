@@ -10,6 +10,10 @@ import type {
   PatientClinicalContext,
 } from "@/lib/application/clinical/patient-clinical-context.service";
 
+import type {
+  UnifiedIntelligenceExperienceModel,
+} from "@/lib/application/unified-intelligence/unified-intelligence-experience.model";
+
 export type AssistantLatestReportContext = {
   reportId: number;
   fileName: string;
@@ -66,9 +70,13 @@ export type AssistantResponseHealthContext = {
     | PatientJourneyEvent[]
     | null;
 
-    clinicalContext?:
-  | PatientClinicalContext
-  | null;
+  clinicalContext?:
+    | PatientClinicalContext
+    | null;
+
+  unifiedExperience?:
+    | UnifiedIntelligenceExperienceModel
+    | null;
 };
 
 export type AssistantResponseConversationMessage = {
