@@ -192,7 +192,11 @@ export default function DashboardPage() {
     const user = userData.user;
 
    try {
-  const dashboardSummary = await getDashboardSummary(user.id);
+  const dashboardSummary =
+  await getDashboardSummary(
+    user.id,
+    getStoredLanguage()
+  );
 
   setUsername(dashboardSummary.profile?.username || user.email || "User");
   setAssessments(dashboardSummary.assessments as Assessment[]);
@@ -426,12 +430,13 @@ const nextStep: NextStep = !hasAssessments && !hasReports
     unifiedExperience?.primaryAction ??
     null;
 
-  const resolvedNextStep: NextStep =
-    unifiedPrimaryAction &&
-    !isArabic
+    const resolvedNextStep: NextStep =
+    unifiedPrimaryAction
       ? {
-          tag:
-            "Recommended now",
+                      tag:
+              isArabic
+                ? "موصى به الآن"
+                : "Recommended now",
 
           label:
             unifiedPrimaryAction.title,
@@ -442,8 +447,10 @@ const nextStep: NextStep = !hasAssessments && !hasReports
           href:
             unifiedPrimaryAction.href,
 
-          buttonText:
-            "Open next step",
+                      buttonText:
+              isArabic
+                ? "افتح الخطوة التالية"
+                : "Open next step",
         }
       : nextStep;
 
@@ -557,10 +564,9 @@ const nextStep: NextStep = !hasAssessments && !hasReports
       href: "/health-plan",
     },
   ];
-    const resolvedDashboardIntelligence =
+      const resolvedDashboardIntelligence =
     dashboardIntelligence &&
-    unifiedExperience &&
-    !isArabic
+    unifiedExperience
       ? {
           ...dashboardIntelligence,
 

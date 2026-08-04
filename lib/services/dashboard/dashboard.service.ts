@@ -34,8 +34,14 @@ import {
   buildUnifiedIntelligenceExperienceContext,
 } from "@/lib/application/unified-intelligence/unified-intelligence-experience.builder";
 
+export type DashboardSummaryLanguage =
+  | "en"
+  | "ar";
+
 export async function getDashboardSummary(
-  userId: string
+  userId: string,
+  language:
+    DashboardSummaryLanguage = "en"
 ) {
   const [
     profile,
@@ -84,12 +90,14 @@ export async function getDashboardSummary(
       profile,
     });
 
-  const runtime =
+    const runtime =
     await buildHealthRuntime({
       userId,
 
       patient:
         patientSummary,
+
+      language,
     });
 
   const patientJourney =
