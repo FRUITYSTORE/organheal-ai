@@ -514,6 +514,32 @@ export default function IntelligencePage() {
       });
 
     if (!generationResult.success) {
+      if (
+  generationResult.stage === "report-processing" &&
+  generationResult.processing
+) {
+  setMessage(
+    text(
+      "Your report is being prepared. This page will update when extraction is complete.",
+      "يتم الآن تجهيز تقريرك. سيتم تحديث هذه الصفحة بعد اكتمال استخراج البيانات."
+    )
+  );
+
+  setHealthInsights((current) =>
+    current.map((item) =>
+      item.id === insightId
+        ? {
+            ...item,
+            extraction_status: "Processing",
+          }
+        : item
+    )
+  );
+
+  setExpandedReportId(insightId);
+
+  return;
+}
       if (generationResult.stage === "report-text") {
         alert(generationResult.errorMessage);
 

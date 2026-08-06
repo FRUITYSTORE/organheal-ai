@@ -38,20 +38,23 @@ export async function getRecentHealthInsights(
 }
 
 export async function countGeneratedInsights(
-  userId: string
+  userId: string,
+  client: SupabaseClient = supabase
 ): Promise<number> {
-  const { data, error } = await supabase
+  const { count, error } = await client
     .from("health_insights")
-    .select("id, ai_status")
-    .eq("user_id", userId);
+    .select("id", {
+      count: "exact",
+      head: true,
+    })
+    .eq("user_id", userId)
+    .eq("ai_status", "Generated");
 
   if (error) {
     throw new Error(error.message);
   }
 
-  return (data || []).filter(
-    (item) => item.ai_status === "generated"
-  ).length;
+  return count ?? 0;
 }
 
 export type GeneratedIntelligenceSummary = {
@@ -77,6 +80,24 @@ export async function getRecentGeneratedIntelligenceResults(
   return (data || []) as GeneratedIntelligenceSummary[];
 }
 
+export async function countGeneratedIntelligenceResults(
+  userId: string,
+  client: SupabaseClient = supabase
+): Promise<number> {
+  const { count, error } = await client
+    .from("generated_intelligence_results")
+    .select("id", {
+      count: "exact",
+      head: true,
+    })
+    .eq("user_id", userId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return count ?? 0;
+}
 export type GeneratedResultSummary = {
   insight_id: number | null;
   report_id: number | null;

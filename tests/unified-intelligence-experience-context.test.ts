@@ -32,7 +32,12 @@ import {
 } from "@/lib/application/unified-intelligence/unified-intelligence-experience.builder";
 
 import {
+  createAssessmentFixture,
+  createCheckInFixture,
+  createGeneratedResultFixture,
+  createHealthInsightFixture,
   createPatientSummaryFixture,
+  createUploadedReportFixture,
 } from "@/tests/fixtures/patient-summary.fixture";
 
 import type {
@@ -46,7 +51,7 @@ const FIXED_NOW =
 
 function createAssessment():
   PatientSummary["assessments"][number] {
-  return {
+  return createAssessmentFixture({
     organ_name:
       "Heart",
 
@@ -61,14 +66,14 @@ function createAssessment():
 
     created_at:
       "2026-08-01T08:00:00.000Z",
-  };
+  });
 }
 
 function createCheckIn():
   NonNullable<
     PatientSummary["latestCheckIn"]
   > {
-  return {
+  return createCheckInFixture({
     mood:
       "Good",
 
@@ -77,12 +82,12 @@ function createCheckIn():
 
     created_at:
       "2026-08-02T08:00:00.000Z",
-  };
+  });
 }
 
 function createReport():
   PatientSummary["uploadedReports"][number] {
-  return {
+  return createUploadedReportFixture({
     id:
       1,
 
@@ -106,12 +111,12 @@ function createReport():
 
     extracted_at:
       "2026-08-03T08:05:00.000Z",
-  };
+  });
 }
 
 function createInsight():
   PatientSummary["healthInsights"][number] {
-  return {
+  return createHealthInsightFixture({
     id:
       1,
 
@@ -147,12 +152,12 @@ function createInsight():
 
     created_at:
       "2026-08-03T09:00:00.000Z",
-  };
+  });
 }
 
 function createGeneratedResult():
   PatientSummary["generatedResults"][number] {
-  return {
+  return createGeneratedResultFixture({
     insight_id:
       1,
 
@@ -161,9 +166,8 @@ function createGeneratedResult():
 
     updated_at:
       "2026-08-03T09:05:00.000Z",
-  };
+  });
 }
-
 describe(
   "unified intelligence experience context integration",
   () => {

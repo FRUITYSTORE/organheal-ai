@@ -1,12 +1,9 @@
 import {
-  getUserProfileSummary,
-} from "@/lib/repositories/profile.repository";
-
-import {
   countUploadedReports,
 } from "@/lib/repositories/reports.repository";
 
 import {
+  countGeneratedIntelligenceResults,
   getRecentGeneratedIntelligenceResults,
 } from "@/lib/repositories/insight.repository";
 
@@ -39,63 +36,58 @@ export type DashboardSummaryLanguage =
   | "ar";
 
 export async function getDashboardSummary(
-  userId: string,
+  userId:
+    string,
   language:
     DashboardSummaryLanguage = "en"
 ) {
-  const [
-    profile,
-    uploadedReports,
-    generatedResults,
-    patientSummary,
-  ] =
-    await Promise.all([
-      getUserProfileSummary(
-        userId
-      ),
+ const [
+  uploadedReportCount,
+  savedIntelligenceCount,
+  generatedResults,
+  patientSummary,
+] =
+  await Promise.all([
+    countUploadedReports(
+      userId
+    ),
 
-      countUploadedReports(
-        userId
-      ),
+    countGeneratedIntelligenceResults(
+      userId
+    ),
 
-      getRecentGeneratedIntelligenceResults(
-        userId,
-        20
-      ),
+    getRecentGeneratedIntelligenceResults(
+      userId,
+      1
+    ),
 
-      getPatientSummary(
-        userId
-      ),
-    ]);
+    getPatientSummary(
+      userId
+    ),
+  ]);
 
-  const generatedInsights =
-    generatedResults.length > 0
-      ? generatedResults
-      : patientSummary.healthInsights.filter(
-          (item) =>
-            item.ai_status ===
-              "Generated" ||
-            item.ai_status ===
-              "generated"
-        );
+  const profile =
+    patientSummary.profile;
 
-  const latestIntelligenceDate =
-    generatedInsights[0]
-      ?.created_at ??
-    null;
+ const latestIntelligenceDate =
+  generatedResults[0]
+    ?.created_at ??
+  null;
 
   const healthIntelligence =
-    buildHealthIntelligence({
-      ...patientSummary,
-      profile,
-    });
+    buildHealthIntelligence(
+      patientSummary
+    );
 
-    const runtime =
+  const runtime =
     await buildHealthRuntime({
       userId,
 
       patient:
         patientSummary,
+
+      intelligence:
+        healthIntelligence,
 
       language,
     });
@@ -153,10 +145,11 @@ export async function getDashboardSummary(
         .unavailableReason,
 
     reportStats: {
-      uploadedReports,
+      uploadedReports:
+        uploadedReportCount,
 
       savedIntelligence:
-        generatedInsights.length,
+  savedIntelligenceCount,
 
       latestIntelligenceDate,
     },

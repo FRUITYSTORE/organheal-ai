@@ -1,48 +1,120 @@
-import { getRecentAssessments } from "@/lib/repositories/assessment.repository";
+import type {
+  SupabaseClient,
+} from "@supabase/supabase-js";
+
+import {
+  supabase,
+} from "@/lib/supabase";
+
+import type {
+  PatientSummary,
+} from "@/lib/models/patient";
+
+import {
+  getRecentAssessments,
+} from "@/lib/repositories/assessment.repository";
+
 import {
   getRecentCheckIns,
 } from "@/lib/repositories/checkin.repository";
-import { getRecentUploadedReports } from "@/lib/repositories/reports.repository";
+
+import {
+  getRecentHealthHistory,
+} from "@/lib/repositories/history.repository";
+
 import {
   getRecentGeneratedResults,
   getRecentHealthInsights,
 } from "@/lib/repositories/insight.repository";
-import { getRecentHealthHistory } from "@/lib/repositories/history.repository";
-import { PatientSummary } from "@/lib/models/patient";
-import type { SupabaseClient } from "@supabase/supabase-js";
-import { supabase } from "@/lib/supabase";
+
+import {
+  getUserProfileSummary,
+} from "@/lib/repositories/profile.repository";
+
+import {
+  getRecentUploadedReports,
+} from "@/lib/repositories/reports.repository";
+
+const PATIENT_SUMMARY_ITEM_LIMIT =
+  20;
 
 export async function getPatientSummary(
-  userId: string,
-  client: SupabaseClient = supabase
+  userId:
+    string,
+  client:
+    SupabaseClient = supabase
 ): Promise<PatientSummary> {
   const [
+    profile,
     assessments,
     recentCheckIns,
     uploadedReports,
     healthInsights,
     generatedResults,
     historyItems,
-  ] = await Promise.all([
-    getRecentAssessments(userId, 20, client),
-    getRecentCheckIns(userId, 20, client),
-    getRecentUploadedReports(userId, 20, client),
-    getRecentHealthInsights(userId, 20, client),
-    getRecentGeneratedResults(userId, 20, client),
-    getRecentHealthHistory(userId, 20, client),
-  ]);
+  ] =
+    await Promise.all([
+      getUserProfileSummary(
+        userId,
+        client
+      ),
+
+      getRecentAssessments(
+        userId,
+        PATIENT_SUMMARY_ITEM_LIMIT,
+        client
+      ),
+
+      getRecentCheckIns(
+        userId,
+        PATIENT_SUMMARY_ITEM_LIMIT,
+        client
+      ),
+
+      getRecentUploadedReports(
+        userId,
+        PATIENT_SUMMARY_ITEM_LIMIT,
+        client
+      ),
+
+      getRecentHealthInsights(
+        userId,
+        PATIENT_SUMMARY_ITEM_LIMIT,
+        client
+      ),
+
+      getRecentGeneratedResults(
+        userId,
+        PATIENT_SUMMARY_ITEM_LIMIT,
+        client
+      ),
+
+      getRecentHealthHistory(
+        userId,
+        PATIENT_SUMMARY_ITEM_LIMIT,
+        client
+      ),
+    ]);
 
   const latestCheckIn =
-    recentCheckIns[0] ?? null;
+    recentCheckIns[0] ??
+    null;
 
   return {
-    profile: null,
+    profile,
+
     assessments,
+
     latestCheckIn,
+
     recentCheckIns,
+
     uploadedReports,
+
     healthInsights,
+
     generatedResults,
+
     historyItems,
   };
 }

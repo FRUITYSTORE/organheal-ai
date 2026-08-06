@@ -1,8 +1,12 @@
 import "server-only";
 
+import type {
+  SupabaseClient,
+} from "@supabase/supabase-js";
+
 import {
-  buildHealthIntelligence,
-} from "@/lib/health-intelligence/health-intelligence.service";
+  supabase,
+} from "@/lib/supabase";
 
 import {
   buildUnifiedHealthRuntime,
@@ -17,13 +21,18 @@ type DoctorPortalLanguage =
   | "ar";
 
 export async function getDoctorPortalSummary(
-  userId: string,
+  userId:
+    string,
   language:
-    DoctorPortalLanguage = "en"
+    DoctorPortalLanguage = "en",
+  client:
+    SupabaseClient = supabase
 ) {
-
   const patientSummary =
-    await getPatientSummary(userId);
+    await getPatientSummary(
+      userId,
+      client
+    );
 
   const savedAnalysis =
     patientSummary.generatedResults.map(
@@ -36,19 +45,10 @@ export async function getDoctorPortalSummary(
       })
     );
 
-  /*
-   * Keep the legacy intelligence result temporarily
-   * because the current Doctor Portal components still
-   * consume its existing contract.
-   */
-  const healthIntelligence =
-    buildHealthIntelligence(
-      patientSummary
-    );
-
   const unifiedRuntime =
     await buildUnifiedHealthRuntime({
       userId,
+
       patient:
         patientSummary,
 
@@ -67,6 +67,11 @@ export async function getDoctorPortalSummary(
               .length > 0
         ),
     });
+
+  const healthIntelligence =
+    unifiedRuntime
+      .clinicalDecision
+      .intelligence;
 
   return {
     assessments:
@@ -95,15 +100,8 @@ export async function getDoctorPortalSummary(
         10
       ),
 
-    /*
-     * Legacy contract retained until Doctor Portal
-     * components migrate to V2.
-     */
     healthIntelligence,
 
-    /*
-     * Health Intelligence V2 modules.
-     */
     doctorIntelligence: {
       summary:
         unifiedRuntime.summary,

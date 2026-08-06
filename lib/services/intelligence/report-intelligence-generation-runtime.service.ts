@@ -1,72 +1,131 @@
 import {
   buildHealthInsightUpdate,
 } from "@/lib/services/intelligence/intelligence-persistence.service";
+
 import {
   persistReportIntelligence,
 } from "@/lib/services/intelligence/report-intelligence-persistence-runtime.service";
+
 import {
   buildReportIntelligenceResult,
   type GeneratedIntelligenceResult,
 } from "@/lib/services/intelligence/report-intelligence-result.service";
+
 import {
   prepareReportMarkerRuntime,
 } from "@/lib/services/intelligence/report-marker-runtime.service";
+
 import {
   loadReportTextRuntime,
 } from "@/lib/services/intelligence/report-text-runtime.service";
 
 type AssessmentInput = {
-  organ_name: string;
-  score: number;
-  created_at: string;
+  organ_name:
+    string;
+
+  score:
+    number;
+
+  created_at:
+    string;
 };
 
 type DailyCheckInInput = {
-  mood: string | null;
-  wellness_score: number | null;
-  created_at: string;
+  mood:
+    string | null;
+
+  wellness_score:
+    number | null;
+
+  created_at:
+    string;
 };
 
 type ReportInsightInput = {
-  id: number;
-  report_id: number | null;
-  report_type: string | null;
-  file_path?: string | null;
-  file_name?: string | null;
+  id:
+    number;
+
+  report_id:
+    number | null;
+
+  report_type:
+    string | null;
+
+  file_path?:
+    string | null;
+
+  file_name?:
+    string | null;
 };
 
 type GenerateReportIntelligenceRuntimeInput = {
-  userId: string;
-  insight: ReportInsightInput;
-  assessments: AssessmentInput[];
-  dailyCheckIn: DailyCheckInInput | null;
+  userId:
+    string;
+
+  insight:
+    ReportInsightInput;
+
+  assessments:
+    AssessmentInput[];
+
+  dailyCheckIn:
+    DailyCheckInInput | null;
 };
 
-type HealthInsightUpdate = ReturnType<
-  typeof buildHealthInsightUpdate
->;
+type HealthInsightUpdate =
+  ReturnType<
+    typeof buildHealthInsightUpdate
+  >;
 
 export type GenerateReportIntelligenceRuntimeResult =
   | {
-      success: true;
-      extractedText: string;
-      generatedResult: GeneratedIntelligenceResult;
-      intelligence: HealthInsightUpdate;
+      success:
+        true;
+
+      extractedText:
+        string;
+
+      generatedResult:
+        GeneratedIntelligenceResult;
+
+      intelligence:
+        HealthInsightUpdate;
     }
   | {
-      success: false;
+      success:
+        false;
+
       stage:
+        | "report-processing"
         | "report-text"
         | "health-insight"
         | "generated-result";
-      errorMessage: string;
-      requiresLogin: boolean;
+
+      errorMessage:
+        string;
+
+      requiresLogin:
+        boolean;
+
+      processing?:
+        boolean;
+
+      jobId?:
+        string | null;
+
+      requestId?:
+        string | null;
     };
 
-function getErrorMessage(error: unknown): string {
+function getErrorMessage(
+  error:
+    unknown
+): string {
   return error instanceof Error
     ? error.message
-    : String(error);
+    : String(
+        error
+      );
 }
 
 export async function generateReportIntelligenceRuntime({
@@ -75,38 +134,92 @@ export async function generateReportIntelligenceRuntime({
   assessments,
   dailyCheckIn,
 }: GenerateReportIntelligenceRuntimeInput): Promise<GenerateReportIntelligenceRuntimeResult> {
-  const reportTextResult = await loadReportTextRuntime({
-    userId,
-    insightId: insight.id,
-    reportId: insight.report_id,
-    filePath: insight.file_path,
-    fileName: insight.file_name,
-  });
+  const reportTextResult =
+    await loadReportTextRuntime({
+      userId,
+
+      insightId:
+        insight.id,
+
+      reportId:
+        insight.report_id,
+
+      filePath:
+        insight.file_path,
+
+      fileName:
+        insight.file_name,
+    });
+
+  /*
+   * Asynchronous extraction was accepted.
+   * Intelligence generation must wait until the worker
+   * stores readable text for the selected report.
+   */
+  if (
+    reportTextResult.status ===
+    "processing"
+  ) {
+    return {
+      success:
+        false,
+
+      stage:
+        "report-processing",
+
+      errorMessage:
+        "Report extraction is still processing.",
+
+      requiresLogin:
+        false,
+
+      processing:
+        true,
+
+      jobId:
+        reportTextResult.jobId,
+
+      requestId:
+        reportTextResult.requestId,
+    };
+  }
 
   if (
     reportTextResult.errorMessage ||
     !reportTextResult.extractedText
   ) {
     return {
-      success: false,
-      stage: "report-text",
+      success:
+        false,
+
+      stage:
+        "report-text",
+
       errorMessage:
         reportTextResult.errorMessage ||
         "No readable report text was extracted yet.",
-      requiresLogin: reportTextResult.requiresLogin,
+
+      requiresLogin:
+        reportTextResult.requiresLogin,
     };
   }
 
-  const extractedText = reportTextResult.extractedText;
+  const extractedText =
+    reportTextResult
+      .extractedText;
 
   const {
     detectedMarkers,
     historicalMarkerRows,
-  } = await prepareReportMarkerRuntime({
-    userId,
-    reportId: insight.report_id,
-    extractedText,
-  });
+  } =
+    await prepareReportMarkerRuntime({
+      userId,
+
+      reportId:
+        insight.report_id,
+
+      extractedText,
+    });
 
   const {
     generatedResultPayload,
@@ -114,48 +227,87 @@ export async function generateReportIntelligenceRuntime({
     radiologySummary,
     isRadiologyReport,
     clinicalPatterns,
-  } = buildReportIntelligenceResult({
-    extractedText,
-    reportType: insight.report_type,
-    detectedMarkers,
-    assessments,
-    dailyCheckIn,
-    historicalMarkerRows,
-  });
+  } =
+    buildReportIntelligenceResult({
+      extractedText,
 
-  const intelligence = buildHealthInsightUpdate({
-    extractedText,
-    reportType: insight.report_type,
-    markerSummary,
-    radiologySummary,
-    isRadiologyReport,
-    clinicalPatterns,
-    unifiedHealth: generatedResultPayload.unifiedHealth,
-  });
+      reportType:
+        insight.report_type,
 
-  const persistenceResult = await persistReportIntelligence({
-    userId,
-    insightId: insight.id,
-    reportId: insight.report_id,
-    intelligence,
-    generatedResult: generatedResultPayload,
-  });
+      detectedMarkers,
 
-  if (!persistenceResult.success) {
+      assessments,
+
+      dailyCheckIn,
+
+      historicalMarkerRows,
+    });
+
+  const intelligence =
+    buildHealthInsightUpdate({
+      extractedText,
+
+      reportType:
+        insight.report_type,
+
+      markerSummary,
+
+      radiologySummary,
+
+      isRadiologyReport,
+
+      clinicalPatterns,
+
+      unifiedHealth:
+        generatedResultPayload
+          .unifiedHealth,
+    });
+
+  const persistenceResult =
+    await persistReportIntelligence({
+      userId,
+
+      insightId:
+        insight.id,
+
+      reportId:
+        insight.report_id,
+
+      intelligence,
+
+      generatedResult:
+        generatedResultPayload,
+    });
+
+  if (
+    !persistenceResult.success
+  ) {
     return {
-      success: false,
-      stage: persistenceResult.stage,
-      errorMessage: getErrorMessage(
-        persistenceResult.error
-      ),
-      requiresLogin: false,
+      success:
+        false,
+
+      stage:
+        persistenceResult.stage,
+
+      errorMessage:
+        getErrorMessage(
+          persistenceResult.error
+        ),
+
+      requiresLogin:
+        false,
     };
   }
 
   return {
-    success: true,
+    success:
+      true,
+
     extractedText,
-    generatedResult: generatedResultPayload,
+
+    generatedResult:
+      generatedResultPayload,
+
     intelligence,
   };
 }

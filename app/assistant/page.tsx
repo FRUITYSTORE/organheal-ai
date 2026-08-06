@@ -3,6 +3,7 @@
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { getHealthContext } from "@/lib/getHealthContext";
+import { supabase } from "@/lib/supabase";
 import PageBackActions from "../components/PageBackActions";
 import type {
   AssistantResponseHealthContext,
@@ -215,23 +216,71 @@ function getAssistantAction(question: string): MessageAction | undefined {
     setInput("");
 
     try {
-      const result = await fetch("/api/assistant", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-  message: userMessage,
-  language,
-  healthContext,
-  conversation: messages
-    .slice(-6)
-    .map((message) => ({
-      role: message.sender === "ai" ? "assistant" : "user",
-      content: message.text,
-    })),
-}),
-      });
+      const {
+  data:
+    sessionData,
+  error:
+    sessionError,
+} =
+  await supabase.auth
+    .getSession();
+
+if (sessionError) {
+  throw new Error(
+    isArabic
+      ? "تعذر التحقق من جلسة المستخدم."
+      : "Could not verify your session."
+  );
+}
+
+const accessToken =
+  sessionData.session
+    ?.access_token;
+
+const result =
+  await fetch(
+    "/api/assistant",
+    {
+      method:
+        "POST",
+
+      headers: {
+        "Content-Type":
+          "application/json",
+
+        ...(accessToken
+          ? {
+              Authorization:
+                `Bearer ${accessToken}`,
+            }
+          : {}),
+      },
+
+      body:
+        JSON.stringify({
+          message:
+            userMessage,
+
+          language,
+
+          conversation:
+            messages
+              .slice(-6)
+              .map(
+                (message) => ({
+                  role:
+                    message.sender ===
+                    "ai"
+                      ? "assistant"
+                      : "user",
+
+                  content:
+                    message.text,
+                })
+              ),
+        }),
+    }
+  );
 
       const data = (await result.json()) as AssistantResponse;
 

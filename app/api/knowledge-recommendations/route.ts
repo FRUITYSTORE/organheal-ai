@@ -1,51 +1,134 @@
-import { NextRequest, NextResponse } from "next/server";
+import {
+  NextRequest,
+  NextResponse,
+} from "next/server";
 
-import { HealthIntelligenceResult } from "@/lib/health-intelligence/models/health-intelligence-result";
-import { getPersonalizedKnowledgeRecommendations } from "@/lib/services/knowledge/knowledge-recommendation.service";
+import {
+  authenticateApiRequest,
+} from "@/lib/api/api-auth";
+
+import {
+  createApiRequestId,
+  logApiError,
+} from "@/lib/api/api-logger";
+
+import {
+  buildHealthIntelligence,
+} from "@/lib/health-intelligence/health-intelligence.service";
+
+import {
+  getPatientSummary,
+} from "@/lib/services/shared/patient-summary.service";
+
+import {
+  getPersonalizedKnowledgeRecommendations,
+} from "@/lib/services/knowledge/knowledge-recommendation.service";
 
 type KnowledgeRecommendationRequest = {
-  intelligence?: HealthIntelligenceResult;
-  language?: "en" | "ar";
+  language?:
+    | "en"
+    | "ar";
 };
 
-export async function POST(request: NextRequest) {
-  try {
-    const body =
-      (await request.json()) as KnowledgeRecommendationRequest;
+export async function POST(
+  request:
+    NextRequest
+) {
+  const requestId =
+    createApiRequestId();
 
-    if (!body.intelligence) {
+  try {
+    const authentication =
+      await authenticateApiRequest(
+        request
+      );
+
+    if (!authentication.success) {
       return NextResponse.json(
         {
           error:
-            "Health intelligence is required to generate knowledge recommendations.",
+            authentication.error,
+
+          requestId,
         },
         {
-          status: 400,
+          status:
+            authentication.status,
+
+          headers: {
+            "x-request-id":
+              requestId,
+          },
         }
       );
     }
 
+    const body =
+      (await request.json()) as
+        KnowledgeRecommendationRequest;
+
     const language =
-      body.language === "ar" ? "ar" : "en";
+      body.language === "ar"
+        ? "ar"
+        : "en";
+
+    const patientSummary =
+      await getPatientSummary(
+        authentication.user.id,
+        authentication.client
+      );
+
+    const intelligence =
+      buildHealthIntelligence(
+        patientSummary
+      );
 
     const recommendations =
       getPersonalizedKnowledgeRecommendations({
-        intelligence: body.intelligence,
+        intelligence,
+
         language,
-        audience: "general",
+
+        audience:
+          "general",
       });
 
-    return NextResponse.json(recommendations);
+    return NextResponse.json(
+      recommendations,
+      {
+        headers: {
+          "x-request-id":
+            requestId,
+        },
+      }
+    );
   } catch (error) {
+    logApiError(
+      "knowledge_recommendations.request_failed",
+      error,
+      {
+        route:
+          "/api/knowledge-recommendations",
+
+        requestId,
+      }
+    );
+
     return NextResponse.json(
       {
         error:
-          error instanceof Error
-            ? error.message
-            : "Could not generate knowledge recommendations.",
+          "Could not generate knowledge recommendations.",
+
+        requestId,
       },
       {
-        status: 500,
+        status:
+          500,
+
+        headers: {
+          "x-request-id":
+            requestId,
+        },
       }
     );
   }

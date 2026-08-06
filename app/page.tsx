@@ -227,25 +227,58 @@ function getHeroAssistantAction(question: string) {
     heroConversation.slice(-6);
 
   try {
-    const result = await fetch(
-      "/api/assistant",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message: currentQuestion,
+    const {
+  data:
+    assistantSessionData,
+  error:
+    assistantSessionError,
+} =
+  await supabase.auth
+    .getSession();
+
+if (assistantSessionError) {
+  throw new Error(
+    language === "ar"
+      ? "تعذر التحقق من جلسة المستخدم."
+      : "Could not verify your session."
+  );
+}
+
+const assistantAccessToken =
+  assistantSessionData.session
+    ?.access_token;
+
+const result =
+  await fetch(
+    "/api/assistant",
+    {
+      method:
+        "POST",
+
+      headers: {
+        "Content-Type":
+          "application/json",
+
+        ...(assistantAccessToken
+          ? {
+              Authorization:
+                `Bearer ${assistantAccessToken}`,
+            }
+          : {}),
+      },
+
+      body:
+        JSON.stringify({
+          message:
+            currentQuestion,
+
           language,
-          healthContext:
-            isLoggedIn
-              ? heroHealthContext
-              : null,
+
           conversation:
             conversationForRequest,
         }),
-      }
-    );
+    }
+  );
 
     const data = await result.json();
 

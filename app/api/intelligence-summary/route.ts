@@ -2,94 +2,67 @@ import {
   NextRequest,
   NextResponse,
 } from "next/server";
+
 import {
-  createClient,
-} from "@supabase/supabase-js";
+  authenticateApiRequest,
+} from "@/lib/api/api-auth";
+
+import {
+  createApiRequestId,
+  logApiError,
+  logApiInfo,
+  startApiTimer,
+} from "@/lib/api/api-logger";
 
 import {
   getCombinedIntelligenceSummary,
 } from "@/lib/services/intelligence/intelligence-summary-v2.service";
+
 import {
   getFocusedIntelligenceSummary,
 } from "@/lib/services/intelligence/focused-intelligence-summary.service";
 
 type IntelligenceSummaryRequest = {
-  language?: "en" | "ar";
-  reportId?: number;
+  language?:
+    | "en"
+    | "ar";
+
+  reportId?:
+    number;
 };
 
 export async function POST(
-  request: NextRequest
+  request:
+    NextRequest
 ) {
+  const requestId =
+    createApiRequestId();
+
+  const timer =
+    startApiTimer();
+
   try {
-    const authorizationHeader =
-      request.headers.get("authorization") || "";
+    const authentication =
+      await authenticateApiRequest(
+        request
+      );
 
-    const token =
-      authorizationHeader.startsWith("Bearer ")
-        ? authorizationHeader
-            .replace("Bearer ", "")
-            .trim()
-        : "";
-
-    if (!token) {
+    if (!authentication.success) {
       return NextResponse.json(
         {
           error:
-            "Authentication is required to build the intelligence summary.",
+            authentication.error,
+
+          requestId,
         },
         {
-          status: 401,
-        }
-      );
-    }
+          status:
+            authentication.status,
 
-    const supabaseUrl =
-      process.env.NEXT_PUBLIC_SUPABASE_URL;
-
-    const supabaseKey =
-      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error(
-        "Supabase environment variables are missing."
-      );
-    }
-
-    const authenticatedSupabase =
-      createClient(
-        supabaseUrl,
-        supabaseKey,
-        {
-          global: {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+          headers: {
+            "x-request-id":
+              requestId,
           },
-          auth: {
-            persistSession: false,
-            autoRefreshToken: false,
-          },
-        }
-      );
-
-    const {
-      data: authData,
-      error: authError,
-    } =
-      await authenticatedSupabase.auth.getUser(
-        token
-      );
-
-    if (authError || !authData.user) {
-      return NextResponse.json(
-        {
-          error:
-            "Your session is invalid or has expired.",
-        },
-        {
-          status: 401,
         }
       );
     }
@@ -98,7 +71,8 @@ export async function POST(
       (await request.json()) as
         IntelligenceSummaryRequest;
 
-    const userId = authData.user.id;
+    const userId =
+      authentication.user.id;
 
     const language =
       body.language === "ar"
@@ -106,62 +80,133 @@ export async function POST(
         : "en";
 
     const requestedReportId =
-      typeof body.reportId === "number" &&
-      Number.isInteger(body.reportId) &&
+      typeof body.reportId ===
+        "number" &&
+      Number.isInteger(
+        body.reportId
+      ) &&
       body.reportId > 0
         ? body.reportId
         : null;
 
-    if (requestedReportId !== null) {
+    if (
+      requestedReportId !==
+      null
+    ) {
       const focusedSummary =
-  await getFocusedIntelligenceSummary(
-    userId,
-    requestedReportId,
-    language,
-    authenticatedSupabase
-  );
+        await getFocusedIntelligenceSummary(
+          userId,
+          requestedReportId,
+          language,
+          authentication.client
+        );
 
       if (!focusedSummary) {
         return NextResponse.json(
           {
             error:
               "The requested report was not found in your account.",
+
+            requestId,
           },
           {
-            status: 404,
+            status:
+              404,
+
+            headers: {
+              "x-request-id":
+                requestId,
+            },
           }
         );
       }
 
+            logApiInfo(
+        "intelligence_summary.completed",
+        {
+          route:
+            "/api/intelligence-summary",
+
+          requestId,
+
+          mode:
+            "focused",
+
+          durationMs:
+            timer.elapsedMs(),
+        }
+      );
+
       return NextResponse.json(
-        focusedSummary
+        focusedSummary,
+        {
+          headers: {
+            "x-request-id":
+              requestId,
+          },
+        }
       );
     }
 
     const combinedSummary =
       await getCombinedIntelligenceSummary(
         userId,
-        language
+        language,
+        authentication.client
       );
 
+       logApiInfo(
+      "intelligence_summary.completed",
+      {
+        route:
+          "/api/intelligence-summary",
+
+        requestId,
+
+        mode:
+          "combined",
+
+        durationMs:
+          timer.elapsedMs(),
+      }
+    );
+
     return NextResponse.json(
-      combinedSummary
+      combinedSummary,
+      {
+        headers: {
+          "x-request-id":
+            requestId,
+        },
+      }
     );
   } catch (error) {
-    console.error(
-      "Intelligence summary error:",
-      error
+    logApiError(
+      "intelligence_summary.request_failed",
+      error,
+      {
+        route:
+          "/api/intelligence-summary",
+
+        requestId,
+      }
     );
 
     return NextResponse.json(
       {
         error:
-          error instanceof Error
-            ? error.message
-            : "Could not build the intelligence summary.",
+          "Could not build the intelligence summary.",
+
+        requestId,
       },
       {
-        status: 500,
+        status:
+          500,
+
+        headers: {
+          "x-request-id":
+            requestId,
+        },
       }
     );
   }

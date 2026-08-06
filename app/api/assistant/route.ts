@@ -1,4 +1,15 @@
-import { NextResponse } from "next/server";
+import {
+  NextResponse,
+} from "next/server";
+
+import {
+  authenticateApiRequest,
+} from "@/lib/api/api-auth";
+
+import {
+  createApiRequestId,
+  logApiError,
+} from "@/lib/api/api-logger";
 
 import {
   runAssistantOrchestrator,
@@ -13,19 +24,23 @@ import type {
 type AssistantRequestBody = {
   message?: unknown;
   language?: unknown;
-  healthContext?: unknown;
   conversation?: unknown;
 };
 
-export async function POST(req: Request) {
+export async function POST(
+  request: Request
+) {
+  const requestId =
+    createApiRequestId();
+
   try {
     const body =
-      (await req.json()) as AssistantRequestBody;
+      (await request.json()) as
+        AssistantRequestBody;
 
     const {
       message,
       language = "en",
-      healthContext,
       conversation,
     } = body;
 
@@ -35,10 +50,19 @@ export async function POST(req: Request) {
     ) {
       return NextResponse.json(
         {
-          error: "Message is required",
+          error:
+            "Message is required",
+
+          requestId,
         },
         {
-          status: 400,
+          status:
+            400,
+
+          headers: {
+            "x-request-id":
+              requestId,
+          },
         }
       );
     }
@@ -50,45 +74,131 @@ export async function POST(req: Request) {
           : "en";
 
     const normalizedConversation =
-      Array.isArray(conversation)
+      Array.isArray(
+        conversation
+      )
         ? (
             conversation as
               AssistantResponseConversationMessage[]
           )
         : [];
 
-    const normalizedHealthContext =
-      (
-        healthContext ??
-        null
-      ) as
-        | AssistantResponseHealthContext
-        | null;
+    let healthContext:
+      AssistantResponseHealthContext | null =
+        null;
+
+    const authorizationHeader =
+      request.headers.get(
+        "authorization"
+      );
+
+    /*
+     * Authentication is optional for the public
+     * educational assistant.
+     *
+     * Authenticated requests rebuild the user's health
+     * context securely from server-side data.
+     */
+    if (
+      authorizationHeader?.startsWith(
+        "Bearer "
+      )
+    ) {
+      const authentication =
+        await authenticateApiRequest(
+          request
+        );
+
+      if (!authentication.success) {
+        return NextResponse.json(
+          {
+            error:
+              authentication.error,
+
+            requestId,
+          },
+          {
+            status:
+              authentication.status,
+
+            headers: {
+              "x-request-id":
+                requestId,
+            },
+          }
+        );
+      }
+
+      const {
+        buildAuthenticatedAssistantContext,
+      } =
+        await import(
+          "@/lib/health-intelligence/application/authenticated-assistant-context.service"
+        );
+
+      healthContext =
+        await buildAuthenticatedAssistantContext({
+          userId:
+            authentication.user.id,
+
+          language:
+            normalizedLanguage,
+
+          client:
+            authentication.client,
+        });
+    }
 
     const result =
       runAssistantOrchestrator({
-        message,
+        message:
+          message.trim(),
+
         language:
           normalizedLanguage,
-        healthContext:
-          normalizedHealthContext,
+
+        healthContext,
+
         conversation:
           normalizedConversation,
       });
 
-    return NextResponse.json(result);
+    return NextResponse.json(
+      result,
+      {
+        headers: {
+          "x-request-id":
+            requestId,
+        },
+      }
+    );
   } catch (error) {
-    console.error(
-      "Assistant API error:",
-      error
+    logApiError(
+      "assistant.request_failed",
+      error,
+      {
+        route:
+          "/api/assistant",
+
+        requestId,
+      }
     );
 
     return NextResponse.json(
       {
-        error: "Server error",
+        error:
+          "Server error",
+
+        requestId,
       },
       {
-        status: 500,
+        status:
+          500,
+
+        headers: {
+          "x-request-id":
+            requestId,
+        },
       }
     );
   }

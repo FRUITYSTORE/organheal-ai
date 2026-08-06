@@ -4,63 +4,95 @@ import {
 } from "next/server";
 
 import {
+  authenticateApiRequest,
+} from "@/lib/api/api-auth";
+
+import {
+  createApiRequestId,
+  logApiError,
+} from "@/lib/api/api-logger";
+
+import {
   getDoctorPortalSummary,
 } from "@/lib/services/doctor/doctor-portal.service";
 
 type DoctorPortalSummaryRequest = {
-  userId?: string;
-  language?: "en" | "ar";
+  language?:
+    | "en"
+    | "ar";
 };
 
 export async function POST(
-  request: NextRequest
+  request:
+    NextRequest
 ) {
+    const requestId =
+    createApiRequestId();
   try {
-    const body =
-      (await request.json()) as
-        DoctorPortalSummaryRequest;
+    const authentication =
+      await authenticateApiRequest(
+        request
+      );
 
-    if (!body.userId) {
+    if (!authentication.success) {
       return NextResponse.json(
         {
           error:
-            "User ID is required to build the doctor portal summary.",
+            authentication.error,
         },
         {
-          status: 400,
+          status:
+            authentication.status,
         }
       );
     }
 
+    const body =
+      (await request.json()) as
+        DoctorPortalSummaryRequest;
+
     const summary =
       await getDoctorPortalSummary(
-        body.userId,
+        authentication.user.id,
+
         body.language === "ar"
           ? "ar"
-          : "en"
+          : "en",
+
+        authentication.client
       );
 
     return NextResponse.json(
       summary
     );
   } catch (error) {
-    console.error(error);
+  logApiError(
+    "doctor_portal_summary.request_failed",
+    error,
+    {
+  route:
+    "/api/doctor-portal-summary",
 
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Could not build the doctor portal summary.",
+  requestId,
+}
+  );
 
-        stack:
-          error instanceof Error
-            ? error.stack
-            : null,
-      },
-      {
-        status: 500,
-      }
-    );
+  return NextResponse.json(
+  {
+    error:
+      "Could not build the doctor portal summary.",
+
+    requestId,
+  },
+  {
+    status:
+      500,
+
+    headers: {
+      "x-request-id":
+        requestId,
+    },
   }
+);
+}
 }

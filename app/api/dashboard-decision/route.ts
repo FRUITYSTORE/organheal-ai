@@ -3,19 +3,27 @@ import {
   NextResponse,
 } from "next/server";
 
-import type {
-  PatientSummary,
-} from "@/lib/models/patient";
+import {
+  authenticateApiRequest,
+} from "@/lib/api/api-auth";
+
+import {
+  createApiRequestId,
+  logApiError,
+} from "@/lib/api/api-logger";
 
 import {
   getDashboardDecision,
 } from "@/lib/application/dashboard/dashboard-decision.service";
 
-type DashboardDecisionRequest = {
-  userId?: string;
-  patient?: PatientSummary;
+import {
+  getPatientSummary,
+} from "@/lib/services/shared/patient-summary.service";
 
-  language?: "en" | "ar";
+type DashboardDecisionRequest = {
+  language?:
+    | "en"
+    | "ar";
 
   audience?:
     | "general"
@@ -26,49 +34,64 @@ type DashboardDecisionRequest = {
     | "caregivers"
     | "healthcare-professionals";
 
-  hasHealthPlan?: boolean;
-  hasDoctorBrief?: boolean;
+  hasHealthPlan?:
+    boolean;
+
+  hasDoctorBrief?:
+    boolean;
 };
 
 export async function POST(
-  request: NextRequest
+  request:
+    NextRequest
 ) {
+  const requestId =
+    createApiRequestId();
+
   try {
+    const authentication =
+      await authenticateApiRequest(
+        request
+      );
+
+    if (!authentication.success) {
+      return NextResponse.json(
+        {
+          error:
+            authentication.error,
+
+          requestId,
+        },
+        {
+          status:
+            authentication.status,
+
+          headers: {
+            "x-request-id":
+              requestId,
+          },
+        }
+      );
+    }
+
     const body =
       (await request.json()) as
         DashboardDecisionRequest;
 
-    if (!body.userId) {
-      return NextResponse.json(
-        {
-          error:
-            "User ID is required to build the dashboard intelligence.",
-        },
-        {
-          status: 400,
-        }
-      );
-    }
+    const userId =
+      authentication.user.id;
 
-    if (!body.patient) {
-      return NextResponse.json(
-        {
-          error:
-            "Patient summary is required to build the dashboard intelligence.",
-        },
-        {
-          status: 400,
-        }
+    const patient =
+      await getPatientSummary(
+        userId,
+        authentication.client
       );
-    }
 
     const decision =
       await getDashboardDecision({
-        userId:
-          body.userId,
+        userId,
 
-        patient:
-          body.patient,
+        patient,
 
         language:
           body.language === "ar"
@@ -88,18 +111,41 @@ export async function POST(
       });
 
     return NextResponse.json(
-      decision
+      decision,
+      {
+        headers: {
+          "x-request-id":
+            requestId,
+        },
+      }
     );
   } catch (error) {
+    logApiError(
+      "dashboard_decision.request_failed",
+      error,
+      {
+        route:
+          "/api/dashboard-decision",
+
+        requestId,
+      }
+    );
+
     return NextResponse.json(
       {
         error:
-          error instanceof Error
-            ? error.message
-            : "Could not build dashboard intelligence.",
+          "Could not build dashboard intelligence.",
+
+        requestId,
       },
       {
-        status: 500,
+        status:
+          500,
+
+        headers: {
+          "x-request-id":
+            requestId,
+        },
       }
     );
   }

@@ -206,33 +206,55 @@ export default function DashboardPage() {
     dashboardSummary.unifiedExperience
   );
     try {
-    const decisionResponse =
-      await fetch(
-        "/api/dashboard-decision",
-        {
-          method: "POST",
+    const {
+  data:
+    sessionData,
+  error:
+    sessionError,
+} =
+  await supabase.auth
+    .getSession();
 
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
+const accessToken =
+  sessionData.session
+    ?.access_token;
 
-          body: JSON.stringify({
-            userId:
-              user.id,
+if (
+  sessionError ||
+  !accessToken
+) {
+  throw new Error(
+    getStoredLanguage() === "ar"
+      ? "انتهت الجلسة. يرجى تسجيل الدخول مرة أخرى."
+      : "Your session has expired. Please sign in again."
+  );
+}
 
-            patient:
-              dashboardSummary
-                .patientSummary,
+const decisionResponse =
+  await fetch(
+    "/api/dashboard-decision",
+    {
+      method:
+        "POST",
 
-            language:
-              getStoredLanguage(),
+      headers: {
+        "Content-Type":
+          "application/json",
 
-            audience:
-              "general",
-          }),
-        }
-      );
+        Authorization:
+          `Bearer ${accessToken}`,
+      },
+
+      body:
+        JSON.stringify({
+          language:
+            getStoredLanguage(),
+
+          audience:
+            "general",
+        }),
+    }
+  );
 
     if (!decisionResponse.ok) {
       const errorPayload =
@@ -276,20 +298,52 @@ setHealthIntelligence(intelligence);
 setKnowledgeRecommendations(null);
 
 try {
-  const knowledgeResponse = await fetch(
+  const {
+  data:
+    knowledgeSessionData,
+  error:
+    knowledgeSessionError,
+} =
+  await supabase.auth
+    .getSession();
+
+const knowledgeAccessToken =
+  knowledgeSessionData.session
+    ?.access_token;
+
+if (
+  knowledgeSessionError ||
+  !knowledgeAccessToken
+) {
+  throw new Error(
+    getStoredLanguage() === "ar"
+      ? "انتهت الجلسة. يرجى تسجيل الدخول مرة أخرى."
+      : "Your session has expired. Please sign in again."
+  );
+}
+
+const knowledgeResponse =
+  await fetch(
     "/api/knowledge-recommendations",
     {
-      method: "POST",
+      method:
+        "POST",
+
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type":
+          "application/json",
+
+        Authorization:
+          `Bearer ${knowledgeAccessToken}`,
       },
-      body: JSON.stringify({
-        intelligence,
-        language:
-          getStoredLanguage() === "ar"
-            ? "ar"
-            : "en",
-      }),
+
+      body:
+        JSON.stringify({
+          language:
+            getStoredLanguage() === "ar"
+              ? "ar"
+              : "en",
+        }),
     }
   );
 

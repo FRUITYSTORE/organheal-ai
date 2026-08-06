@@ -151,6 +151,8 @@ export async function getHealthContext(
       patient:
         patientSummary,
 
+      intelligence,
+
       language:
         isArabic
           ? "ar"

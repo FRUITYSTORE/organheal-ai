@@ -22,6 +22,10 @@ import type {
 } from "@/lib/health-intelligence/context/health-intelligence-context";
 
 import {
+  buildHealthIntelligence,
+} from "@/lib/health-intelligence/health-intelligence.service";
+
+import {
   buildDashboardIntelligenceViewModel,
   type DashboardIntelligenceViewModel,
 } from "@/lib/application/dashboard/dashboard-intelligence.view-model";
@@ -146,19 +150,27 @@ export async function buildUnifiedHealthRuntime({
       hasDoctorBrief
     );
 
+    const intelligence =
+  buildHealthIntelligence(
+    patient
+  );
+
   const [
     clinicalDecision,
     intelligenceRuntime,
   ] = await Promise.all([
-    buildClinicalDecision({
-      patient,
-      language,
-      audience,
-    }),
+   buildClinicalDecision({
+  patient,
+  language,
+  audience,
+  prebuiltIntelligence:
+    intelligence,
+}),
 
     buildHealthRuntime({
       userId,
       patient,
+      intelligence,
       language,
       audience:
         mapRuntimeAudience(audience),

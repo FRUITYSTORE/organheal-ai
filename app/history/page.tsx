@@ -236,23 +236,57 @@ const [officialPassport, setOfficialPassport] =
     setOfficialPassport(null);
 
     try {
-      const response = await fetch(
-        "/api/history-decision",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            userId: userData.user.id,
-            language:
-              currentLanguage === "ar"
-                ? "ar"
-                : "en",
-            audience: "general",
-          }),
-        }
-      );
+     const {
+  data:
+    sessionData,
+  error:
+    sessionError,
+} =
+  await supabase.auth
+    .getSession();
+
+const accessToken =
+  sessionData.session
+    ?.access_token;
+
+if (
+  sessionError ||
+  !accessToken
+) {
+  throw new Error(
+    currentLanguage === "ar"
+      ? "انتهت الجلسة. يرجى تسجيل الدخول مرة أخرى."
+      : "Your session has expired. Please sign in again."
+  );
+}
+
+const response =
+  await fetch(
+    "/api/history-decision",
+    {
+      method:
+        "POST",
+
+      headers: {
+        "Content-Type":
+          "application/json",
+
+        Authorization:
+          `Bearer ${accessToken}`,
+      },
+
+      body:
+        JSON.stringify({
+          language:
+            currentLanguage === "ar"
+              ? "ar"
+              : "en",
+
+          audience:
+            "general",
+        }),
+    }
+  );
 
       if (!response.ok) {
         const responseMessage =

@@ -4,35 +4,81 @@ import type {
   HealthKnowledgeAudience,
   HealthKnowledgeLanguage,
 } from "@/lib/health-knowledge/models/knowledge-item";
-import type { PatientSummary } from "@/lib/models/patient";
-import type { ClinicalDecisionResult } from "@/lib/clinical-decision/models/clinical-decision-result";
 
-import { runClinicalDecisionPipeline } from "@/lib/clinical-decision/pipeline/run-clinical-decision-pipeline";
+import type {
+  PatientSummary,
+} from "@/lib/models/patient";
+
+import type {
+  HealthIntelligenceResult,
+} from "@/lib/health-intelligence/models/health-intelligence-result";
+
+import type {
+  ClinicalDecisionResult,
+} from "@/lib/clinical-decision/models/clinical-decision-result";
+
+import {
+  runClinicalDecisionPipeline,
+} from "@/lib/clinical-decision/pipeline/run-clinical-decision-pipeline";
 
 type BuildClinicalDecisionInput = {
-  patient: PatientSummary;
-  language?: HealthKnowledgeLanguage;
-  audience?: HealthKnowledgeAudience;
+  patient:
+    PatientSummary;
+
+  language?:
+    HealthKnowledgeLanguage;
+
+  audience?:
+    HealthKnowledgeAudience;
+
+    prebuiltIntelligence?:
+  HealthIntelligenceResult;
 };
+
+type ClinicalDecisionStageId =
+  | "health-intelligence"
+  | "health-passport"
+  | "health-timeline"
+  | "personalized-knowledge";
+
+function isClinicalDecisionStageId(
+  stageId:
+    string
+): stageId is ClinicalDecisionStageId {
+  return (
+    stageId ===
+      "health-intelligence" ||
+    stageId ===
+      "health-passport" ||
+    stageId ===
+      "health-timeline" ||
+    stageId ===
+      "personalized-knowledge"
+  );
+}
 
 export async function buildClinicalDecision({
   patient,
   language = "en",
   audience = "general",
+  prebuiltIntelligence,
 }: BuildClinicalDecisionInput): Promise<ClinicalDecisionResult> {
   const pipelineResult =
-    await runClinicalDecisionPipeline({
-      patient,
-      language,
-      audience,
-    });
+  await runClinicalDecisionPipeline({
+    patient,
+    language,
+    audience,
+    intelligence:
+      prebuiltIntelligence,
+  });
 
   const {
-  intelligence,
-  knowledge,
-  passport,
-  timeline,
-} = pipelineResult.context;
+    intelligence,
+    knowledge,
+    passport,
+    timeline,
+  } =
+    pipelineResult.context;
 
   if (!intelligence) {
     throw new Error(
@@ -45,53 +91,57 @@ export async function buildClinicalDecision({
       "Clinical decision pipeline did not produce personalized knowledge."
     );
   }
-  
-if (!passport) {
-  throw new Error(
-    "Clinical decision pipeline did not produce a Health Passport."
-  );
-}
 
-if (!timeline) {
-  throw new Error(
-    "Clinical decision pipeline did not produce a Health Timeline."
-  );
-}
+  if (!passport) {
+    throw new Error(
+      "Clinical decision pipeline did not produce a Health Passport."
+    );
+  }
+
+  if (!timeline) {
+    throw new Error(
+      "Clinical decision pipeline did not produce a Health Timeline."
+    );
+  }
 
   const completedStages =
     pipelineResult.executions
       .filter(
         (execution) =>
-          execution.status === "completed"
+          execution.status ===
+          "completed"
       )
-      .map((execution) => execution.stageId)
-     .filter(
-  (
-    stageId
-  ): stageId is
-    | "health-intelligence"
-    | "health-passport"
-    | "health-timeline"
-    | "personalized-knowledge" =>
-    stageId === "health-intelligence" ||
-    stageId === "health-passport" ||
-    stageId === "personalized-knowledge"
-);
+      .map(
+        (execution) =>
+          execution.stageId
+      )
+      .filter(
+        isClinicalDecisionStageId
+      );
+
+  const isComplete =
+    pipelineResult.successful &&
+    completedStages.length === 4;
+
   return {
-  intelligence,
-  knowledge,
-  passport,
-  timeline,
+    intelligence,
 
-  metadata: {
-    status: pipelineResult.successful
-      ? completedStages.length === 4
-        ? "ready"
-        : "partial"
-      : "partial",
+    knowledge,
 
-    completedStages,
-    generatedAt: pipelineResult.completedAt,
-  },
-};
+    passport,
+
+    timeline,
+
+    metadata: {
+      status:
+        isComplete
+          ? "ready"
+          : "partial",
+
+      completedStages,
+
+      generatedAt:
+        pipelineResult.completedAt,
+    },
+  };
 }

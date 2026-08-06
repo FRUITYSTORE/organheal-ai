@@ -230,27 +230,53 @@ setDoctorIntelligence(null);
       return;
     }
 
-    const userId = userData.user.id;
-
     try {
+  const {
+    data:
+      sessionData,
+    error:
+      sessionError,
+  } =
+    await supabase.auth
+      .getSession();
+
+  const accessToken =
+    sessionData.session
+      ?.access_token;
+
+  if (
+    sessionError ||
+    !accessToken
+  ) {
+    throw new Error(
+      currentLanguage === "ar"
+        ? "انتهت الجلسة. يرجى تسجيل الدخول مرة أخرى."
+        : "Your session has expired. Please sign in again."
+    );
+  }
+
   const doctorResponse =
-  await fetch(
-    "/api/doctor-portal-summary",
-    {
-      method: "POST",
+    await fetch(
+      "/api/doctor-portal-summary",
+      {
+        method:
+          "POST",
 
-      headers: {
-        "Content-Type":
-          "application/json",
-      },
+        headers: {
+          "Content-Type":
+            "application/json",
 
-      body: JSON.stringify({
-  userId,
-  language:
-    currentLanguage,
-}),
-    }
-  );
+          Authorization:
+            `Bearer ${accessToken}`,
+        },
+
+        body:
+          JSON.stringify({
+            language:
+              currentLanguage,
+          }),
+      }
+    );
 
 if (!doctorResponse.ok) {
   const errorPayload =

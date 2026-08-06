@@ -39,10 +39,15 @@ export async function getRecentCheckIns(
 }
 
 export async function getLatestCheckIn(
-  userId: string
+  userId: string,
+  client: SupabaseClient = supabase
 ): Promise<DailyCheckInSummary | null> {
   const recentCheckIns =
-    await getRecentCheckIns(userId, 1);
+    await getRecentCheckIns(
+      userId,
+      1,
+      client
+    );
 
   return recentCheckIns[0] ?? null;
 }

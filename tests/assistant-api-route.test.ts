@@ -151,12 +151,32 @@ describe(
           400
         );
 
-        await expect(
-          response.json()
-        ).resolves.toEqual({
-          error:
-            "Message is required",
-        });
+       const responseBody =
+  (await response.json()) as {
+    error?: string;
+    requestId?: string;
+  };
+
+expect(
+  responseBody
+).toMatchObject({
+  error:
+    "Message is required",
+});
+
+expect(
+  responseBody.requestId
+).toMatch(
+  /^req_[0-9a-f-]+$/i
+);
+
+expect(
+  response.headers.get(
+    "x-request-id"
+  )
+).toBe(
+  responseBody.requestId
+);
 
         expect(
           mockedRunAssistantOrchestrator
@@ -181,12 +201,32 @@ describe(
           400
         );
 
-        await expect(
-          response.json()
-        ).resolves.toEqual({
-          error:
-            "Message is required",
-        });
+        const responseBody =
+  (await response.json()) as {
+    error?: string;
+    requestId?: string;
+  };
+
+expect(
+  responseBody
+).toMatchObject({
+  error:
+    "Message is required",
+});
+
+expect(
+  responseBody.requestId
+).toMatch(
+  /^req_[0-9a-f-]+$/i
+);
+
+expect(
+  response.headers.get(
+    "x-request-id"
+  )
+).toBe(
+  responseBody.requestId
+);
 
         expect(
           mockedRunAssistantOrchestrator
@@ -371,50 +411,42 @@ describe(
     );
 
     it(
-      "passes health context and valid conversation without changing them",
-      async () => {
-        const healthContext = {
-          overallScore:
-            78,
+  "ignores client health context and preserves valid conversation for unauthenticated requests",
+  async () => {
+    const healthContext = {
+      overallScore: 78,
+      priorityOrgan: "Heart",
+      recommendation:
+        "Continue routine follow-up.",
+    };
 
-          priorityOrgan:
-            "Heart",
+    const conversation = [
+      {
+        role: "user" as const,
+        content:
+          "What did my latest report show?",
+      },
+      {
+        role: "assistant" as const,
+        content:
+          "Your recent context was reviewed.",
+      },
+    ];
 
-          recommendation:
-            "Continue routine follow-up.",
-        };
+    const request =
+      new Request(
+        "http://localhost/api/assistant",
+        {
+          method:
+            "POST",
 
-        const conversation = [
-          {
-            role:
-              "user" as const,
-
-            content:
-              "What changed?",
+          headers: {
+            "Content-Type":
+              "application/json",
           },
 
-          {
-            role:
-              "assistant" as const,
-
-            content:
-              "Your recent context was reviewed.",
-          },
-        ];
-
-        const orchestratorResult =
-          createOrchestratorResult(
-            "Your health context remains stable."
-          );
-
-        mockedRunAssistantOrchestrator
-          .mockReturnValue(
-            orchestratorResult
-          );
-
-        const response =
-          await POST(
-            createAssistantRequest({
+          body:
+            JSON.stringify({
               message:
                 "What should I focus on?",
 
@@ -424,36 +456,30 @@ describe(
               healthContext,
 
               conversation,
-            })
-          );
+            }),
+        }
+      );
 
-        expect(
-          mockedRunAssistantOrchestrator
-        ).toHaveBeenCalledWith({
-          message:
-            "What should I focus on?",
-
-          language:
-            "en",
-
-          healthContext,
-
-          conversation,
-        });
-
-        expect(
-          response.status
-        ).toBe(
-          200
-        );
-
-        await expect(
-          response.json()
-        ).resolves.toEqual(
-          orchestratorResult
-        );
-      }
+    await POST(
+      request
     );
+
+    expect(
+      mockedRunAssistantOrchestrator
+    ).toHaveBeenCalledWith({
+      message:
+        "What should I focus on?",
+
+      language:
+        "en",
+
+      healthContext:
+        null,
+
+      conversation,
+    });
+  }
+);
 
     it(
       "returns the orchestrator result without changing its contract",
@@ -516,21 +542,77 @@ describe(
           500
         );
 
-        await expect(
-          response.json()
-        ).resolves.toEqual({
-          error:
-            "Server error",
-        });
+        const responseBody =
+  (await response.json()) as {
+    error?: string;
+    requestId?: string;
+  };
+
+expect(
+  responseBody
+).toMatchObject({
+  error:
+    "Server error",
+});
+
+expect(
+  responseBody.requestId
+).toMatch(
+  /^req_[0-9a-f-]+$/i
+);
+
+expect(
+  response.headers.get(
+    "x-request-id"
+  )
+).toBe(
+  responseBody.requestId
+);
 
         expect(
-          consoleErrorSpy
-        ).toHaveBeenCalledWith(
-          "Assistant API error:",
-          expect.any(
-            Error
-          )
-        );
+  consoleErrorSpy
+).toHaveBeenCalledTimes(1);
+
+const loggedValue =
+  consoleErrorSpy.mock.calls[0]?.[0];
+
+expect(
+  typeof loggedValue
+).toBe("string");
+
+const parsedLog =
+  JSON.parse(
+    loggedValue as string
+  ) as {
+    level?: string;
+    event?: string;
+    route?: string;
+    error?: {
+      name?: string;
+      message?: string;
+    };
+  };
+
+expect(
+  parsedLog
+).toMatchObject({
+  level:
+    "error",
+
+  event:
+    "assistant.request_failed",
+
+  route:
+    "/api/assistant",
+
+  error: {
+    name:
+      "Error",
+
+    message:
+      "Orchestrator failure",
+  },
+});
       }
     );
   }

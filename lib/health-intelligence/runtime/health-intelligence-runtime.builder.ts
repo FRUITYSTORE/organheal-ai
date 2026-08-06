@@ -29,14 +29,28 @@ import {
 } from "@/lib/health-intelligence/engines/shared/health-engine-context";
 
 export type BuildHealthRuntimeInput = {
-  userId: string;
-    patient?: PatientSummary;
+  userId:
+    string;
 
-  language?: HealthIntelligenceContextLanguage;
-  audience?: HealthIntelligenceContextAudience;
+  patient?:
+    PatientSummary;
 
-  hasHealthPlan?: boolean;
-  hasDoctorBrief?: boolean;
+  intelligence?:
+    ReturnType<
+      typeof buildHealthIntelligence
+    >;
+
+  language?:
+    HealthIntelligenceContextLanguage;
+
+  audience?:
+    HealthIntelligenceContextAudience;
+
+  hasHealthPlan?:
+    boolean;
+
+  hasDoctorBrief?:
+    boolean;
 };
 
 function normalizeDate(
@@ -229,7 +243,10 @@ export async function buildHealthRuntime(
     await getPatientSummary(input.userId);
 
   const intelligence =
-    buildHealthIntelligence(patient);
+    input.intelligence ??
+    buildHealthIntelligence(
+      patient
+    );
 
   const context =
     buildContextFromPatient(

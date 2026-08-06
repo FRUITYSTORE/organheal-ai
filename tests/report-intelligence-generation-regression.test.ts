@@ -196,16 +196,25 @@ const intelligenceUpdate = {
 
 function prepareSuccessfulMocks() {
   mockedLoadReportTextRuntime
-    .mockResolvedValue({
-      extractedText:
-        EXTRACTED_TEXT,
+  .mockResolvedValue({
+    status:
+      "ready",
 
-      errorMessage:
-        null,
+    extractedText:
+      EXTRACTED_TEXT,
 
-      requiresLogin:
-        false,
-    });
+    errorMessage:
+      null,
+
+    requiresLogin:
+      false,
+
+    jobId:
+      null,
+
+    requestId:
+      null,
+  });
 
   mockedPrepareReportMarkerRuntime
     .mockResolvedValue({
@@ -557,17 +566,26 @@ describe(
     it(
       "does not build or persist intelligence when report text loading fails",
       async () => {
-        mockedLoadReportTextRuntime
-          .mockResolvedValue({
-            extractedText:
-              null,
+       mockedLoadReportTextRuntime
+  .mockResolvedValue({
+    status:
+      "failed",
 
-            errorMessage:
-              "PDF extraction failed.",
+    extractedText:
+      null,
 
-            requiresLogin:
-              false,
-          });
+    errorMessage:
+      "PDF extraction failed.",
+
+    requiresLogin:
+      false,
+
+    jobId:
+      null,
+
+    requestId:
+      null,
+  });
 
         const result =
           await generateReportIntelligenceRuntime({
@@ -636,16 +654,25 @@ describe(
       "preserves the login requirement when report text loading reports an expired session",
       async () => {
         mockedLoadReportTextRuntime
-          .mockResolvedValue({
-            extractedText:
-              null,
+  .mockResolvedValue({
+    status:
+      "failed",
 
-            errorMessage:
-              "Your session expired. Please login again.",
+    extractedText:
+      null,
 
-            requiresLogin:
-              true,
-          });
+    errorMessage:
+      "Your session expired. Please login again.",
+
+    requiresLogin:
+      true,
+
+    jobId:
+      null,
+
+    requestId:
+      null,
+  });
 
         const result =
           await generateReportIntelligenceRuntime({

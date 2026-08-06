@@ -1,11 +1,30 @@
-import { NextRequest, NextResponse } from "next/server";
+import {
+  NextRequest,
+  NextResponse,
+} from "next/server";
 
-import { getHistoryDecision } from "@/lib/application/history/history-decision.service";
-import { getPatientSummary } from "@/lib/services/shared/patient-summary.service";
+import {
+  authenticateApiRequest,
+} from "@/lib/api/api-auth";
+
+import {
+  createApiRequestId,
+  logApiError,
+} from "@/lib/api/api-logger";
+
+import {
+  getHistoryDecision,
+} from "@/lib/application/history/history-decision.service";
+
+import {
+  getPatientSummary,
+} from "@/lib/services/shared/patient-summary.service";
 
 type HistoryDecisionRequest = {
-  userId?: string;
-  language?: "en" | "ar";
+  language?:
+    | "en"
+    | "ar";
+
   audience?:
     | "general"
     | "children"
@@ -16,49 +35,108 @@ type HistoryDecisionRequest = {
     | "healthcare-professionals";
 };
 
-export async function POST(request: NextRequest) {
-  try {
-    const body =
-      (await request.json()) as HistoryDecisionRequest;
+export async function POST(
+  request:
+    NextRequest
+) {
+  const requestId =
+    createApiRequestId();
 
-    if (!body.userId) {
+  try {
+    const authentication =
+      await authenticateApiRequest(
+        request
+      );
+
+    if (!authentication.success) {
       return NextResponse.json(
         {
           error:
-            "User ID is required to build the history decision.",
+            authentication.error,
+
+          requestId,
         },
         {
-          status: 400,
+          status:
+            authentication.status,
+
+          headers: {
+            "x-request-id":
+              requestId,
+          },
         }
       );
     }
 
-    const patient =
-      await getPatientSummary(body.userId);
+    const body =
+      (await request.json()) as
+        HistoryDecisionRequest;
 
-        const decision =
+    const userId =
+      authentication.user.id;
+
+    const language =
+      body.language === "ar"
+        ? "ar"
+        : "en";
+
+    const audience =
+      body.audience ??
+      "general";
+
+    const patient =
+      await getPatientSummary(
+        userId,
+        authentication.client
+      );
+
+    const decision =
       await getHistoryDecision({
-        userId: body.userId,
+        userId,
+
         patient,
-        language:
-          body.language === "ar"
-            ? "ar"
-            : "en",
-        audience:
-          body.audience ?? "general",
+
+        language,
+
+        audience,
       });
 
-    return NextResponse.json(decision);
+    return NextResponse.json(
+      decision,
+      {
+        headers: {
+          "x-request-id":
+            requestId,
+        },
+      }
+    );
   } catch (error) {
+    logApiError(
+      "history_decision.request_failed",
+      error,
+      {
+        route:
+          "/api/history-decision",
+
+        requestId,
+      }
+    );
+
     return NextResponse.json(
       {
         error:
-          error instanceof Error
-            ? error.message
-            : "Could not build the history decision.",
+          "Could not build the history decision.",
+
+        requestId,
       },
       {
-        status: 500,
+        status:
+          500,
+
+        headers: {
+          "x-request-id":
+            requestId,
+        },
       }
     );
   }
