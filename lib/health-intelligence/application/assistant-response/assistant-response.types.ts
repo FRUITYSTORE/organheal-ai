@@ -14,6 +14,10 @@ import type {
   UnifiedIntelligenceExperienceModel,
 } from "@/lib/application/unified-intelligence/unified-intelligence-experience.model";
 
+import type {
+  WholeBodyClinicalKnowledgeModel,
+} from "@/lib/health-intelligence/models/whole-body-clinical-knowledge";
+
 export type AssistantLatestReportContext = {
   reportId: number;
   fileName: string;
@@ -76,6 +80,10 @@ export type AssistantResponseHealthContext = {
 
   unifiedExperience?:
     | UnifiedIntelligenceExperienceModel
+    | null;
+
+  wholeBodyKnowledge?:
+    | WholeBodyClinicalKnowledgeModel
     | null;
 };
 

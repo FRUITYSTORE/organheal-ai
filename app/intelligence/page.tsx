@@ -222,10 +222,43 @@ export default function IntelligencePage() {
     useState<GeneratedIntelligenceResult | null>(null);
   const [activeGeneratedInsightId, setActiveGeneratedInsightId] =
     useState<number | null>(null);
-  const [expandedReportId, setExpandedReportId] = useState<number | null>(null);
-  const [visibleReportsCount, setVisibleReportsCount] =
-    useState(REPORTS_PAGE_SIZE);
-  const handledReportRequestRef = useRef("");
+    const [expandedReportId, setExpandedReportId] =
+    useState<number | null>(
+      null
+    );
+
+  const [
+    visibleReportsCount,
+    setVisibleReportsCount,
+  ] =
+    useState(
+      REPORTS_PAGE_SIZE
+    );
+
+  const [
+    processingInsightId,
+    setProcessingInsightId,
+  ] =
+    useState<
+      number | null
+    >(
+      null
+    );
+
+  const [
+    processingStartedAt,
+    setProcessingStartedAt,
+  ] =
+    useState<
+      number | null
+    >(
+      null
+    );
+
+  const handledReportRequestRef =
+    useRef(
+      ""
+    );
 
   useEffect(() => {
     loadIntelligence();
@@ -329,8 +362,93 @@ export default function IntelligencePage() {
       );
     }
 
-    handleRequestedReportFromUrl();
-  }, [loading, healthInsights, isArabicUi]);
+        handleRequestedReportFromUrl();
+  }, [
+    loading,
+    healthInsights,
+    isArabicUi,
+  ]);
+
+  useEffect(() => {
+    if (
+      processingInsightId ===
+        null ||
+      processingStartedAt ===
+        null
+    ) {
+      return;
+    }
+
+    const maximumWaitingMs =
+      2 * 60 * 1000;
+
+    let requestInProgress =
+      false;
+
+    const intervalId =
+      window.setInterval(
+        async () => {
+          if (
+            requestInProgress
+          ) {
+            return;
+          }
+
+          const waitingDuration =
+            Date.now() -
+            processingStartedAt;
+
+          if (
+            waitingDuration >=
+            maximumWaitingMs
+          ) {
+            window.clearInterval(
+              intervalId
+            );
+
+            setProcessingInsightId(
+              null
+            );
+
+            setProcessingStartedAt(
+              null
+            );
+
+            setMessage(
+              text(
+                "Report preparation is taking longer than expected. You can try Analyze Report again shortly.",
+                "يستغرق تجهيز التقرير وقتًا أطول من المتوقع. يمكنك محاولة تحليل التقرير مرة أخرى بعد قليل."
+              )
+            );
+
+            return;
+          }
+
+          requestInProgress =
+            true;
+
+          try {
+            await generateReportIntelligence(
+              processingInsightId
+            );
+          } finally {
+            requestInProgress =
+              false;
+          }
+        },
+        3000
+      );
+
+    return () => {
+      window.clearInterval(
+        intervalId
+      );
+    };
+  }, [
+    processingInsightId,
+    processingStartedAt,
+  ]);
+
   async function loadIntelligence() {
     setLoading(true);
     setMessage("");
@@ -536,7 +654,19 @@ export default function IntelligencePage() {
     )
   );
 
-  setExpandedReportId(insightId);
+  setExpandedReportId(
+    insightId
+  );
+
+  setProcessingInsightId(
+    insightId
+  );
+
+  setProcessingStartedAt(
+    (currentValue) =>
+      currentValue ??
+      Date.now()
+  );
 
   return;
 }
@@ -561,9 +691,30 @@ export default function IntelligencePage() {
       return;
     }
 
-    setGeneratedResult(generationResult.generatedResult);
-    setActiveGeneratedInsightId(insightId);
-    setExpandedReportId(insightId);
+        setProcessingInsightId(
+      null
+    );
+
+    setProcessingStartedAt(
+      null
+    );
+
+    setMessage(
+      ""
+    );
+
+    setGeneratedResult(
+      generationResult
+        .generatedResult
+    );
+
+    setActiveGeneratedInsightId(
+      insightId
+    );
+
+    setExpandedReportId(
+      insightId
+    );
 
     setHealthInsights((currentInsights) =>
       currentInsights.map((item) =>
@@ -624,11 +775,23 @@ const {
   focusedReportInsight,
 });
 
-  const focusedReportIsGenerated = Boolean(
-    focusedReportInsight &&
-      focusedReportInsight.ai_status === "Generated" &&
-      focusedReportInsight.extraction_status === "Completed"
-  );
+   const focusedReportIsGenerated =
+    Boolean(
+      focusedReportInsight &&
+        focusedReportInsight
+          .ai_status ===
+          "Generated" &&
+        focusedReportInsight
+          .extraction_status ===
+          "Completed"
+    );
+
+  const focusedReportIsProcessing =
+    Boolean(
+      focusedReportInsight &&
+        processingInsightId ===
+          focusedReportInsight.id
+    );
 
   const unifiedHealthPresentation = generatedResult?.unifiedHealth
     ? presentUnifiedHealth(generatedResult.unifiedHealth)
@@ -1640,20 +1803,49 @@ const hasReportEvidence = Boolean(
     </p>
 
     <div className="selectedReportActionGrid">
-      <button
+            <button
         type="button"
         className="selectedReportActionButton primary"
+        disabled={
+          focusedReportIsProcessing
+        }
+        aria-busy={
+          focusedReportIsProcessing
+        }
         onClick={() => {
-          if (focusedReportIsGenerated) {
-            openSavedGeneratedResult(focusedReportInsight.id);
+          if (
+            focusedReportIsProcessing
+          ) {
+            return;
+          }
+
+          if (
+            focusedReportIsGenerated
+          ) {
+            openSavedGeneratedResult(
+              focusedReportInsight.id
+            );
           } else {
-            generateReportIntelligence(focusedReportInsight.id);
+            generateReportIntelligence(
+              focusedReportInsight.id
+            );
           }
         }}
       >
-        {focusedReportIsGenerated
-          ? text("View Analysis", "عرض التحليل")
-          : text("Analyze Report", "تحليل التقرير")}
+        {focusedReportIsProcessing
+          ? text(
+              "Preparing Report...",
+              "جاري تجهيز التقرير..."
+            )
+          : focusedReportIsGenerated
+            ? text(
+                "View Analysis",
+                "عرض التحليل"
+              )
+            : text(
+                "Analyze Report",
+                "تحليل التقرير"
+              )}
       </button>
 
       <button

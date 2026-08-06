@@ -173,5 +173,9 @@ export function buildAssistantHealthContext({
     clinicalContext,
 
     unifiedExperience,
+
+    wholeBodyKnowledge:
+      intelligence
+        .wholeBodyKnowledge,
   };
 }

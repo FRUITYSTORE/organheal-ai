@@ -18,35 +18,60 @@ import {
   detectAssistantIntent,
 } from "@/lib/health-intelligence/application/assistant-intent/assistant-intent";
 
+import {
+  runClinicalReasoningLoop,
+} from "@/lib/health-intelligence/runtime/clinical-reasoning-loop";
+
 export type AssistantOrchestratorLanguage =
   | "en"
   | "ar";
 
 export type AssistantOrchestratorInput = {
-  message: string;
-  language: AssistantOrchestratorLanguage;
+  message:
+    string;
+
+  language:
+    AssistantOrchestratorLanguage;
+
   healthContext:
     | AssistantResponseHealthContext
     | null;
+
   conversation:
     AssistantResponseConversationMessage[];
 };
 
 export type AssistantOrchestratorReasoning = {
-  mode: "clarify" | "answer";
+  mode:
+    | "clarify"
+    | "answer";
 
-  status: string;
-  confidence: unknown;
+  status:
+    string;
 
-  availableEvidence: unknown;
-  missingInformation: unknown;
+  confidence:
+    unknown;
 
-  questionIntent: unknown;
-  questionEvidenceStatus: unknown;
-  questionEvidenceConfidence: unknown;
+  availableEvidence:
+    unknown;
 
-  questionAvailableEvidence: unknown;
-  questionMissingInformation: unknown;
+  missingInformation:
+    unknown;
+
+  questionIntent:
+    unknown;
+
+  questionEvidenceStatus:
+    unknown;
+
+  questionEvidenceConfidence:
+    unknown;
+
+  questionAvailableEvidence:
+    unknown;
+
+  questionMissingInformation:
+    unknown;
 
   clarifyingQuestion:
     | string
@@ -58,9 +83,14 @@ export type AssistantOrchestratorReasoning = {
 };
 
 export type AssistantOrchestratorResult = {
-  success: true;
-  response: string;
-  reasoning: AssistantOrchestratorReasoning;
+  success:
+    true;
+
+  response:
+    string;
+
+  reasoning:
+    AssistantOrchestratorReasoning;
 };
 
 export function runAssistantOrchestrator({
@@ -68,17 +98,53 @@ export function runAssistantOrchestrator({
   language,
   healthContext,
   conversation,
-}: AssistantOrchestratorInput): AssistantOrchestratorResult {
+}: AssistantOrchestratorInput):
+  AssistantOrchestratorResult {
   const conversationAwareMessage =
     buildConversationAwareMessage(
       message.trim(),
       conversation
     );
 
-    const detectedIntent =
-  detectAssistantIntent(
-    conversationAwareMessage
-  );
+  const detectedIntent =
+    detectAssistantIntent(
+      conversationAwareMessage
+    );
+
+   const clinicalReasoningLoop =
+    healthContext
+      ?.wholeBodyKnowledge
+      ? runClinicalReasoningLoop({
+          question:
+            conversationAwareMessage,
+
+          intent:
+            detectedIntent.intent,
+
+          language,
+
+          knowledge:
+            healthContext
+              .wholeBodyKnowledge,
+
+          conversation,
+
+          /*
+           * The loop is now the authoritative runtime entry
+           * point inside the assistant request pipeline.
+           *
+           * Persistent or reconstructed reasoning state will
+           * be supplied in the next scoped integration step.
+           */
+          previousState:
+            null,
+        })
+      : null;
+
+  const clinicalReasoningRuntime =
+    clinicalReasoningLoop
+      ?.runtime ??
+    null;
 
   const reasoningReadiness =
     assessReasoningReadiness(
@@ -87,12 +153,12 @@ export function runAssistantOrchestrator({
     );
 
   const questionEvidence =
-  assessQuestionEvidence(
-    conversationAwareMessage,
-    healthContext,
-    language,
-    detectedIntent.intent
-  );
+    assessQuestionEvidence(
+      conversationAwareMessage,
+      healthContext,
+      language,
+      detectedIntent.intent
+    );
 
   const reasoningDecision =
     decideReasoningPath(
@@ -100,18 +166,90 @@ export function runAssistantOrchestrator({
       language
     );
 
+  /*
+   * Controlled whole-body reasoning authority:
+   *
+   * The clinical runtime may independently request
+   * clarification for cause-reasoning and risk questions.
+   *
+   * The legacy decision remains available as a fallback.
+   *
+   * Report summaries, doctor preparation, scores,
+   * health-age questions, and general educational questions
+   * are not forced into clarification by this migration step.
+   */
+  const clinicalClarification =
+    clinicalReasoningRuntime
+      ?.clarification
+      .question ??
+    null;
+
+  const clinicalIntentCanLeadClarification =
+    detectedIntent.intent ===
+      "cause-reasoning" ||
+    detectedIntent.intent ===
+      "risk";
+
+  const clinicalRuntimeRequestsClarification =
+    Boolean(
+      clinicalIntentCanLeadClarification &&
+        clinicalReasoningRuntime
+          ?.requiresClarification &&
+        clinicalClarification
+    );
+
+  const legacyRequestsClarification =
+    reasoningDecision.mode ===
+      "clarify" &&
+    Boolean(
+      reasoningDecision.question
+    );
+
+  const shouldClarify =
+    clinicalRuntimeRequestsClarification ||
+    legacyRequestsClarification;
+
+  const selectedClarificationQuestion =
+    clinicalRuntimeRequestsClarification
+      ? clinicalClarification
+          ?.question ??
+        null
+      : legacyRequestsClarification
+        ? clinicalClarification
+            ?.question ??
+          reasoningDecision.question
+        : null;
+
+  const selectedClarificationReason =
+    clinicalRuntimeRequestsClarification
+      ? clinicalReasoningRuntime
+          ?.clarification
+          .reason ??
+        clinicalClarification
+          ?.reason ??
+        null
+      : legacyRequestsClarification &&
+          clinicalClarification
+        ? clinicalReasoningRuntime
+            ?.clarification
+            .reason ??
+          clinicalClarification.reason
+        : reasoningDecision.reason;
+
   if (
-    reasoningDecision.mode === "clarify" &&
-    reasoningDecision.question
+    shouldClarify &&
+    selectedClarificationQuestion
   ) {
     return {
-      success: true,
+      success:
+        true,
 
       response:
-        reasoningDecision.question,
+        selectedClarificationQuestion,
 
       reasoning: {
-        mode: "clarify",
+        mode:
+          "clarify",
 
         status:
           reasoningReadiness.status,
@@ -141,10 +279,10 @@ export function runAssistantOrchestrator({
           questionEvidence.missingInformation,
 
         clarifyingQuestion:
-          reasoningDecision.question,
+          selectedClarificationQuestion,
 
         reason:
-          reasoningDecision.reason,
+          selectedClarificationReason,
       },
     };
   }
@@ -158,12 +296,14 @@ export function runAssistantOrchestrator({
     );
 
   return {
-    success: true,
+    success:
+      true,
 
     response,
 
     reasoning: {
-      mode: "answer",
+      mode:
+        "answer",
 
       status:
         reasoningReadiness.status,
@@ -195,7 +335,8 @@ export function runAssistantOrchestrator({
       clarifyingQuestion:
         questionEvidence.clarifyingQuestion,
 
-      reason: null,
+      reason:
+        null,
     },
   };
 }

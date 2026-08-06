@@ -13,6 +13,10 @@ import { HealthPatternData } from "@/lib/health-intelligence/engines/health-patt
 import { HealthEvidenceData } from "@/lib/health-intelligence/engines/health-evidence.engine";
 import { HealthPassportData } from "@/lib/health-intelligence/engines/health-passport.engine";
 
+import type {
+  WholeBodyClinicalKnowledgeModel,
+} from "@/lib/health-intelligence/models/whole-body-clinical-knowledge";
+
 export type HealthIntelligenceResult = {
   findings: ClinicalFinding[];
   priority: PatientPriorityResult;
@@ -26,5 +30,11 @@ export type HealthIntelligenceResult = {
   doctorBrief: EngineResult<DoctorBriefData>;
   timeline: EngineResult<HealthTimelineData>;
   intelligenceOverview: EngineResult<IntelligenceOverviewData>;
-  healthPassport: EngineResult<HealthPassportData>;
+    healthPassport:
+    EngineResult<
+      HealthPassportData
+    >;
+
+  wholeBodyKnowledge:
+    WholeBodyClinicalKnowledgeModel;
 };

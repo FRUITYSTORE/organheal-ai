@@ -13,11 +13,22 @@ import { HealthIntelligenceResult } from "@/lib/health-intelligence/models/healt
 import { detectHealthPatterns } from "@/lib/health-intelligence/engines/health-pattern.engine";
 import { buildHealthEvidence } from "@/lib/health-intelligence/engines/health-evidence.engine";
 import { buildHealthPassport } from "@/lib/health-intelligence/engines/health-passport.engine";
+import {
+  buildWholeBodyClinicalKnowledge,
+} from "@/lib/health-intelligence/builders/whole-body-clinical-knowledge.builder";
 
 export function buildHealthIntelligence(
   patient: PatientSummary
 ): HealthIntelligenceResult {
-  const findings = buildClinicalFindings(patient);
+    const findings =
+    buildClinicalFindings(
+      patient
+    );
+
+  const wholeBodyKnowledge =
+    buildWholeBodyClinicalKnowledge(
+      patient
+    );
 
   const priority = calculatePatientPriority(patient.assessments);
 
@@ -94,7 +105,8 @@ const evidence = buildHealthEvidence({
   patterns,
   evidence,
   doctorBrief,
-  intelligenceOverview,
+    intelligenceOverview,
   healthPassport,
+  wholeBodyKnowledge,
 };
 }
