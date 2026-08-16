@@ -1,10 +1,16 @@
 "use client";
 
-import { type FormEvent, useEffect, useMemo, useState } from "react";
+import {
+  FormEvent,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import Link from "next/link";
 import { getHealthContext } from "@/lib/getHealthContext";
 import { supabase } from "@/lib/supabase";
 import PageBackActions from "../components/PageBackActions";
+import VoiceInputButton from "../components/voice/VoiceInputButton";
 import type {
   AssistantResponseHealthContext,
 } from "@/lib/health-intelligence/application/assistant-response/assistant-response.types";
@@ -374,11 +380,11 @@ const result =
         }
 
         .assistantCommandPage .assistantInputForm {
-          display: grid;
-          grid-template-columns: 1fr auto;
-          gap: 10px;
-          align-items: center;
-        }
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 10px;
+  align-items: center;
+}
 
         .assistantCommandPage .assistantInputForm input {
           width: 100%;
@@ -425,10 +431,14 @@ const result =
           border-color: rgba(20, 184, 166, 0.5);
           color: #0f766e;
         }
-
+        
         @media (max-width: 760px) {
           .assistantCommandPage .assistantInputForm {
-            grid-template-columns: 1fr;
+            grid-template-columns: 1fr auto;
+          }
+
+          .assistantCommandPage .assistantInputForm input {
+            grid-column: 1 / -1;
           }
 
           .assistantCommandPage .assistantMessage {
@@ -599,7 +609,10 @@ const result =
 
           <div className="ohDivider" />
 
-          <form className="assistantInputForm" onSubmit={handleSubmit}>
+          <form
+            className="assistantInputForm"
+            onSubmit={handleSubmit}
+          >
             <input
               type="text"
               placeholder={text(
@@ -607,11 +620,38 @@ const result =
                 "اسأل عن نتيجتك، نمط المخاطر، التقرير، أو ملخص الطبيب..."
               )}
               value={input}
-              onChange={(event) => setInput(event.target.value)}
+              onChange={(event) =>
+                setInput(event.target.value)
+              }
               disabled={isSending}
             />
 
-            <button className="primaryBtn" type="submit" disabled={isSending}>
+            <VoiceInputButton
+              language={language}
+              disabled={isSending}
+              onTranscript={(transcript) => {
+                setInput((current) => {
+                  const existing = current.trim();
+                  const normalizedTranscript = transcript.trim();
+
+                  if (!normalizedTranscript) {
+                    return current;
+                  }
+
+                  if (!existing) {
+                    return normalizedTranscript;
+                  }
+
+                  return `${existing} ${normalizedTranscript}`;
+                });
+              }}
+            />
+
+            <button
+              className="primaryBtn"
+              type="submit"
+              disabled={isSending || !input.trim()}
+            >
               {isSending ? "..." : text("Send", "إرسال")}
             </button>
           </form>
