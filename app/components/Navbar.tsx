@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import LanguageToggle from "./LanguageToggle";
+import NotificationBell from "./notifications/NotificationBell";
 
 type Language = "en" | "ar";
 
@@ -279,9 +280,21 @@ export default function Navbar() {
               )}
             </div>
 
+                        <NotificationBell
+              isArabic={
+                isArabic
+              }
+            />
+
             <LanguageToggle />
 
-            <button type="button" className="navLogoutBtn" onClick={signOut}>
+            <button
+              type="button"
+              className="navLogoutBtn"
+              onClick={
+                signOut
+              }
+            >
               {labels.signOut}
             </button>
           </>
