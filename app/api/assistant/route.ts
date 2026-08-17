@@ -1,20 +1,15 @@
-import {
-  NextResponse,
-} from "next/server";
+import { NextResponse } from "next/server";
 
-import {
-  authenticateApiRequest,
-} from "@/lib/api/api-auth";
+import { authenticateApiRequest } from "@/lib/api/api-auth";
 
-import {
-  createApiRequestId,
-  logApiError,
-} from "@/lib/api/api-logger";
+import { createApiRequestId, logApiError } from "@/lib/api/api-logger";
 
 import {
   runAssistantOrchestrator,
   type AssistantOrchestratorLanguage,
 } from "@/lib/health-intelligence/application/assistant-orchestrator.service";
+
+import { buildAssistantResponseContract } from "@/lib/health-intelligence/application/assistant-response-contract.service";
 
 import type {
   AssistantResponseConversationMessage,
@@ -27,70 +22,41 @@ type AssistantRequestBody = {
   conversation?: unknown;
 };
 
-export async function POST(
-  request: Request
-) {
-  const requestId =
-    createApiRequestId();
+export async function POST(request: Request) {
+  const requestId = createApiRequestId();
 
   try {
-    const body =
-      (await request.json()) as
-        AssistantRequestBody;
+    const body = (await request.json()) as AssistantRequestBody;
 
-    const {
-      message,
-      language = "en",
-      conversation,
-    } = body;
+    const { message, language = "en", conversation } = body;
 
-    if (
-      typeof message !== "string" ||
-      !message.trim()
-    ) {
+    if (typeof message !== "string" || !message.trim()) {
       return NextResponse.json(
         {
-          error:
-            "Message is required",
+          error: "Message is required",
 
           requestId,
         },
         {
-          status:
-            400,
+          status: 400,
 
           headers: {
-            "x-request-id":
-              requestId,
+            "x-request-id": requestId,
           },
-        }
+        },
       );
     }
 
-    const normalizedLanguage:
-      AssistantOrchestratorLanguage =
-        language === "ar"
-          ? "ar"
-          : "en";
+    const normalizedLanguage: AssistantOrchestratorLanguage =
+      language === "ar" ? "ar" : "en";
 
-    const normalizedConversation =
-      Array.isArray(
-        conversation
-      )
-        ? (
-            conversation as
-              AssistantResponseConversationMessage[]
-          )
-        : [];
+    const normalizedConversation = Array.isArray(conversation)
+      ? (conversation as AssistantResponseConversationMessage[])
+      : [];
 
-    let healthContext:
-      AssistantResponseHealthContext | null =
-        null;
+    let healthContext: AssistantResponseHealthContext | null = null;
 
-    const authorizationHeader =
-      request.headers.get(
-        "authorization"
-      );
+    const authorizationHeader = request.headers.get("authorization");
 
     /*
      * Authentication is optional for the public
@@ -99,107 +65,75 @@ export async function POST(
      * Authenticated requests rebuild the user's health
      * context securely from server-side data.
      */
-    if (
-      authorizationHeader?.startsWith(
-        "Bearer "
-      )
-    ) {
-      const authentication =
-        await authenticateApiRequest(
-          request
-        );
+    if (authorizationHeader?.startsWith("Bearer ")) {
+      const authentication = await authenticateApiRequest(request);
 
       if (!authentication.success) {
         return NextResponse.json(
           {
-            error:
-              authentication.error,
+            error: authentication.error,
 
             requestId,
           },
           {
-            status:
-              authentication.status,
+            status: authentication.status,
 
             headers: {
-              "x-request-id":
-                requestId,
+              "x-request-id": requestId,
             },
-          }
+          },
         );
       }
 
-      const {
-        buildAuthenticatedAssistantContext,
-      } =
-        await import(
-          "@/lib/health-intelligence/application/authenticated-assistant-context.service"
-        );
+      const { buildAuthenticatedAssistantContext } =
+        await import("@/lib/health-intelligence/application/authenticated-assistant-context.service");
 
-      healthContext =
-        await buildAuthenticatedAssistantContext({
-          userId:
-            authentication.user.id,
+      healthContext = await buildAuthenticatedAssistantContext({
+        userId: authentication.user.id,
 
-          language:
-            normalizedLanguage,
+        language: normalizedLanguage,
 
-          client:
-            authentication.client,
-        });
+        client: authentication.client,
+      });
     }
 
-    const result =
-      runAssistantOrchestrator({
-        message:
-          message.trim(),
+    const orchestratorResult = runAssistantOrchestrator({
+      message: message.trim(),
 
-        language:
-          normalizedLanguage,
+      language: normalizedLanguage,
 
-        healthContext,
+      healthContext,
 
-        conversation:
-          normalizedConversation,
-      });
+      conversation: normalizedConversation,
+    });
 
-    return NextResponse.json(
-      result,
-      {
-        headers: {
-          "x-request-id":
-            requestId,
-        },
-      }
-    );
+    const publicContract = buildAssistantResponseContract(orchestratorResult);
+
+    return NextResponse.json(publicContract, {
+      headers: {
+        "x-request-id": requestId,
+      },
+    });
   } catch (error) {
-    logApiError(
-      "assistant.request_failed",
-      error,
-      {
-        route:
-          "/api/assistant",
+    logApiError("assistant.request_failed", error, {
+      route: "/api/assistant",
 
-        requestId,
-      }
-    );
+      requestId,
+    });
 
     return NextResponse.json(
       {
-        error:
-          "Server error",
+        error: "Server error",
 
         requestId,
       },
       {
-        status:
-          500,
+        status: 500,
 
         headers: {
-          "x-request-id":
-            requestId,
+          "x-request-id": requestId,
         },
-      }
+      },
     );
   }
 }

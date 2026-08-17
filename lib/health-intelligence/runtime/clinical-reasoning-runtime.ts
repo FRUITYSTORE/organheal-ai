@@ -1,6 +1,4 @@
-import type {
-  AssistantIntent,
-} from "@/lib/health-intelligence/application/assistant-intent/assistant-intent";
+import type { AssistantIntent } from "@/lib/health-intelligence/application/assistant-intent/assistant-intent";
 
 import {
   selectClinicalClarificationQuestion,
@@ -8,13 +6,33 @@ import {
   type ClinicalClarificationSelectionResult,
 } from "@/lib/health-intelligence/engines/clinical-clarification-selector.engine";
 
-import {
-  evaluateKnowledgeEvidenceWeights,
-} from "@/lib/health-intelligence/engines/clinical-evidence-weight.engine";
+import { evaluateKnowledgeEvidenceWeights } from "@/lib/health-intelligence/engines/clinical-evidence-weight.engine";
 
-import type {
-  ClinicalEvidenceWeightCollection,
-} from "@/lib/health-intelligence/models/clinical-evidence-weight";
+import { buildClinicalHypothesisFoundation } from "@/lib/health-intelligence/engines/clinical-hypothesis.engine";
+
+import {
+  rankClinicalHypotheses,
+  type ClinicalHypothesisRankingResult,
+} from "@/lib/health-intelligence/engines/clinical-hypothesis-ranking.engine";
+
+import {
+  resolveClinicalConflicts,
+  type ClinicalConflictResolutionResult,
+} from "@/lib/health-intelligence/engines/clinical-conflict-resolution.engine";
+
+import {
+  calibrateClinicalConfidence,
+  type ClinicalConfidenceCalibrationResult,
+} from "@/lib/health-intelligence/engines/clinical-confidence-calibration.engine";
+
+import {
+  buildClinicalDecisionTrace,
+  type ClinicalDecisionTrace,
+} from "@/lib/health-intelligence/engines/clinical-decision-trace.engine";
+
+import type { ClinicalEvidenceWeightCollection } from "@/lib/health-intelligence/models/clinical-evidence-weight";
+
+import type { ClinicalHypothesisCollection } from "@/lib/health-intelligence/models/clinical-hypothesis";
 
 import type {
   ClinicalConfidenceProfile,
@@ -30,114 +48,89 @@ import type {
 } from "@/lib/health-intelligence/models/whole-body-clinical-knowledge";
 
 export type ClinicalReasoningMode =
-  | "clarification"
-  | "provisional"
-  | "evidence-based";
+  "clarification" | "provisional" | "evidence-based";
 
 export type ClinicalReasoningRuntimeInput = {
-  question:
-    string;
+  question: string;
 
-  intent:
-    AssistantIntent;
+  intent: AssistantIntent;
 
-  language?:
-    ClinicalClarificationLanguage;
+  language?: ClinicalClarificationLanguage;
 
-  knowledge:
-    WholeBodyClinicalKnowledgeModel;
+  knowledge: WholeBodyClinicalKnowledgeModel;
 
-  resolvedGapTypes?:
-    ClinicalEvidenceGapType[];
+  resolvedGapTypes?: ClinicalEvidenceGapType[];
 
-  previouslyAskedQuestionIds?:
-    string[];
+  previouslyAskedQuestionIds?: string[];
 };
 
 export type ClinicalReasoningUncertainty = {
-  hasUncertainty:
-    boolean;
+  hasUncertainty: boolean;
 
-  gaps:
-    ClinicalEvidenceGap[];
+  gaps: ClinicalEvidenceGap[];
 
-  highImpactMissingInformation:
-    string[];
+  highImpactMissingInformation: string[];
 
-  unresolvedDomains:
-    WholeBodyHealthDomain[];
+  unresolvedDomains: WholeBodyHealthDomain[];
 
-  explanation:
-    string | null;
+  explanation: string | null;
 };
 
 export type ClinicalReasoningRuntime = {
-  question:
-    string;
+  question: string;
 
-  intent:
-    AssistantIntent;
+  intent: AssistantIntent;
 
-  language:
-    ClinicalClarificationLanguage;
+  language: ClinicalClarificationLanguage;
 
-  mode:
-    ClinicalReasoningMode;
+  mode: ClinicalReasoningMode;
 
-  reasoningPermission:
-    ClinicalReasoningPermission;
+  reasoningPermission: ClinicalReasoningPermission;
 
-  knowledge:
-    WholeBodyClinicalKnowledgeModel;
+  knowledge: WholeBodyClinicalKnowledgeModel;
 
-  evidenceSufficiency:
-    ClinicalEvidenceSufficiencyResult | null;
+  evidenceSufficiency: ClinicalEvidenceSufficiencyResult | null;
 
-  evidenceWeights:
-    ClinicalEvidenceWeightCollection;
+  evidenceWeights: ClinicalEvidenceWeightCollection;
 
-  clarification:
-    ClinicalClarificationSelectionResult;
+  hypothesisCollection: ClinicalHypothesisCollection;
 
-  confidence:
-    ClinicalConfidenceProfile | null;
+  hypothesisRanking: ClinicalHypothesisRankingResult;
 
-  uncertainty:
-    ClinicalReasoningUncertainty;
+  conflictResolution: ClinicalConflictResolutionResult;
 
-  canAnswer:
-    boolean;
+  confidenceCalibration: ClinicalConfidenceCalibrationResult;
 
-  canProvideProvisionalAnswer:
-    boolean;
+  decisionTrace: ClinicalDecisionTrace;
 
-  requiresClarification:
-    boolean;
+  clarification: ClinicalClarificationSelectionResult;
 
-  generatedAt:
-    string;
+  confidence: ClinicalConfidenceProfile | null;
+
+  uncertainty: ClinicalReasoningUncertainty;
+
+  canAnswer: boolean;
+
+  canProvideProvisionalAnswer: boolean;
+
+  requiresClarification: boolean;
+
+  generatedAt: string;
 };
 
 function resolveReasoningMode(
-  sufficiency:
-    ClinicalEvidenceSufficiencyResult | null,
-  clarification:
-    ClinicalClarificationSelectionResult
+  sufficiency: ClinicalEvidenceSufficiencyResult | null,
+  clarification: ClinicalClarificationSelectionResult,
 ): ClinicalReasoningMode {
   if (
     !sufficiency ||
-    sufficiency.reasoningPermission ===
-      "clarify-first" ||
-    clarification.question !==
-      null
+    sufficiency.reasoningPermission === "clarify-first" ||
+    clarification.question !== null
   ) {
     return "clarification";
   }
 
-  if (
-    sufficiency.reasoningPermission ===
-    "provisional-answer"
-  ) {
+  if (sufficiency.reasoningPermission === "provisional-answer") {
     return "provisional";
   }
 
@@ -145,43 +138,27 @@ function resolveReasoningMode(
 }
 
 function resolveReasoningPermission(
-  sufficiency:
-    ClinicalEvidenceSufficiencyResult | null
+  sufficiency: ClinicalEvidenceSufficiencyResult | null,
 ): ClinicalReasoningPermission {
-  return (
-    sufficiency
-      ?.reasoningPermission ??
-    "clarify-first"
-  );
+  return sufficiency?.reasoningPermission ?? "clarify-first";
 }
 
 function buildUncertainty(
-  knowledge:
-    WholeBodyClinicalKnowledgeModel,
-  sufficiency:
-    ClinicalEvidenceSufficiencyResult | null
+  knowledge: WholeBodyClinicalKnowledgeModel,
+  sufficiency: ClinicalEvidenceSufficiencyResult | null,
 ): ClinicalReasoningUncertainty {
-  const gaps =
-    sufficiency?.gaps ??
-    [];
+  const gaps = sufficiency?.gaps ?? [];
 
   const highImpactMissingInformation =
-    sufficiency
-      ?.highImpactMissingInformation ??
-    [];
+    sufficiency?.highImpactMissingInformation ?? [];
 
-  const unresolvedDomains =
-    knowledge
-      .unresolvedDomains;
+  const unresolvedDomains = knowledge.unresolvedDomains;
 
   const hasUncertainty =
     !sufficiency ||
-    sufficiency.status !==
-      "sufficient" ||
-    gaps.length >
-      0 ||
-    unresolvedDomains.length >
-      0;
+    sufficiency.status !== "sufficient" ||
+    gaps.length > 0 ||
+    unresolvedDomains.length > 0;
 
   return {
     hasUncertainty,
@@ -192,10 +169,9 @@ function buildUncertainty(
 
     unresolvedDomains,
 
-    explanation:
-      hasUncertainty
-        ? "The available evidence contains unresolved gaps that may change the interpretation, confidence, risk priority, or next action."
-        : null,
+    explanation: hasUncertainty
+      ? "The available evidence contains unresolved gaps that may change the interpretation, confidence, risk priority, or next action."
+      : null,
   };
 }
 
@@ -206,63 +182,66 @@ export function buildClinicalReasoningRuntime({
   knowledge,
   resolvedGapTypes = [],
   previouslyAskedQuestionIds = [],
-}: ClinicalReasoningRuntimeInput):
-  ClinicalReasoningRuntime {
-  const normalizedQuestion =
-    question.trim();
+}: ClinicalReasoningRuntimeInput): ClinicalReasoningRuntime {
+  const normalizedQuestion = question.trim();
 
-  const evidenceSufficiency =
-    knowledge
-      .evidenceSufficiency;
+  const evidenceSufficiency = knowledge.evidenceSufficiency;
 
-  const evidenceWeights =
-    evaluateKnowledgeEvidenceWeights(
-      knowledge
-    );
+  const evidenceWeights = evaluateKnowledgeEvidenceWeights(knowledge);
 
-  const clarification =
-    selectClinicalClarificationQuestion({
-      knowledge,
+  const hypothesisCollection = buildClinicalHypothesisFoundation({
+    knowledge,
 
-      language,
+    evidenceWeights,
+  });
 
-      resolvedGapTypes,
+  const hypothesisRanking = rankClinicalHypotheses({
+    collection: hypothesisCollection,
+  });
 
-      previouslyAskedQuestionIds,
-    });
+  const conflictResolution = resolveClinicalConflicts({
+    ranking: hypothesisRanking,
+  });
 
-  const mode =
-    resolveReasoningMode(
-      evidenceSufficiency,
-      clarification
-    );
+  const confidenceCalibration = calibrateClinicalConfidence({
+    ranking: hypothesisRanking,
 
-  const reasoningPermission =
-    resolveReasoningPermission(
-      evidenceSufficiency
-    );
+    conflictResolution,
+  });
+
+  const decisionTrace = buildClinicalDecisionTrace({
+    ranking: hypothesisRanking,
+
+    conflictResolution,
+
+    confidenceCalibration,
+  });
+
+  const clarification = selectClinicalClarificationQuestion({
+    knowledge,
+
+    language,
+
+    resolvedGapTypes,
+
+    previouslyAskedQuestionIds,
+  });
+
+  const mode = resolveReasoningMode(evidenceSufficiency, clarification);
+
+  const reasoningPermission = resolveReasoningPermission(evidenceSufficiency);
 
   const requiresClarification =
-    mode ===
-      "clarification" &&
-    clarification.question !==
-      null;
+    mode === "clarification" && clarification.question !== null;
 
-  const canProvideProvisionalAnswer =
-    Boolean(
-      evidenceSufficiency
-        ?.canProvideProvisionalInterpretation
-    );
+  const canProvideProvisionalAnswer = Boolean(
+    evidenceSufficiency?.canProvideProvisionalInterpretation,
+  );
 
-  const canAnswer =
-    mode ===
-      "evidence-based" ||
-    mode ===
-      "provisional";
+  const canAnswer = mode === "evidence-based" || mode === "provisional";
 
   return {
-    question:
-      normalizedQuestion,
+    question: normalizedQuestion,
 
     intent,
 
@@ -278,18 +257,21 @@ export function buildClinicalReasoningRuntime({
 
     evidenceWeights,
 
+    hypothesisCollection,
+
+    hypothesisRanking,
+
+    conflictResolution,
+
+    confidenceCalibration,
+
+    decisionTrace,
+
     clarification,
 
-    confidence:
-      evidenceSufficiency
-        ?.confidence ??
-      null,
+    confidence: evidenceSufficiency?.confidence ?? null,
 
-    uncertainty:
-      buildUncertainty(
-        knowledge,
-        evidenceSufficiency
-      ),
+    uncertainty: buildUncertainty(knowledge, evidenceSufficiency),
 
     canAnswer,
 
@@ -297,8 +279,6 @@ export function buildClinicalReasoningRuntime({
 
     requiresClarification,
 
-    generatedAt:
-      new Date()
-        .toISOString(),
+    generatedAt: new Date().toISOString(),
   };
 }

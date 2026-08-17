@@ -4,9 +4,7 @@ import {
   decideReasoningPath,
 } from "@/lib/health-intelligence/application/assistant-decision.service";
 
-import {
-  buildConversationAwareMessage,
-} from "@/lib/health-intelligence/application/assistant-conversation.service";
+import { buildConversationAwareMessage } from "@/lib/health-intelligence/application/assistant-conversation.service";
 
 import {
   buildPersonalizedResponse,
@@ -14,83 +12,66 @@ import {
   type AssistantResponseHealthContext,
 } from "@/lib/health-intelligence/application/assistant-response.service";
 
-import {
-  detectAssistantIntent,
-} from "@/lib/health-intelligence/application/assistant-intent/assistant-intent";
+import { detectAssistantIntent } from "@/lib/health-intelligence/application/assistant-intent/assistant-intent";
 
-import {
-  runClinicalReasoningLoop,
-} from "@/lib/health-intelligence/runtime/clinical-reasoning-loop";
+import { runClinicalReasoningLoop } from "@/lib/health-intelligence/runtime/clinical-reasoning-loop";
 
-export type AssistantOrchestratorLanguage =
-  | "en"
-  | "ar";
+import { composeClinicalResponse } from "@/lib/health-intelligence/application/clinical-response-composer.service";
+
+export type AssistantOrchestratorLanguage = "en" | "ar";
 
 export type AssistantOrchestratorInput = {
-  message:
-    string;
+  message: string;
 
-  language:
-    AssistantOrchestratorLanguage;
+  language: AssistantOrchestratorLanguage;
 
-  healthContext:
-    | AssistantResponseHealthContext
-    | null;
+  healthContext: AssistantResponseHealthContext | null;
 
-  conversation:
-    AssistantResponseConversationMessage[];
+  conversation: AssistantResponseConversationMessage[];
 };
 
 export type AssistantOrchestratorReasoning = {
-  mode:
-    | "clarify"
-    | "answer";
+  mode: "clarify" | "answer";
 
-  status:
-    string;
+  status: string;
 
-  confidence:
-    unknown;
+  confidence: unknown;
 
-  availableEvidence:
-    unknown;
+  availableEvidence: unknown;
 
-  missingInformation:
-    unknown;
+  missingInformation: unknown;
 
-  questionIntent:
-    unknown;
+  questionIntent: unknown;
 
-  questionEvidenceStatus:
-    unknown;
+  questionEvidenceStatus: unknown;
 
-  questionEvidenceConfidence:
-    unknown;
+  questionEvidenceConfidence: unknown;
 
-  questionAvailableEvidence:
-    unknown;
+  questionAvailableEvidence: unknown;
 
-  questionMissingInformation:
-    unknown;
+  questionMissingInformation: unknown;
 
-  clarifyingQuestion:
-    | string
-    | null;
+  clinicalHypothesisRanking: unknown;
 
-  reason:
-    | string
-    | null;
+  clinicalConflictResolution: unknown;
+
+  clinicalConfidenceCalibration: unknown;
+
+  clinicalDecisionTrace?: unknown;
+
+  clinicalNarrative?: unknown;
+
+  clarifyingQuestion: string | null;
+
+  reason: string | null;
 };
 
 export type AssistantOrchestratorResult = {
-  success:
-    true;
+  success: true;
 
-  response:
-    string;
+  response: string;
 
-  reasoning:
-    AssistantOrchestratorReasoning;
+  reasoning: AssistantOrchestratorReasoning;
 };
 
 export function runAssistantOrchestrator({
@@ -98,73 +79,61 @@ export function runAssistantOrchestrator({
   language,
   healthContext,
   conversation,
-}: AssistantOrchestratorInput):
-  AssistantOrchestratorResult {
-  const conversationAwareMessage =
-    buildConversationAwareMessage(
-      message.trim(),
-      conversation
-    );
+}: AssistantOrchestratorInput): AssistantOrchestratorResult {
+  const conversationAwareMessage = buildConversationAwareMessage(
+    message.trim(),
+    conversation,
+  );
 
-  const detectedIntent =
-    detectAssistantIntent(
-      conversationAwareMessage
-    );
+  const detectedIntent = detectAssistantIntent(conversationAwareMessage);
 
-   const clinicalReasoningLoop =
-    healthContext
-      ?.wholeBodyKnowledge
-      ? runClinicalReasoningLoop({
-          question:
-            conversationAwareMessage,
+  const clinicalReasoningLoop = healthContext?.wholeBodyKnowledge
+    ? runClinicalReasoningLoop({
+        question: conversationAwareMessage,
 
-          intent:
-            detectedIntent.intent,
+        intent: detectedIntent.intent,
 
-          language,
+        language,
 
-          knowledge:
-            healthContext
-              .wholeBodyKnowledge,
+        knowledge: healthContext.wholeBodyKnowledge,
 
-          conversation,
+        conversation,
 
-          /*
-           * The loop is now the authoritative runtime entry
-           * point inside the assistant request pipeline.
-           *
-           * Persistent or reconstructed reasoning state will
-           * be supplied in the next scoped integration step.
-           */
-          previousState:
-            null,
-        })
-      : null;
+        /*
+         * The loop is now the authoritative runtime entry
+         * point inside the assistant request pipeline.
+         *
+         * Persistent or reconstructed reasoning state will
+         * be supplied in the next scoped integration step.
+         */
+        previousState: null,
+      })
+    : null;
 
-  const clinicalReasoningRuntime =
-    clinicalReasoningLoop
-      ?.runtime ??
-    null;
+  const clinicalReasoningRuntime = clinicalReasoningLoop?.runtime ?? null;
 
-  const reasoningReadiness =
-    assessReasoningReadiness(
-      healthContext,
-      language
-    );
+  const clinicalResponseComposition = clinicalReasoningRuntime
+    ? composeClinicalResponse({
+        language,
 
-  const questionEvidence =
-    assessQuestionEvidence(
-      conversationAwareMessage,
-      healthContext,
-      language,
-      detectedIntent.intent
-    );
+        ranking: clinicalReasoningRuntime.hypothesisRanking,
 
-  const reasoningDecision =
-    decideReasoningPath(
-      questionEvidence,
-      language
-    );
+        conflictResolution: clinicalReasoningRuntime.conflictResolution,
+
+        confidenceCalibration: clinicalReasoningRuntime.confidenceCalibration,
+      })
+    : null;
+
+  const reasoningReadiness = assessReasoningReadiness(healthContext, language);
+
+  const questionEvidence = assessQuestionEvidence(
+    conversationAwareMessage,
+    healthContext,
+    language,
+    detectedIntent.intent,
+  );
+
+  const reasoningDecision = decideReasoningPath(questionEvidence, language);
 
   /*
    * Controlled whole-body reasoning authority:
@@ -179,164 +148,145 @@ export function runAssistantOrchestrator({
    * are not forced into clarification by this migration step.
    */
   const clinicalClarification =
-    clinicalReasoningRuntime
-      ?.clarification
-      .question ??
-    null;
+    clinicalReasoningRuntime?.clarification.question ?? null;
 
   const clinicalIntentCanLeadClarification =
-    detectedIntent.intent ===
-      "cause-reasoning" ||
-    detectedIntent.intent ===
-      "risk";
+    detectedIntent.intent === "cause-reasoning" ||
+    detectedIntent.intent === "risk";
 
-  const clinicalRuntimeRequestsClarification =
-    Boolean(
-      clinicalIntentCanLeadClarification &&
-        clinicalReasoningRuntime
-          ?.requiresClarification &&
-        clinicalClarification
-    );
+  const clinicalRuntimeOwnsClarification = Boolean(
+    clinicalIntentCanLeadClarification &&
+    clinicalReasoningRuntime?.requiresClarification &&
+    clinicalClarification,
+  );
 
-  const legacyRequestsClarification =
-    reasoningDecision.mode ===
-      "clarify" &&
-    Boolean(
-      reasoningDecision.question
-    );
+  const clinicalRuntimeRequestsClarification = clinicalRuntimeOwnsClarification;
+
+  const legacyRequestsClarification = Boolean(
+    !clinicalRuntimeOwnsClarification &&
+    reasoningDecision.mode === "clarify" &&
+    reasoningDecision.question,
+  );
 
   const shouldClarify =
-    clinicalRuntimeRequestsClarification ||
-    legacyRequestsClarification;
+    clinicalRuntimeRequestsClarification || legacyRequestsClarification;
 
-  const selectedClarificationQuestion =
-    clinicalRuntimeRequestsClarification
-      ? clinicalClarification
-          ?.question ??
-        null
-      : legacyRequestsClarification
-        ? clinicalClarification
-            ?.question ??
-          reasoningDecision.question
-        : null;
+  const selectedClarificationQuestion = clinicalRuntimeRequestsClarification
+    ? (clinicalClarification?.question ?? null)
+    : legacyRequestsClarification
+      ? reasoningDecision.question
+      : null;
 
-  const selectedClarificationReason =
-    clinicalRuntimeRequestsClarification
-      ? clinicalReasoningRuntime
-          ?.clarification
-          .reason ??
-        clinicalClarification
-          ?.reason ??
-        null
-      : legacyRequestsClarification &&
-          clinicalClarification
-        ? clinicalReasoningRuntime
-            ?.clarification
-            .reason ??
-          clinicalClarification.reason
-        : reasoningDecision.reason;
+  const selectedClarificationReason = clinicalRuntimeRequestsClarification
+    ? (clinicalReasoningRuntime?.clarification.reason ??
+      clinicalClarification?.reason ??
+      null)
+    : legacyRequestsClarification
+      ? reasoningDecision.reason
+      : null;
 
-  if (
-    shouldClarify &&
-    selectedClarificationQuestion
-  ) {
+  if (shouldClarify && selectedClarificationQuestion) {
     return {
-      success:
-        true,
+      success: true,
 
-      response:
-        selectedClarificationQuestion,
+      response: selectedClarificationQuestion,
 
       reasoning: {
-        mode:
-          "clarify",
+        mode: "clarify",
 
-        status:
-          reasoningReadiness.status,
+        status: reasoningReadiness.status,
 
-        confidence:
-          reasoningReadiness.confidence,
+        confidence: reasoningReadiness.confidence,
 
-        availableEvidence:
-          reasoningReadiness.availableEvidence,
+        availableEvidence: reasoningReadiness.availableEvidence,
 
-        missingInformation:
-          reasoningReadiness.missingInformation,
+        missingInformation: reasoningReadiness.missingInformation,
 
-        questionIntent:
-          questionEvidence.intent,
+        questionIntent: questionEvidence.intent,
 
-        questionEvidenceStatus:
-          questionEvidence.status,
+        questionEvidenceStatus: questionEvidence.status,
 
-        questionEvidenceConfidence:
-          questionEvidence.confidence,
+        questionEvidenceConfidence: questionEvidence.confidence,
 
-        questionAvailableEvidence:
-          questionEvidence.availableEvidence,
+        questionAvailableEvidence: questionEvidence.availableEvidence,
 
-        questionMissingInformation:
-          questionEvidence.missingInformation,
+        questionMissingInformation: questionEvidence.missingInformation,
 
-        clarifyingQuestion:
-          selectedClarificationQuestion,
+        clinicalHypothesisRanking:
+          clinicalReasoningRuntime?.hypothesisRanking ?? null,
 
-        reason:
-          selectedClarificationReason,
+        clinicalConflictResolution:
+          clinicalReasoningRuntime?.conflictResolution ?? null,
+
+        clinicalConfidenceCalibration:
+          clinicalReasoningRuntime?.confidenceCalibration ?? null,
+
+        clinicalDecisionTrace: clinicalReasoningRuntime?.decisionTrace ?? null,
+
+        clinicalNarrative: clinicalResponseComposition?.response ?? null,
+
+        clarifyingQuestion: selectedClarificationQuestion,
+
+        reason: selectedClarificationReason,
       },
     };
   }
 
+  const personalizedResponse = buildPersonalizedResponse(
+    conversationAwareMessage,
+    language,
+    healthContext,
+    conversation,
+  );
+
   const response =
-    buildPersonalizedResponse(
-      conversationAwareMessage,
-      language,
-      healthContext,
-      conversation
-    );
+    clinicalResponseComposition?.available &&
+    clinicalResponseComposition.response
+      ? clinicalResponseComposition.response
+      : personalizedResponse;
 
   return {
-    success:
-      true,
+    success: true,
 
     response,
 
     reasoning: {
-      mode:
-        "answer",
+      mode: "answer",
 
-      status:
-        reasoningReadiness.status,
+      status: reasoningReadiness.status,
 
-      confidence:
-        reasoningReadiness.confidence,
+      confidence: reasoningReadiness.confidence,
 
-      availableEvidence:
-        reasoningReadiness.availableEvidence,
+      availableEvidence: reasoningReadiness.availableEvidence,
 
-      missingInformation:
-        reasoningReadiness.missingInformation,
+      missingInformation: reasoningReadiness.missingInformation,
 
-      questionIntent:
-        questionEvidence.intent,
+      questionIntent: questionEvidence.intent,
 
-      questionEvidenceStatus:
-        questionEvidence.status,
+      questionEvidenceStatus: questionEvidence.status,
 
-      questionEvidenceConfidence:
-        questionEvidence.confidence,
+      questionEvidenceConfidence: questionEvidence.confidence,
 
-      questionAvailableEvidence:
-        questionEvidence.availableEvidence,
+      questionAvailableEvidence: questionEvidence.availableEvidence,
 
-      questionMissingInformation:
-        questionEvidence.missingInformation,
+      questionMissingInformation: questionEvidence.missingInformation,
 
-      clarifyingQuestion:
-        questionEvidence.clarifyingQuestion,
+      clinicalHypothesisRanking:
+        clinicalReasoningRuntime?.hypothesisRanking ?? null,
 
-      reason:
-        null,
+      clinicalConflictResolution:
+        clinicalReasoningRuntime?.conflictResolution ?? null,
+
+      clinicalConfidenceCalibration:
+        clinicalReasoningRuntime?.confidenceCalibration ?? null,
+
+      clinicalDecisionTrace: clinicalReasoningRuntime?.decisionTrace ?? null,
+
+      clinicalNarrative: clinicalResponseComposition?.response ?? null,
+
+      clarifyingQuestion: questionEvidence.clarifyingQuestion,
+
+      reason: null,
     },
   };
 }
