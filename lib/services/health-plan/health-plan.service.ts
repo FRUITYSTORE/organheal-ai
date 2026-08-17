@@ -58,6 +58,8 @@ export async function getHealthPlanSummary(
       patient:
         patientSummary,
 
+      intelligence,
+
       language,
     });
 
