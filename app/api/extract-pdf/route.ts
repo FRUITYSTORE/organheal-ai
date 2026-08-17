@@ -1,4 +1,5 @@
 import {
+  after,
   NextResponse,
 } from "next/server";
 
@@ -9,7 +10,12 @@ import {
 import {
   createApiRequestId,
   logApiError,
+  logApiInfo,
 } from "@/lib/api/api-logger";
+
+import {
+  createBackgroundJobRuntime,
+} from "@/lib/jobs/background-job-runtime";
 
 import {
   BackgroundJobService,
@@ -376,7 +382,7 @@ export async function POST(
     const jobId =
       enqueueResult.jobId;
 
-    if (
+         if (
       enqueueResult.created
     ) {
       const {
@@ -405,6 +411,59 @@ export async function POST(
       ) {
         throw statusUpdateError;
       }
+
+      after(
+        async () => {
+          try {
+            const runtimeInstance =
+              createBackgroundJobRuntime();
+
+            const result =
+              await runtimeInstance
+                .runner
+                .runBatch(
+                  1
+                );
+
+            logApiInfo(
+              "extract_pdf.background_kick_completed",
+              {
+                route:
+                  "/api/extract-pdf",
+
+                requestId,
+
+                jobId,
+
+                reportId:
+                  resolvedReportId,
+
+                processedJobs:
+                  result.processedJobs,
+
+                queueWasEmpty:
+                  result.queueWasEmpty,
+              }
+            );
+          } catch (error) {
+            logApiError(
+              "extract_pdf.background_kick_failed",
+              error,
+              {
+                route:
+                  "/api/extract-pdf",
+
+                requestId,
+
+                jobId,
+
+                reportId:
+                  resolvedReportId,
+              }
+            );
+          }
+        }
+      );
     }
 
     return NextResponse.json(
