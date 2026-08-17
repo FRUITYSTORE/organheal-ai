@@ -20,8 +20,11 @@ export type CreateJobOptions<
   payload:
     TPayload;
 
-  maxAttempts?:
+   maxAttempts?:
     number;
+
+  availableAt?:
+    string | Date;
 };
 
 export function createJob<
@@ -30,7 +33,28 @@ export function createJob<
   type,
   payload,
   maxAttempts = 3,
+  availableAt,
 }: CreateJobOptions<TPayload>): BackgroundJob<TPayload> {
+  const createdAt =
+    new Date()
+      .toISOString();
+
+  const normalizedAvailableAt =
+    availableAt instanceof Date
+      ? availableAt
+          .toISOString()
+      : typeof availableAt ===
+          "string" &&
+        !Number.isNaN(
+          new Date(
+            availableAt
+          ).getTime()
+        )
+        ? new Date(
+            availableAt
+          ).toISOString()
+        : createdAt;
+
   return {
     id:
       randomUUID(),
@@ -47,8 +71,10 @@ export function createJob<
 
     maxAttempts,
 
-    createdAt:
-      new Date().toISOString(),
+        createdAt,
+
+    availableAt:
+      normalizedAvailableAt,
 
     startedAt:
       null,

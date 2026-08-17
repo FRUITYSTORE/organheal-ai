@@ -27,6 +27,10 @@ import {
 } from "@/lib/jobs/handlers/pdf-extraction.handler";
 
 import {
+  createFollowUpDeliveryHandler,
+} from "@/lib/jobs/handlers/follow-up-delivery.handler";
+
+import {
   JOB_TYPES,
 } from "@/lib/jobs/job-types";
 
@@ -52,9 +56,16 @@ export function createBackgroundJobRuntime(
   const dispatcher =
     new JobDispatcher();
 
-  dispatcher.register(
+   dispatcher.register(
     JOB_TYPES.PDF_EXTRACTION,
     createPdfExtractionHandler(
+      client
+    )
+  );
+
+    dispatcher.register(
+    JOB_TYPES.FOLLOW_UP_DELIVERY,
+    createFollowUpDeliveryHandler(
       client
     )
   );
@@ -70,9 +81,10 @@ export function createBackgroundJobRuntime(
       dispatcher
     );
 
-  const runner =
+    const runner =
     new DurableBackgroundJobRunner(
-      worker
+      worker,
+      repository
     );
 
   return {

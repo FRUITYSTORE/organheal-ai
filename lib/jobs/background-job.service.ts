@@ -2,6 +2,10 @@ import type {
   SupabaseClient,
 } from "@supabase/supabase-js";
 
+import type {
+  FollowUpDeliveryEnvelope,
+} from "@/lib/health-intelligence/application/follow-up-dispatch-adapter.service";
+
 import {
   createJob,
 } from "./job-factory";
@@ -21,6 +25,26 @@ import {
 import type {
   EnqueueBackgroundJobResult,
 } from "./background-job.repository";
+
+export type FollowUpDeliveryJobPayload = {
+  delivery:
+    NonNullable<
+      FollowUpDeliveryEnvelope[
+        "payload"
+      ]
+    >;
+
+  idempotencyKey:
+    string;
+
+  retryDelaysMinutes:
+    number[];
+
+  auditMetadata:
+    FollowUpDeliveryEnvelope[
+      "auditMetadata"
+    ];
+};
 
 export class BackgroundJobService {
   private readonly repository:
@@ -110,12 +134,136 @@ export class BackgroundJobService {
         maxAttempts,
       });
 
-    return this.repository
+        return this.repository
       .createReportJobOnce(
         userId,
         requestId,
         payload.reportId,
         job
       );
+  }
+
+    async enqueueFollowUpDelivery({
+    envelope,
+  }: {
+    envelope:
+      FollowUpDeliveryEnvelope;
+  }): Promise<
+    EnqueueBackgroundJobResult
+  > {
+    if (
+      !envelope.enqueue ||
+      envelope.status !==
+        "ready"
+    ) {
+      throw new Error(
+        "A ready follow-up delivery envelope is required."
+      );
+    }
+
+    if (
+      !envelope.userId ||
+      !envelope.userId.trim()
+    ) {
+      throw new Error(
+        "A valid user ID is required to enqueue follow-up delivery."
+      );
+    }
+
+    if (
+      !envelope.payload
+    ) {
+      throw new Error(
+        "A follow-up delivery payload is required."
+      );
+    }
+
+    if (
+      !envelope.availableAt ||
+      Number.isNaN(
+        new Date(
+          envelope.availableAt
+        ).getTime()
+      )
+    ) {
+      throw new Error(
+        "A valid follow-up delivery availability time is required."
+      );
+    }
+
+    if (
+      !envelope.idempotencyKey ||
+      !envelope
+        .idempotencyKey
+        .trim()
+    ) {
+      throw new Error(
+        "A follow-up delivery idempotency key is required."
+      );
+    }
+
+    if (
+      !Number.isInteger(
+        envelope.maxAttempts
+      ) ||
+      envelope.maxAttempts <=
+        0
+    ) {
+      throw new Error(
+        "Follow-up delivery max attempts must be greater than zero."
+      );
+    }
+
+    const payload:
+      FollowUpDeliveryJobPayload = {
+      delivery: {
+        ...envelope.payload,
+
+        userId:
+          envelope.userId,
+      },
+
+      idempotencyKey:
+        envelope.idempotencyKey,
+
+      retryDelaysMinutes: [
+        ...envelope
+          .retryDelaysMinutes,
+      ],
+
+      auditMetadata: {
+        ...envelope
+          .auditMetadata,
+      },
+    };
+
+    const job =
+      createJob({
+        type:
+          JOB_TYPES
+            .FOLLOW_UP_DELIVERY,
+
+        payload,
+
+        maxAttempts:
+          envelope.maxAttempts,
+
+        availableAt:
+          envelope.availableAt,
+      });
+
+       return this.repository
+      .createFollowUpJobOnce({
+        userId:
+          envelope.userId,
+
+        requestId:
+          envelope.requestId,
+
+        idempotencyKey:
+          envelope.idempotencyKey,
+
+        job,
+      });
   }
 }

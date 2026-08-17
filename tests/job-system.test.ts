@@ -88,6 +88,114 @@ describe(
   "Background job system",
   () => {
     it(
+      "supports the follow-up delivery job type",
+      () => {
+        const job =
+          createJob({
+            type:
+              JOB_TYPES
+                .FOLLOW_UP_DELIVERY,
+
+            payload: {
+              userId:
+                "user-follow-up",
+
+              channel:
+                "email",
+            },
+          });
+
+        expect(
+          job.type
+        ).toBe(
+          "follow-up-delivery"
+        );
+
+        expect(
+          job.status
+        ).toBe(
+          JOB_STATUS.PENDING
+        );
+
+        expect(
+          job.payload
+        ).toEqual({
+          userId:
+            "user-follow-up",
+
+          channel:
+            "email",
+        });
+      }
+    );
+
+    it(
+      "creates an immediately available job by default",
+      () => {
+        const job =
+          createJob({
+            type:
+              JOB_TYPES
+                .PDF_EXTRACTION,
+
+            payload: {
+              reportId:
+                100,
+            },
+          });
+
+        expect(
+          job.availableAt
+        ).toBe(
+          job.createdAt
+        );
+      }
+    );
+
+    it(
+      "creates a job with a scheduled availability time",
+      () => {
+        const availableAt =
+          "2026-08-09T18:00:00.000Z";
+
+        const job =
+          createJob({
+            type:
+              JOB_TYPES
+                .FOLLOW_UP_DELIVERY,
+
+            payload: {
+              userId:
+                "user-follow-up",
+
+              channel:
+                "email",
+            },
+
+            availableAt,
+          });
+
+        expect(
+          job.availableAt
+        ).toBe(
+          availableAt
+        );
+
+        expect(
+          job.createdAt
+        ).not.toBe(
+          availableAt
+        );
+
+        expect(
+          job.status
+        ).toBe(
+          JOB_STATUS.PENDING
+        );
+      }
+    );
+
+    it(
       "enqueues, peeks, dequeues, and clears jobs",
       async () => {
         const queue =

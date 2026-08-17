@@ -14,8 +14,11 @@ export const JOB_TYPES = {
   PATIENT_REPORT:
     "patient-report",
 
-  KNOWLEDGE_RECOMMENDATION:
+    KNOWLEDGE_RECOMMENDATION:
     "knowledge-recommendation",
+
+  FOLLOW_UP_DELIVERY:
+    "follow-up-delivery",
 } as const;
 
 export type JobType =
@@ -64,7 +67,17 @@ export type BackgroundJob<
   maxAttempts:
     number;
 
-  createdAt:
+    createdAt:
+    string;
+
+  /*
+   * Optional at the shared job-contract level to preserve
+   * compatibility with older callers and test fixtures.
+   *
+   * Jobs created through createJob() always receive a
+   * concrete availability timestamp.
+   */
+  availableAt?:
     string;
 
   startedAt:

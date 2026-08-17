@@ -57,8 +57,12 @@ export class BackgroundJobRepository {
         attempts:
           job.attempts,
 
-        max_attempts:
+                max_attempts:
           job.maxAttempts,
+
+        available_at:
+          job.availableAt ??
+          job.createdAt,
 
         created_at:
           job.createdAt,
@@ -135,6 +139,97 @@ export class BackgroundJobRepository {
     ) {
       throw new Error(
         "Background job enqueue RPC returned an invalid result."
+      );
+    }
+
+    return {
+      jobId:
+        result.job_id,
+
+      created:
+        result.created,
+    };
+  }
+
+    async createFollowUpJobOnce({
+    userId,
+    requestId,
+    idempotencyKey,
+    job,
+  }: {
+    userId:
+      string;
+
+    requestId:
+      string | null;
+
+    idempotencyKey:
+      string;
+
+    job:
+      BackgroundJob;
+  }): Promise<
+    EnqueueBackgroundJobResult
+  > {
+    const {
+      data,
+      error,
+    } = await this.client.rpc(
+      "enqueue_follow_up_delivery_once",
+      {
+        p_job_id:
+          job.id,
+
+        p_user_id:
+          userId,
+
+        p_request_id:
+          requestId,
+
+        p_payload:
+          job.payload,
+
+        p_idempotency_key:
+          idempotencyKey,
+
+        p_max_attempts:
+          job.maxAttempts,
+
+        p_available_at:
+          job.availableAt ??
+          job.createdAt,
+
+        p_created_at:
+          job.createdAt,
+      }
+    );
+
+    if (error) {
+      throw error;
+    }
+
+    const rows =
+      Array.isArray(data)
+        ? data
+        : data
+          ? [data]
+          : [];
+
+    const result =
+      rows[0] as
+        | EnqueueBackgroundJobRpcRow
+        | undefined;
+
+    if (
+      !result ||
+      typeof result.job_id !==
+        "string" ||
+      !result.job_id.trim() ||
+      typeof result.created !==
+        "boolean"
+    ) {
+      throw new Error(
+        "Follow-up delivery enqueue RPC returned an invalid result."
       );
     }
 
