@@ -125,11 +125,3 @@ drop policy if exists
   "Users can create their own background jobs"
 on public.background_jobs;
 
-create policy
-  "Users can create their own background jobs"
-on public.background_jobs
-for insert
-to authenticated
-with check (
-  auth.uid() = user_id
-);
