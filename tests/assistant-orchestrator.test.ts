@@ -88,6 +88,29 @@ function createReportHealthContext(): AssistantResponseHealthContext {
       nextBestAction: "Discuss the findings with the treating clinician.",
 
       riskLevel: "Moderate",
+                reportEvidence: [
+        {
+          marker:
+            "LDL",
+
+          value:
+            174,
+
+          unit:
+            "mg/dL",
+        },
+
+        {
+          marker:
+            "HbA1c",
+
+          value:
+            6.6,
+
+          unit:
+            "%",
+        },
+      ],
     },
   };
 }
@@ -276,7 +299,7 @@ describe("Assistant orchestrator dual reasoning", () => {
       mockedBuildPersonalizedResponse
     ).not.toHaveBeenCalled();
   });
-  
+
   it("uses the Arabic whole-body clarification question", () => {
     const result = runAssistantOrchestrator({
       message: "ما سبب النتيجة غير الطبيعية؟",

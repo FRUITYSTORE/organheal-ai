@@ -28,6 +28,54 @@ export function buildReportResponse({
   const latestReport =
     healthContext.latestReportContext;
   
+      const reportEvidence =
+    latestReport
+      ?.reportEvidence ??
+    [];
+
+  const prioritizedEvidence =
+    reportEvidence
+      .filter(
+        (item) =>
+          latestReport
+            ?.keyFindings
+            ?.toLocaleLowerCase()
+            .includes(
+              item.marker
+                .toLocaleLowerCase()
+            )
+      );
+
+  const evidenceToShow =
+    (
+      prioritizedEvidence.length >
+      0
+        ? prioritizedEvidence
+        : reportEvidence
+    )
+      .slice(
+        0,
+        5
+      );
+
+  const evidenceText =
+    evidenceToShow.length >
+    0
+      ? evidenceToShow
+          .map(
+            (
+              item,
+              index
+            ) =>
+              `${index + 1}. ${item.marker}: ${item.value}${item.unit ? ` ${item.unit}` : ""}`
+          )
+          .join(
+            "\n"
+          )
+      : isArabic
+        ? "لا توجد قيم مختبرية منظمة محفوظة لهذا التقرير."
+        : "No structured laboratory values are saved for this report.";
+
   const hasReportIntent =
   detectedIntent === "report" ||
   lowerMessage.includes("report") ||
@@ -101,6 +149,9 @@ export function buildReportResponse({
   أهم النتائج التي تستحق المناقشة:
   ${latestReport.keyFindings || "لا توجد نتائج رئيسية محفوظة حاليًا."}
   
+  القيم الدقيقة الداعمة من هذا التقرير:
+${evidenceText}
+
   التوصيات:
   ${latestReport.recommendations || "لا توجد توصيات محفوظة حاليًا."}
   
@@ -118,6 +169,9 @@ export function buildReportResponse({
   
   Key findings worth discussing:
   ${latestReport.keyFindings || "No key findings are currently saved."}
+
+  Exact supporting values from this report:
+  ${evidenceText}
   
   Recommendations:
   ${latestReport.recommendations || "No saved recommendations are currently available."}

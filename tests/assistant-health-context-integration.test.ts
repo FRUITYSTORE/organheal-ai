@@ -198,8 +198,21 @@ function createLatestReportContext():
     nextBestAction:
       "Continue the current health plan.",
 
-    riskLevel:
+        riskLevel:
       "Stable",
+
+    reportEvidence: [
+      {
+        marker:
+          "LDL",
+
+        value:
+          174,
+
+        unit:
+          "mg/dL",
+      },
+    ],
   };
 }
 

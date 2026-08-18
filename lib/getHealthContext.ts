@@ -24,6 +24,10 @@ import {
 } from "@/lib/repositories/insight.repository";
 
 import {
+  getMedicalReportMarkersByReportId,
+} from "@/lib/repositories/report-markers.repository";
+
+import {
   getReportsLibrary,
 } from "@/lib/services/reports/reports.service";
 
@@ -52,11 +56,21 @@ async function getLatestReportContext(
       return null;
     }
 
-    const insights =
-      await getHealthInsightsByReportId(
-        userId,
-        latestReport.reportId
-      );
+    const [
+      insights,
+      reportMarkers,
+    ] =
+      await Promise.all([
+        getHealthInsightsByReportId(
+          userId,
+          latestReport.reportId
+        ),
+
+        getMedicalReportMarkersByReportId(
+          userId,
+          latestReport.reportId
+        ),
+      ]);
 
     const latestInsight =
       insights[0] ?? null;
@@ -100,6 +114,20 @@ async function getLatestReportContext(
         latestInsight?.risk_level ||
         latestReport.riskLevel ||
         null,
+
+      reportEvidence:
+        reportMarkers.map(
+          (marker) => ({
+            marker:
+              marker.marker_name,
+
+            value:
+              marker.marker_value,
+
+            unit:
+              marker.marker_unit,
+          })
+        ),
     };
   } catch (error) {
     console.error(

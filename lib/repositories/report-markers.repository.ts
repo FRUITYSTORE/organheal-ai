@@ -12,6 +12,16 @@ const MEDICAL_REPORT_MARKERS_TABLE =
 const HISTORICAL_MARKERS_SELECT =
   "marker_name, marker_value, created_at";
 
+const REPORT_MARKERS_SELECT =
+  "marker_name, marker_value, marker_unit, created_at";
+
+export type ReportMedicalMarkerEvidence = {
+  marker_name: string;
+  marker_value: number;
+  marker_unit: string | null;
+  created_at: string;
+};
+
 export type MedicalReportMarkerInput = {
   userId:
     string;
@@ -130,4 +140,81 @@ export async function getHistoricalMedicalMarkers(
   return (
     data ?? []
   ) as HistoricalMedicalMarker[];
+}export async function getMedicalReportMarkersByReportId(
+  userId: string,
+  reportId: number,
+  client: SupabaseClient = supabase
+): Promise<ReportMedicalMarkerEvidence[]> {
+  const {
+    data,
+    error,
+  } =
+    await client
+      .from(
+        MEDICAL_REPORT_MARKERS_TABLE
+      )
+      .select(
+        REPORT_MARKERS_SELECT
+      )
+      .eq(
+        "user_id",
+        userId
+      )
+      .eq(
+        "report_id",
+        reportId
+      )
+      .order(
+        "created_at",
+        {
+          ascending:
+            false,
+        }
+      );
+
+  if (error) {
+    throw new Error(
+      error.message
+    );
+  }
+
+  const seenMarkers =
+    new Set<string>();
+
+  return (
+    data ?? []
+  )
+    .filter(
+      (
+        row
+      ): row is
+        ReportMedicalMarkerEvidence =>
+        typeof row.marker_name ===
+          "string" &&
+        typeof row.marker_value ===
+          "number"
+    )
+    .filter(
+      (row) => {
+        const key =
+          row.marker_name
+            .trim()
+            .toLocaleLowerCase();
+
+        if (
+          !key ||
+          seenMarkers.has(
+            key
+          )
+        ) {
+          return false;
+        }
+
+        seenMarkers.add(
+          key
+        );
+
+        return true;
+      }
+    );
 }

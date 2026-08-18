@@ -27,6 +27,10 @@ import {
   getPatientSummary,
 } from "@/lib/services/shared/patient-summary.service";
 
+import {
+  getMedicalReportMarkersByReportId,
+} from "@/lib/repositories/report-markers.repository";
+
 type AssistantContextLanguage =
   | "en"
   | "ar";
@@ -89,6 +93,15 @@ export async function buildAuthenticatedAssistantContext({
         ) ?? null
       : null;
 
+        const latestReportMarkers =
+    latestReport
+      ? await getMedicalReportMarkersByReportId(
+          userId,
+          latestReport.id,
+          client
+        )
+      : [];
+
   const latestReportContext:
     AssistantLatestReportContext | null =
       latestReport
@@ -131,6 +144,21 @@ export async function buildAuthenticatedAssistantContext({
             riskLevel:
               latestInsight?.risk_level ??
               null,
+
+                          reportEvidence:
+              latestReportMarkers
+                .map(
+                  (marker) => ({
+                    marker:
+                      marker.marker_name,
+
+                    value:
+                      marker.marker_value,
+
+                    unit:
+                      marker.marker_unit,
+                  })
+                ),
           }
         : null;
 

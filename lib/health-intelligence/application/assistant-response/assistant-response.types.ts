@@ -18,6 +18,12 @@ import type {
   WholeBodyClinicalKnowledgeModel,
 } from "@/lib/health-intelligence/models/whole-body-clinical-knowledge";
 
+export type AssistantReportEvidenceItem = {
+  marker: string;
+  value: number;
+  unit: string | null;
+};
+
 export type AssistantLatestReportContext = {
   reportId: number;
   fileName: string;
@@ -29,6 +35,8 @@ export type AssistantLatestReportContext = {
   doctorBrief: string | null;
   nextBestAction: string | null;
   riskLevel: string | null;
+  reportEvidence:
+    AssistantReportEvidenceItem[];
 };
 
 export type AssistantHealthScoreContext = {
