@@ -211,6 +211,72 @@ describe("Assistant orchestrator dual reasoning", () => {
     expect(result.reasoning.questionIntent).toBe("report_summary");
   });
 
+    it("answers an explicit latest-report findings and doctor question without symptom clarification", () => {
+    const result = runAssistantOrchestrator({
+      message:
+        "Based only on my latest uploaded report, what are the 5 most important findings, what exact values support each finding, and what should I discuss with my doctor?",
+
+      language: "en",
+
+      healthContext:
+        createReportHealthContext(),
+
+      conversation: [],
+    });
+
+    expect(
+      result.reasoning.mode
+    ).toBe(
+      "answer"
+    );
+
+    expect(
+      result.response
+    ).toBe(
+      "PERSONALIZED_RESPONSE"
+    );
+
+    expect(
+      result.reasoning
+        .clarifyingQuestion
+    ).toBeNull();
+
+    expect(
+      mockedBuildPersonalizedResponse
+    ).toHaveBeenCalledTimes(
+      1
+    );
+  });
+
+  it("preserves clarification for a clinical cause question that is not grounded in a report", () => {
+    const result = runAssistantOrchestrator({
+      message:
+        "Why am I having chest pain?",
+
+      language: "en",
+
+      healthContext:
+        createWholeBodyHealthContext(),
+
+      conversation: [],
+    });
+
+    expect(
+      result.reasoning.mode
+    ).toBe(
+      "clarify"
+    );
+
+    expect(
+      result.reasoning
+        .clarifyingQuestion
+    ).not.toBeNull();
+
+    expect(
+      mockedBuildPersonalizedResponse
+    ).not.toHaveBeenCalled();
+  });
+  
   it("uses the Arabic whole-body clarification question", () => {
     const result = runAssistantOrchestrator({
       message: "ما سبب النتيجة غير الطبيعية؟",

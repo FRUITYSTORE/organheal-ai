@@ -168,8 +168,52 @@ export function runAssistantOrchestrator({
     reasoningDecision.question,
   );
 
+      const normalizedQuestion =
+    conversationAwareMessage
+      .toLocaleLowerCase();
+
+  const hasExplicitReportReference =
+    normalizedQuestion.includes(
+      "report"
+    ) ||
+    normalizedQuestion.includes(
+      "lab"
+    ) ||
+    normalizedQuestion.includes(
+      "laboratory"
+    ) ||
+    normalizedQuestion.includes(
+      "result"
+    ) ||
+    normalizedQuestion.includes(
+      "finding"
+    ) ||
+    normalizedQuestion.includes(
+      "تقرير"
+    ) ||
+    normalizedQuestion.includes(
+      "فحص"
+    ) ||
+    normalizedQuestion.includes(
+      "نتيجة"
+    ) ||
+    normalizedQuestion.includes(
+      "نتائج"
+    );
+
+  const isReportGroundedQuestion =
+    Boolean(
+      healthContext
+        ?.latestReportContext &&
+      hasExplicitReportReference
+    );
+
   const shouldClarify =
-    clinicalRuntimeRequestsClarification || legacyRequestsClarification;
+    !isReportGroundedQuestion &&
+    (
+      clinicalRuntimeRequestsClarification ||
+      legacyRequestsClarification
+    );
 
   const selectedClarificationQuestion = clinicalRuntimeRequestsClarification
     ? (clinicalClarification?.question ?? null)

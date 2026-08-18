@@ -488,6 +488,32 @@ ${latestReport?.nextBestAction || nextAction}
 I cannot confirm a cause or diagnosis from the current information alone, but the available evidence can now be used to narrow the possibilities progressively as more relevant information is added.`;
 }
 
+/*
+ * Explicit report-grounded questions must be resolved
+ * against the latest saved report before generic clinical
+ * clarification can take over the conversation.
+ *
+ * This prevents questions such as:
+ * "What are the findings in my latest report and what
+ * should I discuss with my doctor?"
+ * from being incorrectly routed into symptom collection.
+ */
+const earlyReportResponse =
+  buildReportResponse({
+    lowerMessage,
+    detectedIntent:
+      detectedIntent.intent,
+    isArabic,
+    healthContext,
+    nextAction,
+    doctorBrief,
+    priorityArea,
+  });
+
+if (earlyReportResponse) {
+  return earlyReportResponse;
+}
+
 const journeyResponse =
   buildJourneyResponse({
     lowerMessage,
@@ -639,20 +665,7 @@ ${nextAction}
 
 This may change as new reports, tests, or health updates are added.`;
   }
- const reportResponse =
-  buildReportResponse({
-    lowerMessage,
-    detectedIntent: detectedIntent.intent,
-    isArabic,
-    healthContext,
-    nextAction,
-    doctorBrief,
-    priorityArea,
-  });
 
-  if (reportResponse) {
-    return reportResponse;
-  }
   if (
   detectedIntent.intent === "health-age" ||
   lowerMessage.includes("health age") ||
