@@ -22,6 +22,10 @@ import type {
 
 import { composeClinicalResponse } from "@/lib/health-intelligence/application/clinical-response-composer.service";
 
+import {
+  assessClinicalUrgency,
+} from "@/lib/health-intelligence/engines/clinical-urgency.engine";
+
 export type AssistantOrchestratorLanguage = "en" | "ar";
 
 export type AssistantOrchestratorInput = {
@@ -97,10 +101,21 @@ export function runAssistantOrchestrator({
     conversation,
   );
 
+  const clinicalUrgency =
+  assessClinicalUrgency({
+    message:
+      conversationAwareMessage,
+
+    language,
+  });
+  
   const detectedIntent = detectAssistantIntent(conversationAwareMessage);
 
-  const clinicalReasoningLoop = healthContext?.wholeBodyKnowledge
-  ? runClinicalReasoningLoop({
+ const clinicalReasoningLoop =
+  clinicalUrgency.level === "none" &&
+  healthContext?.wholeBodyKnowledge
+    ? runClinicalReasoningLoop({
+
       question: conversationAwareMessage,
 
       intent: detectedIntent.intent,
@@ -215,7 +230,8 @@ export function runAssistantOrchestrator({
     );
 
   const shouldClarify =
-    !isReportGroundedQuestion &&
+  clinicalUrgency.level === "none" &&
+  !isReportGroundedQuestion &&
     (
       clinicalRuntimeRequestsClarification ||
       legacyRequestsClarification
@@ -303,12 +319,14 @@ export function runAssistantOrchestrator({
  * that is explicitly grounded in the user's saved report.
  */
 const response =
-  isReportGroundedQuestion
-    ? personalizedResponse
-    : clinicalResponseComposition?.available &&
-        clinicalResponseComposition.response
-      ? clinicalResponseComposition.response
-      : personalizedResponse;
+  clinicalUrgency.response
+    ? clinicalUrgency.response
+    : isReportGroundedQuestion
+      ? personalizedResponse
+      : clinicalResponseComposition?.available &&
+          clinicalResponseComposition.response
+        ? clinicalResponseComposition.response
+        : personalizedResponse;
 
   return {
   success: true,
@@ -356,7 +374,8 @@ const response =
 
       clarifyingQuestion: questionEvidence.clarifyingQuestion,
 
-      reason: null,
+      reason:
+        clinicalUrgency.reason,
     },
   };
 }
