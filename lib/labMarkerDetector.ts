@@ -266,17 +266,27 @@ function escapeRegex(text: string) {
 function findRangeNearAlias(text: string, alias: string) {
   const safeAlias = escapeRegex(alias);
 
+  /*
+   * Marker aliases must match as complete terms.
+   *
+   * Without word boundaries, a short alias such as "ast"
+   * can incorrectly match the "ast" inside "fasting" and
+   * capture the glucose value that follows it.
+   */
+  const boundedAlias =
+    `\\b${safeAlias}\\b`;
+
   const patterns = [
     new RegExp(
-      `${safeAlias}[^\\d]{0,30}(\\d+(?:\\.\\d+)?)\\s*(?:mg\\/dL|g\\/dL|U\\/L|IU\\/L|%|ng\\/mL|mIU\\/L|x10\\^9\\/L|x10\\^12\\/L)?[^\\d]{0,30}(\\d+(?:\\.\\d+)?)\\s*[-–to]+\\s*(\\d+(?:\\.\\d+)?)`,
+      `${boundedAlias}[^\\d]{0,30}(\\d+(?:\\.\\d+)?)\\s*(?:mg\\/dL|g\\/dL|U\\/L|IU\\/L|%|ng\\/mL|mIU\\/L|x10\\^9\\/L|x10\\^12\\/L)?[^\\d]{0,30}(\\d+(?:\\.\\d+)?)\\s*[-–to]+\\s*(\\d+(?:\\.\\d+)?)`,
       "i"
     ),
     new RegExp(
-      `${safeAlias}[^\\d]{0,80}(\\d+(?:\\.\\d+)?)\\s*[-–]\\s*(\\d+(?:\\.\\d+)?)`,
+      `${boundedAlias}[^\\d]{0,80}(\\d+(?:\\.\\d+)?)\\s*[-–]\\s*(\\d+(?:\\.\\d+)?)`,
       "i"
     ),
     new RegExp(
-      `${safeAlias}[^\\d]{0,80}ref(?:erence)?\\s*[:=]?\\s*(\\d+(?:\\.\\d+)?)\\s*[-–]\\s*(\\d+(?:\\.\\d+)?)`,
+      `${boundedAlias}[^\\d]{0,80}ref(?:erence)?\\s*[:=]?\\s*(\\d+(?:\\.\\d+)?)\\s*[-–]\\s*(\\d+(?:\\.\\d+)?)`,
       "i"
     ),
   ];
@@ -311,9 +321,18 @@ function findRangeNearAlias(text: string, alias: string) {
 function findValueNearAlias(text: string, alias: string): number | null {
   const safeAlias = escapeRegex(alias);
 
+  const boundedAlias =
+    `\\b${safeAlias}\\b`;
+
   const patterns = [
-    new RegExp(`${safeAlias}\\s*[:=\\-]?\\s*(\\d+(?:\\.\\d+)?)`, "i"),
-    new RegExp(`${safeAlias}\\s+.*?\\s(\\d+(?:\\.\\d+)?)\\s*(mg\\/dL|g\\/dL|u\\/l|iu\\/l|%|ng\\/ml|miu\\/l)?`, "i"),
+    new RegExp(
+  `${boundedAlias}\\s*[:=\\-]?\\s*(\\d+(?:\\.\\d+)?)`,
+  "i"
+),
+new RegExp(
+  `${boundedAlias}\\s+.*?\\s(\\d+(?:\\.\\d+)?)\\s*(mg\\/dL|g\\/dL|u\\/l|iu\\/l|%|ng\\/ml|miu\\/l)?`,
+  "i"
+),
   ];
 
   for (const regex of patterns) {
