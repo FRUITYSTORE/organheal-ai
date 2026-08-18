@@ -26,6 +26,9 @@ function createOrchestratorResult(
 
     response: overrides.response ?? "Assistant response",
 
+    clinicalReasoningState:
+      null,
+
     reasoning: {
       mode: overrides.mode ?? "answer",
 
@@ -77,6 +80,9 @@ describe("Assistant response contract", () => {
       success: true,
 
       response: "Review your latest health plan.",
+
+      clinicalInterviewId:
+        null,
 
       reasoning: {
         mode: "answer",

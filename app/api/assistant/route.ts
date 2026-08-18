@@ -16,10 +16,24 @@ import type {
   AssistantResponseHealthContext,
 } from "@/lib/health-intelligence/application/assistant-response.service";
 
+import type {
+  SupabaseClient,
+} from "@supabase/supabase-js";
+
+import {
+  createClinicalInterview,
+  getClinicalInterview,
+  updateClinicalInterview,
+} from "@/lib/repositories/clinical-interview.repository";
+
 type AssistantRequestBody = {
   message?: unknown;
+
   language?: unknown;
+
   conversation?: unknown;
+
+  clinicalInterviewId?: unknown;
 };
 
 export async function POST(request: Request) {
@@ -28,7 +42,12 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json()) as AssistantRequestBody;
 
-    const { message, language = "en", conversation } = body;
+    const {
+  message,
+  language = "en",
+  conversation,
+  clinicalInterviewId,
+} = body;
 
     if (typeof message !== "string" || !message.trim()) {
       return NextResponse.json(
@@ -54,60 +73,231 @@ export async function POST(request: Request) {
       ? (conversation as AssistantResponseConversationMessage[])
       : [];
 
-    let healthContext: AssistantResponseHealthContext | null = null;
+    const normalizedClinicalInterviewId =
+      typeof clinicalInterviewId ===
+      "string" &&
+      clinicalInterviewId.trim()
+      ? clinicalInterviewId.trim()
+      : null;
 
-    const authorizationHeader = request.headers.get("authorization");
+   let healthContext:
+  AssistantResponseHealthContext | null =
+    null;
 
-    /*
-     * Authentication is optional for the public
-     * educational assistant.
-     *
-     * Authenticated requests rebuild the user's health
-     * context securely from server-side data.
-     */
-    if (authorizationHeader?.startsWith("Bearer ")) {
-      const authentication = await authenticateApiRequest(request);
+let authenticatedContext:
+  | {
+      userId:
+        string;
 
-      if (!authentication.success) {
-        return NextResponse.json(
-          {
-            error: authentication.error,
-
-            requestId,
-          },
-          {
-            status: authentication.status,
-
-            headers: {
-              "x-request-id": requestId,
-            },
-          },
-        );
-      }
-
-      const { buildAuthenticatedAssistantContext } =
-        await import("@/lib/health-intelligence/application/authenticated-assistant-context.service");
-
-      healthContext = await buildAuthenticatedAssistantContext({
-        userId: authentication.user.id,
-
-        language: normalizedLanguage,
-
-        client: authentication.client,
-      });
+      client:
+        SupabaseClient;
     }
+  | null =
+    null;
 
-    const orchestratorResult = runAssistantOrchestrator({
-      message: message.trim(),
+let trustedClinicalReasoningState =
+  null;
 
-      language: normalizedLanguage,
+let activeClinicalInterviewId:
+  string | null =
+    null;
 
-      healthContext,
+const authorizationHeader =
+  request.headers.get(
+    "authorization"
+  );
 
-      conversation: normalizedConversation,
+/*
+ * Authentication remains optional for the public
+ * educational assistant.
+ *
+ * Persistent clinical interviews are available only
+ * for authenticated users. The browser supplies only
+ * an opaque interview id; the reasoning state itself
+ * is always loaded from trusted server-side storage.
+ */
+if (
+  authorizationHeader?.startsWith(
+    "Bearer "
+  )
+) {
+  const authentication =
+    await authenticateApiRequest(
+      request
+    );
+
+  if (!authentication.success) {
+    return NextResponse.json(
+      {
+        error:
+          authentication.error,
+
+        requestId,
+      },
+      {
+        status:
+          authentication.status,
+
+        headers: {
+          "x-request-id":
+            requestId,
+        },
+      }
+    );
+  }
+
+  authenticatedContext = {
+    userId:
+      authentication.user.id,
+
+    client:
+      authentication.client,
+  };
+
+  const {
+    buildAuthenticatedAssistantContext,
+  } =
+    await import(
+      "@/lib/health-intelligence/application/authenticated-assistant-context.service"
+    );
+
+  healthContext =
+    await buildAuthenticatedAssistantContext({
+      userId:
+        authentication.user.id,
+
+      language:
+        normalizedLanguage,
+
+      client:
+        authentication.client,
     });
 
-    const publicContract = buildAssistantResponseContract(orchestratorResult);
+  if (
+    normalizedClinicalInterviewId
+  ) {
+    const existingInterview =
+      await getClinicalInterview(
+        authentication.user.id,
+        normalizedClinicalInterviewId,
+        authentication.client
+      );
+
+    if (!existingInterview) {
+      return NextResponse.json(
+        {
+          error:
+            "Clinical interview was not found.",
+
+          requestId,
+        },
+        {
+          status:
+            404,
+
+          headers: {
+            "x-request-id":
+              requestId,
+          },
+        }
+      );
+    }
+
+    trustedClinicalReasoningState =
+      existingInterview.reasoning_state;
+
+    activeClinicalInterviewId =
+      existingInterview.id;
+  }
+}
+
+const orchestratorResult =
+  runAssistantOrchestrator({
+    message:
+      message.trim(),
+
+    language:
+      normalizedLanguage,
+
+    healthContext,
+
+    conversation:
+      normalizedConversation,
+
+    ...(trustedClinicalReasoningState
+      ? {
+          clinicalReasoningState:
+            trustedClinicalReasoningState,
+        }
+      : {}),
+  });
+
+if (
+  authenticatedContext &&
+  orchestratorResult
+    .clinicalReasoningState
+) {
+  const reasoningState =
+    orchestratorResult
+      .clinicalReasoningState;
+
+  const sessionStatus =
+    reasoningState.status ===
+      "closed"
+      ? "completed"
+      : "active";
+
+  if (
+    activeClinicalInterviewId
+  ) {
+    const updatedInterview =
+      await updateClinicalInterview(
+        {
+          userId:
+            authenticatedContext
+              .userId,
+
+          interviewId:
+            activeClinicalInterviewId,
+
+          reasoningState,
+
+          status:
+            sessionStatus,
+        },
+        authenticatedContext
+          .client
+      );
+
+    activeClinicalInterviewId =
+      updatedInterview.id;
+  } else {
+    const createdInterview =
+      await createClinicalInterview(
+        {
+          userId:
+            authenticatedContext
+              .userId,
+
+          reasoningState,
+
+          status:
+            sessionStatus,
+        },
+        authenticatedContext
+          .client
+      );
+
+    activeClinicalInterviewId =
+      createdInterview.id;
+  }
+}
+
+    const publicContract =
+  buildAssistantResponseContract(
+    orchestratorResult,
+    activeClinicalInterviewId
+  );
 
     return NextResponse.json(publicContract, {
       headers: {

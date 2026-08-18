@@ -26,6 +26,9 @@ export type AssistantResponseContract = {
   response: string;
 
   reasoning: AssistantPublicReasoningSummary;
+
+  clinicalInterviewId:
+    string | null;
 };
 
 function resolveClinicalNarrative(
@@ -70,12 +73,15 @@ function hasClinicalInterpretation(
 
 export function buildAssistantResponseContract(
   result: AssistantOrchestratorResult,
+  clinicalInterviewId: string | null = null,
 ): AssistantResponseContract {
   return {
     success: true,
 
     response: result.response,
 
+    clinicalInterviewId,
+    
     reasoning: {
       mode: result.reasoning.mode,
 

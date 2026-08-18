@@ -16,6 +16,10 @@ import { detectAssistantIntent } from "@/lib/health-intelligence/application/ass
 
 import { runClinicalReasoningLoop } from "@/lib/health-intelligence/runtime/clinical-reasoning-loop";
 
+import type {
+  ClinicalReasoningState,
+} from "@/lib/health-intelligence/runtime/clinical-reasoning-state";
+
 import { composeClinicalResponse } from "@/lib/health-intelligence/application/clinical-response-composer.service";
 
 export type AssistantOrchestratorLanguage = "en" | "ar";
@@ -28,6 +32,9 @@ export type AssistantOrchestratorInput = {
   healthContext: AssistantResponseHealthContext | null;
 
   conversation: AssistantResponseConversationMessage[];
+
+  clinicalReasoningState?:
+    ClinicalReasoningState | null;
 };
 
 export type AssistantOrchestratorReasoning = {
@@ -72,6 +79,9 @@ export type AssistantOrchestratorResult = {
   response: string;
 
   reasoning: AssistantOrchestratorReasoning;
+
+  clinicalReasoningState:
+    ClinicalReasoningState | null;
 };
 
 export function runAssistantOrchestrator({
@@ -79,7 +89,9 @@ export function runAssistantOrchestrator({
   language,
   healthContext,
   conversation,
+  clinicalReasoningState = null,
 }: AssistantOrchestratorInput): AssistantOrchestratorResult {
+
   const conversationAwareMessage = buildConversationAwareMessage(
     message.trim(),
     conversation,
@@ -88,27 +100,21 @@ export function runAssistantOrchestrator({
   const detectedIntent = detectAssistantIntent(conversationAwareMessage);
 
   const clinicalReasoningLoop = healthContext?.wholeBodyKnowledge
-    ? runClinicalReasoningLoop({
-        question: conversationAwareMessage,
+  ? runClinicalReasoningLoop({
+      question: conversationAwareMessage,
 
-        intent: detectedIntent.intent,
+      intent: detectedIntent.intent,
 
-        language,
+      language,
 
-        knowledge: healthContext.wholeBodyKnowledge,
+      knowledge: healthContext.wholeBodyKnowledge,
 
-        conversation,
+      conversation,
 
-        /*
-         * The loop is now the authoritative runtime entry
-         * point inside the assistant request pipeline.
-         *
-         * Persistent or reconstructed reasoning state will
-         * be supplied in the next scoped integration step.
-         */
-        previousState: null,
-      })
-    : null;
+      previousState:
+        clinicalReasoningState,
+    })
+  : null;
 
   const clinicalReasoningRuntime = clinicalReasoningLoop?.runtime ?? null;
 
@@ -231,11 +237,16 @@ export function runAssistantOrchestrator({
 
   if (shouldClarify && selectedClarificationQuestion) {
     return {
-      success: true,
+  success: true,
 
-      response: selectedClarificationQuestion,
+  response: selectedClarificationQuestion,
 
-      reasoning: {
+  clinicalReasoningState:
+    clinicalReasoningLoop?.state ??
+    clinicalReasoningState ??
+    null,
+
+  reasoning: {
         mode: "clarify",
 
         status: reasoningReadiness.status,
@@ -300,11 +311,16 @@ const response =
       : personalizedResponse;
 
   return {
-    success: true,
+  success: true,
 
-    response,
+  response,
 
-    reasoning: {
+  clinicalReasoningState:
+    clinicalReasoningLoop?.state ??
+    clinicalReasoningState ??
+    null,
+
+  reasoning: {
       mode: "answer",
 
       status: reasoningReadiness.status,

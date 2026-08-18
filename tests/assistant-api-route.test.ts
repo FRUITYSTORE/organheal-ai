@@ -1,380 +1,1087 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
 vi.mock(
   "@/lib/health-intelligence/application/assistant-orchestrator.service",
   () => ({
-    runAssistantOrchestrator: vi.fn(),
-  }),
+    runAssistantOrchestrator:
+      vi.fn(),
+  })
 );
 
 vi.mock(
   "@/lib/health-intelligence/application/assistant-response-contract.service",
   () => ({
-    buildAssistantResponseContract: vi.fn((value) => value),
-  }),
+    buildAssistantResponseContract:
+      vi.fn(
+        (
+          value,
+          clinicalInterviewId = null
+        ) => ({
+          ...value,
+          clinicalInterviewId,
+        })
+      ),
+  })
 );
 
-import { runAssistantOrchestrator } from "@/lib/health-intelligence/application/assistant-orchestrator.service";
+vi.mock(
+  "@/lib/supabase",
+  () => ({
+    supabase: {},
+  })
+);
 
-import { buildAssistantResponseContract } from "@/lib/health-intelligence/application/assistant-response-contract.service";
+vi.mock(
+  "@/lib/repositories/clinical-interview.repository",
+  () => ({
+    createClinicalInterview:
+      vi.fn(),
 
-import { POST } from "@/app/api/assistant/route";
+    getClinicalInterview:
+      vi.fn(),
 
-const mockedRunAssistantOrchestrator = vi.mocked(runAssistantOrchestrator);
+    updateClinicalInterview:
+      vi.fn(),
+  })
+);
 
-const mockedBuildAssistantResponseContract = vi.mocked(
+vi.mock(
+  "@/lib/api/api-auth",
+  () => ({
+    authenticateApiRequest:
+      vi.fn(),
+  })
+);
+
+vi.mock(
+  "@/lib/health-intelligence/application/authenticated-assistant-context.service",
+  () => ({
+    buildAuthenticatedAssistantContext:
+      vi.fn(),
+  })
+);
+
+import {
+  authenticateApiRequest,
+} from "@/lib/api/api-auth";
+
+import {
+  buildAuthenticatedAssistantContext,
+} from "@/lib/health-intelligence/application/authenticated-assistant-context.service";
+
+import {
+  runAssistantOrchestrator,
+} from "@/lib/health-intelligence/application/assistant-orchestrator.service";
+
+import {
   buildAssistantResponseContract,
-);
+} from "@/lib/health-intelligence/application/assistant-response-contract.service";
 
-function createAssistantRequest(body: unknown): Request {
-  return new Request("http://localhost/api/assistant", {
-    method: "POST",
+import {
+  createClinicalInterview,
+  getClinicalInterview,
+  updateClinicalInterview,
+} from "@/lib/repositories/clinical-interview.repository";
 
-    headers: {
-      "Content-Type": "application/json",
-    },
+import type {
+  ClinicalReasoningState,
+} from "@/lib/health-intelligence/runtime/clinical-reasoning-state";
 
-    body: JSON.stringify(body),
-  });
+import {
+  POST,
+} from "@/app/api/assistant/route";
+
+const mockedRunAssistantOrchestrator =
+  vi.mocked(
+    runAssistantOrchestrator
+  );
+
+const mockedBuildAssistantResponseContract =
+  vi.mocked(
+    buildAssistantResponseContract
+  );
+
+const mockedAuthenticateApiRequest =
+  vi.mocked(
+    authenticateApiRequest
+  );
+
+const mockedBuildAuthenticatedAssistantContext =
+  vi.mocked(
+    buildAuthenticatedAssistantContext
+  );
+
+const mockedCreateClinicalInterview =
+  vi.mocked(
+    createClinicalInterview
+  );
+
+const mockedGetClinicalInterview =
+  vi.mocked(
+    getClinicalInterview
+  );
+
+const mockedUpdateClinicalInterview =
+  vi.mocked(
+    updateClinicalInterview
+  );
+
+function createAssistantRequest(
+  body:
+    unknown
+): Request {
+  return new Request(
+    "http://localhost/api/assistant",
+    {
+      method:
+        "POST",
+
+      headers: {
+        "Content-Type":
+          "application/json",
+      },
+
+      body:
+        JSON.stringify(
+          body
+        ),
+    }
+  );
 }
 
 function createOrchestratorResult(
-  response: string,
-): ReturnType<typeof runAssistantOrchestrator> {
+  response:
+    string
+): ReturnType<
+  typeof runAssistantOrchestrator
+> {
   return {
-    success: true,
+    success:
+      true,
 
     response,
 
+    clinicalReasoningState:
+      null,
+
     reasoning: {
-      mode: "answer",
+      mode:
+        "answer",
 
-      status: "sufficient",
+      status:
+        "sufficient",
 
-      confidence: "high",
+      confidence:
+        "high",
 
-      availableEvidence: [],
+      availableEvidence:
+        [],
 
-      missingInformation: [],
+      missingInformation:
+        [],
 
-      questionIntent: "general",
+      questionIntent:
+        "general",
 
-      questionEvidenceStatus: "sufficient",
+      questionEvidenceStatus:
+        "sufficient",
 
-      questionEvidenceConfidence: "high",
+      questionEvidenceConfidence:
+        "high",
 
-      questionAvailableEvidence: [],
+      questionAvailableEvidence:
+        [],
 
-      questionMissingInformation: [],
+      questionMissingInformation:
+        [],
 
-      clinicalHypothesisRanking: null,
+      clinicalHypothesisRanking:
+        null,
 
-      clinicalConflictResolution: null,
+      clinicalConflictResolution:
+        null,
 
-      clinicalConfidenceCalibration: null,
+      clinicalConfidenceCalibration:
+        null,
 
-      clarifyingQuestion: null,
+      clarifyingQuestion:
+        null,
 
-      reason: null,
+      reason:
+        null,
     },
   };
 }
 
-describe("POST /api/assistant", () => {
-  let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
+describe(
+  "POST /api/assistant",
+  () => {
+    let consoleErrorSpy:
+      ReturnType<
+        typeof vi.spyOn
+      >;
 
-  beforeEach(() => {
-    mockedRunAssistantOrchestrator.mockReset();
+    beforeEach(
+      () => {
+        mockedRunAssistantOrchestrator
+          .mockReset();
 
-    mockedBuildAssistantResponseContract.mockReset();
+        mockedBuildAssistantResponseContract
+          .mockReset();
 
-    mockedBuildAssistantResponseContract.mockImplementation(
-      (value) =>
-        value as unknown as ReturnType<typeof buildAssistantResponseContract>,
+        mockedAuthenticateApiRequest
+          .mockReset();
+
+        mockedBuildAuthenticatedAssistantContext
+          .mockReset();
+
+        mockedCreateClinicalInterview
+          .mockReset();
+
+        mockedGetClinicalInterview
+          .mockReset();
+
+        mockedUpdateClinicalInterview
+          .mockReset();
+
+        mockedBuildAssistantResponseContract
+          .mockImplementation(
+            (
+              value,
+              clinicalInterviewId = null
+            ) =>
+              ({
+                ...value,
+
+                clinicalInterviewId,
+              }) as unknown as ReturnType<
+                typeof buildAssistantResponseContract
+              >
+          );
+
+        consoleErrorSpy =
+          vi
+            .spyOn(
+              console,
+              "error"
+            )
+            .mockImplementation(
+              () =>
+                undefined
+            );
+      }
     );
 
-    consoleErrorSpy = vi
-      .spyOn(console, "error")
-      .mockImplementation(() => undefined);
-  });
-
-  afterEach(() => {
-    consoleErrorSpy.mockRestore();
-  });
-
-  it("returns 400 when message is missing", async () => {
-    const response = await POST(
-      createAssistantRequest({
-        language: "en",
-      }),
+    afterEach(
+      () => {
+        consoleErrorSpy
+          .mockRestore();
+      }
     );
 
-    expect(response.status).toBe(400);
+    it(
+      "returns 400 when message is missing",
+      async () => {
+        const response =
+          await POST(
+            createAssistantRequest({
+              language:
+                "en",
+            })
+          );
 
-    const responseBody = (await response.json()) as {
-      error?: string;
-      requestId?: string;
-    };
+        expect(
+          response.status
+        ).toBe(
+          400
+        );
 
-    expect(responseBody).toMatchObject({
-      error: "Message is required",
-    });
+        const responseBody =
+          (await response.json()) as {
+            error?:
+              string;
 
-    expect(responseBody.requestId).toMatch(/^req_[0-9a-f-]+$/i);
+            requestId?:
+              string;
+          };
 
-    expect(response.headers.get("x-request-id")).toBe(responseBody.requestId);
+        expect(
+          responseBody
+        ).toMatchObject({
+          error:
+            "Message is required",
+        });
 
-    expect(mockedRunAssistantOrchestrator).not.toHaveBeenCalled();
-  });
+        expect(
+          responseBody.requestId
+        ).toMatch(
+          /^req_[0-9a-f-]+$/i
+        );
 
-  it("returns 400 when message contains only whitespace", async () => {
-    const response = await POST(
-      createAssistantRequest({
-        message: "   ",
-      }),
+        expect(
+          response.headers.get(
+            "x-request-id"
+          )
+        ).toBe(
+          responseBody.requestId
+        );
+
+        expect(
+          mockedRunAssistantOrchestrator
+        ).not.toHaveBeenCalled();
+      }
     );
 
-    expect(response.status).toBe(400);
+    it(
+      "returns 400 when message contains only whitespace",
+      async () => {
+        const response =
+          await POST(
+            createAssistantRequest({
+              message:
+                "   ",
+            })
+          );
 
-    const responseBody = (await response.json()) as {
-      error?: string;
-      requestId?: string;
-    };
+        expect(
+          response.status
+        ).toBe(
+          400
+        );
 
-    expect(responseBody).toMatchObject({
-      error: "Message is required",
-    });
+        const responseBody =
+          (await response.json()) as {
+            error?:
+              string;
 
-    expect(responseBody.requestId).toMatch(/^req_[0-9a-f-]+$/i);
+            requestId?:
+              string;
+          };
 
-    expect(response.headers.get("x-request-id")).toBe(responseBody.requestId);
+        expect(
+          responseBody
+        ).toMatchObject({
+          error:
+            "Message is required",
+        });
 
-    expect(mockedRunAssistantOrchestrator).not.toHaveBeenCalled();
-  });
+        expect(
+          responseBody.requestId
+        ).toMatch(
+          /^req_[0-9a-f-]+$/i
+        );
 
-  it("passes Arabic language to the orchestrator", async () => {
-    const orchestratorResult = createOrchestratorResult("إجابة صحية مخصصة");
+        expect(
+          response.headers.get(
+            "x-request-id"
+          )
+        ).toBe(
+          responseBody.requestId
+        );
 
-    mockedRunAssistantOrchestrator.mockReturnValue(orchestratorResult);
-
-    const response = await POST(
-      createAssistantRequest({
-        message: "ما هي خطوتي التالية؟",
-
-        language: "ar",
-
-        healthContext: null,
-
-        conversation: [],
-      }),
+        expect(
+          mockedRunAssistantOrchestrator
+        ).not.toHaveBeenCalled();
+      }
     );
 
-    expect(response.status).toBe(200);
+    it(
+      "passes Arabic language to the orchestrator",
+      async () => {
+        const orchestratorResult =
+          createOrchestratorResult(
+            "إجابة صحية مخصصة"
+          );
 
-    expect(mockedRunAssistantOrchestrator).toHaveBeenCalledTimes(1);
+        mockedRunAssistantOrchestrator
+          .mockReturnValue(
+            orchestratorResult
+          );
 
-    expect(mockedBuildAssistantResponseContract).toHaveBeenCalledTimes(1);
+        const response =
+          await POST(
+            createAssistantRequest({
+              message:
+                "ما هي خطوتي التالية؟",
 
-    expect(mockedBuildAssistantResponseContract).toHaveBeenCalledWith(
-      orchestratorResult,
+              language:
+                "ar",
+
+              healthContext:
+                null,
+
+              conversation:
+                [],
+            })
+          );
+
+        expect(
+          response.status
+        ).toBe(
+          200
+        );
+
+        expect(
+          mockedRunAssistantOrchestrator
+        ).toHaveBeenCalledTimes(
+          1
+        );
+
+        expect(
+          mockedBuildAssistantResponseContract
+        ).toHaveBeenCalledTimes(
+          1
+        );
+
+        expect(
+          mockedBuildAssistantResponseContract
+        ).toHaveBeenCalledWith(
+          orchestratorResult,
+          null
+        );
+
+        expect(
+          mockedRunAssistantOrchestrator
+        ).toHaveBeenCalledWith({
+          message:
+            "ما هي خطوتي التالية؟",
+
+          language:
+            "ar",
+
+          healthContext:
+            null,
+
+          conversation:
+            [],
+        });
+
+        await expect(
+          response.json()
+        ).resolves.toEqual({
+          ...orchestratorResult,
+
+          clinicalInterviewId:
+            null,
+        });
+      }
     );
 
-    expect(mockedRunAssistantOrchestrator).toHaveBeenCalledWith({
-      message: "ما هي خطوتي التالية؟",
+    it(
+      "normalizes unsupported languages to English",
+      async () => {
+        const orchestratorResult =
+          createOrchestratorResult(
+            "English response"
+          );
 
-      language: "ar",
+        mockedRunAssistantOrchestrator
+          .mockReturnValue(
+            orchestratorResult
+          );
 
-      healthContext: null,
+        const response =
+          await POST(
+            createAssistantRequest({
+              message:
+                "What should I do next?",
 
-      conversation: [],
-    });
+              language:
+                "fr",
+            })
+          );
 
-    await expect(response.json()).resolves.toEqual(orchestratorResult);
-  });
+        expect(
+          response.status
+        ).toBe(
+          200
+        );
 
-  it("normalizes unsupported languages to English", async () => {
-    const orchestratorResult = createOrchestratorResult("English response");
+        expect(
+          mockedRunAssistantOrchestrator
+        ).toHaveBeenCalledWith({
+          message:
+            "What should I do next?",
 
-    mockedRunAssistantOrchestrator.mockReturnValue(orchestratorResult);
+          language:
+            "en",
 
-    const response = await POST(
-      createAssistantRequest({
-        message: "What should I do next?",
+          healthContext:
+            null,
 
-        language: "fr",
-      }),
+          conversation:
+            [],
+        });
+
+        await expect(
+          response.json()
+        ).resolves.toEqual({
+          ...orchestratorResult,
+
+          clinicalInterviewId:
+            null,
+        });
+      }
     );
 
-    expect(response.status).toBe(200);
+    it(
+      "normalizes a non-array conversation to an empty array",
+      async () => {
+        const orchestratorResult =
+          createOrchestratorResult(
+            "Normalized conversation"
+          );
 
-    expect(mockedRunAssistantOrchestrator).toHaveBeenCalledWith({
-      message: "What should I do next?",
+        mockedRunAssistantOrchestrator
+          .mockReturnValue(
+            orchestratorResult
+          );
 
-      language: "en",
+        const response =
+          await POST(
+            createAssistantRequest({
+              message:
+                "Review my progress",
 
-      healthContext: null,
+              language:
+                "en",
 
-      conversation: [],
-    });
+              conversation: {
+                role:
+                  "user",
 
-    await expect(response.json()).resolves.toEqual(orchestratorResult);
-  });
+                content:
+                  "Invalid conversation shape",
+              },
+            })
+          );
 
-  it("normalizes a non-array conversation to an empty array", async () => {
-    const orchestratorResult = createOrchestratorResult(
-      "Normalized conversation",
+        expect(
+          mockedRunAssistantOrchestrator
+        ).toHaveBeenCalledWith({
+          message:
+            "Review my progress",
+
+          language:
+            "en",
+
+          healthContext:
+            null,
+
+          conversation:
+            [],
+        });
+
+        await expect(
+          response.json()
+        ).resolves.toEqual({
+          ...orchestratorResult,
+
+          clinicalInterviewId:
+            null,
+        });
+      }
     );
 
-    mockedRunAssistantOrchestrator.mockReturnValue(orchestratorResult);
+    it(
+      "ignores client health context and preserves valid conversation for unauthenticated requests",
+      async () => {
+        const healthContext = {
+          overallScore:
+            78,
 
-    const response = await POST(
-      createAssistantRequest({
-        message: "Review my progress",
+          priorityOrgan:
+            "Heart",
 
-        language: "en",
+          recommendation:
+            "Continue routine follow-up.",
+        };
 
-        conversation: {
-          role: "user",
+        const conversation = [
+          {
+            role:
+              "user" as const,
 
-          content: "Invalid conversation shape",
-        },
-      }),
+            content:
+              "What did my latest report show?",
+          },
+
+          {
+            role:
+              "assistant" as const,
+
+            content:
+              "Your recent context was reviewed.",
+          },
+        ];
+
+        const request =
+          new Request(
+            "http://localhost/api/assistant",
+            {
+              method:
+                "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
+
+              body:
+                JSON.stringify({
+                  message:
+                    "What should I focus on?",
+
+                  language:
+                    "en",
+
+                  healthContext,
+
+                  conversation,
+                }),
+            }
+          );
+
+        await POST(
+          request
+        );
+
+        expect(
+          mockedRunAssistantOrchestrator
+        ).toHaveBeenCalledWith({
+          message:
+            "What should I focus on?",
+
+          language:
+            "en",
+
+          healthContext:
+            null,
+
+          conversation,
+        });
+      }
     );
 
-    expect(mockedRunAssistantOrchestrator).toHaveBeenCalledWith({
-      message: "Review my progress",
+    it(
+      "returns the public assistant response contract",
+      async () => {
+        const orchestratorResult =
+          createOrchestratorResult(
+            "Review your latest health plan."
+          );
 
-      language: "en",
+        mockedRunAssistantOrchestrator
+          .mockReturnValue(
+            orchestratorResult
+          );
 
-      healthContext: null,
+        const response =
+          await POST(
+            createAssistantRequest({
+              message:
+                "Give me an overview",
+            })
+          );
 
-      conversation: [],
-    });
+        expect(
+          response.status
+        ).toBe(
+          200
+        );
 
-    await expect(response.json()).resolves.toEqual(orchestratorResult);
-  });
+        await expect(
+          response.json()
+        ).resolves.toEqual({
+          ...orchestratorResult,
 
-  it("ignores client health context and preserves valid conversation for unauthenticated requests", async () => {
-    const healthContext = {
-      overallScore: 78,
-      priorityOrgan: "Heart",
-      recommendation: "Continue routine follow-up.",
-    };
-
-    const conversation = [
-      {
-        role: "user" as const,
-        content: "What did my latest report show?",
-      },
-      {
-        role: "assistant" as const,
-        content: "Your recent context was reviewed.",
-      },
-    ];
-
-    const request = new Request("http://localhost/api/assistant", {
-      method: "POST",
-
-      headers: {
-        "Content-Type": "application/json",
-      },
-
-      body: JSON.stringify({
-        message: "What should I focus on?",
-
-        language: "en",
-
-        healthContext,
-
-        conversation,
-      }),
-    });
-
-    await POST(request);
-
-    expect(mockedRunAssistantOrchestrator).toHaveBeenCalledWith({
-      message: "What should I focus on?",
-
-      language: "en",
-
-      healthContext: null,
-
-      conversation,
-    });
-  });
-
-  it("returns the public assistant response contract", async () => {
-    const orchestratorResult = createOrchestratorResult(
-      "Review your latest health plan.",
+          clinicalInterviewId:
+            null,
+        });
+      }
     );
 
-    mockedRunAssistantOrchestrator.mockReturnValue(orchestratorResult);
+    it(
+      "continues an authenticated clinical interview using trusted server-side state",
+      async () => {
+        const authenticatedClient =
+          {} as never;
 
-    const response = await POST(
-      createAssistantRequest({
-        message: "Give me an overview",
-      }),
+        const existingReasoningState:
+          ClinicalReasoningState = {
+          id:
+            "reasoning_state_existing",
+
+          originalQuestion:
+            "What could be causing my abnormal result?",
+
+          currentQuestion:
+            "What symptoms are you having?",
+
+          intent:
+            "cause-reasoning",
+
+          language:
+            "en",
+
+          status:
+            "awaiting-clarification",
+
+          askedClarificationQuestionIds: [
+            "clarification:no-evidence",
+          ],
+
+          resolvedGapTypes:
+            [],
+
+          collectedEvidence:
+            [],
+
+          runtimeHistory:
+            [],
+
+          currentRuntime:
+            {} as ClinicalReasoningState["currentRuntime"],
+
+          createdAt:
+            "2026-08-18T12:00:00.000Z",
+
+          updatedAt:
+            "2026-08-18T12:00:00.000Z",
+        };
+
+        const updatedReasoningState:
+          ClinicalReasoningState = {
+          ...existingReasoningState,
+
+          currentQuestion:
+            "How long have the symptoms been present?",
+
+          resolvedGapTypes: [
+            "no-evidence",
+          ],
+
+          updatedAt:
+            "2026-08-18T12:05:00.000Z",
+        };
+
+        mockedAuthenticateApiRequest
+          .mockResolvedValue({
+            success:
+              true,
+
+            user: {
+              id:
+                "user-1",
+            },
+
+            client:
+              authenticatedClient,
+          } as never);
+
+        mockedBuildAuthenticatedAssistantContext
+          .mockResolvedValue({
+            wholeBodyKnowledge:
+              {},
+          } as never);
+
+        mockedGetClinicalInterview
+          .mockResolvedValue({
+            id:
+              "interview-1",
+
+            user_id:
+              "user-1",
+
+            status:
+              "active",
+
+            reasoning_state:
+              existingReasoningState,
+
+            created_at:
+              "2026-08-18T12:00:00.000Z",
+
+            updated_at:
+              "2026-08-18T12:00:00.000Z",
+          });
+
+        const orchestratorResult =
+          createOrchestratorResult(
+            "How long have the symptoms been present?"
+          );
+
+        orchestratorResult
+          .clinicalReasoningState =
+            updatedReasoningState;
+
+        mockedRunAssistantOrchestrator
+          .mockReturnValue(
+            orchestratorResult
+          );
+
+        mockedUpdateClinicalInterview
+          .mockResolvedValue({
+            id:
+              "interview-1",
+
+            user_id:
+              "user-1",
+
+            status:
+              "active",
+
+            reasoning_state:
+              updatedReasoningState,
+
+            created_at:
+              "2026-08-18T12:00:00.000Z",
+
+            updated_at:
+              "2026-08-18T12:05:00.000Z",
+          });
+
+        const request =
+          new Request(
+            "http://localhost/api/assistant",
+            {
+              method:
+                "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+
+                Authorization:
+                  "Bearer test-token",
+              },
+
+              body:
+                JSON.stringify({
+                  message:
+                    "I have had severe fatigue and dizziness for two weeks.",
+
+                  language:
+                    "en",
+
+                  conversation:
+                    [],
+
+                  clinicalInterviewId:
+                    "interview-1",
+                }),
+            }
+          );
+
+        const response =
+          await POST(
+            request
+          );
+
+        expect(
+          response.status
+        ).toBe(
+          200
+        );
+
+        expect(
+          mockedGetClinicalInterview
+        ).toHaveBeenCalledWith(
+          "user-1",
+          "interview-1",
+          authenticatedClient
+        );
+
+        expect(
+          mockedRunAssistantOrchestrator
+        ).toHaveBeenCalledWith({
+          message:
+            "I have had severe fatigue and dizziness for two weeks.",
+
+          language:
+            "en",
+
+          healthContext:
+            expect.anything(),
+
+          conversation:
+            [],
+
+          clinicalReasoningState:
+            existingReasoningState,
+        });
+
+        expect(
+          mockedUpdateClinicalInterview
+        ).toHaveBeenCalledWith(
+          {
+            userId:
+              "user-1",
+
+            interviewId:
+              "interview-1",
+
+            reasoningState:
+              updatedReasoningState,
+
+            status:
+              "active",
+          },
+
+          authenticatedClient
+        );
+
+        expect(
+          mockedCreateClinicalInterview
+        ).not.toHaveBeenCalled();
+
+        expect(
+          mockedBuildAssistantResponseContract
+        ).toHaveBeenCalledWith(
+          orchestratorResult,
+          "interview-1"
+        );
+
+        const responseBody =
+          await response.json();
+
+        expect(
+          responseBody.clinicalInterviewId
+        ).toBe(
+          "interview-1"
+        );
+
+        expect(
+          "reasoning_state" in responseBody
+        ).toBe(
+          false
+        );
+      }
     );
 
-    expect(response.status).toBe(200);
+    it(
+      "returns 500 when the orchestrator throws an error",
+      async () => {
+        mockedRunAssistantOrchestrator
+          .mockImplementation(
+            () => {
+              throw new Error(
+                "Orchestrator failure"
+              );
+            }
+          );
 
-    await expect(response.json()).resolves.toEqual(orchestratorResult);
-  });
+        const response =
+          await POST(
+            createAssistantRequest({
+              message:
+                "Analyze my health context",
+            })
+          );
 
-  it("returns 500 when the orchestrator throws an error", async () => {
-    mockedRunAssistantOrchestrator.mockImplementation(() => {
-      throw new Error("Orchestrator failure");
-    });
+        expect(
+          response.status
+        ).toBe(
+          500
+        );
 
-    const response = await POST(
-      createAssistantRequest({
-        message: "Analyze my health context",
-      }),
+        const responseBody =
+          (await response.json()) as {
+            error?:
+              string;
+
+            requestId?:
+              string;
+          };
+
+        expect(
+          responseBody
+        ).toMatchObject({
+          error:
+            "Server error",
+        });
+
+        expect(
+          responseBody.requestId
+        ).toMatch(
+          /^req_[0-9a-f-]+$/i
+        );
+
+        expect(
+          response.headers.get(
+            "x-request-id"
+          )
+        ).toBe(
+          responseBody.requestId
+        );
+
+        expect(
+          consoleErrorSpy
+        ).toHaveBeenCalledTimes(
+          1
+        );
+
+        const loggedValue =
+          consoleErrorSpy
+            .mock
+            .calls[0]?.[0];
+
+        expect(
+          typeof loggedValue
+        ).toBe(
+          "string"
+        );
+
+        const parsedLog =
+          JSON.parse(
+            loggedValue as string
+          ) as {
+            level?:
+              string;
+
+            event?:
+              string;
+
+            route?:
+              string;
+
+            error?: {
+              name?:
+                string;
+
+              message?:
+                string;
+            };
+          };
+
+        expect(
+          parsedLog
+        ).toMatchObject({
+          level:
+            "error",
+
+          event:
+            "assistant.request_failed",
+
+          route:
+            "/api/assistant",
+
+          error: {
+            name:
+              "Error",
+
+            message:
+              "Orchestrator failure",
+          },
+        });
+      }
     );
-
-    expect(response.status).toBe(500);
-
-    const responseBody = (await response.json()) as {
-      error?: string;
-      requestId?: string;
-    };
-
-    expect(responseBody).toMatchObject({
-      error: "Server error",
-    });
-
-    expect(responseBody.requestId).toMatch(/^req_[0-9a-f-]+$/i);
-
-    expect(response.headers.get("x-request-id")).toBe(responseBody.requestId);
-
-    expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
-
-    const loggedValue = consoleErrorSpy.mock.calls[0]?.[0];
-
-    expect(typeof loggedValue).toBe("string");
-
-    const parsedLog = JSON.parse(loggedValue as string) as {
-      level?: string;
-      event?: string;
-      route?: string;
-      error?: {
-        name?: string;
-        message?: string;
-      };
-    };
-
-    expect(parsedLog).toMatchObject({
-      level: "error",
-
-      event: "assistant.request_failed",
-
-      route: "/api/assistant",
-
-      error: {
-        name: "Error",
-
-        message: "Orchestrator failure",
-      },
-    });
-  });
-});
+  }
+);
