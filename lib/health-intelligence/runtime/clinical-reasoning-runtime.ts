@@ -217,15 +217,18 @@ export function buildClinicalReasoningRuntime({
     confidenceCalibration,
   });
 
-  const clarification = selectClinicalClarificationQuestion({
-    knowledge,
+const clarification = selectClinicalClarificationQuestion({
+  question:
+    normalizedQuestion,
 
-    language,
+  knowledge,
 
-    resolvedGapTypes,
+  language,
 
-    previouslyAskedQuestionIds,
-  });
+  resolvedGapTypes,
+
+  previouslyAskedQuestionIds,
+});
 
   const mode = resolveReasoningMode(evidenceSufficiency, clarification);
 

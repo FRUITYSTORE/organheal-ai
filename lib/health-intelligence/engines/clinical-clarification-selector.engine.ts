@@ -15,6 +15,9 @@ export type ClinicalClarificationLanguage =
   | "ar";
 
 export type ClinicalClarificationSelectionInput = {
+  question?:
+    string;
+
   knowledge:
     WholeBodyClinicalKnowledgeModel;
 
@@ -233,6 +236,71 @@ const GAP_QUESTION_TEMPLATES:
       ],
     },
   };
+
+  const SYMPTOM_SIGNAL_PATTERNS = [
+  /\b(?:pain|ache|dizzy|dizziness|fatigue|tired|weak|weakness|fever|cough|vomit|vomiting|nausea|breathless|breathlessness|shortness of breath|palpitation|palpitations|headache|faint|fainted|swelling|diarrhea|bleeding)\b/i,
+  /(?:ألم|الم|وجع|دوخة|دوار|تعب|إرهاق|ارهاق|ضعف|حرارة|حمى|سعال|كحة|قيء|استفراغ|غثيان|ضيق تنفس|خفقان|صداع|إغماء|اغماء|تورم|إسهال|اسهال|نزيف)/,
+];
+
+function looksLikeSymptomReport(
+  question:
+    string
+): boolean {
+  const normalizedQuestion =
+    question.trim();
+
+  if (!normalizedQuestion) {
+    return false;
+  }
+
+  return SYMPTOM_SIGNAL_PATTERNS.some(
+    (pattern) =>
+      pattern.test(
+        normalizedQuestion
+      )
+  );
+}
+
+function createSymptomIntakeQuestion(
+  gap:
+    ClinicalEvidenceGap,
+  knowledge:
+    WholeBodyClinicalKnowledgeModel,
+  language:
+    ClinicalClarificationLanguage
+): ClinicalClarificationQuestion {
+  const baseQuestion =
+    createClarificationQuestion(
+      gap,
+      knowledge,
+      language
+    );
+
+  return {
+    ...baseQuestion,
+
+    question:
+      language === "ar"
+        ? "أريد أن أفهم الأعراض بشكل أدق: متى بدأت، ما شدتها الآن، هل تتحسن أم تزداد سوءًا، وهل لديك أي أعراض مقلقة مصاحبة مثل ضيق شديد في التنفس، إغماء، ألم شديد أو مفاجئ، نزيف، ارتباك، أو ضعف مفاجئ؟"
+        : "I want to understand the symptoms more clearly: when did they start, how severe are they now, are they improving or worsening, and do you have any concerning symptoms such as severe shortness of breath, fainting, sudden or severe pain, bleeding, confusion, or sudden weakness?",
+
+    expectedInformation:
+      language === "ar"
+        ? "وقت بداية الأعراض، شدتها، تطورها، والأعراض المصاحبة التي قد تغير درجة الاستعجال أو الحاجة إلى تقييم طبي سريع."
+        : "Symptom onset, severity, progression, and associated features that could change urgency or the need for prompt medical assessment.",
+
+    priority:
+      "important",
+
+    answerMayChange: [
+      "interpretation",
+      "confidence",
+      "risk",
+      "priority",
+      "next-action",
+    ],
+  };
+}
 
 function getImpactWeight(
   impact:
@@ -485,11 +553,13 @@ function createClarificationQuestion(
 }
 
 export function selectClinicalClarificationQuestion({
+  question = "",
   knowledge,
   language = "en",
   resolvedGapTypes = [],
   previouslyAskedQuestionIds = [],
 }: ClinicalClarificationSelectionInput):
+
   ClinicalClarificationSelectionResult {
   const sufficiency =
     knowledge
@@ -599,15 +669,26 @@ export function selectClinicalClarificationQuestion({
     };
   }
 
-  const question =
-    createClarificationQuestion(
-      selectedGap,
-      knowledge,
-      language
-    );
+ const clarificationQuestion =
+  selectedGap.type ===
+    "missing-current-context" &&
+  looksLikeSymptomReport(
+    question
+  )
+    ? createSymptomIntakeQuestion(
+        selectedGap,
+        knowledge,
+        language
+      )
+    : createClarificationQuestion(
+        selectedGap,
+        knowledge,
+        language
+      );
 
   return {
-    question,
+    question:
+  clarificationQuestion,
 
     selectedGap,
 
