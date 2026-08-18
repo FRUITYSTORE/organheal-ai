@@ -1803,79 +1803,116 @@ const hasReportEvidence = Boolean(
     </p>
 
     <div className="selectedReportActionGrid">
-            <button
-        type="button"
-        className="selectedReportActionButton primary"
-        disabled={
-          focusedReportIsProcessing
-        }
-        aria-busy={
-          focusedReportIsProcessing
-        }
-        onClick={() => {
-          if (
-            focusedReportIsProcessing
-          ) {
-            return;
-          }
+  <button
+    type="button"
+    className="selectedReportActionButton primary"
+    disabled={
+      focusedReportIsProcessing
+    }
+    aria-busy={
+      focusedReportIsProcessing
+    }
+    onClick={() => {
+      if (
+        focusedReportIsProcessing
+      ) {
+        return;
+      }
 
-          if (
-            focusedReportIsGenerated
-          ) {
-            openSavedGeneratedResult(
-              focusedReportInsight.id
-            );
-          } else {
-            generateReportIntelligence(
-              focusedReportInsight.id
-            );
-          }
-        }}
-      >
-        {focusedReportIsProcessing
-          ? text(
-              "Preparing Report...",
-              "جاري تجهيز التقرير..."
-            )
-          : focusedReportIsGenerated
-            ? text(
-                "View Analysis",
-                "عرض التحليل"
-              )
-            : text(
-                "Analyze Report",
-                "تحليل التقرير"
-              )}
-      </button>
-
-      <button
-        type="button"
-        className="selectedReportActionButton"
-        onClick={() =>
-          openMedicalReport(
-            focusedReportInsight.file_path
+      if (
+        focusedReportIsGenerated
+      ) {
+        openSavedGeneratedResult(
+          focusedReportInsight.id
+        );
+      } else {
+        generateReportIntelligence(
+          focusedReportInsight.id
+        );
+      }
+    }}
+  >
+    {focusedReportIsProcessing
+      ? text(
+          "Preparing Report...",
+          "جاري تجهيز التقرير..."
+        )
+      : focusedReportIsGenerated
+        ? text(
+            "View Analysis",
+            "عرض التحليل"
           )
-        }
-        disabled={!focusedReportInsight.file_path}
-      >
-        {text(
-          "Open Original Report",
-          "فتح التقرير الأصلي"
-        )}
-      </button>
-
-      {focusedReportIsGenerated && (
-        <Link
-          href="/health-plan"
-          className="selectedReportActionButton"
-        >
-          {text(
-            "Open Health Plan",
-            "فتح خطة الصحة"
+        : text(
+            "Analyze Report",
+            "تحليل التقرير"
           )}
-        </Link>
+  </button>
+
+  {focusedReportIsGenerated && (
+    <button
+      type="button"
+      className="selectedReportActionButton"
+      disabled={
+        focusedReportIsProcessing
+      }
+      aria-busy={
+        focusedReportIsProcessing
+      }
+      onClick={() => {
+        if (
+          focusedReportIsProcessing
+        ) {
+          return;
+        }
+
+        generateReportIntelligence(
+          focusedReportInsight.id
+        );
+      }}
+    >
+      {focusedReportIsProcessing
+        ? text(
+            "Re-Analyzing...",
+            "جاري إعادة التحليل..."
+          )
+        : text(
+            "Re-Analyze Report",
+            "إعادة تحليل التقرير"
+          )}
+    </button>
+  )}
+
+  <button
+    type="button"
+    className="selectedReportActionButton"
+    onClick={() =>
+      openMedicalReport(
+        focusedReportInsight.file_path
+      )
+    }
+    disabled={
+      !focusedReportInsight.file_path ||
+      focusedReportIsProcessing
+    }
+  >
+    {text(
+      "Open Original Report",
+      "فتح التقرير الأصلي"
+    )}
+  </button>
+
+  {focusedReportIsGenerated && (
+    <Link
+      href="/health-plan"
+      className="selectedReportActionButton"
+    >
+      {text(
+        "Open Health Plan",
+        "فتح خطة الصحة"
       )}
-    </div>
+    </Link>
+  )}
+</div>
   </div>
 
   {focusedReportIsGenerated && (
