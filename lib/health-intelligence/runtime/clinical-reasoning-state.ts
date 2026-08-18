@@ -15,6 +15,24 @@ import type {
   ClinicalReasoningRuntime,
 } from "@/lib/health-intelligence/runtime/clinical-reasoning-runtime";
 
+export type PatientEvidenceCategory =
+  | "general"
+  | "symptom-context"
+  | "health-history"
+  | "patient-context"
+  | "additional-evidence"
+  | "relationship-context"
+  | "unresolved-clinical-focus";
+
+export type StructuredClinicalEvidenceReference =
+  ClinicalEvidenceReference & {
+    patientEvidenceCategory:
+      PatientEvidenceCategory;
+
+    resolvedGapType:
+      ClinicalEvidenceGapType | null;
+  };
+
 export type ClinicalReasoningStateStatus =
   | "awaiting-clarification"
   | "provisional"
@@ -78,7 +96,7 @@ export type ClinicalReasoningState = {
     ClinicalEvidenceGapType[];
 
   collectedEvidence:
-    ClinicalEvidenceReference[];
+  StructuredClinicalEvidenceReference[];
 
   runtimeHistory:
     ClinicalReasoningHistoryEntry[];
@@ -151,6 +169,55 @@ function uniqueValues<T>(
       values
     ),
   ];
+}
+
+function resolvePatientEvidenceCategory(
+  gapType:
+    ClinicalEvidenceGapType | null
+): PatientEvidenceCategory {
+  if (
+    gapType ===
+    "missing-current-context"
+  ) {
+    return "symptom-context";
+  }
+
+  if (
+    gapType ===
+    "missing-health-history"
+  ) {
+    return "health-history";
+  }
+
+  if (
+    gapType ===
+    "missing-user-reported-context"
+  ) {
+    return "patient-context";
+  }
+
+  if (
+    gapType ===
+    "limited-source-diversity"
+  ) {
+    return "additional-evidence";
+  }
+
+  if (
+    gapType ===
+    "no-explicit-relationships"
+  ) {
+    return "relationship-context";
+  }
+
+  if (
+    gapType ===
+    "unresolved-domain"
+  ) {
+    return "unresolved-clinical-focus";
+  }
+
+  return "general";
 }
 
 function resolveStateStatus(
@@ -252,6 +319,9 @@ function createUserEvidence(
     stateId:
       string;
 
+    resolvedGapType:
+      ClinicalEvidenceGapType | null;
+
     value:
       string;
 
@@ -261,7 +331,7 @@ function createUserEvidence(
     timestamp:
       string;
   }
-): ClinicalEvidenceReference {
+): StructuredClinicalEvidenceReference {
   return {
     id:
       `evidence:user-answer:${input.stateId}:${input.timestamp}`,
@@ -292,6 +362,14 @@ function createUserEvidence(
 
     relevance:
       "contextual",
+
+      patientEvidenceCategory:
+  resolvePatientEvidenceCategory(
+    input.resolvedGapType
+  ),
+
+resolvedGapType:
+  input.resolvedGapType,
   };
 }
 
@@ -387,17 +465,19 @@ export function updateClinicalReasoningState({
           ...state.collectedEvidence,
 
           createUserEvidence({
-            stateId:
-              state.id,
+  stateId:
+    state.id,
 
-            value:
-              normalizedEvidence,
+  value:
+    normalizedEvidence,
 
-            questionId:
-              answeredQuestionId,
+  questionId:
+    answeredQuestionId,
 
-            timestamp,
-          }),
+  resolvedGapType,
+
+  timestamp,
+}),
         ]
       : state.collectedEvidence;
 

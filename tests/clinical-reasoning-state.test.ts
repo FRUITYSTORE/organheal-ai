@@ -403,6 +403,60 @@ describe(
     );
 
     it(
+  "stores patient clarification evidence with structured clinical metadata",
+  () => {
+    const initialState =
+      createClinicalReasoningState({
+        runtime:
+          createInitialRuntime(),
+      });
+
+    const updatedState =
+      updateClinicalReasoningState({
+        state:
+          initialState,
+
+        runtime:
+          createInitialRuntime(),
+
+        userEvidence:
+          "The dizziness started two weeks ago and is getting worse.",
+
+        answeredQuestionId:
+          "clarification:missing-current-context",
+
+        resolvedGapType:
+          "missing-current-context",
+
+        timestamp:
+          "2026-08-19T00:00:00.000Z",
+      });
+
+    expect(
+      updatedState.collectedEvidence
+    ).toHaveLength(
+      1
+    );
+
+    expect(
+      updatedState.collectedEvidence[0]
+    ).toMatchObject({
+      sourceType:
+        "user-answer",
+
+      value:
+        "The dizziness started two weeks ago and is getting worse.",
+
+      patientEvidenceCategory:
+        "symptom-context",
+
+      resolvedGapType:
+        "missing-current-context",
+    });
+  }
+);
+
+    it(
       "can close a reasoning state without deleting its history",
       () => {
         const runtime =
