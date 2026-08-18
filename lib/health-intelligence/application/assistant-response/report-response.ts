@@ -194,6 +194,15 @@ export function buildReportResponse({
     lowerMessage.includes("توصية") ||
     lowerMessage.includes("توصيات");
   
+      const hasAbnormalFindingsRequest =
+    lowerMessage.includes("abnormal") ||
+    lowerMessage.includes("important finding") ||
+    lowerMessage.includes("important findings") ||
+    lowerMessage.includes("most important") ||
+    lowerMessage.includes("غير طبيعي") ||
+    lowerMessage.includes("غير الطبيعية") ||
+    lowerMessage.includes("أهم النتائج");
+
   if (hasReportIntent && !latestReport) {
     return isArabic
       ? `لا يوجد تقرير طبي حديث متاح في سياقك الصحي حاليًا.
@@ -202,6 +211,50 @@ export function buildReportResponse({
       : `There is no recent medical report available in your current health context.
   
   You can upload and analyze a medical report in OrganHeal to receive more personalized guidance.`;
+  }
+  
+    /*
+   * Explicit abnormal / important findings request.
+   * Findings and exact report evidence take priority over
+   * long doctor summaries when the user asks what matters most.
+   */
+  if (
+    hasReportIntent &&
+    hasFindingsIntent &&
+    hasAbnormalFindingsRequest &&
+    latestReport
+  ) {
+    return isArabic
+      ? `أهم النتائج التي تستحق الانتباه في أحدث تقرير لديك:
+
+التقرير:
+${latestReport.fileName}
+
+القيم الأهم من التقرير:
+${evidenceText}
+
+ما الذي تناقشه مع الطبيب:
+${latestReport.recommendations || latestReport.doctorBrief || "ناقش النتائج غير الطبيعية والقيم الداعمة لها مع الطبيب، مع مراعاة تاريخك الصحي وأعراضك إن وجدت."}
+
+الخطوة التالية المقترحة:
+${latestReport.nextBestAction || nextAction}
+
+هذه القيم مأخوذة من البيانات المنظمة المحفوظة للتقرير. التفسير تثقيفي ولا يمثل تشخيصًا طبيًا.`
+      : `The most important findings to review from your latest report are:
+
+Report:
+${latestReport.fileName}
+
+Key supporting values:
+${evidenceText}
+
+What to discuss with your doctor:
+${latestReport.recommendations || latestReport.doctorBrief || "Discuss the abnormal findings and their supporting values with your clinician in the context of your health history and any symptoms."}
+
+Suggested next step:
+${latestReport.nextBestAction || nextAction}
+
+These values come from the structured evidence saved for this report. The interpretation is educational and is not a medical diagnosis.`;
   }
   
   /*
