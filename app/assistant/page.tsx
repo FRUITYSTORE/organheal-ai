@@ -31,6 +31,7 @@ type Message = {
 type AssistantResponse = {
   response?: string;
   error?: string;
+  clinicalInterviewId?: string | null;
 };
 
 
@@ -52,6 +53,8 @@ export default function AssistantPage() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [isSending, setIsSending] = useState(false);
+  const [clinicalInterviewId, setClinicalInterviewId] =
+  useState<string | null>(null);
   const [isContextLoading, setIsContextLoading] = useState(true);
   const [healthContext, setHealthContext] =
   useState<AssistantResponseHealthContext | null>(
@@ -284,6 +287,7 @@ const result =
                     message.text,
                 })
               ),
+          clinicalInterviewId,
         }),
     }
   );
@@ -294,6 +298,15 @@ const result =
         throw new Error(data.error || "Assistant request failed.");
       }
 
+            if (
+        typeof data.clinicalInterviewId === "string" &&
+        data.clinicalInterviewId.trim()
+      ) {
+        setClinicalInterviewId(
+          data.clinicalInterviewId
+        );
+      }
+      
       setMessages((current) => [
   ...current,
   {
