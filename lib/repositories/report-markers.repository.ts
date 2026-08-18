@@ -6,6 +6,10 @@ import type {
   SupabaseClient,
 } from "@supabase/supabase-js";
 
+import type {
+  LabMarkerStatus,
+} from "@/lib/labMarkerDetector";
+
 const MEDICAL_REPORT_MARKERS_TABLE =
   "medical_report_markers";
 
@@ -13,12 +17,19 @@ const HISTORICAL_MARKERS_SELECT =
   "marker_name, marker_value, created_at";
 
 const REPORT_MARKERS_SELECT =
-  "marker_name, marker_value, marker_unit, created_at";
+  "marker_name, marker_value, marker_unit, marker_status, reference_low, reference_high, reference_source, created_at";
 
 export type ReportMedicalMarkerEvidence = {
   marker_name: string;
   marker_value: number;
   marker_unit: string | null;
+  marker_status: LabMarkerStatus | null;
+  reference_low: number | null;
+  reference_high: number | null;
+  reference_source:
+    | "report"
+    | "default"
+    | null;
   created_at: string;
 };
 
@@ -37,6 +48,20 @@ export type MedicalReportMarkerInput = {
 
   markerUnit:
     string | null;
+
+  markerStatus:
+    LabMarkerStatus;
+
+  referenceLow:
+    number | null;
+
+  referenceHigh:
+    number | null;
+
+  referenceSource:
+    | "report"
+    | "default"
+    | null;
 };
 
 export type HistoricalMedicalMarker = {
@@ -79,6 +104,18 @@ export async function saveMedicalReportMarkers(
 
         marker_unit:
           marker.markerUnit,
+
+        marker_status:
+          marker.markerStatus,
+
+        reference_low:
+          marker.referenceLow,
+
+        reference_high:
+          marker.referenceHigh,
+
+        reference_source:
+          marker.referenceSource,
       })
     );
 
@@ -140,11 +177,18 @@ export async function getHistoricalMedicalMarkers(
   return (
     data ?? []
   ) as HistoricalMedicalMarker[];
-}export async function getMedicalReportMarkersByReportId(
-  userId: string,
-  reportId: number,
-  client: SupabaseClient = supabase
-): Promise<ReportMedicalMarkerEvidence[]> {
+}
+
+export async function getMedicalReportMarkersByReportId(
+  userId:
+    string,
+  reportId:
+    number,
+  client:
+    SupabaseClient = supabase
+): Promise<
+  ReportMedicalMarkerEvidence[]
+> {
   const {
     data,
     error,

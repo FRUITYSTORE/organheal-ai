@@ -22,8 +22,25 @@ export type AssistantReportEvidenceItem = {
   marker: string;
   value: number;
   unit: string | null;
-};
 
+  status:
+    | "Low"
+    | "Normal"
+    | "High"
+    | "Detected"
+    | null;
+
+  referenceLow:
+    number | null;
+
+  referenceHigh:
+    number | null;
+
+  referenceSource:
+    | "report"
+    | "default"
+    | null;
+};
 export type AssistantLatestReportContext = {
   reportId: number;
   fileName: string;

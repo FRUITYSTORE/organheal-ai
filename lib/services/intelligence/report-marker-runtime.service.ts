@@ -33,12 +33,19 @@ export async function prepareReportMarkerRuntime({
           marker.value !== null
       )
       .map((marker) => ({
-        userId,
-        reportId,
-        markerName: marker.marker,
-        markerValue: marker.value,
-        markerUnit: marker.unit,
-      }));
+  userId,
+  reportId,
+  markerName: marker.marker,
+  markerValue: marker.value,
+  markerUnit: marker.unit,
+  markerStatus: marker.status,
+  referenceLow:
+    marker.referenceLow ?? null,
+  referenceHigh:
+    marker.referenceHigh ?? null,
+  referenceSource:
+    marker.referenceSource ?? null,
+}));
 
     try {
       await saveMedicalReportMarkers(validMarkers);

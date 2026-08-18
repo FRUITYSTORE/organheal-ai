@@ -88,7 +88,7 @@ function createReportHealthContext(): AssistantResponseHealthContext {
       nextBestAction: "Discuss the findings with the treating clinician.",
 
       riskLevel: "Moderate",
-                reportEvidence: [
+                     reportEvidence: [
         {
           marker:
             "LDL",
@@ -98,6 +98,18 @@ function createReportHealthContext(): AssistantResponseHealthContext {
 
           unit:
             "mg/dL",
+
+          status:
+            "High",
+
+          referenceLow:
+            0,
+
+          referenceHigh:
+            100,
+
+          referenceSource:
+            "default",
         },
 
         {
@@ -109,6 +121,18 @@ function createReportHealthContext(): AssistantResponseHealthContext {
 
           unit:
             "%",
+
+          status:
+            "High",
+
+          referenceLow:
+            0,
+
+          referenceHigh:
+            5.7,
+
+          referenceSource:
+            "default",
         },
       ],
     },

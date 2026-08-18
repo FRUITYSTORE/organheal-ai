@@ -116,18 +116,30 @@ async function getLatestReportContext(
         null,
 
       reportEvidence:
-        reportMarkers.map(
-          (marker) => ({
-            marker:
-              marker.marker_name,
+  reportMarkers.map(
+    (marker) => ({
+      marker:
+        marker.marker_name,
 
-            value:
-              marker.marker_value,
+      value:
+        marker.marker_value,
 
-            unit:
-              marker.marker_unit,
-          })
-        ),
+      unit:
+        marker.marker_unit,
+
+      status:
+        marker.marker_status,
+
+      referenceLow:
+        marker.reference_low,
+
+      referenceHigh:
+        marker.reference_high,
+
+      referenceSource:
+        marker.reference_source,
+    })
+  ),
     };
   } catch (error) {
     console.error(

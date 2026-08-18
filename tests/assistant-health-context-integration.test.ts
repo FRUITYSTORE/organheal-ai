@@ -211,6 +211,14 @@ function createLatestReportContext():
 
         unit:
           "mg/dL",
+
+          status: "High",
+
+referenceLow: 70,
+
+referenceHigh: 99,
+
+referenceSource: "report",
       },
     ],
   };

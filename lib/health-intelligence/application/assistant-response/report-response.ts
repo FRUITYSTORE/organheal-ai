@@ -33,26 +33,89 @@ export function buildReportResponse({
       ?.reportEvidence ??
     [];
 
+    const normalizedKeyFindings =
+    latestReport
+      ?.keyFindings
+      ?.toLocaleLowerCase() ??
+    "";
+
   const prioritizedEvidence =
-    reportEvidence
-      .filter(
-        (item) =>
-          latestReport
-            ?.keyFindings
-            ?.toLocaleLowerCase()
-            .includes(
-              item.marker
+    [...reportEvidence]
+      .sort(
+        (
+          first,
+          second
+        ) => {
+          const firstIsAbnormal =
+            first.status === "High" ||
+            first.status === "Low";
+
+          const secondIsAbnormal =
+            second.status === "High" ||
+            second.status === "Low";
+
+          if (
+            firstIsAbnormal !==
+            secondIsAbnormal
+          ) {
+            return firstIsAbnormal
+              ? -1
+              : 1;
+          }
+
+          const firstIsKeyFinding =
+            normalizedKeyFindings.includes(
+              first.marker
                 .toLocaleLowerCase()
-            )
+            );
+
+          const secondIsKeyFinding =
+            normalizedKeyFindings.includes(
+              second.marker
+                .toLocaleLowerCase()
+            );
+
+          if (
+            firstIsKeyFinding !==
+            secondIsKeyFinding
+          ) {
+            return firstIsKeyFinding
+              ? -1
+              : 1;
+          }
+
+          return 0;
+        }
       );
 
+  const seenEvidenceMarkers =
+    new Set<string>();
+
   const evidenceToShow =
-    (
-      prioritizedEvidence.length >
-      0
-        ? prioritizedEvidence
-        : reportEvidence
-    )
+    prioritizedEvidence
+      .filter(
+        (item) => {
+          const markerKey =
+            item.marker
+              .trim()
+              .toLocaleLowerCase();
+
+          if (
+            !markerKey ||
+            seenEvidenceMarkers.has(
+              markerKey
+            )
+          ) {
+            return false;
+          }
+
+          seenEvidenceMarkers.add(
+            markerKey
+          );
+
+          return true;
+        }
+      )
       .slice(
         0,
         5
@@ -66,8 +129,22 @@ export function buildReportResponse({
             (
               item,
               index
-            ) =>
-              `${index + 1}. ${item.marker}: ${item.value}${item.unit ? ` ${item.unit}` : ""}`
+            ) => {
+              const statusText =
+                item.status
+                  ? ` (${item.status})`
+                  : "";
+
+              const referenceText =
+                item.referenceLow !==
+                  null &&
+                item.referenceHigh !==
+                  null
+                  ? ` [reference: ${item.referenceLow}-${item.referenceHigh}${item.unit ? ` ${item.unit}` : ""}]`
+                  : "";
+
+              return `${index + 1}. ${item.marker}: ${item.value}${item.unit ? ` ${item.unit}` : ""}${statusText}${referenceText}`;
+            }
           )
           .join(
             "\n"
