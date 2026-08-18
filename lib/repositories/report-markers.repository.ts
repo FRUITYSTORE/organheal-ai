@@ -119,15 +119,19 @@ export async function saveMedicalReportMarkers(
       })
     );
 
-  const {
+    const {
     error,
   } =
     await client
       .from(
         MEDICAL_REPORT_MARKERS_TABLE
       )
-      .insert(
-        markerRows
+      .upsert(
+        markerRows,
+        {
+          onConflict:
+            "user_id,report_id,marker_name",
+        }
       );
 
   if (error) {
