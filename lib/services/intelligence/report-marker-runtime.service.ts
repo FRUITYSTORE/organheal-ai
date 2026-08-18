@@ -47,11 +47,9 @@ export async function prepareReportMarkerRuntime({
     marker.referenceSource ?? null,
 }));
 
-    try {
-      await saveMedicalReportMarkers(validMarkers);
-    } catch (error) {
-      console.error("Could not save medical report markers", error);
-    }
+       await saveMedicalReportMarkers(
+      validMarkers
+    );
   }
 
   let historicalMarkerRows: HistoricalMedicalMarker[] = [];
