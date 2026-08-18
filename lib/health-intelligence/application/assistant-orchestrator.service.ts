@@ -283,9 +283,19 @@ export function runAssistantOrchestrator({
     conversation,
   );
 
-  const response =
-    clinicalResponseComposition?.available &&
-    clinicalResponseComposition.response
+  /*
+ * Explicit report-grounded questions are answered by the
+ * report-aware personalized response.
+ *
+ * The clinical composer remains authoritative for clinical
+ * reasoning questions, but it must not replace a response
+ * that is explicitly grounded in the user's saved report.
+ */
+const response =
+  isReportGroundedQuestion
+    ? personalizedResponse
+    : clinicalResponseComposition?.available &&
+        clinicalResponseComposition.response
       ? clinicalResponseComposition.response
       : personalizedResponse;
 

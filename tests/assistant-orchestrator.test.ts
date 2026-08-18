@@ -413,7 +413,7 @@ describe("Assistant orchestrator dual reasoning", () => {
 
     expect(result.reasoning.mode).toBe("clarify");
   });
-  it("uses an available clinical response on the established answer path", () => {
+  it("preserves the report-grounded response when a clinical response is also available", () => {
     mockedComposeClinicalResponse.mockReturnValue({
       available: true,
 
@@ -465,7 +465,7 @@ describe("Assistant orchestrator dual reasoning", () => {
 
     expect(result.reasoning.mode).toBe("answer");
 
-    expect(result.response).toBe("CLINICAL_RESPONSE");
+    expect(result.response).toBe("PERSONALIZED_RESPONSE");
 
     expect(mockedComposeClinicalResponse).toHaveBeenCalledTimes(1);
 
