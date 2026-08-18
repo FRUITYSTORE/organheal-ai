@@ -1,4 +1,5 @@
 import type {
+  AssistantClinicalMemoryContext,
   AssistantLatestReportContext,
   AssistantResponseHealthContext,
 } from "@/lib/health-intelligence/application/assistant-response/assistant-response.types";
@@ -41,7 +42,7 @@ type PatientSummary =
   Awaited<ReturnType<typeof getPatientSummary>>;
 
 export type BuildAssistantHealthContextInput = {
-  patientSummary:
+    patientSummary:
     PatientSummary;
 
   intelligence:
@@ -57,6 +58,9 @@ export type BuildAssistantHealthContextInput = {
   latestReportContext:
     | AssistantLatestReportContext
     | null;
+
+    clinicalMemory?:
+  AssistantClinicalMemoryContext | null;
 };
 
 export function buildAssistantHealthContext({
@@ -65,6 +69,7 @@ export function buildAssistantHealthContext({
   runtime,
   doctorBrief,
   latestReportContext,
+  clinicalMemory = null,
 }: BuildAssistantHealthContextInput): AssistantResponseHealthContext {
 
   const overview =
@@ -143,18 +148,20 @@ export function buildAssistantHealthContext({
     doctorBrief,
 
     healthScore: {
-      score:
-        healthScore.score,
+  score:
+    healthScore.score,
 
-      level:
-        healthScore.level,
+  level:
+    healthScore.level,
 
-      confidence:
-        intelligence.healthScore.confidence,
+  confidence:
+    intelligence.healthScore.confidence,
 
-      dataCompleteness:
-        healthScore.dataCompleteness,
-    },
+  dataCompleteness:
+    healthScore.dataCompleteness,
+},
+
+clinicalMemory,
 
     recommendation:
       primaryAction.description ||

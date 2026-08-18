@@ -31,6 +31,10 @@ import {
   getMedicalReportMarkersByReportId,
 } from "@/lib/repositories/report-markers.repository";
 
+import {
+  getRecentClinicalInterviews,
+} from "@/lib/repositories/clinical-interview.repository";
+
 type AssistantContextLanguage =
   | "en"
   | "ar";
@@ -53,11 +57,42 @@ export async function buildAuthenticatedAssistantContext({
 }: BuildAuthenticatedAssistantContextInput): Promise<
   AssistantResponseHealthContext
 > {
-  const patientSummary =
-    await getPatientSummary(
+  const [
+  patientSummary,
+  recentClinicalInterviews,
+] =
+  await Promise.all([
+    getPatientSummary(
       userId,
       client
-    );
+    ),
+
+    getRecentClinicalInterviews(
+      userId,
+      10,
+      client
+    ),
+  ]);
+
+const clinicalMemoryEvidence =
+  recentClinicalInterviews.flatMap(
+    (interview) =>
+      interview
+        .reasoning_state
+        ?.collectedEvidence ??
+      []
+  );
+
+const clinicalMemory =
+  recentClinicalInterviews.length > 0
+    ? {
+        evidence:
+          clinicalMemoryEvidence,
+
+        interviewCount:
+          recentClinicalInterviews.length,
+      }
+    : null;
 
   const intelligence =
     buildHealthIntelligence(
@@ -201,5 +236,7 @@ export async function buildAuthenticatedAssistantContext({
     doctorBrief,
 
     latestReportContext,
+
+    clinicalMemory,
   });
 }

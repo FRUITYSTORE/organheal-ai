@@ -147,6 +147,59 @@ export async function getClinicalInterview(
     : null;
 }
 
+export async function getRecentClinicalInterviews(
+  userId:
+    string,
+  limit = 10,
+  client:
+    SupabaseClient = supabase
+): Promise<ClinicalInterviewSession[]> {
+  const safeLimit =
+    Math.max(
+      1,
+      Math.min(
+        limit,
+        50
+      )
+    );
+
+  const {
+    data,
+    error,
+  } =
+    await client
+      .from(
+        CLINICAL_INTERVIEW_SESSIONS_TABLE
+      )
+      .select(
+        CLINICAL_INTERVIEW_SELECT
+      )
+      .eq(
+        "user_id",
+        userId
+      )
+      .order(
+        "updated_at",
+        {
+          ascending:
+            false,
+        }
+      )
+      .limit(
+        safeLimit
+      );
+
+  if (error) {
+    throw new Error(
+      error.message
+    );
+  }
+
+  return (
+    data ?? []
+  ) as ClinicalInterviewSession[];
+}
+
 export async function updateClinicalInterview(
   {
     userId,

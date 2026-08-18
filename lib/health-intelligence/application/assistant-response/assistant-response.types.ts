@@ -18,6 +18,10 @@ import type {
   WholeBodyClinicalKnowledgeModel,
 } from "@/lib/health-intelligence/models/whole-body-clinical-knowledge";
 
+import type {
+  StructuredClinicalEvidenceReference,
+} from "@/lib/health-intelligence/runtime/clinical-reasoning-state";
+
 export type AssistantReportEvidenceItem = {
   marker: string;
   value: number;
@@ -41,6 +45,7 @@ export type AssistantReportEvidenceItem = {
     | "default"
     | null;
 };
+
 export type AssistantLatestReportContext = {
   reportId: number;
   fileName: string;
@@ -63,6 +68,14 @@ export type AssistantHealthScoreContext = {
   dataCompleteness: number;
 };
 
+export type AssistantClinicalMemoryContext = {
+  evidence:
+    StructuredClinicalEvidenceReference[];
+
+  interviewCount:
+    number;
+};
+
 export type AssistantResponseHealthContext = {
   overallScore?: number | null;
   strongestOrgan?: string | null;
@@ -78,6 +91,10 @@ export type AssistantResponseHealthContext = {
   healthAge?: number | null;
   healthAgeStatus?: string | null;
 
+  clinicalMemory?:
+  | AssistantClinicalMemoryContext
+  | null;
+  
   doctorBrief?: string | null;
   recommendation?: string | null;
 
