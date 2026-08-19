@@ -108,7 +108,7 @@ export function runAssistantOrchestrator({
 
     language,
   });
-  
+
   const detectedIntent = detectAssistantIntent(conversationAwareMessage);
 
  const clinicalReasoningLoop =
@@ -125,6 +125,12 @@ export function runAssistantOrchestrator({
       knowledge: healthContext.wholeBodyKnowledge,
 
       conversation,
+
+      memoryEvidence:
+        healthContext
+        .clinicalMemory
+         ?.evidence ??
+         [],
 
       previousState:
         clinicalReasoningState,

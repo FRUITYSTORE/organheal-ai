@@ -501,6 +501,84 @@ describe(
     );
 
     it(
+  "uses previous clinical memory to avoid repeating a resolved clarification gap",
+  () => {
+    const knowledge =
+      createEmptyKnowledge();
+
+    const result =
+      runClinicalReasoningLoop({
+        question:
+          "What could be causing my abnormal result?",
+
+        intent:
+          "cause-reasoning",
+
+        knowledge,
+
+        conversation:
+          [],
+
+        memoryEvidence: [
+          {
+            id:
+              "evidence:memory:1",
+
+            sourceType:
+              "user-answer",
+
+            sourceId:
+              "clarification:no-evidence",
+
+            label:
+              "Previous patient clarification",
+
+            value:
+              "I previously reported fatigue and dizziness.",
+
+            unit:
+              null,
+
+            observedAt:
+              "2026-08-18T12:00:00.000Z",
+
+            certainty:
+              "reported",
+
+            confidence:
+              "moderate",
+
+            relevance:
+              "contextual",
+
+            patientEvidenceCategory:
+              "symptom-context",
+
+            resolvedGapType:
+              "no-evidence",
+          },
+        ],
+      });
+
+    expect(
+      result.runtime
+        .clarification
+        .question
+        ?.id
+    ).not.toBe(
+      "clarification:no-evidence"
+    );
+
+    expect(
+      result.state
+        .askedClarificationQuestionIds
+    ).not.toContain(
+      "clarification:no-evidence"
+    );
+  }
+);
+
+    it(
       "preserves the original state creation time while advancing the update time",
       () => {
         const knowledge =

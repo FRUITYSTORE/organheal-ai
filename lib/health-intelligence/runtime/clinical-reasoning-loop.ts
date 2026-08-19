@@ -20,6 +20,7 @@ import {
   createClinicalReasoningState,
   updateClinicalReasoningState,
   type ClinicalReasoningState,
+  type StructuredClinicalEvidenceReference,
 } from "@/lib/health-intelligence/runtime/clinical-reasoning-state";
 
 import type {
@@ -52,6 +53,9 @@ export type RunClinicalReasoningLoopInput = {
 
   previousState?:
     ClinicalReasoningState | null;
+
+  memoryEvidence?:
+    StructuredClinicalEvidenceReference[];
 
   timestamp?:
     string;
@@ -90,7 +94,9 @@ function collectPreviouslyAskedQuestionIds(
   previousState:
     ClinicalReasoningState | null,
   interpretation:
-    ClinicalConversationInterpretation
+    ClinicalConversationInterpretation,
+  memoryEvidence:
+    StructuredClinicalEvidenceReference[]
 ): string[] {
   const values = [
     ...(
@@ -98,6 +104,21 @@ function collectPreviouslyAskedQuestionIds(
         ?.askedClarificationQuestionIds ??
       []
     ),
+
+    ...memoryEvidence
+      .map(
+        (evidence) =>
+          evidence.sourceId
+      )
+      .filter(
+        (
+          value
+        ): value is string =>
+          typeof value ===
+            "string" &&
+          value.length >
+            0
+      ),
   ];
 
   if (
@@ -121,7 +142,9 @@ function collectResolvedGapTypes(
   previousState:
     ClinicalReasoningState | null,
   interpretation:
-    ClinicalConversationInterpretation
+    ClinicalConversationInterpretation,
+  memoryEvidence:
+    StructuredClinicalEvidenceReference[]
 ): ClinicalEvidenceGapType[] {
   const values = [
     ...(
@@ -129,6 +152,19 @@ function collectResolvedGapTypes(
         ?.resolvedGapTypes ??
       []
     ),
+
+    ...memoryEvidence
+      .map(
+        (evidence) =>
+          evidence.resolvedGapType
+      )
+      .filter(
+        (
+          value
+        ): value is ClinicalEvidenceGapType =>
+          value !==
+          null
+      ),
   ];
 
   if (
@@ -183,6 +219,7 @@ export function runClinicalReasoningLoop({
   knowledge,
   conversation,
   previousState = null,
+  memoryEvidence = [],
   timestamp =
     new Date().toISOString(),
 }: RunClinicalReasoningLoopInput):
@@ -201,16 +238,18 @@ export function runClinicalReasoningLoop({
       : createEmptyInterpretation();
 
   const previouslyAskedQuestionIds =
-    collectPreviouslyAskedQuestionIds(
-      previousState,
-      interpretation
-    );
+  collectPreviouslyAskedQuestionIds(
+    previousState,
+    interpretation,
+    memoryEvidence
+  );
 
-  const resolvedGapTypes =
-    collectResolvedGapTypes(
-      previousState,
-      interpretation
-    );
+const resolvedGapTypes =
+  collectResolvedGapTypes(
+    previousState,
+    interpretation,
+    memoryEvidence
+  );
 
   const runtime =
     buildClinicalReasoningRuntime({
