@@ -17,6 +17,7 @@ import {
 } from "@/lib/health-intelligence/runtime/clinical-reasoning-runtime";
 
 import {
+  closeClinicalReasoningState,
   createClinicalReasoningState,
   updateClinicalReasoningState,
   type ClinicalReasoningState,
@@ -368,15 +369,32 @@ const resolvedGapTypes =
       previouslyAskedQuestionIds,
     });
 
+    const shouldCloseState =
+  !runtime.requiresClarification &&
+  (
+    runtime.mode ===
+      "provisional" ||
+    runtime.mode ===
+      "evidence-based"
+  );
+
   if (
     !previousState
   ) {
-    const state =
-      createClinicalReasoningState({
-        runtime,
+    const createdState =
+  createClinicalReasoningState({
+    runtime,
 
-        timestamp,
-      });
+    timestamp,
+  });
+
+const state =
+  shouldCloseState
+    ? closeClinicalReasoningState(
+        createdState,
+        timestamp
+      )
+    : createdState;
 
     return {
       interpretation,
@@ -405,8 +423,8 @@ const resolvedGapTypes =
     };
   }
 
-  const state =
-    updateClinicalReasoningState({
+  const updatedState =
+  updateClinicalReasoningState({
       state:
         previousState,
 
@@ -435,6 +453,14 @@ const resolvedGapTypes =
 
       timestamp,
     });
+
+    const state =
+  shouldCloseState
+    ? closeClinicalReasoningState(
+        updatedState,
+        timestamp
+      )
+    : updatedState;
 
   return {
     interpretation,

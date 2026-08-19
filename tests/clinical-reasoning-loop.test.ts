@@ -729,6 +729,111 @@ it(
   }
 );
 
+it(
+  "closes the clinical reasoning state when clarification is no longer required",
+  () => {
+    const baseKnowledge =
+      createEmptyKnowledge();
+
+    const knowledge = {
+      ...baseKnowledge,
+
+      evidenceSufficiency: {
+        status:
+          "sufficient",
+
+        reasoningPermission:
+          "evidence-based-answer",
+
+        completenessScore:
+          100,
+
+        evidenceNodeCount:
+          0,
+
+        relationshipCount:
+          0,
+
+        sourceTypeCount:
+          0,
+
+        coveredDomainCount:
+          0,
+
+        unresolvedDomainCount:
+          0,
+
+        confidence: {
+          evidenceConfidence:
+            "high",
+
+          relationshipConfidence:
+            "high",
+
+          reasoningConfidence:
+            "high",
+
+          recommendationConfidence:
+            "high",
+        },
+
+        gaps:
+          [],
+
+        highImpactMissingInformation:
+          [],
+
+        canProvideProvisionalInterpretation:
+          true,
+
+        requiresClarification:
+          false,
+
+        generatedAt:
+          "2026-08-19T05:00:00.000Z",
+      },
+    } as ReturnType<
+      typeof createEmptyKnowledge
+    >;
+
+    const result =
+      runClinicalReasoningLoop({
+        question:
+          "What should I understand from the available evidence?",
+
+        intent:
+          "cause-reasoning",
+
+        knowledge,
+
+        conversation:
+          [],
+
+        timestamp:
+          "2026-08-19T05:05:00.000Z",
+      });
+
+    expect(
+      result.runtime
+        .requiresClarification
+    ).toBe(
+      false
+    );
+
+    expect(
+      result.runtime.mode
+    ).toBe(
+      "evidence-based"
+    );
+
+    expect(
+      result.state.status
+    ).toBe(
+      "closed"
+    );
+  }
+);
+
     it(
       "preserves the original state creation time while advancing the update time",
       () => {
