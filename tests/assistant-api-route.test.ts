@@ -725,6 +725,16 @@ describe(
         const authenticatedClient =
           {} as never;
 
+        const dateNowSpy =
+          vi.spyOn(
+          Date,
+         "now"
+         ).mockReturnValue(
+         new Date(
+        "2026-08-18T18:00:00.000Z"
+        ).getTime()
+        );
+
         const existingReasoningState:
           ClinicalReasoningState = {
           id:
@@ -983,6 +993,16 @@ describe(
     const authenticatedClient =
       {} as never;
 
+      const dateNowSpy =
+  vi.spyOn(
+    Date,
+    "now"
+  ).mockReturnValue(
+    new Date(
+      "2026-08-18T18:00:00.000Z"
+    ).getTime()
+  );
+
     const existingReasoningState:
       ClinicalReasoningState = {
       id:
@@ -1225,10 +1245,306 @@ describe(
       await response.json();
 
     expect(
-      responseBody.clinicalInterviewId
-    ).toBe(
-      "interview-active"
+  responseBody.clinicalInterviewId
+     ).toBe(
+     "interview-active"
+   );
+
+    dateNowSpy.mockRestore();
+   }
+ );
+
+it(
+  "abandons an expired active clinical interview and starts a new interview",
+  async () => {
+    const authenticatedClient =
+      {} as never;
+
+     const dateNowSpy =
+  vi.spyOn(
+    Date,
+    "now"
+  ).mockReturnValue(
+      new Date(
+        "2026-08-20T12:00:00.000Z"
+      ).getTime()
     );
+
+    const expiredReasoningState:
+      ClinicalReasoningState = {
+      id:
+        "reasoning_state_expired",
+
+      originalQuestion:
+        "What could be causing my abnormal result?",
+
+      currentQuestion:
+        "What symptoms are you having?",
+
+      intent:
+        "cause-reasoning",
+
+      language:
+        "en",
+
+      status:
+        "awaiting-clarification",
+
+      askedClarificationQuestionIds: [
+        "clarification:missing-current-context",
+      ],
+
+      resolvedGapTypes:
+        [],
+
+      collectedEvidence:
+        [],
+
+      runtimeHistory:
+        [],
+
+      currentRuntime:
+        {} as ClinicalReasoningState["currentRuntime"],
+
+      createdAt:
+        "2026-08-18T10:00:00.000Z",
+
+      updatedAt:
+        "2026-08-18T10:00:00.000Z",
+    };
+
+    const newReasoningState:
+      ClinicalReasoningState = {
+      ...expiredReasoningState,
+
+      id:
+        "reasoning_state_new",
+
+      originalQuestion:
+        "I have dizziness today.",
+
+      currentQuestion:
+        "I have dizziness today.",
+
+      askedClarificationQuestionIds:
+        [],
+
+      createdAt:
+        "2026-08-20T12:00:00.000Z",
+
+      updatedAt:
+        "2026-08-20T12:00:00.000Z",
+    };
+
+    mockedAuthenticateApiRequest
+      .mockResolvedValue({
+        success:
+          true,
+
+        user: {
+          id:
+            "user-1",
+        },
+
+        client:
+          authenticatedClient,
+      } as never);
+
+    mockedBuildAuthenticatedAssistantContext
+      .mockResolvedValue({
+        wholeBodyKnowledge:
+          {},
+      } as never);
+
+    mockedGetRecentClinicalInterviews
+      .mockResolvedValue([
+        {
+          id:
+            "interview-expired",
+
+          user_id:
+            "user-1",
+
+          status:
+            "active",
+
+          reasoning_state:
+            expiredReasoningState,
+
+          created_at:
+            "2026-08-18T10:00:00.000Z",
+
+          updated_at:
+            "2026-08-18T10:00:00.000Z",
+        },
+      ]);
+
+    const orchestratorResult =
+      createOrchestratorResult(
+        "What symptoms are you having today?"
+      );
+
+    orchestratorResult
+      .clinicalReasoningState =
+        newReasoningState;
+
+    mockedRunAssistantOrchestrator
+      .mockReturnValue(
+        orchestratorResult
+      );
+
+    mockedUpdateClinicalInterview
+      .mockResolvedValueOnce({
+        id:
+          "interview-expired",
+
+        user_id:
+          "user-1",
+
+        status:
+          "abandoned",
+
+        reasoning_state:
+          expiredReasoningState,
+
+        created_at:
+          "2026-08-18T10:00:00.000Z",
+
+        updated_at:
+          "2026-08-20T12:00:00.000Z",
+      });
+
+    mockedCreateClinicalInterview
+      .mockResolvedValue({
+        id:
+          "interview-new",
+
+        user_id:
+          "user-1",
+
+        status:
+          "active",
+
+        reasoning_state:
+          newReasoningState,
+
+        created_at:
+          "2026-08-20T12:00:00.000Z",
+
+        updated_at:
+          "2026-08-20T12:00:00.000Z",
+      });
+
+    const request =
+      new Request(
+        "http://localhost/api/assistant",
+        {
+          method:
+            "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+
+            Authorization:
+              "Bearer test-token",
+          },
+
+          body:
+            JSON.stringify({
+              message:
+                "I have dizziness today.",
+
+              language:
+                "en",
+
+              conversation:
+                [],
+            }),
+        }
+      );
+
+    const response =
+      await POST(
+        request
+      );
+
+    expect(
+      response.status
+    ).toBe(
+      200
+    );
+
+    expect(
+      mockedUpdateClinicalInterview
+    ).toHaveBeenCalledWith(
+      {
+        userId:
+          "user-1",
+
+        interviewId:
+          "interview-expired",
+
+        reasoningState:
+          expiredReasoningState,
+
+        status:
+          "abandoned",
+      },
+
+      authenticatedClient
+    );
+
+    expect(
+      mockedRunAssistantOrchestrator
+    ).toHaveBeenCalledWith({
+      message:
+        "I have dizziness today.",
+
+      language:
+        "en",
+
+      healthContext:
+        expect.anything(),
+
+      conversation:
+        [],
+    });
+
+    expect(
+      mockedCreateClinicalInterview
+    ).toHaveBeenCalledWith(
+      {
+        userId:
+          "user-1",
+
+        reasoningState:
+          newReasoningState,
+
+        status:
+          "active",
+      },
+
+      authenticatedClient
+    );
+
+    expect(
+      mockedBuildAssistantResponseContract
+    ).toHaveBeenCalledWith(
+      orchestratorResult,
+      "interview-new"
+    );
+
+    const responseBody =
+      await response.json();
+
+    expect(
+  responseBody.clinicalInterviewId
+).toBe(
+  "interview-new"
+);
+
+dateNowSpy.mockRestore();
   }
 );
 

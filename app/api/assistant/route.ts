@@ -27,6 +27,12 @@ import {
   updateClinicalInterview,
 } from "@/lib/repositories/clinical-interview.repository";
 
+const CLINICAL_INTERVIEW_RESUME_WINDOW_MS =
+  24 *
+  60 *
+  60 *
+  1000;
+
 type AssistantRequestBody = {
   message?: unknown;
 
@@ -217,20 +223,63 @@ if (
       authentication.client
     );
 
-  const resumableInterview =
-    recentClinicalInterviews.find(
-      (interview) =>
-        interview.status ===
-        "active"
-    ) ?? null;
+ const now =
+  Date.now();
 
-    if (resumableInterview) {
-    trustedClinicalReasoningState =
-      resumableInterview.reasoning_state;
+const activeInterview =
+  recentClinicalInterviews.find(
+    (interview) =>
+      interview.status ===
+      "active"
+  ) ?? null;
 
-    activeClinicalInterviewId =
-      resumableInterview.id;
-  }
+const activeInterviewUpdatedAt =
+  activeInterview
+    ? new Date(
+        activeInterview.updated_at
+      ).getTime()
+    : Number.NaN;
+
+const isResumableInterview =
+  Boolean(
+    activeInterview &&
+    Number.isFinite(
+      activeInterviewUpdatedAt
+    ) &&
+    now -
+      activeInterviewUpdatedAt <=
+      CLINICAL_INTERVIEW_RESUME_WINDOW_MS
+  );
+
+if (
+  activeInterview &&
+  isResumableInterview
+) {
+  trustedClinicalReasoningState =
+    activeInterview.reasoning_state;
+
+  activeClinicalInterviewId =
+    activeInterview.id;
+} else if (
+  activeInterview
+) {
+  await updateClinicalInterview(
+    {
+      userId:
+        authentication.user.id,
+
+      interviewId:
+        activeInterview.id,
+
+      reasoningState:
+        activeInterview.reasoning_state,
+
+      status:
+        "abandoned",
+    },
+    authentication.client
+  );
+}
 }
 }
 
