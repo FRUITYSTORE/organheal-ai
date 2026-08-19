@@ -189,11 +189,18 @@ export function runAssistantOrchestrator({
 
   const clinicalRuntimeRequestsClarification = clinicalRuntimeOwnsClarification;
 
-  const legacyRequestsClarification = Boolean(
-    !clinicalRuntimeOwnsClarification &&
-    reasoningDecision.mode === "clarify" &&
-    reasoningDecision.question,
-  );
+ const clinicalRuntimeAllowsAnswer = Boolean(
+  clinicalReasoningRuntime &&
+  clinicalReasoningRuntime.reasoningPermission !==
+    "clarify-first"
+);
+
+const legacyRequestsClarification = Boolean(
+  !clinicalRuntimeOwnsClarification &&
+  !clinicalRuntimeAllowsAnswer &&
+  reasoningDecision.mode === "clarify" &&
+  reasoningDecision.question,
+);
 
       const normalizedQuestion =
     conversationAwareMessage
