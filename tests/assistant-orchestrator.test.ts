@@ -58,6 +58,75 @@ function createWholeBodyHealthContext(): AssistantResponseHealthContext {
   };
 }
 
+function createSufficientWholeBodyHealthContext():
+  AssistantResponseHealthContext {
+  const baseKnowledge =
+    buildWholeBodyClinicalKnowledge(
+      createEmptyPatientSummary()
+    );
+
+  return {
+    wholeBodyKnowledge: {
+      ...baseKnowledge,
+
+      evidenceSufficiency: {
+  status:
+    "sufficient",
+
+  reasoningPermission:
+    "evidence-based-answer",
+
+  completenessScore:
+    100,
+
+  evidenceNodeCount:
+    0,
+
+  relationshipCount:
+    0,
+
+  sourceTypeCount:
+    0,
+
+  coveredDomainCount:
+    0,
+
+  unresolvedDomainCount:
+    0,
+
+  confidence: {
+    evidenceConfidence:
+      "high",
+
+    relationshipConfidence:
+      "high",
+
+    reasoningConfidence:
+      "high",
+
+    recommendationConfidence:
+      "high",
+  },
+
+  gaps:
+    [],
+
+  highImpactMissingInformation:
+    [],
+
+  canProvideProvisionalInterpretation:
+    true,
+
+  requiresClarification:
+    false,
+
+  generatedAt:
+    "2026-08-19T05:05:00.000Z",
+},
+    },
+  };
+}
+
 function createLegacyOnlyHealthContext(): AssistantResponseHealthContext {
   return {};
 }
@@ -437,6 +506,120 @@ describe("Assistant orchestrator dual reasoning", () => {
 
     expect(result.reasoning.mode).toBe("clarify");
   });
+
+  it(
+  "returns the composed clinical conclusion and closes reasoning when evidence is sufficient",
+  () => {
+    mockedComposeClinicalResponse
+      .mockReturnValue({
+        available:
+          true,
+
+        hypothesisId:
+          "hypothesis:test",
+
+        title:
+          "Evidence-supported interpretation",
+
+        summary:
+          "A safe clinical interpretation is available.",
+
+        supportingEvidence:
+          [],
+
+        contradictingEvidence:
+          [],
+
+        contextualEvidence:
+          [],
+
+        missingEvidence:
+          [],
+
+        confidence:
+          "moderate",
+
+        confidenceExplanation:
+          "Confidence is calibrated from the available evidence.",
+
+        conflictLevel:
+          "none",
+
+        requiresClarification:
+          false,
+
+        requiresAdditionalEvidence:
+          false,
+
+        requiresClinicalReview:
+          false,
+
+        interpretationBoundary:
+          "This is not a confirmed diagnosis.",
+
+        response:
+          "CLINICAL_RESPONSE",
+
+        reason:
+          "A deterministic clinical response was composed.",
+
+        generatedAt:
+          "2026-08-19T05:05:00.000Z",
+      });
+
+    const result =
+      runAssistantOrchestrator({
+        message:
+          "What should I understand from the available evidence?",
+
+        language:
+          "en",
+
+        healthContext:
+          createSufficientWholeBodyHealthContext(),
+
+        conversation:
+          [],
+      });
+
+    expect(
+      result.reasoning.mode
+    ).toBe(
+      "answer"
+    );
+
+    expect(
+      result.reasoning
+        .clarifyingQuestion
+    ).toBeNull();
+
+    expect(
+      result.response
+    ).toBe(
+      "CLINICAL_RESPONSE"
+    );
+
+    expect(
+      result.clinicalReasoningState
+        ?.status
+    ).toBe(
+      "closed"
+    );
+
+    expect(
+      mockedComposeClinicalResponse
+    ).toHaveBeenCalledTimes(
+      1
+    );
+
+    expect(
+      mockedBuildPersonalizedResponse
+    ).toHaveBeenCalledTimes(
+      1
+    );
+  }
+);
+
   it("preserves the report-grounded response when a clinical response is also available", () => {
     mockedComposeClinicalResponse.mockReturnValue({
       available: true,
