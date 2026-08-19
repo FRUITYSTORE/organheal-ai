@@ -47,6 +47,9 @@ vi.mock(
     getClinicalInterview:
       vi.fn(),
 
+    getRecentClinicalInterviews:
+      vi.fn(),
+
     updateClinicalInterview:
       vi.fn(),
   })
@@ -87,6 +90,7 @@ import {
 import {
   createClinicalInterview,
   getClinicalInterview,
+  getRecentClinicalInterviews,
   updateClinicalInterview,
 } from "@/lib/repositories/clinical-interview.repository";
 
@@ -126,6 +130,11 @@ const mockedCreateClinicalInterview =
 const mockedGetClinicalInterview =
   vi.mocked(
     getClinicalInterview
+  );
+
+  const mockedGetRecentClinicalInterviews =
+  vi.mocked(
+    getRecentClinicalInterviews
   );
 
 const mockedUpdateClinicalInterview =
@@ -248,6 +257,8 @@ describe(
         mockedGetClinicalInterview
           .mockReset();
 
+        mockedGetRecentClinicalInterviews
+          .mockReset();
         mockedUpdateClinicalInterview
           .mockReset();
 
@@ -965,6 +976,261 @@ describe(
         );
       }
     );
+
+    it(
+  "automatically resumes the latest active authenticated clinical interview when no interview id is provided",
+  async () => {
+    const authenticatedClient =
+      {} as never;
+
+    const existingReasoningState:
+      ClinicalReasoningState = {
+      id:
+        "reasoning_state_active",
+
+      originalQuestion:
+        "What could be causing my abnormal result?",
+
+      currentQuestion:
+        "What symptoms are you having?",
+
+      intent:
+        "cause-reasoning",
+
+      language:
+        "en",
+
+      status:
+        "awaiting-clarification",
+
+      askedClarificationQuestionIds: [
+        "clarification:missing-current-context",
+      ],
+
+      resolvedGapTypes:
+        [],
+
+      collectedEvidence:
+        [],
+
+      runtimeHistory:
+        [],
+
+      currentRuntime:
+        {} as ClinicalReasoningState["currentRuntime"],
+
+      createdAt:
+        "2026-08-18T12:00:00.000Z",
+
+      updatedAt:
+        "2026-08-18T12:05:00.000Z",
+    };
+
+    const updatedReasoningState:
+      ClinicalReasoningState = {
+      ...existingReasoningState,
+
+      currentQuestion:
+        "Do you have any relevant medical history?",
+
+      resolvedGapTypes: [
+        "missing-current-context",
+      ],
+
+      updatedAt:
+        "2026-08-18T12:10:00.000Z",
+    };
+
+    mockedAuthenticateApiRequest
+      .mockResolvedValue({
+        success:
+          true,
+
+        user: {
+          id:
+            "user-1",
+        },
+
+        client:
+          authenticatedClient,
+      } as never);
+
+    mockedBuildAuthenticatedAssistantContext
+      .mockResolvedValue({
+        wholeBodyKnowledge:
+          {},
+      } as never);
+
+    mockedGetRecentClinicalInterviews
+      .mockResolvedValue([
+        {
+          id:
+            "interview-active",
+
+          user_id:
+            "user-1",
+
+          status:
+            "active",
+
+          reasoning_state:
+            existingReasoningState,
+
+          created_at:
+            "2026-08-18T12:00:00.000Z",
+
+          updated_at:
+            "2026-08-18T12:05:00.000Z",
+        },
+      ]);
+
+    const orchestratorResult =
+      createOrchestratorResult(
+        "Do you have any relevant medical history?"
+      );
+
+    orchestratorResult
+      .clinicalReasoningState =
+        updatedReasoningState;
+
+    mockedRunAssistantOrchestrator
+      .mockReturnValue(
+        orchestratorResult
+      );
+
+    mockedUpdateClinicalInterview
+      .mockResolvedValue({
+        id:
+          "interview-active",
+
+        user_id:
+          "user-1",
+
+        status:
+          "active",
+
+        reasoning_state:
+          updatedReasoningState,
+
+        created_at:
+          "2026-08-18T12:00:00.000Z",
+
+        updated_at:
+          "2026-08-18T12:10:00.000Z",
+      });
+
+    const request =
+      new Request(
+        "http://localhost/api/assistant",
+        {
+          method:
+            "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+
+            Authorization:
+              "Bearer test-token",
+          },
+
+          body:
+            JSON.stringify({
+              message:
+                "I still have dizziness.",
+
+              language:
+                "en",
+
+              conversation:
+                [],
+            }),
+        }
+      );
+
+    const response =
+      await POST(
+        request
+      );
+
+    expect(
+      response.status
+    ).toBe(
+      200
+    );
+
+    expect(
+      mockedGetRecentClinicalInterviews
+    ).toHaveBeenCalledWith(
+      "user-1",
+      10,
+      authenticatedClient
+    );
+
+    expect(
+      mockedGetClinicalInterview
+    ).not.toHaveBeenCalled();
+
+    expect(
+      mockedRunAssistantOrchestrator
+    ).toHaveBeenCalledWith({
+      message:
+        "I still have dizziness.",
+
+      language:
+        "en",
+
+      healthContext:
+        expect.anything(),
+
+      conversation:
+        [],
+
+      clinicalReasoningState:
+        existingReasoningState,
+    });
+
+    expect(
+      mockedUpdateClinicalInterview
+    ).toHaveBeenCalledWith(
+      {
+        userId:
+          "user-1",
+
+        interviewId:
+          "interview-active",
+
+        reasoningState:
+          updatedReasoningState,
+
+        status:
+          "active",
+      },
+
+      authenticatedClient
+    );
+
+    expect(
+      mockedCreateClinicalInterview
+    ).not.toHaveBeenCalled();
+
+    expect(
+      mockedBuildAssistantResponseContract
+    ).toHaveBeenCalledWith(
+      orchestratorResult,
+      "interview-active"
+    );
+
+    const responseBody =
+      await response.json();
+
+    expect(
+      responseBody.clinicalInterviewId
+    ).toBe(
+      "interview-active"
+    );
+  }
+);
 
     it(
       "returns 500 when the orchestrator throws an error",

@@ -23,6 +23,7 @@ import type {
 import {
   createClinicalInterview,
   getClinicalInterview,
+  getRecentClinicalInterviews,
   updateClinicalInterview,
 } from "@/lib/repositories/clinical-interview.repository";
 
@@ -174,41 +175,63 @@ if (
     });
 
   if (
-    normalizedClinicalInterviewId
-  ) {
-    const existingInterview =
-      await getClinicalInterview(
-        authentication.user.id,
-        normalizedClinicalInterviewId,
-        authentication.client
-      );
+  normalizedClinicalInterviewId
+) {
+  const existingInterview =
+    await getClinicalInterview(
+      authentication.user.id,
+      normalizedClinicalInterviewId,
+      authentication.client
+    );
 
-    if (!existingInterview) {
-      return NextResponse.json(
-        {
-          error:
-            "Clinical interview was not found.",
+  if (!existingInterview) {
+    return NextResponse.json(
+      {
+        error:
+          "Clinical interview was not found.",
 
-          requestId,
+        requestId,
+      },
+      {
+        status:
+          404,
+
+        headers: {
+          "x-request-id":
+            requestId,
         },
-        {
-          status:
-            404,
+      }
+    );
+  }
 
-          headers: {
-            "x-request-id":
-              requestId,
-          },
-        }
-      );
-    }
+  trustedClinicalReasoningState =
+    existingInterview.reasoning_state;
 
+  activeClinicalInterviewId =
+    existingInterview.id;
+} else {
+  const recentClinicalInterviews =
+    await getRecentClinicalInterviews(
+      authentication.user.id,
+      10,
+      authentication.client
+    );
+
+  const resumableInterview =
+    recentClinicalInterviews.find(
+      (interview) =>
+        interview.status ===
+        "active"
+    ) ?? null;
+
+    if (resumableInterview) {
     trustedClinicalReasoningState =
-      existingInterview.reasoning_state;
+      resumableInterview.reasoning_state;
 
     activeClinicalInterviewId =
-      existingInterview.id;
+      resumableInterview.id;
   }
+}
 }
 
 const orchestratorResult =
