@@ -988,6 +988,159 @@ describe(
     );
 
     it(
+  "rejects a completed clinical interview when an explicit interview id is provided",
+  async () => {
+    const authenticatedClient =
+      {} as never;
+
+    const completedReasoningState:
+      ClinicalReasoningState = {
+      id:
+        "reasoning_state_completed",
+
+      originalQuestion:
+        "What could be causing my abnormal result?",
+
+      currentQuestion:
+        "What could be causing my abnormal result?",
+
+      intent:
+        "cause-reasoning",
+
+      language:
+        "en",
+
+      status:
+        "closed",
+
+      askedClarificationQuestionIds:
+        [],
+
+      resolvedGapTypes:
+        [],
+
+      collectedEvidence:
+        [],
+
+      runtimeHistory:
+        [],
+
+      currentRuntime:
+        {} as ClinicalReasoningState["currentRuntime"],
+
+      createdAt:
+        "2026-08-18T12:00:00.000Z",
+
+      updatedAt:
+        "2026-08-18T12:10:00.000Z",
+    };
+
+    mockedAuthenticateApiRequest
+      .mockResolvedValue({
+        success:
+          true,
+
+        user: {
+          id:
+            "user-1",
+        },
+
+        client:
+          authenticatedClient,
+      } as never);
+
+    mockedBuildAuthenticatedAssistantContext
+      .mockResolvedValue({
+        wholeBodyKnowledge:
+          {},
+      } as never);
+
+    mockedGetClinicalInterview
+      .mockResolvedValue({
+        id:
+          "interview-completed",
+
+        user_id:
+          "user-1",
+
+        status:
+          "completed",
+
+        reasoning_state:
+          completedReasoningState,
+
+        created_at:
+          "2026-08-18T12:00:00.000Z",
+
+        updated_at:
+          "2026-08-18T12:10:00.000Z",
+      });
+
+    const request =
+      new Request(
+        "http://localhost/api/assistant",
+        {
+          method:
+            "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+
+            Authorization:
+              "Bearer test-token",
+          },
+
+          body:
+            JSON.stringify({
+              message:
+                "Continue this interview.",
+
+              language:
+                "en",
+
+              conversation:
+                [],
+
+              clinicalInterviewId:
+                "interview-completed",
+            }),
+        }
+      );
+
+    const response =
+      await POST(
+        request
+      );
+
+    expect(
+      response.status
+    ).toBe(
+      409
+    );
+
+    await expect(
+      response.json()
+    ).resolves.toMatchObject({
+      error:
+        "Clinical interview is no longer active.",
+    });
+
+    expect(
+      mockedRunAssistantOrchestrator
+    ).not.toHaveBeenCalled();
+
+    expect(
+      mockedUpdateClinicalInterview
+    ).not.toHaveBeenCalled();
+
+    expect(
+      mockedCreateClinicalInterview
+    ).not.toHaveBeenCalled();
+  }
+);
+
+    it(
   "automatically resumes the latest active authenticated clinical interview when no interview id is provided",
   async () => {
     const authenticatedClient =

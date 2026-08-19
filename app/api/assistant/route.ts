@@ -210,6 +210,29 @@ if (
     );
   }
 
+  if (
+  existingInterview.status !==
+  "active"
+) {
+  return NextResponse.json(
+    {
+      error:
+        "Clinical interview is no longer active.",
+
+      requestId,
+    },
+    {
+      status:
+        409,
+
+      headers: {
+        "x-request-id":
+          requestId,
+      },
+    }
+  );
+}
+
   trustedClinicalReasoningState =
     existingInterview.reasoning_state;
 
