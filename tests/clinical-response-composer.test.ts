@@ -342,7 +342,14 @@ describe("Clinical response composer", () => {
 
     expect(result.response).toContain("Important missing information");
 
-    expect(result.response).toContain("not a confirmed diagnosis");
+    expect(result.response).toContain("Important missing information");
+
+expect(result.response).toContain(
+  "not a confirmed diagnosis"
+);
+    expect(result.response).toContain(
+    "Complete cardiovascular risk profile"
+   );
   });
 
   it("composes an Arabic evidence-grounded response", () => {
@@ -368,7 +375,13 @@ describe("Clinical response composer", () => {
 
     expect(result.response).toContain("معلومات مهمة ما زلنا نحتاج إليها");
 
-    expect(result.response).toContain("not a confirmed diagnosis");
+    expect(result.response).toContain(
+  "هذه فرضية تفسيرية مبنية على الأدلة وليست تشخيصًا مؤكدًا."
+);
+
+expect(result.response).toContain(
+  "Complete cardiovascular risk profile"
+);
   });
 
   it("preserves supporting, contradicting, and missing evidence", () => {

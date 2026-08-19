@@ -45,6 +45,83 @@ export type ClinicalNarrativeResult = {
   generatedAt: string;
 };
 
+function localizeSystemGeneratedClinicalText(
+  value: string,
+  language: ClinicalNarrativeLanguage,
+): string {
+  if (language !== "ar") {
+    return value;
+  }
+
+  const exactTranslations:
+    Record<string, string> = {
+    "This generated health insight explicitly references this uploaded report.":
+      "تشير هذه المعلومة الصحية المُولدة بشكل مباشر إلى هذا التقرير الطبي المرفوع.",
+
+    "This evidence provides relevant clinical context but does not independently establish the proposed relationship.":
+      "يوفر هذا الدليل سياقًا سريريًا ذا صلة، لكنه لا يثبت بمفرده العلاقة المقترحة.",
+
+    "This weighted evidence supports evaluating the explicit clinical relationship.":
+      "يدعم هذا الدليل الموزون تقييم العلاقة السريرية المحددة.",
+
+    "This weighted evidence may weaken, limit, or provide an alternative interpretation of the relationship.":
+      "قد يضعف هذا الدليل الموزون العلاقة المقترحة أو يحد منها أو يدعم تفسيرًا بديلًا لها.",
+
+    "Clarification of the unresolved evidence conflict.":
+      "توضيح التعارض غير المحسوم بين الأدلة.",
+
+    "Additional objective clinical evidence.":
+      "أدلة سريرية موضوعية إضافية.",
+
+    "Clinical review of the supporting and contradicting evidence.":
+      "مراجعة سريرية للأدلة الداعمة والمتعارضة.",
+  };
+
+  const exactTranslation =
+    exactTranslations[value];
+
+  if (exactTranslation) {
+    return exactTranslation;
+  }
+
+  if (
+    value.includes(
+      "evidence-grounded interpretive hypothesis"
+    ) &&
+    value.includes(
+      "not a confirmed diagnosis"
+    )
+  ) {
+    return "هذه فرضية تفسيرية مبنية على الأدلة وليست تشخيصًا مؤكدًا. يجب مراجعتها ضمن التاريخ السريري الكامل والفحص والتقييم المهني المناسب.";
+  }
+
+  if (
+    value.includes(
+      "This interpretation is not a confirmed diagnosis"
+    )
+  ) {
+    return "هذا التفسير ليس تشخيصًا مؤكدًا.";
+  }
+
+  if (
+    value.includes(
+      "This is not a confirmed diagnosis"
+    )
+  ) {
+    return "هذا ليس تشخيصًا مؤكدًا.";
+  }
+
+  if (
+    value.includes(
+      "This interpretation is not diagnostic confirmation"
+    )
+  ) {
+    return "هذا التفسير لا يمثل تأكيدًا تشخيصيًا.";
+  }
+
+  return value;
+}
+
 function formatEvidence(
   evidence: ClinicalDecisionTraceEvidence[],
   language: ClinicalNarrativeLanguage,
@@ -56,8 +133,14 @@ function formatEvidence(
   }
 
   return evidence
-    .map((item, index) => `${index + 1}. ${item.explanation}`)
-    .join("\n");
+  .map(
+    (item, index) =>
+      `${index + 1}. ${localizeSystemGeneratedClinicalText(
+        item.explanation,
+        language,
+      )}`,
+  )
+  .join("\n");
 }
 
 function formatStringItems(
@@ -70,7 +153,15 @@ function formatStringItems(
     return language === "ar" ? emptyArabic : emptyEnglish;
   }
 
-  return items.map((item, index) => `${index + 1}. ${item}`).join("\n");
+  return items
+  .map(
+    (item, index) =>
+      `${index + 1}. ${localizeSystemGeneratedClinicalText(
+        item,
+        language,
+      )}`,
+  )
+  .join("\n");
 }
 
 function buildEnglishConfidenceStatement(
@@ -335,17 +426,46 @@ function buildAssistantEnglishNarrative(
 function buildAssistantArabicNarrative(
   decisionTrace: ClinicalDecisionTrace,
 ): string {
+  const hypothesisDescription =
+    decisionTrace.hypothesisDescription
+      ? localizeSystemGeneratedClinicalText(
+          decisionTrace.hypothesisDescription,
+          "ar",
+        )
+      : "لا يتوفر تفسير سريري حاليًا.";
+
+  const missingEvidence =
+    decisionTrace.missingEvidence
+      .map((item) =>
+        localizeSystemGeneratedClinicalText(
+          item,
+          "ar",
+        )
+      );
+
+  const interpretationBoundary =
+    decisionTrace.interpretationBoundary
+      ? localizeSystemGeneratedClinicalText(
+          decisionTrace.interpretationBoundary,
+          "ar",
+        )
+      : "هذا ليس تشخيصًا مؤكدًا.";
+
   return [
-    decisionTrace.hypothesisDescription ?? "لا يتوفر تفسير سريري حاليًا.",
+    hypothesisDescription,
     "",
-    buildArabicConfidenceStatement(decisionTrace),
-    buildArabicConflictStatement(decisionTrace),
+    buildArabicConfidenceStatement(
+      decisionTrace
+    ),
+    buildArabicConflictStatement(
+      decisionTrace
+    ),
     "",
-    decisionTrace.missingEvidence.length > 0
-      ? `معلومات مهمة ما زلنا نحتاج إليها: ${decisionTrace.missingEvidence.join("؛ ")}.`
+    missingEvidence.length > 0
+      ? `معلومات مهمة ما زلنا نحتاج إليها: ${missingEvidence.join("؛ ")}.`
       : "لا توجد معلومات مهمة مفقودة مسجلة حاليًا.",
     "",
-    decisionTrace.interpretationBoundary ?? "هذا ليس تشخيصًا مؤكدًا.",
+    interpretationBoundary,
   ].join("\n");
 }
 
