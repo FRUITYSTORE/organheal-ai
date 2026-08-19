@@ -212,6 +212,100 @@ function createEmptyInterpretation():
   };
 }
 
+function mergeClinicalMemoryEvidence(
+  knowledge:
+    WholeBodyClinicalKnowledgeModel,
+  memoryEvidence:
+    StructuredClinicalEvidenceReference[]
+): WholeBodyClinicalKnowledgeModel {
+  if (
+    memoryEvidence.length ===
+    0
+  ) {
+    return knowledge;
+  }
+
+  const memoryBySourceId =
+    new Map(
+      memoryEvidence
+        .filter(
+          (evidence) =>
+            evidence.sourceId !==
+            null
+        )
+        .map(
+          (evidence) => [
+            evidence.sourceId as string,
+            evidence,
+          ]
+        )
+    );
+
+  if (
+    memoryBySourceId.size ===
+    0
+  ) {
+    return knowledge;
+  }
+
+  return {
+    ...knowledge,
+
+    nodes:
+      knowledge.nodes.map(
+        (node) => {
+          const matchingMemory =
+            node.evidence
+              .map(
+                (evidence) =>
+                  evidence.sourceId
+                    ? memoryBySourceId.get(
+                        evidence.sourceId
+                      )
+                    : undefined
+              )
+              .filter(
+                (
+                  evidence
+                ): evidence is StructuredClinicalEvidenceReference =>
+                  evidence !==
+                  undefined
+              );
+
+          if (
+            matchingMemory.length ===
+            0
+          ) {
+            return node;
+          }
+
+          const existingIds =
+            new Set(
+              node.evidence.map(
+                (evidence) =>
+                  evidence.id
+              )
+            );
+
+          return {
+            ...node,
+
+            evidence: [
+              ...node.evidence,
+
+              ...matchingMemory.filter(
+                (evidence) =>
+                  !existingIds.has(
+                    evidence.id
+                  )
+              ),
+            ],
+          };
+        }
+      ),
+  };
+}
+
 export function runClinicalReasoningLoop({
   question,
   intent,
@@ -226,6 +320,12 @@ export function runClinicalReasoningLoop({
   ClinicalReasoningLoopResult {
   const normalizedQuestion =
     question.trim();
+
+    const reasoningKnowledge =
+  mergeClinicalMemoryEvidence(
+    knowledge,
+    memoryEvidence
+  );
 
   const interpretation =
     previousState
@@ -260,7 +360,8 @@ const resolvedGapTypes =
 
       language,
 
-      knowledge,
+      knowledge:
+        reasoningKnowledge,
 
       resolvedGapTypes,
 

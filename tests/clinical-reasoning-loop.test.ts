@@ -578,6 +578,157 @@ describe(
   }
 );
 
+it(
+  "merges matching clinical memory evidence into reasoning knowledge",
+  () => {
+    const baseKnowledge =
+      createEmptyKnowledge();
+
+    const knowledge = {
+      ...baseKnowledge,
+
+      nodes: [
+        {
+          id:
+            "node:symptom-context",
+
+          label:
+            "Current symptom context",
+
+          type:
+            "symptom",
+
+          domains: [
+            "general-systemic",
+          ],
+
+          priority:
+            "monitor",
+
+          confidence:
+            "moderate",
+
+          evidence: [
+            {
+              id:
+                "evidence:current-context",
+
+              sourceType:
+                "user-answer",
+
+              sourceId:
+                "clarification:missing-current-context",
+
+              label:
+                "Current symptom context",
+
+              value:
+                "Current symptom information",
+
+              unit:
+                null,
+
+              observedAt:
+                "2026-08-19T00:00:00.000Z",
+
+              certainty:
+                "reported",
+
+              confidence:
+                "moderate",
+
+              relevance:
+                "contextual",
+            },
+          ],
+        } as unknown as (
+          typeof baseKnowledge.nodes
+        )[number],
+      ],
+    };
+
+    const result =
+      runClinicalReasoningLoop({
+        question:
+          "What should I focus on now?",
+
+        intent:
+          "cause-reasoning",
+
+        knowledge,
+
+        conversation:
+          [],
+
+        memoryEvidence: [
+          {
+            id:
+              "evidence:memory:symptom-context",
+
+            sourceType:
+              "user-answer",
+
+            sourceId:
+              "clarification:missing-current-context",
+
+            label:
+              "Previous patient symptom context",
+
+            value:
+              "The dizziness started two weeks ago and is getting worse.",
+
+            unit:
+              null,
+
+            observedAt:
+              "2026-08-18T12:00:00.000Z",
+
+            certainty:
+              "reported",
+
+            confidence:
+              "moderate",
+
+            relevance:
+              "contextual",
+
+            patientEvidenceCategory:
+              "symptom-context",
+
+            resolvedGapType:
+              "missing-current-context",
+          },
+        ],
+      });
+
+    expect(
+      result.runtime
+        .knowledge
+        .nodes[0]
+        .evidence
+        .map(
+          (evidence) =>
+            evidence.id
+        )
+    ).toContain(
+      "evidence:memory:symptom-context"
+    );
+
+    expect(
+      result.runtime
+        .evidenceWeights
+        .evidence
+        .some(
+          (evidence) =>
+            evidence.evidenceId ===
+            "evidence:memory:symptom-context"
+        )
+    ).toBe(
+      true
+    );
+  }
+);
+
     it(
       "preserves the original state creation time while advancing the update time",
       () => {
