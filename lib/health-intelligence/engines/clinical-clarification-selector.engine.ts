@@ -75,9 +75,9 @@ const GAP_PRIORITY_ORDER:
   ClinicalEvidenceGapType[] = [
     "no-evidence",
     "missing-current-context",
-    "unresolved-domain",
     "missing-health-history",
     "missing-user-reported-context",
+    "unresolved-domain",
     "limited-source-diversity",
     "no-explicit-relationships",
   ];
@@ -349,21 +349,6 @@ function rankGaps(
       first,
       second
     ) => {
-      const impactDifference =
-        getImpactWeight(
-          second.impact
-        ) -
-        getImpactWeight(
-          first.impact
-        );
-
-      if (
-        impactDifference !==
-        0
-      ) {
-        return impactDifference;
-      }
-
       const typeDifference =
         getTypeOrder(
           first.type
@@ -377,6 +362,21 @@ function rankGaps(
         0
       ) {
         return typeDifference;
+      }
+
+      const impactDifference =
+        getImpactWeight(
+          second.impact
+        ) -
+        getImpactWeight(
+          first.impact
+        );
+
+      if (
+        impactDifference !==
+        0
+      ) {
+        return impactDifference;
       }
 
       return first.id.localeCompare(

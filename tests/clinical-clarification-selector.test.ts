@@ -118,5 +118,99 @@ describe(
         );
       }
     );
+    it(
+  "follows clinical assessment progression before lower-priority unresolved domains",
+  () => {
+    const knowledge = {
+      evidenceSufficiency: {
+        requiresClarification:
+          true,
+
+        gaps: [
+          {
+            id:
+              "gap-unresolved-domain",
+
+            type:
+              "unresolved-domain",
+
+            label:
+              "Unresolved domain",
+
+            reason:
+              "A clinical domain remains unresolved.",
+
+            affectedDomains:
+              [],
+
+            impact:
+              "high",
+          },
+
+          {
+            id:
+              "gap-health-history",
+
+            type:
+              "missing-health-history",
+
+            label:
+              "Health history missing",
+
+            reason:
+              "Relevant medical history is not yet documented.",
+
+            affectedDomains:
+              [],
+
+            impact:
+              "moderate",
+          },
+        ],
+      },
+
+      unresolvedDomains:
+        [],
+
+      coveredDomains:
+        [],
+
+      nodes:
+        [],
+
+      relationships:
+        [],
+    } as unknown as WholeBodyClinicalKnowledgeModel;
+
+    const result =
+      selectClinicalClarificationQuestion({
+        question:
+          "I want to understand what could be causing this.",
+
+        knowledge,
+
+        language:
+          "en",
+
+        resolvedGapTypes:
+          [],
+
+        previouslyAskedQuestionIds:
+          [],
+      });
+
+    expect(
+      result.selectedGap?.type
+    ).toBe(
+      "missing-health-history"
+    );
+
+    expect(
+      result.question?.id
+    ).toBe(
+      "clarification:missing-health-history"
+    );
+  }
+);
   }
 );
