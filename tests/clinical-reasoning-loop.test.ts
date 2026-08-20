@@ -834,6 +834,285 @@ it(
   }
 );
 
+it(
+  "completes a multi-turn clinical journey from clarification through collected evidence to a closed reasoning state",
+  () => {
+    const initialKnowledge =
+      createEmptyKnowledge();
+
+    /*
+     * Turn 1:
+     * The user asks a clinical question with insufficient evidence.
+     * The reasoning loop should request clarification.
+     */
+    const firstResult =
+      runClinicalReasoningLoop({
+        question:
+          "What could be causing my abnormal result?",
+
+        intent:
+          "cause-reasoning",
+
+        knowledge:
+          initialKnowledge,
+
+        conversation:
+          [],
+
+        timestamp:
+          "2026-08-20T01:00:00.000Z",
+      });
+
+    expect(
+      firstResult.runtime
+        .requiresClarification
+    ).toBe(
+      true
+    );
+
+    expect(
+      firstResult.runtime
+        .clarification
+        .question
+    ).not.toBeNull();
+
+    /*
+     * Turn 2:
+     * The patient provides meaningful clinical context.
+     * The answer should become collected evidence and
+     * resolve the original evidence gap.
+     */
+    const secondResult =
+      runClinicalReasoningLoop({
+        question:
+          "I have had severe fatigue and dizziness for two weeks.",
+
+        intent:
+          "cause-reasoning",
+
+        knowledge:
+          initialKnowledge,
+
+        conversation: [
+          {
+            role:
+              "user",
+
+            content:
+              "What could be causing my abnormal result?",
+          },
+
+          {
+            role:
+              "assistant",
+
+            content:
+              firstResult.runtime
+                .clarification
+                .question
+                ?.question ??
+              "",
+          },
+        ],
+
+        previousState:
+          firstResult.state,
+
+        timestamp:
+          "2026-08-20T01:05:00.000Z",
+      });
+
+    expect(
+      secondResult.isNewState
+    ).toBe(
+      false
+    );
+
+    expect(
+      secondResult.stateWasUpdated
+    ).toBe(
+      true
+    );
+
+    expect(
+      secondResult.userEvidence
+    ).toBe(
+      "I have had severe fatigue and dizziness for two weeks."
+    );
+
+    expect(
+      secondResult.state
+        .resolvedGapTypes
+    ).toContain(
+      "no-evidence"
+    );
+
+    expect(
+      secondResult.state
+        .collectedEvidence
+    ).toHaveLength(
+      1
+    );
+
+    /*
+     * Turn 3:
+     * The available clinical knowledge is now sufficient
+     * for an evidence-based answer.
+     */
+    const sufficientKnowledge = {
+      ...initialKnowledge,
+
+      evidenceSufficiency: {
+        status:
+          "sufficient",
+
+        reasoningPermission:
+          "evidence-based-answer",
+
+        completenessScore:
+          100,
+
+        evidenceNodeCount:
+          0,
+
+        relationshipCount:
+          0,
+
+        sourceTypeCount:
+          0,
+
+        coveredDomainCount:
+          0,
+
+        unresolvedDomainCount:
+          0,
+
+        confidence: {
+          evidenceConfidence:
+            "high",
+
+          relationshipConfidence:
+            "high",
+
+          reasoningConfidence:
+            "high",
+
+          recommendationConfidence:
+            "high",
+        },
+
+        gaps:
+          [],
+
+        highImpactMissingInformation:
+          [],
+
+        canProvideProvisionalInterpretation:
+          true,
+
+        requiresClarification:
+          false,
+
+        generatedAt:
+          "2026-08-20T01:10:00.000Z",
+      },
+    } as ReturnType<
+      typeof createEmptyKnowledge
+    >;
+
+    const finalResult =
+      runClinicalReasoningLoop({
+        question:
+          "What should I understand from the available evidence?",
+
+        intent:
+          "cause-reasoning",
+
+        knowledge:
+          sufficientKnowledge,
+
+        conversation:
+          [],
+
+        previousState:
+          secondResult.state,
+
+        timestamp:
+          "2026-08-20T01:10:00.000Z",
+      });
+
+    /*
+     * Final E2E assertions:
+     * The previously collected patient evidence survives,
+     * clarification stops, and the interview closes.
+     */
+    expect(
+      finalResult.isNewState
+    ).toBe(
+      false
+    );
+
+    expect(
+      finalResult.runtime
+        .requiresClarification
+    ).toBe(
+      false
+    );
+
+    expect(
+      finalResult.runtime.mode
+    ).toBe(
+      "evidence-based"
+    );
+
+    expect(
+      finalResult.state.status
+    ).toBe(
+      "closed"
+    );
+
+    expect(
+      finalResult.state
+        .resolvedGapTypes
+    ).toContain(
+      "no-evidence"
+    );
+
+    expect(
+      finalResult.state
+        .collectedEvidence
+    ).toEqual(
+      secondResult.state
+        .collectedEvidence
+    );
+
+    expect(
+      finalResult.state
+        .runtimeHistory
+        .length
+    ).toBeGreaterThan(
+      secondResult.state
+        .runtimeHistory
+        .length
+    );
+
+    expect(
+      finalResult.state
+        .createdAt
+    ).toBe(
+      firstResult.state
+        .createdAt
+    );
+
+    expect(
+      finalResult.state
+        .updatedAt
+    ).toBe(
+      "2026-08-20T01:10:00.000Z"
+    );
+  }
+);
+
     it(
       "preserves the original state creation time while advancing the update time",
       () => {

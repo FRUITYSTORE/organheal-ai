@@ -385,6 +385,13 @@ if (
 
     activeClinicalInterviewId =
       createdInterview.id;
+      if (
+  sessionStatus ===
+  "completed"
+) {
+  activeClinicalInterviewId =
+    null;
+}
   }
 }
 

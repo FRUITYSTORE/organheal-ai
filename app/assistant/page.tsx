@@ -298,15 +298,27 @@ const result =
         throw new Error(data.error || "Assistant request failed.");
       }
 
-            if (
+              if (
         typeof data.clinicalInterviewId === "string" &&
         data.clinicalInterviewId.trim()
       ) {
         setClinicalInterviewId(
           data.clinicalInterviewId
         );
-      }
-      
+      } else if (
+        data.clinicalInterviewId === null
+      ) {
+        setClinicalInterviewId(
+          null
+        );
+      } else if (
+  data.clinicalInterviewId === null
+) {
+  setClinicalInterviewId(
+    null
+  );
+}
+
       setMessages((current) => [
   ...current,
   {
