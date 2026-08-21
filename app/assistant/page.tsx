@@ -570,9 +570,23 @@ const result =
               </h2>
             </div>
 
-            <span className="ohStatusBadge neutral">
-              {text("Educational", "تعليمي")}
-            </span>
+            <span
+  className={`ohStatusBadge ${
+    clinicalInterviewId
+      ? "good"
+      : "neutral"
+  }`}
+>
+  {clinicalInterviewId
+    ? text(
+        "Conversation in progress",
+        "محادثة مستمرة"
+      )
+    : text(
+        "Educational",
+        "تعليمي"
+      )}
+</span>
           </div>
 
           <div className="assistantChatWindow">
