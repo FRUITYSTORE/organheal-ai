@@ -89,19 +89,49 @@ export default function AssistantPage() {
   }, []);
 
   useEffect(() => {
-    setMessages((current) => {
-      if (current.length > 0) return current;
+  if (isContextLoading) {
+    return;
+  }
+
+  setMessages((current) => {
+    if (current.length > 0) {
+      return current;
+    }
+
+    if (healthContext) {
+      const priority =
+        healthContext.priorityOrgan ||
+        text(
+          "your overall health",
+          "صحتك العامة"
+        );
 
       return [
         {
           sender: "ai",
-          text: isArabic
-            ? "مرحبًا، أنا OrganHeal AI. أستطيع مساعدتك في فهم نتائجك، نمط المخاطر، التقارير، والخطوات الصحية التالية بطريقة تعليمية ومنظمة."
-            : "Hello, I am OrganHeal AI. I can help you understand your results, risk pattern, reports, and next health steps in an educational and organized way.",
+          text: text(
+            `Hello, I’m OrganHeal AI. I have your current health context available, including your focus on ${priority}. Ask me naturally about your results, reports, health concerns, or what you should do next.`,
+            `مرحبًا، أنا OrganHeal AI. لدي سياقك الصحي الحالي، بما في ذلك التركيز على ${priority}. اسألني بطريقتك الطبيعية عن نتائجك أو تقاريرك أو مخاوفك الصحية أو الخطوة التالية المناسبة لك.`
+          ),
         },
       ];
-    });
-  }, [isArabic]);
+    }
+
+    return [
+      {
+        sender: "ai",
+        text: text(
+          "Hello, I’m OrganHeal AI. You can ask me a general health question now. If you later add an assessment or medical report, I can use that information to make the conversation more relevant to you.",
+          "مرحبًا، أنا OrganHeal AI. يمكنك أن تسألني سؤالًا صحيًا عامًا الآن. وإذا أضفت لاحقًا تقييمًا صحيًا أو تقريرًا طبيًا، يمكنني استخدام هذه المعلومات لجعل المحادثة أكثر ارتباطًا بك."
+        ),
+      },
+    ];
+  });
+}, [
+  healthContext,
+  isContextLoading,
+  isArabic,
+]);
 
   useEffect(() => {
     async function loadHealthContext() {
