@@ -597,21 +597,33 @@ export default function ProfilePage() {
                   </span>
                 </div>
 
-                <div className="ohStack">
+                                <div className="ohStack">
                   <p className="ohCardText">
-                    <strong>{text("Email:", "البريد الإلكتروني:")}</strong>{" "}
-                    {email || text("Not available", "غير متاح")}
+                    <strong>{text("Email:", "Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ:")}</strong>{" "}
+                    {email || text("Not available", "ØºÙŠØ± Ù…ØªØ§Ø")}
                   </p>
 
                   <p className="ohCardText">
-                    <strong>{text("Member since:", "عضو منذ:")}</strong>{" "}
+                    <strong>{text("Member since:", "Ø¹Ø¶Ùˆ Ù…Ù†Ø°:")}</strong>{" "}
                     {memberSinceLabel}
                   </p>
 
                   <p className="ohCardText">
-                    <strong>{text("Latest report:", "آخر تقرير:")}</strong>{" "}
-                    {latestReportDate || text("No reports uploaded yet", "لا توجد تقارير مرفوعة بعد")}
+                    <strong>{text("Latest report:", "Ø¢Ø®Ø± ØªÙ‚Ø±ÙŠØ±:")}</strong>{" "}
+                    {latestReportDate || text("No reports uploaded yet", "Ù„Ø§ ØªÙˆØ¬Ø¯ ØªÙ‚Ø§Ø±ÙŠØ± Ù…Ø±ÙÙˆØ¹Ø© Ø¨Ø¹Ø¯")}
                   </p>
+
+                  <div className="ohButtonRow" style={{ marginTop: "8px" }}>
+                    <Link
+                      href="/settings/communications"
+                      className="secondaryBtn"
+                    >
+                      {text(
+                        "Communication Settings",
+                        "إعدادات التواصل"
+                      )}
+                    </Link>
+                  </div>
                 </div>
               </article>
             </section>
