@@ -62,6 +62,12 @@ const [heroAction, setHeroAction] = useState<{
   label: string;
   href: string;
 } | null>(null);
+
+const [
+  heroClinicalInterviewId,
+  setHeroClinicalInterviewId,
+] = useState<string | null>(null);
+
 const [heroLoading, setHeroLoading] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 const [heroHealthContext, setHeroHealthContext] = useState<Record<string, unknown> | null>(null);
@@ -151,58 +157,7 @@ try {
     setIsLoggedIn(false);
     window.location.href = "/";
   }
-function getHeroAssistantAction(question: string) {
-  const normalizedQuestion = question.toLowerCase();
 
-  if (
-    normalizedQuestion.includes("doctor") ||
-    normalizedQuestion.includes("brief") ||
-    normalizedQuestion.includes("طبيب") ||
-    normalizedQuestion.includes("دكتور")
-  ) {
-    return {
-      label: text("Review Reports", "مراجعة التقارير"),
-      href: "/reports",
-    };
-  }
-
-  if (
-    normalizedQuestion.includes("report") ||
-    normalizedQuestion.includes("lab") ||
-    normalizedQuestion.includes("تقرير") ||
-    normalizedQuestion.includes("فحص") ||
-    normalizedQuestion.includes("مختبر")
-  ) {
-    return {
-      label: text("Open Reports", "فتح التقارير"),
-      href: "/reports",
-    };
-  }
-
-  if (
-    normalizedQuestion.includes("next") ||
-    normalizedQuestion.includes("action") ||
-    normalizedQuestion.includes("improve") ||
-    normalizedQuestion.includes("plan") ||
-    normalizedQuestion.includes("الخطوة") ||
-    normalizedQuestion.includes("تحسين") ||
-    normalizedQuestion.includes("خطة")
-  ) {
-    return {
-      label: text("Open Health Plan", "فتح الخطة الصحية"),
-      href: "/health-plan",
-    };
-  }
-
-  if (!isLoggedIn) {
-    return {
-      label: text("Upload Report", "رفع تقرير"),
-      href: "/lab-upload",
-    };
-  }
-
-  return null;
-}
  async function askHeroAI() {
   const currentQuestion =
     heroQuestion.trim();
@@ -269,14 +224,17 @@ const result =
 
       body:
         JSON.stringify({
-          message:
-            currentQuestion,
+  message:
+    currentQuestion,
 
-          language,
+  language,
 
-          conversation:
-            conversationForRequest,
-        }),
+  conversation:
+    conversationForRequest,
+
+  clinicalInterviewId:
+    heroClinicalInterviewId,
+}),
     }
   );
 
@@ -310,11 +268,31 @@ const result =
         ].slice(-8)
       );
 
-      setHeroAction(
-        getHeroAssistantAction(
-          currentQuestion
-        )
-      );
+      if (
+  typeof data.clinicalInterviewId === "string" &&
+  data.clinicalInterviewId.trim()
+) {
+  setHeroClinicalInterviewId(
+    data.clinicalInterviewId
+  );
+} else if (
+  data.clinicalInterviewId === null
+) {
+  setHeroClinicalInterviewId(null);
+}
+
+if (
+  data.action &&
+  typeof data.action.label === "string" &&
+  typeof data.action.href === "string"
+) {
+  setHeroAction({
+    label: data.action.label,
+    href: data.action.href,
+  });
+} else {
+  setHeroAction(null);
+}
     }
   } catch {
     setHeroAnswer(
