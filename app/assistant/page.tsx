@@ -4,6 +4,7 @@ import {
   FormEvent,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import Link from "next/link";
@@ -58,6 +59,18 @@ export default function AssistantPage() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [isSending, setIsSending] = useState(false);
+  const [
+  voicePlaybackIndex,
+  setVoicePlaybackIndex,
+] = useState<number | null>(null);
+
+const [
+  voiceLoadingIndex,
+  setVoiceLoadingIndex,
+] = useState<number | null>(null);
+
+const voiceAudioRef =
+  useRef<HTMLAudioElement | null>(null);
   const [clinicalInterviewId, setClinicalInterviewId] =
   useState<string | null>(null);
   const [isContextLoading, setIsContextLoading] = useState(true);
@@ -386,6 +399,152 @@ const result =
     }
   }
 
+  function stopSpokenResponse() {
+  const currentAudio =
+    voiceAudioRef.current;
+
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.currentTime = 0;
+
+    voiceAudioRef.current =
+      null;
+  }
+
+  setVoicePlaybackIndex(null);
+  setVoiceLoadingIndex(null);
+}
+
+async function playSpokenResponse(
+  messageText: string,
+  messageIndex: number
+) {
+  if (
+    voicePlaybackIndex ===
+    messageIndex
+  ) {
+    stopSpokenResponse();
+    return;
+  }
+
+  stopSpokenResponse();
+
+  setVoiceLoadingIndex(
+    messageIndex
+  );
+
+  try {
+    const {
+      data:
+        sessionData,
+    } =
+      await supabase.auth
+        .getSession();
+
+    const accessToken =
+      sessionData.session
+        ?.access_token;
+
+    const response =
+      await fetch(
+        "/api/voice/speak",
+        {
+          method:
+            "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+
+            ...(accessToken
+              ? {
+                  Authorization:
+                    `Bearer ${accessToken}`,
+                }
+              : {}),
+          },
+
+          body:
+            JSON.stringify({
+              text:
+                messageText,
+
+              language,
+            }),
+        }
+      );
+
+    if (!response.ok) {
+      throw new Error(
+        "Voice playback request failed."
+      );
+    }
+
+    const audioBlob =
+      await response.blob();
+
+    const audioUrl =
+      URL.createObjectURL(
+        audioBlob
+      );
+
+    const audio =
+      new Audio(
+        audioUrl
+      );
+
+    voiceAudioRef.current =
+      audio;
+
+    audio.onended =
+      () => {
+        URL.revokeObjectURL(
+          audioUrl
+        );
+
+        voiceAudioRef.current =
+          null;
+
+        setVoicePlaybackIndex(
+          null
+        );
+      };
+
+    audio.onerror =
+      () => {
+        URL.revokeObjectURL(
+          audioUrl
+        );
+
+        voiceAudioRef.current =
+          null;
+
+        setVoicePlaybackIndex(
+          null
+        );
+      };
+
+    setVoicePlaybackIndex(
+      messageIndex
+    );
+
+    await audio.play();
+  } catch (error) {
+    console.error(
+      "Could not play OrganHeal voice response:",
+      error
+    );
+
+    setVoicePlaybackIndex(
+      null
+    );
+  } finally {
+    setVoiceLoadingIndex(
+      null
+    );
+  }
+}
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     sendMessage();
@@ -671,6 +830,43 @@ const result =
           href={message.action.href}
           className="secondaryBtn"
         >
+          {message.sender === "ai" && (
+  <div
+    style={{
+      marginTop: "10px",
+    }}
+  >
+    <button
+      type="button"
+      className="secondaryBtn"
+      onClick={() =>
+        playSpokenResponse(
+          message.text,
+          index
+        )
+      }
+      disabled={
+        voiceLoadingIndex !== null &&
+        voiceLoadingIndex !== index
+      }
+    >
+      {voiceLoadingIndex === index
+        ? text(
+            "Preparing voice...",
+            "جاري تجهيز الصوت..."
+          )
+        : voicePlaybackIndex === index
+          ? text(
+              "Stop audio",
+              "إيقاف الصوت"
+            )
+          : text(
+              "Listen",
+              "استمع"
+            )}
+    </button>
+  </div>
+)}
           {message.action.label}
         </Link>
       </div>
