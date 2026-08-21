@@ -452,11 +452,12 @@ describe(
         );
 
         expect(
-          mockedBuildAssistantResponseContract
-        ).toHaveBeenCalledWith(
-          orchestratorResult,
-          null
-        );
+  mockedBuildAssistantResponseContract
+).toHaveBeenCalledWith(
+  orchestratorResult,
+  null,
+  "ar"
+);
 
         expect(
           mockedRunAssistantOrchestrator
@@ -964,11 +965,12 @@ describe(
         ).not.toHaveBeenCalled();
 
         expect(
-          mockedBuildAssistantResponseContract
-        ).toHaveBeenCalledWith(
-          orchestratorResult,
-          "interview-1"
-        );
+  mockedBuildAssistantResponseContract
+).toHaveBeenCalledWith(
+  orchestratorResult,
+  "interview-1",
+  "en"
+);
 
         const responseBody =
           await response.json();
@@ -1139,7 +1141,6 @@ describe(
     ).not.toHaveBeenCalled();
   }
 );
-
     it(
   "automatically resumes the latest active authenticated clinical interview when no interview id is provided",
   async () => {
@@ -1388,11 +1389,12 @@ describe(
     ).not.toHaveBeenCalled();
 
     expect(
-      mockedBuildAssistantResponseContract
-    ).toHaveBeenCalledWith(
-      orchestratorResult,
-      "interview-active"
-    );
+  mockedBuildAssistantResponseContract
+).toHaveBeenCalledWith(
+  orchestratorResult,
+  "interview-active",
+  "en"
+);
 
     const responseBody =
       await response.json();
@@ -1682,11 +1684,12 @@ it(
     );
 
     expect(
-      mockedBuildAssistantResponseContract
-    ).toHaveBeenCalledWith(
-      orchestratorResult,
-      "interview-new"
-    );
+  mockedBuildAssistantResponseContract
+).toHaveBeenCalledWith(
+  orchestratorResult,
+  "interview-new",
+  "en"
+);
 
     const responseBody =
       await response.json();

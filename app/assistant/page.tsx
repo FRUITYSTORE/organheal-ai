@@ -32,6 +32,11 @@ type AssistantResponse = {
   response?: string;
   error?: string;
   clinicalInterviewId?: string | null;
+
+  action?: {
+    label: string;
+    href: string;
+  } | null;
 };
 
 
@@ -155,66 +160,10 @@ export default function AssistantPage() {
         "What are the most important questions I should discuss with my doctor?",
       ];
 }, [healthContext, isArabic]);
-
-  const contextStatus = healthContext
-    ? text("Assistant is using your health context", "المساعد يستخدم بياناتك الصحية")
-    : text("No health context available yet", "لا توجد بيانات صحية كافية بعد");
-
   const priorityArea =
     healthContext?.priorityOrgan ||
     text("General Health", "الصحة العامة");
-function getAssistantAction(question: string): MessageAction | undefined {
-  const normalizedQuestion = question.toLowerCase();
 
-  if (
-    normalizedQuestion.includes("doctor") ||
-    normalizedQuestion.includes("brief") ||
-    normalizedQuestion.includes("طبيب") ||
-    normalizedQuestion.includes("دكتور")
-  ) {
-    return {
-      label: text("Review Reports", "مراجعة التقارير"),
-      href: "/reports",
-    };
-  }
-
-  if (
-    normalizedQuestion.includes("report") ||
-    normalizedQuestion.includes("lab") ||
-    normalizedQuestion.includes("تقرير") ||
-    normalizedQuestion.includes("فحص") ||
-    normalizedQuestion.includes("مختبر")
-  ) {
-    return {
-      label: text("Open Reports", "فتح التقارير"),
-      href: "/reports",
-    };
-  }
-
-  if (
-    normalizedQuestion.includes("next") ||
-    normalizedQuestion.includes("action") ||
-    normalizedQuestion.includes("improve") ||
-    normalizedQuestion.includes("plan") ||
-    normalizedQuestion.includes("الخطوة") ||
-    normalizedQuestion.includes("تحسين") ||
-    normalizedQuestion.includes("خطة")
-  ) {
-    return {
-      label: text("Open Health Plan", "فتح الخطة الصحية"),
-      href: "/health-plan",
-    };
-  }
-
-  if (!healthContext) {
-    return {
-      label: text("Upload Report", "رفع تقرير"),
-      href: "/lab-upload",
-    };
-  }
-
-  return undefined;
-}
   async function sendMessage(customQuestion?: string) {
     const userMessage = customQuestion || input;
 
@@ -305,13 +254,7 @@ const result =
         setClinicalInterviewId(
           data.clinicalInterviewId
         );
-      } else if (
-        data.clinicalInterviewId === null
-      ) {
-        setClinicalInterviewId(
-          null
-        );
-      } else if (
+           } else if (
   data.clinicalInterviewId === null
 ) {
   setClinicalInterviewId(
@@ -329,9 +272,10 @@ const result =
         "OrganHeal AI is temporarily unavailable.",
         "OrganHeal AI غير متاح مؤقتًا."
       ),
-    action: data.response
-      ? getAssistantAction(userMessage)
-      : undefined,
+    action:
+  data.response && data.action
+    ? data.action
+    : undefined,
   },
 ]);
     } catch (error) {
@@ -456,7 +400,7 @@ const result =
           border-color: rgba(20, 184, 166, 0.5);
           color: #0f766e;
         }
-        
+
         @media (max-width: 760px) {
           .assistantCommandPage .assistantInputForm {
             grid-template-columns: 1fr auto;
@@ -483,7 +427,10 @@ const result =
           <div className="ohHeroGrid">
             <div>
               <p className="ohEyebrow">
-                {text("OrganHeal AI Assistant", "مساعد OrganHeal AI")}
+                {text(
+                  "OrganHeal AI Assistant",
+                  "مساعد OrganHeal AI"
+                )}
               </p>
 
               <h1 className="ohTitle">
@@ -495,89 +442,92 @@ const result =
 
               <p className="ohLead">
                 {text(
-                  "Use the assistant to understand your assessments, reports, risk pattern, doctor brief, and next health steps in clear language.",
-                  "استخدم المساعد لفهم التقييمات، التقارير، نمط المخاطر، ملخص الطبيب، والخطوات الصحية التالية بلغة واضحة."
+                  "Ask naturally about your health, reports, results, or next steps. OrganHeal uses your available context and can ask focused follow-up questions when more information is needed.",
+                  "اسأل بطريقتك الطبيعية عن صحتك أو تقاريرك أو نتائجك أو خطواتك التالية. يستخدم OrganHeal سياقك الصحي المتاح، ويمكنه طرح أسئلة متابعة محددة عند الحاجة إلى معلومات إضافية."
                 )}
               </p>
-
-            <div className="ohButtonRow" style={{ marginTop: "24px" }}>
-  <Link href="/dashboard" className="primaryBtn">
-    {text("Dashboard", "لوحة التحكم")}
-  </Link>
-
-  <Link href="/reports" className="secondaryBtn">
-    {text("Reports", "التقارير")}
-  </Link>
-
-  <Link href="/health-plan" className="secondaryBtn">
-    {text("Health Plan", "الخطة الصحية")}
-  </Link>
-</div>
             </div>
 
             <div className="ohCard">
               <div className="ohCardHeader">
                 <div>
                   <p className="ohMetricLabel">
-                    {text("Health context", "السياق الصحي")}
+                    {text(
+                      "Personalized context",
+                      "السياق الصحي المخصص"
+                    )}
                   </p>
 
-                  <h2 className="ohCardTitle" style={{ marginTop: "8px" }}>
+                  <h2
+                    className="ohCardTitle"
+                    style={{ marginTop: "8px" }}
+                  >
                     {isContextLoading
-                      ? text("Loading context...", "جاري تحميل السياق...")
-                      : contextStatus}
+                      ? text(
+                          "Preparing your health context...",
+                          "جاري تجهيز سياقك الصحي..."
+                        )
+                      : healthContext
+                        ? text(
+                            "OrganHeal is ready with your current health context.",
+                            "OrganHeal جاهز باستخدام سياقك الصحي الحالي."
+                          )
+                        : text(
+                            "You can start even without saved health data.",
+                            "يمكنك البدء حتى دون وجود بيانات صحية محفوظة."
+                          )}
                   </h2>
                 </div>
 
-                <span className={`ohStatusBadge ${healthContext ? "good" : "moderate"}`}>
+                <span
+                  className={`ohStatusBadge ${
+                    healthContext
+                      ? "good"
+                      : "moderate"
+                  }`}
+                >
                   {healthContext
-                    ? text("Connected", "متصل")
-                    : text("Limited", "محدود")}
+                    ? text(
+                        "Context ready",
+                        "السياق جاهز"
+                      )
+                    : text(
+                        "General mode",
+                        "الوضع العام"
+                      )}
                 </span>
               </div>
 
               {healthContext ? (
-  <div className="ohStack" style={{ gap: "10px" }}>
-    <p className="ohCardText">
-      {text(
-        `Priority area: ${priorityArea}`,
-        `منطقة الأولوية: ${priorityArea}`
-      )}
-    </p>
+                <div
+                  className="ohStack"
+                  style={{ gap: "10px" }}
+                >
+                  <p className="ohCardText">
+                    {text(
+                      `I’ll use your available health information to keep the conversation relevant to ${priorityArea}.`,
+                      `سأستخدم معلوماتك الصحية المتاحة لجعل المحادثة أكثر ارتباطًا بـ ${priorityArea}.`
+                    )}
+                  </p>
 
-    {typeof healthContext.overallScore === "number" && (
-      <p className="ohCardText">
-        {text(
-          `Overall score: ${healthContext.overallScore}/100`,
-          `النتيجة العامة: ${healthContext.overallScore}/100`
-        )}
-      </p>
-    )}
-
-    {healthContext.riskPattern && (
-      <p className="ohCardText">
-        {text(
-          `Risk pattern: ${healthContext.riskPattern}`,
-          `نمط المخاطر: ${healthContext.riskPattern}`
-        )}
-      </p>
-    )}
-  </div>
-) : (
-  <p className="ohCardText">
-    {text(
-      "Complete an assessment or upload a report to unlock more personalized guidance.",
-      "أكمل تقييمًا صحيًا أو ارفع تقريرًا للحصول على إرشاد أكثر تخصيصًا."
-    )}
-  </p>
-)}
-
-              <div className="ohDivider" />
-
-              </div>
+                  <p className="ohCardText">
+                    {text(
+                      "Ask naturally. If more information is needed, I’ll ask a focused follow-up question before giving a more specific answer.",
+                      "اسأل بطريقتك الطبيعية. وإذا احتجت إلى معلومات إضافية، فسأطرح سؤال متابعة محددًا قبل تقديم إجابة أكثر تخصيصًا."
+                    )}
+                  </p>
+                </div>
+              ) : (
+                <p className="ohCardText">
+                  {text(
+                    "Ask a general health question now, or add an assessment or medical report later for more personalized guidance.",
+                    "يمكنك طرح سؤال صحي عام الآن، أو إضافة تقييم صحي أو تقرير طبي لاحقًا للحصول على إرشاد أكثر تخصيصًا."
+                  )}
+                </p>
+              )}
+            </div>
           </div>
         </section>
-
  <section className="ohCard">
           <div className="ohCardHeader">
             <div>
@@ -682,8 +632,8 @@ const result =
           </form>
         </section>
 
-        <section className="ohGrid cols2">
-          <article className="ohCard">
+        <section>
+  <article className="ohCard">
             <div className="ohCardHeader">
               <div>
                 <p className="ohMetricLabel">
@@ -710,62 +660,9 @@ const result =
               ))}
             </div>
           </article>
+       </section>
 
-          <article className="ohCard">
-            <p className="ohMetricLabel">
-              {text("Use assistant for", "استخدم المساعد من أجل")}
-            </p>
-
-            <div className="ohTimeline" style={{ marginTop: "18px" }}>
-              <div className="ohTimelineItem">
-                <span className="ohTimelineDot" />
-                <div>
-                  <p className="ohTimelineTitle">
-                    {text("Explain health results", "شرح النتائج الصحية")}
-                  </p>
-                  <p className="ohTimelineMeta">
-                    {text(
-                      "Understand scores, reports, and risk patterns.",
-                      "فهم الدرجات، التقارير، وأنماط المخاطر."
-                    )}
-                  </p>
-                </div>
-              </div>
-
-              <div className="ohTimelineItem">
-                <span className="ohTimelineDot" />
-                <div>
-                  <p className="ohTimelineTitle">
-                    {text("Prepare doctor questions", "تحضير أسئلة للطبيب")}
-                  </p>
-                  <p className="ohTimelineMeta">
-                    {text(
-                      "Turn confusing results into focused discussion points.",
-                      "حوّل النتائج المربكة إلى نقاط نقاش واضحة."
-                    )}
-                  </p>
-                </div>
-              </div>
-
-              <div className="ohTimelineItem">
-                <span className="ohTimelineDot" />
-                <div>
-                  <p className="ohTimelineTitle">
-                    {text("Choose next steps", "اختيار الخطوات التالية")}
-                  </p>
-                  <p className="ohTimelineMeta">
-                    {text(
-                      "Get educational guidance for your next practical action.",
-                      "احصل على إرشاد تعليمي للخطوة العملية التالية."
-                    )}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </article>
-        </section>
-
-               <section className="ohTrustNotice">
+                <section className="ohTrustNotice">
           <span aria-hidden="true">🩺</span>
           <div>
             <strong>

@@ -395,10 +395,11 @@ if (
   }
 }
 
-    const publicContract =
+   const publicContract =
   buildAssistantResponseContract(
     orchestratorResult,
-    activeClinicalInterviewId
+    activeClinicalInterviewId,
+    normalizedLanguage
   );
 
     return NextResponse.json(publicContract, {

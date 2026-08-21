@@ -84,6 +84,10 @@ describe("Assistant response contract", () => {
       clinicalInterviewId:
         null,
 
+
+      action:
+        null,
+
       reasoning: {
         mode: "answer",
 

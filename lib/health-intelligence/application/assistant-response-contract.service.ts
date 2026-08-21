@@ -1,4 +1,7 @@
-import type { AssistantOrchestratorResult } from "@/lib/health-intelligence/application/assistant-orchestrator.service";
+import type {
+  AssistantOrchestratorResult,
+  AssistantOrchestratorLanguage,
+} from "@/lib/health-intelligence/application/assistant-orchestrator.service";
 
 export type AssistantPublicReasoningMode = "clarify" | "answer";
 
@@ -20,6 +23,12 @@ export type AssistantPublicReasoningSummary = {
   hasClinicalInterpretation: boolean;
 };
 
+export type AssistantProductAction = {
+  label: string;
+
+  href: string;
+};
+
 export type AssistantResponseContract = {
   success: true;
 
@@ -29,6 +38,9 @@ export type AssistantResponseContract = {
 
   clinicalInterviewId:
     string | null;
+
+  action:
+    AssistantProductAction | null;
 };
 
 function resolveClinicalNarrative(
@@ -36,7 +48,9 @@ function resolveClinicalNarrative(
 ): string | null {
   const narrative = result.reasoning.clinicalNarrative;
 
-  return typeof narrative === "string" && narrative.trim() ? narrative : null;
+  return typeof narrative === "string" && narrative.trim()
+    ? narrative
+    : null;
 }
 
 function hasClinicalDecisionTrace(
@@ -66,14 +80,76 @@ function hasClinicalInterpretation(
 ): boolean {
   return Boolean(
     result.reasoning.clinicalHypothesisRanking ||
-    result.reasoning.clinicalConfidenceCalibration ||
-    resolveClinicalNarrative(result),
+      result.reasoning.clinicalConfidenceCalibration ||
+      resolveClinicalNarrative(result),
   );
+}
+
+function resolveProductAction(
+  result: AssistantOrchestratorResult,
+  language: AssistantOrchestratorLanguage,
+): AssistantProductAction | null {
+  if (result.reasoning.mode === "clarify") {
+    return null;
+  }
+
+  const intent = result.reasoning.questionIntent;
+
+  switch (intent) {
+    case "report":
+      return {
+        label:
+          language === "ar"
+            ? "فتح التقارير"
+            : "Open Reports",
+
+        href: "/reports",
+      };
+
+    case "doctor":
+      return {
+        label:
+          language === "ar"
+            ? "فتح بوابة الطبيب"
+            : "Open Doctor Portal",
+
+        href: "/doctor-portal",
+      };
+
+    case "next-step":
+    case "improvement":
+      return {
+        label:
+          language === "ar"
+            ? "فتح الخطة الصحية"
+            : "Open Health Plan",
+
+        href: "/health-plan",
+      };
+
+    case "risk":
+    case "score":
+    case "health-age":
+      return {
+        label:
+          language === "ar"
+            ? "فتح التحليل الصحي"
+            : "Open Intelligence",
+
+        href: "/intelligence",
+      };
+
+    case "cause-reasoning":
+    case "general":
+    default:
+      return null;
+  }
 }
 
 export function buildAssistantResponseContract(
   result: AssistantOrchestratorResult,
   clinicalInterviewId: string | null = null,
+  language: AssistantOrchestratorLanguage = "en",
 ): AssistantResponseContract {
   return {
     success: true,
@@ -81,7 +157,13 @@ export function buildAssistantResponseContract(
     response: result.response,
 
     clinicalInterviewId,
-    
+
+    action:
+      resolveProductAction(
+        result,
+        language,
+      ),
+
     reasoning: {
       mode: result.reasoning.mode,
 
