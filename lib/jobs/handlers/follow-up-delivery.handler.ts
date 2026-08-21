@@ -203,26 +203,12 @@ function isFollowUpDeliveryPayload(
   );
 }
 
-function resolveNotificationChannels(
-  channel:
-    FollowUpDeliveryJobPayload[
-      "delivery"
-    ]["channel"]
-): FollowUpDeliveryJobPayload[
-  "delivery"
-]["channel"][] {
-  if (
-    channel ===
-      "dashboard"
-  ) {
-    return [
-      "dashboard",
-    ];
-  }
-
+function resolveNotificationChannels():
+  FollowUpDeliveryJobPayload[
+    "delivery"
+  ]["channel"][] {
   return [
     "dashboard",
-    channel,
   ];
 }
 
@@ -328,9 +314,7 @@ export function createFollowUpDeliveryHandler(
         payload.delivery.priority,
 
       channels:
-        resolveNotificationChannels(
-          payload.delivery.channel
-        ),
+  resolveNotificationChannels(),
 
       title:
         payload.delivery.title,

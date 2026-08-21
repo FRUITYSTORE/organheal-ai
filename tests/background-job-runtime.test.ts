@@ -324,9 +324,8 @@ describe(
               "repeat-checkin",
 
             channels: [
-              "dashboard",
-              "email",
-            ],
+  "dashboard",
+],
 
             source:
               "follow-up-delivery",

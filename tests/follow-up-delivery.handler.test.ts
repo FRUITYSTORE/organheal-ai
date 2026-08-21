@@ -216,9 +216,8 @@ describe(
                 "unread",
 
               channels: [
-                "dashboard",
-                "email",
-              ],
+  "dashboard",
+],
 
               title:
                 "Add a new health check-in",
@@ -322,9 +321,8 @@ describe(
             "medium",
 
           channels: [
-            "dashboard",
-            "email",
-          ],
+  "dashboard",
+],
 
           title:
             "Add a new health check-in",
@@ -476,9 +474,8 @@ describe(
               "urgent-review",
 
             channels: [
-              "dashboard",
-              "push",
-            ],
+  "dashboard",
+],
 
             safety: {
               note:
