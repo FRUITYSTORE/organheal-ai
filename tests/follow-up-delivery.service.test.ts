@@ -1,4 +1,5 @@
 import {
+  afterEach,
   beforeEach,
   describe,
   expect,
@@ -187,6 +188,17 @@ describe(
       () => {
         mockedLogApiInfo
           .mockReset();
+
+        vi.stubEnv(
+          "WHATSAPP_DELIVERY_ENABLED",
+          "false"
+        );
+      }
+    );
+
+    afterEach(
+      () => {
+        vi.unstubAllEnvs();
       }
     );
 
@@ -220,6 +232,8 @@ describe(
           dryRun:
             true,
 
+          providerMessageId:
+            null,
           channel:
             "email",
 
@@ -537,6 +551,304 @@ describe(
         );
       }
     );
+
+    it(
+  "does not call the whatsapp provider while delivery is disabled",
+  async () => {
+    const sendWhatsApp =
+      vi.fn();
+
+    const whatsappPayload =
+      createPayload({
+        delivery: {
+          ...createPayload()
+            .delivery,
+
+          channel:
+            "whatsapp",
+        },
+      });
+
+    const result =
+      await executeFollowUpDelivery({
+        jobId:
+          "job-whatsapp",
+
+        requestId:
+          "req-whatsapp",
+
+        userId:
+          "user-123",
+
+        payload:
+          whatsappPayload,
+
+        loadCommunicationPreferences:
+          vi.fn(
+            async () =>
+              createCommunicationPreferences({
+                whatsapp_enabled:
+                  true,
+
+                whatsapp_phone_e164:
+                  "+971501234567",
+
+                whatsapp_phone_verified_at:
+                  "2026-08-06T18:05:00.000Z",
+
+                whatsapp_consent_granted_at:
+                  "2026-08-06T18:00:00.000Z",
+              })
+          ),
+
+        sendWhatsApp,
+
+        referenceTime:
+          "2026-08-06T19:00:00.000Z",
+      });
+
+    expect(
+      result.delivered
+    ).toBe(false);
+
+    expect(
+      result.dryRun
+    ).toBe(true);
+
+    expect(
+      result.providerMessageId
+    ).toBeNull();
+
+    expect(
+      sendWhatsApp
+    ).not.toHaveBeenCalled();
+  }
+);
+
+it(
+  "sends an authorized whatsapp follow-up when delivery is enabled",
+  async () => {
+    vi.stubEnv(
+      "WHATSAPP_DELIVERY_ENABLED",
+      "true"
+    );
+
+    const sendWhatsApp =
+      vi.fn(
+        async () => ({
+          messageId:
+            "wamid.follow-up-test",
+
+          recipient:
+            "971501234567",
+
+          templateName:
+            "organheal_repeat_checkin",
+
+          graphApiVersion:
+            "v23.0",
+        })
+      );
+
+    const whatsappPayload =
+      createPayload({
+        delivery: {
+          ...createPayload()
+            .delivery,
+
+          channel:
+            "whatsapp",
+        },
+      });
+
+    const result =
+      await executeFollowUpDelivery({
+        jobId:
+          "job-whatsapp",
+
+        requestId:
+          "req-whatsapp",
+
+        userId:
+          "user-123",
+
+        payload:
+          whatsappPayload,
+
+        loadCommunicationPreferences:
+          vi.fn(
+            async () =>
+              createCommunicationPreferences({
+                whatsapp_enabled:
+                  true,
+
+                whatsapp_phone_e164:
+                  "+971501234567",
+
+                whatsapp_phone_verified_at:
+                  "2026-08-06T18:05:00.000Z",
+
+                whatsapp_consent_granted_at:
+                  "2026-08-06T18:00:00.000Z",
+              })
+          ),
+
+        sendWhatsApp,
+
+        referenceTime:
+          "2026-08-06T19:00:00.000Z",
+      });
+
+    expect(
+      sendWhatsApp
+    ).toHaveBeenCalledWith({
+      to:
+        "+971501234567",
+
+      templateName:
+        "organheal_repeat_checkin",
+
+      language:
+        "en",
+
+      parameters: [
+        {
+          text:
+            "Add a new health check-in",
+        },
+        {
+          text:
+            "Complete a new health check-in.",
+        },
+        {
+          text:
+            "Open Check-In",
+        },
+      ],
+    });
+
+    expect(
+      result
+    ).toEqual({
+      delivered:
+        true,
+
+      dryRun:
+        false,
+
+      providerMessageId:
+        "wamid.follow-up-test",
+
+      channel:
+        "whatsapp",
+
+      userId:
+        "user-123",
+
+      idempotencyKey:
+        "follow-up:user-123:email:repeat-checkin:2026-08-09",
+
+      reason:
+        "The WhatsApp follow-up message was accepted by the configured provider.",
+
+      executedAt:
+        "2026-08-06T19:00:00.000Z",
+    });
+
+    expect(
+      mockedLogApiInfo
+    ).toHaveBeenCalledWith(
+      "follow_up_delivery.whatsapp_completed",
+      expect.objectContaining({
+        channel:
+          "whatsapp",
+
+        providerMessageId:
+          "wamid.follow-up-test",
+
+        templateName:
+          "organheal_repeat_checkin",
+      })
+    );
+  }
+);
+
+it(
+  "propagates whatsapp provider failures so the background job can retry",
+  async () => {
+    vi.stubEnv(
+      "WHATSAPP_DELIVERY_ENABLED",
+      "true"
+    );
+
+    const providerError =
+      new Error(
+        "WhatsApp provider unavailable"
+      );
+
+    const sendWhatsApp =
+      vi.fn(
+        async () => {
+          throw providerError;
+        }
+      );
+
+    const whatsappPayload =
+      createPayload({
+        delivery: {
+          ...createPayload()
+            .delivery,
+
+          channel:
+            "whatsapp",
+        },
+      });
+
+    await expect(
+      executeFollowUpDelivery({
+        jobId:
+          "job-whatsapp",
+
+        requestId:
+          "req-whatsapp",
+
+        userId:
+          "user-123",
+
+        payload:
+          whatsappPayload,
+
+        loadCommunicationPreferences:
+          vi.fn(
+            async () =>
+              createCommunicationPreferences({
+                whatsapp_enabled:
+                  true,
+
+                whatsapp_phone_e164:
+                  "+971501234567",
+
+                whatsapp_phone_verified_at:
+                  "2026-08-06T18:05:00.000Z",
+
+                whatsapp_consent_granted_at:
+                  "2026-08-06T18:00:00.000Z",
+              })
+          ),
+
+        sendWhatsApp,
+      })
+    ).rejects.toThrow(
+      "WhatsApp provider unavailable"
+    );
+
+    expect(
+      sendWhatsApp
+    ).toHaveBeenCalledTimes(
+      1
+    );
+  }
+);
 
     it(
       "rejects a delivery user that differs from the job user",

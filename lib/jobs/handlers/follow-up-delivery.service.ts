@@ -10,6 +10,16 @@ import type {
   CommunicationPreferences,
 } from "@/lib/repositories/communication-preferences.repository";
 
+import {
+  buildWhatsAppFollowUpTemplate,
+} from "@/lib/communication/whatsapp-follow-up-template.service";
+
+import {
+  sendWhatsAppTemplate,
+  type SendWhatsAppTemplateInput,
+  type WhatsAppCloudSendResult,
+} from "@/lib/communication/whatsapp-cloud.provider";
+
 type FollowUpChannel =
   FollowUpDeliveryJobPayload[
     "delivery"
@@ -20,7 +30,10 @@ export type FollowUpDeliveryExecutionResult = {
     boolean;
 
   dryRun:
-    true;
+  boolean;
+
+providerMessageId:
+  string | null;
 
   channel:
     FollowUpChannel;
@@ -47,6 +60,15 @@ export type FollowUpPreferencesLoader =
       CommunicationPreferences | null
     >;
 
+export type WhatsAppTemplateSender =
+  (
+    input:
+      SendWhatsAppTemplateInput
+  ) =>
+    Promise<
+      WhatsAppCloudSendResult
+    >;
+
 export type ExecuteFollowUpDeliveryInput = {
   jobId:
     string;
@@ -65,6 +87,8 @@ export type ExecuteFollowUpDeliveryInput = {
 
   loadCommunicationPreferences?:
     FollowUpPreferencesLoader;
+    sendWhatsApp?:
+  WhatsAppTemplateSender;
 };
 
 function normalizeReferenceTime(
@@ -225,8 +249,10 @@ export async function executeFollowUpDelivery({
   requestId,
   userId,
   payload,
-  referenceTime,
+    referenceTime,
   loadCommunicationPreferences,
+  sendWhatsApp =
+    sendWhatsAppTemplate,
 }: ExecuteFollowUpDeliveryInput):
   Promise<
     FollowUpDeliveryExecutionResult
@@ -290,13 +316,20 @@ export async function executeFollowUpDelivery({
    * background worker to supply its trusted server
    * repository implementation.
    */
+
+  let communicationPreferences:
+  CommunicationPreferences | null =
+    null;
   if (
     loadCommunicationPreferences
   ) {
     const preferences =
-      await loadCommunicationPreferences(
-        normalizedUserId
-      );
+  await loadCommunicationPreferences(
+    normalizedUserId
+  );
+
+communicationPreferences =
+  preferences;
 
     if (!preferences) {
       logApiInfo(
@@ -329,6 +362,9 @@ export async function executeFollowUpDelivery({
 
         dryRun:
           true,
+
+        providerMessageId:
+          null,
 
         channel:
           payload.delivery.channel,
@@ -382,6 +418,8 @@ export async function executeFollowUpDelivery({
         dryRun:
           true,
 
+        providerMessageId:
+          null,
         channel:
           payload.delivery.channel,
 
@@ -397,6 +435,110 @@ export async function executeFollowUpDelivery({
       };
     }
   }
+
+  const whatsappDeliveryEnabled =
+  process.env
+    .WHATSAPP_DELIVERY_ENABLED ===
+  "true";
+
+if (
+  payload.delivery.channel ===
+    "whatsapp" &&
+  whatsappDeliveryEnabled &&
+  communicationPreferences
+) {
+  const whatsappPhone =
+    communicationPreferences
+      .whatsapp_phone_e164;
+
+  if (!whatsappPhone) {
+    throw new Error(
+      "Authorized WhatsApp delivery is missing a destination phone number."
+    );
+  }
+
+  const template =
+    buildWhatsAppFollowUpTemplate(
+      payload
+    );
+
+  const providerResult =
+    await sendWhatsApp({
+      to:
+        whatsappPhone,
+
+      templateName:
+        template.templateName,
+
+      language:
+        template.language,
+
+      parameters:
+        template.parameters,
+    });
+
+  logApiInfo(
+    "follow_up_delivery.whatsapp_completed",
+    {
+      route:
+        "background-worker",
+
+      requestId,
+
+      jobId:
+        normalizedJobId,
+
+      userId:
+        normalizedUserId,
+
+      channel:
+        "whatsapp",
+
+      priority:
+        payload.delivery.priority,
+
+      purpose:
+        payload.delivery.purpose,
+
+      language:
+        payload.delivery.language,
+
+      idempotencyKey,
+
+      providerMessageId:
+        providerResult.messageId,
+
+      templateName:
+        template.templateName,
+
+      executedAt,
+    }
+  );
+
+  return {
+    delivered:
+      true,
+
+    dryRun:
+      false,
+
+    providerMessageId:
+      providerResult.messageId,
+
+    channel:
+      "whatsapp",
+
+    userId:
+      normalizedUserId,
+
+    idempotencyKey,
+
+    reason:
+      "The WhatsApp follow-up message was accepted by the configured provider.",
+
+    executedAt,
+  };
+}
 
   /*
    * Dry-run delivery:
@@ -475,6 +617,9 @@ export async function executeFollowUpDelivery({
 
     dryRun:
       true,
+
+    providerMessageId:
+      null,
 
     channel:
       payload.delivery.channel,

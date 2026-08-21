@@ -270,6 +270,8 @@ describe(
             dryRun:
               true,
 
+            providerMessageId:
+              null,
             channel:
               "email",
 
