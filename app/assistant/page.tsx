@@ -172,23 +172,83 @@ export default function AssistantPage() {
         ];
   }
 
+  const questions: string[] = [];
+
+  const latestReport =
+    healthContext.latestReportContext;
+
   const priority =
     healthContext.priorityOrgan ||
-    (isArabic ? "صحتي العامة" : "my overall health");
+    (isArabic
+      ? "صحتي العامة"
+      : "my overall health");
 
-  return isArabic
+  if (latestReport) {
+    questions.push(
+      isArabic
+        ? `اشرح لي أهم ما في تقريري الأخير ${latestReport.fileName}.`
+        : `Explain the most important findings in my latest report, ${latestReport.fileName}.`
+    );
+  }
+
+  if (
+    latestReport?.nextBestAction ||
+    healthContext.recommendation
+  ) {
+    questions.push(
+      isArabic
+        ? "ما أهم خطوة صحية تالية بالنسبة لي الآن؟"
+        : "What is my most important next health action right now?"
+    );
+  }
+
+  if (
+    healthContext.riskPattern ||
+    latestReport?.riskLevel
+  ) {
+    questions.push(
+      isArabic
+        ? "اشرح لي نمط المخاطر الحالي وما الذي يعنيه بالنسبة لي."
+        : "Explain my current risk pattern and what it means for me."
+    );
+  }
+
+  if (
+    healthContext.doctorBrief ||
+    latestReport?.doctorBrief
+  ) {
+    questions.push(
+      isArabic
+        ? "ما أهم النقاط التي يجب أن أناقشها مع طبيبي؟"
+        : "What are the most important points I should discuss with my doctor?"
+    );
+  }
+
+  const fallbackQuestions = isArabic
     ? [
         `ما الذي يجب أن أركز عليه الآن بخصوص ${priority}؟`,
-        "اشرح لي نمط المخاطر الصحي الحالي بطريقة مبسطة.",
-        "ما هي أهم خطوة صحية تالية بناءً على بياناتي الحالية؟",
-        "ما أهم الأسئلة التي يجب أن أناقشها مع الطبيب؟",
+        "هل توجد تغيّرات مهمة في بياناتي الصحية الحالية؟",
+        "ما الذي يمكنني فعله لتحسين صحتي بناءً على بياناتي الحالية؟",
+        "ما المعلومات الإضافية التي قد تساعدك على فهم حالتي بشكل أفضل؟",
       ]
     : [
         `What should I focus on now regarding ${priority}?`,
-        "Explain my current health risk pattern in simple terms.",
-        "What is my most important next health action based on my current data?",
-        "What are the most important questions I should discuss with my doctor?",
+        "Are there any important changes in my current health data?",
+        "What can I do to improve my health based on my current data?",
+        "What additional information would help you understand my situation better?",
       ];
+
+  for (const question of fallbackQuestions) {
+    if (questions.length >= 4) {
+      break;
+    }
+
+    if (!questions.includes(question)) {
+      questions.push(question);
+    }
+  }
+
+  return questions.slice(0, 4);
 }, [healthContext, isArabic]);
   const priorityArea =
     healthContext?.priorityOrgan ||
@@ -681,11 +741,14 @@ const result =
             <div className="ohCardHeader">
               <div>
                 <p className="ohMetricLabel">
-                  {text("Suggested questions", "أسئلة مقترحة")}
+                  {text("Suggested for you", "مقترح لك")}
                 </p>
 
                 <h2 className="ohCardTitle">
-                  {text("Start with a useful prompt", "ابدأ بسؤال مفيد")}
+                  {text(
+  "Continue with what matters most",
+  "تابع بما هو الأكثر أهمية لك"
+)}
                 </h2>
               </div>
             </div>
