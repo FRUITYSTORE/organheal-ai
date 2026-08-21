@@ -32,6 +32,14 @@ import type {
 } from "@/lib/jobs/background-job-worker.repository";
 
 vi.mock(
+  "@/lib/repositories/communication-preferences.repository",
+  () => ({
+    getCommunicationPreferences:
+      vi.fn(),
+  })
+);
+
+vi.mock(
   "@/lib/jobs/handlers/follow-up-delivery.service",
   () => ({
     executeFollowUpDelivery:
@@ -334,21 +342,22 @@ describe(
         );
 
         expect(
-          mockedExecuteFollowUpDelivery
-        ).toHaveBeenCalledWith({
-          jobId:
-            "job-follow-up",
+  mockedExecuteFollowUpDelivery
+).toHaveBeenCalledWith(
+  expect.objectContaining({
+    jobId:
+      "job-follow-up",
 
-          requestId:
-            "req-follow-up",
+    requestId:
+      "req-follow-up",
 
-          userId:
-            "user-123",
+    userId:
+      "user-123",
 
-          payload:
-            job.payload,
+    loadCommunicationPreferences:
+      expect.any(Function),
+  })
+);
         });
       }
     );
-  }
-);

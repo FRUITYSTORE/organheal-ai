@@ -26,6 +26,10 @@ import {
   executeFollowUpDelivery,
 } from "@/lib/jobs/handlers/follow-up-delivery.service";
 
+import {
+  getCommunicationPreferences,
+} from "@/lib/repositories/communication-preferences.repository";
+
 const VALID_CHANNELS =
   new Set([
     "dashboard",
@@ -355,16 +359,23 @@ export function createFollowUpDeliveryHandler(
     });
 
     await executeFollowUpDelivery({
-      jobId:
-        job.id,
+  jobId:
+    job.id,
 
-      requestId:
-        job.requestId,
+  requestId:
+    job.requestId,
 
-      userId:
-        job.userId,
+  userId:
+    job.userId,
 
-      payload,
-    });
+  payload,
+
+  loadCommunicationPreferences:
+    (userId) =>
+      getCommunicationPreferences(
+        userId,
+        client
+      ),
+});
   };
 }
