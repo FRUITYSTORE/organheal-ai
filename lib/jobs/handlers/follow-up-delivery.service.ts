@@ -6,6 +6,15 @@ import type {
   FollowUpDeliveryJobPayload,
 } from "@/lib/jobs/background-job.service";
 
+import type {
+  CommunicationPreferences,
+} from "@/lib/repositories/communication-preferences.repository";
+
+type FollowUpChannel =
+  FollowUpDeliveryJobPayload[
+    "delivery"
+  ]["channel"];
+
 export type FollowUpDeliveryExecutionResult = {
   delivered:
     boolean;
@@ -14,9 +23,7 @@ export type FollowUpDeliveryExecutionResult = {
     true;
 
   channel:
-    FollowUpDeliveryJobPayload[
-      "delivery"
-    ]["channel"];
+    FollowUpChannel;
 
   userId:
     string;
@@ -30,6 +37,15 @@ export type FollowUpDeliveryExecutionResult = {
   executedAt:
     string;
 };
+
+export type FollowUpPreferencesLoader =
+  (
+    userId:
+      string
+  ) =>
+    Promise<
+      CommunicationPreferences | null
+    >;
 
 export type ExecuteFollowUpDeliveryInput = {
   jobId:
@@ -46,6 +62,9 @@ export type ExecuteFollowUpDeliveryInput = {
 
   referenceTime?:
     string | Date;
+
+  loadCommunicationPreferences?:
+    FollowUpPreferencesLoader;
 };
 
 function normalizeReferenceTime(
@@ -100,12 +119,114 @@ function requireText(
   return normalized;
 }
 
+function hasActiveConsent(
+  grantedAt:
+    string | null,
+  revokedAt:
+    string | null
+): boolean {
+  if (!grantedAt) {
+    return false;
+  }
+
+  if (!revokedAt) {
+    return true;
+  }
+
+  const grantedTime =
+    new Date(
+      grantedAt
+    ).getTime();
+
+  const revokedTime =
+    new Date(
+      revokedAt
+    ).getTime();
+
+  if (
+    Number.isNaN(
+      grantedTime
+    ) ||
+    Number.isNaN(
+      revokedTime
+    )
+  ) {
+    return false;
+  }
+
+  return (
+    grantedTime >
+    revokedTime
+  );
+}
+
+function isChannelAuthorized(
+  channel:
+    FollowUpChannel,
+  preferences:
+    CommunicationPreferences
+): boolean {
+  switch (channel) {
+    case "dashboard":
+      return (
+        preferences
+          .dashboard_enabled
+      );
+
+    case "email":
+      return (
+        preferences
+          .email_enabled &&
+        hasActiveConsent(
+          preferences
+            .email_consent_granted_at,
+          preferences
+            .email_consent_revoked_at
+        )
+      );
+
+    case "whatsapp":
+      return (
+        preferences
+          .whatsapp_enabled &&
+        Boolean(
+          preferences
+            .whatsapp_phone_e164
+            ?.trim()
+        ) &&
+        Boolean(
+          preferences
+            .whatsapp_phone_verified_at
+        ) &&
+        hasActiveConsent(
+          preferences
+            .whatsapp_consent_granted_at,
+          preferences
+            .whatsapp_consent_revoked_at
+        )
+      );
+
+    case "push":
+      return (
+        preferences
+          .push_enabled &&
+        hasActiveConsent(
+          preferences
+            .push_consent_granted_at,
+          preferences
+            .push_consent_revoked_at
+        )
+      );
+  }
+}
+
 export async function executeFollowUpDelivery({
   jobId,
   requestId,
   userId,
   payload,
   referenceTime,
+  loadCommunicationPreferences,
 }: ExecuteFollowUpDeliveryInput):
   Promise<
     FollowUpDeliveryExecutionResult
@@ -161,9 +282,126 @@ export async function executeFollowUpDelivery({
     ).toISOString();
 
   /*
+   * Communication preferences are intentionally
+   * dependency-injected here.
+   *
+   * This keeps the delivery service independent
+   * from a specific Supabase client and allows the
+   * background worker to supply its trusted server
+   * repository implementation.
+   */
+  if (
+    loadCommunicationPreferences
+  ) {
+    const preferences =
+      await loadCommunicationPreferences(
+        normalizedUserId
+      );
+
+    if (!preferences) {
+      logApiInfo(
+        "follow_up_delivery.channel_blocked",
+        {
+          route:
+            "background-worker",
+
+          requestId,
+
+          jobId:
+            normalizedJobId,
+
+          userId:
+            normalizedUserId,
+
+          channel:
+            payload.delivery.channel,
+
+          reason:
+            "communication-preferences-unavailable",
+
+          executedAt,
+        }
+      );
+
+      return {
+        delivered:
+          false,
+
+        dryRun:
+          true,
+
+        channel:
+          payload.delivery.channel,
+
+        userId:
+          normalizedUserId,
+
+        idempotencyKey,
+
+        reason:
+          "Delivery was blocked because communication preferences are unavailable.",
+
+        executedAt,
+      };
+    }
+
+    if (
+      !isChannelAuthorized(
+        payload.delivery.channel,
+        preferences
+      )
+    ) {
+      logApiInfo(
+        "follow_up_delivery.channel_blocked",
+        {
+          route:
+            "background-worker",
+
+          requestId,
+
+          jobId:
+            normalizedJobId,
+
+          userId:
+            normalizedUserId,
+
+          channel:
+            payload.delivery.channel,
+
+          reason:
+            "channel-not-authorized",
+
+          executedAt,
+        }
+      );
+
+      return {
+        delivered:
+          false,
+
+        dryRun:
+          true,
+
+        channel:
+          payload.delivery.channel,
+
+        userId:
+          normalizedUserId,
+
+        idempotencyKey,
+
+        reason:
+          "Delivery was blocked because the selected communication channel is not enabled and consented.",
+
+        executedAt,
+      };
+    }
+  }
+
+  /*
    * Dry-run delivery:
    *
-   * The durable job pipeline is now exercised end to end,
+   * The durable job pipeline is exercised end to end,
    * but no external channel provider is called yet.
    *
    * A real channel adapter will replace this audit-only
@@ -196,6 +434,11 @@ export async function executeFollowUpDelivery({
         payload.delivery.language,
 
       idempotencyKey,
+
+      communicationPreferencesChecked:
+        Boolean(
+          loadCommunicationPreferences
+        ),
 
       requiresImmediateDelivery:
         payload

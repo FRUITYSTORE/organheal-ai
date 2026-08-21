@@ -18,6 +18,10 @@ import type {
   FollowUpDeliveryJobPayload,
 } from "@/lib/jobs/background-job.service";
 
+import type {
+  CommunicationPreferences,
+} from "@/lib/repositories/communication-preferences.repository";
+
 vi.mock(
   "@/lib/api/api-logger",
   () => ({
@@ -108,6 +112,74 @@ function createPayload(
   };
 }
 
+function createCommunicationPreferences(
+  overrides:
+    Partial<
+      CommunicationPreferences
+    > = {}
+): CommunicationPreferences {
+  return {
+    user_id:
+      "user-123",
+
+    preferred_language:
+      "en",
+
+    timezone:
+      "UTC",
+
+    dashboard_enabled:
+      true,
+
+    email_enabled:
+      false,
+
+    whatsapp_enabled:
+      false,
+
+    push_enabled:
+      false,
+
+    whatsapp_phone_e164:
+      null,
+
+    whatsapp_phone_verified_at:
+      null,
+
+    email_consent_granted_at:
+      null,
+
+    email_consent_revoked_at:
+      null,
+
+    whatsapp_consent_granted_at:
+      null,
+
+    whatsapp_consent_revoked_at:
+      null,
+
+    push_consent_granted_at:
+      null,
+
+    push_consent_revoked_at:
+      null,
+
+    consent_source:
+      null,
+
+    consent_version:
+      null,
+
+    created_at:
+      "2026-08-06T18:00:00.000Z",
+
+    updated_at:
+      "2026-08-06T18:00:00.000Z",
+
+    ...overrides,
+  };
+}
+
 describe(
   "Follow-up delivery service",
   () => {
@@ -188,6 +260,279 @@ describe(
 
             hasSafetyNote:
               false,
+          })
+        );
+      }
+    );
+
+    it(
+      "blocks delivery when communication preferences are unavailable",
+      async () => {
+        const result =
+          await executeFollowUpDelivery({
+            jobId:
+              "job-follow-up",
+
+            requestId:
+              "req-follow-up",
+
+            userId:
+              "user-123",
+
+            payload:
+              createPayload(),
+
+            loadCommunicationPreferences:
+              vi.fn(
+                async () =>
+                  null
+              ),
+
+            referenceTime:
+              "2026-08-06T19:00:00.000Z",
+          });
+
+        expect(
+          result.delivered
+        ).toBe(false);
+
+        expect(
+          result.reason
+        ).toContain(
+          "communication preferences are unavailable"
+        );
+
+        expect(
+          mockedLogApiInfo
+        ).toHaveBeenCalledWith(
+          "follow_up_delivery.channel_blocked",
+          expect.objectContaining({
+            userId:
+              "user-123",
+
+            channel:
+              "email",
+
+            reason:
+              "communication-preferences-unavailable",
+          })
+        );
+      }
+    );
+
+    it(
+      "blocks email when consent is not active",
+      async () => {
+        const result =
+          await executeFollowUpDelivery({
+            jobId:
+              "job-follow-up",
+
+            requestId:
+              "req-follow-up",
+
+            userId:
+              "user-123",
+
+            payload:
+              createPayload(),
+
+            loadCommunicationPreferences:
+              vi.fn(
+                async () =>
+                  createCommunicationPreferences({
+                    email_enabled:
+                      true,
+
+                    email_consent_granted_at:
+                      null,
+
+                    email_consent_revoked_at:
+                      null,
+                  })
+              ),
+
+            referenceTime:
+              "2026-08-06T19:00:00.000Z",
+          });
+
+        expect(
+          result.delivered
+        ).toBe(false);
+
+        expect(
+          mockedLogApiInfo
+        ).toHaveBeenCalledWith(
+          "follow_up_delivery.channel_blocked",
+          expect.objectContaining({
+            userId:
+              "user-123",
+
+            channel:
+              "email",
+          })
+        );
+      }
+    );
+
+    it(
+      "blocks whatsapp when the number is not verified",
+      async () => {
+        const whatsappPayload =
+          createPayload({
+            delivery: {
+              ...createPayload()
+                .delivery,
+
+              channel:
+                "whatsapp",
+            },
+          });
+
+        const result =
+          await executeFollowUpDelivery({
+            jobId:
+              "job-whatsapp",
+
+            requestId:
+              "req-whatsapp",
+
+            userId:
+              "user-123",
+
+            payload:
+              whatsappPayload,
+
+            loadCommunicationPreferences:
+              vi.fn(
+                async () =>
+                  createCommunicationPreferences({
+                    whatsapp_enabled:
+                      true,
+
+                    whatsapp_phone_e164:
+                      "+971501234567",
+
+                    whatsapp_phone_verified_at:
+                      null,
+
+                    whatsapp_consent_granted_at:
+                      "2026-08-06T18:00:00.000Z",
+
+                    consent_source:
+                      "profile-settings",
+
+                    consent_version:
+                      "v1",
+                  })
+              ),
+
+            referenceTime:
+              "2026-08-06T19:00:00.000Z",
+          });
+
+        expect(
+          result.delivered
+        ).toBe(false);
+
+        expect(
+          mockedLogApiInfo
+        ).toHaveBeenCalledWith(
+          "follow_up_delivery.channel_blocked",
+          expect.objectContaining({
+            userId:
+              "user-123",
+
+            channel:
+              "whatsapp",
+          })
+        );
+      }
+    );
+
+    it(
+      "allows an authorized whatsapp channel to reach dry-run execution",
+      async () => {
+        const whatsappPayload =
+          createPayload({
+            delivery: {
+              ...createPayload()
+                .delivery,
+
+              channel:
+                "whatsapp",
+            },
+          });
+
+        const result =
+          await executeFollowUpDelivery({
+            jobId:
+              "job-whatsapp",
+
+            requestId:
+              "req-whatsapp",
+
+            userId:
+              "user-123",
+
+            payload:
+              whatsappPayload,
+
+            loadCommunicationPreferences:
+              vi.fn(
+                async () =>
+                  createCommunicationPreferences({
+                    whatsapp_enabled:
+                      true,
+
+                    whatsapp_phone_e164:
+                      "+971501234567",
+
+                    whatsapp_phone_verified_at:
+                      "2026-08-06T18:05:00.000Z",
+
+                    whatsapp_consent_granted_at:
+                      "2026-08-06T18:00:00.000Z",
+
+                    consent_source:
+                      "profile-settings",
+
+                    consent_version:
+                      "v1",
+
+                    updated_at:
+                      "2026-08-06T18:05:00.000Z",
+                  })
+              ),
+
+            referenceTime:
+              "2026-08-06T19:00:00.000Z",
+          });
+
+        expect(
+          result.delivered
+        ).toBe(false);
+
+        expect(
+          result.dryRun
+        ).toBe(true);
+
+        expect(
+          result.channel
+        ).toBe(
+          "whatsapp"
+        );
+
+        expect(
+          mockedLogApiInfo
+        ).toHaveBeenCalledWith(
+          "follow_up_delivery.dry_run_completed",
+          expect.objectContaining({
+            userId:
+              "user-123",
+
+            channel:
+              "whatsapp",
           })
         );
       }
