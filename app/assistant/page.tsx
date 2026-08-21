@@ -71,6 +71,8 @@ const [
 
 const voiceAudioRef =
   useRef<HTMLAudioElement | null>(null);
+  const voiceAudioUrlRef =
+  useRef<string | null>(null);
   const [clinicalInterviewId, setClinicalInterviewId] =
   useState<string | null>(null);
   const [isContextLoading, setIsContextLoading] = useState(true);
@@ -145,6 +147,32 @@ const voiceAudioRef =
   isContextLoading,
   isArabic,
 ]);
+
+useEffect(() => {
+  return () => {
+    const currentAudio =
+      voiceAudioRef.current;
+
+    if (currentAudio) {
+      currentAudio.pause();
+
+      voiceAudioRef.current =
+        null;
+    }
+
+    const currentAudioUrl =
+      voiceAudioUrlRef.current;
+
+    if (currentAudioUrl) {
+      URL.revokeObjectURL(
+        currentAudioUrl
+      );
+
+      voiceAudioUrlRef.current =
+        null;
+    }
+  };
+}, []);
 
   useEffect(() => {
     async function loadHealthContext() {
@@ -411,6 +439,18 @@ const result =
       null;
   }
 
+  const currentAudioUrl =
+    voiceAudioUrlRef.current;
+
+  if (currentAudioUrl) {
+    URL.revokeObjectURL(
+      currentAudioUrl
+    );
+
+    voiceAudioUrlRef.current =
+      null;
+  }
+
   setVoicePlaybackIndex(null);
   setVoiceLoadingIndex(null);
 }
@@ -488,6 +528,8 @@ async function playSpokenResponse(
         audioBlob
       );
 
+      voiceAudioUrlRef.current =
+  audioUrl;
     const audio =
       new Audio(
         audioUrl
@@ -502,6 +544,8 @@ async function playSpokenResponse(
           audioUrl
         );
 
+        voiceAudioUrlRef.current =
+          null;
         voiceAudioRef.current =
           null;
 
@@ -516,6 +560,8 @@ async function playSpokenResponse(
           audioUrl
         );
 
+        voiceAudioUrlRef.current =
+          null;
         voiceAudioRef.current =
           null;
 
