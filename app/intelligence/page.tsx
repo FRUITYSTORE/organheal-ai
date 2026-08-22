@@ -46,6 +46,9 @@ import {
   getIntelligenceSession,
 } from "@/lib/services/intelligence/intelligence-session-runtime.service";
 import {
+  triggerReportFollowUp,
+} from "@/lib/services/intelligence/report-follow-up-runtime.service";
+import {
   createUploadedReportSignedUrl,
 } from "@/lib/repositories/reports.repository";
 import {
@@ -729,8 +732,27 @@ export default function IntelligencePage() {
           : item
       )
     );
-  }
 
+    /*
+     * Follow-up scheduling is best-effort.
+     * Intelligence generation and persistence have
+     * already completed successfully at this point.
+     *
+     * A follow-up failure must not convert successful
+     * report analysis into a failed user operation.
+     */
+    void triggerReportFollowUp({
+      accessToken:
+        sessionResult.accessToken,
+
+      language:
+        isArabicUi
+          ? "ar"
+          : "en",
+    }).catch(
+      () => undefined
+    );
+  }
   function getReportTypeLabel(type: string | null) {
     if (type === "lab") return text("Laboratory Report", "تقرير مختبر");
     if (type === "radiology") return text("Radiology Report", "تقرير أشعة");
