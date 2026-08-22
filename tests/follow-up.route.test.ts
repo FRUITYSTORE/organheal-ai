@@ -1,4 +1,4 @@
-﻿import {
+import {
   afterEach,
   beforeEach,
   describe,
@@ -10,6 +10,55 @@
 import type {
   SupabaseClient,
 } from "@supabase/supabase-js";
+
+const {
+  mockedAfter,
+  mockedRunBatch,
+} = vi.hoisted(
+  () => ({
+    mockedAfter:
+      vi.fn(),
+
+    mockedRunBatch:
+      vi.fn(),
+  })
+);
+
+vi.mock(
+  "next/server",
+  async (
+    importOriginal
+  ) => {
+    const actual =
+      await importOriginal<
+        typeof import(
+          "next/server"
+        )
+      >();
+
+    return {
+      ...actual,
+
+      after:
+        mockedAfter,
+    };
+  }
+);
+
+vi.mock(
+  "@/lib/jobs/background-job-runtime",
+  () => ({
+    createBackgroundJobRuntime:
+      vi.fn(
+        () => ({
+          runner: {
+            runBatch:
+              mockedRunBatch,
+          },
+        })
+      ),
+  })
+);
 
 vi.mock(
   "@/lib/api/api-auth",
@@ -141,6 +190,34 @@ describe(
     beforeEach(
       () => {
         vi.clearAllMocks();
+
+        mockedAfter
+          .mockImplementation(
+            (
+              callback:
+                () =>
+                  Promise<void>
+            ) => {
+              void callback();
+            }
+          );
+
+        mockedRunBatch
+          .mockResolvedValue({
+            processedJobs:
+              1,
+
+            queueWasEmpty:
+              false,
+
+            recovery: {
+              recoveredRetrying:
+                0,
+
+              recoveredFailed:
+                0,
+            },
+          });
 
         consoleErrorSpy =
           vi.spyOn(
@@ -357,6 +434,81 @@ describe(
               ),
           })
         );
+      }
+    );
+
+    it(
+      "kicks the durable worker when a new follow-up job is created",
+      async () => {
+        const response =
+          await POST(
+            createRequest() as never
+          );
+
+        expect(
+          response.status
+        ).toBe(
+          200
+        );
+
+        expect(
+          mockedAfter
+        ).toHaveBeenCalledTimes(
+          1
+        );
+
+        await vi.waitFor(
+          () => {
+            expect(
+              mockedRunBatch
+            ).toHaveBeenCalledTimes(
+              1
+            );
+          }
+        );
+
+        expect(
+          mockedRunBatch
+        ).toHaveBeenCalledWith(
+          1
+        );
+      }
+    );
+
+    it(
+      "does not kick the worker when the follow-up job already exists",
+      async () => {
+        mockedExecuteAuthenticatedFollowUp
+          .mockResolvedValue(
+            createFollowUpResult({
+              enqueueResult: {
+                jobId:
+                  "job-existing",
+
+                created:
+                  false,
+              },
+            })
+          );
+
+        const response =
+          await POST(
+            createRequest() as never
+          );
+
+        expect(
+          response.status
+        ).toBe(
+          200
+        );
+
+        expect(
+          mockedAfter
+        ).not.toHaveBeenCalled();
+
+        expect(
+          mockedRunBatch
+        ).not.toHaveBeenCalled();
       }
     );
 

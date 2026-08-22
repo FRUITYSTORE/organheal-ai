@@ -1,4 +1,5 @@
-﻿import {
+import {
+  after,
   NextRequest,
   NextResponse,
 } from "next/server";
@@ -16,6 +17,10 @@ import {
 import {
   executeAuthenticatedFollowUp,
 } from "@/lib/health-intelligence/application/authenticated-follow-up-runtime.service";
+
+import {
+  createBackgroundJobRuntime,
+} from "@/lib/jobs/background-job-runtime";
 
 export const runtime =
   "nodejs";
@@ -134,6 +139,78 @@ export async function POST(
           null,
       }
     );
+
+    /*
+     * Newly created durable follow-up jobs should be
+     * processed promptly instead of waiting for the
+     * scheduled recovery runner.
+     *
+     * This kick is intentionally best-effort. Once the
+     * job has been durably enqueued, a runner failure
+     * must not turn the successful follow-up request
+     * into an HTTP failure. The scheduled runner remains
+     * the recovery path.
+     */
+    if (
+      result
+        .enqueueResult
+        ?.created ===
+      true
+    ) {
+      const jobId =
+        result
+          .enqueueResult
+          .jobId;
+
+      after(
+        async () => {
+          try {
+            const runtimeInstance =
+              createBackgroundJobRuntime();
+
+            const runResult =
+              await runtimeInstance
+                .runner
+                .runBatch(
+                  1
+                );
+
+            logApiInfo(
+              "follow_up.background_kick_completed",
+              {
+                route:
+                  "/api/follow-up",
+
+                requestId,
+
+                jobId,
+
+                processedJobs:
+                  runResult
+                    .processedJobs,
+
+                queueWasEmpty:
+                  runResult
+                    .queueWasEmpty,
+              }
+            );
+          } catch (error) {
+            logApiError(
+              "follow_up.background_kick_failed",
+              error,
+              {
+                route:
+                  "/api/follow-up",
+
+                requestId,
+
+                jobId,
+              }
+            );
+          }
+        }
+      );
+    }
 
     return NextResponse.json(
       {
