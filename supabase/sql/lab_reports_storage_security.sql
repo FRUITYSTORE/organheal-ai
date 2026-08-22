@@ -1,6 +1,17 @@
--- OrganHeal AI Lab Reports Storage Security
--- Restricts authenticated users to their own folder
--- inside the private lab-reports bucket.
+﻿-- OrganHeal AI Lab Reports Storage Security
+-- Keeps the lab-reports bucket private, restricts accepted
+-- uploads, and isolates authenticated users to their own folder.
+
+update storage.buckets
+set
+  public = false,
+  file_size_limit = 20971520,
+  allowed_mime_types = array[
+    'application/pdf',
+    'image/png',
+    'image/jpeg'
+  ]
+where id = 'lab-reports';
 
 drop policy if exists
   "Authenticated users can upload lab reports"
