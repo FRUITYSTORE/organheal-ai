@@ -2,100 +2,167 @@
 
 ## Purpose
 
-This document is the operational checklist for preparing OrganHeal AI for real users, growth, performance, reliability, security, and future scalability.
+This document tracks the engineering controls required to prepare OrganHeal AI
+for reliable production use, growth, security, performance, and future
+scalability.
 
-OrganHeal must not be considered ready for wide launch, paid subscription growth, or heavy marketing until the required items in this checklist are reviewed, tested, and improved.
-
----
-
-## Core Rule
-
-Every future change should answer at least one of these questions:
-
-- Does it make OrganHeal faster?
-- Does it make OrganHeal more reliable?
-- Does it make OrganHeal safer?
-- Does it reduce user confusion?
-- Does it reduce duplicated code or duplicated UX?
-- Does it prepare the platform for more users?
-- Does it increase real product value?
-
----
----
-
-## Performance Budget
-
-Each page should have a clear query and loading budget. New features must not add unnecessary database calls or heavy processing to page load.
-
-### Target Query Budget
-
-| Area | Target |
-|---|---:|
-| Public pages | 0 private queries |
-| Dashboard | 3–4 primary queries maximum |
-| Reports | 3 primary queries maximum |
-| Health Plan | 5 primary queries maximum |
-| Doctor Portal | 5 primary queries maximum |
-| Report Analysis | Async/background processing preferred |
-| PDF extraction | Background job preferred |
-| AI generation | Background job preferred |
-
-### Rules
-
-- Any new feature must declare its expected data source.
-- Avoid adding queries inside UI components unless required.
-- Prefer summary queries over loading full records.
-- Prefer `limit()` on all list queries.
-- Prefer selected columns over `select("*")`.
-- Do not run AI, PDF extraction, OCR, or heavy processing during normal page load.
-- Reuse saved/generated results before generating new ones.
-- Heavy user actions should move toward a status-based flow: Pending → Processing → Completed.
-- If a page becomes slow, first count queries before changing UI.
-
-### Future Goal
-
-Move from page-level multiple queries toward summary views or backend summary functions where appropriate, especially for Dashboard and Doctor Portal.
+Production readiness is evidence-based. A capability is marked verified only
+when implementation or production behavior has been checked directly.
 
 ---
 
-## Database Index Plan
+## Current Status
 
-These indexes should be reviewed and added carefully through Supabase SQL Editor or migrations. Indexes improve read performance for user-specific pages, especially when tables grow.
+**Phase:** Production Readiness
+**Gate:** Gate 2 — In Progress
 
-### High Priority Indexes
+Major production-readiness infrastructure is implemented. Remaining work
+is focused on broader performance validation, hosted telemetry validation,
+and final release-gate review.
 
-```sql
-create index if not exists idx_profiles_id
-on profiles(id);
+---
 
-create index if not exists idx_organ_assessments_user_created
-on organ_assessments(user_id, created_at desc);
+## Verified Areas
 
-create index if not exists idx_daily_checkins_user_created
-on daily_checkins(user_id, created_at desc);
+- Query and performance discipline
+- Production database indexing
+- Durable background jobs and recovery
+- API authentication and authorization hardening
+- Private lab-report storage and upload restrictions
+- WhatsApp webhook signature verification and request tracing
+- Structured logging and request IDs
+- Health and queue monitoring endpoint
+- Automated regression testing
+- Production dependency security audit
+- Baseline load testing
 
-create index if not exists idx_uploaded_lab_files_user_created
-on uploaded_lab_files(user_id, created_at desc);
+---
 
-create index if not exists idx_health_insights_user_created
-on health_insights(user_id, created_at desc);
+## Automated Testing
 
-create index if not exists idx_health_insights_user_report
-on health_insights(user_id, report_id);
+Latest verified test run:
 
-create index if not exists idx_generated_results_user_updated
-on generated_intelligence_results(user_id, updated_at desc);
+- Test files: 73 passed
+- Tests: 454 passed
+- Failed tests: 0
+- Duration: 7.82 seconds
 
-create index if not exists idx_generated_results_user_insight
-on generated_intelligence_results(user_id, insight_id);
+Standard verification:
 
-create index if not exists idx_health_history_user_created
-on health_history(user_id, created_at desc);
-
-## Build Rules
-
-Before every commit:
-
-```bash
+```text
+npx tsc --noEmit
+npm test
 npm run build
-git status
+git diff --check
+```
+
+---
+
+## Load and Performance Testing
+
+Reusable load test:
+
+`npm run test:load:health`
+
+Current automated guardrails:
+
+- Connections: 10
+- Duration: 15 seconds
+- Pipelining: 1
+- Average latency maximum: 1500 ms
+- p97.5 latency maximum: 4000 ms
+- Errors: 0 required
+- Timeouts: 0 required
+- Non-2xx responses: 0 required
+
+Verified successful runs included:
+
+| Requests | Average latency | p97.5 | Errors | Timeouts | Non-2xx |
+|---:|---:|---:|---:|---:|---:|
+| 148 | 973.82 ms | 3009 ms | 0 | 0 | 0 |
+| 157 | 925.00 ms | 2789 ms | 0 | 0 | 0 |
+| 146 | 966.32 ms | 3082 ms | 0 | 0 | 0 |
+
+Intermittent non-2xx responses were observed during some load-test runs.
+
+Enhanced `/api/health` diagnostics identified the dependency failure as:
+
+- Supabase/PostgREST error code: `PGRST303`
+- Error message: `JWT issued at future`
+
+The condition remained reproducible after upgrading `@supabase/supabase-js`
+from 2.107.0 to 2.112.3.
+
+Local Windows time synchronization was verified against `time.windows.com`.
+Five measurements showed an average clock offset of approximately -0.153
+seconds, so no material local clock drift was demonstrated by that check.
+
+The backend admin client uses a Supabase `sb_secret_` server key rather than
+a legacy three-part JWT key.
+
+The root cause has not yet been confirmed. The condition is tracked as an
+unresolved Supabase/PostgREST dependency risk. The load-test guardrail
+continues to require zero non-2xx responses and has not been weakened to hide
+the failure.
+
+These tests do not establish the maximum number of users OrganHeal can
+support. They cover one local production-build endpoint connected to
+external dependencies.
+
+---
+
+## Security Verification
+
+- Production dependency audit: 0 vulnerabilities
+- Row-level access controls reviewed
+- Application-role TRUNCATE and TRIGGER privileges removed from existing
+  public tables
+- Lab-report bucket remains private
+- Lab-report uploads restricted to PDF, PNG, and JPEG
+- Lab-report upload limit: 20 MB per file
+- User storage paths isolated by authenticated user ID
+- WhatsApp webhook verification token and HMAC signature validation enabled
+- Request tracing enabled on the WhatsApp webhook
+
+---
+
+## Database Index Verification
+
+Production inspection confirmed required access patterns are indexed.
+
+`profiles(id)` is covered by `profiles_pkey`.
+
+`generated_intelligence_results(user_id, insight_id)` is covered by
+`generated_intelligence_results_unique_insight`.
+
+Duplicate indexes for these two access patterns are therefore unnecessary.
+
+---
+
+## Gate 2 — Remaining Verification
+
+- Expand performance testing beyond `/api/health`
+- Validate representative authenticated user journeys
+- Validate background-job throughput under controlled load
+- Continue investigating health-check tail latency
+- Confirm hosted production telemetry and alerting strategy
+- Perform final production security review
+- Update the project scorecard
+- Complete final release-gate review
+
+---
+
+## Production Readiness Definition
+
+OrganHeal should be considered ready for broader production growth only when
+the evidence supports stable architecture, secure medical-data handling,
+reliable background processing, production observability, automated testing,
+representative load testing, reliable health-intelligence workflows, and no
+unresolved launch-blocking security findings.
+
+---
+
+## Review Frequency
+
+Update this document after every major production-readiness milestone,
+architectural change, security review, or meaningful performance test.
