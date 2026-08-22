@@ -9,6 +9,7 @@ import {
 } from "next/server";
 
 import {
+  createApiRequestId,
   logApiInfo,
 } from "@/lib/api/api-logger";
 
@@ -127,6 +128,8 @@ export async function GET(
   request:
     NextRequest
 ) {
+  const requestId =
+    createApiRequestId();
   const mode =
     request.nextUrl.searchParams.get(
       "hub.mode"
@@ -159,6 +162,11 @@ export async function GET(
       {
         status:
           400,
+
+        headers: {
+          "x-request-id":
+            requestId,
+        },
       }
     );
   }
@@ -181,6 +189,11 @@ export async function GET(
       {
         status:
           503,
+
+        headers: {
+          "x-request-id":
+            requestId,
+        },
       }
     );
   }
@@ -202,6 +215,11 @@ export async function GET(
       {
         status:
           403,
+
+        headers: {
+          "x-request-id":
+            requestId,
+        },
       }
     );
   }
@@ -211,6 +229,8 @@ export async function GET(
     {
       route:
         "/api/whatsapp/webhook",
+
+      requestId,
     }
   );
 
@@ -223,6 +243,9 @@ export async function GET(
       headers: {
         "Content-Type":
           "text/plain",
+
+        "x-request-id":
+          requestId,
       },
     }
   );
@@ -232,6 +255,8 @@ export async function POST(
   request:
     NextRequest
 ) {
+  const requestId =
+    createApiRequestId();
   let appSecret:
     string;
 
@@ -250,6 +275,11 @@ export async function POST(
       {
         status:
           503,
+
+        headers: {
+          "x-request-id":
+            requestId,
+        },
       }
     );
   }
@@ -272,6 +302,11 @@ export async function POST(
       {
         status:
           400,
+
+        headers: {
+          "x-request-id":
+            requestId,
+        },
       }
     );
   }
@@ -299,6 +334,11 @@ export async function POST(
       {
         status:
           401,
+
+        headers: {
+          "x-request-id":
+            requestId,
+        },
       }
     );
   }
@@ -323,6 +363,11 @@ export async function POST(
       {
         status:
           400,
+
+        headers: {
+          "x-request-id":
+            requestId,
+        },
       }
     );
   }
@@ -345,6 +390,8 @@ export async function POST(
       route:
         "/api/whatsapp/webhook",
 
+      requestId,
+
       signatureVerified:
         true,
 
@@ -361,6 +408,11 @@ export async function POST(
     {
       status:
         200,
+
+        headers: {
+          "x-request-id":
+            requestId,
+        },
     }
   );
 }

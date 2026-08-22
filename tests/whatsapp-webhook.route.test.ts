@@ -22,6 +22,12 @@ import {
 vi.mock(
   "@/lib/api/api-logger",
   () => ({
+    createApiRequestId:
+      vi.fn(
+        () =>
+          "req_whatsapp_test"
+      ),
+
     logApiInfo:
       vi.fn(),
   })
@@ -191,6 +197,14 @@ describe(
           response.status
         ).toBe(
           200
+        );
+
+        expect(
+          response.headers.get(
+          "x-request-id"
+        )
+        ).toBe(
+          "req_whatsapp_test"
         );
 
         expect(
