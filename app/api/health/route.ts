@@ -5,6 +5,7 @@ import {
 import {
   classifyApiDuration,
   createApiRequestId,
+  logApiError,
   logApiInfo,
   logApiWarning,
   startApiTimer,
@@ -56,7 +57,10 @@ type QueueHealthCheck =
     };
   };
 
-async function checkDatabase():
+async function checkDatabase(
+  requestId:
+    string
+):
   Promise<
     ServiceHealthCheck<
       DependencyHealthStatus
@@ -83,27 +87,74 @@ async function checkDatabase():
           1
         );
 
+    if (error) {
+      const durationMs =
+        timer.elapsedMs();
+
+      logApiError(
+        "health_check.database_query_failed",
+        new Error(
+          error.message ||
+            "Database health query failed."
+        ),
+        {
+          route:
+            "/api/health",
+
+          requestId,
+
+          supabaseErrorCode:
+            error.code,
+
+          durationMs,
+        }
+      );
+
+      return {
+        status:
+          "unhealthy",
+
+        durationMs,
+      };
+    }
+
     return {
       status:
-        error
-          ? "unhealthy"
-          : "healthy",
+        "healthy",
 
       durationMs:
         timer.elapsedMs(),
     };
-  } catch {
+  } catch (error) {
+    const durationMs =
+      timer.elapsedMs();
+
+    logApiError(
+      "health_check.database_failed",
+      error,
+      {
+        route:
+          "/api/health",
+
+        requestId,
+
+        durationMs,
+      }
+    );
+
     return {
       status:
         "unhealthy",
 
-      durationMs:
-        timer.elapsedMs(),
+      durationMs,
     };
   }
 }
 
-async function checkBackgroundJobsQueue():
+async function checkBackgroundJobsQueue(
+  requestId:
+    string
+):
   Promise<QueueHealthCheck> {
   const timer =
     startApiTimer();
@@ -195,6 +246,44 @@ async function checkBackgroundJobsQueue():
       waitingResult.error ||
       staleRunningResult.error
     ) {
+      const error =
+        waitingResult.error ??
+        staleRunningResult.error ??
+        new Error(
+          "Background queue health query failed."
+        );
+
+      logApiError(
+        "health_check.queue_query_failed",
+        new Error(
+          error.message ||
+            "Background queue health query failed."
+        ),
+        {
+          route:
+            "/api/health",
+
+          requestId,
+
+          supabaseErrorCode:
+            waitingResult.error?.code ??
+            staleRunningResult.error?.code,
+
+          waitingQueryFailed:
+            Boolean(
+              waitingResult.error
+            ),
+
+          staleRunningQueryFailed:
+            Boolean(
+              staleRunningResult.error
+            ),
+
+          durationMs:
+            timer.elapsedMs(),
+        }
+      );
+
       return {
         status:
           "unhealthy",
@@ -238,13 +327,28 @@ async function checkBackgroundJobsQueue():
         staleRunningCount,
       },
     };
-  } catch {
+  } catch (error) {
+    const durationMs =
+      timer.elapsedMs();
+
+    logApiError(
+      "health_check.queue_failed",
+      error,
+      {
+        route:
+          "/api/health",
+
+        requestId,
+
+        durationMs,
+      }
+    );
+
     return {
       status:
         "unhealthy",
 
-      durationMs:
-        timer.elapsedMs(),
+      durationMs,
 
       diagnostics: {
         waitingTooLongCount:
@@ -269,8 +373,12 @@ export async function GET() {
     queue,
   ] =
     await Promise.all([
-      checkDatabase(),
-      checkBackgroundJobsQueue(),
+      checkDatabase(
+        requestId
+      ),
+      checkBackgroundJobsQueue(
+        requestId
+      ),
     ]);
 
   let status:
