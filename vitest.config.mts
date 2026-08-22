@@ -12,6 +12,12 @@ export default defineConfig({
           import.meta.dirname,
           "."
         ),
+
+      "server-only":
+        path.resolve(
+          import.meta.dirname,
+          "tests/server-only.stub.ts"
+        ),
     },
   },
 
