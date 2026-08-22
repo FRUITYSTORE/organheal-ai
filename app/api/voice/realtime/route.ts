@@ -3,6 +3,10 @@ import {
 } from "next/server";
 
 import {
+  authenticateApiRequest,
+} from "@/lib/api/api-auth";
+
+import {
   createApiRequestId,
   logApiError,
   logApiInfo,
@@ -50,6 +54,33 @@ export async function POST(
     startApiTimer();
 
   try {
+    const authentication =
+      await authenticateApiRequest(
+        request
+      );
+
+    if (
+      !authentication.success
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            authentication.error,
+
+          requestId,
+        },
+        {
+          status:
+            authentication.status,
+
+          headers: {
+            "x-request-id":
+              requestId,
+          },
+        }
+      );
+    }
+
     const apiKey =
       getOpenAIApiKey();
 

@@ -7,6 +7,9 @@ import {
   useState,
 } from "react";
 
+import {
+  supabase,
+} from "@/lib/supabase";
 type RealtimeStatus =
   | "idle"
   | "connecting"
@@ -709,6 +712,34 @@ if (
             );
           }
 
+          const {
+            data:
+              sessionData,
+            error:
+              sessionError,
+          } =
+            await supabase.auth
+              .getSession();
+
+          if (
+            sessionError
+          ) {
+            throw new Error(
+              sessionError.message
+            );
+          }
+
+          const accessToken =
+            sessionData
+              .session
+              ?.access_token;
+
+          if (!accessToken) {
+            throw new Error(
+              "Your session has expired. Please log in again."
+            );
+          }
+
           const response =
             await fetch(
               "/api/voice/realtime",
@@ -717,6 +748,9 @@ if (
                   "POST",
 
                 headers: {
+                  Authorization:
+                    `Bearer ${accessToken}`,
+
                   "Content-Type":
                     "application/json",
                 },
