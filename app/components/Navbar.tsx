@@ -82,6 +82,10 @@ export default function Navbar() {
     history: isArabic ? "التاريخ الصحي" : "History",
     doctorPortal: isArabic ? "بوابة الطبيب" : "Doctor Portal",
     profile: isArabic ? "الملف الشخصي" : "Profile",
+    communicationSettings:
+  isArabic
+    ? "إعدادات التواصل"
+    : "Communication Settings",
     more: isArabic ? "المزيد" : "More",
     createAccount: isArabic ? "إنشاء حساب" : "Create Account",
     signIn: isArabic ? "تسجيل الدخول" : "Sign In",
@@ -274,8 +278,15 @@ export default function Navbar() {
                   </Link>
 
                   <Link href="/profile" onClick={closeMore}>
-                    {labels.profile}
+                   {labels.profile}
                   </Link>
+
+                  <Link
+                  href="/settings/communications"
+                  onClick={closeMore}
+>
+                 {labels.communicationSettings}
+                 </Link>
                 </div>
               )}
             </div>
