@@ -193,6 +193,10 @@ describe(
           "WHATSAPP_DELIVERY_ENABLED",
           "false"
         );
+        vi.stubEnv(
+  "EMAIL_DELIVERY_ENABLED",
+  "false"
+);
       }
     );
 
@@ -844,6 +848,375 @@ it(
 
     expect(
       sendWhatsApp
+    ).toHaveBeenCalledTimes(
+      1
+    );
+  }
+);
+
+it(
+  "does not call the email provider while delivery is disabled",
+  async () => {
+    const sendEmail =
+      vi.fn();
+
+    const emailPayload =
+      createPayload({
+        delivery: {
+          ...createPayload()
+            .delivery,
+
+          channel:
+            "email",
+        },
+      });
+
+    const result =
+      await executeFollowUpDelivery({
+        jobId:
+          "job-email",
+
+        requestId:
+          "req-email",
+
+        userId:
+          "user-123",
+
+        payload:
+          emailPayload,
+
+        loadCommunicationPreferences:
+          vi.fn(
+            async () =>
+              createCommunicationPreferences({
+                email_enabled:
+                  true,
+
+                email_consent_granted_at:
+                  "2026-08-06T18:00:00.000Z",
+              })
+          ),
+
+        loadUserProfile:
+          vi.fn(
+            async () => ({
+              username:
+                "test-user",
+
+              email:
+                "user@example.com",
+            })
+          ),
+
+        sendEmail,
+
+        referenceTime:
+          "2026-08-06T19:00:00.000Z",
+      });
+
+    expect(
+      result.delivered
+    ).toBe(false);
+
+    expect(
+      result.dryRun
+    ).toBe(true);
+
+    expect(
+      result.providerMessageId
+    ).toBeNull();
+
+    expect(
+      sendEmail
+    ).not.toHaveBeenCalled();
+  }
+);
+
+it(
+  "sends an authorized email follow-up when delivery is enabled",
+  async () => {
+    vi.stubEnv(
+      "EMAIL_DELIVERY_ENABLED",
+      "true"
+    );
+
+    const sendEmail =
+      vi.fn(
+        async () => ({
+          messageId:
+            "email-follow-up-test",
+
+          recipient:
+            "user@example.com",
+
+          from:
+            "OrganHeal AI <followup@organheal.com>",
+        })
+      );
+
+    const emailPayload =
+      createPayload({
+        delivery: {
+          ...createPayload()
+            .delivery,
+
+          channel:
+            "email",
+        },
+      });
+
+    const result =
+      await executeFollowUpDelivery({
+        jobId:
+          "job-email",
+
+        requestId:
+          "req-email",
+
+        userId:
+          "user-123",
+
+        payload:
+          emailPayload,
+
+        loadCommunicationPreferences:
+          vi.fn(
+            async () =>
+              createCommunicationPreferences({
+                email_enabled:
+                  true,
+
+                email_consent_granted_at:
+                  "2026-08-06T18:00:00.000Z",
+              })
+          ),
+
+        loadUserProfile:
+          vi.fn(
+            async () => ({
+              username:
+                "test-user",
+
+              email:
+                "user@example.com",
+            })
+          ),
+
+        sendEmail,
+
+        referenceTime:
+          "2026-08-06T19:00:00.000Z",
+      });
+
+    expect(
+      sendEmail
+    ).toHaveBeenCalledWith({
+      to:
+        "user@example.com",
+
+      subject:
+        "Add a new health check-in",
+
+      text:
+        "Complete a new health check-in.",
+
+      idempotencyKey:
+        "follow-up:user-123:email:repeat-checkin:2026-08-09",
+    });
+
+    expect(
+      result
+    ).toEqual({
+      delivered:
+        true,
+
+      dryRun:
+        false,
+
+      providerMessageId:
+        "email-follow-up-test",
+
+      channel:
+        "email",
+
+      userId:
+        "user-123",
+
+      idempotencyKey:
+        "follow-up:user-123:email:repeat-checkin:2026-08-09",
+
+      reason:
+        "The email follow-up message was accepted by the configured provider.",
+
+      executedAt:
+        "2026-08-06T19:00:00.000Z",
+    });
+
+    expect(
+      mockedLogApiInfo
+    ).toHaveBeenCalledWith(
+      "follow_up_delivery.email_completed",
+      expect.objectContaining({
+        channel:
+          "email",
+
+        providerMessageId:
+          "email-follow-up-test",
+
+        purpose:
+          "repeat-checkin",
+      })
+    );
+  }
+);
+
+it(
+  "rejects email delivery when the trusted profile has no email address",
+  async () => {
+    vi.stubEnv(
+      "EMAIL_DELIVERY_ENABLED",
+      "true"
+    );
+
+    const sendEmail =
+      vi.fn();
+
+    const emailPayload =
+      createPayload({
+        delivery: {
+          ...createPayload()
+            .delivery,
+
+          channel:
+            "email",
+        },
+      });
+
+    await expect(
+      executeFollowUpDelivery({
+        jobId:
+          "job-email",
+
+        requestId:
+          "req-email",
+
+        userId:
+          "user-123",
+
+        payload:
+          emailPayload,
+
+        loadCommunicationPreferences:
+          vi.fn(
+            async () =>
+              createCommunicationPreferences({
+                email_enabled:
+                  true,
+
+                email_consent_granted_at:
+                  "2026-08-06T18:00:00.000Z",
+              })
+          ),
+
+        loadUserProfile:
+          vi.fn(
+            async () => ({
+              username:
+                "test-user",
+
+              email:
+                null,
+            })
+          ),
+
+        sendEmail,
+      })
+    ).rejects.toThrow(
+      "missing a trusted destination email address"
+    );
+
+    expect(
+      sendEmail
+    ).not.toHaveBeenCalled();
+  }
+);
+
+it(
+  "propagates email provider failures so the background job can retry",
+  async () => {
+    vi.stubEnv(
+      "EMAIL_DELIVERY_ENABLED",
+      "true"
+    );
+
+    const providerError =
+      new Error(
+        "Email provider unavailable"
+      );
+
+    const sendEmail =
+      vi.fn(
+        async () => {
+          throw providerError;
+        }
+      );
+
+    const emailPayload =
+      createPayload({
+        delivery: {
+          ...createPayload()
+            .delivery,
+
+          channel:
+            "email",
+        },
+      });
+
+    await expect(
+      executeFollowUpDelivery({
+        jobId:
+          "job-email",
+
+        requestId:
+          "req-email",
+
+        userId:
+          "user-123",
+
+        payload:
+          emailPayload,
+
+        loadCommunicationPreferences:
+          vi.fn(
+            async () =>
+              createCommunicationPreferences({
+                email_enabled:
+                  true,
+
+                email_consent_granted_at:
+                  "2026-08-06T18:00:00.000Z",
+              })
+          ),
+
+        loadUserProfile:
+          vi.fn(
+            async () => ({
+              username:
+                "test-user",
+
+              email:
+                "user@example.com",
+            })
+          ),
+
+        sendEmail,
+      })
+    ).rejects.toThrow(
+      "Email provider unavailable"
+    );
+
+    expect(
+      sendEmail
     ).toHaveBeenCalledTimes(
       1
     );

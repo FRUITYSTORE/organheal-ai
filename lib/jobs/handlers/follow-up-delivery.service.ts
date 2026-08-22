@@ -20,6 +20,16 @@ import {
   type WhatsAppCloudSendResult,
 } from "@/lib/communication/whatsapp-cloud.provider";
 
+import {
+  sendEmailWithResend,
+  type SendEmailInput,
+  type ResendEmailSendResult,
+} from "@/lib/communication/resend-email.provider";
+
+import type {
+  UserProfileSummary,
+} from "@/lib/repositories/profile.repository";
+
 type FollowUpChannel =
   FollowUpDeliveryJobPayload[
     "delivery"
@@ -60,6 +70,15 @@ export type FollowUpPreferencesLoader =
       CommunicationPreferences | null
     >;
 
+    export type UserProfileLoader =
+  (
+    userId:
+      string
+  ) =>
+    Promise<
+      UserProfileSummary | null
+    >;
+
 export type WhatsAppTemplateSender =
   (
     input:
@@ -67,6 +86,15 @@ export type WhatsAppTemplateSender =
   ) =>
     Promise<
       WhatsAppCloudSendResult
+    >;
+
+    export type EmailSender =
+  (
+    input:
+      SendEmailInput
+  ) =>
+    Promise<
+      ResendEmailSendResult
     >;
 
 export type ExecuteFollowUpDeliveryInput = {
@@ -86,9 +114,16 @@ export type ExecuteFollowUpDeliveryInput = {
     string | Date;
 
   loadCommunicationPreferences?:
-    FollowUpPreferencesLoader;
-    sendWhatsApp?:
+  FollowUpPreferencesLoader;
+
+  loadUserProfile?:
+  UserProfileLoader;
+
+sendWhatsApp?:
   WhatsAppTemplateSender;
+
+sendEmail?:
+  EmailSender;
 };
 
 function normalizeReferenceTime(
@@ -249,10 +284,13 @@ export async function executeFollowUpDelivery({
   requestId,
   userId,
   payload,
-    referenceTime,
-  loadCommunicationPreferences,
-  sendWhatsApp =
-    sendWhatsAppTemplate,
+referenceTime,
+loadCommunicationPreferences,
+loadUserProfile,
+sendWhatsApp =
+  sendWhatsAppTemplate,
+sendEmail =
+  sendEmailWithResend,
 }: ExecuteFollowUpDeliveryInput):
   Promise<
     FollowUpDeliveryExecutionResult
@@ -435,6 +473,119 @@ communicationPreferences =
       };
     }
   }
+
+  const emailDeliveryEnabled =
+  process.env
+    .EMAIL_DELIVERY_ENABLED ===
+  "true";
+
+if (
+  payload.delivery.channel ===
+    "email" &&
+  emailDeliveryEnabled &&
+  communicationPreferences
+) {
+  if (!loadUserProfile) {
+    throw new Error(
+      "Authorized email delivery is missing the trusted user profile loader."
+    );
+  }
+
+  const profile =
+    await loadUserProfile(
+      normalizedUserId
+    );
+
+  const emailAddress =
+    profile
+      ?.email
+      ?.trim();
+
+  if (!emailAddress) {
+    throw new Error(
+      "Authorized email delivery is missing a trusted destination email address."
+    );
+  }
+
+  const providerResult =
+    await sendEmail({
+      to:
+        emailAddress,
+
+      subject:
+        title,
+
+      text:
+        body,
+
+      idempotencyKey,
+    });
+
+  logApiInfo(
+    "follow_up_delivery.email_completed",
+    {
+      route:
+        "background-worker",
+
+      requestId,
+
+      jobId:
+        normalizedJobId,
+
+      userId:
+        normalizedUserId,
+
+      channel:
+        "email",
+
+      priority:
+        payload.delivery.priority,
+
+      purpose:
+        payload.delivery.purpose,
+
+      language:
+        payload.delivery.language,
+
+      idempotencyKey,
+
+      providerMessageId:
+        providerResult.messageId,
+
+      subjectLength:
+        title.length,
+
+      bodyLength:
+        body.length,
+
+      executedAt,
+    }
+  );
+
+  return {
+    delivered:
+      true,
+
+    dryRun:
+      false,
+
+    providerMessageId:
+      providerResult.messageId,
+
+    channel:
+      "email",
+
+    userId:
+      normalizedUserId,
+
+    idempotencyKey,
+
+    reason:
+      "The email follow-up message was accepted by the configured provider.",
+
+    executedAt,
+  };
+}
 
   const whatsappDeliveryEnabled =
   process.env

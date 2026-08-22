@@ -40,6 +40,14 @@ vi.mock(
 );
 
 vi.mock(
+  "@/lib/repositories/profile.repository",
+  () => ({
+    getUserProfileSummary:
+      vi.fn(),
+  })
+);
+
+vi.mock(
   "@/lib/jobs/handlers/follow-up-delivery.service",
   () => ({
     executeFollowUpDelivery:

@@ -7,10 +7,13 @@ import type {
 } from "@supabase/supabase-js";
 
 const PROFILE_SUMMARY_SELECT =
-  "username";
+  "username,email";
 
 export type UserProfileSummary = {
   username:
+    string | null;
+
+  email:
     string | null;
 };
 

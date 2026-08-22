@@ -30,6 +30,10 @@ import {
   getCommunicationPreferences,
 } from "@/lib/repositories/communication-preferences.repository";
 
+import {
+  getUserProfileSummary,
+} from "@/lib/repositories/profile.repository";
+
 const VALID_CHANNELS =
   new Set([
     "dashboard",
@@ -357,6 +361,13 @@ export function createFollowUpDeliveryHandler(
   loadCommunicationPreferences:
     (userId) =>
       getCommunicationPreferences(
+        userId,
+        client
+      ),
+
+  loadUserProfile:
+    (userId) =>
+      getUserProfileSummary(
         userId,
         client
       ),
