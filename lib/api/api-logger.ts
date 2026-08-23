@@ -472,23 +472,5 @@ export async function logApiErrorAndFlush(
       }
     );
 
-  console.log(
-    JSON.stringify({
-      event:
-        "api_error_tracking.flush_completed",
-
-      originalEvent:
-        event,
-
-      requestId:
-        typeof details.requestId ===
-          "string"
-          ? details.requestId
-          : null,
-
-      flushed,
-    })
-  );
-
   return flushed;
 }
