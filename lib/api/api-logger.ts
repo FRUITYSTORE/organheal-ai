@@ -449,25 +449,46 @@ export async function logApiErrorAndFlush(
     }
   );
 
-  return captureApiExceptionAndFlush(
-    error,
-    {
-      event,
+  const flushed =
+    await captureApiExceptionAndFlush(
+      error,
+      {
+        event,
 
-      route:
-        typeof details.route ===
-          "string"
-          ? details.route
-          : undefined,
+        route:
+          typeof details.route ===
+            "string"
+            ? details.route
+            : undefined,
+
+        requestId:
+          typeof details.requestId ===
+            "string"
+            ? details.requestId
+            : undefined,
+
+        details:
+          sanitizedDetails,
+      }
+    );
+
+  console.log(
+    JSON.stringify({
+      event:
+        "api_error_tracking.flush_completed",
+
+      originalEvent:
+        event,
 
       requestId:
         typeof details.requestId ===
           "string"
           ? details.requestId
-          : undefined,
+          : null,
 
-      details:
-        sanitizedDetails,
-    }
+      flushed,
+    })
   );
+
+  return flushed;
 }
