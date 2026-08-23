@@ -1,3 +1,9 @@
+import "server-only";
+
+import * as Sentry from "@sentry/nextjs";
+
+import "@/sentry.server.config";
+
 export type ApiErrorTrackingContext = {
   event:
     string;
@@ -24,23 +30,77 @@ export type ApiErrorTracker = {
   ): void;
 };
 
-/*
- * The default tracker is intentionally silent.
- *
- * Structured local logging remains the responsibility
- * of api-logger.ts. An external provider such as Sentry
- * can be registered later through setApiErrorTracker().
- */
 const noopApiErrorTracker:
   ApiErrorTracker = {
     captureException() {
-      // No external tracking provider is configured.
+      // External tracking is intentionally disabled.
     },
   };
 
+const sentryApiErrorTracker:
+  ApiErrorTracker = {
+    captureException(
+      error,
+      context
+    ) {
+      Sentry.withScope(
+        (scope) => {
+          scope.setTag(
+            "organheal.event",
+            context.event
+          );
+
+          if (
+            context.route
+          ) {
+            scope.setTag(
+              "organheal.route",
+              context.route
+            );
+          }
+
+          if (
+            context.requestId
+          ) {
+            scope.setTag(
+              "organheal.request_id",
+              context.requestId
+            );
+          }
+
+          /*
+           * Do not send context.details to Sentry.
+           * Application details may contain health or
+           * other sensitive information.
+           */
+          Sentry.captureException(
+            error instanceof Error
+              ? error
+              : new Error(
+                  "Non-Error exception captured by API error tracker."
+                )
+          );
+        }
+      );
+    },
+  };
+
+function getDefaultApiErrorTracker():
+  ApiErrorTracker {
+  if (
+    process.env.NODE_ENV ===
+      "production" &&
+    process.env.SENTRY_DSN
+  ) {
+    return sentryApiErrorTracker;
+  }
+
+  return noopApiErrorTracker;
+}
+
 let activeApiErrorTracker:
   ApiErrorTracker =
-    noopApiErrorTracker;
+    getDefaultApiErrorTracker();
 
 export function setApiErrorTracker(
   tracker:
@@ -52,7 +112,7 @@ export function setApiErrorTracker(
 
 export function resetApiErrorTracker(): void {
   activeApiErrorTracker =
-    noopApiErrorTracker;
+    getDefaultApiErrorTracker();
 }
 
 export function captureApiException(

@@ -12,6 +12,7 @@
     "test:load:health": "node scripts/load/health-load-test.mjs"
   },
   "dependencies": {
+    "@sentry/nextjs": "^10.70.0",
     "@supabase/supabase-js": "2.112.3",
     "html2canvas": "^1.4.1",
     "html2pdf.js": "^0.14.0",
