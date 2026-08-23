@@ -121,6 +121,34 @@ export function captureApiException(
   context:
     ApiErrorTrackingContext
 ): void {
+  console.log(
+  JSON.stringify({
+    event:
+      "api_error_tracker.capture",
+
+    tracker:
+      activeApiErrorTracker ===
+        noopApiErrorTracker
+        ? "noop"
+        : "sentry",
+
+    originalEvent:
+      context.event,
+
+    requestId:
+      context.requestId ??
+      null,
+
+    nodeEnv:
+      process.env.NODE_ENV ??
+      null,
+
+    sentryConfigured:
+      Boolean(
+        process.env.SENTRY_DSN
+      ),
+  })
+);
   try {
     activeApiErrorTracker
       .captureException(
