@@ -8,6 +8,7 @@ import {
 
 import {
   captureApiException,
+  captureApiExceptionAndFlush,
 } from "@/lib/api/api-error-tracker";
 
 export type ApiLogLevel =
@@ -401,6 +402,54 @@ export function logApiError(
   );
 
   captureApiException(
+    error,
+    {
+      event,
+
+      route:
+        typeof details.route ===
+          "string"
+          ? details.route
+          : undefined,
+
+      requestId:
+        typeof details.requestId ===
+          "string"
+          ? details.requestId
+          : undefined,
+
+      details:
+        sanitizedDetails,
+    }
+  );
+}
+
+export async function logApiErrorAndFlush(
+  event: string,
+  error: unknown,
+  details: ApiLogDetails = {}
+): Promise<boolean> {
+  const sanitizedDetails =
+    sanitizeDetails(
+      details
+    );
+
+  writeApiLog(
+    "error",
+    event,
+    {
+      ...sanitizedDetails,
+
+      error:
+        error instanceof Error
+          ? error
+          : String(
+              error
+            ),
+    }
+  );
+
+  return captureApiExceptionAndFlush(
     error,
     {
       event,

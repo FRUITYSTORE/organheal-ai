@@ -9,7 +9,7 @@ import {
 
 import {
   createApiRequestId,
-  logApiError,
+  logApiErrorAndFlush,
 } from "@/lib/api/api-logger";
 
 import {
@@ -120,7 +120,7 @@ export async function POST(
       }
     );
   } catch (error) {
-    logApiError(
+    await logApiErrorAndFlush(
       "dashboard_decision.request_failed",
       error,
       {

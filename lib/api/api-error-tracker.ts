@@ -115,40 +115,58 @@ export function resetApiErrorTracker(): void {
     getDefaultApiErrorTracker();
 }
 
+function logTrackingFailure(
+  trackingError:
+    unknown,
+  context:
+    ApiErrorTrackingContext,
+  event:
+    string
+): void {
+  /*
+   * Error tracking must never break the API request.
+   * Do not include the original error or health data.
+   */
+  console.error(
+    JSON.stringify({
+      timestamp:
+        new Date().toISOString(),
+
+      source:
+        "api-error-tracker",
+
+      event,
+
+      originalEvent:
+        context.event,
+
+      requestId:
+        context.requestId ??
+        null,
+
+      error: {
+        name:
+          trackingError instanceof Error
+            ? trackingError.name
+            : "UnknownError",
+
+        message:
+          trackingError instanceof Error
+            ? trackingError.message
+            : String(
+                trackingError
+              ),
+      },
+    })
+  );
+}
+
 export function captureApiException(
   error:
     unknown,
   context:
     ApiErrorTrackingContext
 ): void {
-  console.log(
-  JSON.stringify({
-    event:
-      "api_error_tracker.capture",
-
-    tracker:
-      activeApiErrorTracker ===
-        noopApiErrorTracker
-        ? "noop"
-        : "sentry",
-
-    originalEvent:
-      context.event,
-
-    requestId:
-      context.requestId ??
-      null,
-
-    nodeEnv:
-      process.env.NODE_ENV ??
-      null,
-
-    sentryConfigured:
-      Boolean(
-        process.env.SENTRY_DSN
-      ),
-  })
-);
   try {
     activeApiErrorTracker
       .captureException(
@@ -158,42 +176,89 @@ export function captureApiException(
   } catch (
     trackingError
   ) {
-    /*
-     * Error tracking must never break the API request.
-     * Do not include the original error or health data.
-     */
-    console.error(
-      JSON.stringify({
-        timestamp:
-          new Date().toISOString(),
-
-        source:
-          "api-error-tracker",
-
-        event:
-          "error_tracking_failed",
-
-        originalEvent:
-          context.event,
-
-        requestId:
-          context.requestId ??
-          null,
-
-        error: {
-          name:
-            trackingError instanceof Error
-              ? trackingError.name
-              : "UnknownError",
-
-          message:
-            trackingError instanceof Error
-              ? trackingError.message
-              : String(
-                  trackingError
-                ),
-        },
-      })
+    logTrackingFailure(
+      trackingError,
+      context,
+      "error_tracking_failed"
     );
+  }
+}
+
+export async function captureApiExceptionAndFlush(
+  error:
+    unknown,
+  context:
+    ApiErrorTrackingContext
+): Promise<boolean> {
+  const tracker =
+    activeApiErrorTracker;
+
+  try {
+    tracker.captureException(
+      error,
+      context
+    );
+  } catch (
+    trackingError
+  ) {
+    logTrackingFailure(
+      trackingError,
+      context,
+      "error_tracking_failed"
+    );
+
+    return false;
+  }
+
+  /*
+   * Custom test trackers and the noop tracker do not
+   * require Sentry transport flushing.
+   */
+  if (
+    tracker !==
+      sentryApiErrorTracker
+  ) {
+    return true;
+  }
+
+  try {
+    const flushed =
+      await Sentry.flush(
+        5000
+      );
+
+    if (!flushed) {
+      console.error(
+        JSON.stringify({
+          timestamp:
+            new Date().toISOString(),
+
+          source:
+            "api-error-tracker",
+
+          event:
+            "error_tracking_flush_timeout",
+
+          originalEvent:
+            context.event,
+
+          requestId:
+            context.requestId ??
+            null,
+        })
+      );
+    }
+
+    return flushed;
+  } catch (
+    trackingError
+  ) {
+    logTrackingFailure(
+      trackingError,
+      context,
+      "error_tracking_flush_failed"
+    );
+
+    return false;
   }
 }
