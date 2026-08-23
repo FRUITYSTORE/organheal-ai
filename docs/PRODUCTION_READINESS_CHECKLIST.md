@@ -13,12 +13,18 @@ when implementation or production behavior has been checked directly.
 
 ## Current Status
 
-**Phase:** Production Readiness
-**Gate:** Gate 2 — In Progress
+**Phase:** Production Readiness  
+**Gate:** Gate 2 — Final Verification
 
-Major production-readiness infrastructure is implemented. Remaining work
-is focused on broader performance validation, hosted telemetry validation,
-and final release-gate review.
+Major production-readiness infrastructure is implemented and verified.
+
+Production Sentry error tracking has been verified end-to-end in Vercel
+Production. Representative authenticated API performance has also been
+validated.
+
+Remaining Gate 2 work is limited to unresolved external Supabase/PostgREST
+reliability findings, controlled background-job throughput validation, and
+the final release-gate review.
 
 ---
 
@@ -26,7 +32,7 @@ and final release-gate review.
 
 - Query and performance discipline
 - Production database indexing
-- Durable background jobs and recovery
+- Durable background jobs, retry, failure handling, and recovery
 - API authentication and authorization hardening
 - Private lab-report storage and upload restrictions
 - WhatsApp webhook signature verification and request tracing
@@ -35,6 +41,9 @@ and final release-gate review.
 - Automated regression testing
 - Production dependency security audit
 - Baseline load testing
+- Representative authenticated API performance baseline
+- Final application security review
+- Production Sentry error tracking and hosted telemetry
 
 ---
 
@@ -139,16 +148,46 @@ Duplicate indexes for these two access patterns are therefore unnecessary.
 
 ---
 
+## Production Observability Verification
+
+Hosted Sentry error tracking is configured for Vercel Production.
+
+Verified behavior:
+
+- `SENTRY_DSN` is available inside the Vercel Production runtime
+- `NODE_ENV` is `production`
+- `VERCEL_ENV` is `production`
+- Direct Vercel-to-Sentry event delivery was verified
+- Real `/api/dashboard-decision` exceptions were captured in Sentry
+- Serverless error delivery was verified using explicit Sentry flush handling
+- Repeated Production tests increased the Sentry event count from 4 to 5
+- Request IDs are preserved for operational correlation
+- Default PII transmission is disabled
+- Health-data details are intentionally excluded from Sentry exception context
+
+Production observability is therefore considered verified for Gate 2.
+
+---
+
 ## Gate 2 — Remaining Verification
 
-- Expand performance testing beyond `/api/health`
-- Validate representative authenticated user journeys
-- Validate background-job throughput under controlled load
-- Continue investigating health-check tail latency
-- Confirm hosted production telemetry and alerting strategy
-- Perform final production security review
+Completed during final verification:
+
+- Representative authenticated API performance baseline
+- Production hosted telemetry and Sentry validation
+- Final application security review
+- Production dependency security audit
+- Automated regression verification
+- Production build verification
+
+Still open:
+
+- Resolve or formally disposition the intermittent Supabase/PostgREST
+  `PGRST303: JWT issued at future` condition
+- Validate background-job throughput under controlled concurrent load
+- Continue monitoring health-check tail latency
 - Update the project scorecard
-- Complete final release-gate review
+- Complete the final Gate 2 release decision
 
 ---
 
