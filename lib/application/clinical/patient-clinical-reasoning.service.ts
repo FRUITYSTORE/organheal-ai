@@ -1,6 +1,7 @@
 import type {
   ClinicalComparisonField,
   ClinicalComparisonFieldEvidence,
+  ClinicalMarkerComparisonEvidence,
   PatientClinicalComparisonEvidence,
 } from "@/lib/application/clinical/patient-clinical-comparison-evidence.service";
 
@@ -31,6 +32,23 @@ export type PatientClinicalReasoningSignal = {
     boolean;
 };
 
+export type PatientClinicalObjectiveMarkerChange = {
+  marker:
+    string;
+
+  unit:
+    string;
+
+  previousValue:
+    number;
+
+  latestValue:
+    number;
+
+  delta:
+    number;
+};
+
 export type PatientClinicalReasoning = {
   state:
     PatientClinicalReasoningState;
@@ -46,6 +64,9 @@ export type PatientClinicalReasoning = {
 
   stableAreas:
     PatientClinicalReasoningSignal[];
+
+  objectiveMarkerChanges:
+    PatientClinicalObjectiveMarkerChange[];
 
   insufficientEvidence:
     ClinicalComparisonField[];
@@ -93,6 +114,28 @@ function toReasoningSignal(
   };
 }
 
+function toObjectiveMarkerChange(
+  marker:
+    ClinicalMarkerComparisonEvidence
+): PatientClinicalObjectiveMarkerChange {
+  return {
+    marker:
+      marker.marker,
+
+    unit:
+      marker.unit,
+
+    previousValue:
+      marker.previousValue,
+
+    latestValue:
+      marker.latestValue,
+
+    delta:
+      marker.delta,
+  };
+}
+
 function calculateConfidence(
   evidence:
     PatientClinicalComparisonEvidence
@@ -129,6 +172,18 @@ function determineState(
       null
   ) {
     return "comparison_unavailable";
+  }
+
+  const hasObjectiveMarkerChange =
+    evidence.markerComparisons.some(
+      (marker) =>
+        marker.changed
+    );
+
+  if (
+    hasObjectiveMarkerChange
+  ) {
+    return "verified_changes";
   }
 
   if (
@@ -179,6 +234,16 @@ export function buildPatientClinicalReasoning({
         toReasoningSignal
       );
 
+  const objectiveMarkerChanges =
+    evidence.markerComparisons
+      .filter(
+        (marker) =>
+          marker.changed
+      )
+      .map(
+        toObjectiveMarkerChange
+      );
+
   const limitations = [
     ...evidence.limitations,
   ];
@@ -189,6 +254,15 @@ export function buildPatientClinicalReasoning({
   ) {
     limitations.push(
       "The detected changes confirm that report content differs, but they do not establish whether the patient's condition improved or deteriorated."
+    );
+  }
+
+  if (
+    objectiveMarkerChanges.length >
+    0
+  ) {
+    limitations.push(
+      "Objective marker values changed across comparable reports, but the numeric change alone does not establish clinical improvement or deterioration."
     );
   }
 
@@ -219,6 +293,8 @@ export function buildPatientClinicalReasoning({
     significantChanges,
 
     stableAreas,
+
+    objectiveMarkerChanges,
 
     insufficientEvidence:
       evidence.missingFields,
