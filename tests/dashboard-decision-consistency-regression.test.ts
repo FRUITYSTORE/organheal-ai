@@ -504,3 +504,60 @@ describe(
     );
   }
 );
+it(
+  "preserves low confidence reason codes for start health plan decisions",
+  () => {
+    const input =
+      createSummaryInput();
+
+    input.nextDecision.primary = {
+      type:
+        "start-health-plan",
+
+      priority:
+        "primary",
+
+      urgency:
+        "routine",
+
+      href:
+        "/health-plan",
+
+      reasonCodes: [
+        "core-data-connected",
+        "health-plan-not-started",
+        "low-confidence-result",
+      ],
+
+      relatedEvidenceGap:
+        null,
+
+      relatedEvidenceRecommendation:
+        null,
+    };
+
+    const summary =
+      buildHealthIntelligenceSummary(
+        input
+      );
+
+    expect(
+      summary.decision
+    ).toEqual({
+      type:
+        "start-health-plan",
+
+      urgency:
+        "routine",
+
+      href:
+        "/health-plan",
+
+      reasonCodes: [
+        "core-data-connected",
+        "health-plan-not-started",
+        "low-confidence-result",
+      ],
+    });
+  }
+);
