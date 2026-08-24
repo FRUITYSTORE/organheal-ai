@@ -27,8 +27,9 @@ function createEmptyPatientSummary():
     recentCheckIns:
       [],
 
-    uploadedReports:
-      [],
+    uploadedReports: [],
+
+    reportMarkers: [],
 
     healthInsights:
       [],
@@ -300,8 +301,9 @@ describe(
               PatientSummary = {
               ...patient,
 
-              uploadedReports:
-                [],
+              uploadedReports: [],
+
+              reportMarkers: [],
 
               healthInsights:
                 patient.healthInsights.map(

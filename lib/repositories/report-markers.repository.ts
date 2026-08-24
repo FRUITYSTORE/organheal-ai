@@ -17,9 +17,10 @@ const HISTORICAL_MARKERS_SELECT =
   "marker_name, marker_value, created_at";
 
 const REPORT_MARKERS_SELECT =
-  "marker_name, marker_value, marker_unit, marker_status, reference_low, reference_high, reference_source, created_at";
+  "report_id, marker_name, marker_value, marker_unit, marker_status, reference_low, reference_high, reference_source, created_at";
 
 export type ReportMedicalMarkerEvidence = {
+  report_id: number;
   marker_name: string;
   marker_value: number;
   marker_unit: string | null;
@@ -181,6 +182,59 @@ export async function getHistoricalMedicalMarkers(
   return (
     data ?? []
   ) as HistoricalMedicalMarker[];
+}
+
+export async function getMedicalReportMarkersForPatient(
+  userId:
+    string,
+  client:
+    SupabaseClient = supabase
+): Promise<
+  ReportMedicalMarkerEvidence[]
+> {
+  const {
+    data,
+    error,
+  } =
+    await client
+      .from(
+        MEDICAL_REPORT_MARKERS_TABLE
+      )
+      .select(
+        REPORT_MARKERS_SELECT
+      )
+      .eq(
+        "user_id",
+        userId
+      )
+      .order(
+        "created_at",
+        {
+          ascending:
+            false,
+        }
+      );
+
+  if (error) {
+    throw new Error(
+      error.message
+    );
+  }
+
+  return (
+    data ?? []
+  ).filter(
+    (
+      row
+    ): row is
+      ReportMedicalMarkerEvidence =>
+      typeof row.report_id ===
+        "number" &&
+      typeof row.marker_name ===
+        "string" &&
+      typeof row.marker_value ===
+        "number"
+  );
 }
 
 export async function getMedicalReportMarkersByReportId(

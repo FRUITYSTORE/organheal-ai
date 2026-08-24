@@ -37,8 +37,9 @@ function createEmptyPatientSummary():
     recentCheckIns:
       [],
 
-    uploadedReports:
-      [],
+    uploadedReports: [],
+
+    reportMarkers: [],
 
     healthInsights:
       [],

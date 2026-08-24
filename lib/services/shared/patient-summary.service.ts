@@ -35,6 +35,10 @@ import {
   getRecentUploadedReports,
 } from "@/lib/repositories/reports.repository";
 
+import {
+  getMedicalReportMarkersForPatient,
+} from "@/lib/repositories/report-markers.repository";
+
 const PATIENT_SUMMARY_ITEM_LIMIT =
   20;
 
@@ -45,14 +49,15 @@ export async function getPatientSummary(
     SupabaseClient = supabase
 ): Promise<PatientSummary> {
   const [
-    profile,
-    assessments,
-    recentCheckIns,
-    uploadedReports,
-    healthInsights,
-    generatedResults,
-    historyItems,
-  ] =
+  profile,
+  assessments,
+  recentCheckIns,
+  uploadedReports,
+  reportMarkers,
+  healthInsights,
+  generatedResults,
+  historyItems,
+] =
     await Promise.all([
       getUserProfileSummary(
         userId,
@@ -75,6 +80,11 @@ export async function getPatientSummary(
         userId,
         PATIENT_SUMMARY_ITEM_LIMIT,
         client
+      ),
+
+      getMedicalReportMarkersForPatient(
+      userId,
+      client
       ),
 
       getRecentHealthInsights(
@@ -110,6 +120,8 @@ export async function getPatientSummary(
     recentCheckIns,
 
     uploadedReports,
+
+    reportMarkers,
 
     healthInsights,
 

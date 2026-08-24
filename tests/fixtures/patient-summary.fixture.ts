@@ -193,6 +193,9 @@ export function createPatientSummaryFixture(
       uploadedReports:
         [],
 
+      reportMarkers:
+        [],
+
       healthInsights:
         [],
 
@@ -221,6 +224,11 @@ export function createPatientSummaryFixture(
       overrides.uploadedReports
         ? [...overrides.uploadedReports]
         : [...baseFixture.uploadedReports],
+
+    reportMarkers:
+      overrides.reportMarkers
+        ? [...overrides.reportMarkers]
+        : [...baseFixture.reportMarkers],
 
     healthInsights:
       overrides.healthInsights

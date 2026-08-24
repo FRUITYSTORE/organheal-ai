@@ -17,6 +17,7 @@ import type {
 } from "@supabase/supabase-js";
 
 import {
+  getMedicalReportMarkersForPatient,
   saveMedicalReportMarkers,
 } from "@/lib/repositories/report-markers.repository";
 
@@ -149,5 +150,145 @@ describe(
         ).not.toHaveBeenCalled();
       }
     );
+  }
+);it(
+  "loads patient report markers in one query ordered newest first",
+  async () => {
+    const order =
+      vi.fn()
+        .mockResolvedValue({
+          data: [
+            {
+              report_id:
+                105,
+
+              marker_name:
+                "LDL",
+
+              marker_value:
+                174,
+
+              marker_unit:
+                "mg/dL",
+
+              marker_status:
+                "High",
+
+              reference_low:
+                0,
+
+              reference_high:
+                100,
+
+              reference_source:
+                "default",
+
+              created_at:
+                "2026-08-24T10:00:00.000Z",
+            },
+
+            {
+              report_id:
+                104,
+
+              marker_name:
+                "LDL",
+
+              marker_value:
+                150,
+
+              marker_unit:
+                "mg/dL",
+
+              marker_status:
+                "High",
+
+              reference_low:
+                0,
+
+              reference_high:
+                100,
+
+              reference_source:
+                "default",
+
+              created_at:
+                "2026-07-24T10:00:00.000Z",
+            },
+          ],
+
+          error:
+            null,
+        });
+
+    const eq =
+      vi.fn()
+        .mockReturnValue({
+          order,
+        });
+
+    const select =
+      vi.fn()
+        .mockReturnValue({
+          eq,
+        });
+
+    const from =
+      vi.fn()
+        .mockReturnValue({
+          select,
+        });
+
+    const client = {
+      from,
+    } as unknown as SupabaseClient;
+
+    const result =
+      await getMedicalReportMarkersForPatient(
+        "user-1",
+        client
+      );
+
+    expect(
+      from
+    ).toHaveBeenCalledWith(
+      "medical_report_markers"
+    );
+
+    expect(
+      eq
+    ).toHaveBeenCalledWith(
+      "user_id",
+      "user-1"
+    );
+
+    expect(
+      order
+    ).toHaveBeenCalledWith(
+      "created_at",
+      {
+        ascending:
+          false,
+      }
+    );
+
+    expect(
+      result
+    ).toHaveLength(
+      2
+    );
+
+    expect(
+      result[0]
+    ).toMatchObject({
+      report_id:
+        105,
+
+      marker_name:
+        "LDL",
+
+      marker_value:
+        174,
+    });
   }
 );

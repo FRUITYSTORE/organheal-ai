@@ -18,6 +18,8 @@ function createEmptyPatientSummary(): PatientSummary {
 
     uploadedReports: [],
 
+    reportMarkers: [],
+
     healthInsights: [],
 
     generatedResults: [],
