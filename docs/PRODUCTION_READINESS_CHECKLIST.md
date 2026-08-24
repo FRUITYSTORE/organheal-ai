@@ -180,13 +180,45 @@ Completed during final verification:
 - Automated regression verification
 - Production build verification
 
+---
+
+## Background-Job Controlled Concurrency Verification
+
+Controlled background-job processing was validated without creating synthetic
+medical jobs in Production.
+
+Verified results:
+
+- Sequential batch: 100 jobs processed
+- Unique dispatched jobs: 100
+- Unique completed jobs: 100
+- Retries: 0
+- Failures: 0
+- Concurrent simulation: 5 workers processing 100 jobs
+- Total processed: 100
+- Unique claims: 100
+- Unique completions: 100
+- Duplicate claims: 0
+- Failures: 0
+- Full regression suite after the change: 74 test files and 456 tests passed
+
+The production database claim function uses `FOR UPDATE SKIP LOCKED`, providing
+row-level claim isolation for competing workers.
+
+The measured in-memory execution times and jobs-per-second values are not
+production-capacity measurements and must not be used to claim maximum
+background-job throughput.
+
+Production database throughput should continue to be measured operationally as
+real workload grows.
+
+---
+
 Still open:
 
 - Resolve or formally disposition the intermittent Supabase/PostgREST
   `PGRST303: JWT issued at future` condition
-- Validate background-job throughput under controlled concurrent load
 - Continue monitoring health-check tail latency
-- Update the project scorecard
 - Complete the final Gate 2 release decision
 
 ---

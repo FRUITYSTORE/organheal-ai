@@ -1,6 +1,6 @@
 # OrganHeal Project Scorecard
 
-> Version: 2.1
+> Version: 2.2
 >
 > Status: Active
 >
@@ -33,11 +33,11 @@ guaranteed maximum production-user capacity.
 | Database Design | 9.0 | 9.5 | Strong |
 | Security | 9.2 | 9.5 | Strong |
 | AI Intelligence | 6.8 | 10 | Developing |
-| Background Processing | 8.8 | 10 | Strong |
+| Background Processing | 9.1 | 10 | Strong |
 | Monitoring & Logging | 9.0 | 10 | Strong |
-| Automated Testing | 9.0 | 10 | Strong |
+| Automated Testing | 9.1 | 10 | Strong |
 | Load Testing | 7.3 | 10 | In Progress |
-| Production Readiness | 9.1 | 10 | Final Verification |
+| Production Readiness | 9.2 | 10 | Final Verification |
 
 ---
 
@@ -50,10 +50,9 @@ Status: **Final Verification**
 The core production-readiness architecture is implemented and has passed
 substantial verification.
 
-The remaining Gate 2 work is limited to controlled background-job throughput
-validation, continued disposition of the intermittent Supabase/PostgREST
-`PGRST303` condition, health-check tail-latency monitoring, and the final
-release decision.
+The remaining Gate 2 work is limited to final disposition of the intermittent
+Supabase/PostgREST `PGRST303` condition, continued health-check tail-latency
+monitoring, and the final release decision.
 
 ---
 
@@ -81,10 +80,26 @@ release decision.
 - Queue health diagnostics
 - Waiting-job diagnostics
 - Stale-running-job diagnostics
+- Controlled sequential processing verification
+- Controlled multi-worker concurrency verification
 
-Background-job reliability behavior is verified through automated tests.
-Maximum queue throughput under controlled concurrent load has not yet been
-established.
+Background-job reliability and controlled concurrency behavior are verified
+through automated tests.
+
+Controlled verification processed 100 jobs sequentially with 100 unique
+dispatches, 100 unique completions, zero retries, and zero failures.
+
+A second controlled test processed 100 jobs across 5 concurrent workers with
+100 unique claims, 100 unique completions, zero duplicate claims, and zero
+failures.
+
+The production database claim function uses `FOR UPDATE SKIP LOCKED` to provide
+row-level claim isolation for competing workers.
+
+These controlled in-memory measurements verify concurrency correctness. They
+do not establish maximum Production database or worker throughput capacity.
+
+---
 
 ## Security
 
@@ -109,6 +124,8 @@ established.
 The reviewed `dangerouslySetInnerHTML` usage in the blog is limited to JSON-LD
 structured data and escapes `<` before insertion.
 
+---
+
 ## Observability
 
 - Structured API logging
@@ -127,8 +144,8 @@ structured data and escapes `<` before insertion.
 - Direct Vercel-to-Sentry event delivery verified
 - Real Production API exceptions captured by Sentry
 - Serverless exception delivery verified using explicit flush handling
-- Request IDs remain available for correlation between OrganHeal logs and
-  hosted error monitoring
+- Request IDs available for correlation between OrganHeal logs and hosted
+  error monitoring
 
 Repeated Production verification increased the same Sentry SyntaxError issue
 from four events to five events, confirming repeatable event delivery rather
@@ -136,12 +153,14 @@ than a one-time test.
 
 Production hosted error tracking is therefore considered verified.
 
+---
+
 ## Automated Testing
 
 Latest verified run:
 
-- Test files: 73 passed
-- Tests: 454 passed
+- Test files: 74 passed
+- Tests: 456 passed
 - Failed tests: 0
 - TypeScript verification passed
 - Production build passed
