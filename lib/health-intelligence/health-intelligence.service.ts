@@ -59,6 +59,7 @@ export function buildHealthIntelligence(
     risk,
     recommendations,
     healthScore,
+    wholeBodyKnowledge,
   });
 
   const patterns = detectHealthPatterns({
