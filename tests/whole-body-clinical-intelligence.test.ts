@@ -339,6 +339,168 @@ describe(
       }
     );
 
+    it(
+  "connects separate reports from the same clinical domain as longitudinal context",
+  () => {
+    const patient:
+      PatientSummary = {
+      ...createEmptyPatientSummary(),
+
+      uploadedReports: [
+        {
+          id: 201,
+
+          file_name:
+            "lipid-panel-january.pdf",
+
+          file_path:
+            "user/reports/lipid-panel-january.pdf",
+
+          report_type:
+            "cardiovascular",
+
+          extraction_status:
+            "Completed",
+
+          extracted_text:
+            "January lipid panel.",
+
+          created_at:
+            "2026-01-10T08:00:00.000Z",
+
+          extracted_at:
+            "2026-01-10T08:02:00.000Z",
+        },
+
+        {
+          id: 202,
+
+          file_name:
+            "lipid-panel-august.pdf",
+
+          file_path:
+            "user/reports/lipid-panel-august.pdf",
+
+          report_type:
+            "cardiovascular",
+
+          extraction_status:
+            "Completed",
+
+          extracted_text:
+            "August lipid panel.",
+
+          created_at:
+            "2026-08-10T08:00:00.000Z",
+
+          extracted_at:
+            "2026-08-10T08:02:00.000Z",
+        },
+      ],
+    };
+
+    const knowledge =
+      buildWholeBodyClinicalKnowledge(
+        patient
+      );
+
+    expect(
+      knowledge.relationships.some(
+        (relationship) =>
+          relationship.sourceNodeId ===
+            "node:report:201" &&
+          relationship.targetNodeId ===
+            "node:report:202"
+      )
+    ).toBe(
+      true
+    );
+  }
+);
+
+it(
+  "does not create a temporal report relationship when report timing is unavailable",
+  () => {
+    const patient:
+      PatientSummary = {
+      ...createEmptyPatientSummary(),
+
+      uploadedReports: [
+        {
+          id: 203,
+
+          file_name:
+            "cardiology-undated.pdf",
+
+          file_path:
+            "user/reports/cardiology-undated.pdf",
+
+          report_type:
+            "cardiovascular",
+
+          extraction_status:
+            "Completed",
+
+          extracted_text:
+            "Undated cardiovascular report.",
+
+          created_at:
+           "invalid-date",
+
+          extracted_at:
+            null,
+        },
+
+        {
+          id: 204,
+
+          file_name:
+            "cardiology-august.pdf",
+
+          file_path:
+            "user/reports/cardiology-august.pdf",
+
+          report_type:
+            "cardiovascular",
+
+          extraction_status:
+            "Completed",
+
+          extracted_text:
+            "August cardiovascular report.",
+
+          created_at:
+            "2026-08-10T08:00:00.000Z",
+
+          extracted_at:
+            "2026-08-10T08:02:00.000Z",
+        },
+      ],
+    };
+
+    const knowledge =
+      buildWholeBodyClinicalKnowledge(
+        patient
+      );
+
+    expect(
+      knowledge.relationships.some(
+        (relationship) =>
+          relationship.type ===
+            "temporal" &&
+          (
+            relationship.sourceNodeId ===
+              "node:report:203" ||
+            relationship.targetNodeId ===
+              "node:report:203"
+          )
+      )
+    ).toBe(
+      false
+    );
+  }
+);
+
     describe(
       "Evidence Sufficiency Engine",
       () => {
