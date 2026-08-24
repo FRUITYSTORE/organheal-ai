@@ -129,9 +129,15 @@ Examples:
 | Engineering Handbook | Engineering constitution |
 | Database Architecture | Database design and responsibilities |
 | Query Audit | Database query review |
-| Production Readiness | Production checklist |
+| ORGANHEAL_ENGINEERING_MASTER.md | Canonical engineering maturity, production-readiness evidence, operational risks, priorities, and release gates |
 | ADR | Architectural decisions |
-| Project Scorecard | Overall platform maturity |
+
+`ORGANHEAL_ENGINEERING_MASTER.md` is the canonical source of truth for current
+engineering maturity, production-readiness evidence, operational risks,
+engineering priorities, and release-gate status.
+
+Do not create separate scorecard or production-readiness status documents that
+duplicate this information.
 
 ---
 

@@ -134,7 +134,7 @@ Trade-offs
 # Related Documents
 
 - docs/00_GOVERNANCE/ENGINEERING_HANDBOOK.md
-- docs/PRODUCTION_READINESS_CHECKLIST.md
+- docs/ORGANHEAL_ENGINEERING_MASTER.md
 - supabase/sql/production_indexes.sql
 
 ---
