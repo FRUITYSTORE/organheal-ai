@@ -2,6 +2,10 @@ import type {
   PatientClinicalComparison,
 } from "@/lib/application/clinical/patient-clinical-comparison.service";
 
+import type {
+  ReportMedicalMarkerEvidence,
+} from "@/lib/repositories/report-markers.repository";
+
 export type ClinicalComparisonEvidenceStatus =
   | "ready"
   | "partial"
@@ -34,6 +38,26 @@ export type ClinicalComparisonFieldEvidence = {
     boolean;
 };
 
+export type ClinicalMarkerComparisonEvidence = {
+  marker:
+    string;
+
+  unit:
+    string;
+
+  previousValue:
+    number;
+
+  latestValue:
+    number;
+
+  delta:
+    number;
+
+  changed:
+    boolean;
+};
+
 export type PatientClinicalComparisonEvidence = {
   status:
     ClinicalComparisonEvidenceStatus;
@@ -57,6 +81,9 @@ export type PatientClinicalComparisonEvidence = {
   fields:
     ClinicalComparisonFieldEvidence[];
 
+  markerComparisons:
+  ClinicalMarkerComparisonEvidence[];
+
   comparableFieldCount:
     number;
 
@@ -76,6 +103,9 @@ export type PatientClinicalComparisonEvidence = {
 export type BuildPatientClinicalComparisonEvidenceInput = {
   comparison:
     PatientClinicalComparison;
+
+  reportMarkers?:
+    ReportMedicalMarkerEvidence[];
 };
 
 function normalizeText(
@@ -108,6 +138,142 @@ function normalizeComparableText(
   return value
     ? value.toLocaleLowerCase()
     : null;
+}
+
+function normalizeMarkerName(
+  value:
+    string
+): string {
+  return value
+    .trim()
+    .toLocaleLowerCase();
+}
+
+function normalizeMarkerUnit(
+  value:
+    string | null
+): string | null {
+  if (!value) {
+    return null;
+  }
+
+  const normalized =
+    value
+      .trim()
+      .toLocaleLowerCase();
+
+  return normalized.length > 0
+    ? normalized
+    : null;
+}
+
+function buildMarkerComparisons({
+  comparison,
+  reportMarkers,
+}: {
+  comparison:
+    PatientClinicalComparison;
+
+  reportMarkers:
+    ReportMedicalMarkerEvidence[];
+}): ClinicalMarkerComparisonEvidence[] {
+  const latestReportId =
+    comparison.latest?.report.id ??
+    null;
+
+  const previousReportId =
+    comparison.previous?.report.id ??
+    null;
+
+  if (
+    latestReportId === null ||
+    previousReportId === null
+  ) {
+    return [];
+  }
+
+  const latestMarkers =
+    reportMarkers.filter(
+      (marker) =>
+        marker.report_id ===
+        latestReportId
+    );
+
+  const previousMarkersByName =
+    new Map(
+      reportMarkers
+        .filter(
+          (marker) =>
+            marker.report_id ===
+            previousReportId
+        )
+        .map(
+          (marker) => [
+            normalizeMarkerName(
+              marker.marker_name
+            ),
+            marker,
+          ]
+        )
+    );
+
+  return latestMarkers.flatMap(
+    (latestMarker) => {
+      const previousMarker =
+        previousMarkersByName.get(
+          normalizeMarkerName(
+            latestMarker.marker_name
+          )
+        );
+
+      if (!previousMarker) {
+        return [];
+      }
+
+      const latestUnit =
+        normalizeMarkerUnit(
+          latestMarker.marker_unit
+        );
+
+      const previousUnit =
+        normalizeMarkerUnit(
+          previousMarker.marker_unit
+        );
+
+      if (
+        !latestUnit ||
+        !previousUnit ||
+        latestUnit !== previousUnit
+      ) {
+        return [];
+      }
+
+      const delta =
+        latestMarker.marker_value -
+        previousMarker.marker_value;
+
+      return [
+        {
+          marker:
+            latestMarker.marker_name,
+
+          unit:
+            latestMarker.marker_unit!,
+
+          previousValue:
+            previousMarker.marker_value,
+
+          latestValue:
+            latestMarker.marker_value,
+
+          delta,
+
+          changed:
+            delta !== 0,
+        },
+      ];
+    }
+  );
 }
 
 function buildFieldEvidence(
@@ -159,6 +325,7 @@ function buildFieldEvidence(
 
 export function buildPatientClinicalComparisonEvidence({
   comparison,
+  reportMarkers = [],
 }: BuildPatientClinicalComparisonEvidenceInput): PatientClinicalComparisonEvidence {
   const latest =
     comparison.latest;
@@ -274,6 +441,11 @@ export function buildPatientClinicalComparisonEvidence({
             missingFields.length === 0
           ? "ready"
           : "partial";
+  const markerComparisons =
+  buildMarkerComparisons({
+    comparison,
+    reportMarkers,
+  });
 
   return {
     status,
@@ -295,6 +467,8 @@ export function buildPatientClinicalComparisonEvidence({
       null,
 
     fields,
+
+    markerComparisons,
 
     comparableFieldCount:
       comparableFields.length,

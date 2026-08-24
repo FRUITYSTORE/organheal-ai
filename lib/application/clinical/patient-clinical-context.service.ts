@@ -50,9 +50,12 @@ export function buildPatientClinicalContext({
     });
 
   const evidence =
-    buildPatientClinicalComparisonEvidence({
-      comparison,
-    });
+  buildPatientClinicalComparisonEvidence({
+    comparison,
+
+    reportMarkers:
+      patientSummary.reportMarkers,
+  });
 
   const reasoning =
     buildPatientClinicalReasoning({
