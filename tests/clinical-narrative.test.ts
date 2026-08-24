@@ -218,3 +218,59 @@ describe("Clinical narrative service", () => {
     expect(result.reason).toContain("without recalculating");
   });
 });
+it(
+  "preserves the clinical review safety boundary in the assistant narrative",
+  () => {
+    const result =
+      buildClinicalNarrative({
+        audience:
+          "assistant",
+
+        language:
+          "en",
+
+        decisionTrace:
+          createDecisionTrace({
+            conflictLevel:
+              "high",
+
+            calibratedConfidence:
+              "low",
+
+            requiresClinicalReview:
+              true,
+
+            requiresClarification:
+              true,
+          }),
+      });
+
+    expect(
+      result.available
+    ).toBe(true);
+
+    expect(
+      result.confidenceStatement
+    ).toContain(
+      "requires clinical review"
+    );
+
+    expect(
+      result.narrative
+    ).toContain(
+      "requires clinical review"
+    );
+
+    expect(
+      result.narrative
+    ).toContain(
+      "evidence-conflict level is high"
+    );
+
+    expect(
+      result.narrative
+    ).toContain(
+      "not a confirmed diagnosis"
+    );
+  }
+);
