@@ -132,6 +132,42 @@ function collectRelationshipEvidence(
     );
 }
 
+function resolveHypothesisConfidence(
+  relationship:
+    WholeBodyClinicalRelationship,
+  contradictingEvidence:
+    ClinicalHypothesisEvidence[]
+): WholeBodyClinicalRelationship["confidence"] {
+  const hasEligibleContradiction =
+    contradictingEvidence.some(
+      (evidence) =>
+        evidence.normalizedWeight >=
+        MINIMUM_ELIGIBLE_EVIDENCE_WEIGHT
+    );
+
+  if (
+    !hasEligibleContradiction
+  ) {
+    return relationship.confidence;
+  }
+
+  if (
+    relationship.confidence ===
+    "high"
+  ) {
+    return "moderate";
+  }
+
+  if (
+    relationship.confidence ===
+    "moderate"
+  ) {
+    return "low";
+  }
+
+  return "low";
+}
+
 function collectContextualEvidence(
   nodes: Array<WholeBodyClinicalNode | null>,
   weightMap: Map<string, ClinicalEvidenceWeightResult>,
@@ -226,6 +262,12 @@ function buildCandidateHypothesis(
     "This weighted evidence may weaken, limit, or provide an alternative interpretation of the relationship.",
   );
 
+  const confidence =
+  resolveHypothesisConfidence(
+    relationship,
+    contradictingEvidence
+  );
+
   const explicitlyUsedEvidenceIds = new Set([
     ...relationship.supportingEvidenceIds,
 
@@ -253,7 +295,7 @@ function buildCandidateHypothesis(
 
     priority: relationship.clinicalSignificance,
 
-    confidence: relationship.confidence,
+    confidence,
 
     supportingEvidence,
 

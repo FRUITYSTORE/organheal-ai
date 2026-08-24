@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+﻿import { describe, expect, it } from "vitest";
 
 import { buildClinicalHypothesisFoundation } from "@/lib/health-intelligence/engines/clinical-hypothesis.engine";
 
@@ -411,6 +411,61 @@ describe("Clinical hypothesis generation", () => {
       hypothesis.contradictingEvidence.map((evidence) => evidence.evidenceId),
     ).toEqual(["evidence:contradicting"]);
   });
+
+    it(
+    "does not preserve high hypothesis confidence when strong contradicting evidence exists",
+    () => {
+      const result =
+        buildClinicalHypothesisFoundation({
+          knowledge:
+            createConnectedKnowledge({
+              contradictingEvidenceIds: [
+                "evidence:contradicting",
+              ],
+            }),
+
+          evidenceWeights:
+            createEvidenceWeights([
+              {
+                id: "evidence:1",
+                weight: 0.9,
+              },
+              {
+                id: "evidence:2",
+                weight: 0.8,
+              },
+              {
+                id:
+                  "evidence:contradicting",
+                weight: 0.85,
+                relevance:
+                  "contradicting",
+              },
+            ]),
+
+          referenceTime:
+            "2026-08-06T08:00:00.000Z",
+        });
+
+      const hypothesis =
+        result.hypotheses[0];
+
+      expect(
+        hypothesis
+          .contradictingEvidence
+          .map(
+            (evidence) =>
+              evidence.evidenceId
+          )
+      ).toContain(
+        "evidence:contradicting"
+      );
+
+      expect(
+        hypothesis.confidence
+      ).not.toBe("high");
+    }
+  );
 
   it("preserves missing evidence and the interpretation safety boundary", () => {
     const result = buildClinicalHypothesisFoundation({
