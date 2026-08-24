@@ -629,6 +629,9 @@ describe(
             analyses: [
               createAnalysis(),
             ],
+
+            hasHealthPlan:
+              true,
           });
 
         const stableMomentum:
@@ -681,6 +684,82 @@ describe(
         );
       }
     );
+
+    it(
+  "starts a health plan when core intelligence is connected but no health plan exists",
+  () => {
+    const scenario =
+      buildDecisionScenario({
+        assessments: [
+          createAssessment(),
+        ],
+
+        checkIns: [
+          createCheckIn(),
+        ],
+
+        reports: [
+          createReport(),
+        ],
+
+        analyses: [
+          createAnalysis(),
+        ],
+
+        hasHealthPlan:
+          false,
+      });
+
+    const stableMomentum:
+      HealthMomentumData = {
+      ...scenario.momentum,
+
+      status:
+        "stable",
+    };
+
+    const decision =
+      buildNextDecision({
+        engineContext:
+          scenario.engineContext,
+
+        evidence: {
+          ...scenario.evidence,
+
+          recommendations:
+            [],
+        },
+
+        clinicalConfidence:
+          scenario.clinicalConfidence,
+
+        momentum:
+          stableMomentum,
+      });
+
+    expect(
+      decision.primary
+    ).toMatchObject({
+      type:
+        "start-health-plan",
+
+      priority:
+        "primary",
+
+      urgency:
+        "routine",
+
+      href:
+        "/health-plan",
+    });
+
+    expect(
+      decision.primary.reasonCodes
+    ).toContain(
+      "core-data-connected"
+    );
+  }
+);
 
     it(
       "returns unique alternatives, excludes the primary type, and limits them to three",

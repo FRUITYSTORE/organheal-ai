@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   ClinicalConfidenceData,
 } from "./clinical-confidence.engine";
 
@@ -26,6 +26,7 @@ export type NextDecisionType =
   | "generate-analysis"
   | "add-followup-history"
   | "review-declining-momentum"
+  | "start-health-plan"
   | "continue-health-plan";
 
 export type NextDecisionPriority =
@@ -47,6 +48,7 @@ export type NextDecisionReasonCode =
   | "declining-momentum-detected"
   | "mixed-momentum-detected"
   | "low-confidence-result"
+  | "health-plan-not-started"
   | "core-data-connected";
 
 export type NextDecisionAction = {
@@ -421,6 +423,36 @@ function buildFallbackDecision(
 
       relatedEvidenceGap:
         "no-generated-analysis",
+
+      relatedEvidenceRecommendation:
+        null,
+    };
+  }
+
+    if (
+    !context.readiness
+      .hasHealthPlan
+  ) {
+    return {
+      type:
+        "start-health-plan",
+
+      priority:
+        "primary",
+
+      urgency:
+        "routine",
+
+      href:
+        "/health-plan",
+
+      reasonCodes: [
+        "core-data-connected",
+        "health-plan-not-started",
+      ],
+
+      relatedEvidenceGap:
+        null,
 
       relatedEvidenceRecommendation:
         null,

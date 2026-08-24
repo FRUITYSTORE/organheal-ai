@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   NextDecisionAction,
   NextDecisionData,
   NextDecisionType,
@@ -34,6 +34,7 @@ export type DecisionImpactCode =
   | "strengthen-followup-history"
   | "clarify-health-momentum"
   | "support-health-plan-review"
+  | "establish-health-plan"
   | "maintain-plan-continuity";
 
 export type DecisionImpact = {
@@ -371,6 +372,36 @@ function buildImpactsForAction(
 
           category:
             "doctor-preparation",
+
+          direction:
+            "improve",
+
+          magnitude:
+            "moderate",
+        },
+      ];
+
+          case "start-health-plan":
+      return [
+        {
+          code:
+            "establish-health-plan",
+
+          category:
+            "plan-continuity",
+
+          direction:
+            "enable",
+
+          magnitude:
+            "high",
+        },
+        {
+          code:
+            "strengthen-followup-history",
+
+          category:
+            "trend-detection",
 
           direction:
             "improve",

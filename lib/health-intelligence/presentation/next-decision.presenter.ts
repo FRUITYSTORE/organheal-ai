@@ -210,6 +210,29 @@ export function presentNextDecision(
         urgencyLabel,
       };
 
+   case "start-health-plan":
+  return {
+    title: presentationText(
+      language,
+      "Start your health plan",
+      "ابدأ خطتك الصحية"
+    ),
+
+    description: presentationText(
+      language,
+      "Your core health information is connected. Start your health plan to turn this intelligence into personalized actions and follow-up.",
+      "معلوماتك الصحية الأساسية مترابطة. ابدأ خطتك الصحية لتحويل هذه المعلومات إلى إجراءات شخصية وخطوات متابعة."
+    ),
+
+    actionLabel: presentationText(
+      language,
+      "Start Health Plan",
+      "ابدأ الخطة الصحية"
+    ),
+
+    urgencyLabel,
+  };
+
     case "continue-health-plan":
       return {
         title: presentationText(
