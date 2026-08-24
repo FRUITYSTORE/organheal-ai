@@ -76,6 +76,37 @@ function sortReportsNewestFirst(
   );
 }
 
+function findPreviousComparableReport(
+  latestReport:
+    UploadedReportSummary,
+  olderReports:
+    UploadedReportSummary[]
+): UploadedReportSummary | null {
+  const latestReportType =
+    latestReport.report_type
+      ?.trim()
+      .toLocaleLowerCase() ??
+    "";
+
+  if (!latestReportType) {
+    return olderReports[0] ?? null;
+  }
+
+  return (
+    olderReports.find(
+      (report) =>
+        (
+          report.report_type
+            ?.trim()
+            .toLocaleLowerCase() ??
+          ""
+        ) ===
+        latestReportType
+    ) ??
+    null
+  );
+}
+
 function getLatestInsightForReport(
   reportId: number,
   insights:
@@ -135,8 +166,12 @@ export function buildPatientClinicalComparison({
     null;
 
   const previousReport =
-    sortedReports[1] ??
-    null;
+  latestReport
+    ? findPreviousComparableReport(
+        latestReport,
+        sortedReports.slice(1)
+      )
+    : null;
 
   const latest =
     latestReport
