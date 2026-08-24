@@ -54,16 +54,73 @@ capacity or a zero-error guarantee.
 
 Gate 2 Status: **Passed with Monitored Operational Risks**
 
-The core production-readiness architecture has passed Gate 2 based on the
-engineering evidence collected during the Production Readiness phase.
+Gate 3 Status: **Active**
 
-Gate 2 closure does not represent a zero-error or maximum-capacity claim.
+### Phase 17 — Intelligence Architecture and Integration Audit
 
-External dependency reliability, health-check tail latency, broader production
-capacity, and production background-job throughput remain subject to continued
-operational monitoring.
+Status: **Completed**
 
-Gate 3 is now the primary engineering phase.
+The Gate 3 architecture audit verified that OrganHeal already contains a
+substantial and connected intelligence foundation. The audit therefore did not
+introduce another parallel intelligence engine or unnecessary runtime.
+
+Verified architecture includes:
+
+- Foundational Health Intelligence built from the patient summary
+- Unified Health Runtime orchestration
+- Health Intelligence Runtime module composition
+- Evidence Intelligence
+- Clinical Confidence
+- Health Momentum
+- Next Decision
+- Decision Impact
+- Health Intelligence Summary
+- Clinical evidence sufficiency
+- Clinical evidence weighting
+- Clinical hypothesis generation
+- Clinical hypothesis ranking
+- Clinical conflict resolution
+- Clinical confidence calibration
+- Clinical Decision Trace
+- Clarification selection
+- Clinical reasoning state and reasoning loop
+- Clinical narrative generation
+- Clinical response composition
+- Assistant clinical-urgency handling
+- Assistant orchestration
+- Report-grounded response prioritization
+- Arabic and English assistant behavior
+- Unified primary-action propagation across intelligence, Health Plan, and
+  assistant-facing context
+
+The audit also confirmed that `ClinicalDecisionResult` and `NextDecision`
+represent different architectural responsibilities rather than duplicate
+decision engines.
+
+`ClinicalDecisionResult` provides Health Intelligence, Health Passport,
+Health Timeline, personalized knowledge, and pipeline metadata.
+
+`NextDecision` is a Health Intelligence Runtime module responsible for the
+user's next actionable product and follow-up decision.
+
+No architecture refactor is currently justified solely to merge these two
+responsibilities.
+
+The audit also verified that the Assistant path connects clinical urgency,
+clinical reasoning, hypothesis ranking, conflict resolution, confidence
+calibration, Decision Trace, clarification, clinical narrative, and response
+composition before selecting the final response.
+
+Phase 17 is therefore complete.
+
+Gate 3 remains active because the next objective is not further architecture
+discovery. The next objective is measurable Intelligence Maturation:
+improving reasoning quality, personalization, longitudinal understanding,
+clinical usefulness, and decision quality while preserving the architecture
+and safety boundaries verified during Phase 17.
+
+Gate 2 monitored operational risks remain active during Gate 3. Gate 2 closure
+does not represent a zero-error or maximum-capacity claim.
 
 ---
 
