@@ -588,6 +588,80 @@ describe(
     );
 
     it(
+  "does not present high confidence when evidence maturity is only connected",
+  () => {
+    const confidence =
+      buildConfidenceScenario({
+        assessments: [
+          createAssessment({
+            id:
+              "assessment-old",
+
+            score:
+              72,
+
+            createdAt:
+              "2026-07-01T08:00:00.000Z",
+          }),
+
+          createAssessment({
+            id:
+              "assessment-new",
+
+            score:
+              78,
+
+            createdAt:
+              "2026-08-01T08:00:00.000Z",
+          }),
+        ],
+
+        checkIns: [
+          createCheckIn({
+            id:
+              "checkin-old",
+
+            wellnessScore:
+              70,
+
+            createdAt:
+              "2026-07-02T08:00:00.000Z",
+          }),
+
+          createCheckIn({
+            id:
+              "checkin-new",
+
+            wellnessScore:
+              76,
+
+            createdAt:
+              "2026-08-02T08:00:00.000Z",
+          }),
+        ],
+
+        reports: [
+          createReport(),
+        ],
+
+        analyses: [],
+      });
+
+    expect(
+      confidence.evidenceMaturity
+    ).toBe(
+      "connected"
+    );
+
+    expect(
+      confidence.level
+    ).not.toBe(
+      "high"
+    );
+  }
+);
+
+    it(
       "reaches high confidence with complete connected evidence and comparable history",
       () => {
         const confidence =

@@ -94,6 +94,32 @@ function getConfidenceLevel(
   return "low";
 }
 
+function constrainConfidenceLevelByEvidenceMaturity(
+  level:
+    ClinicalConfidenceLevel,
+  evidenceMaturity:
+    HealthEngineContext["reasoning"]["evidence"]["maturity"]
+): ClinicalConfidenceLevel {
+  if (
+    evidenceMaturity ===
+    "comprehensive"
+  ) {
+    return level;
+  }
+
+  if (
+    evidenceMaturity ===
+    "connected"
+  ) {
+    return level ===
+      "high"
+      ? "moderate"
+      : level;
+  }
+
+  return "low";
+}
+
 function buildFactors(
   engineContext: HealthEngineContext,
     momentumSignals: HealthMomentumSignals
@@ -318,9 +344,20 @@ export function buildClinicalConfidence(
         )
       : 0;
 
+        const evidenceMaturity =
+    reasoning.evidence
+      .maturity;
+
+  const level =
+    constrainConfidenceLevelByEvidenceMaturity(
+      getConfidenceLevel(
+        score
+      ),
+      evidenceMaturity
+    );
+
   return {
-    level:
-      getConfidenceLevel(score),
+   level,
 
     score,
 
@@ -338,8 +375,7 @@ export function buildClinicalConfidence(
         momentumSignals
       ),
 
-    evidenceMaturity:
-      reasoning.evidence.maturity,
+    evidenceMaturity,
 
         comparableSourceCount:
       momentumSignals.comparable.length,
