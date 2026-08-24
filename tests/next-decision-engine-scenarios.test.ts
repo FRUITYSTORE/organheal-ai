@@ -30,6 +30,10 @@ import {
   buildNextDecision,
 } from "@/lib/health-intelligence/engines/next-decision.engine";
 
+import type {
+  ClinicalConfidenceData,
+} from "@/lib/health-intelligence/engines/clinical-confidence.engine";
+
 type AssessmentInput =
   NonNullable<
     BuildHealthIntelligenceContextInput[
@@ -757,6 +761,83 @@ describe(
       decision.primary.reasonCodes
     ).toContain(
       "core-data-connected"
+    );
+  }
+);
+
+it(
+  "preserves low confidence context when starting a health plan",
+  () => {
+    const scenario =
+      buildDecisionScenario({
+        assessments: [
+          createAssessment(),
+        ],
+
+        checkIns: [
+          createCheckIn(),
+        ],
+
+        reports: [
+          createReport(),
+        ],
+
+        analyses: [
+          createAnalysis(),
+        ],
+
+        hasHealthPlan:
+          false,
+      });
+
+    const stableMomentum:
+      HealthMomentumData = {
+      ...scenario.momentum,
+
+      status:
+        "stable",
+    };
+
+    const lowConfidence:
+      ClinicalConfidenceData = {
+      ...scenario.clinicalConfidence,
+
+      level:
+        "low",
+
+      score:
+        30,
+    };
+
+    const decision =
+      buildNextDecision({
+        engineContext:
+          scenario.engineContext,
+
+        evidence: {
+          ...scenario.evidence,
+
+          recommendations:
+            [],
+        },
+
+        clinicalConfidence:
+          lowConfidence,
+
+        momentum:
+          stableMomentum,
+      });
+
+    expect(
+      decision.primary.type
+    ).toBe(
+      "start-health-plan"
+    );
+
+    expect(
+      decision.primary.reasonCodes
+    ).toContain(
+      "low-confidence-result"
     );
   }
 );

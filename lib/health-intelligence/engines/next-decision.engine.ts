@@ -447,9 +447,16 @@ function buildFallbackDecision(
         "/health-plan",
 
       reasonCodes: [
-        "core-data-connected",
-        "health-plan-not-started",
-      ],
+  "core-data-connected",
+  "health-plan-not-started",
+
+  ...(clinicalConfidence.level ===
+  "low"
+    ? ([
+        "low-confidence-result",
+      ] as NextDecisionReasonCode[])
+    : []),
+],
 
       relatedEvidenceGap:
         null,
