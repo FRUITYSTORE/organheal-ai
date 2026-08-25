@@ -7,6 +7,18 @@ import {
 } from "@/lib/api/api-auth";
 
 import {
+  resolveApiRateLimitIdentity,
+} from "@/lib/api/api-rate-limit-identity";
+
+import {
+  consumePersistentApiRateLimit,
+} from "@/lib/api/api-rate-limit";
+
+import {
+  getSupabaseAdminClient,
+} from "@/lib/supabase-admin";
+
+import {
   createApiRequestId,
   logApiError,
   logApiInfo,
@@ -25,6 +37,14 @@ const MAX_AUDIO_BYTES =
 
 const TRANSCRIPTION_TIMEOUT_MS =
   45_000;
+
+const VOICE_TRANSCRIPTION_RATE_LIMIT = {
+  limit:
+    10,
+
+  windowMs:
+    60_000,
+} as const;
 
 const ALLOWED_AUDIO_TYPES =
   new Set([
@@ -93,6 +113,10 @@ export async function POST(
     let authenticated =
       false;
 
+    let authenticatedUserId:
+      string | null =
+      null;
+
     if (
       authorizationHeader
         ?.startsWith(
@@ -127,8 +151,71 @@ export async function POST(
       }
 
       authenticated =
-        true;
+       true;
+
+      authenticatedUserId =
+       authentication.user.id;
+      }
+
+    const rateLimitIdentity =
+  resolveApiRateLimitIdentity({
+    request,
+
+    userId:
+      authenticatedUserId,
+  });
+
+const rateLimitClient =
+  getSupabaseAdminClient();
+
+const rateLimit =
+  await consumePersistentApiRateLimit({
+    client:
+      rateLimitClient,
+
+    key:
+      `voice-transcribe:${rateLimitIdentity.type}:${rateLimitIdentity.value}`,
+
+    policy:
+      VOICE_TRANSCRIPTION_RATE_LIMIT,
+  });
+
+if (
+  !rateLimit.allowed
+) {
+  return NextResponse.json(
+    {
+      error:
+        "Too many voice transcription requests. Please try again shortly.",
+
+      requestId,
+    },
+    {
+      status:
+        429,
+
+      headers: {
+        "x-request-id":
+          requestId,
+
+        "retry-after":
+          String(
+            rateLimit.retryAfterSeconds
+          ),
+
+        "x-ratelimit-limit":
+          String(
+            rateLimit.limit
+          ),
+
+        "x-ratelimit-remaining":
+          String(
+            rateLimit.remaining
+          ),
+      },
     }
+  );
+}
 
     let formData:
       FormData;

@@ -162,18 +162,18 @@ export async function consumePersistentApiRateLimit({
   }
 
   return {
-    allowed:
-      row.allowed,
+  allowed:
+    row.allowed,
 
-    limit:
-      policy.limit,
+  limit:
+    policy.limit,
 
-    remaining:
-      row.remaining,
+  remaining:
+    row.remaining,
 
-    resetAt,
+  resetAt,
 
-    retryAfterSeconds:
-      row.retry_after_seconds,
-  };
+  retryAfterSeconds:
+    row.retry_after_seconds,
+};
 }
