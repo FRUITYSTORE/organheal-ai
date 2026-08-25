@@ -141,6 +141,64 @@ describe(
 
           changed:
             true,
+
+          previousStatus:
+            "High",
+
+          latestStatus:
+            "High",
+
+          statusChanged:
+            false,
+
+          previousReferenceLow:
+            0,
+
+          previousReferenceHigh:
+            100,
+
+          latestReferenceLow:
+            0,
+
+          latestReferenceHigh:
+            100,
+
+          previousReferenceSource:
+            "default",
+
+          latestReferenceSource:
+            "default",
+        });
+
+        expect(
+          context.markerTrends
+        ).toContainEqual({
+          marker:
+            "LDL",
+
+          unit:
+            "mg/dL",
+
+          previousValue:
+            174,
+
+          latestValue:
+            132,
+
+          delta:
+            -42,
+
+          previousStatus:
+            "High",
+
+          latestStatus:
+            "High",
+
+          interpretation:
+            "persistent_abnormal_numeric_change",
+
+          canConfirmClinicalDirection:
+            false,
         });
 
         expect(

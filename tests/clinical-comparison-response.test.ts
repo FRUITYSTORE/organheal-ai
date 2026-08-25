@@ -76,6 +76,33 @@ describe(
 
                     changed:
                       true,
+
+                    previousStatus:
+                      "High",
+
+                    latestStatus:
+                      "High",
+
+                    statusChanged:
+                      false,
+
+                    previousReferenceLow:
+                      0,
+
+                    previousReferenceHigh:
+                      100,
+
+                    latestReferenceLow:
+                      0,
+
+                    latestReferenceHigh:
+                      100,
+
+                    previousReferenceSource:
+                      "default",
+
+                    latestReferenceSource:
+                      "default",
                   },
                 ],
 
@@ -94,6 +121,37 @@ describe(
                 limitations:
                   [],
               },
+
+              markerTrends: [
+                {
+                  marker:
+                    "LDL",
+
+                  unit:
+                    "mg/dL",
+
+                  previousValue:
+                    174,
+
+                  latestValue:
+                    132,
+
+                  delta:
+                    -42,
+
+                  previousStatus:
+                    "High",
+
+                  latestStatus:
+                    "High",
+
+                  interpretation:
+                    "persistent_abnormal_numeric_change",
+
+                  canConfirmClinicalDirection:
+                    false,
+                },
+              ],
 
               reasoning: {
                 state:
@@ -151,10 +209,9 @@ describe(
                 direction:
                   null,
 
-                limitations:
-                  [
-                    "Objective marker values changed across comparable reports, but the numeric change alone does not establish clinical improvement or deterioration.",
-                  ],
+                limitations: [
+                  "Objective marker values changed across comparable reports, but the numeric change alone does not establish clinical improvement or deterioration.",
+                ],
               },
 
               direction: {

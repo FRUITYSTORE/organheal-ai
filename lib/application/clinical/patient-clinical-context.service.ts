@@ -22,12 +22,20 @@ import {
   type PatientClinicalDirectionAssessment,
 } from "@/lib/application/clinical/patient-clinical-direction.service";
 
+import {
+  buildPatientClinicalMarkerTrends,
+  type PatientClinicalMarkerTrend,
+} from "@/lib/application/clinical/patient-clinical-marker-trend.service";
+
 export type PatientClinicalContext = {
   comparison:
     PatientClinicalComparison;
 
   evidence:
     PatientClinicalComparisonEvidence;
+
+  markerTrends:
+    PatientClinicalMarkerTrend[];
 
   reasoning:
     PatientClinicalReasoning;
@@ -57,6 +65,11 @@ export function buildPatientClinicalContext({
       patientSummary.reportMarkers,
   });
 
+  const markerTrends =
+  buildPatientClinicalMarkerTrends(
+    evidence.markerComparisons
+  );
+
   const reasoning =
     buildPatientClinicalReasoning({
       evidence,
@@ -69,9 +82,10 @@ export function buildPatientClinicalContext({
     });
 
   return {
-    comparison,
-    evidence,
-    reasoning,
-    direction,
-  };
+  comparison,
+  evidence,
+  markerTrends,
+  reasoning,
+  direction,
+};
 }

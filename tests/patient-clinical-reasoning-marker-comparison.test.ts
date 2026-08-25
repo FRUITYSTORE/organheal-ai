@@ -57,6 +57,33 @@ describe(
 
               changed:
                 true,
+
+              previousStatus:
+                "High",
+
+              latestStatus:
+                "High",
+
+              statusChanged:
+                false,
+
+              previousReferenceLow:
+                0,
+
+              previousReferenceHigh:
+                100,
+
+              latestReferenceLow:
+                0,
+
+              latestReferenceHigh:
+                100,
+
+              previousReferenceSource:
+                "default",
+
+              latestReferenceSource:
+                "default",
             },
           ],
 
@@ -116,13 +143,13 @@ describe(
         expect(
           reasoning.objectiveMarkerChangeCount
         ).toBe(
-        1
+          1
         );
 
         expect(
           reasoning.verifiedChangeCount
         ).toBe(
-        0
+          0
         );
 
         expect(

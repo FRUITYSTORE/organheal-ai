@@ -56,6 +56,33 @@ export type ClinicalMarkerComparisonEvidence = {
 
   changed:
     boolean;
+
+  previousStatus:
+    ReportMedicalMarkerEvidence["marker_status"];
+
+  latestStatus:
+    ReportMedicalMarkerEvidence["marker_status"];
+
+  statusChanged:
+    boolean;
+
+  previousReferenceLow:
+    number | null;
+
+  previousReferenceHigh:
+    number | null;
+
+  latestReferenceLow:
+    number | null;
+
+  latestReferenceHigh:
+    number | null;
+
+  previousReferenceSource:
+    ReportMedicalMarkerEvidence["reference_source"];
+
+  latestReferenceSource:
+    ReportMedicalMarkerEvidence["reference_source"];
 };
 
 export type PatientClinicalComparisonEvidence = {
@@ -253,25 +280,53 @@ function buildMarkerComparisons({
         previousMarker.marker_value;
 
       return [
-        {
-          marker:
-            latestMarker.marker_name,
+  {
+    marker:
+      latestMarker.marker_name,
 
-          unit:
-            latestMarker.marker_unit!,
+    unit:
+      latestMarker.marker_unit!,
 
-          previousValue:
-            previousMarker.marker_value,
+    previousValue:
+      previousMarker.marker_value,
 
-          latestValue:
-            latestMarker.marker_value,
+    latestValue:
+      latestMarker.marker_value,
 
-          delta,
+    delta,
 
-          changed:
-            delta !== 0,
-        },
-      ];
+    changed:
+      delta !== 0,
+
+    previousStatus:
+      previousMarker.marker_status,
+
+    latestStatus:
+      latestMarker.marker_status,
+
+    statusChanged:
+      previousMarker.marker_status !==
+      latestMarker.marker_status,
+
+    previousReferenceLow:
+      previousMarker.reference_low,
+
+    previousReferenceHigh:
+      previousMarker.reference_high,
+
+    latestReferenceLow:
+      latestMarker.reference_low,
+
+    latestReferenceHigh:
+      latestMarker.reference_high,
+
+    previousReferenceSource:
+      previousMarker.reference_source,
+
+    latestReferenceSource:
+      latestMarker.reference_source,
+  },
+];
     }
   );
 }
