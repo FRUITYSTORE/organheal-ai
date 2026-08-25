@@ -238,6 +238,12 @@ describe(
         );
 
         expect(
+          unifiedExperience.clinical.markerTrends
+        ).toEqual(
+          clinicalContext.markerTrends
+        );
+
+        expect(
           unifiedExperience.decision
         ).toEqual({
           layer:

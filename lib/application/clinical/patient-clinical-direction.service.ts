@@ -3,6 +3,10 @@ import type {
 } from "@/lib/application/clinical/patient-clinical-comparison-evidence.service";
 
 import type {
+  PatientClinicalMarkerTrend,
+} from "@/lib/application/clinical/patient-clinical-marker-trend.service";
+
+import type {
   PatientClinicalReasoning,
 } from "@/lib/application/clinical/patient-clinical-reasoning.service";
 
@@ -24,7 +28,12 @@ export type PatientClinicalDirectionSignalCode =
   | "risk_level_missing"
   | "unsupported_risk_level"
   | "structured_fields_changed"
-  | "structured_fields_stable";
+  | "structured_fields_stable"
+  | "marker_normal_to_abnormal"
+  | "marker_abnormal_to_normal"
+  | "marker_persistent_abnormal"
+  | "marker_status_transition"
+  | "marker_numeric_change";
 
 export type PatientClinicalDirectionSignal = {
   code:
@@ -33,7 +42,8 @@ export type PatientClinicalDirectionSignal = {
   field:
     | "risk_level"
     | "report_type"
-    | "structured_fields";
+    | "structured_fields"
+    | "marker";
 
   previousValue:
     | string
@@ -81,6 +91,9 @@ export type BuildPatientClinicalDirectionInput = {
 
   reasoning:
     PatientClinicalReasoning;
+
+  markerTrends?:
+    PatientClinicalMarkerTrend[];
 };
 
 type NormalizedRiskLevel =
@@ -137,7 +150,9 @@ function normalizeRiskLevel(
     | undefined
 ): NormalizedRiskLevel | null {
   const normalized =
-    normalizeText(value);
+    normalizeText(
+      value
+    );
 
   if (!normalized) {
     return null;
@@ -145,7 +160,9 @@ function normalizeRiskLevel(
 
   if (
     normalized === "low" ||
-    normalized.includes("low risk")
+    normalized.includes(
+      "low risk"
+    )
   ) {
     return "low";
   }
@@ -165,7 +182,9 @@ function normalizeRiskLevel(
 
   if (
     normalized === "high" ||
-    normalized.includes("high risk")
+    normalized.includes(
+      "high risk"
+    )
   ) {
     return "high";
   }
@@ -202,9 +221,97 @@ function getFieldEvidence(
   );
 }
 
+function formatMarkerValue(
+  marker:
+    PatientClinicalMarkerTrend,
+  side:
+    | "previous"
+    | "latest"
+): string {
+  const value =
+    side === "previous"
+      ? marker.previousValue
+      : marker.latestValue;
+
+  const status =
+    side === "previous"
+      ? marker.previousStatus
+      : marker.latestStatus;
+
+  return `${marker.marker}: ${value} ${marker.unit} (${status ?? "Unknown"})`;
+}
+
+function getMarkerSignalCode(
+  marker:
+    PatientClinicalMarkerTrend
+): PatientClinicalDirectionSignalCode | null {
+  switch (
+    marker.interpretation
+  ) {
+    case "normal_to_abnormal":
+      return "marker_normal_to_abnormal";
+
+    case "abnormal_to_normal":
+      return "marker_abnormal_to_normal";
+
+    case "persistent_abnormal_numeric_change":
+      return "marker_persistent_abnormal";
+
+    case "status_transition":
+      return "marker_status_transition";
+
+    case "normal_numeric_change":
+    case "numeric_change":
+      return "marker_numeric_change";
+
+    case "unchanged":
+      return null;
+  }
+}
+
+function buildMarkerSignals(
+  markerTrends:
+    PatientClinicalMarkerTrend[]
+): PatientClinicalDirectionSignal[] {
+  return markerTrends.flatMap(
+    (marker) => {
+      const code =
+        getMarkerSignalCode(
+          marker
+        );
+
+      if (!code) {
+        return [];
+      }
+
+      return [
+        {
+          code,
+
+          field:
+            "marker" as const,
+
+          previousValue:
+            formatMarkerValue(
+              marker,
+              "previous"
+            ),
+
+          latestValue:
+            formatMarkerValue(
+              marker,
+              "latest"
+            ),
+        },
+      ];
+    }
+  );
+}
+
 export function buildPatientClinicalDirection({
   evidence,
   reasoning,
+  markerTrends = [],
 }: BuildPatientClinicalDirectionInput): PatientClinicalDirectionAssessment {
   const riskEvidence =
     getFieldEvidence(
@@ -257,7 +364,10 @@ export function buildPatientClinicalDirection({
       normalizedLatestReportType;
 
   const supportingSignals:
-    PatientClinicalDirectionSignal[] = [];
+    PatientClinicalDirectionSignal[] =
+      buildMarkerSignals(
+        markerTrends
+      );
 
   const contradictingSignals:
     PatientClinicalDirectionSignal[] = [];
@@ -265,6 +375,15 @@ export function buildPatientClinicalDirection({
   const limitations = [
     ...reasoning.limitations,
   ];
+
+  if (
+    markerTrends.length >
+    0
+  ) {
+    limitations.push(
+      "Longitudinal marker transitions are supporting clinical signals only and do not independently establish overall clinical improvement or deterioration."
+    );
+  }
 
   if (
     !comparableReportType

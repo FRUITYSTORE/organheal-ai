@@ -289,11 +289,10 @@ export function buildHealthMomentum(
     };
   }
 
-    const signals =
+      const signals =
     buildHealthMomentumSignals(
       engineContext
     );
-
   const analysis =
     buildMomentumAnalysis(
       signals

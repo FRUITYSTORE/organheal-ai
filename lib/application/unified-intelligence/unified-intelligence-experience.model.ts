@@ -5,6 +5,10 @@ import type {
 } from "@/lib/application/clinical/patient-clinical-direction.service";
 
 import type {
+  PatientClinicalMarkerTrend,
+} from "@/lib/application/clinical/patient-clinical-marker-trend.service";
+
+import type {
   PatientJourneySnapshot,
 } from "@/lib/application/journey/patient-journey-snapshot.service";
 
@@ -151,6 +155,9 @@ export type UnifiedIntelligenceExperienceModel = {
 
     contradictingSignals:
       PatientClinicalDirectionSignal[];
+
+    markerTrends:
+      PatientClinicalMarkerTrend[];
 
     limitations:
       string[];

@@ -76,10 +76,11 @@ export function buildPatientClinicalContext({
     });
 
   const direction =
-    buildPatientClinicalDirection({
-      evidence,
-      reasoning,
-    });
+  buildPatientClinicalDirection({
+    evidence,
+    reasoning,
+    markerTrends,
+  });
 
   return {
   comparison,

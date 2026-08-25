@@ -167,6 +167,9 @@ export function buildUnifiedIntelligenceExperience({
       contradictingSignals:
         [...clinicalDirection.contradictingSignals],
 
+      markerTrends:
+        [...clinicalContext.markerTrends],
+
       limitations:
         [...clinicalDirection.limitations],
     },
