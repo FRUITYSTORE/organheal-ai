@@ -9,6 +9,8 @@ import {
 
 const {
   mockedAuthenticateApiRequest,
+  mockedConsumePersistentApiRateLimit,
+  mockedGetSupabaseAdminClient,
   mockedCreateApiRequestId,
   mockedLogApiError,
   mockedLogApiInfo,
@@ -17,6 +19,12 @@ const {
 } = vi.hoisted(
   () => ({
     mockedAuthenticateApiRequest:
+      vi.fn(),
+
+    mockedConsumePersistentApiRateLimit:
+      vi.fn(),
+
+    mockedGetSupabaseAdminClient:
       vi.fn(),
 
     mockedCreateApiRequestId:
@@ -36,11 +44,27 @@ const {
   })
 );
 
-vi.mock(
+  vi.mock(
   "@/lib/api/api-auth",
   () => ({
     authenticateApiRequest:
       mockedAuthenticateApiRequest,
+  })
+);
+
+vi.mock(
+  "@/lib/api/api-rate-limit",
+  () => ({
+    consumePersistentApiRateLimit:
+      mockedConsumePersistentApiRateLimit,
+  })
+);
+
+vi.mock(
+  "@/lib/supabase-admin",
+  () => ({
+    getSupabaseAdminClient:
+      mockedGetSupabaseAdminClient,
   })
 );
 
@@ -129,6 +153,30 @@ describe(
             elapsedMs:
               () => 25,
           });
+
+        mockedGetSupabaseAdminClient
+  .mockReturnValue(
+    {} as never
+  );
+
+mockedConsumePersistentApiRateLimit
+  .mockResolvedValue({
+    allowed:
+      true,
+
+    limit:
+      10,
+
+    remaining:
+      9,
+
+    resetAt:
+      Date.now() +
+      60_000,
+
+    retryAfterSeconds:
+      0,
+  });
 
         globalThis.fetch =
           mockedFetch;
@@ -283,5 +331,116 @@ describe(
         );
       }
     );
+    it(
+  "returns 429 and does not call the realtime provider when the authenticated user exceeds the limit",
+  async () => {
+    mockedAuthenticateApiRequest
+      .mockResolvedValue({
+        success:
+          true,
+
+        token:
+          "user-access-token",
+
+        user: {
+          id:
+            "user-123",
+        },
+
+        client: {},
+      });
+
+    mockedConsumePersistentApiRateLimit
+      .mockResolvedValue({
+        allowed:
+          false,
+
+        limit:
+          10,
+
+        remaining:
+          0,
+
+        resetAt:
+          Date.now() +
+          30_000,
+
+        retryAfterSeconds:
+          30,
+      });
+
+    const response =
+      await POST(
+        createRequest(
+          "Bearer user-access-token"
+        )
+      );
+
+    expect(
+      response.status
+    ).toBe(
+      429
+    );
+
+    expect(
+      response.headers.get(
+        "retry-after"
+      )
+    ).toBe(
+      "30"
+    );
+
+    expect(
+      response.headers.get(
+        "x-ratelimit-limit"
+      )
+    ).toBe(
+      "10"
+    );
+
+    expect(
+      response.headers.get(
+        "x-ratelimit-remaining"
+      )
+    ).toBe(
+      "0"
+    );
+
+    expect(
+      mockedConsumePersistentApiRateLimit
+    ).toHaveBeenCalledWith({
+      client:
+        expect.anything(),
+
+      key:
+        "voice-realtime:user:user-123",
+
+      policy: {
+        limit:
+          10,
+
+        windowMs:
+          60_000,
+      },
+    });
+
+    expect(
+      mockedFetch
+    ).not.toHaveBeenCalled();
+
+    const body =
+      await response.json();
+
+    expect(
+      body
+    ).toEqual({
+      error:
+        "Too many realtime voice requests. Please try again shortly.",
+
+      requestId:
+        "req_voice_realtime_test",
+    });
+  }
+);
   }
 );

@@ -7,6 +7,14 @@ import {
 } from "@/lib/api/api-auth";
 
 import {
+  consumePersistentApiRateLimit,
+} from "@/lib/api/api-rate-limit";
+
+import {
+  getSupabaseAdminClient,
+} from "@/lib/supabase-admin";
+
+import {
   createApiRequestId,
   logApiError,
   logApiInfo,
@@ -26,6 +34,14 @@ const REALTIME_MODEL =
     .OPENAI_REALTIME_MODEL
     ?.trim() ||
   "gpt-realtime";
+
+const VOICE_REALTIME_RATE_LIMIT = {
+  limit:
+    10,
+
+  windowMs:
+    60_000,
+} as const;
 
 function getOpenAIApiKey():
   string {
@@ -80,6 +96,58 @@ export async function POST(
         }
       );
     }
+
+    const rateLimitClient =
+  getSupabaseAdminClient();
+
+const rateLimit =
+  await consumePersistentApiRateLimit({
+    client:
+      rateLimitClient,
+
+    key:
+      `voice-realtime:user:${authentication.user.id}`,
+
+    policy:
+      VOICE_REALTIME_RATE_LIMIT,
+  });
+
+if (
+  !rateLimit.allowed
+) {
+  return NextResponse.json(
+    {
+      error:
+        "Too many realtime voice requests. Please try again shortly.",
+
+      requestId,
+    },
+    {
+      status:
+        429,
+
+      headers: {
+        "x-request-id":
+          requestId,
+
+        "retry-after":
+          String(
+            rateLimit.retryAfterSeconds
+          ),
+
+        "x-ratelimit-limit":
+          String(
+            rateLimit.limit
+          ),
+
+        "x-ratelimit-remaining":
+          String(
+            rateLimit.remaining
+          ),
+      },
+    }
+  );
+}
 
     const apiKey =
       getOpenAIApiKey();
