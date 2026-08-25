@@ -64,6 +64,22 @@ vi.mock(
 );
 
 vi.mock(
+  "@/lib/supabase-admin",
+  () => ({
+    getSupabaseAdminClient:
+      vi.fn(),
+  })
+);
+
+vi.mock(
+  "@/lib/api/api-rate-limit",
+  () => ({
+    consumePersistentApiRateLimit:
+      vi.fn(),
+  })
+);
+
+vi.mock(
   "@/lib/health-intelligence/application/authenticated-assistant-context.service",
   () => ({
     buildAuthenticatedAssistantContext:
@@ -74,6 +90,14 @@ vi.mock(
 import {
   authenticateApiRequest,
 } from "@/lib/api/api-auth";
+
+import {
+  getSupabaseAdminClient,
+} from "@/lib/supabase-admin";
+
+import {
+  consumePersistentApiRateLimit,
+} from "@/lib/api/api-rate-limit";
 
 import {
   buildAuthenticatedAssistantContext,
@@ -115,6 +139,16 @@ const mockedBuildAssistantResponseContract =
 const mockedAuthenticateApiRequest =
   vi.mocked(
     authenticateApiRequest
+  );
+
+const mockedGetSupabaseAdminClient =
+  vi.mocked(
+    getSupabaseAdminClient
+  );
+
+const mockedConsumePersistentApiRateLimit =
+  vi.mocked(
+    consumePersistentApiRateLimit
   );
 
 const mockedBuildAuthenticatedAssistantContext =
@@ -244,6 +278,30 @@ describe(
 
         mockedBuildAssistantResponseContract
           .mockReset();
+
+        mockedGetSupabaseAdminClient
+          .mockReturnValue(
+          {} as never
+          );
+
+        mockedConsumePersistentApiRateLimit
+          .mockResolvedValue({
+          allowed:
+          true,
+
+          limit:
+          20,
+
+          remaining:
+          19,
+
+          resetAt:
+          Date.now() +
+          60_000,
+
+          retryAfterSeconds:
+          0,
+        });
 
         mockedAuthenticateApiRequest
           .mockReset();
@@ -452,12 +510,12 @@ describe(
         );
 
         expect(
-  mockedBuildAssistantResponseContract
-).toHaveBeenCalledWith(
-  orchestratorResult,
-  null,
-  "ar"
-);
+          mockedBuildAssistantResponseContract
+        ).toHaveBeenCalledWith(
+          orchestratorResult,
+          null,
+         "ar"
+        );
 
         expect(
           mockedRunAssistantOrchestrator
@@ -965,12 +1023,12 @@ describe(
         ).not.toHaveBeenCalled();
 
         expect(
-  mockedBuildAssistantResponseContract
-).toHaveBeenCalledWith(
-  orchestratorResult,
-  "interview-1",
-  "en"
-);
+         mockedBuildAssistantResponseContract
+        ).toHaveBeenCalledWith(
+           orchestratorResult,
+          "interview-1",
+           "en"
+        );
 
         const responseBody =
           await response.json();
@@ -1819,6 +1877,126 @@ dateNowSpy.mockRestore();
               "Orchestrator failure",
           },
         });
+       }
+    );
+
+    it(
+      "returns 429 with rate-limit headers when the authenticated user exceeds the assistant limit",
+      async () => {
+        mockedAuthenticateApiRequest
+          .mockResolvedValue({
+            success:
+              true,
+
+            token:
+              "test-token",
+
+            user: {
+              id:
+                "user-rate-limited",
+            },
+
+            client:
+              {} as never,
+          } as never);
+
+        mockedConsumePersistentApiRateLimit
+          .mockResolvedValueOnce({
+            allowed:
+              false,
+
+            limit:
+              20,
+
+            remaining:
+              0,
+
+            resetAt:
+              Date.now() +
+              30_000,
+
+            retryAfterSeconds:
+              30,
+          });
+
+        const request =
+          new Request(
+            "http://localhost/api/assistant",
+            {
+              method:
+                "POST",
+
+              headers: {
+                "content-type":
+                  "application/json",
+
+                authorization:
+                  "Bearer test-token",
+              },
+
+              body:
+                JSON.stringify({
+                  message:
+                    "What should I do next?",
+                }),
+            }
+          );
+
+        const response =
+          await POST(
+            request
+          );
+
+        const body =
+          await response.json();
+
+        expect(
+          response.status
+        ).toBe(
+          429
+        );
+
+        expect(
+          response.headers.get(
+            "retry-after"
+          )
+        ).toBe(
+          "30"
+        );
+
+        expect(
+          response.headers.get(
+            "x-ratelimit-limit"
+          )
+        ).toBe(
+          "20"
+        );
+
+        expect(
+          response.headers.get(
+            "x-ratelimit-remaining"
+          )
+        ).toBe(
+          "0"
+        );
+
+        expect(
+          body.error
+        ).toBe(
+          "Too many assistant requests. Please try again shortly."
+        );
+
+        expect(
+          body.requestId
+        ).toEqual(
+          expect.any(
+            String
+          )
+        );
+
+        expect(
+          mockedRunAssistantOrchestrator
+        ).not.toHaveBeenCalled();
       }
     );
   }

@@ -5,6 +5,10 @@ import { authenticateApiRequest } from "@/lib/api/api-auth";
 import { createApiRequestId, logApiError } from "@/lib/api/api-logger";
 
 import {
+  consumePersistentApiRateLimit,
+} from "@/lib/api/api-rate-limit";
+
+import {
   runAssistantOrchestrator,
   type AssistantOrchestratorLanguage,
 } from "@/lib/health-intelligence/application/assistant-orchestrator.service";
@@ -27,11 +31,23 @@ import {
   updateClinicalInterview,
 } from "@/lib/repositories/clinical-interview.repository";
 
+import {
+  getSupabaseAdminClient,
+} from "@/lib/supabase-admin";
+
 const CLINICAL_INTERVIEW_RESUME_WINDOW_MS =
   24 *
   60 *
   60 *
   1000;
+
+const ASSISTANT_RATE_LIMIT = {
+  limit:
+    20,
+
+  windowMs:
+    60_000,
+} as const;
 
 type AssistantRequestBody = {
   message?: unknown;
@@ -152,6 +168,58 @@ if (
       }
     );
   }
+
+  const rateLimitClient =
+  getSupabaseAdminClient();
+
+const rateLimit =
+  await consumePersistentApiRateLimit({
+    client:
+      rateLimitClient,
+
+    key:
+      `assistant:user:${authentication.user.id}`,
+
+    policy:
+      ASSISTANT_RATE_LIMIT,
+  });
+
+if (
+  !rateLimit.allowed
+) {
+  return NextResponse.json(
+    {
+      error:
+        "Too many assistant requests. Please try again shortly.",
+
+      requestId,
+    },
+    {
+      status:
+        429,
+
+      headers: {
+        "x-request-id":
+          requestId,
+
+        "retry-after":
+          String(
+            rateLimit.retryAfterSeconds
+          ),
+
+        "x-ratelimit-limit":
+          String(
+            rateLimit.limit
+          ),
+
+        "x-ratelimit-remaining":
+          String(
+            rateLimit.remaining
+          ),
+      },
+    }
+  );
+}
 
   authenticatedContext = {
     userId:
