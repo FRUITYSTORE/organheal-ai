@@ -196,6 +196,36 @@ function formatConfidence(
   return labels[confidence];
 }
 
+function formatObjectiveMarkerChanges(
+  markers:
+    {
+      marker: string;
+      unit: string;
+      previousValue: number;
+      latestValue: number;
+      delta: number;
+    }[],
+  language:
+    SupportedLanguage
+): string {
+  if (
+    markers.length === 0
+  ) {
+    return language === "ar"
+      ? "لا يوجد"
+      : "None";
+  }
+
+  return markers
+    .map(
+      (marker) =>
+        language === "ar"
+          ? `• ${marker.marker}: ${marker.previousValue} ${marker.unit} → ${marker.latestValue} ${marker.unit} (التغير: ${marker.delta})`
+          : `• ${marker.marker}: ${marker.previousValue} ${marker.unit} → ${marker.latestValue} ${marker.unit} (change: ${marker.delta})`
+    )
+    .join("\n");
+}
+
 export function buildClinicalComparisonResponse({
   language,
   healthContext,
@@ -295,16 +325,19 @@ I cannot confirm a clinical change from the currently available data.`;
   }
 
   const changedFields =
-    reasoning.significantChanges.map(
-      (signal) =>
-        signal.field
-    );
+  reasoning.significantChanges.map(
+    (signal) =>
+      signal.field
+  );
 
-  const stableFields =
-    reasoning.stableAreas.map(
-      (signal) =>
-        signal.field
-    );
+const stableFields =
+  reasoning.stableAreas.map(
+    (signal) =>
+      signal.field
+  );
+
+const objectiveMarkerChanges =
+  reasoning.objectiveMarkerChanges;
 
   if (
     reasoning.state ===
@@ -366,6 +399,75 @@ ${formatConfidence(
 
 This does not prove that the clinical condition remained unchanged. It only means that the available structured fields did not differ.`;
   }
+
+  if (
+  changedFields.length === 0 &&
+  objectiveMarkerChanges.length > 0
+) {
+  return isArabic
+    ? `قارنت أحدث تقريرين ووجدت تغيرات رقمية موضوعية قابلة للمقارنة في القياسات التالية:
+
+القياسات التي تغيرت:
+${formatObjectiveMarkerChanges(
+  objectiveMarkerChanges,
+  language
+)}
+
+التقرير الأحدث:
+${formatDate(
+  evidence.latestReportDate,
+  language
+)}
+
+التقرير السابق:
+${formatDate(
+  evidence.previousReportDate,
+  language
+)}
+
+عدد القياسات المتغيرة:
+${reasoning.objectiveMarkerChangeCount}
+
+درجة الثقة:
+${formatConfidence(
+  reasoning.confidence,
+  language
+)}
+
+حدود الاستنتاج:
+تؤكد هذه القيم وجود تغير رقمي بين التقريرين، لكن التغير الرقمي وحده لا يثبت تحسنًا أو تدهورًا سريريًا.`
+    : `I compared the latest two reports and found objective numeric changes in the following comparable clinical markers:
+
+Changed markers:
+${formatObjectiveMarkerChanges(
+  objectiveMarkerChanges,
+  language
+)}
+
+Latest report:
+${formatDate(
+  evidence.latestReportDate,
+  language
+)}
+
+Previous report:
+${formatDate(
+  evidence.previousReportDate,
+  language
+)}
+
+Changed marker count:
+${reasoning.objectiveMarkerChangeCount}
+
+Confidence:
+${formatConfidence(
+  reasoning.confidence,
+  language
+)}
+
+Reasoning boundary:
+These values confirm an objective numeric change across the comparable reports, but the numeric change alone does not establish clinical improvement or deterioration.`;
+}
 
   return isArabic
     ? `قارنت أحدث تقريرين ووجدت اختلافات مؤكدة في محتوى الحقول التالية:
