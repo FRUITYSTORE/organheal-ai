@@ -14,12 +14,20 @@ import type {
 const {
   mockedAfter,
   mockedRunBatch,
+  mockedConsumePersistentApiRateLimit,
+  mockedGetSupabaseAdminClient,
 } = vi.hoisted(
   () => ({
     mockedAfter:
       vi.fn(),
 
     mockedRunBatch:
+      vi.fn(),
+
+    mockedConsumePersistentApiRateLimit:
+      vi.fn(),
+
+    mockedGetSupabaseAdminClient:
       vi.fn(),
   })
 );
@@ -65,6 +73,22 @@ vi.mock(
   () => ({
     authenticateApiRequest:
       vi.fn(),
+  })
+);
+
+vi.mock(
+  "@/lib/api/api-rate-limit",
+  () => ({
+    consumePersistentApiRateLimit:
+      mockedConsumePersistentApiRateLimit,
+  })
+);
+
+vi.mock(
+  "@/lib/supabase-admin",
+  () => ({
+    getSupabaseAdminClient:
+      mockedGetSupabaseAdminClient,
   })
 );
 
@@ -258,12 +282,36 @@ describe(
             >
           >);
 
+      mockedGetSupabaseAdminClient
+        .mockReturnValue(
+        {} as never
+        );
+
+      mockedConsumePersistentApiRateLimit
+        .mockResolvedValue({
+         allowed:
+        true,
+
+        limit:
+        10,
+
+        remaining:
+        9,
+
+        resetAt:
+        Date.now() +
+        60_000,
+
+        retryAfterSeconds:
+        0,
+    });
+
         mockedExecuteAuthenticatedFollowUp
           .mockResolvedValue(
             createFollowUpResult()
           );
-      }
-    );
+        }
+      );
 
     afterEach(
       () => {
@@ -436,6 +484,125 @@ describe(
         );
       }
     );
+
+    it(
+  "returns 429 and does not execute follow-up when the authenticated user exceeds the limit",
+  async () => {
+    mockedAuthenticateApiRequest
+      .mockResolvedValue({
+        success:
+          true,
+
+        token:
+          "test-token",
+
+        user: {
+          id:
+            "user-123",
+        },
+
+        client:
+          createClient(),
+      } as never);
+
+    mockedConsumePersistentApiRateLimit
+      .mockResolvedValueOnce({
+        allowed:
+          false,
+
+        limit:
+          10,
+
+        remaining:
+          0,
+
+        resetAt:
+          Date.now() +
+          30_000,
+
+        retryAfterSeconds:
+          30,
+      });
+
+    const response =
+      await POST(
+        createRequest({
+          language:
+            "en",
+        }) as never
+      );
+
+    const body =
+      await response.json();
+
+    expect(
+      response.status
+    ).toBe(
+      429
+    );
+
+    expect(
+      response.headers.get(
+        "retry-after"
+      )
+    ).toBe(
+      "30"
+    );
+
+    expect(
+      response.headers.get(
+        "x-ratelimit-limit"
+      )
+    ).toBe(
+      "10"
+    );
+
+    expect(
+      response.headers.get(
+        "x-ratelimit-remaining"
+      )
+    ).toBe(
+      "0"
+    );
+
+    expect(
+      mockedConsumePersistentApiRateLimit
+    ).toHaveBeenCalledWith({
+      client:
+        expect.anything(),
+
+      key:
+        "follow-up:user:user-123",
+
+      policy: {
+        limit:
+          10,
+
+        windowMs:
+          60_000,
+      },
+    });
+
+    expect(
+      mockedExecuteAuthenticatedFollowUp
+    ).not.toHaveBeenCalled();
+
+    expect(
+      body
+    ).toEqual({
+      success:
+        false,
+
+      error:
+        "Too many follow-up requests. Please try again shortly.",
+
+      requestId:
+        expect.any(
+          String
+        ),
+    });
+  }
+);
 
     it(
       "kicks the durable worker when a new follow-up job is created",

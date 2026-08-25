@@ -9,6 +9,14 @@ import {
 } from "@/lib/api/api-auth";
 
 import {
+  consumePersistentApiRateLimit,
+} from "@/lib/api/api-rate-limit";
+
+import {
+  getSupabaseAdminClient,
+} from "@/lib/supabase-admin";
+
+import {
   createApiRequestId,
   logApiError,
   logApiInfo,
@@ -24,6 +32,14 @@ import {
 
 export const runtime =
   "nodejs";
+
+  const FOLLOW_UP_RATE_LIMIT = {
+  limit:
+    10,
+
+  windowMs:
+    60_000,
+} as const;
 
 type FollowUpRequest = {
   language?:
@@ -68,6 +84,61 @@ export async function POST(
         }
       );
     }
+
+    const adminClient =
+  getSupabaseAdminClient();
+
+const rateLimit =
+  await consumePersistentApiRateLimit({
+    client:
+      adminClient,
+
+    key:
+      `follow-up:user:${authentication.user.id}`,
+
+    policy:
+      FOLLOW_UP_RATE_LIMIT,
+  });
+
+if (
+  !rateLimit.allowed
+) {
+  return NextResponse.json(
+    {
+      success:
+        false,
+
+      error:
+        "Too many follow-up requests. Please try again shortly.",
+
+      requestId,
+    },
+    {
+      status:
+        429,
+
+      headers: {
+        "x-request-id":
+          requestId,
+
+        "retry-after":
+          String(
+            rateLimit.retryAfterSeconds
+          ),
+
+        "x-ratelimit-limit":
+          String(
+            rateLimit.limit
+          ),
+
+        "x-ratelimit-remaining":
+          String(
+            rateLimit.remaining
+          ),
+      },
+    }
+  );
+}
 
     let body:
       FollowUpRequest = {};
