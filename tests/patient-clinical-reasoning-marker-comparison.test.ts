@@ -114,6 +114,18 @@ describe(
         });
 
         expect(
+          reasoning.objectiveMarkerChangeCount
+        ).toBe(
+        1
+        );
+
+        expect(
+          reasoning.verifiedChangeCount
+        ).toBe(
+        0
+        );
+
+        expect(
           reasoning.canConfirmDirection
         ).toBe(false);
 

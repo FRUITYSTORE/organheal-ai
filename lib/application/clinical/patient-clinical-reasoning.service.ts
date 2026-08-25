@@ -74,6 +74,9 @@ export type PatientClinicalReasoning = {
   verifiedChangeCount:
     number;
 
+  objectiveMarkerChangeCount:
+    number;
+
   stableFieldCount:
     number;
 
@@ -302,8 +305,11 @@ export function buildPatientClinicalReasoning({
     verifiedChangeCount:
       significantChanges.length,
 
-    stableFieldCount:
-      stableAreas.length,
+    objectiveMarkerChangeCount:
+      objectiveMarkerChanges.length,
+
+   stableFieldCount:
+     stableAreas.length,
 
     comparableFieldCount:
       evidence.comparableFieldCount,
