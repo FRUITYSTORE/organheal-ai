@@ -7,11 +7,23 @@ import {
 } from "@/lib/api/api-auth";
 
 import {
+  resolveApiRateLimitIdentity,
+} from "@/lib/api/api-rate-limit-identity";
+
+import {
+  consumePersistentApiRateLimit,
+} from "@/lib/api/api-rate-limit";
+
+import {
   createApiRequestId,
   logApiError,
   logApiInfo,
   startApiTimer,
 } from "@/lib/api/api-logger";
+
+import {
+  getSupabaseAdminClient,
+} from "@/lib/supabase-admin";
 
 import {
   synthesizeVoice,
@@ -23,6 +35,14 @@ const SYNTHESIS_TIMEOUT_MS =
 
 const MAX_SYNTHESIS_TEXT_LENGTH =
   4000;
+
+const VOICE_SYNTHESIS_RATE_LIMIT = {
+  limit:
+    20,
+
+  windowMs:
+    60_000,
+} as const;
 
 type VoiceSynthesisRequestBody = {
   text?:
@@ -50,6 +70,10 @@ export async function POST(
 
     let authenticated =
       false;
+
+    let authenticatedUserId:
+      string | null =
+        null;
 
     if (
       authorizationHeader
@@ -86,6 +110,9 @@ export async function POST(
 
       authenticated =
         true;
+
+      authenticatedUserId =
+        authentication.user.id;
     }
 
     let body:
@@ -161,6 +188,66 @@ export async function POST(
           headers: {
             "x-request-id":
               requestId,
+          },
+        }
+      );
+    }
+
+    const rateLimitIdentity =
+      resolveApiRateLimitIdentity({
+        request,
+
+        userId:
+          authenticatedUserId,
+      });
+
+    const rateLimitClient =
+      getSupabaseAdminClient();
+
+    const rateLimit =
+      await consumePersistentApiRateLimit({
+        client:
+          rateLimitClient,
+
+        key:
+          `voice-synthesis:${rateLimitIdentity.type}:${rateLimitIdentity.value}`,
+
+        policy:
+          VOICE_SYNTHESIS_RATE_LIMIT,
+      });
+
+    if (
+      !rateLimit.allowed
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Too many voice synthesis requests. Please try again shortly.",
+
+          requestId,
+        },
+        {
+          status:
+            429,
+
+          headers: {
+            "x-request-id":
+              requestId,
+
+            "retry-after":
+              String(
+                rateLimit.retryAfterSeconds
+              ),
+
+            "x-ratelimit-limit":
+              String(
+                rateLimit.limit
+              ),
+
+            "x-ratelimit-remaining":
+              String(
+                rateLimit.remaining
+              ),
           },
         }
       );

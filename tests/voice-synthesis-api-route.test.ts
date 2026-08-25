@@ -9,36 +9,74 @@ import {
 
 const {
   mockedAuthenticateApiRequest,
+  mockedConsumePersistentApiRateLimit,
+  mockedResolveApiRateLimitIdentity,
+  mockedGetSupabaseAdminClient,
   mockedCreateApiRequestId,
   mockedLogApiError,
   mockedLogApiInfo,
   mockedStartApiTimer,
   mockedSynthesizeVoice,
-} = vi.hoisted(() => ({
-  mockedAuthenticateApiRequest:
-    vi.fn(),
+} = vi.hoisted(
+  () => ({
+    mockedAuthenticateApiRequest:
+      vi.fn(),
 
-  mockedCreateApiRequestId:
-    vi.fn(),
+    mockedConsumePersistentApiRateLimit:
+      vi.fn(),
 
-  mockedLogApiError:
-    vi.fn(),
+    mockedResolveApiRateLimitIdentity:
+      vi.fn(),
 
-  mockedLogApiInfo:
-    vi.fn(),
+    mockedGetSupabaseAdminClient:
+      vi.fn(),
 
-  mockedStartApiTimer:
-    vi.fn(),
+    mockedCreateApiRequestId:
+      vi.fn(),
 
-  mockedSynthesizeVoice:
-    vi.fn(),
-}));
+    mockedLogApiError:
+      vi.fn(),
+
+    mockedLogApiInfo:
+      vi.fn(),
+
+    mockedStartApiTimer:
+      vi.fn(),
+
+    mockedSynthesizeVoice:
+      vi.fn(),
+  })
+);
 
 vi.mock(
   "@/lib/api/api-auth",
   () => ({
     authenticateApiRequest:
       mockedAuthenticateApiRequest,
+  })
+);
+
+vi.mock(
+  "@/lib/api/api-rate-limit",
+  () => ({
+    consumePersistentApiRateLimit:
+      mockedConsumePersistentApiRateLimit,
+  })
+);
+
+vi.mock(
+  "@/lib/api/api-rate-limit-identity",
+  () => ({
+    resolveApiRateLimitIdentity:
+      mockedResolveApiRateLimitIdentity,
+  })
+);
+
+vi.mock(
+  "@/lib/supabase-admin",
+  () => ({
+    getSupabaseAdminClient:
+      mockedGetSupabaseAdminClient,
   })
 );
 
@@ -129,6 +167,39 @@ describe(
           elapsedMs:
             () => 25,
         });
+
+      mockedGetSupabaseAdminClient
+        .mockReturnValue(
+            {} as never
+        );
+
+      mockedResolveApiRateLimitIdentity
+        .mockReturnValue({
+           type:
+          "anonymous",
+
+          value:
+         "unknown",
+        });
+
+mockedConsumePersistentApiRateLimit
+  .mockResolvedValue({
+    allowed:
+      true,
+
+    limit:
+      20,
+
+    remaining:
+      19,
+
+    resetAt:
+      Date.now() +
+      60_000,
+
+    retryAfterSeconds:
+      0,
+  });
 
       mockedSynthesizeVoice
         .mockResolvedValue({
