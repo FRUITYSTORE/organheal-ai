@@ -8,6 +8,14 @@ import {
 } from "@/lib/api/api-auth";
 
 import {
+  resolveApiRateLimitIdentity,
+} from "@/lib/api/api-rate-limit-identity";
+
+import {
+  consumePersistentApiRateLimit,
+} from "@/lib/api/api-rate-limit";
+
+import {
   createApiRequestId,
   logApiError,
   logApiInfo,
@@ -27,6 +35,14 @@ import {
 
 export const runtime =
   "nodejs";
+
+const PDF_EXTRACTION_RATE_LIMIT = {
+  limit:
+    10,
+
+  windowMs:
+    60_000,
+} as const;
 
 type ExtractPdfRequestPayload = {
   reportId?:
@@ -351,10 +367,70 @@ export async function POST(
       );
     }
 
-    const adminClient =
-      getSupabaseAdminClient();
+      const rateLimitIdentity =
+        resolveApiRateLimitIdentity({
+        request,
 
-    const backgroundJobService =
+        userId:
+        user.id,
+     });
+
+      const adminClient =
+        getSupabaseAdminClient();
+
+      const rateLimit =
+        await consumePersistentApiRateLimit({
+        client:
+        adminClient,
+
+      key:
+      `pdf-extraction:${rateLimitIdentity.type}:${rateLimitIdentity.value}`,
+
+      policy:
+      PDF_EXTRACTION_RATE_LIMIT,
+   });
+
+if (
+  !rateLimit.allowed
+) {
+  return NextResponse.json(
+    {
+      success:
+        false,
+
+      error:
+        "Too many report extraction requests. Please try again shortly.",
+
+      requestId,
+    },
+    {
+      status:
+        429,
+
+      headers: {
+        "x-request-id":
+          requestId,
+
+        "retry-after":
+          String(
+            rateLimit.retryAfterSeconds
+          ),
+
+        "x-ratelimit-limit":
+          String(
+            rateLimit.limit
+          ),
+
+        "x-ratelimit-remaining":
+          String(
+            rateLimit.remaining
+          ),
+      },
+    }
+  );
+}
+
+const backgroundJobService =
       new BackgroundJobService(
         adminClient
       );
