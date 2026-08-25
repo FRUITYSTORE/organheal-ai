@@ -56,14 +56,14 @@ export function createBackgroundJobRuntime(
   const dispatcher =
     new JobDispatcher();
 
-   dispatcher.register(
+  dispatcher.register(
     JOB_TYPES.PDF_EXTRACTION,
     createPdfExtractionHandler(
       client
     )
   );
 
-    dispatcher.register(
+  dispatcher.register(
     JOB_TYPES.FOLLOW_UP_DELIVERY,
     createFollowUpDeliveryHandler(
       client
@@ -81,7 +81,7 @@ export function createBackgroundJobRuntime(
       dispatcher
     );
 
-    const runner =
+  const runner =
     new DurableBackgroundJobRunner(
       worker,
       repository

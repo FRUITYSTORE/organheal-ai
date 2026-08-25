@@ -185,3 +185,49 @@ on function public.consume_api_rate_limit(
   integer
 )
 to service_role;
+create or replace function public.cleanup_expired_api_rate_limits(
+  p_retention_seconds integer default 3600
+)
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_deleted_count integer;
+begin
+  if
+    p_retention_seconds < 0
+  then
+    raise exception
+      'Retention seconds must not be negative.';
+  end if;
+
+  delete from public.api_rate_limits
+  where
+    window_expires_at <
+    clock_timestamp() -
+      make_interval(
+        secs => p_retention_seconds
+      );
+
+  get diagnostics
+    v_deleted_count =
+      row_count;
+
+  return
+    v_deleted_count;
+end;
+$$;
+
+revoke all
+on function public.cleanup_expired_api_rate_limits(
+  integer
+)
+from public, anon, authenticated;
+
+grant execute
+on function public.cleanup_expired_api_rate_limits(
+  integer
+)
+to service_role;

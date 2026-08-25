@@ -10,6 +10,7 @@ import {
 import {
   createApiRequestId,
   logApiError,
+  logApiInfo,
   logApiWarning,
 } from "@/lib/api/api-logger";
 
@@ -17,11 +18,18 @@ import {
   createBackgroundJobRuntime,
 } from "@/lib/jobs/background-job-runtime";
 
+import {
+  getSupabaseAdminClient,
+} from "@/lib/supabase-admin";
+
 export const runtime =
   "nodejs";
 
 const CRON_BATCH_SIZE =
   10;
+
+const API_RATE_LIMIT_RETENTION_SECONDS =
+  3600;
 
 function secretsMatch(
   providedSecret: string,
@@ -123,13 +131,82 @@ export async function GET(
       createBackgroundJobRuntime();
 
     const result =
-      await runtimeInstance
-        .runner
-        .runBatch(
-          CRON_BATCH_SIZE
-        );
+  await runtimeInstance
+    .runner
+    .runBatch(
+      CRON_BATCH_SIZE
+    );
 
-    return NextResponse.json(
+try {
+  const adminClient =
+    getSupabaseAdminClient();
+
+  const {
+    data:
+      deletedRateLimitRows,
+    error:
+      cleanupError,
+  } =
+    await adminClient.rpc(
+      "cleanup_expired_api_rate_limits",
+      {
+        p_retention_seconds:
+          API_RATE_LIMIT_RETENTION_SECONDS,
+      }
+    );
+
+  if (cleanupError) {
+    logApiWarning(
+      "background_jobs_cron.rate_limit_cleanup_failed",
+      {
+        route:
+          "/api/internal/background-jobs/cron",
+
+        requestId,
+
+        supabaseErrorCode:
+          cleanupError.code,
+
+        errorMessage:
+          cleanupError.message,
+      }
+    );
+  } else {
+    logApiInfo(
+      "background_jobs_cron.rate_limit_cleanup_completed",
+      {
+        route:
+          "/api/internal/background-jobs/cron",
+
+        requestId,
+
+        deletedRows:
+          typeof deletedRateLimitRows ===
+            "number"
+            ? deletedRateLimitRows
+            : null,
+      }
+    );
+  }
+} catch (cleanupError) {
+  logApiWarning(
+    "background_jobs_cron.rate_limit_cleanup_failed",
+    {
+      route:
+        "/api/internal/background-jobs/cron",
+
+      requestId,
+
+      errorMessage:
+        cleanupError instanceof
+          Error
+          ? cleanupError.message
+          : "Unknown cleanup error.",
+    }
+  );
+}
+
+return NextResponse.json(
       {
         success:
           true,
