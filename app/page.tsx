@@ -8,7 +8,7 @@ import {
   getReportsLibrary,
   type ReportsLibraryCard,
 } from "@/lib/services/reports/reports.service";
-
+import VoiceInputButton from "@/app/components/voice/VoiceInputButton";
 type Language = "en" | "ar";
 
 type TrustCard = {
@@ -900,27 +900,28 @@ if (
           position: relative;
           z-index: 1;
           display: grid;
-          grid-template-columns: minmax(0, 0.92fr) minmax(420px, 1.08fr);
-          gap: clamp(30px, 5vw, 72px);
+          grid-template-columns: minmax(0, 1fr);
+          gap: clamp(32px, 5vw, 56px);
           align-items: start;
         }
 
         .publicHomePage .homeCommandIntro {
+          width: 100%;
+          max-width: 920px;
           min-width: 0;
         }
 
         .publicHomePage .homeCommandBadge {
           display: inline-flex;
           align-items: center;
-          gap: 9px;
-          padding: 8px 12px;
-          border: 1px solid rgba(15, 118, 110, 0.2);
-          border-radius: 999px;
-          background: rgba(240, 253, 250, 0.82);
+          gap: 10px;
+          padding: 0;
+          border: 0;
+          background: transparent;
           color: #0f766e;
-          font-size: 0.78rem;
-          font-weight: 900;
-          letter-spacing: 0.04em;
+          font-size: 0.76rem;
+          font-weight: 850;
+          letter-spacing: 0.08em;
           text-transform: uppercase;
         }
 
@@ -933,35 +934,38 @@ if (
         }
 
         .publicHomePage .homeCommandTitle {
-          max-width: 760px;
-          margin-top: 22px;
-          font-size: clamp(2.75rem, 5.4vw, 5.6rem);
-          line-height: 0.98;
-          letter-spacing: -0.055em;
+          max-width: 860px;
+          margin-top: 28px;
+          font-size: clamp(3rem, 5.8vw, 6rem);
+          line-height: 0.96;
+          letter-spacing: -0.06em;
+          text-wrap: balance;
         }
 
         .publicHomePage .homeCommandLead {
-          max-width: 700px;
-          margin-top: 22px;
-          font-size: clamp(1rem, 1.35vw, 1.18rem);
-          line-height: 1.8;
+          max-width: 660px;
+          margin-top: 26px;
+          font-size: clamp(1.04rem, 1.3vw, 1.2rem);
+          line-height: 1.7;
+          text-wrap: pretty;
         }
 
         .publicHomePage .homePrimaryActions {
           display: flex;
           flex-wrap: wrap;
-          align-items: stretch;
-          gap: 12px;
-          margin-top: 28px;
+          align-items: center;
+          gap: 14px;
+          margin-top: 34px;
         }
 
         .publicHomePage .homeUploadAction {
           display: inline-flex;
           align-items: center;
           justify-content: flex-start;
-          gap: 12px;
-          min-width: min(100%, 300px);
-          padding: 13px 18px;
+          gap: 13px;
+          min-width: min(100%, 320px);
+          min-height: 64px;
+          padding: 14px 20px;
         }
 
         .publicHomePage .homeUploadAction span:last-child {
@@ -997,6 +1001,16 @@ if (
         .publicHomePage .homePrimaryActions .homeSecondaryAction {
           min-height: 52px;
           justify-content: center;
+        }
+
+        .publicHomePage .homePrimaryActions .homeAskAction {
+          min-width: 156px;
+          min-height: 56px;
+          padding: 13px 20px;
+          border-color: rgba(15, 118, 110, 0.2);
+          background: rgba(255, 255, 255, 0.7);
+          box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+          backdrop-filter: blur(12px);
         }
 
         .publicHomePage .homeUtilityAction {
@@ -1075,12 +1089,13 @@ if (
 
         .publicHomePage .homePrivacyPromise {
           display: flex;
-          gap: 12px;
-          margin-top: 24px;
-          padding: 15px;
-          border: 1px solid rgba(15, 118, 110, 0.16);
-          border-radius: 18px;
-          background: rgba(255, 255, 255, 0.72);
+          max-width: 620px;
+          align-items: flex-start;
+          gap: 11px;
+          margin-top: 30px;
+          padding: 0;
+          border: 0;
+          background: transparent;
         }
 
         .publicHomePage .homePrivacyIcon {
@@ -1096,14 +1111,15 @@ if (
         }
 
         .publicHomePage .homePrivacyPromise strong {
-          color: #0f172a;
-          font-size: 0.91rem;
+          color: #334155;
+          font-size: 0.84rem;
+          font-weight: 800;
         }
 
         .publicHomePage .homePrivacyPromise p {
-          margin: 4px 0 0;
-          color: #526077;
-          font-size: 0.78rem;
+          margin: 3px 0 0;
+          color: #64748b;
+          font-size: 0.76rem;
           line-height: 1.55;
         }
 
@@ -1146,6 +1162,7 @@ if (
         .publicHomePage .homeAICommandCard {
           position: relative;
           min-width: 0;
+          width: 100%;
           overflow: hidden;
           padding: clamp(22px, 3vw, 32px);
           border: 1px solid rgba(99, 102, 241, 0.2);
@@ -1803,18 +1820,18 @@ if (
                 {isLoggedIn
                   ? homeHealthFocus?.title
                   : text(
-  "Build your personal health intelligence over time.",
-  "ابنِ ذكاءك الصحي الشخصي مع مرور الوقت."
-)}
+                      "Your health, understood over time.",
+                      "صحتك، بفهمٍ أعمق مع مرور الوقت."
+                    )}
               </h1>
 
               <p className="ohLead homeCommandLead">
                 {isLoggedIn
                   ? homeHealthFocus?.description
                   : text(
-  "OrganHeal AI securely connects your medical reports, health assessments, daily check-ins, and health history to help you understand how your health is changing over time—and what to do next.",
-  "يربط OrganHeal AI تقاريرك الطبية وتقييماتك الصحية والمتابعات اليومية وسجلّك الصحي بشكل آمن، ليساعدك على فهم كيف تتغير صحتك مع مرور الوقت وما هي الخطوة التالية المناسبة."
-)}
+                      "OrganHeal connects your reports and health history to show you what matters, what changed, and what to do next.",
+                      "يربط OrganHeal تقاريرك وسجلّك الصحي ليُظهر لك ما الذي يهم الآن، وما الذي تغيّر، وما هي خطوتك التالية."
+                    )}
               </p>
 
               <div className="homePrimaryActions">
@@ -1846,28 +1863,14 @@ if (
                     </Link>
 
                     <Link
-                      href="/reports"
-                      className="secondaryBtn homeSecondaryAction homeUtilityAction"
+                      href="/assistant"
+                      className="secondaryBtn homeSecondaryAction homeAskAction"
                     >
-                      {text("Reports", "التقارير")}
+                      {text(
+                        "Ask OrganHeal",
+                        "اسأل OrganHeal"
+                      )}
                     </Link>
-
-                    <Link
-                      href="/lab-upload"
-                      className="secondaryBtn homeSecondaryAction homeUtilityAction"
-                    >
-                      {text("Upload Report", "رفع تقرير")}
-                    </Link>
-
-                    <Link
-  href="/assistant"
-  className="secondaryBtn homeSecondaryAction homeUtilityAction"
->
-  {text(
-    "Ask OrganHeal AI",
-    "اسأل OrganHeal AI"
-  )}
-</Link>
                   </>
                 ) : (
                   <>
@@ -1921,51 +1924,7 @@ if (
                 </div>
               </div>
 
-              <div className="homeProductPromise">
-  <span aria-hidden="true">✦</span>
-
-  <p>
-    {text(
-      "Every report, assessment, and check-in helps OrganHeal AI build a more complete understanding of your health over time.",
-      "كل تقرير أو تقييم أو متابعة تضيفها تساعد OrganHeal AI على بناء فهم أشمل لصحتك مع مرور الوقت."
-    )}
-  </p>
-</div>
-
-<div
-  className="homeJourneyPreview"
-  aria-label={text(
-    "Personal health intelligence journey",
-    "رحلة الذكاء الصحي الشخصي"
-  )}
->
-  <div className="homeJourneyItem">
-    <span>01</span>
-    <strong>{text("Build Health History", "ابنِ سجلك الصحي")}</strong>
-  </div>
-
-  <div className="homeJourneyConnector" aria-hidden="true">→</div>
-
-  <div className="homeJourneyItem">
-    <span>02</span>
-    <strong>{text("Connect Reports", "اربط تقاريرك")}</strong>
-  </div>
-
-  <div className="homeJourneyConnector" aria-hidden="true">→</div>
-
-  <div className="homeJourneyItem">
-    <span>03</span>
-    <strong>{text("Understand Changes", "افهم التغيرات")}</strong>
-  </div>
-
-  <div className="homeJourneyConnector" aria-hidden="true">→</div>
-
-  <div className="homeJourneyItem">
-    <span>04</span>
-    <strong>{text("Take the Next Step", "اتخذ الخطوة التالية")}</strong>
-  </div>
-</div>
-            </div>
+                          </div>
 
             <aside
               className="homeAICommandCard"
@@ -2053,48 +2012,59 @@ if (
                 />
 
                 <div className="homeAIComposerActions">
-                  <Link href="/lab-upload" className="homeAttachAction">
-                    <span aria-hidden="true">＋</span>
-                    {text("Attach report", "إرفاق تقرير")}
-                  </Link>
+  <div className="homeAIInputActions">
+    <VoiceInputButton
+      language={language}
+      disabled={heroLoading}
+      realtimeEnabled={isLoggedIn}
+      onTranscript={(transcript) => {
+        setHeroQuestion(transcript);
+      }}
+    />
 
-                  <button
-                    type="button"
-                    className="primaryBtn homeAskAction"
-                    onClick={askHeroAI}
-                    disabled={heroLoading || !heroQuestion.trim()}
-                  >
-                    {heroLoading
-                      ? text("Thinking...", "جاري التفكير...")
-                      : text("Ask OrganHeal AI", "اسأل OrganHeal AI")}
-                  </button>
-                </div>
+    <Link href="/lab-upload" className="homeAttachAction">
+      <span aria-hidden="true">＋</span>
+      {text("Attach report", "إرفاق تقرير")}
+    </Link>
+  </div>
+
+  <button
+    type="button"
+    className="primaryBtn homeAskAction"
+    onClick={askHeroAI}
+    disabled={heroLoading || !heroQuestion.trim()}
+  >
+    {heroLoading
+      ? text("Thinking...", "جاري التفكير...")
+      : text("Ask OrganHeal AI", "اسأل OrganHeal AI")}
+  </button>
+</div>
               </div>
 
               {heroAnswer && (
-  <div className="homeAIAnswer">
-    <div className="homeAIAnswerHeader">
-      <span aria-hidden="true">AI</span>
+                <div className="homeAIAnswer">
+                  <div className="homeAIAnswerHeader">
+                    <span aria-hidden="true">AI</span>
 
-      <strong>
-        {text("OrganHeal response", "إجابة OrganHeal")}
-      </strong>
-    </div>
+                    <strong>
+                      {text("OrganHeal response", "إجابة OrganHeal")}
+                    </strong>
+                  </div>
 
-    <p>{heroAnswer}</p>
+                  <p>{heroAnswer}</p>
 
-    {heroAction && (
-      <div style={{ marginTop: "14px" }}>
-        <Link
-          href={heroAction.href}
-          className="secondaryBtn"
-        >
-          {heroAction.label}
-        </Link>
-      </div>
-    )}
-  </div>
-)}
+                  {heroAction && (
+                    <div style={{ marginTop: "14px" }}>
+                      <Link
+                        href={heroAction.href}
+                        className="secondaryBtn"
+                      >
+                        {heroAction.label}
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="homeAIOutcomePanel">
                 <p>
@@ -2119,6 +2089,65 @@ if (
                 )}
               </p>
             </aside>
+
+            <div className="homeProductPromise">
+              <span aria-hidden="true">✦</span>
+
+              <p>
+                {text(
+                  "Every report, assessment, and check-in helps OrganHeal AI build a more complete understanding of your health over time.",
+                  "كل تقرير أو تقييم أو متابعة تضيفها تساعد OrganHeal AI على بناء فهم أشمل لصحتك مع مرور الوقت."
+                )}
+              </p>
+            </div>
+
+            <div
+              className="homeJourneyPreview"
+              aria-label={text(
+                "Personal health intelligence journey",
+                "رحلة الذكاء الصحي الشخصي"
+              )}
+            >
+              <div className="homeJourneyItem">
+                <span>01</span>
+                <strong>
+                  {text("Build Health History", "ابنِ سجلك الصحي")}
+                </strong>
+              </div>
+
+              <div className="homeJourneyConnector" aria-hidden="true">
+                →
+              </div>
+
+              <div className="homeJourneyItem">
+                <span>02</span>
+                <strong>
+                  {text("Connect Reports", "اربط تقاريرك")}
+                </strong>
+              </div>
+
+              <div className="homeJourneyConnector" aria-hidden="true">
+                →
+              </div>
+
+              <div className="homeJourneyItem">
+                <span>03</span>
+                <strong>
+                  {text("Understand Changes", "افهم التغيرات")}
+                </strong>
+              </div>
+
+              <div className="homeJourneyConnector" aria-hidden="true">
+                →
+              </div>
+
+              <div className="homeJourneyItem">
+                <span>04</span>
+                <strong>
+                  {text("Take the Next Step", "اتخذ الخطوة التالية")}
+                </strong>
+              </div>
+            </div>
           </div>
         </section>
         {isLoggedIn && (

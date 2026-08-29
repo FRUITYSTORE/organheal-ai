@@ -30,6 +30,9 @@ type VoiceInputButtonProps = {
   disabled?:
     boolean;
 
+  realtimeEnabled?:
+    boolean;
+
   onTranscript:
     (
       transcript:
@@ -132,6 +135,8 @@ export default function VoiceInputButton({
   language,
   disabled =
     false,
+  realtimeEnabled =
+    true,
   onTranscript,
 }: VoiceInputButtonProps) {
   const isArabic =
@@ -638,16 +643,34 @@ export default function VoiceInputButton({
         return;
       }
 
-     setUseFallback(
-  false
-);
+      if (
+        !realtimeEnabled
+      ) {
+        setUseFallback(
+          true
+        );
 
-setRealtimeFailed(
-  false
-);
+        setRealtimeFailed(
+          false
+        );
 
-await startRealtime();
-};
+        resetRecording();
+
+        await startRecording();
+
+        return;
+      }
+
+      setUseFallback(
+        false
+      );
+
+      setRealtimeFailed(
+        false
+      );
+
+      await startRealtime();
+    };
 
   const waveformBars =
     [
