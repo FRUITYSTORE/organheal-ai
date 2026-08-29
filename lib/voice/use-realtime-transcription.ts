@@ -315,21 +315,26 @@ export function useRealtimeTranscription(
             dataChannel;
 dataChannel.onopen =
   () => {
-    console.log(
-      "[VOICE REALTIME CONNECTED]",
-      {
-        readyState:
-          dataChannel.readyState,
+    if (
+  process.env.NODE_ENV ===
+  "development"
+) {
+  console.log(
+    "[VOICE REALTIME CONNECTED]",
+    {
+      readyState:
+        dataChannel.readyState,
 
-        peerConnectionState:
-          peerConnection
-            .connectionState,
+      peerConnectionState:
+        peerConnection
+          .connectionState,
 
-        iceConnectionState:
-          peerConnection
-            .iceConnectionState,
-      }
-    );
+      iceConnectionState:
+        peerConnection
+          .iceConnectionState,
+    }
+  );
+}
 
     dataChannel.send(
       JSON.stringify({
@@ -442,30 +447,35 @@ dataChannel.onopen =
       }
     );
 
-    console.log(
-      "[VOICE AUDIO OUTBOUND]",
-      {
-        trackEnabled:
-          track
-            ?.enabled,
+    if (
+  process.env.NODE_ENV ===
+  "development"
+) {
+  console.log(
+    "[VOICE AUDIO OUTBOUND]",
+    {
+      trackEnabled:
+        track
+          ?.enabled,
 
-        trackMuted:
-          track
-            ?.muted,
+      trackMuted:
+        track
+          ?.muted,
 
-        readyState:
-          track
-            ?.readyState,
+      readyState:
+        track
+          ?.readyState,
 
-        label:
-          track
-            ?.label,
+      label:
+        track
+          ?.label,
 
-        bytesSent,
+      bytesSent,
 
-        packetsSent,
-      }
-    );
+      packetsSent,
+    }
+  );
+}
   },
   3000
 );
@@ -473,10 +483,6 @@ dataChannel.onopen =
             (
               event
             ) => {
-                console.log(
-  "[VOICE REALTIME RAW EVENT]",
-  event.data
-);
               try {
                 const payload =
                   JSON.parse(
@@ -489,10 +495,6 @@ dataChannel.onopen =
   typeof payload.delta ===
     "string"
 ) {
-  console.log(
-    "[VOICE REALTIME DELTA]",
-    payload.delta
-  );
 if (
   process.env.NODE_ENV ===
   "development"
@@ -522,18 +524,9 @@ if (
   const transcript =
     payload.transcript.trim();
 
-  console.log(
-    "[VOICE REALTIME COMPLETED]",
-    transcript
-  );
-
   if (
   transcript
 ) {
-  console.log(
-    "[VOICE REALTIME COMPLETED]",
-    transcript
-  );
 
   setLiveTranscript(
     transcript
@@ -557,10 +550,15 @@ if (
   payload.type ===
   "conversation.item.input_audio_transcription.failed"
 ) {
+  if (
+  process.env.NODE_ENV ===
+  "development"
+) {
   console.error(
     "[VOICE REALTIME TRANSCRIPTION FAILED]",
     payload
   );
+}
 
   return;
 }
@@ -569,10 +567,15 @@ if (
   payload.type ===
   "error"
 ) {
+  if (
+  process.env.NODE_ENV ===
+  "development"
+) {
   console.error(
     "[VOICE REALTIME ERROR]",
     payload
   );
+}
 }
               } catch {
                 // Ignore unrelated
@@ -582,16 +585,27 @@ if (
 
           dataChannel.onerror =
   (event) => {
-    console.error(
-      "[VOICE REALTIME DATA CHANNEL ERROR]",
-      event
-    );
+    if (
+      process.env.NODE_ENV ===
+      "development"
+    ) {
+      console.error(
+        "[VOICE REALTIME DATA CHANNEL ERROR]",
+        event
+      );
+    }
+
     dataChannel.onclose =
-  () => {
-    console.log(
-      "[VOICE REALTIME DATA CHANNEL CLOSED]"
-    );
-  };
+      () => {
+        if (
+          process.env.NODE_ENV ===
+          "development"
+        ) {
+          console.log(
+            "[VOICE REALTIME DATA CHANNEL CLOSED]"
+          );
+        }
+      };
               setStatus(
                 "error"
               );
