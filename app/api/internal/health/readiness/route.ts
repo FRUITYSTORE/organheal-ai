@@ -132,7 +132,7 @@ async function checkDatabase(
         ),
         {
           route:
-            "/api/health",
+            "/api/internal/health/readiness",
 
           requestId,
 
@@ -167,7 +167,7 @@ async function checkDatabase(
       error,
       {
         route:
-          "/api/health",
+          "/api/internal/health/readiness",
 
         requestId,
 
@@ -294,7 +294,7 @@ async function checkBackgroundJobsQueue(
         ),
         {
           route:
-            "/api/health",
+            "/api/internal/health/readiness",
 
           requestId,
 
@@ -369,7 +369,7 @@ async function checkBackgroundJobsQueue(
       error,
       {
         route:
-          "/api/health",
+          "/api/internal/health/readiness",
 
         requestId,
 
@@ -531,7 +531,7 @@ if (
 
   const logDetails = {
     route:
-      "/api/health",
+      "/api/internal/health/readiness",
 
     requestId,
 
