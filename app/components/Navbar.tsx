@@ -247,10 +247,23 @@ export default function Navbar() {
       <div className="navLinks">
         {isLoggedIn ? (
           <>
-            <Link href="/dashboard">{labels.dashboard}</Link>
+            <Link href="/dashboard">
+              {language === "ar" ? "صحتي" : "My Health"}
+            </Link>
+
+            <Link href="/assistant">
+              {language === "ar" ? "اسأل OrganHeal" : "Ask OrganHeal"}
+            </Link>
+
             <Link href="/reports">{labels.reports}</Link>
-            <Link href="/health-plan">{labels.healthPlan}</Link>
-            <Link href="/library">{labels.education}</Link>
+
+            <Link href="/health-plan">
+              {language === "ar" ? "الخطة" : "Plan"}
+            </Link>
+
+            <Link href="/library">
+              {language === "ar" ? "تعلّم" : "Learn"}
+            </Link>
 
             <div className="navMoreMenu" ref={moreMenuRef}>
               <button
@@ -265,10 +278,6 @@ export default function Navbar() {
 
               {isMoreOpen && (
                 <div className="navMorePanel" role="menu">
-                  <Link href="/" onClick={closeMore}>
-                    {labels.home}
-                  </Link>
-
                   <Link href="/history" onClick={closeMore}>
                     {labels.history}
                   </Link>
