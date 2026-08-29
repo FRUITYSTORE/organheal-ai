@@ -4,8 +4,17 @@ const url =
   process.env.LOAD_TEST_URL ??
   "http://localhost:3000/api/health";
 
-const connections = 10;
-const duration = 15;
+const connections =
+  Number(
+    process.env.LOAD_TEST_CONNECTIONS ??
+      10
+  );
+
+const duration =
+  Number(
+    process.env.LOAD_TEST_DURATION ??
+      15
+  );
 
 const thresholds = {
   averageLatencyMs: 1500,
