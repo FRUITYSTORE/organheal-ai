@@ -223,6 +223,10 @@ export default function Navbar() {
           background: rgba(20, 184, 166, 0.14);
         }
 
+        .navMobileCta {
+          display: none;
+        }
+
         .navMobileTrigger {
           display: none;
           width: 46px;
@@ -244,10 +248,26 @@ export default function Navbar() {
         }
 
         @media (max-width: 900px) {
-          .navMobileTrigger {
-            display: block;
-            margin-inline-start: auto;
-          }
+        .navMobileCta {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 44px;
+          margin-inline-start: auto;
+          padding: 0 16px;
+          border-radius: 14px;
+          background: linear-gradient(135deg, #22d3ee, #38bdf8);
+          color: #07111f;
+          font-size: 0.88rem;
+          font-weight: 900;
+          text-decoration: none;
+          white-space: nowrap;
+        }
+
+        .navMobileTrigger {
+          display: block;
+          margin-inline-start: 0;
+        }
 
           .navLinks {
             display: none;
@@ -294,17 +314,30 @@ export default function Navbar() {
         </div>
       </Link>
 
-      <button
-        type="button"
-        className="navMobileTrigger"
-        aria-label={isArabic ? "فتح قائمة التنقل" : "Open navigation menu"}
-        aria-expanded={isMobileMenuOpen}
-        onClick={() => setIsMobileMenuOpen((current) => !current)}
-      >
-        <span />
-        <span />
-        <span />
-      </button>
+      <Link
+  href={isLoggedIn ? "/assistant" : "/signup"}
+  className="navMobileCta"
+>
+  {isLoggedIn
+    ? isArabic
+      ? "اسأل AI"
+      : "Ask AI"
+    : isArabic
+      ? "ابدأ مجانًا"
+      : "Start Free"}
+</Link>
+
+<button
+  type="button"
+  className="navMobileTrigger"
+  aria-label={isArabic ? "فتح قائمة التنقل" : "Open navigation menu"}
+  aria-expanded={isMobileMenuOpen}
+  onClick={() => setIsMobileMenuOpen((current) => !current)}
+>
+  <span />
+  <span />
+  <span />
+</button>
 
       <div className={`navLinks ${isMobileMenuOpen ? "navLinksOpen" : ""}`}>
         {isLoggedIn ? (
