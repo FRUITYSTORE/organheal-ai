@@ -449,6 +449,10 @@ if (
           padding: 38px;
         }
 
+        .homeJourneyDescription {
+          color: #475569;
+        }
+
         .publicHomePage .homeHero::before {
           content: "";
           position: absolute;
@@ -1864,7 +1868,7 @@ if (
             <div className="homeProductPromise">
               <span aria-hidden="true">✦</span>
 
-              <p>
+              <p className="homeJourneyDescription">
                 {text(
                   "Every report, assessment, and check-in helps OrganHeal AI build a more complete understanding of your health over time.",
                   "كل تقرير أو تقييم أو متابعة تضيفها تساعد OrganHeal AI على بناء فهم أشمل لصحتك مع مرور الوقت."

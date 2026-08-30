@@ -351,6 +351,22 @@ export default function LoginPage() {
           gap: 16px;
         }
 
+        .loginCommandPage .ohContainer > .loginForm {
+          padding: clamp(28px, 4vw, 44px);
+          gap: 24px;
+        }
+
+        .loginCommandPage .ohContainer > .loginForm .ohTitle {
+          font-size: clamp(2.2rem, 4vw, 3.35rem);
+          line-height: 1;
+        }
+
+        .loginCommandPage .ohContainer > .loginForm .ohLead {
+          max-width: 560px;
+          font-size: 1.02rem;
+          line-height: 1.7;
+        }
+
         .loginCommandPage .loginField {
           display: grid;
           gap: 8px;
@@ -365,13 +381,14 @@ export default function LoginPage() {
         .loginCommandPage input[type="text"],
         .loginCommandPage input[type="password"] {
           width: 100%;
-          min-height: 48px;
+          min-height: 54px;
           border-radius: 14px;
           border: 1px solid rgba(148, 163, 184, 0.36);
           background: rgba(255, 255, 255, 0.94);
           color: var(--oh-text);
           padding: 12px 14px;
           font: inherit;
+          font-size: 1rem;
           outline: none;
         }
 
@@ -404,29 +421,12 @@ export default function LoginPage() {
           justify-content: center;
         }
 
-        .loginCommandPage .loginHelpActions {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 10px;
+        .loginCommandPage .loginSubmit {
+          min-height: 54px;
+          font-size: 1rem;
+          font-weight: 900;
         }
 
-        .loginCommandPage .loginHelpActions button {
-          min-height: 44px;
-          border: 1px solid rgba(148, 163, 184, 0.32);
-          border-radius: 14px;
-          background: rgba(255, 255, 255, 0.82);
-          color: var(--oh-text);
-          font-weight: 800;
-          cursor: pointer;
-          padding: 10px 12px;
-        }
-
-        .loginCommandPage .loginHelpActions button:hover:not(:disabled) {
-          border-color: rgba(20, 184, 166, 0.52);
-          color: #0f766e;
-        }
-
-        .loginCommandPage .loginHelpActions button:disabled,
         .loginCommandPage .primaryBtn:disabled {
           opacity: 0.62;
           cursor: not-allowed;
@@ -449,124 +449,85 @@ export default function LoginPage() {
           background: rgba(148, 163, 184, 0.28);
         }
 
+                .loginCommandPage .loginTextAction {
+          border: 0;
+          background: transparent;
+          color: #0f766e;
+          font: inherit;
+          font-weight: 850;
+          cursor: pointer;
+          padding: 4px;
+          justify-self: center;
+        }
+
+        .loginCommandPage .loginTextAction.secondary {
+          color: var(--oh-muted);
+          font-size: 0.9rem;
+        }
+
+        .loginCommandPage .loginTextAction:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        .loginCommandPage .loginPrivacyNote {
+          display: grid;
+          gap: 4px;
+          padding-top: 18px;
+          border-top: 1px solid rgba(148, 163, 184, 0.22);
+          color: var(--oh-muted);
+          text-align: center;
+          line-height: 1.55;
+          font-size: 0.9rem;
+        }
+
+        .loginCommandPage .loginPrivacyNote strong {
+          color: #0f766e;
+        }
+
         @media (max-width: 760px) {
-          .loginCommandPage .loginHelpActions {
-            grid-template-columns: 1fr;
-          }
         }
       `}</style>
 
-      <div className="ohContainer ohStack large" style={{ padding: "32px 0 64px" }}>
-        <section className="ohHero">
-          <div className="ohHeroGrid">
-            <div>
-              <p className="ohEyebrow">
-                {text("Sign in to OrganHeal", "تسجيل الدخول إلى OrganHeal")}
-              </p>
+      <div
+        className="ohContainer"
+        style={{
+          padding: "32px 0 64px",
+          maxWidth: "760px",
+        }}
+      >
+        <section className="ohCard loginForm">
+          <div>
+            <p className="ohEyebrow">
+              {text("Sign in to OrganHeal", "تسجيل الدخول إلى OrganHeal")}
+            </p>
 
-              <h1 className="ohTitle">
-                {text(
-                  "Return to your health analysis journey.",
-                  "ارجع إلى رحلتك مع التحليل الصحي."
-                )}
-              </h1>
+            <h1 className="ohTitle" style={{ marginTop: "12px" }}>
+              {text("Welcome back.", "مرحبًا بعودتك.")}
+            </h1>
 
-              <p className="ohLead">
-                {text(
-                  "Sign in to access your private health workspace. If you were redirected from a protected page, OrganHeal will return you there after login.",
-                  "سجّل الدخول للوصول إلى مساحتك الصحية الخاصة. إذا تم تحويلك من صفحة محمية، سيعيدك OrganHeal إليها بعد الدخول."
-                )}
-              </p>
-
-              <div className="ohButtonRow" style={{ marginTop: "24px" }}>
-                <Link href="/" className="secondaryBtn">
-                  {text("Back Home", "العودة للرئيسية")}
-                </Link>
-
-                <Link href="/signup" className="primaryBtn">
-                  {text("Create Free Account", "إنشاء حساب مجاني")}
-                </Link>
-              </div>
-            </div>
-
-            <div className="ohCard">
-              <div className="ohCardHeader">
-                <div>
-                  <p className="ohMetricLabel">
-                    {text("Smart login flow", "مسار دخول ذكي")}
-                  </p>
-
-                  <h2 className="ohCardTitle" style={{ marginTop: "8px" }}>
-                    {text("Email or username", "البريد أو اسم المستخدم")}
-                  </h2>
-                </div>
-
-                <span className="ohStatusBadge good">
-                  {text("Secure", "آمن")}
-                </span>
-              </div>
-
-              <div className="ohTimeline">
-                <div className="ohTimelineItem">
-                  <span className="ohTimelineDot" />
-                  <p className="ohTimelineTitle">
-                    {text("Login with email or username", "الدخول بالبريد أو اسم المستخدم")}
-                  </p>
-                </div>
-
-                <div className="ohTimelineItem">
-                  <span className="ohTimelineDot" />
-                  <p className="ohTimelineTitle">
-                    {text("New users go to onboarding", "المستخدم الجديد يذهب إلى صفحة البداية")}
-                  </p>
-                </div>
-
-                <div className="ohTimelineItem">
-                  <span className="ohTimelineDot" />
-                  <p className="ohTimelineTitle">
-                    {text("Existing users return to dashboard", "المستخدم الحالي يعود إلى لوحة التحكم")}
-                  </p>
-                </div>
-
-                <div className="ohTimelineItem">
-                  <span className="ohTimelineDot" />
-                  <p className="ohTimelineTitle">
-                    {text("Email confirmation is required", "تأكيد البريد مطلوب")}
-                  </p>
-                </div>
-              </div>
-            </div>
+            <p className="ohLead" style={{ marginBottom: 0 }}>
+              {text(
+                "Access your private health workspace and continue where you left off.",
+                "ادخل إلى مساحتك الصحية الخاصة وتابع من حيث توقفت."
+              )}
+            </p>
           </div>
-        </section>
 
-        <section className="ohGrid cols2">
-          <form className="ohCard loginForm" onSubmit={handleLogin}>
-            <div className="ohCardHeader">
-              <div>
-                <p className="ohMetricLabel">
-                  {text("Account login", "دخول الحساب")}
-                </p>
-
-                <h2 className="ohCardTitle">
-                  {text("Access your dashboard", "الدخول إلى لوحة التحكم")}
-                </h2>
-
-                <p className="ohCardText">
-                  {text(
-                    "Use your email or the username you selected during signup.",
-                    "استخدم بريدك الإلكتروني أو اسم المستخدم الذي اخترته عند التسجيل."
-                  )}
-                </p>
-              </div>
-            </div>
-
+          <form className="loginForm" onSubmit={handleLogin}>
             <label className="loginField">
-              <span>{text("Email or username", "البريد الإلكتروني أو اسم المستخدم")}</span>
+              <span>
+                {text(
+                  "Email or username",
+                  "البريد الإلكتروني أو اسم المستخدم"
+                )}
+              </span>
+
               <input
                 type="text"
                 placeholder={text(
                   "example@email.com or username",
-                  "example@email.com أو username"
+                  "example@email.com أو اسم المستخدم"
                 )}
                 value={identifier}
                 onChange={(event) => setIdentifier(event.target.value)}
@@ -577,9 +538,13 @@ export default function LoginPage() {
 
             <label className="loginField">
               <span>{text("Password", "كلمة المرور")}</span>
+
               <input
                 type="password"
-                placeholder={text("Enter your password", "اكتب كلمة المرور")}
+                placeholder={text(
+                  "Enter your password",
+                  "أدخل كلمة المرور"
+                )}
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 autoComplete="current-password"
@@ -588,7 +553,11 @@ export default function LoginPage() {
             </label>
 
             {message && (
-              <p className={`loginMessage ${messageType === "success" ? "success" : "error"}`}>
+              <p
+                className={`loginMessage ${
+                  messageType === "success" ? "success" : "error"
+                }`}
+              >
                 {message}
               </p>
             )}
@@ -600,146 +569,76 @@ export default function LoginPage() {
             >
               {loadingAction === "login"
                 ? text("Signing in...", "جاري تسجيل الدخول...")
-                : text("Login", "تسجيل الدخول")}
+                : text("Sign In", "تسجيل الدخول")}
             </button>
 
-            <div className="loginHelpActions">
-              <button
-                type="button"
-                onClick={handleForgotPassword}
-                disabled={loadingAction !== ""}
-              >
-                {loadingAction === "forgot"
-                  ? text("Sending...", "جاري الإرسال...")
-                  : text("Forgot Password?", "نسيت كلمة المرور؟")}
-              </button>
+            <button
+              type="button"
+              className="loginTextAction"
+              onClick={handleForgotPassword}
+              disabled={loadingAction !== ""}
+            >
+              {loadingAction === "forgot"
+                ? text("Sending...", "جاري الإرسال...")
+                : text("Forgot your password?", "نسيت كلمة المرور؟")}
+            </button>
 
-              <button
-                type="button"
-                onClick={handleResendVerification}
-                disabled={loadingAction !== ""}
-              >
-                {loadingAction === "resend"
-                  ? text("Sending...", "جاري الإرسال...")
-                  : text("Resend Verification Email", "إعادة إرسال التأكيد")}
-              </button>
-            </div>
+            <button
+              type="button"
+              className="loginTextAction secondary"
+              onClick={handleResendVerification}
+              disabled={loadingAction !== ""}
+            >
+              {loadingAction === "resend"
+                ? text("Sending...", "جاري الإرسال...")
+                : text(
+                    "Didn't receive your verification email?",
+                    "لم يصلك بريد تأكيد الحساب؟"
+                  )}
+            </button>
 
             <div className="loginDivider">
-              <span>{text("New to OrganHeal?", "جديد على OrganHeal؟")}</span>
+              <span>
+                {text("New to OrganHeal?", "جديد على OrganHeal؟")}
+              </span>
             </div>
 
-            <Link href="/signup" className="secondaryBtn" style={{ justifyContent: "center" }}>
+            <Link
+              href="/signup"
+              className="secondaryBtn"
+              style={{ justifyContent: "center" }}
+            >
               {text("Create Free Account", "إنشاء حساب مجاني")}
             </Link>
 
-            <p className="ohMetricHint" style={{ textAlign: "center", margin: 0 }}>
-              {text(
-                "Need password reset only?",
-                "تحتاج فقط إلى إعادة تعيين كلمة المرور؟"
-              )}{" "}
-              <Link href="/reset-password" style={{ color: "#0f766e", fontWeight: 900 }}>
-                {text("Open reset page", "افتح صفحة إعادة التعيين")}
+            <p
+              className="ohMetricHint"
+              style={{
+                textAlign: "center",
+                margin: 0,
+              }}
+            >
+              <Link href="/" style={{ color: "#0f766e", fontWeight: 850 }}>
+                {text("Back to OrganHeal", "العودة إلى OrganHeal")}
               </Link>
             </p>
           </form>
 
-          <aside className="ohCard">
-            <p className="ohMetricLabel">
-              {text("What happens after login?", "ماذا يحدث بعد الدخول؟")}
-            </p>
-
-            <h2 className="ohCardTitle">
+          <div className="loginPrivacyNote">
+            <strong>
               {text(
-                "OrganHeal sends you to the right next step.",
-                "OrganHeal يوجهك إلى الخطوة المناسبة."
+                "Private by design",
+                "الخصوصية جزء من التصميم"
               )}
-            </h2>
+            </strong>
 
-            <p className="ohCardText">
+            <span>
               {text(
-                "If you already started with assessments, reports, or check-ins, you will return to the dashboard. If not, onboarding will help you choose your first action.",
-                "إذا بدأت سابقًا بتقييمات أو تقارير أو تحديثات صحية، ستعود إلى لوحة التحكم. إذا لم تبدأ بعد، ستساعدك صفحة البداية على اختيار أول خطوة."
+                "Your health workspace is connected to your account and protected by your sign-in.",
+                "مساحتك الصحية مرتبطة بحسابك ومحمية بتسجيل الدخول."
               )}
-            </p>
-
-            <div className="ohTimeline" style={{ marginTop: "18px" }}>
-              <div className="ohTimelineItem">
-                <span className="ohTimelineDot" />
-                <div>
-                  <p className="ohTimelineTitle">
-                    {text("Dashboard", "لوحة التحكم")}
-                  </p>
-                  <p className="ohTimelineMeta">
-                    {text(
-                      "For users with existing health data.",
-                      "للمستخدمين الذين لديهم بيانات صحية محفوظة."
-                    )}
-                  </p>
-                </div>
-              </div>
-
-              <div className="ohTimelineItem">
-                <span className="ohTimelineDot" />
-                <div>
-                  <p className="ohTimelineTitle">
-                    {text("Onboarding", "صفحة البداية")}
-                  </p>
-                  <p className="ohTimelineMeta">
-                    {text(
-                      "For new users who still need a first step.",
-                      "للمستخدمين الجدد الذين يحتاجون إلى أول خطوة."
-                    )}
-                  </p>
-                </div>
-              </div>
-
-              <div className="ohTimelineItem">
-                <span className="ohTimelineDot" />
-                <div>
-                  <p className="ohTimelineTitle">
-                    {text("Email verification", "تأكيد البريد")}
-                  </p>
-                  <p className="ohTimelineMeta">
-                    {text(
-                      "Required before accessing the account.",
-                      "مطلوب قبل الدخول إلى الحساب."
-                    )}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="ohDivider" />
-
-            <div className="ohTrustNotice">
-              <span aria-hidden="true">🛡️</span>
-              <div>
-                <strong>
-                  {text("Medical safety reminder", "تذكير السلامة الطبية")}
-                </strong>
-                <br />
-                {text(
-                  "OrganHeal provides educational and organizational health analysis only and does not replace licensed medical care.",
-                  "OrganHeal يقدم ذكاء صحي تعليمي وتنظيمي فقط ولا يستبدل الرعاية الطبية المرخصة."
-                )}
-              </div>
-            </div>
-
-            <div className="ohButtonRow" style={{ marginTop: "18px" }}>
-              <Link href="/privacy" className="secondaryBtn">
-                {text("Privacy", "الخصوصية")}
-              </Link>
-
-              <Link href="/terms" className="secondaryBtn">
-                {text("Terms", "الشروط")}
-              </Link>
-
-              <Link href="/medical-disclaimer" className="secondaryBtn">
-                {text("Medical Disclaimer", "إخلاء المسؤولية")}
-              </Link>
-            </div>
-          </aside>
+            </span>
+          </div>
         </section>
       </div>
     </main>

@@ -240,6 +240,36 @@ export default function SignupPage() {
           gap: 16px;
         }
 
+        .signupCommandPage .ohContainer > .signupForm {
+          width: min(100%, 720px);
+          max-width: 100%;
+          box-sizing: border-box;
+          margin-inline: auto;
+          padding: clamp(30px, 4vw, 46px);
+          gap: 26px;
+        }
+
+        .signupCommandPage .ohContainer > .signupForm > div:first-child {
+          display: grid;
+          gap: 12px;
+        }
+
+        .signupCommandPage .ohContainer > .signupForm .ohTitle {
+          font-size: clamp(2.25rem, 4vw, 3.4rem);
+          line-height: 1.02;
+          letter-spacing: -0.035em;
+        }
+
+        .signupCommandPage .ohContainer > .signupForm .ohLead {
+          max-width: 590px;
+          font-size: 1.02rem;
+          line-height: 1.7;
+        }
+
+        .signupCommandPage .ohContainer > .signupForm > form {
+          gap: 20px;
+        }
+
         .signupCommandPage .signupGrid {
           display: grid;
           grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -249,6 +279,7 @@ export default function SignupPage() {
         .signupCommandPage .signupField {
           display: grid;
           gap: 8px;
+          min-width: 0;
         }
 
         .signupCommandPage .signupField span,
@@ -262,13 +293,16 @@ export default function SignupPage() {
         .signupCommandPage input[type="text"],
         .signupCommandPage input[type="password"] {
           width: 100%;
-          min-height: 48px;
+          box-sizing: border-box;
+          min-width: 0;
+          min-height: 54px;
           border-radius: 14px;
           border: 1px solid rgba(148, 163, 184, 0.36);
           background: rgba(255, 255, 255, 0.94);
           color: var(--oh-text);
           padding: 12px 14px;
           font: inherit;
+          font-size: 1rem;
           outline: none;
         }
 
@@ -349,123 +383,66 @@ export default function SignupPage() {
 
         .signupCommandPage .signupSubmit {
           width: 100%;
+          min-height: 54px;
           justify-content: center;
+          font-size: 1rem;
+          font-weight: 900;
         }
 
         @media (max-width: 760px) {
-          .signupCommandPage .signupGrid {
-            grid-template-columns: 1fr;
-          }
+        .signupCommandPage .signupGrid {
+          grid-template-columns: 1fr;
         }
+
+        .signupCommandPage .ohContainer > .signupForm {
+          padding: 24px 20px;
+          gap: 22px;
+        }
+
+        .signupCommandPage .ohContainer > .signupForm .ohTitle {
+          font-size: clamp(2rem, 10vw, 2.7rem);
+        }
+      }
       `}</style>
 
-      <div className="ohContainer ohStack large" style={{ padding: "32px 0 64px" }}>
-        <section className="ohHero">
-          <div className="ohHeroGrid">
-            <div>
-              <p className="ohEyebrow">
-                {text("Create your OrganHeal account", "إنشاء حساب OrganHeal")}
-              </p>
+      <div
+        className="ohContainer"
+        style={{
+          maxWidth: "760px",
+          padding: "32px 0 64px",
+        }}
+      >
+        <section className="ohCard signupForm">
+          <div>
+            <p className="ohEyebrow">
+              {text(
+                "CREATE YOUR ORGANHEAL ACCOUNT",
+                "إنشاء حساب OrganHeal"
+              )}
+            </p>
 
-              <h1 className="ohTitle">
-                {text(
-                  "Start your personal health analysis journey.",
-                  "ابدأ رحلتك مع التحليل الصحي الشخصي."
-                )}
-              </h1>
+            <h1 className="ohTitle">
+              {text(
+                "Start your health journey.",
+                "ابدأ رحلتك الصحية."
+              )}
+            </h1>
 
-              <p className="ohLead">
-                {text(
-                  "Create a free account to save your assessments, upload reports, and begin building your health profile inside OrganHeal.",
-                  "أنشئ حسابًا مجانيًا لحفظ تقييماتك، رفع تقاريرك، وبدء بناء ملفك الصحي داخل OrganHeal."
-                )}
-              </p>
-
-              <div className="ohButtonRow" style={{ marginTop: "24px" }}>
-                <Link href="/" className="secondaryBtn">
-                  {text("Back Home", "العودة للرئيسية")}
-                </Link>
-
-                <Link href="/login" className="primaryBtn">
-                  {text("Already have an account?", "لديك حساب؟")}
-                </Link>
-              </div>
-            </div>
-
-            <div className="ohCard">
-              <div className="ohCardHeader">
-                <div>
-                  <p className="ohMetricLabel">
-                    {text("Free account includes", "الحساب المجاني يشمل")}
-                  </p>
-
-                  <h2 className="ohCardTitle" style={{ marginTop: "8px" }}>
-                    {text("Your first health profile", "ملفك الصحي الأول")}
-                  </h2>
-                </div>
-
-                <span className="ohStatusBadge good">
-                  {text("Free", "مجاني")}
-                </span>
-              </div>
-
-              <div className="ohTimeline">
-                <div className="ohTimelineItem">
-                  <span className="ohTimelineDot" />
-                  <p className="ohTimelineTitle">
-                    {text("Free health assessment", "تقييم صحي مجاني")}
-                  </p>
-                </div>
-
-                <div className="ohTimelineItem">
-                  <span className="ohTimelineDot" />
-                  <p className="ohTimelineTitle">
-                    {text("Medical report upload", "رفع تقرير طبي")}
-                  </p>
-                </div>
-
-                <div className="ohTimelineItem">
-                  <span className="ohTimelineDot" />
-                  <p className="ohTimelineTitle">
-                    {text("Start your health profile", "بداية ملفك الصحي")}
-                  </p>
-                </div>
-
-                <div className="ohTimelineItem">
-                  <span className="ohTimelineDot" />
-                  <p className="ohTimelineTitle">
-                    {text("Email confirmation for account safety", "تأكيد البريد لحماية الحساب")}
-                  </p>
-                </div>
-              </div>
-            </div>
+            <p className="ohLead">
+              {text(
+                "Create your private account to save reports, health insights, and continue your journey over time.",
+                "أنشئ حسابك الخاص لحفظ تقاريرك ورؤيتك الصحية ومواصلة رحلتك مع مرور الوقت."
+              )}
+            </p>
           </div>
-        </section>
 
-        <section className="ohGrid cols2">
-          <form className="ohCard signupForm" onSubmit={handleSignup}>
-            <div className="ohCardHeader">
-              <div>
-                <p className="ohMetricLabel">
-                  {text("Account details", "بيانات الحساب")}
-                </p>
-
-                <h2 className="ohCardTitle">
-                  {text("Create Free Account", "إنشاء حساب مجاني")}
-                </h2>
-
-                <p className="ohCardText">
-                  {text(
-                    "Use a valid email because the confirmation message will be sent there.",
-                    "استخدم بريدًا صحيحًا لأن رسالة التأكيد ستصل إليه."
-                  )}
-                </p>
-              </div>
-            </div>
-
+          <form className="signupForm" onSubmit={handleSignup}>
             <div className="signupGrid">
               <label className="signupField">
-                <span>{text("Email", "البريد الإلكتروني")}</span>
+                <span>
+                  {text("Email", "البريد الإلكتروني")}
+                </span>
+
                 <input
                   type="email"
                   placeholder="name@example.com"
@@ -477,7 +454,10 @@ export default function SignupPage() {
               </label>
 
               <label className="signupField">
-                <span>{text("Confirm email", "تأكيد البريد الإلكتروني")}</span>
+                <span>
+                  {text("Confirm email", "تأكيد البريد الإلكتروني")}
+                </span>
+
                 <input
                   type="email"
                   placeholder="name@example.com"
@@ -490,29 +470,42 @@ export default function SignupPage() {
             </div>
 
             <label className="signupField">
-              <span>{text("Username", "اسم المستخدم")}</span>
+              <span>
+                {text("Username", "اسم المستخدم")}
+              </span>
+
               <input
                 type="text"
-                placeholder={text("Example: organ_user", "مثال: organ_user")}
+                placeholder={text(
+                  "Example: organ_user",
+                  "مثال: organ_user"
+                )}
                 value={username}
                 onChange={(event) => setUsername(event.target.value)}
                 autoComplete="username"
                 required
               />
+
               <small className="signupHelp">
                 {text(
                   "3-20 characters. Letters, numbers, and underscores only.",
-                  "3-20 حرفًا. يمكن استخدام الأحرف والأرقام و underscore فقط."
+                  "من 3 إلى 20 حرفًا. استخدم الأحرف والأرقام والشرطة السفلية فقط."
                 )}
               </small>
             </label>
 
             <div className="signupGrid">
               <label className="signupField">
-                <span>{text("Password", "كلمة المرور")}</span>
+                <span>
+                  {text("Password", "كلمة المرور")}
+                </span>
+
                 <input
                   type="password"
-                  placeholder={text("Strong password", "كلمة مرور قوية")}
+                  placeholder={text(
+                    "Strong password",
+                    "كلمة مرور قوية"
+                  )}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   autoComplete="new-password"
@@ -521,12 +514,20 @@ export default function SignupPage() {
               </label>
 
               <label className="signupField">
-                <span>{text("Confirm password", "تأكيد كلمة المرور")}</span>
+                <span>
+                  {text("Confirm password", "تأكيد كلمة المرور")}
+                </span>
+
                 <input
                   type="password"
-                  placeholder={text("Repeat password", "أعد كتابة كلمة المرور")}
+                  placeholder={text(
+                    "Repeat password",
+                    "أعد كتابة كلمة المرور"
+                  )}
                   value={confirmPassword}
-                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  onChange={(event) =>
+                    setConfirmPassword(event.target.value)
+                  }
                   autoComplete="new-password"
                   required
                 />
@@ -536,12 +537,26 @@ export default function SignupPage() {
             {password && (
               <div className="signupStrength">
                 <div className="signupStrengthBar">
-                  <span style={{ width: `${strengthScore * 25}%` }} />
+                  <span
+                    style={{
+                      width: `${strengthScore * 25}%`,
+                    }}
+                  />
                 </div>
 
-                <p className="ohMetricHint" style={{ margin: 0 }}>
-                  {text("Password strength:", "قوة كلمة المرور:")}{" "}
-                  <span className={`ohStatusBadge ${strengthTone}`}>{strengthText}</span>
+                <p
+                  className="ohMetricHint"
+                  style={{ margin: 0 }}
+                >
+                  {text(
+                    "Password strength:",
+                    "قوة كلمة المرور:"
+                  )}{" "}
+                  <span
+                    className={`ohStatusBadge ${strengthTone}`}
+                  >
+                    {strengthText}
+                  </span>
                 </p>
               </div>
             )}
@@ -550,146 +565,123 @@ export default function SignupPage() {
               <input
                 type="checkbox"
                 checked={terms}
-                onChange={(event) => setTerms(event.target.checked)}
+                onChange={(event) =>
+                  setTerms(event.target.checked)
+                }
               />
 
               <span>
                 {text("I agree to the ", "أوافق على ")}
-                <Link href="/terms">{text("Terms", "الشروط")}</Link>
-                {text(" and ", " و ")}
-                <Link href="/privacy">{text("Privacy Policy", "سياسة الخصوصية")}</Link>
+                <Link href="/terms">
+                  {text("Terms", "الشروط")}
+                </Link>
+                {text(" and ", " و")}
+                <Link href="/privacy">
+                  {text(
+                    "Privacy Policy",
+                    "سياسة الخصوصية"
+                  )}
+                </Link>
                 .
               </span>
             </label>
 
             {message && (
-              <p className={`signupMessage ${messageType === "success" ? "success" : "error"}`}>
+              <p
+                className={`signupMessage ${
+                  messageType === "success"
+                    ? "success"
+                    : "error"
+                }`}
+              >
                 {message}
               </p>
             )}
 
             {messageType === "success" && (
-              <div className="ohButtonRow">
-                <Link href="/login" className="primaryBtn">
-                  {text("Go to Login", "اذهب لتسجيل الدخول")}
-                </Link>
-
-                <Link href="/" className="secondaryBtn">
-                  {text("Back Home", "العودة للرئيسية")}
-                </Link>
-              </div>
+              <Link href="/login" className="primaryBtn">
+                {text(
+                  "Continue to Sign In",
+                  "المتابعة إلى تسجيل الدخول"
+                )}
+              </Link>
             )}
 
-            <button type="submit" className="primaryBtn signupSubmit" disabled={loading}>
+            <button
+              type="submit"
+              className="primaryBtn signupSubmit"
+              disabled={loading}
+            >
               {loading
-                ? text("Creating account...", "جاري إنشاء الحساب...")
-                : text("Create Free Account", "إنشاء حساب مجاني")}
+                ? text(
+                    "Creating account...",
+                    "جاري إنشاء الحساب..."
+                  )
+                : text(
+                    "Create Free Account",
+                    "إنشاء حساب مجاني"
+                  )}
             </button>
 
-            <p className="ohMetricHint" style={{ textAlign: "center", margin: 0 }}>
-              {text("Already have an account?", "لديك حساب؟")}{" "}
-              <Link href="/login" style={{ color: "#0f766e", fontWeight: 900 }}>
+            <p
+              className="ohMetricHint"
+              style={{
+                textAlign: "center",
+                margin: 0,
+              }}
+            >
+              {text(
+                "Already have an account?",
+                "لديك حساب بالفعل؟"
+              )}{" "}
+              <Link
+                href="/login"
+                style={{
+                  color: "#0f766e",
+                  fontWeight: 900,
+                }}
+              >
                 {text("Sign in", "تسجيل الدخول")}
+              </Link>
+            </p>
+
+            <p
+              className="ohMetricHint"
+              style={{
+                textAlign: "center",
+                margin: 0,
+              }}
+            >
+              <Link
+                href="/"
+                style={{
+                  color: "#0f766e",
+                  fontWeight: 850,
+                }}
+              >
+                {text(
+                  "Back to OrganHeal",
+                  "العودة إلى OrganHeal"
+                )}
               </Link>
             </p>
           </form>
 
-          <aside className="ohCard">
-            <p className="ohMetricLabel">
-              {text("What happens next?", "ماذا يحدث بعد التسجيل؟")}
-            </p>
-
-            <h2 className="ohCardTitle">
+          <div className="signupPrivacyNote">
+            <strong>
               {text(
-                "Confirm your email, then start onboarding.",
-                "أكد بريدك الإلكتروني، ثم ابدأ صفحة البداية."
+                "Private by design",
+                "الخصوصية جزء من التصميم"
               )}
-            </h2>
+            </strong>
 
-            <p className="ohCardText">
+            <span>
               {text(
-                "After creating your account, check your email for the confirmation link. Once confirmed, sign in and OrganHeal will guide you to the first step.",
-                "بعد إنشاء الحساب، افحص بريدك الإلكتروني لرابط التأكيد. بعد التأكيد، سجل الدخول وسيقودك OrganHeal إلى أول خطوة."
+                "Your health workspace stays connected to your account. Email verification is required after signup to help protect access.",
+                "تبقى مساحتك الصحية مرتبطة بحسابك. ويُطلب تأكيد البريد الإلكتروني بعد التسجيل للمساعدة في حماية الوصول إلى الحساب."
               )}
-            </p>
-
-            <div className="ohTimeline" style={{ marginTop: "18px" }}>
-              <div className="ohTimelineItem">
-                <span className="ohTimelineDot" />
-                <div>
-                  <p className="ohTimelineTitle">
-                    {text("Step 1: Confirm email", "الخطوة 1: تأكيد البريد")}
-                  </p>
-                  <p className="ohTimelineMeta">
-                    {text(
-                      "This protects your account and health information.",
-                      "هذا يحمي حسابك ومعلوماتك الصحية."
-                    )}
-                  </p>
-                </div>
-              </div>
-
-              <div className="ohTimelineItem">
-                <span className="ohTimelineDot" />
-                <div>
-                  <p className="ohTimelineTitle">
-                    {text("Step 2: Sign in", "الخطوة 2: تسجيل الدخول")}
-                  </p>
-                  <p className="ohTimelineMeta">
-                    {text(
-                      "Use your email and password to access your dashboard.",
-                      "استخدم بريدك وكلمة المرور للوصول إلى لوحة التحكم."
-                    )}
-                  </p>
-                </div>
-              </div>
-
-              <div className="ohTimelineItem">
-                <span className="ohTimelineDot" />
-                <div>
-                  <p className="ohTimelineTitle">
-                    {text("Step 3: Start onboarding", "الخطوة 3: بدء صفحة البداية")}
-                  </p>
-                  <p className="ohTimelineMeta">
-                    {text(
-                      "Choose whether to start with assessment, report upload, or dashboard.",
-                      "اختر البدء بالتقييم، رفع تقرير، أو لوحة التحكم."
-                    )}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="ohDivider" />
-
-            <div className="ohTrustNotice">
-              <span aria-hidden="true">🛡️</span>
-              <div>
-                <strong>
-                  {text("Medical safety reminder", "تذكير السلامة الطبية")}
-                </strong>
-                <br />
-                {text(
-                  "OrganHeal provides educational and organizational health analysis only and does not replace licensed medical care.",
-                  "OrganHeal يقدم ذكاء صحي تعليمي وتنظيمي فقط ولا يستبدل الرعاية الطبية المرخصة."
-                )}
-              </div>
-            </div>
-
-            <div className="ohButtonRow" style={{ marginTop: "18px" }}>
-              <Link href="/terms" className="secondaryBtn">
-                {text("Terms", "الشروط")}
-              </Link>
-
-              <Link href="/privacy" className="secondaryBtn">
-                {text("Privacy", "الخصوصية")}
-              </Link>
-
-              <Link href="/medical-disclaimer" className="secondaryBtn">
-                {text("Medical Disclaimer", "إخلاء المسؤولية")}
-              </Link>
-            </div>
-          </aside>
+            </span>
+          </div>
         </section>
       </div>
     </main>

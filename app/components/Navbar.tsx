@@ -66,6 +66,7 @@ export default function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [language, setLanguage] = useState<Language>("en");
   const [isMoreOpen, setIsMoreOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const moreMenuRef = useRef<HTMLDivElement | null>(null);
 
   const isArabic = language === "ar";
@@ -222,9 +223,58 @@ export default function Navbar() {
           background: rgba(20, 184, 166, 0.14);
         }
 
+        .navMobileTrigger {
+          display: none;
+          width: 46px;
+          height: 46px;
+          padding: 11px;
+          border: 1px solid rgba(94, 234, 212, 0.34);
+          border-radius: 14px;
+          background: rgba(15, 23, 42, 0.72);
+          cursor: pointer;
+        }
+
+        .navMobileTrigger span {
+          display: block;
+          width: 100%;
+          height: 2px;
+          margin: 5px 0;
+          border-radius: 999px;
+          background: currentColor;
+        }
+
         @media (max-width: 900px) {
+          .navMobileTrigger {
+            display: block;
+            margin-inline-start: auto;
+          }
+
+          .navLinks {
+            display: none;
+            width: 100%;
+          }
+
+          .navLinks.navLinksOpen {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 10px;
+            padding-top: 14px;
+          }
+
+          .navLinks.navLinksOpen > a,
+          .navLinks.navLinksOpen > button {
+            width: 100%;
+            text-align: center;
+          }
+
           .navMoreMenu {
             width: 100%;
+          }
+
+          .navMoreTrigger {
+            width: 100%;
+            text-align: center;
           }
 
           .navMorePanel {
@@ -244,7 +294,19 @@ export default function Navbar() {
         </div>
       </Link>
 
-      <div className="navLinks">
+      <button
+        type="button"
+        className="navMobileTrigger"
+        aria-label={isArabic ? "فتح قائمة التنقل" : "Open navigation menu"}
+        aria-expanded={isMobileMenuOpen}
+        onClick={() => setIsMobileMenuOpen((current) => !current)}
+      >
+        <span />
+        <span />
+        <span />
+      </button>
+
+      <div className={`navLinks ${isMobileMenuOpen ? "navLinksOpen" : ""}`}>
         {isLoggedIn ? (
           <>
             <Link href="/dashboard">
