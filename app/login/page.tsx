@@ -3,6 +3,9 @@
 import { type FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import {
+  sendProductAnalyticsEvent,
+} from "@/lib/analytics/product-analytics.client";
 
 type Language = "en" | "ar";
 type MessageType = "success" | "error" | "";
@@ -91,33 +94,6 @@ export default function LoginPage() {
     setMessageType(type);
   }
 
-  async function resolveLoginEmail(cleanIdentifier: string) {
-    if (cleanIdentifier.includes("@")) {
-      return cleanIdentifier;
-    }
-
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("email")
-      .ilike("username", cleanIdentifier)
-      .maybeSingle();
-
-    if (profileError) {
-      throw new Error(profileError.message);
-    }
-
-    if (!profile?.email) {
-      throw new Error(
-        text(
-          "Username not found. Please check your username or use your email.",
-          "اسم المستخدم غير موجود. جرّب البريد الإلكتروني أو تأكد من الاسم."
-        )
-      );
-    }
-
-    return profile.email as string;
-  }
-
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     showMessage("", "");
@@ -137,38 +113,118 @@ export default function LoginPage() {
 
     setLoadingAction("login");
 
-    let loginEmail = "";
+        let loginResponse: Response;
 
     try {
-      loginEmail = await resolveLoginEmail(cleanIdentifier);
-    } catch (error) {
+      loginResponse =
+        await fetch(
+          "/api/auth/login",
+          {
+            method:
+              "POST",
+
+            headers: {
+              "content-type":
+                "application/json",
+            },
+
+            body:
+              JSON.stringify({
+                identifier:
+                  cleanIdentifier,
+
+                password,
+              }),
+          }
+        );
+    } catch {
       showMessage(
-        error instanceof Error
-          ? error.message
-          : text("Unable to find account.", "تعذر العثور على الحساب."),
+        text(
+          "Unable to sign in right now. Please try again.",
+          "تعذر تسجيل الدخول حاليًا. يرجى المحاولة مرة أخرى."
+        ),
         "error"
       );
+
       setLoadingAction("");
       return;
     }
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: loginEmail,
-      password,
-    });
+    const loginResult =
+      await loginResponse
+        .json()
+        .catch(
+          () => null
+        ) as
+        | {
+            success?: boolean;
 
-    if (error) {
-      if (error.message === "Invalid login credentials") {
-        showMessage(
-          text(
-            "Incorrect email, username, or password. If you forgot your password, use Forgot Password below.",
-            "البريد الإلكتروني أو اسم المستخدم أو كلمة المرور غير صحيحة. إذا نسيت كلمة المرور، استخدم خيار إعادة التعيين."
-          ),
-          "error"
-        );
-      } else {
-        showMessage(error.message, "error");
-      }
+            session?: {
+              accessToken?: string;
+
+              refreshToken?: string;
+            };
+
+            error?: string;
+          }
+        | null;
+
+    if (
+      !loginResponse.ok ||
+      !loginResult?.success ||
+      !loginResult.session
+        ?.accessToken ||
+      !loginResult.session
+        ?.refreshToken
+    ) {
+      showMessage(
+        loginResponse.status === 429
+          ? text(
+              "Too many login attempts. Please wait a moment and try again.",
+              "عدد محاولات تسجيل الدخول كبير. يرجى الانتظار قليلًا ثم المحاولة مرة أخرى."
+            )
+          : text(
+              "Incorrect email, username, or password. If you forgot your password, use Forgot Password below.",
+              "البريد الإلكتروني أو اسم المستخدم أو كلمة المرور غير صحيحة. إذا نسيت كلمة المرور، استخدم خيار إعادة التعيين."
+            ),
+        "error"
+      );
+
+      setLoadingAction("");
+      return;
+    }
+
+    const {
+      data,
+      error:
+        sessionError,
+    } =
+      await supabase.auth
+        .setSession({
+          access_token:
+            loginResult.session
+              .accessToken,
+
+          refresh_token:
+            loginResult.session
+              .refreshToken,
+        });
+
+    if (
+      sessionError ||
+      !data.session ||
+      !data.user
+    ) {
+      await supabase.auth
+        .signOut();
+
+      showMessage(
+        text(
+          "Unable to complete sign in. Please try again.",
+          "تعذر إكمال تسجيل الدخول. يرجى المحاولة مرة أخرى."
+        ),
+        "error"
+      );
 
       setLoadingAction("");
       return;
@@ -188,6 +244,16 @@ export default function LoginPage() {
       setLoadingAction("");
       return;
     }
+
+    void sendProductAnalyticsEvent({
+      name:
+        "login_completed",
+
+      language,
+
+      source:
+        "login",
+    });
 
     if (!data.user) {
       showMessage(

@@ -5,6 +5,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import PageBackActions from "../components/PageBackActions";
 import { supabase } from "@/lib/supabase";
+import {
+  sendProductAnalyticsEvent,
+} from "@/lib/analytics/product-analytics.client";
 
 type Language = "en" | "ar";
 type UploadStep = "idle" | "uploading" | "saved" | "error";
@@ -242,6 +245,15 @@ export default function LabUploadPage() {
     }
 
     const user = userData.user;
+        void sendProductAnalyticsEvent({
+      name:
+        "report_upload_started",
+
+      language,
+
+      source:
+        "lab-upload",
+    });
     const filesToUpload = [...selectedFiles];
     const uploadedNames: string[] = [];
 
@@ -371,6 +383,16 @@ export default function LabUploadPage() {
       uploadedNames.push(file.name);
       setLatestUploadedReportId(insertedFile.id);
     }
+
+      void sendProductAnalyticsEvent({
+        name:
+          "report_upload_completed",
+
+        language,
+
+        source:
+          "lab-upload",
+      });
 
     setSelectedFiles([]);
     setSavedFileNames(uploadedNames);

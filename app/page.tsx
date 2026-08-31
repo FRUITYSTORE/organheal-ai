@@ -5,6 +5,9 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { getHealthContext } from "@/lib/getHealthContext";
 import {
+  sendProductAnalyticsEvent,
+} from "@/lib/analytics/product-analytics.client";
+import {
   getReportsLibrary,
   type ReportsLibraryCard,
 } from "@/lib/services/reports/reports.service";
@@ -87,6 +90,22 @@ const [heroHealthContext, setHeroHealthContext] = useState<Record<string, unknow
       window.removeEventListener("storage", syncLanguage);
       window.removeEventListener("organheal-language-change", syncLanguage);
     };
+  }, []);
+
+    useEffect(() => {
+    const currentLanguage =
+      getStoredLanguage();
+
+    void sendProductAnalyticsEvent({
+      name:
+        "homepage_viewed",
+
+      language:
+        currentLanguage,
+
+      source:
+        "homepage",
+    });
   }, []);
 
   function text(en: string, ar: string) {

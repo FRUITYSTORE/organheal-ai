@@ -26,6 +26,19 @@ export type ApiAuthenticationResult =
   | AuthenticatedApiSession
   | ApiAuthenticationFailure;
 
+export type OptionalApiAuthenticationResult =
+  | AuthenticatedApiSession
+  | {
+      success: true;
+
+      token: null;
+
+      user: null;
+
+      client: null;
+    }
+  | ApiAuthenticationFailure;
+
 function extractBearerToken(
   request: Request
 ): string {
@@ -149,4 +162,29 @@ export async function authenticateApiRequest(
 
     client,
   };
+}
+
+export async function authenticateOptionalApiRequest(
+  request: Request
+): Promise<OptionalApiAuthenticationResult> {
+  const token =
+    extractBearerToken(
+      request
+    );
+
+  if (!token) {
+    return {
+      success: true,
+
+      token: null,
+
+      user: null,
+
+      client: null,
+    };
+  }
+
+  return authenticateApiRequest(
+    request
+  );
 }

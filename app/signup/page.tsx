@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { type FormEvent, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import {
+  sendProductAnalyticsEvent,
+} from "@/lib/analytics/product-analytics.client";
 
 type Language = "en" | "ar";
 type MessageType = "success" | "error" | "";
@@ -189,6 +192,16 @@ export default function SignupPage() {
       return;
     }
 
+        void sendProductAnalyticsEvent({
+      name:
+        "signup_started",
+
+      language,
+
+      source:
+        "signup",
+    });
+
     const { error } = await supabase.auth.signUp({
       email: cleanEmail,
       password,
@@ -205,6 +218,16 @@ export default function SignupPage() {
       setLoading(false);
       return;
     }
+
+        void sendProductAnalyticsEvent({
+      name:
+        "signup_completed",
+
+      language,
+
+      source:
+        "signup",
+    });
 
     showMessage(
       text(

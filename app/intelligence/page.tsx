@@ -58,6 +58,9 @@ import {
   getFocusedReportInsight,
   getIntelligenceReportListView,
 } from "@/lib/selectors/intelligence-page.selectors";
+import {
+  sendProductAnalyticsEvent,
+} from "@/lib/analytics/product-analytics.client";
 
 type Assessment = {
   organ_name: string;
@@ -925,13 +928,37 @@ const hasDevelopingAdvancedModels =
 
 const hasReportEvidence = Boolean(
   focusedReportInsight &&
-    (
+        (
       focusedReportInsight.summary?.trim() ||
       focusedReportInsight.key_findings?.trim() ||
       focusedReportInsight.risk_signals?.trim() ||
       focusedReportInsight.recommendations?.trim()
     )
 );
+
+  useEffect(() => {
+    if (
+      !focusedReportHasVisibleResult ||
+      !generatedResult
+    ) {
+      return;
+    }
+
+    void sendProductAnalyticsEvent({
+      name:
+        "intelligence_viewed",
+
+            language:
+        uiLanguage,
+
+      source:
+        "intelligence",
+    });
+  }, [
+    focusedReportHasVisibleResult,
+    generatedResult,
+        uiLanguage,
+  ]);
 
   return (
     <main
