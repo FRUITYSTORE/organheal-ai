@@ -700,4 +700,157 @@ describe("Assistant orchestrator dual reasoning", () => {
 
     expect(mockedBuildPersonalizedResponse).toHaveBeenCalledTimes(1);
   });
+    it("does not allow product navigation to override clinical urgency", () => {
+    const result =
+      runAssistantOrchestrator({
+        message:
+          "Open my reports, but I have severe chest pain right now.",
+
+        language:
+          "en",
+
+        healthContext:
+          null,
+
+        conversation:
+          [],
+      });
+
+    expect(
+      result.reasoning.productNavigation
+    ).toBeNull();
+
+    expect(
+      result.reasoning.mode
+    ).toBe(
+      "answer"
+    );
+
+    expect(
+      result.response
+    ).toBeTruthy();
+  });
+  it(
+  "uses a trusted semantic product navigation decision for an otherwise unclear message",
+  () => {
+    const result =
+      runAssistantOrchestrator({
+        message:
+          "طيب وين بلاقيه؟",
+
+        language:
+          "ar",
+
+        healthContext:
+          null,
+
+        conversation: [
+          {
+            role:
+              "assistant",
+
+            content:
+              "نتيجة تقريرك الأخير متاحة الآن.",
+          },
+        ],
+
+        semanticRoutingDecision: {
+          domain:
+            "product_navigation",
+
+          confidence:
+            "high",
+
+          source:
+            "model",
+
+          productDestination:
+            "view-results",
+
+          requiresConversationContext:
+            true,
+
+          reason:
+            "The follow-up refers to the previously discussed report results.",
+        },
+      });
+
+    expect(
+      result.reasoning
+        .productNavigation
+        ?.matched
+    ).toBe(true);
+
+    expect(
+      result.reasoning
+        .productNavigation
+        ?.destination
+    ).toBe(
+      "view-results"
+    );
+
+    expect(
+      result.reasoning
+        .productNavigation
+        ?.confidence
+    ).toBe(
+      "high"
+    );
+  }
+);
+
+it(
+  "does not allow a semantic product navigation decision to override clinical urgency",
+  () => {
+    const result =
+      runAssistantOrchestrator({
+        message:
+          "Open my reports, but I have severe chest pain right now.",
+
+        language:
+          "en",
+
+        healthContext:
+          null,
+
+        conversation:
+          [],
+
+        semanticRoutingDecision: {
+          domain:
+            "product_navigation",
+
+          confidence:
+            "high",
+
+          source:
+            "model",
+
+          productDestination:
+            "reports",
+
+          requiresConversationContext:
+            false,
+
+          reason:
+            "The user mentioned reports.",
+        },
+      });
+
+    expect(
+      result.reasoning
+        .productNavigation
+    ).toBeNull();
+
+    expect(
+      result.reasoning.mode
+    ).toBe(
+      "answer"
+    );
+
+    expect(
+      result.response
+    ).toBeTruthy();
+  }
+);
 });

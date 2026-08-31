@@ -3,6 +3,10 @@ import type {
   AssistantOrchestratorLanguage,
 } from "@/lib/health-intelligence/application/assistant-orchestrator.service";
 
+import {
+  getProductNavigationAction,
+} from "@/lib/health-intelligence/application/product-navigation/resolve-product-navigation";
+
 export type AssistantPublicReasoningMode = "clarify" | "answer";
 
 export type AssistantPublicReasoningSummary = {
@@ -91,6 +95,27 @@ function resolveProductAction(
 ): AssistantProductAction | null {
   if (result.reasoning.mode === "clarify") {
     return null;
+  }
+
+    const productNavigation =
+    result.reasoning.productNavigation;
+
+  if (
+    productNavigation?.matched &&
+    productNavigation.destination
+  ) {
+    const productAction =
+      getProductNavigationAction(
+        productNavigation.destination
+      );
+
+    return {
+      label:
+        productAction.label[language],
+
+      href:
+        productAction.href,
+    };
   }
 
   const intent = result.reasoning.questionIntent;

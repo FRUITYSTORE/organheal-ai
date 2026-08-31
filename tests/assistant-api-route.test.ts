@@ -16,6 +16,14 @@ vi.mock(
 );
 
 vi.mock(
+  "@/lib/health-intelligence/application/assistant-semantic-routing/assistant-semantic-model.service",
+  () => ({
+    resolveAssistantSemanticRoutingWithModel:
+      vi.fn(),
+  })
+);
+
+vi.mock(
   "@/lib/health-intelligence/application/assistant-response-contract.service",
   () => ({
     buildAssistantResponseContract:
@@ -108,6 +116,10 @@ import {
 } from "@/lib/health-intelligence/application/assistant-orchestrator.service";
 
 import {
+  resolveAssistantSemanticRoutingWithModel,
+} from "@/lib/health-intelligence/application/assistant-semantic-routing/assistant-semantic-model.service";
+
+import {
   buildAssistantResponseContract,
 } from "@/lib/health-intelligence/application/assistant-response-contract.service";
 
@@ -129,6 +141,11 @@ import {
 const mockedRunAssistantOrchestrator =
   vi.mocked(
     runAssistantOrchestrator
+  );
+
+const mockedResolveAssistantSemanticRoutingWithModel =
+  vi.mocked(
+    resolveAssistantSemanticRoutingWithModel
   );
 
 const mockedBuildAssistantResponseContract =
@@ -233,6 +250,8 @@ function createOrchestratorResult(
       questionIntent:
         "general",
 
+      productNavigation: null,
+
       questionEvidenceStatus:
         "sufficient",
 
@@ -275,6 +294,18 @@ describe(
       () => {
         mockedRunAssistantOrchestrator
           .mockReset();
+
+        mockedResolveAssistantSemanticRoutingWithModel
+  .mockReset();
+
+mockedResolveAssistantSemanticRoutingWithModel
+  .mockImplementation(
+    async ({
+      input,
+    }) =>
+      input
+        .deterministicDecision
+  );
 
         mockedBuildAssistantResponseContract
           .mockReset();
@@ -519,7 +550,8 @@ describe(
 
         expect(
           mockedRunAssistantOrchestrator
-        ).toHaveBeenCalledWith({
+        ).toHaveBeenCalledWith(
+         expect.objectContaining({
           message:
             "ما هي خطوتي التالية؟",
 
@@ -531,7 +563,8 @@ describe(
 
           conversation:
             [],
-        });
+          })
+        );
 
         await expect(
           response.json()
@@ -576,7 +609,8 @@ describe(
 
         expect(
           mockedRunAssistantOrchestrator
-        ).toHaveBeenCalledWith({
+        ).toHaveBeenCalledWith(
+          expect.objectContaining({
           message:
             "What should I do next?",
 
@@ -588,7 +622,8 @@ describe(
 
           conversation:
             [],
-        });
+          })
+        );
 
         await expect(
           response.json()
@@ -635,7 +670,8 @@ describe(
 
         expect(
           mockedRunAssistantOrchestrator
-        ).toHaveBeenCalledWith({
+        ).toHaveBeenCalledWith(
+          expect.objectContaining({
           message:
             "Review my progress",
 
@@ -647,7 +683,8 @@ describe(
 
           conversation:
             [],
-        });
+            })
+          );
 
         await expect(
           response.json()
@@ -725,7 +762,8 @@ describe(
 
         expect(
           mockedRunAssistantOrchestrator
-        ).toHaveBeenCalledWith({
+        ).toHaveBeenCalledWith(
+          expect.objectContaining({
           message:
             "What should I focus on?",
 
@@ -736,9 +774,125 @@ describe(
             null,
 
           conversation,
-        });
+          })
+        );
       }
     );
+
+    it(
+  "passes conversation context through semantic routing and forwards the validated semantic decision to the orchestrator",
+  async () => {
+    const conversation = [
+      {
+        role:
+          "assistant" as const,
+
+        content:
+          "نتيجة تقريرك الأخير أصبحت جاهزة.",
+      },
+    ];
+
+    const semanticDecision = {
+      domain:
+        "product_navigation" as const,
+
+      confidence:
+        "high" as const,
+
+      source:
+        "model" as const,
+
+      productDestination:
+        "view-results" as const,
+
+      requiresConversationContext:
+        true,
+
+      reason:
+        "The follow-up refers to the report result discussed in the recent conversation.",
+    };
+
+    mockedResolveAssistantSemanticRoutingWithModel
+      .mockResolvedValueOnce(
+        semanticDecision
+      );
+
+    const orchestratorResult =
+      createOrchestratorResult(
+        "يمكنك فتح نتائجك."
+      );
+
+    mockedRunAssistantOrchestrator
+      .mockReturnValue(
+        orchestratorResult
+      );
+
+    const response =
+      await POST(
+        createAssistantRequest({
+          message:
+            "طيب وين بلاقيها؟",
+
+          language:
+            "ar",
+
+          conversation,
+        })
+      );
+
+    expect(
+      response.status
+    ).toBe(
+      200
+    );
+
+    expect(
+      mockedResolveAssistantSemanticRoutingWithModel
+    ).toHaveBeenCalledTimes(
+      1
+    );
+
+    expect(
+      mockedResolveAssistantSemanticRoutingWithModel
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        input:
+          expect.objectContaining({
+            currentMessage:
+              "طيب وين بلاقيها؟",
+
+            language:
+              "ar",
+
+            conversation,
+
+            deterministicDecision:
+              expect.objectContaining({
+                domain:
+                  "unclear",
+              }),
+          }),
+      })
+    );
+
+    expect(
+      mockedRunAssistantOrchestrator
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message:
+          "طيب وين بلاقيها؟",
+
+        language:
+          "ar",
+
+        conversation,
+
+        semanticRoutingDecision:
+          semanticDecision,
+      })
+    );
+  }
+);
 
     it(
       "returns the public assistant response contract",
@@ -981,7 +1135,8 @@ describe(
 
         expect(
           mockedRunAssistantOrchestrator
-        ).toHaveBeenCalledWith({
+        ).toHaveBeenCalledWith(
+          expect.objectContaining({
           message:
             "I have had severe fatigue and dizziness for two weeks.",
 
@@ -996,7 +1151,8 @@ describe(
 
           clinicalReasoningState:
             existingReasoningState,
-        });
+          })
+        );
 
         expect(
           mockedUpdateClinicalInterview
@@ -1405,7 +1561,8 @@ describe(
 
     expect(
       mockedRunAssistantOrchestrator
-    ).toHaveBeenCalledWith({
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
       message:
         "I still have dizziness.",
 
@@ -1420,7 +1577,8 @@ describe(
 
       clinicalReasoningState:
         existingReasoningState,
-    });
+      })
+    );
 
     expect(
       mockedUpdateClinicalInterview
@@ -1710,7 +1868,8 @@ it(
 
     expect(
       mockedRunAssistantOrchestrator
-    ).toHaveBeenCalledWith({
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
       message:
         "I have dizziness today.",
 
@@ -1722,7 +1881,8 @@ it(
 
       conversation:
         [],
-    });
+      })
+    );
 
     expect(
       mockedCreateClinicalInterview

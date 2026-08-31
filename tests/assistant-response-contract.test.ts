@@ -42,6 +42,8 @@ function createOrchestratorResult(
 
       questionIntent: "general",
 
+      productNavigation: null,
+
       questionEvidenceStatus: "sufficient",
 
       questionEvidenceConfidence: "moderate",

@@ -15,6 +15,18 @@ import {
 
 import { buildAssistantResponseContract } from "@/lib/health-intelligence/application/assistant-response-contract.service";
 
+import {
+  resolveAssistantSemanticRouting,
+} from "@/lib/health-intelligence/application/assistant-semantic-routing/resolve-assistant-semantic-routing";
+
+import {
+  resolveAssistantSemanticRoutingWithModel,
+} from "@/lib/health-intelligence/application/assistant-semantic-routing/assistant-semantic-model.service";
+
+import {
+  openAIAssistantSemanticModelClient,
+} from "@/lib/health-intelligence/application/assistant-semantic-routing/openai-assistant-semantic-model.client";
+
 import type {
   AssistantResponseConversationMessage,
   AssistantResponseHealthContext,
@@ -374,6 +386,31 @@ if (
 }
 }
 
+const deterministicSemanticDecision =
+  resolveAssistantSemanticRouting(
+    message.trim()
+  );
+
+const semanticRoutingDecision =
+  await resolveAssistantSemanticRoutingWithModel({
+    input: {
+      currentMessage:
+        message.trim(),
+
+      language:
+        normalizedLanguage,
+
+      conversation:
+        normalizedConversation,
+
+      deterministicDecision:
+        deterministicSemanticDecision,
+    },
+
+    client:
+      openAIAssistantSemanticModelClient,
+  });
+
 const orchestratorResult =
   runAssistantOrchestrator({
     message:
@@ -386,6 +423,8 @@ const orchestratorResult =
 
     conversation:
       normalizedConversation,
+
+    semanticRoutingDecision,
 
     ...(trustedClinicalReasoningState
       ? {

@@ -14,6 +14,18 @@ import {
 
 import { detectAssistantIntent } from "@/lib/health-intelligence/application/assistant-intent/assistant-intent";
 
+import type {
+  ProductNavigationDetection,
+} from "@/lib/health-intelligence/application/product-navigation/product-navigation.types";
+
+import type {
+  AssistantSemanticRoutingDecision,
+} from "@/lib/health-intelligence/application/assistant-semantic-routing/assistant-semantic-routing.types";
+
+import {
+  resolveProductNavigation,
+} from "@/lib/health-intelligence/application/product-navigation/resolve-product-navigation";
+
 import { runClinicalReasoningLoop } from "@/lib/health-intelligence/runtime/clinical-reasoning-loop";
 
 import type {
@@ -37,6 +49,9 @@ export type AssistantOrchestratorInput = {
 
   conversation: AssistantResponseConversationMessage[];
 
+  semanticRoutingDecision?:
+  AssistantSemanticRoutingDecision | null;
+
   clinicalReasoningState?:
     ClinicalReasoningState | null;
 };
@@ -53,6 +68,9 @@ export type AssistantOrchestratorReasoning = {
   missingInformation: unknown;
 
   questionIntent: unknown;
+
+  productNavigation:
+    ProductNavigationDetection | null;
 
   questionEvidenceStatus: unknown;
 
@@ -93,6 +111,7 @@ export function runAssistantOrchestrator({
   language,
   healthContext,
   conversation,
+  semanticRoutingDecision = null,
   clinicalReasoningState = null,
 }: AssistantOrchestratorInput): AssistantOrchestratorResult {
 
@@ -102,14 +121,44 @@ export function runAssistantOrchestrator({
   );
 
   const clinicalUrgency =
-  assessClinicalUrgency({
-    message:
-      conversationAwareMessage,
+    assessClinicalUrgency({
+      message:
+        conversationAwareMessage,
 
-    language,
-  });
+      language,
+    });
 
-  const detectedIntent = detectAssistantIntent(conversationAwareMessage);
+  const deterministicProductNavigation =
+  resolveProductNavigation(
+    conversationAwareMessage
+  );
+
+const productNavigation:
+  ProductNavigationDetection | null =
+  clinicalUrgency.level !== "none"
+    ? null
+    : semanticRoutingDecision?.domain ===
+        "product_navigation" &&
+      semanticRoutingDecision.productDestination
+    ? {
+        matched:
+          true,
+
+        destination:
+          semanticRoutingDecision.productDestination,
+
+        confidence:
+          semanticRoutingDecision.confidence,
+
+        matchedKeywords:
+          [],
+      }
+    : deterministicProductNavigation;
+
+  const detectedIntent =
+    detectAssistantIntent(
+      conversationAwareMessage
+    );
 
  const clinicalReasoningLoop =
   clinicalUrgency.level === "none" &&
@@ -288,6 +337,8 @@ const legacyRequestsClarification = Boolean(
 
         questionIntent: questionEvidence.intent,
 
+        productNavigation,
+
         questionEvidenceStatus: questionEvidence.status,
 
         questionEvidenceConfidence: questionEvidence.confidence,
@@ -363,6 +414,8 @@ const response =
       missingInformation: reasoningReadiness.missingInformation,
 
       questionIntent: questionEvidence.intent,
+
+      productNavigation,
 
       questionEvidenceStatus: questionEvidence.status,
 
