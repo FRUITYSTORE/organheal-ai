@@ -73,6 +73,78 @@ export class BackgroundJobRepository {
     }
   }
 
+    async findActiveReportJob(
+    userId: string,
+    jobType: string,
+    reportId: number
+  ): Promise<string | null> {
+    const {
+      data,
+      error,
+    } =
+      await this.client
+        .from(
+          "background_jobs"
+        )
+        .select(
+          "id"
+        )
+        .eq(
+          "user_id",
+          userId
+        )
+        .eq(
+          "job_type",
+          jobType
+        )
+        .eq(
+          "report_id",
+          reportId
+        )
+        .in(
+          "status",
+          [
+            "pending",
+            "running",
+            "retrying",
+          ]
+        )
+        .order(
+          "created_at",
+          {
+            ascending:
+              true,
+          }
+        )
+        .limit(
+          1
+        )
+        .maybeSingle();
+
+    if (error) {
+      throw error;
+    }
+
+    const row =
+      data as
+        | {
+            id?:
+              unknown;
+          }
+        | null;
+
+    if (
+      !row ||
+      typeof row.id !==
+        "string" ||
+      !row.id.trim()
+    ) {
+      return null;
+    }
+
+    return row.id;
+  }
+
   async createReportJobOnce(
     userId: string,
     requestId: string | null,

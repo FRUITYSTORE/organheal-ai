@@ -92,6 +92,38 @@ export class BackgroundJobService {
     return job.id;
   }
 
+    async findActivePdfExtraction({
+    userId,
+    reportId,
+  }: {
+    userId:
+      string;
+
+    reportId:
+      number;
+  }): Promise<
+    string | null
+  > {
+    if (
+      !Number.isSafeInteger(
+        reportId
+      ) ||
+      reportId <= 0
+    ) {
+      throw new Error(
+        "A valid report ID is required to find active PDF extraction."
+      );
+    }
+
+    return this.repository
+      .findActiveReportJob(
+        userId,
+        JOB_TYPES
+          .PDF_EXTRACTION,
+        reportId
+      );
+  }
+
   async enqueuePdfExtraction<
     TPayload extends {
       reportId: number;

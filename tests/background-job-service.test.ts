@@ -30,6 +30,91 @@ function createClient():
     SupabaseClient;
 }
 
+function createActiveReportJobClient({
+  data,
+}: {
+  data:
+    | {
+        id:
+          string;
+      }
+    | null;
+}): SupabaseClient {
+  const maybeSingle =
+    vi.fn()
+      .mockResolvedValue({
+        data,
+
+        error:
+          null,
+      });
+
+  const limit =
+    vi.fn(
+      () => ({
+        maybeSingle,
+      })
+    );
+
+  const order =
+    vi.fn(
+      () => ({
+        limit,
+      })
+    );
+
+  const inStatus =
+    vi.fn(
+      () => ({
+        order,
+      })
+    );
+
+  const eqReportId =
+    vi.fn(
+      () => ({
+        in:
+          inStatus,
+      })
+    );
+
+  const eqJobType =
+    vi.fn(
+      () => ({
+        eq:
+          eqReportId,
+      })
+    );
+
+  const eqUserId =
+    vi.fn(
+      () => ({
+        eq:
+          eqJobType,
+      })
+    );
+
+  const select =
+    vi.fn(
+      () => ({
+        eq:
+          eqUserId,
+      })
+    );
+
+  const from =
+    vi.fn(
+      () => ({
+        select,
+      })
+    );
+
+  return {
+    from,
+  } as unknown as
+    SupabaseClient;
+}
+
 function createEnvelope(
   overrides:
     Partial<
@@ -394,6 +479,94 @@ describe(
                   }),
               }),
           })
+        );
+      }
+    );
+  }
+);
+describe(
+  "BackgroundJobService PDF extraction lookup",
+  () => {
+    it(
+      "returns the active PDF extraction job for the report",
+      async () => {
+        const service =
+          new BackgroundJobService(
+            createActiveReportJobClient({
+              data: {
+                id:
+                  "pdf-job-existing",
+              },
+            })
+          );
+
+        const result =
+          await service
+            .findActivePdfExtraction({
+              userId:
+                "user-123",
+
+              reportId:
+                701,
+            });
+
+        expect(
+          result
+        ).toBe(
+          "pdf-job-existing"
+        );
+      }
+    );
+
+    it(
+      "returns null when the report has no active PDF extraction job",
+      async () => {
+        const service =
+          new BackgroundJobService(
+            createActiveReportJobClient({
+              data:
+                null,
+            })
+          );
+
+        const result =
+          await service
+            .findActivePdfExtraction({
+              userId:
+                "user-123",
+
+              reportId:
+                701,
+            });
+
+        expect(
+          result
+        ).toBeNull();
+      }
+    );
+
+    it(
+      "rejects an invalid report id before querying for an active extraction",
+      async () => {
+        const service =
+          new BackgroundJobService(
+            createActiveReportJobClient({
+              data:
+                null,
+            })
+          );
+
+        await expect(
+          service
+            .findActivePdfExtraction({
+              userId:
+                "user-123",
+
+              reportId:
+                0,
+            })
+        ).rejects.toThrow(
+          "A valid report ID is required to find active PDF extraction."
         );
       }
     );

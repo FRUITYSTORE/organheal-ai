@@ -15,12 +15,16 @@ const {
   mockedLogApiInfo,
   mockedGetSupabaseAdminClient,
   mockedEnqueuePdfExtraction,
+  mockedFindActivePdfExtraction,
 } = vi.hoisted(
   () => ({
     mockedAuthenticateApiRequest:
       vi.fn(),
 
     mockedConsumePersistentApiRateLimit:
+      vi.fn(),
+
+     mockedFindActivePdfExtraction:
       vi.fn(),
 
     mockedResolveApiRateLimitIdentity:
@@ -93,10 +97,13 @@ vi.mock(
   "@/lib/jobs/background-job.service",
   () => ({
     BackgroundJobService:
-      class {
-        enqueuePdfExtraction =
-          mockedEnqueuePdfExtraction;
-      },
+  class {
+    findActivePdfExtraction =
+      mockedFindActivePdfExtraction;
+
+    enqueuePdfExtraction =
+      mockedEnqueuePdfExtraction;
+   },
   })
 );
 
@@ -392,6 +399,107 @@ describe(
 
           jobId:
             "job-123",
+
+          reportId:
+            701,
+
+          requestId:
+            "req_extract_pdf_test",
+        });
+      }
+    );
+
+        it(
+      "reuses an active PDF extraction job without consuming rate limit quota",
+      async () => {
+        const supabase =
+          createSupabaseClient();
+
+        mockedAuthenticateApiRequest
+          .mockResolvedValue({
+            success:
+              true,
+
+            token:
+              "test-token",
+
+            user: {
+              id:
+                "user-123",
+            },
+
+            client:
+              supabase,
+          } as never);
+
+        mockedFindActivePdfExtraction
+          .mockResolvedValueOnce(
+            "job-existing-701"
+          );
+
+        const response =
+          await POST(
+            new Request(
+              "http://localhost/api/extract-pdf",
+              {
+                method:
+                  "POST",
+
+                headers: {
+                  "content-type":
+                    "application/json",
+
+                  authorization:
+                    "Bearer test-token",
+                },
+
+                body:
+                  JSON.stringify({
+                    reportId:
+                      701,
+                  }),
+              }
+            )
+          );
+
+        const body =
+          await response.json();
+
+        expect(
+          response.status
+        ).toBe(
+          202
+        );
+
+        expect(
+          mockedFindActivePdfExtraction
+        ).toHaveBeenCalledWith({
+          userId:
+            "user-123",
+
+          reportId:
+            701,
+        });
+
+        expect(
+          mockedConsumePersistentApiRateLimit
+        ).not.toHaveBeenCalled();
+
+        expect(
+          mockedEnqueuePdfExtraction
+        ).not.toHaveBeenCalled();
+
+        expect(
+          body
+        ).toEqual({
+          success:
+            true,
+
+          status:
+            "processing",
+
+          jobId:
+            "job-existing-701",
 
           reportId:
             701,

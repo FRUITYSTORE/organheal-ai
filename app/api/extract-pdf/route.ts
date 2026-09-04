@@ -378,6 +378,68 @@ export async function POST(
       const adminClient =
         getSupabaseAdminClient();
 
+              const backgroundJobService =
+        new BackgroundJobService(
+          adminClient
+        );
+
+      const existingJobId =
+        await backgroundJobService
+          .findActivePdfExtraction({
+            userId:
+              user.id,
+
+            reportId:
+              resolvedReportId,
+          });
+
+      if (
+        existingJobId
+      ) {
+        logApiInfo(
+          "extract_pdf.existing_job_reused",
+          {
+            route:
+              "/api/extract-pdf",
+
+            requestId,
+
+            jobId:
+              existingJobId,
+
+            reportId:
+              resolvedReportId,
+          }
+        );
+
+        return NextResponse.json(
+          {
+            success:
+              true,
+
+            status:
+              "processing",
+
+            jobId:
+              existingJobId,
+
+            reportId:
+              resolvedReportId,
+
+            requestId,
+          },
+          {
+            status:
+              202,
+
+            headers: {
+              "x-request-id":
+                requestId,
+            },
+          }
+        );
+      }
+
       const rateLimit =
         await consumePersistentApiRateLimit({
         client:
@@ -429,11 +491,6 @@ if (
     }
   );
 }
-
-const backgroundJobService =
-      new BackgroundJobService(
-        adminClient
-      );
 
     const enqueueResult =
       await backgroundJobService
