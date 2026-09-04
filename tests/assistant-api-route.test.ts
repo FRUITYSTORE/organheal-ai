@@ -55,7 +55,7 @@ vi.mock(
     getClinicalInterview:
       vi.fn(),
 
-    getRecentClinicalInterviews:
+    getLatestActiveClinicalInterview:
       vi.fn(),
 
     updateClinicalInterview:
@@ -126,7 +126,7 @@ import {
 import {
   createClinicalInterview,
   getClinicalInterview,
-  getRecentClinicalInterviews,
+  getLatestActiveClinicalInterview,
   updateClinicalInterview,
 } from "@/lib/repositories/clinical-interview.repository";
 
@@ -183,9 +183,14 @@ const mockedGetClinicalInterview =
     getClinicalInterview
   );
 
+  const mockedGetLatestActiveClinicalInterview =
+  vi.mocked(
+    getLatestActiveClinicalInterview
+  );
+
   const mockedGetRecentClinicalInterviews =
   vi.mocked(
-    getRecentClinicalInterviews
+    getLatestActiveClinicalInterview
   );
 
 const mockedUpdateClinicalInterview =
@@ -234,6 +239,9 @@ function createOrchestratorResult(
     reasoning: {
       mode:
         "answer",
+
+      clinicalUrgencyLevel:
+        "none",
 
       status:
         "sufficient",
@@ -1449,28 +1457,26 @@ mockedResolveAssistantSemanticRoutingWithModel
           {},
       } as never);
 
-    mockedGetRecentClinicalInterviews
-      .mockResolvedValue([
-        {
-          id:
-            "interview-active",
+    mockedGetLatestActiveClinicalInterview
+  .mockResolvedValue({
+    id:
+      "interview-active",
 
-          user_id:
-            "user-1",
+    user_id:
+      "user-1",
 
-          status:
-            "active",
+    status:
+      "active",
 
-          reasoning_state:
-            existingReasoningState,
+    reasoning_state:
+      existingReasoningState,
 
-          created_at:
-            "2026-08-18T12:00:00.000Z",
+    created_at:
+      "2026-08-18T12:00:00.000Z",
 
-          updated_at:
-            "2026-08-18T12:05:00.000Z",
-        },
-      ]);
+    updated_at:
+      "2026-08-18T12:05:00.000Z",
+  });
 
     const orchestratorResult =
       createOrchestratorResult(
@@ -1548,12 +1554,11 @@ mockedResolveAssistantSemanticRoutingWithModel
     );
 
     expect(
-      mockedGetRecentClinicalInterviews
-    ).toHaveBeenCalledWith(
-      "user-1",
-      10,
-      authenticatedClient
-    );
+  mockedGetLatestActiveClinicalInterview
+).toHaveBeenCalledWith(
+  "user-1",
+  authenticatedClient
+);
 
     expect(
       mockedGetClinicalInterview
@@ -1727,28 +1732,26 @@ it(
           {},
       } as never);
 
-    mockedGetRecentClinicalInterviews
-      .mockResolvedValue([
-        {
-          id:
-            "interview-expired",
+    mockedGetLatestActiveClinicalInterview
+  .mockResolvedValue({
+    id:
+      "interview-expired",
 
-          user_id:
-            "user-1",
+    user_id:
+      "user-1",
 
-          status:
-            "active",
+    status:
+      "active",
 
-          reasoning_state:
-            expiredReasoningState,
+    reasoning_state:
+      expiredReasoningState,
 
-          created_at:
-            "2026-08-18T10:00:00.000Z",
+    created_at:
+      "2026-08-18T10:00:00.000Z",
 
-          updated_at:
-            "2026-08-18T10:00:00.000Z",
-        },
-      ]);
+    updated_at:
+      "2026-08-18T10:00:00.000Z",
+  });
 
     const orchestratorResult =
       createOrchestratorResult(

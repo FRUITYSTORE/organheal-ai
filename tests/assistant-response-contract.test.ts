@@ -32,6 +32,9 @@ function createOrchestratorResult(
     reasoning: {
       mode: overrides.mode ?? "answer",
 
+      clinicalUrgencyLevel:
+        "none",
+
       status: "sufficient",
 
       confidence: "moderate",

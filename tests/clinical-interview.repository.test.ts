@@ -158,24 +158,21 @@ describe(
           createReasoningState();
 
         const row = {
-          id:
-            "interview-1",
+  id:
+    "interview-1",
 
-          user_id:
-            "user-1",
+  user_id:
+    "user-1",
 
-          status:
-            "active",
+  status:
+    "active",
 
-          reasoning_state:
-            reasoningState,
+  created_at:
+    "2026-08-18T12:00:00.000Z",
 
-          created_at:
-            "2026-08-18T12:00:00.000Z",
-
-          updated_at:
-            "2026-08-18T12:00:00.000Z",
-        };
+  updated_at:
+    "2026-08-18T12:00:00.000Z",
+};
 
         const mock =
           createClient({
@@ -213,12 +210,20 @@ describe(
           reasoning_state:
             reasoningState,
         });
+        expect(
+          mock.select
+        ).toHaveBeenCalledWith(
+          "id, user_id, status, created_at, updated_at"
+      );
 
         expect(
           result
-        ).toEqual(
-          row
-        );
+        ).toEqual({
+           ...row,
+
+          reasoning_state:
+            reasoningState,
+       });
       }
     );
 

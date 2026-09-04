@@ -31,10 +31,6 @@ import {
   getMedicalReportMarkersByReportId,
 } from "@/lib/repositories/report-markers.repository";
 
-import {
-  getRecentClinicalInterviews,
-} from "@/lib/repositories/clinical-interview.repository";
-
 type AssistantContextLanguage =
   | "en"
   | "ar";
@@ -57,42 +53,11 @@ export async function buildAuthenticatedAssistantContext({
 }: BuildAuthenticatedAssistantContextInput): Promise<
   AssistantResponseHealthContext
 > {
-  const [
-  patientSummary,
-  recentClinicalInterviews,
-] =
-  await Promise.all([
-    getPatientSummary(
+  const patientSummary =
+    await getPatientSummary(
       userId,
       client
-    ),
-
-    getRecentClinicalInterviews(
-      userId,
-      10,
-      client
-    ),
-  ]);
-
-const clinicalMemoryEvidence =
-  recentClinicalInterviews.flatMap(
-    (interview) =>
-      interview
-        .reasoning_state
-        ?.collectedEvidence ??
-      []
-  );
-
-const clinicalMemory =
-  recentClinicalInterviews.length > 0
-    ? {
-        evidence:
-          clinicalMemoryEvidence,
-
-        interviewCount:
-          recentClinicalInterviews.length,
-      }
-    : null;
+    );
 
   const intelligence =
     buildHealthIntelligence(
@@ -128,7 +93,7 @@ const clinicalMemory =
         ) ?? null
       : null;
 
-        const latestReportMarkers =
+  const latestReportMarkers =
     latestReport
       ? await getMedicalReportMarkersByReportId(
           userId,
@@ -180,32 +145,31 @@ const clinicalMemory =
               latestInsight?.risk_level ??
               null,
 
-              reportEvidence:
-  latestReportMarkers
-    .map(
-      (marker) => ({
-        marker:
-          marker.marker_name,
+            reportEvidence:
+              latestReportMarkers.map(
+                (marker) => ({
+                  marker:
+                    marker.marker_name,
 
-        value:
-          marker.marker_value,
+                  value:
+                    marker.marker_value,
 
-        unit:
-          marker.marker_unit,
+                  unit:
+                    marker.marker_unit,
 
-        status:
-          marker.marker_status,
+                  status:
+                    marker.marker_status,
 
-        referenceLow:
-          marker.reference_low,
+                  referenceLow:
+                    marker.reference_low,
 
-        referenceHigh:
-          marker.reference_high,
+                  referenceHigh:
+                    marker.reference_high,
 
-        referenceSource:
-          marker.reference_source,
-      })
-    ),
+                  referenceSource:
+                    marker.reference_source,
+                })
+              ),
           }
         : null;
 
@@ -237,6 +201,7 @@ const clinicalMemory =
 
     latestReportContext,
 
-    clinicalMemory,
+    clinicalMemory:
+      null,
   });
 }

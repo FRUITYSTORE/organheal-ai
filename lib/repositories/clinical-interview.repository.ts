@@ -94,7 +94,7 @@ export async function createClinicalInterview(
           reasoningState,
       })
       .select(
-        CLINICAL_INTERVIEW_SELECT
+        "id, user_id, status, created_at, updated_at"
       )
       .single();
 
@@ -104,7 +104,12 @@ export async function createClinicalInterview(
     );
   }
 
-  return data as ClinicalInterviewSession;
+  return {
+    ...data,
+
+    reasoning_state:
+      reasoningState,
+  } as ClinicalInterviewSession;
 }
 
 export async function getClinicalInterview(
@@ -143,7 +148,57 @@ export async function getClinicalInterview(
   }
 
   return data
-    ? data as ClinicalInterviewSession
+    ? data as
+        ClinicalInterviewSession
+    : null;
+}
+
+export async function getLatestActiveClinicalInterview(
+  userId:
+    string,
+  client:
+    SupabaseClient = supabase
+): Promise<ClinicalInterviewSession | null> {
+  const {
+    data,
+    error,
+  } =
+    await client
+      .from(
+        CLINICAL_INTERVIEW_SESSIONS_TABLE
+      )
+      .select(
+        CLINICAL_INTERVIEW_SELECT
+      )
+      .eq(
+        "user_id",
+        userId
+      )
+      .eq(
+        "status",
+        "active"
+      )
+      .order(
+        "updated_at",
+        {
+          ascending:
+            false,
+        }
+      )
+      .limit(
+        1
+      )
+      .maybeSingle();
+
+  if (error) {
+    throw new Error(
+      error.message
+    );
+  }
+
+  return data
+    ? data as
+        ClinicalInterviewSession
     : null;
 }
 
@@ -247,5 +302,6 @@ export async function updateClinicalInterview(
     );
   }
 
-  return data as ClinicalInterviewSession;
+  return data as
+    ClinicalInterviewSession;
 }

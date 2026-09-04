@@ -9,6 +9,10 @@ import type {
   WholeBodyClinicalRelationship,
 } from "@/lib/health-intelligence/models/whole-body-clinical-knowledge";
 
+import {
+  buildLaboratoryMarkerRelationships,
+} from "@/lib/health-intelligence/engines/laboratory-marker-relationship.engine";
+
 type UnknownRecord =
   Record<
     string,
@@ -631,6 +635,10 @@ export function buildWholeBodyClinicalRelationships({
       patient,
       nodes
     ),
+
+    ...buildLaboratoryMarkerRelationships({
+      nodes,
+    }),
 
     ...buildSameDomainReportTemporalRelationships(
       patient,

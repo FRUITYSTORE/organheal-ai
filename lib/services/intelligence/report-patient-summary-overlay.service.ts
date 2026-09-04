@@ -15,6 +15,10 @@ import {
 } from "@/lib/repositories/insight.repository";
 
 import {
+  getMedicalReportMarkersByReportId,
+} from "@/lib/repositories/report-markers.repository";
+
+import {
   getPatientSummary,
 } from "@/lib/services/shared/patient-summary.service";
 
@@ -86,12 +90,13 @@ export async function getFocusedReportPatientSummary(
   reportId: number,
   client: SupabaseClient
 ): Promise<PatientSummary | null> {
-  const [
+    const [
     patientSummary,
     focusedReports,
     focusedInsights,
     focusedGeneratedResults,
-   ] = await Promise.all([
+    focusedReportMarkers,
+  ] = await Promise.all([
     getPatientSummary(userId, client),
     getUploadedReportsByIds(
       userId,
@@ -104,6 +109,11 @@ export async function getFocusedReportPatientSummary(
       client
     ),
     getGeneratedResultsByReportId(
+      userId,
+      reportId,
+      client
+    ),
+    getMedicalReportMarkersByReportId(
       userId,
       reportId,
       client
@@ -123,6 +133,9 @@ export async function getFocusedReportPatientSummary(
       focusedReport,
       patientSummary.uploadedReports
     ),
+
+    reportMarkers:
+      focusedReportMarkers,
 
     healthInsights: prioritizeInsights(
       focusedInsights,

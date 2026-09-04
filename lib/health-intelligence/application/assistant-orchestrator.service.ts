@@ -59,6 +59,11 @@ export type AssistantOrchestratorInput = {
 export type AssistantOrchestratorReasoning = {
   mode: "clarify" | "answer";
 
+  clinicalUrgencyLevel:
+    ReturnType<
+      typeof assessClinicalUrgency
+    >["level"];
+
   status: string;
 
   confidence: unknown;
@@ -327,6 +332,9 @@ const legacyRequestsClarification = Boolean(
   reasoning: {
         mode: "clarify",
 
+        clinicalUrgencyLevel:
+          clinicalUrgency.level,
+
         status: reasoningReadiness.status,
 
         confidence: reasoningReadiness.confidence,
@@ -404,6 +412,9 @@ const response =
 
   reasoning: {
       mode: "answer",
+
+      clinicalUrgencyLevel:
+        clinicalUrgency.level,
 
       status: reasoningReadiness.status,
 

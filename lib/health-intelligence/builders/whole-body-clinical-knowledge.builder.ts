@@ -21,6 +21,10 @@ import {
   assessClinicalEvidenceSufficiency,
 } from "@/lib/health-intelligence/engines/clinical-evidence-sufficiency.engine";
 
+import {
+  buildReportMarkerClinicalNodes,
+} from "@/lib/health-intelligence/builders/report-marker-clinical-nodes.builder";
+
 type UnknownRecord =
   Record<
     string,
@@ -954,6 +958,10 @@ export function buildWholeBodyClinicalKnowledge(
     ),
 
     ...buildCheckInNodes(
+      patient
+    ),
+
+    ...buildReportMarkerClinicalNodes(
       patient
     ),
 
