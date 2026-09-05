@@ -106,6 +106,33 @@ function resolveClinicalExplanationMode(
   return "full";
 }
 
+function resolveClinicalExplanationEvidence(
+  latestReport:
+    NonNullable<
+      AssistantResponseHealthContext["latestReportContext"]
+    >,
+  mode:
+    AssistantClinicalExplanationMode
+) {
+  if (
+  mode ===
+    "full" &&
+  (
+    latestReport
+      .expandedReportEvidence
+      ?.length ??
+    0
+  ) >
+    0
+) {
+  return latestReport
+    .expandedReportEvidence!;
+}
+
+  return latestReport
+    .reportEvidence;
+}
+
 function canGenerateClinicalExplanation(
   input:
     EnhanceAssistantClinicalResponseInput
@@ -181,6 +208,19 @@ export async function enhanceAssistantClinicalResponse(
     input.question
   );
 
+    const explanationEvidence =
+    resolveClinicalExplanationEvidence(
+      latestReport,
+      explanationMode
+    );
+
+  const explanationReport = {
+    ...latestReport,
+
+    reportEvidence:
+      explanationEvidence,
+  };
+
   try {
     const rawExplanation =
       await input.client.generate({
@@ -194,7 +234,7 @@ export async function enhanceAssistantClinicalResponse(
           explanationMode,
 
         report:
-          latestReport,
+          explanationReport,
 
         knowledge,
 
@@ -212,16 +252,16 @@ export async function enhanceAssistantClinicalResponse(
       });
 
     const explanation =
-      validateAssistantClinicalExplanation(
-        rawExplanation,
-        latestReport.reportEvidence
-      );
+    validateAssistantClinicalExplanation(
+      rawExplanation,
+      explanationEvidence
+   );
 
     if (!explanation) {
   const validationReason =
     diagnoseAssistantClinicalExplanationValidationFailure(
       rawExplanation,
-      latestReport.reportEvidence
+      explanationEvidence
     );
 
   logApiInfo(

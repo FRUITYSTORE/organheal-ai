@@ -486,5 +486,221 @@ describe(
         );
       }
     );
+        it(
+      "uses expanded evidence only for full report interpretation",
+      async () => {
+        vi.stubEnv(
+          "OPENAI_CLINICAL_EXPLANATION_ENABLED",
+          "true"
+        );
+
+        const healthContext =
+          createHealthContext();
+
+        const latestReport =
+          healthContext
+            .latestReportContext;
+
+        expect(
+          latestReport
+        ).not.toBeNull();
+
+        expect(
+          latestReport
+        ).toBeDefined();
+
+        if (
+          !latestReport
+        ) {
+          throw new Error(
+            "Expected latest report context."
+          );
+        }
+
+        latestReport
+          .expandedReportEvidence = [
+            ...latestReport
+              .reportEvidence,
+
+            {
+              marker:
+                "Urine ACR",
+
+              value:
+                31,
+
+              unit:
+                "mg/g",
+
+              status:
+                "High",
+
+              referenceLow:
+                null,
+
+              referenceHigh:
+                30,
+
+              referenceSource:
+                "report",
+            },
+          ];
+
+        const generate =
+          vi.fn()
+            .mockResolvedValue(
+              validExplanation
+            );
+
+        const client: AssistantClinicalExplanationClient = {
+          generate,
+        };
+
+        await enhanceAssistantClinicalResponse({
+          question:
+            "Explain my latest report.",
+
+          language:
+            "en",
+
+          healthContext,
+
+          deterministicResult:
+            createDeterministicResult(),
+
+          client,
+
+          requestId:
+            "req_full_evidence",
+        });
+
+        await enhanceAssistantClinicalResponse({
+          question:
+            "Why is my HbA1c high?",
+
+          language:
+            "en",
+
+          healthContext,
+
+          deterministicResult:
+            createDeterministicResult(),
+
+          client,
+
+          requestId:
+            "req_cause_evidence",
+        });
+
+        await enhanceAssistantClinicalResponse({
+          question:
+            "What should I do next about my report?",
+
+          language:
+            "en",
+
+          healthContext,
+
+          deterministicResult:
+            createDeterministicResult(),
+
+          client,
+
+          requestId:
+            "req_next_step_evidence",
+        });
+
+        expect(
+          generate
+        ).toHaveBeenCalledTimes(
+          3
+        );
+
+        const fullInput =
+          generate.mock
+            .calls[0][0];
+
+        const causeInput =
+          generate.mock
+            .calls[1][0];
+
+        const nextStepInput =
+          generate.mock
+            .calls[2][0];
+
+        expect(
+          fullInput.mode
+        ).toBe(
+          "full"
+        );
+
+        expect(
+          fullInput.report
+            .reportEvidence
+        ).toHaveLength(
+          3
+        );
+
+        expect(
+          fullInput.report
+            .reportEvidence
+        ).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              marker:
+                "Urine ACR",
+
+              value:
+                31,
+
+              unit:
+                "mg/g",
+            }),
+          ])
+        );
+
+        expect(
+          causeInput.mode
+        ).toBe(
+          "cause-reasoning"
+        );
+
+        expect(
+          causeInput.report
+            .reportEvidence
+        ).toEqual(
+          latestReport
+            .reportEvidence
+        );
+
+        expect(
+          causeInput.report
+            .reportEvidence
+        ).toHaveLength(
+          2
+        );
+
+        expect(
+          nextStepInput.mode
+        ).toBe(
+          "next-step"
+        );
+
+        expect(
+          nextStepInput.report
+            .reportEvidence
+        ).toEqual(
+          latestReport
+            .reportEvidence
+        );
+
+        expect(
+          nextStepInput.report
+            .reportEvidence
+        ).toHaveLength(
+          2
+        );
+      }
+    );
   }
 );

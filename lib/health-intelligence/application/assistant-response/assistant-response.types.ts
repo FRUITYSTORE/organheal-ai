@@ -57,8 +57,23 @@ export type AssistantLatestReportContext = {
   doctorBrief: string | null;
   nextBestAction: string | null;
   riskLevel: string | null;
+
+  /*
+   * Existing canonical evidence used by focused
+   * assistant reasoning paths.
+   */
   reportEvidence:
     AssistantReportEvidenceItem[];
+
+  /*
+   * Parser v2 high-confidence report evidence.
+   *
+   * This is intentionally separate so full report
+   * interpretation can use broader evidence without
+   * expanding focused cause/next-step requests.
+   */
+  expandedReportEvidence?:
+  AssistantReportEvidenceItem[];
 };
 
 export type AssistantHealthScoreContext = {

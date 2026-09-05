@@ -31,6 +31,10 @@ import {
   getMedicalReportMarkersByReportId,
 } from "@/lib/repositories/report-markers.repository";
 
+import {
+  getReportEvidenceEventsByReportId,
+} from "@/lib/repositories/report-evidence-events.repository";
+
 type AssistantContextLanguage =
   | "en"
   | "ar";
@@ -102,6 +106,105 @@ export async function buildAuthenticatedAssistantContext({
         )
       : [];
 
+        const latestReportEvidenceEvents =
+    latestReport
+      ? await getReportEvidenceEventsByReportId(
+          userId,
+          latestReport.id,
+          client
+        )
+      : [];
+
+  const canonicalReportEvidence =
+    latestReportMarkers.map(
+      (marker) => ({
+        marker:
+          marker.marker_name,
+
+        value:
+          marker.marker_value,
+
+        unit:
+          marker.marker_unit,
+
+        status:
+          marker.marker_status,
+
+        referenceLow:
+          marker.reference_low,
+
+        referenceHigh:
+          marker.reference_high,
+
+        referenceSource:
+          marker.reference_source,
+      })
+    );
+
+  const parserV2Evidence =
+    latestReportEvidenceEvents
+      .filter(
+        (event) =>
+          event.normalization_confidence ===
+          "high"
+      )
+      .map(
+        (event) => ({
+          marker:
+            event.canonical_marker_name,
+
+          value:
+            event.marker_value,
+
+          unit:
+            event.marker_unit,
+
+          status:
+            event.marker_status,
+
+          referenceLow:
+            event.reference_low,
+
+          referenceHigh:
+            event.reference_high,
+
+          referenceSource:
+            event.reference_low !== null ||
+            event.reference_high !== null
+              ? ("report" as const)
+              : null,
+        })
+      );
+
+  const expandedReportEvidence =
+    [
+      ...canonicalReportEvidence,
+    ];
+
+  for (
+    const evidence
+    of parserV2Evidence
+  ) {
+    const alreadyExists =
+      expandedReportEvidence.some(
+        (existing) =>
+          existing.marker ===
+            evidence.marker &&
+          existing.value ===
+            evidence.value &&
+          existing.unit ===
+            evidence.unit
+      );
+
+    if (
+      !alreadyExists
+    ) {
+      expandedReportEvidence.push(
+        evidence
+      );
+    }
+  }
+
   const latestReportContext:
     AssistantLatestReportContext | null =
       latestReport
@@ -146,30 +249,9 @@ export async function buildAuthenticatedAssistantContext({
               null,
 
             reportEvidence:
-              latestReportMarkers.map(
-                (marker) => ({
-                  marker:
-                    marker.marker_name,
+  canonicalReportEvidence,
 
-                  value:
-                    marker.marker_value,
-
-                  unit:
-                    marker.marker_unit,
-
-                  status:
-                    marker.marker_status,
-
-                  referenceLow:
-                    marker.reference_low,
-
-                  referenceHigh:
-                    marker.reference_high,
-
-                  referenceSource:
-                    marker.reference_source,
-                })
-              ),
+expandedReportEvidence,
           }
         : null;
 
