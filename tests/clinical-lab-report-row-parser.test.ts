@@ -172,5 +172,65 @@ Ferritin 11 ng/mL 30 - 400 L
         ]);
       }
     );
+    it(
+  "extracts laboratory rows from flattened PDF text without line breaks",
+  () => {
+    const rows =
+      parseClinicalLabReportRows(
+        "CHEMISTRY / METABOLIC PANEL Test Result Units Reference interval Flag Glucose 128 mg/dL 70 - 99 H Sodium 136 mmol/L 135 - 145 Potassium - initial 5.7 mmol/L 3.5 - 5.1 H Potassium - repeat 4.3 mmol/L 3.5 - 5.1 Creatinine 0.82 mg/dL 0.67 - 1.17 GLYCEMIC MARKERS Test Result Units Reference interval Flag Hemoglobin A1c 6.6 % 4.0 - 5.6 H LIPID PROFILE Test Result Units Reference interval Flag Total cholesterol 258 mg/dL HDL cholesterol 0.93 mmol/L Triglycerides 240 mg/dL"
+      );
+
+    expect(
+      rows
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          rawName:
+            "Glucose",
+          value:
+            128,
+          unit:
+            "mg/dL",
+        }),
+
+        expect.objectContaining({
+          rawName:
+            "Potassium - initial",
+          value:
+            5.7,
+          unit:
+            "mmol/L",
+        }),
+
+        expect.objectContaining({
+          rawName:
+            "Potassium - repeat",
+          value:
+            4.3,
+          unit:
+            "mmol/L",
+        }),
+
+        expect.objectContaining({
+          rawName:
+            "Hemoglobin A1c",
+          value:
+            6.6,
+          unit:
+            "%",
+        }),
+
+        expect.objectContaining({
+          rawName:
+            "HDL cholesterol",
+          value:
+            0.93,
+          unit:
+            "mmol/L",
+        }),
+      ])
+    );
+  }
+);
   }
 );

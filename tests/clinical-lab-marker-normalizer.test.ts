@@ -102,5 +102,39 @@ describe(
         });
       }
     );
+    it(
+  "normalizes repeated-result qualifiers without losing the raw marker name",
+  () => {
+    expect(
+      normalizeClinicalLabMarkerName(
+        "Potassium - initial"
+      )
+    ).toEqual({
+      rawName:
+        "Potassium - initial",
+
+      canonicalName:
+        "Potassium",
+
+      confidence:
+        "high",
+    });
+
+    expect(
+      normalizeClinicalLabMarkerName(
+        "Potassium - repeat"
+      )
+    ).toEqual({
+      rawName:
+        "Potassium - repeat",
+
+      canonicalName:
+        "Potassium",
+
+      confidence:
+        "high",
+    });
+  }
+);
   }
 );

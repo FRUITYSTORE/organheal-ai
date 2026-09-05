@@ -28,6 +28,21 @@ function normalizeName(
     .trim();
 }
 
+function stripCommonResultQualifier(
+  normalizedName: string
+): string {
+  return normalizedName
+    .replace(
+      /\b(?:initial|repeat|repeated|recheck|rechecked|first|second|baseline)\b/g,
+      " "
+    )
+    .replace(
+      /\s+/g,
+      " "
+    )
+    .trim();
+}
+
 const canonicalAliases: Record<
   string,
   string[]
@@ -177,6 +192,16 @@ const aliasLookup =
       )
   );
 
+function findCanonicalMatch(
+  normalizedName: string
+) {
+  return aliasLookup.find(
+    (entry) =>
+      entry.alias ===
+      normalizedName
+  );
+}
+
 export function normalizeClinicalLabMarkerName(
   rawName: string
 ): CanonicalClinicalLabMarker {
@@ -186,10 +211,8 @@ export function normalizeClinicalLabMarkerName(
     );
 
   const exactMatch =
-    aliasLookup.find(
-      (entry) =>
-        entry.alias ===
-        normalizedRawName
+    findCanonicalMatch(
+      normalizedRawName
     );
 
   if (
@@ -205,6 +228,46 @@ export function normalizeClinicalLabMarkerName(
       confidence:
         "high",
     };
+  }
+
+  /*
+   * Some reports distinguish repeated measurements by
+   * appending a qualifier to the marker name:
+   *
+   * Potassium - initial
+   * Potassium - repeat
+   *
+   * The qualifier belongs to the evidence event, not to
+   * the biological marker identity.
+   */
+  const normalizedWithoutQualifier =
+    stripCommonResultQualifier(
+      normalizedRawName
+    );
+
+  if (
+    normalizedWithoutQualifier !==
+    normalizedRawName
+  ) {
+    const qualifiedMatch =
+      findCanonicalMatch(
+        normalizedWithoutQualifier
+      );
+
+    if (
+      qualifiedMatch
+    ) {
+      return {
+        rawName,
+
+        canonicalName:
+          qualifiedMatch
+            .canonicalName,
+
+        confidence:
+          "high",
+      };
+    }
   }
 
   /*
