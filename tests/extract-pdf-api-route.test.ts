@@ -16,9 +16,13 @@ const {
   mockedGetSupabaseAdminClient,
   mockedEnqueuePdfExtraction,
   mockedFindActivePdfExtraction,
+  mockedProcessBackgroundJobById,
 } = vi.hoisted(
   () => ({
     mockedAuthenticateApiRequest:
+      vi.fn(),
+
+    mockedProcessBackgroundJobById:
       vi.fn(),
 
     mockedConsumePersistentApiRateLimit:
@@ -108,10 +112,43 @@ vi.mock(
 );
 
 vi.mock(
+  "next/server",
+  async () => {
+    const actual =
+      await vi.importActual<
+        typeof import("next/server")
+      >(
+        "next/server"
+      );
+
+    return {
+      ...actual,
+
+      after:
+        vi.fn(
+          (
+            callback:
+              () =>
+                | void
+                | Promise<void>
+          ) => {
+            void callback();
+          }
+        ),
+    };
+  }
+);
+
+vi.mock(
   "@/lib/jobs/background-job-runtime",
   () => ({
     createBackgroundJobRuntime:
       vi.fn(() => ({
+        worker: {
+          processById:
+            mockedProcessBackgroundJobById,
+        },
+
         runner: {
           runBatch:
             vi.fn(),
@@ -219,6 +256,10 @@ describe(
             {} as never
           );
 
+          mockedProcessBackgroundJobById
+          .mockResolvedValue(
+            true
+      );
         mockedResolveApiRateLimitIdentity
           .mockReturnValue({
            type:
@@ -313,7 +354,7 @@ describe(
         const supabase =
           createSupabaseClient();
 
-        mockedAuthenticateApiRequest
+                mockedAuthenticateApiRequest
           .mockResolvedValue({
             success:
               true,
@@ -329,6 +370,15 @@ describe(
             client:
               supabase,
           } as never);
+
+        mockedEnqueuePdfExtraction
+          .mockResolvedValueOnce({
+            jobId:
+              "job-123",
+
+            created:
+              true,
+          });
 
         const response =
           await POST(
@@ -389,6 +439,12 @@ describe(
         });
 
         expect(
+          mockedProcessBackgroundJobById
+        ).toHaveBeenCalledWith(
+          "job-123"
+        );
+
+        expect(
           body
         ).toEqual({
           success:
@@ -431,6 +487,15 @@ describe(
             client:
               supabase,
           } as never);
+
+                  mockedEnqueuePdfExtraction
+          .mockResolvedValueOnce({
+            jobId:
+              "job-123",
+
+            created:
+              true,
+          });
 
         mockedFindActivePdfExtraction
           .mockResolvedValueOnce(
@@ -480,6 +545,12 @@ describe(
           reportId:
             701,
         });
+
+        expect(
+          mockedProcessBackgroundJobById
+        ).toHaveBeenCalledWith(
+          "job-existing-701"
+        );
 
         expect(
           mockedConsumePersistentApiRateLimit

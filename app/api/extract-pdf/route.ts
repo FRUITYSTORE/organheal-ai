@@ -412,6 +412,57 @@ export async function POST(
           }
         );
 
+                after(
+          async () => {
+            try {
+              const runtimeInstance =
+                createBackgroundJobRuntime();
+
+              const processed =
+                await runtimeInstance
+                  .worker
+                  .processById(
+                    existingJobId
+                  );
+
+              logApiInfo(
+                "extract_pdf.existing_job_kick_completed",
+                {
+                  route:
+                    "/api/extract-pdf",
+
+                  requestId,
+
+                  jobId:
+                    existingJobId,
+
+                  reportId:
+                    resolvedReportId,
+
+                  processed,
+                }
+              );
+            } catch (error) {
+              logApiError(
+                "extract_pdf.existing_job_kick_failed",
+                error,
+                {
+                  route:
+                    "/api/extract-pdf",
+
+                  requestId,
+
+                  jobId:
+                    existingJobId,
+
+                  reportId:
+                    resolvedReportId,
+                }
+              );
+            }
+          }
+        );
+
         return NextResponse.json(
           {
             success:
@@ -551,11 +602,11 @@ if (
             const runtimeInstance =
               createBackgroundJobRuntime();
 
-            const result =
+            const processed =
               await runtimeInstance
-                .runner
-                .runBatch(
-                  1
+                .worker
+                .processById(
+                  jobId
                 );
 
             logApiInfo(
@@ -571,13 +622,10 @@ if (
                 reportId:
                   resolvedReportId,
 
-                processedJobs:
-                  result.processedJobs,
-
-                queueWasEmpty:
-                  result.queueWasEmpty,
+                processed,
               }
             );
+
           } catch (error) {
             logApiError(
               "extract_pdf.background_kick_failed",

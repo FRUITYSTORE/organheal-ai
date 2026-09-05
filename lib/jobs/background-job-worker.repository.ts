@@ -244,6 +244,47 @@ export class BackgroundJobWorkerRepository {
       : null;
   }
 
+    async claimById<
+    TPayload = unknown,
+  >(
+    jobId:
+      string
+  ): Promise<
+    DurableBackgroundJob<TPayload> | null
+  > {
+    const {
+      data,
+      error,
+    } =
+      await this.client.rpc(
+        "claim_background_job_by_id",
+        {
+          p_job_id:
+            jobId,
+        }
+      );
+
+    if (error) {
+      throw error;
+    }
+
+    const rows =
+      Array.isArray(data)
+        ? data
+        : [];
+
+    const row =
+      rows[0] as
+        | BackgroundJobRow
+        | undefined;
+
+    return row
+      ? mapBackgroundJobRow<TPayload>(
+          row
+        )
+      : null;
+  }
+
   async markCompleted(
     jobId:
       string

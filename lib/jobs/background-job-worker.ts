@@ -67,6 +67,27 @@ export class DurableBackgroundJobWorker {
     return true;
   }
 
+    async processById(
+    jobId:
+      string
+  ): Promise<boolean> {
+    const job =
+      await this.repository
+        .claimById(
+          jobId
+        );
+
+    if (!job) {
+      return false;
+    }
+
+    await this.processClaimedJob(
+      job
+    );
+
+    return true;
+  }
+
   private async processClaimedJob(
     job:
       DurableBackgroundJob
