@@ -172,6 +172,98 @@ Ferritin 11 ng/mL 30 - 400 L
         ]);
       }
     );
+
+    it(
+  "parses adjacent results and report qualifiers from the real flattened challenge layout",
+  () => {
+    const rows =
+      parseClinicalLabReportRows(
+        [
+          "CHEMISTRY / METABOLIC PANEL Test Result Units Reference interval Flag",
+          "Glucose 128 mg/dL 70 - 99 fasting H",
+          "Sodium 136 mmol/L 135 - 145",
+          "Potassium - initial 5.7 mmol/L 3.5 - 5.1 H",
+          "Potassium - repeat 4.3 mmol/L 3.5 - 5.1",
+          "LIPID PROFILE Test Result Units Reference interval Flag",
+          "Total cholesterol 258 mg/dL < 200 H",
+          "LDL cholesterol - calculated 174 mg/dL < 100 desirable H",
+          "HDL cholesterol 0.93 mmol/L >= 1.03 male L",
+          "Triglycerides 240 mg/dL < 150 H",
+          "COMPLETE BLOOD COUNT Test Result Units Reference interval Flag",
+          "RBC count 5.18 x10^6/uL 4.20 - 5.80",
+          "WBC count 7.4 x10^3/uL 3.8 - 10.8",
+          "THYROID / VITAMINS / INFLAMMATION Test Result Units Reference interval Flag",
+          "TSH 1.82 mIU/L 0.40 - 4.50",
+          "Free T4 1.18 ng/dL 0.80 - 1.80",
+          "25-OH Vitamin D 18 ng/mL 30 - 100 L",
+        ].join(" ")
+      );
+
+    expect(
+      rows
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          rawName:
+            "Glucose",
+          value:
+            128,
+          flag:
+            "H",
+        }),
+
+        expect.objectContaining({
+          rawName:
+            "LDL cholesterol - calculated",
+          value:
+            174,
+          flag:
+            "H",
+        }),
+
+        expect.objectContaining({
+          rawName:
+            "HDL cholesterol",
+          value:
+            0.93,
+          flag:
+            "L",
+        }),
+
+        expect.objectContaining({
+          rawName:
+            "RBC count",
+          value:
+            5.18,
+        }),
+
+        expect.objectContaining({
+          rawName:
+            "WBC count",
+          value:
+            7.4,
+        }),
+
+        expect.objectContaining({
+          rawName:
+            "Free T4",
+          value:
+            1.18,
+        }),
+
+        expect.objectContaining({
+          rawName:
+            "25-OH Vitamin D",
+          value:
+            18,
+          flag:
+            "L",
+        }),
+      ])
+    );
+  }
+);
+
     it(
   "extracts laboratory rows from flattened PDF text without line breaks",
   () => {

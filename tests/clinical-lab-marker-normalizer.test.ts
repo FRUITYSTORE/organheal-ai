@@ -136,5 +136,37 @@ describe(
     });
   }
 );
+it(
+  "normalizes additional clinical markers from flattened reports",
+  () => {
+    const cases = [
+      ["LDL cholesterol - calculated", "LDL"],
+      ["Non-HDL cholesterol", "Non-HDL Cholesterol"],
+      ["TSH", "TSH"],
+      ["Free T4", "Free T4"],
+      ["25-OH Vitamin D", "Vitamin D"],
+      ["RBC count", "RBC"],
+      ["WBC count", "WBC"],
+    ] as const;
+
+    for (
+      const [
+        rawName,
+        canonicalName,
+      ] of cases
+    ) {
+      expect(
+        normalizeClinicalLabMarkerName(
+          rawName
+        )
+      ).toEqual({
+        rawName,
+        canonicalName,
+        confidence:
+          "high",
+      });
+    }
+  }
+);
   }
 );

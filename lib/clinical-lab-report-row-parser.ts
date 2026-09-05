@@ -21,13 +21,11 @@ function normalizeUnit(
       .toLowerCase()
       .replace(/\s+/g, "");
 
-  const knownUnits: Record<
-    string,
-    string
-  > = {
+  const knownUnits: Record<string, string> = {
     "mg/dl": "mg/dL",
     "g/dl": "g/dL",
     "ng/ml": "ng/mL",
+    "ng/dl": "ng/dL",
     "pg/ml": "pg/mL",
     "miu/l": "mIU/L",
     "mmol/l": "mmol/L",
@@ -47,16 +45,12 @@ function normalizeUnit(
     "x10^6/ul": "x10^6/uL",
     "x10^9/l": "x10^9/L",
     "x10^12/l": "x10^12/L",
-    "ml/min/1.73m²":
-      "mL/min/1.73m²",
-    "ml/min/1.73m2":
-      "mL/min/1.73m²",
+    "ml/min/1.73m²": "mL/min/1.73m²",
+    "ml/min/1.73m2": "mL/min/1.73m²",
   };
 
   return (
-    knownUnits[
-      normalized
-    ] ??
+    knownUnits[normalized] ??
     unit.trim()
   );
 }
@@ -76,69 +70,142 @@ function toNumber(
       )
     );
 
-  return Number.isFinite(
-    parsed
-  )
+  return Number.isFinite(parsed)
     ? parsed
     : null;
 }
 
 const UNIT_PATTERN =
-  "(?:mg\\/dL|g\\/dL|ng\\/mL|pg\\/mL|mIU\\/L|mmol\\/L|µmol\\/L|umol\\/L|U\\/L|IU\\/L|%|mg\\/g|mg\\/L|µg\\/dL|ug\\/dL|ng\\/L|pg|fL|x10\\^3\\/uL|x10\\^6\\/uL|x10\\^9\\/L|x10\\^12\\/L|mL\\/min\\/1\\.73m(?:²|2))";
+  "(?:mg\\/dL|g\\/dL|ng\\/mL|ng\\/dL|pg\\/mL|mIU\\/L|mmol\\/L|µmol\\/L|umol\\/L|U\\/L|IU\\/L|%|mg\\/g|mg\\/L|µg\\/dL|ug\\/dL|ng\\/L|pg|fL|x10\\^3\\/uL|x10\\^6\\/uL|x10\\^9\\/L|x10\\^12\\/L|mL\\/min\\/1\\.73m(?:²|2))";
 
-const FLAG_PATTERN =
-  "(?:HIGH|LOW|NORMAL|BORDERLINE|H|L|N|\\*)";
+const SECTION_PATTERN =
+  "(?:CHEMISTRY\\s*\\/\\s*METABOLIC PANEL|" +
+  "GLYCEMIC MARKERS|" +
+  "LIPID PROFILE|" +
+  "LIVER\\s*\\/\\s*PROTEIN PROFILE|" +
+  "KIDNEY FUNCTION|" +
+  "COMPLETE BLOOD COUNT|" +
+  "IRON STUDIES|" +
+  "THYROID\\s*\\/\\s*VITAMINS\\s*\\/\\s*INFLAMMATION|" +
+  "URINALYSIS\\s*\\/\\s*KIDNEY RISK MARKERS|" +
+  "ADDITIONAL TESTS)";
 
-const RESULT_PATTERN_SOURCE =
-  [
-    "([A-Za-z][A-Za-z0-9()\\-/+ .]{0,100}?)",
-    "\\s+",
-    "(-?\\d+(?:[.,]\\d+)?)",
-    "\\s*",
-    `(${UNIT_PATTERN})`,
-    "(?:",
+const TABLE_HEADER_PATTERN =
+  /^(?:Test\s+Result\s+Units?\s+Reference\s+(?:interval|range)\s+Flag\s*)+/i;
+
+const START_OF_RESULT_PATTERN =
+  new RegExp(
+    [
+      "((?:[A-Za-z]|[0-9]{1,3}(?=-[A-Za-z]))[A-Za-z0-9()\\-/+ .]{0,120}?)",
       "\\s+",
       "(-?\\d+(?:[.,]\\d+)?)",
-      "\\s*(?:-|–|—|to)\\s*",
-      "(-?\\d+(?:[.,]\\d+)?)",
-    ")?",
-    "(?:",
-      "\\s+",
-      `(${FLAG_PATTERN})`,
-      "(?=\\s|$)",
-    ")?",
-  ].join(
-    ""
-  );
-
-const LINE_RESULT_PATTERN =
-  new RegExp(
-    `^\\s*${RESULT_PATTERN_SOURCE}\\s*$`,
-    "i"
-  );
-
-const FLAT_RESULT_PATTERN =
-  new RegExp(
-    RESULT_PATTERN_SOURCE,
+      "\\s*",
+      `(${UNIT_PATTERN})`,
+    ].join(""),
     "gi"
   );
 
+type ParsedCandidate = {
+  match: RegExpExecArray;
+  rawName: string;
+  carriedFlag: string | null;
+};
+
+function stripLeadingCarryTokens(
+  value: string
+): {
+  text: string;
+  carriedFlag: string | null;
+} {
+  let text =
+    value
+      .replace(
+        /\s+/g,
+        " "
+      )
+      .trim();
+
+  let carriedFlag:
+    string | null =
+    null;
+
+  /*
+   * These tokens usually belong to the PREVIOUS result
+   * after PDF flattening:
+   *
+   * fasting H Sodium
+   * desirable H HDL cholesterol
+   * male L Triglycerides
+   * H Potassium - repeat
+   */
+  const carryMatch =
+    text.match(
+      /^(?:(?:fasting|desirable|male|female)\s+)?(HIGH|LOW|NORMAL|BORDERLINE|H|L|N|\*)\s+(.+)$/i
+    );
+
+  if (
+    carryMatch
+  ) {
+    carriedFlag =
+      carryMatch[1]
+        .toUpperCase();
+
+    text =
+      carryMatch[2]
+        .trim();
+  }
+
+  return {
+    text,
+    carriedFlag,
+  };
+}
+
 function cleanRawName(
   rawName: string
-): string {
+): {
+  rawName: string;
+  carriedFlag: string | null;
+} {
+  const carry =
+    stripLeadingCarryTokens(
+      rawName
+    );
+
   let cleaned =
-    rawName
+    carry.text;
+
+  /*
+   * Remove report section prefixes even if there is prose or
+   * a carried flag immediately before them.
+   */
+  const sectionRegex =
+    new RegExp(
+      `^.*?${SECTION_PATTERN}\\s+`,
+      "i"
+    );
+
+  if (
+    sectionRegex.test(
+      cleaned
+    )
+  ) {
+    cleaned =
+      cleaned.replace(
+        sectionRegex,
+        ""
+      );
+  }
+
+  /*
+   * A section removal may expose the report table header,
+   * so remove it AFTER section cleanup.
+   */
+  cleaned =
+    cleaned
       .replace(
-        /\bTest\s+Result\s+Units?\s+Reference\s+(?:interval|range)\s+Flag\b/gi,
-        " "
-      )
-      .replace(
-        /\bTest\s+Result\s+Units?\s+Reference\s+(?:interval|range)\b/gi,
-        " "
-      )
-      .replace(
-        /\bTest\s+Result\s+Units?\b/gi,
-        " "
+        TABLE_HEADER_PATTERN,
+        ""
       )
       .replace(
         /\s+/g,
@@ -147,28 +214,24 @@ function cleanRawName(
       .trim();
 
   /*
-   * In flattened PDF text, a section title can appear before
-   * the table header. Once the table header has been removed,
-   * remove a remaining leading all-uppercase section prefix.
-   *
-   * Examples:
-   *
-   * GLYCEMIC MARKERS Hemoglobin A1c
-   * LIPID PROFILE Total cholesterol
-   * CHEMISTRY / METABOLIC PANEL Glucose
+   * Some flattened captures can contain the table header
+   * without a recognizable section prefix.
    */
   cleaned =
-    cleaned.replace(
-      /^(?:[A-Z][A-Z /&-]*[A-Z])\s+(?=[A-Z][a-z]|[A-Za-z]{1,6}\b)/,
-      ""
-    );
+    cleaned
+      .replace(
+        TABLE_HEADER_PATTERN,
+        ""
+      )
+      .trim();
 
-  return cleaned
-    .replace(
-      /\s+/g,
-      " "
-    )
-    .trim();
+  return {
+    rawName:
+      cleaned,
+
+    carriedFlag:
+      carry.carriedFlag,
+  };
 }
 
 function isLikelyLabName(
@@ -177,7 +240,7 @@ function isLikelyLabName(
   if (
     !rawName ||
     rawName.length >
-      100
+      120
   ) {
     return false;
   }
@@ -195,6 +258,8 @@ function isLikelyLabName(
     "ordering source",
     "reference laboratory",
     "final report",
+    "not for clinical care",
+    "software validation",
   ];
 
   return !rejectedFragments.some(
@@ -205,176 +270,117 @@ function isLikelyLabName(
   );
 }
 
-function buildRowFromMatch(
-  match: RegExpMatchArray | RegExpExecArray
-): ClinicalLabReportRow | null {
-  const rawName =
-    cleanRawName(
-      match[1] ??
-        ""
-    );
+function parseReference(
+  tail: string
+): {
+  referenceLow: number | null;
+  referenceHigh: number | null;
+  flag: string | null;
+} {
+  const normalized =
+    tail
+      .replace(
+        /\s+/g,
+        " "
+      )
+      .trim();
 
-  const value =
-    toNumber(
-      match[2]
+  const rangeMatch =
+    normalized.match(
+      /^(-?\d+(?:[.,]\d+)?)\s*(?:-|–|—|to)\s*(-?\d+(?:[.,]\d+)?)(?:\s+(?:fasting|desirable|male|female))?(?:\s+(HIGH|LOW|NORMAL|BORDERLINE|H|L|N|\*))?/i
     );
 
   if (
-    !isLikelyLabName(
-      rawName
-    ) ||
-    value === null
+    rangeMatch
   ) {
-    return null;
+    return {
+      referenceLow:
+        toNumber(
+          rangeMatch[1]
+        ),
+
+      referenceHigh:
+        toNumber(
+          rangeMatch[2]
+        ),
+
+      flag:
+        rangeMatch[3]
+          ?.toUpperCase() ??
+        null,
+    };
   }
 
+  const lessThanMatch =
+    normalized.match(
+      /^<=?\s*(-?\d+(?:[.,]\d+)?)(?:\s+(?:fasting|desirable|male|female))?(?:\s+(HIGH|LOW|NORMAL|BORDERLINE|H|L|N|\*))?/i
+    );
+
+  if (
+    lessThanMatch
+  ) {
+    return {
+      referenceLow:
+        null,
+
+      referenceHigh:
+        toNumber(
+          lessThanMatch[1]
+        ),
+
+      flag:
+        lessThanMatch[2]
+          ?.toUpperCase() ??
+        null,
+    };
+  }
+
+  const greaterThanMatch =
+    normalized.match(
+      /^>=?\s*(-?\d+(?:[.,]\d+)?)(?:\s+(?:fasting|desirable|male|female))?(?:\s+(HIGH|LOW|NORMAL|BORDERLINE|H|L|N|\*))?/i
+    );
+
+  if (
+    greaterThanMatch
+  ) {
+    return {
+      referenceLow:
+        toNumber(
+          greaterThanMatch[1]
+        ),
+
+      referenceHigh:
+        null,
+
+      flag:
+        greaterThanMatch[2]
+          ?.toUpperCase() ??
+        null,
+    };
+  }
+
+  const flagMatch =
+    normalized.match(
+      /^(?:fasting|desirable|male|female\s+)?(HIGH|LOW|NORMAL|BORDERLINE|H|L|N|\*)(?:\s|$)/i
+    );
+
   return {
-    rawName,
-
-    value,
-
-    unit:
-      normalizeUnit(
-        match[3]
-      ),
-
     referenceLow:
-      toNumber(
-        match[4]
-      ),
-
-    referenceHigh:
-      toNumber(
-        match[5]
-      ),
-
-    flag:
-      match[6]
-        ?.trim() ??
       null,
 
-    rawLine:
-      match[0]
-        .trim(),
+    referenceHigh:
+      null,
+
+    flag:
+      flagMatch?.[1]
+        ?.toUpperCase() ??
+      null,
   };
-}
-
-function buildRowIdentity(
-  row: ClinicalLabReportRow
-): string {
-  return [
-    row.rawName
-      .trim()
-      .toLocaleLowerCase(),
-
-    row.value,
-
-    row.unit ??
-      "",
-  ].join(
-    "|"
-  );
 }
 
 export function parseClinicalLabReportRows(
   text: string
 ): ClinicalLabReportRow[] {
-  const rows:
-    ClinicalLabReportRow[] =
-    [];
-
-  const seen =
-    new Set<string>();
-
-  function addRow(
-    row: ClinicalLabReportRow | null
-  ) {
-    if (!row) {
-      return;
-    }
-
-    const identity =
-      buildRowIdentity(
-        row
-      );
-
-    if (
-      seen.has(
-        identity
-      )
-    ) {
-      return;
-    }
-
-    seen.add(
-      identity
-    );
-
-    rows.push(
-      row
-    );
-  }
-
-  /*
-   * Pass 1:
-   * Preserve true PDF line boundaries whenever available.
-   *
-   * This prevents section headings from becoming part of
-   * the marker name.
-   */
-  const lines =
-    text
-      .replace(
-        /\r/g,
-        ""
-      )
-      .split(
-        "\n"
-      )
-      .map(
-        (line) =>
-          line
-            .replace(
-              /\s+/g,
-              " "
-            )
-            .trim()
-      )
-      .filter(
-        Boolean
-      );
-
-  for (
-    const line
-    of lines
-  ) {
-    const match =
-      line.match(
-        LINE_RESULT_PATTERN
-      );
-
-    if (
-      match
-    ) {
-      addRow(
-        buildRowFromMatch(
-          match
-        )
-      );
-    }
-  }
-
-  /*
-   * Pass 2:
-   * Flattened PDF fallback.
-   *
-   * Some PDF extractors preserve only page-level line breaks.
-   * In that situation, find structured
-   *
-   *   name + value + unit [+ reference] [+ flag]
-   *
-   * sequences across the flattened page text.
-   */
   const flattenedText =
     text
       .replace(
@@ -391,7 +397,11 @@ export function parseClinicalLabReportRows(
       )
       .trim();
 
-  FLAT_RESULT_PATTERN.lastIndex =
+  const rawMatches:
+    RegExpExecArray[] =
+    [];
+
+  START_OF_RESULT_PATTERN.lastIndex =
     0;
 
   let match:
@@ -400,16 +410,129 @@ export function parseClinicalLabReportRows(
   while (
     (
       match =
-        FLAT_RESULT_PATTERN.exec(
+        START_OF_RESULT_PATTERN.exec(
           flattenedText
         )
     ) !== null
   ) {
-    addRow(
-      buildRowFromMatch(
-        match
-      )
+    rawMatches.push(
+      match
     );
+  }
+
+  const candidates:
+    ParsedCandidate[] =
+    rawMatches.map(
+      (rawMatch) => {
+        const cleaned =
+          cleanRawName(
+            rawMatch[1] ??
+              ""
+          );
+
+        return {
+          match:
+            rawMatch,
+
+          rawName:
+            cleaned.rawName,
+
+          carriedFlag:
+            cleaned.carriedFlag,
+        };
+      }
+    );
+
+  const rows:
+    ClinicalLabReportRow[] =
+    [];
+
+  for (
+    let index = 0;
+    index <
+    candidates.length;
+    index += 1
+  ) {
+    const current =
+      candidates[index];
+
+    const next =
+      candidates[
+        index + 1
+      ];
+
+    const value =
+      toNumber(
+        current
+          .match[2]
+      );
+
+    if (
+      value === null ||
+      !isLikelyLabName(
+        current.rawName
+      )
+    ) {
+      continue;
+    }
+
+    const currentEnd =
+      current.match.index +
+      current.match[0].length;
+
+    const nextStart =
+      next?.match.index ??
+      flattenedText.length;
+
+    const tail =
+      flattenedText.slice(
+        currentEnd,
+        nextStart
+      );
+
+    const reference =
+      parseReference(
+        tail
+      );
+
+    /*
+     * If the flattened parser consumed the previous result's
+     * flag as the beginning of the next marker, transfer that
+     * flag back to the current result.
+     */
+    const flag =
+      reference.flag ??
+      next?.carriedFlag ??
+      null;
+
+    rows.push({
+      rawName:
+        current.rawName,
+
+      value,
+
+      unit:
+        normalizeUnit(
+          current
+            .match[3]
+        ),
+
+      referenceLow:
+        reference.referenceLow,
+
+      referenceHigh:
+        reference.referenceHigh,
+
+      flag,
+
+      rawLine:
+        flattenedText
+          .slice(
+            current.match.index,
+            nextStart
+          )
+          .trim(),
+    });
   }
 
   return rows;

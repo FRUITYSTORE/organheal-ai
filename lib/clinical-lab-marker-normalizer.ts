@@ -66,11 +66,13 @@ const canonicalAliases: Record<
     "cholesterol total",
   ],
 
-  LDL: [
-    "ldl",
-    "ldl cholesterol",
-    "low density lipoprotein",
-  ],
+LDL: [
+  "ldl",
+  "ldl cholesterol",
+  "ldl cholesterol calculated",
+  "ldl cholesterol - calculated",
+  "low density lipoprotein",
+],
 
   HDL: [
     "hdl",
@@ -83,6 +85,33 @@ const canonicalAliases: Record<
     "triglyceride",
     "tg",
   ],
+
+  TSH: [
+  "tsh",
+  "thyroid stimulating hormone",
+],
+
+"Free T4": [
+  "free t4",
+  "free thyroxine",
+],
+
+RBC: [
+  "rbc",
+  "rbc count",
+  "red blood cell count",
+],
+
+WBC: [
+  "wbc",
+  "wbc count",
+  "white blood cell count",
+],
+
+"Non-HDL Cholesterol": [
+  "non hdl cholesterol",
+  "non-hdl cholesterol",
+],
 
   Creatinine: [
     "creatinine",
@@ -112,10 +141,11 @@ const canonicalAliases: Record<
   ],
 
   "Vitamin D": [
-    "vitamin d",
-    "25 oh vitamin d",
-    "25 hydroxy vitamin d",
-  ],
+  "vitamin d",
+  "25 oh vitamin d",
+  "25 hydroxy vitamin d",
+  "25-oh vitamin d",
+],
 
   "Vitamin B12": [
     "vitamin b12",
