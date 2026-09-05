@@ -447,6 +447,9 @@ export function parseClinicalLabReportRows(
     ClinicalLabReportRow[] =
     [];
 
+  /*
+   * Main generic numeric lab-result pass.
+   */
   for (
     let index = 0;
     index <
@@ -496,9 +499,9 @@ export function parseClinicalLabReportRows(
       );
 
     /*
-     * If the flattened parser consumed the previous result's
-     * flag as the beginning of the next marker, transfer that
-     * flag back to the current result.
+     * If PDF flattening attached the previous result's
+     * flag to the beginning of the next marker, transfer
+     * it back to the current result.
      */
     const flag =
       reference.flag ??
@@ -531,6 +534,92 @@ export function parseClinicalLabReportRows(
             current.match.index,
             nextStart
           )
+          .trim(),
+    });
+  }
+
+  /*
+   * Isolated urine ACR fallback.
+   *
+   * Urinalysis commonly contains qualitative rows
+   * (Negative / Trace) around the numeric ACR row,
+   * which can prevent the generic numeric boundary
+   * matcher from capturing it cleanly.
+   */
+  const acrPattern =
+    /(?:^|\s)(Urine\s+albumin\/creatinine\s+ratio)\s+(-?\d+(?:[.,]\d+)?)\s*(mg\/g)(?:\s*<\s*(-?\d+(?:[.,]\d+)?))?(?:\s+(H|L|N))?(?=\s|$)/gi;
+
+  let acrMatch:
+    RegExpExecArray | null;
+
+  while (
+    (
+      acrMatch =
+        acrPattern.exec(
+          flattenedText
+        )
+    ) !== null
+  ) {
+    const rawName =
+      acrMatch[1]
+        .replace(
+          /\s+/g,
+          " "
+        )
+        .trim();
+
+    const value =
+      toNumber(
+        acrMatch[2]
+      );
+
+    if (
+      value === null
+    ) {
+      continue;
+    }
+
+    const alreadyExists =
+      rows.some(
+        (row) =>
+          row.rawName
+            .toLowerCase() ===
+            rawName.toLowerCase() &&
+          row.value ===
+            value &&
+          row.unit ===
+            "mg/g"
+      );
+
+    if (
+      alreadyExists
+    ) {
+      continue;
+    }
+
+    rows.push({
+      rawName,
+
+      value,
+
+      unit:
+        "mg/g",
+
+      referenceLow:
+        null,
+
+      referenceHigh:
+        toNumber(
+          acrMatch[4]
+        ),
+
+      flag:
+        acrMatch[5]
+          ?.toUpperCase() ??
+        null,
+
+      rawLine:
+        acrMatch[0]
           .trim(),
     });
   }

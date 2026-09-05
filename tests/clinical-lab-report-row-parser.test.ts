@@ -264,6 +264,39 @@ Ferritin 11 ng/mL 30 - 400 L
   }
 );
 
+it(
+  "extracts urine albumin creatinine ratio from mixed urinalysis text",
+  () => {
+    const rows =
+      parseClinicalLabReportRows(
+        "Urine specific gravity 1.026 1.005 - 1.030 Urine protein Trace Negative H Urine glucose Negative Negative Urine blood Negative Negative Urine albumin/creatinine ratio 31 mg/g < 30 H Albumin/creatinine ratio is only slightly above the laboratory cutoff."
+      );
+
+    expect(
+      rows
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          rawName:
+            "Urine albumin/creatinine ratio",
+
+          value:
+            31,
+
+          unit:
+            "mg/g",
+
+          referenceHigh:
+            30,
+
+          flag:
+            "H",
+        }),
+      ])
+    );
+  }
+);
+
     it(
   "extracts laboratory rows from flattened PDF text without line breaks",
   () => {
