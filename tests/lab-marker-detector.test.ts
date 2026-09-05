@@ -467,5 +467,47 @@ describe(
         );
       }
     );
+    it(
+  "prefers the actual Hemoglobin A1c result over later explanatory HbA1c text",
+  () => {
+    const results =
+      detectLabMarkers(`
+        GLYCEMIC MARKERS
+
+        Hemoglobin A1c 6.6 % 4.0 - 5.6 H
+        Estimated average glucose 143 mg/dL
+        Calculated from HbA1c
+
+        LIPID PROFILE
+
+        Total cholesterol 258 mg/dL
+      `);
+
+    const hba1c =
+      results.find(
+        (result) =>
+          result.marker ===
+          "HbA1c"
+      );
+
+    expect(
+      hba1c?.value
+    ).toBe(
+      6.6
+    );
+
+    expect(
+      hba1c?.unit
+    ).toBe(
+      "%"
+    );
+
+    expect(
+      hba1c?.value
+    ).not.toBe(
+      258
+    );
+  }
+);
   }
 );
