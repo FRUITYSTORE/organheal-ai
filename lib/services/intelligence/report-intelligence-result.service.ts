@@ -32,6 +32,7 @@ type DailyCheckInInput = {
 type HistoricalMarkerRow = {
   marker_name: string;
   marker_value: unknown;
+  marker_unit: string | null;
   created_at: string;
 };
 
@@ -69,14 +70,35 @@ export function buildReportIntelligenceResult({
   const markerSummary = buildLabMarkerSummary(detectedMarkers);
 
   const labTrends = buildHistoricalLabTrends(
-    historicalMarkerRows
-      .filter((row) => row.marker_value !== null)
-      .map((row) => ({
-        marker: row.marker_name,
-        value: Number(row.marker_value),
-        date: row.created_at,
-      }))
-  );
+  historicalMarkerRows
+    .filter(
+      (row) =>
+        row.marker_value !==
+          null &&
+        Number.isFinite(
+          Number(
+            row.marker_value
+          )
+        )
+    )
+    .map(
+      (row) => ({
+        marker:
+          row.marker_name,
+
+        value:
+          Number(
+            row.marker_value
+          ),
+
+        unit:
+          row.marker_unit,
+
+        date:
+          row.created_at,
+      })
+    )
+);
 
   const radiologyFindings = detectRadiologyFindings(extractedText);
   const radiologySummary = buildRadiologySummary(radiologyFindings);

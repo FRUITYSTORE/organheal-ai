@@ -505,7 +505,10 @@ describe(
             marker_value:
               3.5,
 
-            created_at:
+            marker_unit:
+              "mg/dL",
+
+              created_at:
               "2026-07-01T08:00:00.000Z",
           },
         ];

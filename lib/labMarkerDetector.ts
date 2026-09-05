@@ -318,29 +318,144 @@ function findRangeNearAlias(text: string, alias: string) {
   return null;
 }
 
-function findValueNearAlias(text: string, alias: string): number | null {
-  const safeAlias = escapeRegex(alias);
+type ExtractedLabValue = {
+  value: number;
+  unit: string | null;
+};
+
+function normalizeReportedUnit(
+  unit: string | undefined
+): string | null {
+  if (!unit) {
+    return null;
+  }
+
+  const normalized =
+    unit
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "");
+
+  const knownUnits: Record<
+    string,
+    string
+  > = {
+    "mg/dl":
+      "mg/dL",
+
+    "g/dl":
+      "g/dL",
+
+    "u/l":
+      "U/L",
+
+    "iu/l":
+      "IU/L",
+
+    "%":
+      "%",
+
+    "ng/ml":
+      "ng/mL",
+
+    "miu/l":
+      "mIU/L",
+
+    "mmol/l":
+      "mmol/L",
+
+    "ml/min/1.73m²":
+      "mL/min/1.73m²",
+
+    "ml/min/1.73m2":
+      "mL/min/1.73m²",
+
+    "ml/min/1.73mâ²":
+      "mL/min/1.73m²",
+  };
+
+  return (
+    knownUnits[
+      normalized
+    ] ??
+    unit.trim()
+  );
+}
+
+function findValueNearAlias(
+  text: string,
+  alias: string
+): ExtractedLabValue | null {
+  const safeAlias =
+    escapeRegex(
+      alias
+    );
 
   const boundedAlias =
     `\\b${safeAlias}\\b`;
 
+  const unitPattern =
+    "mg\\/dL|g\\/dL|u\\/l|iu\\/l|%|ng\\/ml|miu\\/l|mmol\\/l|ml\\/min\\/1\\.73m(?:²|2|Â²)";
+
   const patterns = [
+    /*
+     * A method or equation may appear between the marker
+     * name and the actual result:
+     *
+     * eGFR (CKD-EPI 2021) 105 mL/min/1.73m²
+     *
+     * 2021 describes the equation and is not the result.
+     */
     new RegExp(
-  `${boundedAlias}\\s*[:=\\-]?\\s*(\\d+(?:\\.\\d+)?)`,
-  "i"
-),
-new RegExp(
-  `${boundedAlias}\\s+.*?\\s(\\d+(?:\\.\\d+)?)\\s*(mg\\/dL|g\\/dL|u\\/l|iu\\/l|%|ng\\/ml|miu\\/l)?`,
-  "i"
-),
+      `${boundedAlias}\\s*\\([^)]{0,80}\\)\\s*(\\d+(?:\\.\\d+)?)\\s*(${unitPattern})?`,
+      "i"
+    ),
+
+    new RegExp(
+      `${boundedAlias}\\s*[:=\\-]?\\s*(\\d+(?:\\.\\d+)?)\\s*(${unitPattern})?`,
+      "i"
+    ),
+
+    new RegExp(
+      `${boundedAlias}\\s+.*?\\s(\\d+(?:\\.\\d+)?)\\s*(${unitPattern})?`,
+      "i"
+    ),
   ];
 
-  for (const regex of patterns) {
-    const match = text.match(regex);
-    if (!match) continue;
+  for (
+    const regex
+    of patterns
+  ) {
+    const match =
+      text.match(
+        regex
+      );
 
-    const value = Number(match[1]);
-    if (Number.isFinite(value)) return value;
+    if (!match) {
+      continue;
+    }
+
+    const value =
+      Number(
+        match[1]
+      );
+
+    if (
+      !Number.isFinite(
+        value
+      )
+    ) {
+      continue;
+    }
+
+    return {
+      value,
+
+      unit:
+        normalizeReportedUnit(
+          match[2]
+        ),
+    };
   }
 
   return null;
@@ -377,15 +492,72 @@ export function detectLabMarkers(text: string): LabMarkerResult[] {
 
   for (const markerDef of markerPatterns) {
     for (const alias of markerDef.aliases) {
-const rangeMatch = findRangeNearAlias(cleanText, alias);
-const value = rangeMatch?.value ?? findValueNearAlias(cleanText, alias);
+const rangeMatch =
+  findRangeNearAlias(
+    cleanText,
+    alias
+  );
 
-if (value === null) continue;
-if (seenMarkers.has(markerDef.marker)) continue;
+const extractedValue =
+  findValueNearAlias(
+    cleanText,
+    alias
+  );
 
-let referenceLow = markerDef.low;
-let referenceHigh = markerDef.high;
-let referenceSource: "report" | "default" = "default";
+const value =
+  rangeMatch?.value ??
+  extractedValue?.value ??
+  null;
+
+if (
+  value === null
+) {
+  continue;
+}
+
+if (
+  seenMarkers.has(
+    markerDef.marker
+  )
+) {
+  continue;
+}
+
+const reportedUnit =
+  extractedValue?.unit;
+
+const unit =
+  reportedUnit ??
+  markerDef.unit;
+
+const usesDefaultUnit =
+  !reportedUnit ||
+  reportedUnit
+    .trim()
+    .toLowerCase() ===
+    markerDef.unit
+      .trim()
+      .toLowerCase();
+
+let referenceLow:
+  number | null =
+  usesDefaultUnit
+    ? markerDef.low
+    : null;
+
+let referenceHigh:
+  number | null =
+  usesDefaultUnit
+    ? markerDef.high
+    : null;
+
+let referenceSource:
+  | "report"
+  | "default"
+  | undefined =
+  usesDefaultUnit
+    ? "default"
+    : undefined;
 
 if (
   rangeMatch &&
@@ -400,12 +572,20 @@ if (
   referenceSource = "report";
 }
 
-const status = getStatus(value, referenceLow, referenceHigh);
+const status =
+  referenceLow !== null &&
+  referenceHigh !== null
+    ? getStatus(
+        value,
+        referenceLow,
+        referenceHigh
+      )
+    : "Detected";
 
 results.push({
   marker: markerDef.marker,
   value,
-  unit: markerDef.unit,
+  unit,
   status,
   note:
     referenceSource === "report"

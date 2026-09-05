@@ -14,7 +14,7 @@ const MEDICAL_REPORT_MARKERS_TABLE =
   "medical_report_markers";
 
 const HISTORICAL_MARKERS_SELECT =
-  "marker_name, marker_value, created_at";
+  "marker_name, marker_value, marker_unit, created_at";
 
 const REPORT_MARKERS_SELECT =
   "report_id, marker_name, marker_value, marker_unit, marker_status, reference_low, reference_high, reference_source, created_at";
@@ -71,6 +71,9 @@ export type HistoricalMedicalMarker = {
 
   marker_value:
     number;
+
+  marker_unit:
+    string | null;
 
   created_at:
     string;

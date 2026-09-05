@@ -174,5 +174,298 @@ describe(
         );
       }
     );
+        it(
+      "does not capture the next marker value for HbA1c",
+      () => {
+        const results =
+          detectLabMarkers(`
+            Laboratory Results
+
+            HbA1c 6.6 %
+            Total Cholesterol 258 mg/dL
+          `);
+
+        const hba1c =
+          results.find(
+            (result) =>
+              result.marker ===
+              "HbA1c"
+          );
+
+        const totalCholesterol =
+          results.find(
+            (result) =>
+              result.marker ===
+              "Total Cholesterol"
+          );
+
+        expect(
+          hba1c?.value
+        ).toBe(
+          6.6
+        );
+
+        expect(
+          totalCholesterol?.value
+        ).toBe(
+          258
+        );
+      }
+    );
+
+    it(
+      "does not treat CKD-EPI 2021 as the eGFR result",
+      () => {
+        const results =
+          detectLabMarkers(`
+            Kidney Function
+
+            eGFR (CKD-EPI 2021) 105 mL/min/1.73m²
+          `);
+
+        const egfr =
+          results.find(
+            (result) =>
+              result.marker ===
+              "eGFR"
+          );
+
+        expect(
+          egfr?.value
+        ).toBe(
+          105
+        );
+
+        expect(
+          egfr?.value
+        ).not.toBe(
+          2021
+        );
+      }
+    );
+        it(
+      "keeps challenge-report marker values associated with the correct tests",
+      () => {
+        const results =
+          detectLabMarkers(`
+            Synthetic Laboratory Report
+
+            Fasting glucose 128 mg/dL
+            HbA1c 6.6 %
+            Total Cholesterol 258 mg/dL
+            LDL 174 mg/dL
+            HDL 0.93 mmol/L
+            Triglycerides 240 mg/dL
+
+            Creatinine 0.88 mg/dL
+            eGFR (CKD-EPI 2021) 105 mL/min/1.73m²
+
+            ALT 68 U/L
+            AST 32 U/L
+
+            Vitamin D 18 ng/mL
+            Ferritin 11 ng/mL
+          `);
+
+        const getValue =
+          (
+            marker:
+              string
+          ) =>
+            results.find(
+              (result) =>
+                result.marker ===
+                marker
+            )?.value;
+
+        expect(
+          getValue(
+            "Glucose"
+          )
+        ).toBe(
+          128
+        );
+
+        expect(
+          getValue(
+            "HbA1c"
+          )
+        ).toBe(
+          6.6
+        );
+
+        expect(
+          getValue(
+            "Total Cholesterol"
+          )
+        ).toBe(
+          258
+        );
+
+        expect(
+          getValue(
+            "LDL"
+          )
+        ).toBe(
+          174
+        );
+
+        expect(
+          getValue(
+            "HDL"
+          )
+        ).toBe(
+          0.93
+        );
+
+        expect(
+          getValue(
+            "Triglycerides"
+          )
+        ).toBe(
+          240
+        );
+
+        expect(
+          getValue(
+            "Creatinine"
+          )
+        ).toBe(
+          0.88
+        );
+
+        expect(
+          getValue(
+            "eGFR"
+          )
+        ).toBe(
+          105
+        );
+
+        expect(
+          getValue(
+            "ALT"
+          )
+        ).toBe(
+          68
+        );
+
+        expect(
+          getValue(
+            "AST"
+          )
+        ).toBe(
+          32
+        );
+
+        expect(
+          getValue(
+            "Vitamin D"
+          )
+        ).toBe(
+          18
+        );
+
+        expect(
+          getValue(
+            "Ferritin"
+          )
+        ).toBe(
+          11
+        );
+      }
+    );
+        it(
+      "preserves the HDL unit reported in the laboratory report",
+      () => {
+        const results =
+          detectLabMarkers(`
+            Lipid Profile
+
+            HDL 0.93 mmol/L
+          `);
+
+        const hdl =
+          results.find(
+            (result) =>
+              result.marker ===
+              "HDL"
+          );
+
+        expect(
+          hdl?.value
+        ).toBe(
+          0.93
+        );
+
+        expect(
+          hdl?.unit
+        ).toBe(
+          "mmol/L"
+        );
+      }
+    );
+
+    it(
+      "preserves the standard reported unit for LDL",
+      () => {
+        const results =
+          detectLabMarkers(`
+            Lipid Profile
+
+            LDL 174 mg/dL
+          `);
+
+        const ldl =
+          results.find(
+            (result) =>
+              result.marker ===
+              "LDL"
+          );
+
+        expect(
+          ldl?.value
+        ).toBe(
+          174
+        );
+
+        expect(
+          ldl?.unit
+        ).toBe(
+          "mg/dL"
+        );
+      }
+    );
+
+    it(
+      "preserves the reported eGFR unit after a method qualifier",
+      () => {
+        const results =
+          detectLabMarkers(`
+            Kidney Function
+
+            eGFR (CKD-EPI 2021) 105 mL/min/1.73m²
+          `);
+
+        const egfr =
+          results.find(
+            (result) =>
+              result.marker ===
+              "eGFR"
+          );
+
+        expect(
+          egfr?.value
+        ).toBe(
+          105
+        );
+
+        expect(
+          egfr?.unit
+        ).toBe(
+          "mL/min/1.73m²"
+        );
+      }
+    );
   }
 );
