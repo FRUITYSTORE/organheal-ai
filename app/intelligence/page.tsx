@@ -2428,19 +2428,30 @@ const hasReportEvidence = Boolean(
                       />
                     </div>
 
-                    <GeneratedReportDetailsCard
-                      medicalCategory={
-                        focusedReportInsight.medical_category
-                      }
-                      summary={focusedReportInsight.summary}
-                      keyFindings={focusedReportInsight.key_findings}
-                      riskSignals={focusedReportInsight.risk_signals}
-                      recommendations={focusedReportInsight.recommendations}
-                      doctorBrief={
-                        unifiedDoctorBriefV2 ??
-                        focusedReportInsight.doctor_brief
-                      }
-                    />
+                     <GeneratedReportDetailsCard
+  medicalCategory={
+    focusedReportInsight.medical_category
+  }
+  summary={
+    focusedReportInsight.summary
+  }
+  keyFindings={
+    focusedReportInsight.key_findings
+  }
+  riskSignals={
+    focusedReportInsight.risk_signals
+  }
+  recommendations={
+    focusedReportInsight.recommendations
+  }
+  doctorBrief={
+    unifiedDoctorBriefV2 ??
+    focusedReportInsight.doctor_brief
+  }
+  isArabic={
+    isArabicUi
+  }
+/>
                   </div>
                 </details>
 
