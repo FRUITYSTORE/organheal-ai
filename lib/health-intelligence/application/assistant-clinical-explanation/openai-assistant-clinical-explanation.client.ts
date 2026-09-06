@@ -855,11 +855,22 @@ function buildModeInstructions(
   }
 
   return [
-    "Provide a complete but prioritized interpretation of the report.",
-    "Avoid unnecessary repetition.",
-  ].join(
-    "\n"
-  );
+  "The user is asking for a full report interpretation.",
+  "Review all supplied structured report evidence before composing the answer.",
+  "Do not omit a clinically meaningful abnormal or borderline finding merely to keep the answer short.",
+  "Group related findings into clinically coherent patterns instead of repeating isolated laboratory values.",
+  "Cover the major clinically relevant domains represented in the evidence, including metabolic, lipid, hematologic or iron-related, liver, kidney or urine, inflammatory, nutritional, and electrolyte findings when present.",
+  "When repeated measurements of the same marker are present, interpret them as a sequence or repeat result rather than as unrelated conflicting values.",
+  "Mention reassuring normal findings when they materially change the interpretation of an abnormal finding.",
+  "Distinguish clearly between confirmed report facts, plausible relationships, and conclusions that cannot be made from the report alone.",
+  "Do not infer fasting status, chronic disease, diagnosis, causation, persistence, or treatment need unless the supplied evidence supports it.",
+  "If a single abnormal result requires persistence or repeat confirmation before a chronic condition can be inferred, state that explicitly.",
+  "If multiple findings together support a pattern, explain the pattern while avoiding a definitive diagnosis unless the evidence establishes one.",
+  "Keep the answer organized and prioritized, but completeness takes precedence over brevity in full-report mode.",
+  "Return only the fields required by the supplied response schema.",
+].join(
+  "\n"
+);
 }
 
 function normalizeClinicalExplanationOutput(
