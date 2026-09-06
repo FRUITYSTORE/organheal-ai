@@ -706,68 +706,121 @@ export function detectLabPatterns(markers: LabMarkerResult[]): LabPatternInsight
   return insights;
 }
 
-export function buildLabMarkerSummary(markers: LabMarkerResult[]) {
+export function buildLabMarkerSummary(
+  markers: LabMarkerResult[],
+  language: "en" | "ar" = "en"
+) {
   const patterns = detectLabPatterns(markers);
+  const isArabic = language === "ar";
+
+  const statusLabel = (
+    status: LabMarkerResult["status"]
+  ) => {
+    if (!isArabic) return status;
+
+    if (status === "High") return "مرتفع";
+    if (status === "Low") return "منخفض";
+    if (status === "Normal") return "طبيعي";
+
+    return status;
+  };
 
   if (markers.length === 0) {
     return {
-      summary: "No structured lab markers were detected clearly from this report.",
-      keyFindings:
-        "OCR text was extracted, but lab values were not clearly structured.",
-      riskSignals: "No specific lab risk signals detected.",
-      recommendations:
-        "Review the original report with a licensed healthcare professional.",
+      summary: isArabic
+        ? "لم يتم اكتشاف مؤشرات مخبرية منظمة بشكل واضح من هذا التقرير."
+        : "No structured lab markers were detected clearly from this report.",
+
+      keyFindings: isArabic
+        ? "تم استخراج نص التقرير، لكن القيم المخبرية لم تكن منظمة بشكل واضح."
+        : "OCR text was extracted, but lab values were not clearly structured.",
+
+      riskSignals: isArabic
+        ? "لم يتم اكتشاف إشارات مخبرية محددة تستدعي الانتباه."
+        : "No specific lab risk signals detected.",
+
+      recommendations: isArabic
+        ? "راجع التقرير الأصلي مع مختص رعاية صحية مرخص."
+        : "Review the original report with a licensed healthcare professional.",
     };
   }
 
   const abnormal = markers.filter(
-    (item) => item.status === "High" || item.status === "Low"
+    (item) =>
+      item.status === "High" ||
+      item.status === "Low"
   );
 
-  const normal = markers.filter((item) => item.status === "Normal");
+  const normal = markers.filter(
+    (item) =>
+      item.status === "Normal"
+  );
 
   const keyFindings = [
-  ...abnormal.map(
-    (item) =>
-      `${item.marker}: ${item.value ?? "Detected"} ${item.unit} (${item.status})${
-        item.referenceLow !== undefined &&
-        item.referenceHigh !== undefined
-          ? ` | Ref: ${item.referenceLow}-${item.referenceHigh} (${item.referenceSource})`
-          : ""
-      }`
-  ),
+    ...abnormal.map(
+      (item) =>
+        `${item.marker}: ${item.value ?? (isArabic ? "مكتشف" : "Detected")} ${item.unit ?? ""} (${statusLabel(item.status)})${
+          item.referenceLow !== undefined &&
+          item.referenceHigh !== undefined
+            ? ` | ${
+                isArabic
+                  ? "المرجع"
+                  : "Ref"
+              }: ${item.referenceLow}-${item.referenceHigh} (${item.referenceSource})`
+            : ""
+        }`
+    ),
 
-  ...normal.map(
-    (item) =>
-      `${item.marker}: ${item.value ?? "Detected"} ${item.unit} (${item.status})${
-        item.referenceLow !== undefined &&
-        item.referenceHigh !== undefined
-          ? ` | Ref: ${item.referenceLow}-${item.referenceHigh} (${item.referenceSource})`
-          : ""
-      }`
-  ),
-].join(" | ");
+    ...normal.map(
+      (item) =>
+        `${item.marker}: ${item.value ?? (isArabic ? "مكتشف" : "Detected")} ${item.unit ?? ""} (${statusLabel(item.status)})${
+          item.referenceLow !== undefined &&
+          item.referenceHigh !== undefined
+            ? ` | ${
+                isArabic
+                  ? "المرجع"
+                  : "Ref"
+              }: ${item.referenceLow}-${item.referenceHigh} (${item.referenceSource})`
+            : ""
+        }`
+    ),
+  ].join(" | ");
 
   const riskSignals =
     patterns.length > 0
       ? patterns
-          .map((pattern) => `${pattern.title} (${pattern.severity}): ${pattern.message}`)
+          .map(
+            (pattern) =>
+              isArabic
+                ? `${pattern.title}: ${pattern.message}`
+                : `${pattern.title} (${pattern.severity}): ${pattern.message}`
+          )
           .join("\n")
       : abnormal.length > 0
-      ? abnormal.map((item) => `${item.marker}: ${item.status}`).join("\n")
-      : "No abnormal marker detected based on common adult reference ranges.";
+        ? abnormal
+            .map(
+              (item) =>
+                `${item.marker}: ${statusLabel(item.status)}`
+            )
+            .join("\n")
+        : isArabic
+          ? "لم يتم اكتشاف مؤشرات غير طبيعية وفق نطاقات مرجعية شائعة للبالغين."
+          : "No abnormal marker detected based on common adult reference ranges.";
 
   const recommendations =
-    patterns.length > 0
-      ? patterns
-          .map((pattern) => `${pattern.title}: ${pattern.message}`)
-          .join("\n")
-      : abnormal.length > 0
-      ? "Some markers may be outside common adult reference ranges. Please review with a licensed healthcare professional."
-      : "Detected markers appear generally within common adult reference ranges. Continue regular health monitoring.";
+    abnormal.length > 0
+      ? isArabic
+        ? "توجد بعض النتائج التي قد تكون خارج النطاقات المرجعية الشائعة. يُنصح بمراجعتها مع مختص رعاية صحية مرخص ضمن السياق السريري الكامل."
+        : "Some markers may be outside common adult reference ranges. Please review with a licensed healthcare professional."
+      : isArabic
+        ? "تبدو المؤشرات المكتشفة عمومًا ضمن النطاقات المرجعية الشائعة. استمر في المتابعة الصحية الدورية."
+        : "Detected markers appear generally within common adult reference ranges. Continue regular health monitoring.";
 
   return {
-    summary: `${markers.length} lab marker(s) detected from the uploaded report.`,
+    summary: isArabic
+      ? `تم اكتشاف ${markers.length} مؤشرًا مخبريًا من التقرير المرفوع.`
+      : `${markers.length} lab marker(s) detected from the uploaded report.`,
+
     keyFindings,
     riskSignals,
     recommendations,

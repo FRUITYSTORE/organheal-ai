@@ -629,13 +629,24 @@ export default function IntelligencePage() {
       return;
     }
 
-    const generationResult =
-      await generateReportIntelligenceRuntime({
-        userId: sessionResult.userId,
-        insight: selectedInsight,
-        assessments: assessmentData,
-        dailyCheckIn,
-      });
+const generationResult =
+  await generateReportIntelligenceRuntime({
+    userId:
+      sessionResult.userId,
+
+    insight:
+      selectedInsight,
+
+    assessments:
+      assessmentData,
+
+    dailyCheckIn,
+
+    language:
+      isArabicUi
+        ? "ar"
+        : "en",
+  });
 
     if (!generationResult.success) {
       if (

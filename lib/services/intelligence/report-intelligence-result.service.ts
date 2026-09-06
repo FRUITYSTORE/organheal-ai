@@ -57,6 +57,9 @@ type BuildReportIntelligenceResultInput = {
   assessments: AssessmentInput[];
   dailyCheckIn: DailyCheckInInput | null;
   historicalMarkerRows: HistoricalMarkerRow[];
+    language:
+    | "en"
+    | "ar";
 };
 
 export function buildReportIntelligenceResult({
@@ -66,8 +69,13 @@ export function buildReportIntelligenceResult({
   assessments,
   dailyCheckIn,
   historicalMarkerRows,
+  language,
 }: BuildReportIntelligenceResultInput) {
-  const markerSummary = buildLabMarkerSummary(detectedMarkers);
+  const markerSummary =
+    buildLabMarkerSummary(
+    detectedMarkers,
+    language
+  );
 
   const labTrends = buildHistoricalLabTrends(
   historicalMarkerRows
@@ -104,7 +112,11 @@ export function buildReportIntelligenceResult({
   const radiologySummary = buildRadiologySummary(radiologyFindings);
   const isRadiologyReport = reportType === "radiology";
 
-  const clinicalPatterns = detectClinicalPatterns(detectedMarkers);
+  const clinicalPatterns =
+  detectClinicalPatterns(
+    detectedMarkers
+  );
+
   const healthStrategy = buildHealthStrategy(detectedMarkers);
 
   const unifiedHealth = buildUnifiedHealthIntelligence({
@@ -148,12 +160,14 @@ export function buildReportIntelligenceResult({
     crossSource.confidenceScore
   );
 
-  const healthStory = buildHealthStory({
+  const healthStory =
+  buildHealthStory({
     timeline,
     longitudinalRisk,
     forecast,
     crossSource,
     digitalTwin,
+    language,
   });
 
   const actionPlan = buildActionPlan({

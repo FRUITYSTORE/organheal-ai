@@ -562,6 +562,9 @@ describe(
           dailyCheckIn,
 
           historicalMarkerRows,
+
+          language:
+            "en",
         });
       }
     );

@@ -70,6 +70,9 @@ type GenerateReportIntelligenceRuntimeInput = {
 
   dailyCheckIn:
     DailyCheckInInput | null;
+      language?:
+    | "en"
+    | "ar";
 };
 
 type HealthInsightUpdate =
@@ -133,6 +136,7 @@ export async function generateReportIntelligenceRuntime({
   insight,
   assessments,
   dailyCheckIn,
+  language = "en",
 }: GenerateReportIntelligenceRuntimeInput): Promise<GenerateReportIntelligenceRuntimeResult> {
   const reportTextResult =
     await loadReportTextRuntime({
@@ -241,6 +245,8 @@ export async function generateReportIntelligenceRuntime({
       dailyCheckIn,
 
       historicalMarkerRows,
+
+      language,
     });
 
   const intelligence =
@@ -261,6 +267,8 @@ export async function generateReportIntelligenceRuntime({
       unifiedHealth:
         generatedResultPayload
           .unifiedHealth,
+
+      language,
     });
 
   const persistenceResult =
