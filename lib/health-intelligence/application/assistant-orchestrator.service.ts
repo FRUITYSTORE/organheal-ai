@@ -23,6 +23,10 @@ import type {
 } from "@/lib/health-intelligence/application/assistant-semantic-routing/assistant-semantic-routing.types";
 
 import {
+  mapSemanticUnderstandingToAssistantIntent,
+} from "@/lib/health-intelligence/application/assistant-semantic-routing/map-semantic-understanding-to-assistant-intent";
+
+import {
   resolveProductNavigation,
 } from "@/lib/health-intelligence/application/product-navigation/resolve-product-navigation";
 
@@ -160,10 +164,31 @@ const productNavigation:
       }
     : deterministicProductNavigation;
 
-  const detectedIntent =
-    detectAssistantIntent(
-      conversationAwareMessage
-    );
+  const legacyDetectedIntent =
+  detectAssistantIntent(
+    conversationAwareMessage
+  );
+
+const semanticAssistantIntent =
+  mapSemanticUnderstandingToAssistantIntent(
+    semanticRoutingDecision
+  );
+
+const detectedIntent =
+  semanticAssistantIntent
+    ? {
+        intent:
+          semanticAssistantIntent,
+
+        confidence:
+          semanticRoutingDecision
+            ?.confidence ??
+          legacyDetectedIntent.confidence,
+
+        matchedKeywords:
+          [],
+      }
+    : legacyDetectedIntent;
 
  const clinicalReasoningLoop =
   clinicalUrgency.level === "none" &&
@@ -289,12 +314,25 @@ const legacyRequestsClarification = Boolean(
       "نتائج"
     );
 
-  const isReportGroundedQuestion =
-    Boolean(
-      healthContext
-        ?.latestReportContext &&
-      hasExplicitReportReference
-    );
+  const semanticUnderstanding =
+  semanticRoutingDecision
+    ?.understanding;
+
+const semanticReportGrounding =
+  Boolean(
+    semanticUnderstanding
+      ?.needsReportEvidence
+  );
+
+const isReportGroundedQuestion =
+  Boolean(
+    healthContext
+      ?.latestReportContext &&
+    (
+      hasExplicitReportReference ||
+      semanticReportGrounding
+    )
+  );
 
   const shouldClarify =
   clinicalUrgency.level === "none" &&

@@ -603,11 +603,13 @@ const clinicalExplanationPromise =
 
     healthContext,
 
-    deterministicResult:
-      orchestratorResult,
+  deterministicResult:
+     orchestratorResult,
 
-    client:
-      openAIAssistantClinicalExplanationClient,
+  semanticRoutingDecision,
+
+  client:
+     openAIAssistantClinicalExplanationClient,
 
     requestId,
   }).then(

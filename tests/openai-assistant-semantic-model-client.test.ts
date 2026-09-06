@@ -217,10 +217,22 @@ describe(
         );
 
         expect(
-          body.instructions
-        ).toContain(
-          "Classify meaning only."
-        );
+  body.instructions
+).toContain(
+  "You are the semantic conversation interpreter for OrganHeal AI."
+);
+
+expect(
+  body.instructions
+).toContain(
+  "If the user asks several things in one message, preserve every meaningful goal instead of selecting only one."
+);
+
+expect(
+  body.instructions
+).toContain(
+  "Use the recent conversation to resolve pronouns, omitted subjects, and references"
+);
       }
     );
 

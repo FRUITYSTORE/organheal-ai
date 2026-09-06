@@ -7,6 +7,10 @@ import type {
 } from "@/lib/health-intelligence/application/assistant-response/assistant-response.types";
 
 import type {
+  AssistantSemanticRoutingDecision,
+} from "@/lib/health-intelligence/application/assistant-semantic-routing/assistant-semantic-routing.types";
+
+import type {
   AssistantClinicalExplanationClient,
   AssistantClinicalExplanationLanguage,
   AssistantClinicalExplanationMode,
@@ -44,6 +48,9 @@ export type EnhanceAssistantClinicalResponseInput = {
   deterministicResult:
     AssistantOrchestratorResult;
 
+  semanticRoutingDecision?:
+    AssistantSemanticRoutingDecision | null;
+
   client:
     AssistantClinicalExplanationClient;
 
@@ -64,8 +71,22 @@ function isClinicalExplanationEnabled():
 
 function isEligibleIntent(
   question:
-    string
+    string,
+  semanticRoutingDecision?:
+    AssistantSemanticRoutingDecision | null
 ): boolean {
+  const semanticUnderstanding =
+    semanticRoutingDecision
+      ?.understanding;
+
+  if (
+    semanticRoutingDecision?.domain ===
+      "clinical_question" &&
+    semanticUnderstanding
+  ) {
+    return true;
+  }
+
   const intent =
     detectAssistantIntent(
       question
@@ -82,8 +103,57 @@ function isEligibleIntent(
 
 function resolveClinicalExplanationMode(
   question:
-    string
+    string,
+  semanticRoutingDecision?:
+    AssistantSemanticRoutingDecision | null
 ): AssistantClinicalExplanationMode {
+  const understanding =
+    semanticRoutingDecision
+      ?.understanding;
+
+  if (understanding) {
+    const goals =
+      understanding.goals;
+
+    /*
+     * Multi-goal questions require one integrated response.
+     *
+     * Example:
+     * "Why is my glucose high, is it dangerous,
+     * and what should I do?"
+     *
+     * A focused cause or next-step mode would discard
+     * part of the user's request, so use full mode.
+     */
+    if (goals.length > 1) {
+      return "full";
+    }
+
+    if (
+      understanding.primaryGoal ===
+        "next-step" ||
+      understanding.asksForAction
+    ) {
+      return "next-step";
+    }
+
+    if (
+      understanding.primaryGoal ===
+        "cause" ||
+      understanding.primaryGoal ===
+        "diagnostic-meaning" ||
+      understanding.asksForDiagnosis
+    ) {
+      return "cause-reasoning";
+    }
+
+    return "full";
+  }
+
+  /*
+   * Legacy fallback when semantic understanding is
+   * unavailable because of provider failure or timeout.
+   */
   const intent =
     detectAssistantIntent(
       question
@@ -104,6 +174,81 @@ function resolveClinicalExplanationMode(
   }
 
   return "full";
+}
+
+function buildSemanticClinicalQuestion(
+  question:
+    string,
+  semanticRoutingDecision?:
+    AssistantSemanticRoutingDecision | null
+): string {
+  const understanding =
+    semanticRoutingDecision
+      ?.understanding;
+
+  if (!understanding) {
+    return question;
+  }
+
+  const subject =
+    understanding.subject;
+
+  const contextLines:
+    string[] = [];
+
+  if (
+    understanding.isFollowUp ||
+    understanding.refersToPreviousTurn
+  ) {
+    contextLines.push(
+      "This is a conversational follow-up to the recent discussion."
+    );
+  }
+
+  if (
+    subject.value
+  ) {
+    contextLines.push(
+      `Resolved conversational subject: ${subject.value}`
+    );
+  } else if (
+    subject.kind !== "unknown"
+  ) {
+    contextLines.push(
+      `Resolved subject type: ${subject.kind}`
+    );
+  }
+
+  if (
+    understanding.goals.length > 1
+  ) {
+    contextLines.push(
+      `User goals: ${understanding.goals.join(", ")}`
+    );
+  }
+
+  if (
+    understanding.needsHistory
+  ) {
+    contextLines.push(
+      "The user is asking for longitudinal or previous-result context."
+    );
+  }
+
+  if (
+    contextLines.length === 0
+  ) {
+    return question;
+  }
+
+  return [
+    question,
+    "",
+    "Resolved semantic conversation context:",
+    ...contextLines,
+  ].join(
+    "\n"
+  );
 }
 
 function resolveClinicalExplanationEvidence(
@@ -151,7 +296,8 @@ function canGenerateClinicalExplanation(
       .productNavigation
       ?.matched ||
     !isEligibleIntent(
-      input.question
+    input.question,
+    input.semanticRoutingDecision
     )
   ) {
     return false;
@@ -204,8 +350,15 @@ export async function enhanceAssistantClinicalResponse(
     startApiTimer();
 
   const explanationMode =
-    resolveClinicalExplanationMode(
-    input.question
+  resolveClinicalExplanationMode(
+    input.question,
+    input.semanticRoutingDecision
+  );
+
+const semanticClinicalQuestion =
+  buildSemanticClinicalQuestion(
+    input.question,
+    input.semanticRoutingDecision
   );
 
     const explanationEvidence =
@@ -225,7 +378,7 @@ export async function enhanceAssistantClinicalResponse(
     const rawExplanation =
       await input.client.generate({
         question:
-          input.question,
+          semanticClinicalQuestion,
 
         language:
           input.language,
