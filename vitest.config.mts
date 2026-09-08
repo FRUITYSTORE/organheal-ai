@@ -30,6 +30,10 @@ export default defineConfig({
       "lib/**/*.test.ts",
     ],
 
+    setupFiles: [
+      "./tests/setup/network-guard.ts",
+    ],
+
     clearMocks:
       true,
 
