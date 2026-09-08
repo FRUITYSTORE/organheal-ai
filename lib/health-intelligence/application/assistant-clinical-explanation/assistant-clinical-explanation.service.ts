@@ -176,6 +176,36 @@ function resolveClinicalExplanationMode(
   return "full";
 }
 
+function resolveConversationResponseScope(
+  semanticRoutingDecision?:
+    AssistantSemanticRoutingDecision | null
+): "full-report" | "focused" | "legacy" {
+  const understanding =
+    semanticRoutingDecision
+      ?.understanding;
+
+  if (!understanding) {
+    return "legacy";
+  }
+
+  const explicitlyFullReport =
+    !understanding.isFollowUp &&
+    !understanding.refersToPreviousTurn &&
+    understanding.subject.kind ===
+      "report" &&
+    (
+      understanding.requestedDepth ===
+        "detailed" ||
+      understanding.goals.includes(
+        "summarize"
+      )
+    );
+
+  return explicitlyFullReport
+    ? "full-report"
+    : "focused";
+}
+
 function buildSemanticClinicalQuestion(
   question:
     string,
@@ -195,6 +225,15 @@ function buildSemanticClinicalQuestion(
 
   const contextLines:
     string[] = [];
+
+    const responseScope =
+  resolveConversationResponseScope(
+    semanticRoutingDecision
+  );
+
+contextLines.push(
+  `Conversation response scope: ${responseScope}`
+);
 
   if (
     understanding.isFollowUp ||
@@ -282,6 +321,12 @@ function canGenerateClinicalExplanation(
   input:
     EnhanceAssistantClinicalResponseInput
 ): boolean {
+  if (
+     input.deterministicResult
+    .reasoning.mode === "clarify"
+) {
+  return false;
+}
   if (
     !isClinicalExplanationEnabled() ||
     input.deterministicResult
@@ -471,22 +516,11 @@ const semanticClinicalQuestion =
       return input.deterministicResult;
     }
 
-    const responseIntent =
-      detectAssistantIntent(
-       input.question
-    ).intent;
-
     const response =
   renderAssistantClinicalExplanation(
     explanation,
     input.language,
-    responseIntent ===
-      "next-step"
-      ? "next-step"
-      : responseIntent ===
-          "cause-reasoning"
-        ? "cause-reasoning"
-        : "full"
+    explanationMode
   );
 
     logApiInfo(

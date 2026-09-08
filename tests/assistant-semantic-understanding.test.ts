@@ -105,6 +105,172 @@ describe(
     );
 
     it(
+  "accepts an ambiguous conversational referent without inventing a subject",
+  () => {
+    const result =
+      validateAssistantSemanticRoutingDecision({
+        domain:
+          "clinical_question",
+
+        confidence:
+          "high",
+
+        productDestination:
+          null,
+
+        requiresConversationContext:
+          true,
+
+        reason:
+          "The short follow-up could refer to several findings.",
+
+        understanding: {
+          goals: [
+            "cause",
+          ],
+
+          primaryGoal:
+            "cause",
+
+          subject: {
+            kind:
+              "previous-topic",
+
+            value:
+              null,
+          },
+
+          referentStatus:
+            "ambiguous",
+
+          referentConfidence:
+            "high",
+
+          isFollowUp:
+            true,
+
+          refersToPreviousTurn:
+            true,
+
+          needsReportEvidence:
+            true,
+
+          needsHistory:
+            false,
+
+          asksForDiagnosis:
+            false,
+
+          asksForUrgency:
+            false,
+
+          asksForAction:
+            false,
+
+          requestedDepth:
+            "brief",
+        },
+      });
+
+    expect(
+      result?.understanding
+        ?.referentStatus
+    ).toBe(
+      "ambiguous"
+    );
+
+    expect(
+      result?.understanding
+        ?.subject.value
+    ).toBeNull();
+  }
+);
+
+it(
+  "accepts a resolved short follow-up when one active clinical subject is known",
+  () => {
+    const result =
+      validateAssistantSemanticRoutingDecision({
+        domain:
+          "clinical_question",
+
+        confidence:
+          "high",
+
+        productDestination:
+          null,
+
+        requiresConversationContext:
+          true,
+
+        reason:
+          "The previous turn was specifically about LDL.",
+
+        understanding: {
+          goals: [
+            "cause",
+          ],
+
+          primaryGoal:
+            "cause",
+
+          subject: {
+            kind:
+              "marker",
+
+            value:
+              "LDL",
+          },
+
+          referentStatus:
+            "resolved",
+
+          referentConfidence:
+            "high",
+
+          isFollowUp:
+            true,
+
+          refersToPreviousTurn:
+            true,
+
+          needsReportEvidence:
+            true,
+
+          needsHistory:
+            false,
+
+          asksForDiagnosis:
+            false,
+
+          asksForUrgency:
+            false,
+
+          asksForAction:
+            false,
+
+          requestedDepth:
+            "brief",
+        },
+      });
+
+    expect(
+      result?.understanding
+        ?.referentStatus
+    ).toBe(
+      "resolved"
+    );
+
+    expect(
+      result?.understanding
+        ?.subject.value
+    ).toBe(
+      "LDL"
+    );
+  }
+);
+
+    it(
       "represents a short contextual follow-up without requiring an explicit marker name",
       () => {
         const result =
@@ -136,9 +302,15 @@ describe(
                 kind:
                   "previous-topic",
 
-                value:
-                  "LDL",
+              value:
+                "LDL",
               },
+
+              referentStatus:
+                "resolved",
+
+              referentConfidence:
+                "high",
 
               isFollowUp:
                 true,

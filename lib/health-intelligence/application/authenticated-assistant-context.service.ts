@@ -35,6 +35,10 @@ import {
   getReportEvidenceEventsByReportId,
 } from "@/lib/repositories/report-evidence-events.repository";
 
+import {
+  getFocusedReportPatientSummary,
+} from "@/lib/services/intelligence/report-patient-summary-overlay.service";
+
 type AssistantContextLanguage =
   | "en"
   | "ar";
@@ -48,20 +52,38 @@ export type BuildAuthenticatedAssistantContextInput = {
 
   client:
     SupabaseClient;
+
+  reportId?:
+    number | null;
 };
 
 export async function buildAuthenticatedAssistantContext({
   userId,
   language,
   client,
+  reportId = null,
 }: BuildAuthenticatedAssistantContextInput): Promise<
   AssistantResponseHealthContext
 > {
-  const patientSummary =
-    await getPatientSummary(
-      userId,
-      client
-    );
+const patientSummary =
+  reportId !== null
+    ? await getFocusedReportPatientSummary(
+        userId,
+        reportId,
+        client
+      )
+    : await getPatientSummary(
+        userId,
+        client
+      );
+
+if (
+  !patientSummary
+) {
+  throw new Error(
+    "The selected report could not be resolved for the authenticated user."
+  );
+}
 
   const intelligence =
     buildHealthIntelligence(

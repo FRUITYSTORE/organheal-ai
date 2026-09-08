@@ -2,7 +2,16 @@ import type {
   SupabaseClient,
 } from "@supabase/supabase-js";
 
-import PDFParser from "pdf2json";
+import {
+  getReportFileRejectionReason,
+  REPORT_UPLOAD_SUPPORTED_EXTENSIONS_LABEL,
+  resolveReportFileCapability,
+} from "@/lib/report-ingestion/report-file-capabilities";
+
+import {
+  extractReportTextFromBuffer,
+  type ExtractedReportFileType,
+} from "@/lib/report-ingestion/report-text-extractor";
 
 export type PdfExtractionPayload = {
   reportId:
@@ -26,7 +35,7 @@ export type PdfExtractionResult = {
     string;
 
   fileType:
-    "pdf" | "image";
+    ExtractedReportFileType;
 
   text:
     string;
@@ -53,225 +62,6 @@ export class PdfExtractionError
   }
 }
 
-function safeDecode(
-  text:
-    string
-): string {
-  try {
-    return decodeURIComponent(
-      text
-    );
-  } catch {
-    return text;
-  }
-}
-
-function getFileType(
-  fileName:
-    string
-): "pdf" | "image" | "unknown" {
-  const normalizedFileName =
-    fileName.toLowerCase();
-
-  if (
-    normalizedFileName.endsWith(
-      ".pdf"
-    )
-  ) {
-    return "pdf";
-  }
-
-  if (
-    normalizedFileName.endsWith(
-      ".png"
-    ) ||
-    normalizedFileName.endsWith(
-      ".jpg"
-    ) ||
-    normalizedFileName.endsWith(
-      ".jpeg"
-    )
-  ) {
-    return "image";
-  }
-
-  return "unknown";
-}
-
-function extractTextFromPdfBuffer(
-  buffer:
-    Buffer
-): Promise<string> {
-  return new Promise(
-    (
-      resolve,
-      reject
-    ) => {
-      const parser =
-        new PDFParser();
-
-      parser.on(
-        "pdfParser_dataError",
-        (
-          errorData
-        ) => {
-          reject(
-            errorData instanceof Error
-              ? errorData
-              : errorData.parserError ||
-                  new Error(
-                    "PDF parsing failed."
-                  )
-          );
-        }
-      );
-
-      parser.on(
-        "pdfParser_dataReady",
-        (
-          pdfData
-        ) => {
-          try {
-            const text =
-              pdfData.Pages
-                .map(
-                  (
-                    page
-                  ) =>
-                    page.Texts
-                      .map(
-                        (
-                          textItem
-                        ) =>
-                          safeDecode(
-                            textItem.R
-                              .map(
-                                (
-                                  item
-                                ) =>
-                                  item.T
-                              )
-                              .join(
-                                " "
-                              )
-                          )
-                      )
-                      .join(
-                        " "
-                      )
-                )
-                .join(
-                  "\n\n"
-                );
-
-            resolve(
-              text.trim()
-            );
-          } catch (
-            error
-          ) {
-            reject(
-              error
-            );
-          }
-        }
-      );
-
-      parser.parseBuffer(
-        buffer
-      );
-    }
-  );
-}
-
-async function extractTextFromImageBuffer(
-  buffer:
-    Buffer
-): Promise<string> {
-  const apiKey =
-    process.env
-      .OCR_SPACE_API_KEY;
-
-  if (!apiKey) {
-    throw new Error(
-      "OCR image extraction is not configured on the server."
-    );
-  }
-
-  const formData =
-    new FormData();
-
-  formData.append(
-    "base64Image",
-    `data:image/png;base64,${buffer.toString(
-      "base64"
-    )}`
-  );
-
-  formData.append(
-    "language",
-    "eng"
-  );
-
-  formData.append(
-    "isOverlayRequired",
-    "false"
-  );
-
-  formData.append(
-    "OCREngine",
-    "2"
-  );
-
-  const response =
-    await fetch(
-      "https://api.ocr.space/parse/image",
-      {
-        method:
-          "POST",
-
-        headers: {
-          apikey:
-            apiKey,
-        },
-
-        body:
-          formData,
-      }
-    );
-
-  const data =
-    (await response.json()) as {
-      IsErroredOnProcessing?:
-        boolean;
-
-      ErrorMessage?:
-        string[];
-
-      ParsedResults?:
-        Array<{
-          ParsedText?:
-            string;
-        }>;
-    };
-
-  if (
-    !response.ok ||
-    data.IsErroredOnProcessing
-  ) {
-    throw new Error(
-      data.ErrorMessage?.[0] ||
-        "Image OCR failed."
-    );
-  }
-
-  return (
-    data.ParsedResults?.[0]
-      ?.ParsedText?.trim() ||
-    ""
-  );
-}
-
 async function updateExtractionStatus(
   client:
     SupabaseClient,
@@ -288,7 +78,9 @@ async function updateExtractionStatus(
       unknown
     >
 ): Promise<void> {
-  if (!reportId) {
+  if (
+    !reportId
+  ) {
     return;
   }
 
@@ -311,11 +103,22 @@ async function updateExtractionStatus(
         userId
       );
 
-  if (error) {
+  if (
+    error
+  ) {
     throw error;
   }
 }
 
+/*
+ * NOTE:
+ * The legacy exported names are intentionally preserved because
+ * existing API routes, background-job records, tests and workers
+ * still use the historical "PDF extraction" contract.
+ *
+ * The implementation itself is now capability-aware and handles
+ * multiple report formats.
+ */
 export async function executePdfExtraction({
   client,
   userId,
@@ -329,12 +132,15 @@ export async function executePdfExtraction({
 
   payload:
     PdfExtractionPayload;
-}): Promise<PdfExtractionResult> {
+}): Promise<
+  PdfExtractionResult
+> {
   const {
     reportId,
     storagePath,
     fileName,
-  } = payload;
+  } =
+    payload;
 
   if (
     !storagePath ||
@@ -349,14 +155,17 @@ export async function executePdfExtraction({
     );
   }
 
-  const fileType =
-    getFileType(
-      fileName
-    );
+  const capability =
+    resolveReportFileCapability({
+      fileName,
+    });
 
   if (
-    fileType ===
-    "unknown"
+    !capability ||
+    !capability
+      .uploadEnabled ||
+    !capability
+      .analysisEnabled
   ) {
     await updateExtractionStatus(
       client,
@@ -368,10 +177,15 @@ export async function executePdfExtraction({
       }
     );
 
+    const reason =
+      getReportFileRejectionReason({
+        fileName,
+      });
+
     throw new PdfExtractionError(
-      "Unsupported report file type.",
+      `Unsupported report file type: ${reason}`,
       400,
-      "Unsupported file type. Please upload PDF, PNG, JPG, or JPEG."
+      `This report format is not available for analysis yet. Supported formats: ${REPORT_UPLOAD_SUPPORTED_EXTENSIONS_LABEL}.`
     );
   }
 
@@ -415,7 +229,8 @@ export async function executePdfExtraction({
     );
 
     throw new PdfExtractionError(
-      downloadError?.message ||
+      downloadError
+        ?.message ||
         "Report storage download failed.",
       500,
       "Report file could not be opened. Please re-upload the report."
@@ -428,46 +243,49 @@ export async function executePdfExtraction({
         .arrayBuffer()
     );
 
-  let extractedText =
-    "";
-
   try {
-    extractedText =
-      fileType === "pdf"
-        ? await extractTextFromPdfBuffer(
-            buffer
-          )
-        : await extractTextFromImageBuffer(
-            buffer
-          );
-  } catch (
-    error
-  ) {
+    const result =
+      await extractReportTextFromBuffer({
+        buffer,
+
+        fileName,
+
+        mimeType:
+          fileBlob.type ||
+          null,
+      });
+
     await updateExtractionStatus(
       client,
       userId,
       reportId,
       {
+        extracted_text:
+          result.text,
+
         extraction_status:
-          "Failed",
+          "Completed",
+
+        extracted_at:
+          new Date()
+            .toISOString(),
       }
     );
 
-    throw new PdfExtractionError(
-      error instanceof Error
-        ? error.message
-        : String(
-            error
-          ),
-      422,
-      "Could not read text from this report. If this is a scanned PDF or image, OCR setup is required."
-    );
-  }
+    return {
+      reportId,
 
-  const cleanText =
-    extractedText.trim();
+      fileName,
 
-  if (!cleanText) {
+      fileType:
+        result.fileType,
+
+      text:
+        result.text,
+    };
+  } catch (
+    error
+  ) {
     await updateExtractionStatus(
       client,
       userId,
@@ -482,37 +300,14 @@ export async function executePdfExtraction({
     );
 
     throw new PdfExtractionError(
-      "No readable text was found in the report.",
+      error instanceof
+        Error
+        ? error.message
+        : String(
+            error
+          ),
       422,
-      "No readable text was found in this report. If this is a scanned PDF, OCR setup is required."
+      "OrganHeal could not read usable content from this report. Check the file format and try again."
     );
   }
-
-  await updateExtractionStatus(
-    client,
-    userId,
-    reportId,
-    {
-      extracted_text:
-        cleanText,
-
-      extraction_status:
-        "Completed",
-
-      extracted_at:
-        new Date()
-          .toISOString(),
-    }
-  );
-
-  return {
-    reportId,
-
-    fileName,
-
-    fileType,
-
-    text:
-      cleanText,
-  };
 }

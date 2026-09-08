@@ -286,48 +286,58 @@ function createSemanticDecision(
     reason:
       "Resolved from semantic conversation context.",
 
-    understanding: {
-      goals: [
-        "cause",
-      ],
+understanding: {
+  goals: [
+    "cause",
+  ],
 
-      primaryGoal:
-        "cause",
+  primaryGoal:
+    "cause",
 
-      subject: {
-        kind:
-          "previous-topic",
+  subject: {
+    kind:
+      "previous-topic",
 
-        value:
-          "LDL",
-      },
+    value:
+      "LDL",
+  },
 
-      isFollowUp:
-        true,
+  referentStatus:
+    "resolved",
 
-      refersToPreviousTurn:
-        true,
+  referentConfidence:
+    "high",
 
-      needsReportEvidence:
-        true,
+  isFollowUp:
+    true,
 
-      needsHistory:
-        false,
+  refersToPreviousTurn:
+    true,
 
-      asksForDiagnosis:
-        false,
+  needsReportEvidence:
+    true,
 
-      asksForUrgency:
-        false,
+  needsHistory:
+    false,
 
-      asksForAction:
-        false,
+  asksForDiagnosis:
+    false,
 
-      requestedDepth:
-        "normal",
+  asksForUrgency:
+    false,
 
-      ...overrides,
-    },
+  asksForAction:
+    false,
+
+requestedDepth:
+  "normal",
+
+...overrides,
+
+reportReference:
+  overrides.reportReference ??
+  null,
+},
   };
 }
 
@@ -410,6 +420,12 @@ describe(
           input.question
         ).toContain(
           "ليش؟"
+        );
+
+        expect(
+          input.question
+        ).toContain(
+          "Conversation response scope: focused"
         );
 
         expect(
@@ -569,6 +585,12 @@ describe(
           input.mode
         ).toBe(
           "full"
+        );
+
+        expect(
+          input.question
+        ).toContain(
+          "Conversation response scope: focused"
         );
 
         expect(

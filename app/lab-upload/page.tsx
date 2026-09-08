@@ -8,6 +8,12 @@ import { supabase } from "@/lib/supabase";
 import {
   sendProductAnalyticsEvent,
 } from "@/lib/analytics/product-analytics.client";
+import {
+  getReportFileRejectionReason,
+  isSupportedReportFile,
+  REPORT_UPLOAD_ACCEPT_ATTRIBUTE,
+  REPORT_UPLOAD_SUPPORTED_EXTENSIONS_LABEL,
+} from "@/lib/report-ingestion/report-file-capabilities";
 
 type Language = "en" | "ar";
 type UploadStep = "idle" | "uploading" | "saved" | "error";
@@ -96,19 +102,18 @@ export default function LabUploadPage() {
     }
   }
 
-  function isAllowedFile(file: File) {
-    const lowerName = file.name.toLowerCase();
+function isAllowedFile(
+  file:
+    File
+) {
+  return isSupportedReportFile({
+    fileName:
+      file.name,
 
-    return (
-      file.type === "application/pdf" ||
-      file.type === "image/png" ||
-      file.type === "image/jpeg" ||
-      lowerName.endsWith(".pdf") ||
-      lowerName.endsWith(".png") ||
-      lowerName.endsWith(".jpg") ||
-      lowerName.endsWith(".jpeg")
-    );
-  }
+    mimeType:
+      file.type,
+  });
+}
 
   function getSafeStorageFileName(name: string) {
     const safeName = name
@@ -132,7 +137,15 @@ export default function LabUploadPage() {
       const sizeMb = file.size / (1024 * 1024);
 
       if (!isAllowedFile(file)) {
-        rejectedFiles.push(`${file.name} - unsupported type`);
+        rejectedFiles.push(
+  `${file.name} - ${getReportFileRejectionReason({
+    fileName:
+      file.name,
+
+    mimeType:
+      file.type,
+  })}`
+);
         continue;
       }
 
@@ -149,19 +162,20 @@ export default function LabUploadPage() {
     setSavedFileNames([]);
 
     if (rejectedFiles.length > 0) {
-      setMessage(
-        text(
-          `Some files were not added: ${rejectedFiles.join(
-            ", "
-          )}. Supported files: PDF, PNG, JPG, JPEG.`,
-          `لم تتم إضافة بعض الملفات: ${rejectedFiles.join(
-            ", "
-          )}. الملفات المدعومة: PDF وPNG وJPG وJPEG.`
-        )
-      );
-      setUploadStep("error");
-      return;
-    }
+  setMessage(
+    text(
+      `Some files were not added: ${rejectedFiles.join(
+        ", "
+      )}. Supported formats: ${REPORT_UPLOAD_SUPPORTED_EXTENSIONS_LABEL}.`,
+      `لم تتم إضافة بعض الملفات: ${rejectedFiles.join(
+        ", "
+      )}. الصيغ المدعومة حاليًا: ${REPORT_UPLOAD_SUPPORTED_EXTENSIONS_LABEL}.`
+    )
+  );
+
+  setUploadStep("error");
+  return;
+}
 
     setMessage("");
     setUploadStep("idle");
@@ -205,8 +219,8 @@ export default function LabUploadPage() {
     if (selectedFiles.length === 0) {
       setMessage(
         text(
-          "Please select at least one PDF or image first.",
-          "يرجى اختيار ملف PDF أو صورة واحدة على الأقل أولًا."
+          "Please select at least one supported medical report first.",
+          "يرجى اختيار تقرير طبي بصيغة مدعومة أولًا."
         )
       );
       setUploadStep("error");
@@ -1180,8 +1194,8 @@ export default function LabUploadPage() {
 
               <p className="ohCardText">
                 {text(
-                  `PDF, PNG, JPG, and JPEG are supported. Maximum ${MAX_FILES} files per upload and ${MAX_FILE_SIZE_MB} MB per file.`,
-                  `الملفات المدعومة PDF وPNG وJPG وJPEG. الحد الأقصى ${MAX_FILES} ملفات في كل عملية و${MAX_FILE_SIZE_MB} MB لكل ملف.`
+                  `Supported formats: ${REPORT_UPLOAD_SUPPORTED_EXTENSIONS_LABEL}. Maximum ${MAX_FILES} files per upload and ${MAX_FILE_SIZE_MB} MB per file.`,
+                  `الصيغ المدعومة: ${REPORT_UPLOAD_SUPPORTED_EXTENSIONS_LABEL}. الحد الأقصى ${MAX_FILES} ملفات في كل عملية و${MAX_FILE_SIZE_MB} MB لكل ملف.`
                 )}
               </p>
             </div>
@@ -1224,13 +1238,13 @@ export default function LabUploadPage() {
                 <input
                   type="file"
                   multiple
-                  accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg"
+                  accept={REPORT_UPLOAD_ACCEPT_ATTRIBUTE}
                   onChange={handleFileInput}
                   disabled={uploading}
                   style={{ display: "none" }}
                 />
 
-                <span className="uploadDropzoneIcon">PDF</span>
+                <span className="uploadDropzoneIcon">FILE</span>
 
                 <strong>
                   {selectedFiles.length > 0

@@ -6,6 +6,8 @@ import type {
   AssistantSemanticConfidence,
   AssistantSemanticDomain,
   AssistantSemanticGoal,
+  AssistantSemanticReferentStatus,
+  AssistantSemanticReportReferenceKind,
   AssistantSemanticRequestedDepth,
   AssistantSemanticRoutingDecision,
   AssistantSemanticSubjectKind,
@@ -18,6 +20,7 @@ const VALID_DOMAINS:
     "clinical_question",
     "health_journey",
     "general_health",
+    "general_conversation",
     "unclear",
   ];
 
@@ -64,6 +67,7 @@ const VALID_SUBJECT_KINDS:
     "symptom",
     "previous-topic",
     "general-health",
+    "general-topic",
     "unknown",
   ];
 
@@ -74,8 +78,26 @@ const VALID_REQUESTED_DEPTH:
     "detailed",
   ];
 
+const VALID_REPORT_REFERENCE_KINDS:
+  AssistantSemanticReportReferenceKind[] = [
+    "latest",
+    "previous",
+    "current-conversation",
+    "specific",
+    "range",
+    "unspecified",
+  ];
+
+const VALID_REFERENT_STATUS:
+  AssistantSemanticReferentStatus[] = [
+    "resolved",
+    "ambiguous",
+    "missing",
+  ];
+
 function isRecord(
-  value: unknown
+  value:
+    unknown
 ): value is Record<string, unknown> {
   return (
     typeof value === "object" &&
@@ -84,26 +106,67 @@ function isRecord(
   );
 }
 
+function resolveLegacyReferentStatus(
+  input: {
+    subjectKind:
+      AssistantSemanticSubjectKind;
+
+    subjectValue:
+      string | null;
+
+    isFollowUp:
+      boolean;
+
+    refersToPreviousTurn:
+      boolean;
+  }
+): AssistantSemanticReferentStatus {
+  if (
+    input.subjectValue ||
+    (
+      !input.isFollowUp &&
+      input.subjectKind !== "unknown"
+    )
+  ) {
+    return "resolved";
+  }
+
+  if (
+    input.isFollowUp ||
+    input.refersToPreviousTurn
+  ) {
+    return "missing";
+  }
+
+  return input.subjectKind === "unknown"
+    ? "missing"
+    : "resolved";
+}
+
 function validateUnderstanding(
-  value: unknown
+  value:
+    unknown
 ): AssistantSemanticUnderstanding | null {
   if (!isRecord(value)) {
     return null;
   }
 
-  const {
-    goals,
-    primaryGoal,
-    subject,
-    isFollowUp,
-    refersToPreviousTurn,
-    needsReportEvidence,
-    needsHistory,
-    asksForDiagnosis,
-    asksForUrgency,
-    asksForAction,
-    requestedDepth,
-  } = value;
+const {
+  goals,
+  primaryGoal,
+  subject,
+  reportReference,
+  referentStatus,
+  referentConfidence,
+  isFollowUp,
+  refersToPreviousTurn,
+  needsReportEvidence,
+  needsHistory,
+  asksForDiagnosis,
+  asksForUrgency,
+  asksForAction,
+  requestedDepth,
+} = value;
 
   if (
     !Array.isArray(goals) ||
@@ -178,11 +241,209 @@ function validateUnderstanding(
     return null;
   }
 
+  const normalizedSubjectKind =
+    subject.kind as AssistantSemanticSubjectKind;
+
+  const normalizedSubjectValue =
+    subject.value === null
+      ? null
+      : subject.value.trim() || null;
+
+  let normalizedReferentStatus:
+    AssistantSemanticReferentStatus;
+
+  /*
+   * Backwards-compatible migration path:
+   * older model fixtures may not yet contain referentStatus.
+   */
+  if (
+    referentStatus === undefined
+  ) {
+    normalizedReferentStatus =
+      resolveLegacyReferentStatus({
+        subjectKind:
+          normalizedSubjectKind,
+
+        subjectValue:
+          normalizedSubjectValue,
+
+        isFollowUp,
+
+        refersToPreviousTurn,
+      });
+  } else if (
+    typeof referentStatus === "string" &&
+    VALID_REFERENT_STATUS.includes(
+      referentStatus as AssistantSemanticReferentStatus
+    )
+  ) {
+    normalizedReferentStatus =
+      referentStatus as AssistantSemanticReferentStatus;
+  } else {
+    return null;
+  }
+
+  let normalizedReferentConfidence:
+    AssistantSemanticConfidence;
+
+  /*
+   * Same migration rule for existing tests/model fixtures.
+   * New model-backed decisions should always provide this field.
+   */
+  if (
+    referentConfidence === undefined
+  ) {
+    normalizedReferentConfidence =
+      normalizedReferentStatus === "resolved"
+        ? "medium"
+        : "low";
+  } else if (
+    typeof referentConfidence === "string" &&
+    VALID_CONFIDENCE.includes(
+      referentConfidence as AssistantSemanticConfidence
+    )
+  ) {
+    normalizedReferentConfidence =
+      referentConfidence as AssistantSemanticConfidence;
+  } else {
+    return null;
+  }
+
+  /*
+   * A resolved reference must identify something meaningful.
+   *
+   * A direct report-level request is allowed to resolve by kind alone,
+   * e.g. subject.kind === "report" with no literal value.
+   */
+  if (
+    normalizedReferentStatus === "resolved" &&
+    normalizedSubjectKind === "unknown"
+  ) {
+    return null;
+  }
+
+  /*
+   * Do not allow the model to claim high-confidence resolution of an
+   * unspecified previous topic.
+   */
+  if (
+    normalizedReferentStatus === "resolved" &&
+    normalizedSubjectKind === "previous-topic" &&
+    !normalizedSubjectValue &&
+    normalizedReferentConfidence === "high"
+  ) {
+    return null;
+  }
+
   const uniqueGoals = [
     ...new Set(
       goals as AssistantSemanticGoal[]
     ),
   ];
+
+  let normalizedReportReference:
+  AssistantSemanticUnderstanding["reportReference"] =
+    null;
+
+/*
+ * Migration compatibility:
+ * older model fixtures and deterministic decisions
+ * may not yet contain reportReference.
+ */
+if (
+  reportReference !== undefined &&
+  reportReference !== null
+) {
+  if (
+    !isRecord(
+      reportReference
+    )
+  ) {
+    return null;
+  }
+
+  const {
+    kind,
+    count,
+    value:
+      reportReferenceValue,
+  } = reportReference;
+
+  if (
+    typeof kind !== "string" ||
+    !VALID_REPORT_REFERENCE_KINDS.includes(
+      kind as AssistantSemanticReportReferenceKind
+    )
+  ) {
+    return null;
+  }
+
+  if (
+    count !== null &&
+    (
+      typeof count !== "number" ||
+      !Number.isInteger(
+        count
+      ) ||
+      count < 1 ||
+      count > 50
+    )
+  ) {
+    return null;
+  }
+
+  if (
+    reportReferenceValue !== null &&
+    typeof reportReferenceValue !==
+      "string"
+  ) {
+    return null;
+  }
+
+  const normalizedValue =
+    reportReferenceValue === null
+      ? null
+      : reportReferenceValue
+          .trim() || null;
+
+  const normalizedKind =
+    kind as AssistantSemanticReportReferenceKind;
+
+  /*
+   * A specific report must identify what
+   * makes the report specific.
+   */
+  if (
+    normalizedKind === "specific" &&
+    !normalizedValue
+  ) {
+    return null;
+  }
+
+  /*
+   * A range must describe the requested
+   * period/range rather than inventing one.
+   */
+  if (
+    normalizedKind === "range" &&
+    !normalizedValue
+  ) {
+    return null;
+  }
+
+  normalizedReportReference = {
+    kind:
+      normalizedKind,
+
+    count:
+      count === null
+        ? null
+        : count,
+
+    value:
+      normalizedValue,
+  };
+}
 
   return {
     goals:
@@ -193,13 +454,20 @@ function validateUnderstanding(
 
     subject: {
       kind:
-        subject.kind as AssistantSemanticSubjectKind,
+        normalizedSubjectKind,
 
       value:
-        subject.value === null
-          ? null
-          : subject.value.trim() || null,
+        normalizedSubjectValue,
     },
+
+    reportReference:
+      normalizedReportReference,
+
+    referentStatus:
+      normalizedReferentStatus,
+
+    referentConfidence:
+      normalizedReferentConfidence,
 
     isFollowUp,
 
@@ -221,7 +489,8 @@ function validateUnderstanding(
 }
 
 export function validateAssistantSemanticRoutingDecision(
-  value: unknown
+  value:
+    unknown
 ): AssistantSemanticRoutingDecision | null {
   if (!isRecord(value)) {
     return null;
@@ -262,17 +531,9 @@ export function validateAssistantSemanticRoutingDecision(
   }
 
   if (
-    reason !== null &&
-    typeof reason !== "string"
-  ) {
-    return null;
-  }
-
-  if (
     productDestination !== null &&
     (
-      typeof productDestination !==
-        "string" ||
+      typeof productDestination !== "string" ||
       !VALID_PRODUCT_DESTINATIONS.includes(
         productDestination as ProductNavigationDestination
       )
@@ -281,33 +542,50 @@ export function validateAssistantSemanticRoutingDecision(
     return null;
   }
 
+  /*
+ * Product navigation must always resolve to a valid
+ * product destination.
+ *
+ * Conversely, non-product domains must never carry
+ * a product destination.
+ */
+if (
+  domain ===
+    "product_navigation" &&
+  productDestination ===
+    null
+) {
+  return null;
+}
+
+if (
+  domain !==
+    "product_navigation" &&
+  productDestination !==
+    null
+) {
+  return null;
+}
+
   if (
-    domain === "product_navigation" &&
-    productDestination === null
+    reason !== null &&
+    typeof reason !== "string"
   ) {
     return null;
   }
 
+  const normalizedUnderstanding =
+    understanding === undefined
+      ? undefined
+      : validateUnderstanding(
+          understanding
+        );
+
   if (
-    domain !== "product_navigation" &&
-    productDestination !== null
+    understanding !== undefined &&
+    !normalizedUnderstanding
   ) {
     return null;
-  }
-
-  let validatedUnderstanding:
-    AssistantSemanticUnderstanding | null =
-      null;
-
-  if (understanding !== undefined) {
-    validatedUnderstanding =
-      validateUnderstanding(
-        understanding
-      );
-
-    if (!validatedUnderstanding) {
-      return null;
-    }
   }
 
   return {
@@ -327,12 +605,15 @@ export function validateAssistantSemanticRoutingDecision(
 
     requiresConversationContext,
 
-    reason,
+    reason:
+      reason === null
+        ? null
+        : reason.trim() || null,
 
-    ...(validatedUnderstanding
+    ...(normalizedUnderstanding
       ? {
           understanding:
-            validatedUnderstanding,
+            normalizedUnderstanding,
         }
       : {}),
   };

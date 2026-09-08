@@ -95,6 +95,38 @@ vi.mock(
   })
 );
 
+vi.mock(
+  "@/lib/health-intelligence/application/assistant-report-reference/trusted-assistant-report-reference-resolver",
+  () => ({
+    createTrustedAssistantReportReferenceResolver:
+      vi.fn(),
+  })
+);
+
+vi.mock(
+  "@/lib/health-intelligence/application/assistant-multi-report-comparison/assistant-multi-report-comparison.service",
+  () => ({
+    buildAssistantMultiReportComparison:
+      vi.fn(),
+  })
+);
+
+vi.mock(
+  "@/lib/health-intelligence/application/assistant-multi-report-comparison/render-assistant-multi-report-comparison",
+  () => ({
+    renderAssistantMultiReportComparison:
+      vi.fn(),
+  })
+);
+
+vi.mock(
+  "@/lib/health-intelligence/application/assistant-multi-report-comparison/assistant-multi-report-clinical-explanation.service",
+  () => ({
+    enhanceAssistantMultiReportClinicalResponse:
+      vi.fn(),
+  })
+);
+
 import {
   authenticateApiRequest,
 } from "@/lib/api/api-auth";
@@ -110,6 +142,22 @@ import {
 import {
   buildAuthenticatedAssistantContext,
 } from "@/lib/health-intelligence/application/authenticated-assistant-context.service";
+
+import {
+  createTrustedAssistantReportReferenceResolver,
+} from "@/lib/health-intelligence/application/assistant-report-reference/trusted-assistant-report-reference-resolver";
+
+import {
+  buildAssistantMultiReportComparison,
+} from "@/lib/health-intelligence/application/assistant-multi-report-comparison/assistant-multi-report-comparison.service";
+
+import {
+  renderAssistantMultiReportComparison,
+} from "@/lib/health-intelligence/application/assistant-multi-report-comparison/render-assistant-multi-report-comparison";
+
+import {
+  enhanceAssistantMultiReportClinicalResponse,
+} from "@/lib/health-intelligence/application/assistant-multi-report-comparison/assistant-multi-report-clinical-explanation.service";
 
 import {
   runAssistantOrchestrator,
@@ -172,6 +220,29 @@ const mockedBuildAuthenticatedAssistantContext =
   vi.mocked(
     buildAuthenticatedAssistantContext
   );
+
+const mockedCreateTrustedAssistantReportReferenceResolver =
+  vi.mocked(
+    createTrustedAssistantReportReferenceResolver
+  );
+
+const mockedBuildAssistantMultiReportComparison =
+  vi.mocked(
+    buildAssistantMultiReportComparison
+  );
+
+const mockedRenderAssistantMultiReportComparison =
+  vi.mocked(
+    renderAssistantMultiReportComparison
+  );
+
+const mockedEnhanceAssistantMultiReportClinicalResponse =
+  vi.mocked(
+    enhanceAssistantMultiReportClinicalResponse
+  );
+
+const mockedReportResolverResolve =
+  vi.fn();
 
 const mockedCreateClinicalInterview =
   vi.mocked(
@@ -347,6 +418,35 @@ mockedResolveAssistantSemanticRoutingWithModel
 
         mockedBuildAuthenticatedAssistantContext
           .mockReset();
+
+          mockedCreateTrustedAssistantReportReferenceResolver
+  .mockReset();
+
+mockedReportResolverResolve
+  .mockReset();
+
+mockedCreateTrustedAssistantReportReferenceResolver
+  .mockReturnValue({
+    resolve:
+      mockedReportResolverResolve,
+  } as never);
+
+mockedBuildAssistantMultiReportComparison
+  .mockReset();
+
+mockedRenderAssistantMultiReportComparison
+  .mockReset();
+
+mockedEnhanceAssistantMultiReportClinicalResponse
+  .mockReset();
+
+mockedEnhanceAssistantMultiReportClinicalResponse
+  .mockImplementation(
+    async ({
+      deterministicResult,
+    }) =>
+      deterministicResult
+  );
 
         mockedCreateClinicalInterview
           .mockReset();
@@ -1922,6 +2022,327 @@ it(
 );
 
 dateNowSpy.mockRestore();
+  }
+);
+
+it(
+  "routes an explicit Arabic latest-3 request through the trusted multi-report path",
+  async () => {
+    const message =
+      "قارن آخر 3 تقارير عندي. ما أهم شيء تحسن، وما الذي ساء أو ما زال يحتاج متابعة؟";
+
+    const authenticatedClient =
+      {} as never;
+
+    const adminClient =
+      {} as never;
+
+    const reports = [
+      {
+        id:
+          203,
+
+        file_name:
+          "follow-up-2.txt",
+
+        file_path:
+          "user-1/follow-up-2.txt",
+
+        report_type:
+          "laboratory",
+
+        extraction_status:
+          "completed",
+
+        created_at:
+          "2026-09-07T12:00:00.000Z",
+      },
+
+      {
+        id:
+          202,
+
+        file_name:
+          "follow-up-1.docx",
+
+        file_path:
+          "user-1/follow-up-1.docx",
+
+        report_type:
+          "laboratory",
+
+        extraction_status:
+          "completed",
+
+        created_at:
+          "2026-09-06T12:00:00.000Z",
+      },
+
+      {
+        id:
+          201,
+
+        file_name:
+          "baseline.pdf",
+
+        file_path:
+          "user-1/baseline.pdf",
+
+        report_type:
+          "laboratory",
+
+        extraction_status:
+          "completed",
+
+        created_at:
+          "2026-09-05T12:00:00.000Z",
+      },
+    ];
+
+    const comparison =
+      {} as never;
+
+    mockedAuthenticateApiRequest
+      .mockResolvedValue({
+        success:
+          true,
+
+        token:
+          "test-token",
+
+        user: {
+          id:
+            "user-1",
+        },
+
+        client:
+          authenticatedClient,
+      } as never);
+
+    mockedGetSupabaseAdminClient
+      .mockReturnValue(
+        adminClient
+      );
+
+    mockedBuildAuthenticatedAssistantContext
+      .mockResolvedValue(
+        {} as never
+      );
+
+    mockedReportResolverResolve
+      .mockResolvedValue({
+        status:
+          "resolved",
+
+        reference: {
+          kind:
+            "latest",
+
+          count:
+            3,
+
+          value:
+            null,
+        },
+
+        requestedCount:
+          3,
+
+        resolvedCount:
+          3,
+
+        reports,
+
+        reason:
+          null,
+      } as never);
+
+    const orchestratorResult =
+      createOrchestratorResult(
+        "Orchestrator fallback response."
+      );
+
+    mockedRunAssistantOrchestrator
+      .mockReturnValue(
+        orchestratorResult
+      );
+
+    mockedBuildAssistantMultiReportComparison
+      .mockResolvedValue(
+        comparison
+      );
+
+    mockedRenderAssistantMultiReportComparison
+      .mockReturnValue(
+        "مقارنة آخر 3 تقارير"
+      );
+
+    const response =
+      await POST(
+        new Request(
+          "http://localhost/api/assistant",
+          {
+            method:
+              "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+
+              Authorization:
+                "Bearer test-token",
+            },
+
+            body:
+              JSON.stringify({
+                message,
+
+                language:
+                  "ar",
+
+                conversation:
+                  [],
+              }),
+          }
+        )
+      );
+
+    expect(
+      response.status
+    ).toBe(
+      200
+    );
+
+    /*
+     * The route receives the explicit latest-3
+     * deterministic understanding.
+     */
+    expect(
+      mockedResolveAssistantSemanticRoutingWithModel
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        input:
+          expect.objectContaining({
+            currentMessage:
+              message,
+
+            language:
+              "ar",
+
+            deterministicDecision:
+              expect.objectContaining({
+                domain:
+                  "clinical_question",
+
+                confidence:
+                  "high",
+
+                source:
+                  "deterministic",
+
+                understanding:
+                  expect.objectContaining({
+                    primaryGoal:
+                      "compare",
+
+                    needsReportEvidence:
+                      true,
+
+                    needsHistory:
+                      true,
+
+                    reportReference: {
+                      kind:
+                        "latest",
+
+                      count:
+                        3,
+
+                      value:
+                        null,
+                    },
+                  }),
+              }),
+          }),
+      })
+    );
+
+    /*
+     * The report reference reaches the trusted
+     * authenticated report resolver.
+     */
+    expect(
+      mockedCreateTrustedAssistantReportReferenceResolver
+    ).toHaveBeenCalledTimes(
+      1
+    );
+
+    expect(
+      mockedReportResolverResolve
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId:
+          "user-1",
+
+        reference: {
+          kind:
+            "latest",
+
+          count:
+            3,
+
+          value:
+            null,
+        },
+      })
+    );
+
+    /*
+     * All three trusted reports reach the dedicated
+     * longitudinal comparison capability.
+     */
+    expect(
+      mockedBuildAssistantMultiReportComparison
+    ).toHaveBeenCalledTimes(
+      1
+    );
+
+    expect(
+      mockedBuildAssistantMultiReportComparison
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId:
+          "user-1",
+
+        reports,
+      })
+    );
+
+    expect(
+      mockedRenderAssistantMultiReportComparison
+    ).toHaveBeenCalledWith(
+      comparison,
+      "ar"
+    );
+
+    /*
+     * AI narration is mocked in this test.
+     * No provider request is performed.
+     */
+    expect(
+      mockedEnhanceAssistantMultiReportClinicalResponse
+    ).toHaveBeenCalledTimes(
+      1
+    );
+
+    const responseBody =
+      await response.json();
+
+    expect(
+      responseBody.response
+    ).toBe(
+      "مقارنة آخر 3 تقارير"
+    );
   }
 );
 

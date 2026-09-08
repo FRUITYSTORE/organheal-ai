@@ -167,7 +167,7 @@ function buildReportMarkerRelationships(
               "direct",
 
             explanation:
-              "This laboratory marker was extracted from this uploaded report.",
+              "This marker is supported directly by the uploaded report evidence.",
 
             supportingEvidenceIds: [
               ...getEvidenceIds(

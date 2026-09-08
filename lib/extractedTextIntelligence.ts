@@ -40,6 +40,6 @@ export function generateIntelligenceFromText(
         : "Report text extracted and prepared for doctor-ready summarization.",
 
     next_best_action:
-      "Review extracted report text and generate deeper structured intelligence.",
+  "Review the important report findings and determine whether any follow-up is needed.",
   };
 }

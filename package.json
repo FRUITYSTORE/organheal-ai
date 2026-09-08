@@ -14,9 +14,13 @@
   "dependencies": {
     "@sentry/nextjs": "^10.70.0",
     "@supabase/supabase-js": "2.112.3",
+    "csv-parse": "^7.0.2",
+    "exceljs": "^4.4.0",
+    "fast-xml-parser": "^5.11.1",
     "html2canvas": "^1.4.1",
     "html2pdf.js": "^0.14.0",
     "jspdf": "^4.2.1",
+    "mammoth": "^1.12.2",
     "next": "16.3.2",
     "pdf2json": "^4.0.3",
     "pdfjs-dist": "^6.2.108",

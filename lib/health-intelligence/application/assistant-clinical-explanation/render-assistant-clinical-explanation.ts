@@ -3,6 +3,282 @@ import type {
   AssistantClinicalExplanationLanguage,
 } from "@/lib/health-intelligence/application/assistant-clinical-explanation/assistant-clinical-explanation.types";
 
+const ARABIC_MARKER_NAMES:
+  Record<string, string> = {
+    Glucose:
+      "سكر الدم (Glucose)",
+
+    HbA1c:
+      "السكر التراكمي (HbA1c)",
+
+    LDL:
+      "الكوليسترول الضار (LDL)",
+
+    HDL:
+      "الكوليسترول الجيد (HDL)",
+
+    Triglycerides:
+      "الدهون الثلاثية",
+
+    "Total Cholesterol":
+      "الكوليسترول الكلي",
+
+    Ferritin:
+      "مخزون الحديد (Ferritin)",
+
+    Iron:
+      "الحديد",
+
+    "Serum Iron":
+      "الحديد في الدم",
+
+    "Transferrin Saturation":
+      "نسبة تشبع الترانسفيرين",
+
+    ALT:
+      "إنزيم الكبد ALT",
+
+    AST:
+      "إنزيم الكبد AST",
+
+    eGFR:
+      "كفاءة ترشيح الكلى (eGFR)",
+
+    Creatinine:
+      "الكرياتينين",
+
+    Potassium:
+      "البوتاسيوم",
+
+    Sodium:
+      "الصوديوم",
+
+    "Vitamin D":
+      "فيتامين د",
+
+    "Vitamin B12":
+      "فيتامين ب12",
+
+    "Urine ACR":
+      "نسبة الألبومين إلى الكرياتينين في البول (ACR)",
+
+    "hs-CRP":
+      "مؤشر الالتهاب عالي الحساسية (hs-CRP)",
+  };
+
+function renderArabicMarker(
+  marker:
+    string
+): string {
+  return (
+    ARABIC_MARKER_NAMES[
+      marker
+    ] ??
+    marker
+  );
+}
+
+function renderArabicConfidence(
+  confidence:
+    string
+): string {
+  switch (
+    confidence.toLowerCase()
+  ) {
+    case "high":
+      return "عالية";
+
+    case "medium":
+      return "متوسطة";
+
+    case "low":
+      return "منخفضة";
+
+    default:
+      return confidence;
+  }
+}
+
+function escapeRegExp(
+  value:
+    string
+): string {
+  return value.replace(
+    /[.*+?^${}()|[\]\\]/g,
+    "\\$&"
+  );
+}
+
+function localizeArabicClinicalText(
+  value:
+    string
+): string {
+  let localized =
+    value;
+
+  const entries =
+    Object.entries(
+      ARABIC_MARKER_NAMES
+    )
+      .sort(
+        (
+          [left],
+          [right]
+        ) =>
+          right.length -
+          left.length
+      );
+
+  for (
+    const [
+      marker,
+      arabicName,
+    ] of entries
+  ) {
+    const pattern =
+      new RegExp(
+        `(?<![\\p{L}\\p{N}])${escapeRegExp(
+          marker
+        )}(?![\\p{L}\\p{N}])`,
+        "giu"
+      );
+
+    localized =
+      localized.replace(
+        pattern,
+        arabicName
+      );
+  }
+
+  return localized
+    .replace(
+      /\bHigh\b/gi,
+      "مرتفع"
+    )
+    .replace(
+      /\bLow\b/gi,
+      "منخفض"
+    )
+    .replace(
+      /\bNormal\b/gi,
+      "طبيعي"
+    )
+    .replace(
+      /\bDetected\b/gi,
+      "موجود"
+    )
+    .replace(
+      /\bBorderline\b/gi,
+      "حدّي"
+    );
+}
+
+function localizeArabicExplanation(
+  explanation:
+    AssistantClinicalExplanation
+): AssistantClinicalExplanation {
+  return {
+    ...explanation,
+
+    overview:
+      localizeArabicClinicalText(
+        explanation.overview
+      ),
+
+    priorityFindings:
+      explanation
+        .priorityFindings
+        .map(
+          (finding) => ({
+            ...finding,
+
+            title:
+              localizeArabicClinicalText(
+                finding.title
+              ),
+
+            explanation:
+              localizeArabicClinicalText(
+                finding.explanation
+              ),
+          })
+        ),
+
+    relationships:
+      explanation
+        .relationships
+        .map(
+          (relationship) => ({
+            ...relationship,
+
+            explanation:
+              localizeArabicClinicalText(
+                relationship.explanation
+              ),
+          })
+        ),
+
+    possibleContributors:
+      explanation
+        .possibleContributors
+        .map(
+          (contributor) => ({
+            ...contributor,
+
+            factor:
+              localizeArabicClinicalText(
+                contributor.factor
+              ),
+
+            whyPossible:
+              localizeArabicClinicalText(
+                contributor.whyPossible
+              ),
+
+            confirmationNeeded:
+              localizeArabicClinicalText(
+                contributor.confirmationNeeded
+              ),
+          })
+        ),
+
+    reassuringFindings:
+      explanation
+        .reassuringFindings
+        .map(
+          localizeArabicClinicalText
+        ),
+
+    missingContext:
+      explanation
+        .missingContext
+        .map(
+          localizeArabicClinicalText
+        ),
+
+    nextSteps:
+      explanation
+        .nextSteps
+        .map(
+          localizeArabicClinicalText
+        ),
+
+    questionsForClinician:
+      explanation
+        .questionsForClinician
+        .map(
+          localizeArabicClinicalText
+        ),
+
+    limitations:
+      explanation
+        .limitations
+        .map(
+          localizeArabicClinicalText
+        ),
+  };
+}
+
 function renderList(
   items:
     string[]
@@ -112,13 +388,19 @@ function renderArabic(
       [
         "ما الذي يستحق الاهتمام أولًا:",
         ...explanation.priorityFindings.map(
-          (finding) => [
-            `• ${finding.title}`,
-            finding.explanation,
-            `الأدلة من التقرير: ${finding.evidenceMarkers.join(", ")}`,
-            `درجة الثقة: ${finding.confidence}`,
-          ].join("\n")
-        ),
+         (finding) => [
+           `• ${finding.title}`,
+          finding.explanation,
+        `الأدلة من التقرير: ${finding.evidenceMarkers
+          .map(
+          renderArabicMarker
+        )
+        .join("، ")}`,
+        `درجة الثقة: ${renderArabicConfidence(
+          finding.confidence
+       )}`,
+      ].join("\n")
+    ),
       ].join("\n\n")
     );
   }
@@ -132,7 +414,11 @@ function renderArabic(
         "كيف ترتبط النتائج:",
         ...explanation.relationships.map(
           (relationship) =>
-            `• ${relationship.markers.join(" + ")}: ${relationship.explanation}`
+            `• ${relationship.markers
+  .map(
+    renderArabicMarker
+  )
+  .join(" + ")}: ${relationship.explanation}`
         ),
       ].join("\n")
     );
@@ -211,6 +497,30 @@ function renderArabic(
   );
 }
 
+function sanitizeUserFacingText(
+  value:
+    string
+): string {
+  return value
+    .replace(
+      /Review extracted report text and generate deeper structured intelligence\.?/gi,
+      ""
+    )
+    .replace(
+      /This laboratory marker was extracted from this uploaded report\.?/gi,
+      ""
+    )
+    .replace(
+      /Report text extracted and prepared for doctor-ready summarization\.?/gi,
+      ""
+    )
+    .replace(
+      /\n{3,}/g,
+      "\n\n"
+    )
+    .trim();
+}
+
 function renderEnglish(
   explanation:
     AssistantClinicalExplanation
@@ -232,7 +542,7 @@ function renderEnglish(
             `• ${finding.title}`,
             finding.explanation,
             `Evidence from the report: ${finding.evidenceMarkers.join(", ")}`,
-            `Confidence: ${finding.confidence}`,
+            `Confidence: ${finding.confidence}`
           ].join("\n")
         ),
       ].join("\n\n")
@@ -468,37 +778,62 @@ export function renderAssistantClinicalExplanation(
     | "cause-reasoning" =
       "full"
 ): string {
+  const presentationExplanation =
+    language === "ar"
+      ? localizeArabicExplanation(
+          explanation
+        )
+      : explanation;
+
+  let rendered:
+    string;
+
   if (
     mode ===
     "next-step"
   ) {
-    return language === "ar"
-      ? renderArabicNextStep(
-          explanation
-        )
-      : renderEnglishNextStep(
-          explanation
-        );
+    rendered =
+      language === "ar"
+        ? renderArabicNextStep(
+            presentationExplanation
+          )
+        : renderEnglishNextStep(
+            explanation
+          );
+
+    return sanitizeUserFacingText(
+      rendered
+    );
   }
 
   if (
     mode ===
     "cause-reasoning"
   ) {
-    return language === "ar"
-      ? renderArabicCauseReasoning(
-          explanation
-        )
-      : renderEnglishCauseReasoning(
-          explanation
-        );
+    rendered =
+      language === "ar"
+        ? renderArabicCauseReasoning(
+            presentationExplanation
+          )
+        : renderEnglishCauseReasoning(
+            explanation
+          );
+
+    return sanitizeUserFacingText(
+      rendered
+    );
   }
 
-  return language === "ar"
-    ? renderArabic(
-        explanation
-      )
-    : renderEnglish(
-        explanation
-      );
+  rendered =
+    language === "ar"
+      ? renderArabic(
+          presentationExplanation
+        )
+      : renderEnglish(
+          explanation
+        );
+
+  return sanitizeUserFacingText(
+    rendered
+  );
 }

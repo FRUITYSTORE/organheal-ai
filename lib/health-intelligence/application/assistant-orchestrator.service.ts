@@ -190,8 +190,48 @@ const detectedIntent =
       }
     : legacyDetectedIntent;
 
+    const semanticUnderstanding =
+  semanticRoutingDecision
+    ?.understanding;
+
+const semanticReferentNeedsClarification =
+  Boolean(
+    clinicalUrgency.level === "none" &&
+    semanticRoutingDecision?.domain ===
+      "clinical_question" &&
+    semanticUnderstanding?.isFollowUp &&
+    (
+      semanticUnderstanding.referentStatus ===
+        "ambiguous" ||
+      semanticUnderstanding.referentStatus ===
+        "missing"
+    )
+  );
+
+const semanticReferentClarificationQuestion =
+  semanticReferentNeedsClarification
+    ? language === "ar"
+      ? semanticUnderstanding?.referentStatus ===
+          "ambiguous"
+        ? "تقصد أي نتيجة أو موضوع بالتحديد؟ اذكر اسم التحليل أو النتيجة التي تريد أن أشرحها."
+        : "ما النتيجة أو الموضوع الذي تقصده؟ اذكر اسم التحليل أو النتيجة حتى أجيبك بدقة."
+      : semanticUnderstanding?.referentStatus ===
+          "ambiguous"
+        ? "Which result or topic do you mean? Tell me the test or finding you want me to explain."
+        : "Which result or topic are you referring to? Tell me the test or finding so I can answer accurately."
+    : null;
+
+const semanticReferentClarificationReason =
+  semanticReferentNeedsClarification
+    ? semanticUnderstanding?.referentStatus ===
+        "ambiguous"
+      ? "semantic_referent_ambiguous"
+      : "semantic_referent_missing"
+    : null;
+
  const clinicalReasoningLoop =
   clinicalUrgency.level === "none" &&
+  !semanticReferentNeedsClarification &&
   healthContext?.wholeBodyKnowledge
     ? runClinicalReasoningLoop({
 
@@ -314,11 +354,7 @@ const legacyRequestsClarification = Boolean(
       "نتائج"
     );
 
-  const semanticUnderstanding =
-  semanticRoutingDecision
-    ?.understanding;
-
-const semanticReportGrounding =
+  const semanticReportGrounding =
   Boolean(
     semanticUnderstanding
       ?.needsReportEvidence
@@ -336,25 +372,42 @@ const isReportGroundedQuestion =
 
   const shouldClarify =
   clinicalUrgency.level === "none" &&
-  !isReportGroundedQuestion &&
+  (
+    semanticReferentNeedsClarification ||
     (
-      clinicalRuntimeRequestsClarification ||
-      legacyRequestsClarification
-    );
+      !isReportGroundedQuestion &&
+      (
+        clinicalRuntimeRequestsClarification ||
+        legacyRequestsClarification
+      )
+    )
+  );
 
-  const selectedClarificationQuestion = clinicalRuntimeRequestsClarification
-    ? (clinicalClarification?.question ?? null)
-    : legacyRequestsClarification
-      ? reasoningDecision.question
-      : null;
+  const selectedClarificationQuestion =
+  semanticReferentNeedsClarification
+    ? semanticReferentClarificationQuestion
+    : clinicalRuntimeRequestsClarification
+      ? (
+          clinicalClarification?.question ??
+          null
+        )
+      : legacyRequestsClarification
+        ? reasoningDecision.question
+        : null;
 
-  const selectedClarificationReason = clinicalRuntimeRequestsClarification
-    ? (clinicalReasoningRuntime?.clarification.reason ??
-      clinicalClarification?.reason ??
-      null)
-    : legacyRequestsClarification
-      ? reasoningDecision.reason
-      : null;
+  const selectedClarificationReason =
+  semanticReferentNeedsClarification
+    ? semanticReferentClarificationReason
+    : clinicalRuntimeRequestsClarification
+      ? (
+          clinicalReasoningRuntime
+            ?.clarification.reason ??
+          clinicalClarification?.reason ??
+          null
+        )
+      : legacyRequestsClarification
+        ? reasoningDecision.reason
+        : null;
 
   if (shouldClarify && selectedClarificationQuestion) {
     return {

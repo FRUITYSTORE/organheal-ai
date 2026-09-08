@@ -38,6 +38,14 @@ import {
   openAIAssistantSemanticModelClient,
 } from "@/lib/health-intelligence/application/assistant-semantic-routing/openai-assistant-semantic-model.client";
 
+import {
+  enhanceAssistantGeneralResponse,
+} from "@/lib/health-intelligence/application/assistant-general-intelligence/assistant-general-intelligence.service";
+
+import {
+  openAIAssistantGeneralIntelligenceClient,
+} from "@/lib/health-intelligence/application/assistant-general-intelligence/openai-assistant-general-intelligence.client";
+
 import type {
   AssistantResponseConversationMessage,
   AssistantResponseHealthContext,
@@ -65,6 +73,34 @@ import {
 import {
   getSupabaseAdminClient,
 } from "@/lib/supabase-admin";
+
+import {
+  createTrustedAssistantReportReferenceResolver,
+} from "@/lib/health-intelligence/application/assistant-report-reference/trusted-assistant-report-reference-resolver";
+
+import type {
+  AssistantReportReferenceResolution,
+} from "@/lib/health-intelligence/application/assistant-report-reference/assistant-report-reference.types";
+
+import {
+  buildAssistantMultiReportComparison,
+} from "@/lib/health-intelligence/application/assistant-multi-report-comparison/assistant-multi-report-comparison.service";
+
+import {
+  renderAssistantMultiReportComparison,
+} from "@/lib/health-intelligence/application/assistant-multi-report-comparison/render-assistant-multi-report-comparison";
+
+import type {
+  PatientClinicalLongitudinalComparison,
+} from "@/lib/application/clinical/patient-clinical-longitudinal-comparison.service";
+
+import {
+  enhanceAssistantMultiReportClinicalResponse,
+} from "@/lib/health-intelligence/application/assistant-multi-report-comparison/assistant-multi-report-clinical-explanation.service";
+
+import {
+  openAIAssistantMultiReportClinicalExplanationClient,
+} from "@/lib/health-intelligence/application/assistant-clinical-explanation/openai-assistant-clinical-explanation.client";
 
 const CLINICAL_INTERVIEW_RESUME_WINDOW_MS =
   24 *
@@ -559,6 +595,185 @@ export async function POST(
     currentStage =
       "orchestrator";
 
+      logApiInfo(
+  "assistant.semantic_resolution.debug",
+  {
+    route:
+      "/api/assistant",
+
+    requestId,
+
+    domain:
+      semanticRoutingDecision.domain,
+
+    source:
+      semanticRoutingDecision.source,
+
+    confidence:
+      semanticRoutingDecision.confidence,
+
+    goals:
+      semanticRoutingDecision
+        .understanding
+        ?.goals ??
+      [],
+
+    primaryGoal:
+      semanticRoutingDecision
+        .understanding
+        ?.primaryGoal ??
+      null,
+
+    reportReferenceKind:
+      semanticRoutingDecision
+        .understanding
+        ?.reportReference
+        ?.kind ??
+      null,
+
+    reportReferenceCount:
+      semanticRoutingDecision
+        .understanding
+        ?.reportReference
+        ?.count ??
+      null,
+
+    needsReportEvidence:
+      semanticRoutingDecision
+        .understanding
+        ?.needsReportEvidence ??
+      null,
+
+    needsHistory:
+      semanticRoutingDecision
+        .understanding
+        ?.needsHistory ??
+      null,
+
+    referentStatus:
+      semanticRoutingDecision
+        .understanding
+        ?.referentStatus ??
+      null,
+  }
+);
+
+      let resolvedReportSelection:
+      AssistantReportReferenceResolution | null =
+    null;
+
+const semanticUnderstanding =
+  semanticRoutingDecision
+    .understanding;
+
+const reportReference =
+  semanticUnderstanding
+    ?.reportReference ??
+  null;
+
+if (
+  authenticatedContext &&
+  reportReference
+) {
+  currentStage =
+    "resolve_report_reference";
+
+  const reportReferenceTimer =
+    startApiTimer();
+
+  const reportResolver =
+    createTrustedAssistantReportReferenceResolver(
+      authenticatedContext
+        .client
+    );
+
+  resolvedReportSelection =
+    await reportResolver.resolve({
+      userId:
+        authenticatedContext
+          .userId,
+
+      reference:
+        reportReference,
+
+      activeReportId:
+        healthContext
+          ?.latestReportContext
+          ?.reportId ??
+        null,
+    });
+
+  logStageCompleted(
+    "resolve_report_reference",
+    reportReferenceTimer
+  );
+
+  const resolvedReports =
+    resolvedReportSelection
+      .reports;
+
+  /*
+   * Existing clinical intelligence is currently
+   * single-report oriented.
+   *
+   * When exactly one report has been resolved,
+   * rebuild the authenticated health context
+   * around that verified report.
+   *
+   * Multi-report selections are preserved for
+   * the dedicated comparison capability and
+   * must not silently collapse to one report.
+   */
+  if (
+    (
+      resolvedReportSelection
+        .status ===
+        "resolved" ||
+      resolvedReportSelection
+        .status ===
+        "partial"
+    ) &&
+    resolvedReports.length ===
+      1
+  ) {
+    const {
+      buildAuthenticatedAssistantContext,
+    } =
+      await import(
+        "@/lib/health-intelligence/application/authenticated-assistant-context.service"
+      );
+
+    currentStage =
+      "build_selected_report_context";
+
+    const selectedReportContextTimer =
+      startApiTimer();
+
+    healthContext =
+      await buildAuthenticatedAssistantContext({
+        userId:
+          authenticatedContext
+            .userId,
+
+        language:
+          normalizedLanguage,
+
+        client:
+          authenticatedContext
+            .client,
+
+        reportId:
+          resolvedReports[0]
+            .id,
+      });
+
+    logStageCompleted(
+      "build_selected_report_context",
+      selectedReportContextTimer
+    );
+  }
+}
+
     const orchestratorTimer =
       startApiTimer();
 
@@ -593,30 +808,162 @@ export async function POST(
     const clinicalExplanationTimer =
   startApiTimer();
 
+const hasMultiReportSelection =
+  Boolean(
+    resolvedReportSelection &&
+    resolvedReportSelection
+      .reports.length >
+      1
+  );
+
+  let multiReportComparison:
+  PatientClinicalLongitudinalComparison | null =
+    null;
+
+let multiReportComparisonResponse:
+  string | null =
+    null;
+
+if (
+  hasMultiReportSelection &&
+  authenticatedContext &&
+  resolvedReportSelection
+) {
+  currentStage =
+    "multi_report_comparison";
+
+  const multiReportComparisonTimer =
+    startApiTimer();
+
+  multiReportComparison =
+  await buildAssistantMultiReportComparison({
+      userId:
+        authenticatedContext
+          .userId,
+
+      reports:
+        resolvedReportSelection
+          .reports,
+
+      client:
+        authenticatedContext
+          .client,
+    });
+
+  multiReportComparisonResponse =
+    renderAssistantMultiReportComparison(
+      multiReportComparison,
+      normalizedLanguage
+    );
+
+  logStageCompleted(
+    "multi_report_comparison",
+    multiReportComparisonTimer
+  );
+}
+
+const multiReportDeterministicResult =
+  hasMultiReportSelection
+    ? {
+        ...orchestratorResult,
+
+        response:
+          multiReportComparisonResponse ??
+          orchestratorResult.response,
+      }
+    : orchestratorResult;
+
 const clinicalExplanationPromise =
-  enhanceAssistantClinicalResponse({
-    question:
-      message.trim(),
+  hasMultiReportSelection
+    ? multiReportComparison
+      ? enhanceAssistantMultiReportClinicalResponse({
+          question:
+            message.trim(),
 
-    language:
-      normalizedLanguage,
+          language:
+            normalizedLanguage,
 
-    healthContext,
+          comparison:
+            multiReportComparison,
 
-  deterministicResult:
-     orchestratorResult,
+          deterministicResult:
+            multiReportDeterministicResult,
 
-  semanticRoutingDecision,
+          semanticRoutingDecision,
 
-  client:
-     openAIAssistantClinicalExplanationClient,
+          client:
+            openAIAssistantMultiReportClinicalExplanationClient,
 
-    requestId,
-  }).then(
-    (result) => {
+          requestId,
+        })
+      : Promise.resolve(
+          multiReportDeterministicResult
+        )
+    : enhanceAssistantClinicalResponse({
+        question:
+          message.trim(),
+
+        language:
+          normalizedLanguage,
+
+        healthContext,
+
+        deterministicResult:
+          orchestratorResult,
+
+        semanticRoutingDecision,
+
+        client:
+          openAIAssistantClinicalExplanationClient,
+
+        requestId,
+      });
+
+const clinicalExplanationResultPromise =
+  clinicalExplanationPromise.then(
+    (
+      result
+    ) => {
       logStageCompleted(
         "clinical_explanation",
         clinicalExplanationTimer
+      );
+
+      return result;
+    }
+  );
+
+const finalAssistantResponsePromise =
+  clinicalExplanationResultPromise.then(
+    async (
+      clinicalResult
+    ) => {
+      const generalIntelligenceTimer =
+        startApiTimer();
+
+      const result =
+        await enhanceAssistantGeneralResponse({
+          message:
+            message.trim(),
+
+          language:
+            normalizedLanguage,
+
+          conversation:
+            normalizedConversation,
+
+          semanticRoutingDecision,
+
+          deterministicResult:
+            clinicalResult,
+
+          client:
+            openAIAssistantGeneralIntelligenceClient,
+        });
+
+      logStageCompleted(
+        "general_intelligence",
+        generalIntelligenceTimer
       );
 
       return result;
@@ -714,13 +1061,45 @@ const clinicalInterviewPersistencePromise =
 currentStage =
   "parallel_clinical_processing";
 
+/*
+ * The clinical answer is the critical user-facing path.
+ *
+ * Clinical-interview persistence is useful for continuity,
+ * but it must never hold a completed clinical answer hostage
+ * or turn a persistence timeout into an HTTP 500.
+ */
+const clinicalInterviewPersistenceSafePromise =
+  Promise.race<
+    string | null
+  >([
+    clinicalInterviewPersistencePromise
+      .catch(
+        () =>
+          activeClinicalInterviewId
+      ),
+
+    new Promise<
+      string | null
+    >(
+      (resolve) => {
+        setTimeout(
+          () =>
+            resolve(
+              activeClinicalInterviewId
+            ),
+          5000
+        );
+      }
+    ),
+  ]);
+
 const [
   finalOrchestratorResult,
   persistedClinicalInterviewId,
 ] =
   await Promise.all([
-    clinicalExplanationPromise,
-    clinicalInterviewPersistencePromise,
+    finalAssistantResponsePromise,
+    clinicalInterviewPersistenceSafePromise,
   ]);
 
 activeClinicalInterviewId =

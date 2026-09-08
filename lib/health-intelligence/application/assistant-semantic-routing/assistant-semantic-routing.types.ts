@@ -11,6 +11,7 @@ export type AssistantSemanticDomain =
   | "clinical_question"
   | "health_journey"
   | "general_health"
+  | "general_conversation"
   | "unclear";
 
 export type AssistantSemanticConfidence =
@@ -43,12 +44,59 @@ export type AssistantSemanticSubjectKind =
   | "symptom"
   | "previous-topic"
   | "general-health"
+  | "general-topic"
   | "unknown";
 
 export type AssistantSemanticRequestedDepth =
   | "brief"
   | "normal"
   | "detailed";
+
+ export type AssistantSemanticReportReferenceKind =
+  | "latest"
+  | "previous"
+  | "current-conversation"
+  | "specific"
+  | "range"
+  | "unspecified";
+
+export type AssistantSemanticReportReference = {
+  kind:
+    AssistantSemanticReportReferenceKind;
+
+  /**
+   * Number of reports requested when the reference
+   * represents a collection.
+   *
+   * Examples:
+   * latest + count 3
+   *   = the latest 3 uploaded reports
+   *
+   * previous + count 2
+   *   = the previous 2 reports relative to the
+   *     active/latest report context
+   */
+  count:
+    number | null;
+
+  /**
+   * Human/model-resolved identifier when the user
+   * names a particular report, date, period, or
+   * conversational reference.
+   *
+   * Examples:
+   * "September 2026"
+   * "blood test from August"
+   * "report.pdf"
+   */
+  value:
+    string | null;
+};
+
+export type AssistantSemanticReferentStatus =
+  | "resolved"
+  | "ambiguous"
+  | "missing";
 
 export type AssistantSemanticSubject = {
   kind:
@@ -67,6 +115,31 @@ export type AssistantSemanticUnderstanding = {
 
   subject:
     AssistantSemanticSubject;
+
+  reportReference:
+    AssistantSemanticReportReference | null;
+
+  /**
+   * Describes whether the subject/reference required to understand
+   * this turn was actually resolved from the current message and
+   * recent conversation.
+   *
+   * resolved:
+   *   There is one sufficiently clear active subject.
+   *
+   * ambiguous:
+   *   More than one plausible recent subject exists and choosing one
+   *   would require guessing.
+   *
+   * missing:
+   *   The message requires a subject/reference but the available
+   *   conversation does not provide one.
+   */
+  referentStatus:
+    AssistantSemanticReferentStatus;
+
+  referentConfidence:
+    AssistantSemanticConfidence;
 
   isFollowUp:
     boolean;

@@ -1,3 +1,8 @@
+import {
+  logApiError,
+  logApiInfo,
+} from "@/lib/api/api-logger";
+
 import type {
   AssistantSemanticRoutingDecision,
   AssistantSemanticRoutingInput,
@@ -13,6 +18,47 @@ export type AssistantSemanticModelClient = {
   ) => Promise<unknown>;
 };
 
+function isAuthoritativeStructuredReportComparison(
+  decision:
+    AssistantSemanticRoutingDecision
+): boolean {
+  const understanding =
+    decision.understanding;
+
+  if (
+    !understanding
+  ) {
+    return false;
+  }
+
+  const reportReference =
+    understanding.reportReference;
+
+  return (
+    decision.source ===
+      "deterministic" &&
+    decision.domain ===
+      "clinical_question" &&
+    decision.confidence ===
+      "high" &&
+    understanding.primaryGoal ===
+      "compare" &&
+    understanding.goals.includes(
+      "compare"
+    ) &&
+    understanding.needsReportEvidence ===
+      true &&
+    understanding.needsHistory ===
+      true &&
+    reportReference?.kind ===
+      "latest" &&
+    typeof reportReference.count ===
+      "number" &&
+    reportReference.count >=
+      2
+  );
+}
+
 export async function resolveAssistantSemanticRoutingWithModel({
   input,
   client,
@@ -24,13 +70,7 @@ export async function resolveAssistantSemanticRoutingWithModel({
     AssistantSemanticModelClient;
 }): Promise<AssistantSemanticRoutingDecision> {
   /*
-   * Explicit deterministic product navigation is intentionally
-   * preserved without an additional model call.
-   *
-   * Clinical, journey, general-health, and unclear messages are
-   * allowed through the semantic model so OrganHeal can understand
-   * multi-goal questions, colloquial language, and follow-up
-   * references instead of relying only on keyword classifiers.
+   * Explicit high-confidence product navigation requires no model.
    */
   if (
     input.deterministicDecision.domain ===
@@ -38,10 +78,35 @@ export async function resolveAssistantSemanticRoutingWithModel({
     input.deterministicDecision.confidence ===
       "high"
   ) {
-    return input.deterministicDecision;
+    return input
+      .deterministicDecision;
+  }
+
+  /*
+   * A fully structured, explicit latest-N report comparison also
+   * requires no semantic-model call.
+   *
+   * The server-side report resolver remains responsible for choosing
+   * the actual authenticated report records.
+   */
+  if (
+    isAuthoritativeStructuredReportComparison(
+      input.deterministicDecision
+    )
+  ) {
+    return input
+      .deterministicDecision;
   }
 
   try {
+    /*
+     * One semantic call only.
+     *
+     * Semantic routing is an enrichment layer. Retrying a failed
+     * semantic call inside the same request unnecessarily increases
+     * cost and latency, while the deterministic fallback remains
+     * available.
+     */
     const modelResult =
       await client.classify(
         input
@@ -52,17 +117,31 @@ export async function resolveAssistantSemanticRoutingWithModel({
         modelResult
       );
 
-    if (!validatedResult) {
-      return input.deterministicDecision;
+    if (
+      !validatedResult
+    ) {
+      logApiInfo(
+        "assistant.semantic_model.validation_failed",
+        {
+          fallbackDomain:
+            input
+              .deterministicDecision
+              .domain,
+
+          fallbackConfidence:
+            input
+              .deterministicDecision
+              .confidence,
+        }
+      );
+
+      return input
+        .deterministicDecision;
     }
 
     /*
      * Known deterministic clinical/journey domains remain routing
-     * authority while the model enriches them with semantic
-     * understanding.
-     *
-     * This prevents a semantic-model classification drift from
-     * overriding an already-established product capability.
+     * authority while the model may enrich semantic understanding.
      */
     if (
       input.deterministicDecision.domain !==
@@ -72,19 +151,44 @@ export async function resolveAssistantSemanticRoutingWithModel({
         ...validatedResult,
 
         domain:
-          input.deterministicDecision.domain,
+          input
+            .deterministicDecision
+            .domain,
 
         productDestination:
-          input.deterministicDecision.productDestination,
+          input
+            .deterministicDecision
+            .productDestination,
 
         reason:
           validatedResult.reason ??
-          input.deterministicDecision.reason,
+          input
+            .deterministicDecision
+            .reason,
       };
     }
 
     return validatedResult;
-  } catch {
-    return input.deterministicDecision;
+  } catch (
+    error
+  ) {
+    logApiError(
+      "assistant.semantic_model.failed",
+      error,
+      {
+        fallbackDomain:
+          input
+            .deterministicDecision
+            .domain,
+
+        fallbackConfidence:
+          input
+            .deterministicDecision
+            .confidence,
+      }
+    );
+
+    return input
+      .deterministicDecision;
   }
 }

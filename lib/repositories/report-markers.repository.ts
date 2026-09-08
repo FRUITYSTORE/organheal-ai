@@ -323,3 +323,119 @@ export async function getMedicalReportMarkersByReportId(
       }
     );
 }
+export async function getMedicalReportMarkersByReportIds(
+  userId:
+    string,
+  reportIds:
+    number[],
+  client:
+    SupabaseClient = supabase
+): Promise<
+  ReportMedicalMarkerEvidence[]
+> {
+  const normalizedReportIds =
+    [
+      ...new Set(
+        reportIds.filter(
+          (
+            reportId
+          ) =>
+            Number.isInteger(
+              reportId
+            ) &&
+            reportId >
+              0
+        )
+      ),
+    ];
+
+  if (
+    normalizedReportIds.length ===
+    0
+  ) {
+    return [];
+  }
+
+  const {
+    data,
+    error,
+  } =
+    await client
+      .from(
+        MEDICAL_REPORT_MARKERS_TABLE
+      )
+      .select(
+        REPORT_MARKERS_SELECT
+      )
+      .eq(
+        "user_id",
+        userId
+      )
+      .in(
+        "report_id",
+        normalizedReportIds
+      )
+      .order(
+        "created_at",
+        {
+          ascending:
+            false,
+        }
+      );
+
+  if (
+    error
+  ) {
+    throw new Error(
+      error.message
+    );
+  }
+
+  const seenMarkers =
+    new Set<string>();
+
+  return (
+    data ??
+    []
+  )
+    .filter(
+      (
+        row
+      ): row is
+        ReportMedicalMarkerEvidence =>
+        typeof row.report_id ===
+          "number" &&
+        typeof row.marker_name ===
+          "string" &&
+        typeof row.marker_value ===
+          "number"
+    )
+    .filter(
+      (
+        row
+      ) => {
+        const normalizedMarkerName =
+          row.marker_name
+            .trim()
+            .toLocaleLowerCase();
+
+        const key =
+          `${row.report_id}:${normalizedMarkerName}`;
+
+        if (
+          !normalizedMarkerName ||
+          seenMarkers.has(
+            key
+          )
+        ) {
+          return false;
+        }
+
+        seenMarkers.add(
+          key
+        );
+
+        return true;
+      }
+    );
+}
