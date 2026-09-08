@@ -370,6 +370,69 @@ describe("Clinical hypothesis generation", () => {
     ).toContain("evidence:context");
   });
 
+    it(
+    "does not generate a clinical hypothesis from a direct provenance relationship",
+    () => {
+      const knowledge =
+        createConnectedKnowledge();
+
+      knowledge.relationships =
+        knowledge.relationships.map(
+          (relationship) => ({
+            ...relationship,
+
+            type:
+              "direct",
+          })
+        );
+
+      const result =
+        buildClinicalHypothesisFoundation({
+          knowledge,
+
+          evidenceWeights:
+            createEvidenceWeights([
+              {
+                id:
+                  "evidence:1",
+
+                weight:
+                  0.9,
+              },
+
+              {
+                id:
+                  "evidence:2",
+
+                weight:
+                  0.9,
+              },
+            ]),
+
+          referenceTime:
+            "2026-08-06T08:00:00.000Z",
+        });
+
+      expect(
+        result.generationAllowed
+      ).toBe(
+        false
+      );
+
+      expect(
+        result.generatedHypothesisCount
+      ).toBe(
+        0
+      );
+
+      expect(
+        result.hypotheses
+      ).toEqual(
+        []
+      );
+    }
+  );
+  
   it("separates contradicting evidence from supporting evidence", () => {
     const result = buildClinicalHypothesisFoundation({
       knowledge: createConnectedKnowledge({

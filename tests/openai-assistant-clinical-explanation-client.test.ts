@@ -687,6 +687,160 @@ describe(
       }
     );
 
+        it(
+      "excludes direct provenance relationships from the clinical AI payload",
+      async () => {
+        vi.stubEnv(
+          "OPENAI_API_KEY",
+          "test-api-key"
+        );
+
+        const input =
+          createInput();
+
+        const sourceRelationship =
+          input.knowledge
+            .relationships[0];
+
+        expect(
+          sourceRelationship
+        ).toBeDefined();
+
+        if (
+          !sourceRelationship
+        ) {
+          throw new Error(
+            "Expected a clinical relationship fixture."
+          );
+        }
+
+        input.knowledge.relationships.push({
+          ...sourceRelationship,
+
+          id:
+            "relationship:provenance-direct",
+
+          type:
+            "direct",
+        });
+
+        const fetchMock =
+          vi.spyOn(
+            globalThis,
+            "fetch"
+          ).mockResolvedValue(
+            new Response(
+              JSON.stringify({
+                output_text:
+  JSON.stringify({
+    overview:
+      "Test clinical explanation.",
+
+    priorityFindings:
+      [],
+
+    relationships:
+      [],
+
+    possibleContributors:
+      [],
+
+    reassuringFindings:
+      [],
+
+    missingContext:
+      [],
+
+    nextSteps:
+      [],
+
+    questionsForClinician:
+      [],
+
+    urgency:
+      "routine",
+
+    limitations: [
+      "Test limitation.",
+    ],
+  }),
+              }),
+              {
+                status:
+                  200,
+
+                headers: {
+                  "Content-Type":
+                    "application/json",
+                },
+              }
+            )
+          );
+
+        await openAIAssistantClinicalExplanationClient.generate(
+          input
+        );
+
+        expect(
+          fetchMock
+        ).toHaveBeenCalledOnce();
+
+        const requestInit =
+          fetchMock.mock
+            .calls[0]?.[1];
+
+        const body =
+          JSON.parse(
+            String(
+              requestInit?.body
+            )
+          ) as {
+            input:
+              string;
+          };
+
+        const clinicalInput =
+          JSON.parse(
+            body.input
+          ) as {
+            clinicalKnowledge: {
+              relationships:
+                Array<{
+                  id:
+                    string;
+
+                  type:
+                    string;
+                }>;
+            };
+          };
+
+        expect(
+          clinicalInput
+            .clinicalKnowledge
+            .relationships
+            .some(
+              (relationship) =>
+                relationship.type ===
+                "direct"
+            )
+        ).toBe(
+          false
+        );
+
+        expect(
+          clinicalInput
+            .clinicalKnowledge
+            .relationships
+            .find(
+              (relationship) =>
+                relationship.id ===
+                "relationship:provenance-direct"
+            )
+        ).toBeUndefined();
+      }
+    );
+
     it(
       "uses the cause-reasoning schema limits for a focused relationship question",
       async () => {

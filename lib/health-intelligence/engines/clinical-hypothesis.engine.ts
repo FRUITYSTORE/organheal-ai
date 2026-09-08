@@ -227,6 +227,13 @@ function canGenerateFromRelationship(
   relationship: WholeBodyClinicalRelationship,
   weightMap: Map<string, ClinicalEvidenceWeightResult>,
 ): boolean {
+  if (
+    relationship.type ===
+    "direct"
+  ) {
+    return false;
+  }
+
   const eligibleSupportingCount = relationship.supportingEvidenceIds.filter(
     (evidenceId) =>
       (weightMap.get(evidenceId)?.normalizedWeight ?? 0) >=

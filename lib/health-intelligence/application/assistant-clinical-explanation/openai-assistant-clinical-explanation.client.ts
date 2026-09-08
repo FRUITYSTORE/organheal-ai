@@ -232,6 +232,13 @@ function buildClinicalExplanationInput(
 const reportRelationships =
   input.knowledge.relationships.filter(
     (relationship) => {
+      if (
+        relationship.type ===
+        "direct"
+      ) {
+        return false;
+      }
+
       const sourceIsReportMarker =
         markerNodeIds.has(
           relationship.sourceNodeId
