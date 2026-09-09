@@ -468,19 +468,29 @@ mockedEnhanceAssistantMultiReportClinicalResponse
           .mockReset();
 
         mockedBuildAssistantResponseContract
-          .mockImplementation(
-            (
-              value,
-              clinicalInterviewId = null
-            ) =>
-              ({
-                ...value,
+  .mockImplementation(
+    (
+      value,
+      clinicalInterviewId = null,
+      _language = "en",
+      activeReportId =
+        undefined
+    ) =>
+      ({
+        ...value,
 
-                clinicalInterviewId,
-              }) as unknown as ReturnType<
-                typeof buildAssistantResponseContract
-              >
-          );
+        clinicalInterviewId,
+
+        ...(activeReportId !==
+        undefined
+          ? {
+              activeReportId,
+            }
+          : {}),
+      }) as unknown as ReturnType<
+        typeof buildAssistantResponseContract
+      >
+  );
 
         consoleErrorSpy =
           vi
@@ -2288,6 +2298,12 @@ it(
         report_type:
           "laboratory",
 
+        conversation:
+          [],
+
+        activeReportId:
+          105,
+
         extraction_status:
           "completed",
 
@@ -2430,16 +2446,19 @@ it(
                 "Bearer test-token",
             },
 
-            body:
-              JSON.stringify({
-                message,
+              body:
+                JSON.stringify({
+              message,
 
-                language:
-                  "ar",
+              language:
+                "ar",
 
-                conversation:
-                  [],
-              }),
+              conversation:
+                [],
+
+              activeReportId:
+                105,
+    }),
           }
         )
       );
@@ -2572,8 +2591,35 @@ it(
       1
     );
 
+    expect(
+  mockedReportResolverResolve
+).toHaveBeenCalledWith(
+  expect.objectContaining({
+    userId:
+      "user-1",
+
+    reference:
+      expect.objectContaining({
+        kind:
+          "latest",
+
+        count:
+          3,
+      }),
+
+    activeReportId:
+      105,
+  })
+);
+
     const responseBody =
       await response.json();
+
+    expect(
+      responseBody.activeReportId
+    ).toBe(
+      null
+    );
 
     expect(
       responseBody.response

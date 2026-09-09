@@ -43,6 +43,9 @@ export type AssistantResponseContract = {
   clinicalInterviewId:
     string | null;
 
+  activeReportId?:
+    number | null;
+
   action:
     AssistantProductAction | null;
 };
@@ -175,21 +178,34 @@ export function buildAssistantResponseContract(
   result: AssistantOrchestratorResult,
   clinicalInterviewId: string | null = null,
   language: AssistantOrchestratorLanguage = "en",
+  activeReportId:
+    number |
+    null |
+    undefined =
+      undefined,
 ): AssistantResponseContract {
   return {
-    success: true,
+  success: true,
 
-    response: result.response,
+  response:
+    result.response,
 
-    clinicalInterviewId,
+  clinicalInterviewId,
 
-    action:
-      resolveProductAction(
-        result,
-        language,
-      ),
+  ...(activeReportId !==
+  undefined
+    ? {
+        activeReportId,
+      }
+    : {}),
 
-    reasoning: {
+  action:
+    resolveProductAction(
+      result,
+      language,
+    ),
+
+  reasoning: {
       mode: result.reasoning.mode,
 
       status: result.reasoning.status,

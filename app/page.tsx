@@ -62,6 +62,14 @@ const [
   setHeroClinicalInterviewId,
 ] = useState<string | null>(null);
 
+const [
+  heroActiveReportId,
+  setHeroActiveReportId,
+] =
+  useState<number | null>(
+    null
+  );
+
 const [heroLoading, setHeroLoading] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 const [heroHealthContext, setHeroHealthContext] = useState<Record<string, unknown> | null>(null);
@@ -244,6 +252,9 @@ const result =
 
   clinicalInterviewId:
     heroClinicalInterviewId,
+
+  activeReportId:
+    heroActiveReportId,
 }),
     }
   );
@@ -289,6 +300,27 @@ const result =
   data.clinicalInterviewId === null
 ) {
   setHeroClinicalInterviewId(null);
+}
+
+if (
+  typeof data.activeReportId ===
+    "number" &&
+  Number.isSafeInteger(
+    data.activeReportId
+  ) &&
+  data.activeReportId >
+    0
+) {
+  setHeroActiveReportId(
+    data.activeReportId
+  );
+} else if (
+  data.activeReportId ===
+    null
+) {
+  setHeroActiveReportId(
+    null
+  );
 }
 
 if (

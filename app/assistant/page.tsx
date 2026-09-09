@@ -34,6 +34,9 @@ type AssistantResponse = {
   error?: string;
   clinicalInterviewId?: string | null;
 
+  activeReportId?:
+  number | null;
+
   action?: {
     label: string;
     href: string;
@@ -75,6 +78,13 @@ const voiceAudioRef =
   useRef<string | null>(null);
   const [clinicalInterviewId, setClinicalInterviewId] =
   useState<string | null>(null);
+  const [
+  activeReportId,
+  setActiveReportId,
+] =
+  useState<number | null>(
+    null
+  );
   const [isContextLoading, setIsContextLoading] = useState(true);
   const [healthContext, setHealthContext] =
   useState<AssistantResponseHealthContext | null>(
@@ -368,6 +378,7 @@ const result =
                 })
               ),
           clinicalInterviewId,
+          activeReportId,
         }),
     }
   );
@@ -389,6 +400,27 @@ const result =
   data.clinicalInterviewId === null
 ) {
   setClinicalInterviewId(
+    null
+  );
+}
+
+if (
+  typeof data.activeReportId ===
+    "number" &&
+  Number.isSafeInteger(
+    data.activeReportId
+  ) &&
+  data.activeReportId >
+    0
+) {
+  setActiveReportId(
+    data.activeReportId
+  );
+} else if (
+  data.activeReportId ===
+    null
+) {
+  setActiveReportId(
     null
   );
 }

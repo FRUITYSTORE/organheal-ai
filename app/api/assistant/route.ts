@@ -132,6 +132,9 @@ type AssistantRequestBody = {
 
   clinicalInterviewId?:
     unknown;
+
+  activeReportId?:
+    unknown;
 };
 
 export async function POST(
@@ -183,11 +186,12 @@ export async function POST(
         AssistantRequestBody;
 
     const {
-      message,
-      language = "en",
-      conversation,
-      clinicalInterviewId,
-    } = body;
+  message,
+  language = "en",
+  conversation,
+  clinicalInterviewId,
+  activeReportId,
+} = body;
 
     if (
       typeof message !==
@@ -235,6 +239,17 @@ export async function POST(
       clinicalInterviewId.trim()
         ? clinicalInterviewId.trim()
         : null;
+
+        const normalizedActiveReportId =
+  typeof activeReportId ===
+    "number" &&
+  Number.isSafeInteger(
+    activeReportId
+  ) &&
+  activeReportId >
+    0
+    ? activeReportId
+    : null;
 
     let healthContext:
       AssistantResponseHealthContext | null =
@@ -663,8 +678,14 @@ export async function POST(
 );
 
       let resolvedReportSelection:
-      AssistantReportReferenceResolution | null =
+  AssistantReportReferenceResolution | null =
     null;
+
+let resolvedActiveReportId:
+  number |
+  null |
+  undefined =
+    undefined;
 
 const semanticUnderstanding =
   semanticRoutingDecision
@@ -701,10 +722,11 @@ if (
         reportReference,
 
       activeReportId:
-        healthContext
-          ?.latestReportContext
-          ?.reportId ??
-        null,
+  normalizedActiveReportId ??
+  healthContext
+    ?.latestReportContext
+    ?.reportId ??
+  null,
     });
 
   logStageCompleted(
@@ -715,6 +737,58 @@ if (
   const resolvedReports =
     resolvedReportSelection
       .reports;
+
+  /*
+ * A single authenticated report selection becomes
+ * the active conversational report.
+ *
+ * Multi-report selections deliberately clear the
+ * single-report state so a later follow-up cannot
+ * silently attach itself to one report from a
+ * comparison.
+ */
+if (
+  (
+    resolvedReportSelection
+      .status ===
+      "resolved" ||
+    resolvedReportSelection
+      .status ===
+      "partial"
+  ) &&
+  resolvedReports.length ===
+    1
+) {
+  resolvedActiveReportId =
+    resolvedReports[0]
+      .id;
+} else if (
+  (
+    resolvedReportSelection
+      .status ===
+      "resolved" ||
+    resolvedReportSelection
+      .status ===
+      "partial"
+  ) &&
+  resolvedReports.length >
+    1
+) {
+  resolvedActiveReportId =
+    null;
+} else if (
+  reportReference.kind ===
+    "current-conversation" &&
+  normalizedActiveReportId !==
+    null
+) {
+  /*
+   * A client-provided conversation report that
+   * cannot be verified must not remain active.
+   */
+  resolvedActiveReportId =
+    null;
+}
 
   /*
    * Existing clinical intelligence is currently
@@ -1158,10 +1232,18 @@ if (
       startApiTimer();
 
     const publicContract =
-      buildAssistantResponseContract(
+  resolvedActiveReportId ===
+    undefined
+    ? buildAssistantResponseContract(
         finalOrchestratorResult,
         activeClinicalInterviewId,
         normalizedLanguage
+      )
+    : buildAssistantResponseContract(
+        finalOrchestratorResult,
+        activeClinicalInterviewId,
+        normalizedLanguage,
+        resolvedActiveReportId
       );
 
     logStageCompleted(
