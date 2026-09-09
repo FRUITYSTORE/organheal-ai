@@ -387,6 +387,22 @@ const semanticClinicalQuestion =
       input.semanticRoutingDecision
     );
 
+    const semanticSubject =
+  input.semanticRoutingDecision
+    ?.understanding
+    ?.subject ??
+  null;
+
+const focusedMarkerSubject =
+  conversationResponseScope ===
+    "focused" &&
+  semanticSubject?.kind ===
+    "marker" &&
+  typeof semanticSubject.value ===
+    "string"
+    ? semanticSubject.value
+    : null;
+
   const explanationEvidence =
     selectAssistantClinicalExplanationEvidence({
       latestReport,
@@ -396,6 +412,8 @@ const semanticClinicalQuestion =
 
       responseScope:
         conversationResponseScope,
+
+        focusedMarkerSubject,
     });
 
   const explanationReport = {

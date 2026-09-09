@@ -15,8 +15,48 @@ const DEFAULT_SEMANTIC_MODEL =
 const MAX_CONVERSATION_MESSAGES =
   6;
 
-const SEMANTIC_MODEL_TIMEOUT_MS =
-  5_000;
+const DEFAULT_SEMANTIC_MODEL_TIMEOUT_MS =
+  12_000;
+
+const MIN_SEMANTIC_MODEL_TIMEOUT_MS =
+  3_000;
+
+const MAX_SEMANTIC_MODEL_TIMEOUT_MS =
+  30_000;
+
+function getSemanticModelTimeoutMs():
+  number {
+  const configuredValue =
+    process.env
+      .OPENAI_SEMANTIC_MODEL_TIMEOUT_MS
+      ?.trim();
+
+  if (!configuredValue) {
+    return DEFAULT_SEMANTIC_MODEL_TIMEOUT_MS;
+  }
+
+  const parsedValue =
+    Number.parseInt(
+      configuredValue,
+      10
+    );
+
+  if (
+    !Number.isFinite(
+      parsedValue
+    )
+  ) {
+    return DEFAULT_SEMANTIC_MODEL_TIMEOUT_MS;
+  }
+
+  return Math.min(
+    MAX_SEMANTIC_MODEL_TIMEOUT_MS,
+    Math.max(
+      MIN_SEMANTIC_MODEL_TIMEOUT_MS,
+      parsedValue
+    )
+  );
+}
 
 type OpenAIResponsesResult = {
   output_text?: unknown;
@@ -130,12 +170,15 @@ export const openAIAssistantSemanticModelClient:
       const abortController =
         new AbortController();
 
-      const timeoutId =
-        setTimeout(
-          () =>
-             abortController.abort(),
-           SEMANTIC_MODEL_TIMEOUT_MS
-          );
+      const semanticModelTimeoutMs =
+  getSemanticModelTimeoutMs();
+
+const timeoutId =
+  setTimeout(
+    () =>
+      abortController.abort(),
+    semanticModelTimeoutMs
+  );
 
 try {
   const response =

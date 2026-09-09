@@ -442,7 +442,7 @@ const rejectionExpectation =
   });
 
 await vi.advanceTimersByTimeAsync(
-  5_000
+  12_000
 );
 
 await rejectionExpectation;
@@ -466,6 +466,113 @@ await rejectionExpectation;
     ).toBe(
       true
     );
+
+    vi.useRealTimers();
+  }
+);
+
+it(
+  "uses the configured semantic model timeout",
+  async () => {
+    vi.useFakeTimers();
+
+    const originalTimeout =
+      process.env
+        .OPENAI_SEMANTIC_MODEL_TIMEOUT_MS;
+
+    process.env
+      .OPENAI_SEMANTIC_MODEL_TIMEOUT_MS =
+      "7000";
+
+    const fetchMock =
+      vi.spyOn(
+        globalThis,
+        "fetch"
+      )
+        .mockImplementation(
+          (
+            _input,
+            init
+          ) =>
+            new Promise<Response>(
+              (
+                _resolve,
+                reject
+              ) => {
+                const signal =
+                  init?.signal;
+
+                signal?.addEventListener(
+                  "abort",
+                  () => {
+                    const error =
+                      new Error(
+                        "The operation was aborted."
+                      );
+
+                    error.name =
+                      "AbortError";
+
+                    reject(
+                      error
+                    );
+                  }
+                );
+              }
+            )
+        );
+
+    const classificationPromise =
+      openAIAssistantSemanticModelClient
+        .classify(
+          createInput()
+        );
+
+    const rejectionExpectation =
+      expect(
+        classificationPromise
+      ).rejects.toMatchObject({
+        name:
+          "AbortError",
+      });
+
+    await vi.advanceTimersByTimeAsync(
+      6_999
+    );
+
+    const options =
+      fetchMock.mock
+        .calls[0]?.[1];
+
+    expect(
+      options?.signal?.aborted
+    ).toBe(
+      false
+    );
+
+    await vi.advanceTimersByTimeAsync(
+      1
+    );
+
+    await rejectionExpectation;
+
+    expect(
+      options?.signal?.aborted
+    ).toBe(
+      true
+    );
+
+    if (
+      originalTimeout ===
+      undefined
+    ) {
+      delete process.env
+        .OPENAI_SEMANTIC_MODEL_TIMEOUT_MS;
+    } else {
+      process.env
+        .OPENAI_SEMANTIC_MODEL_TIMEOUT_MS =
+        originalTimeout;
+    }
 
     vi.useRealTimers();
   }

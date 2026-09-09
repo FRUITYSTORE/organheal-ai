@@ -109,6 +109,74 @@ describe(
     );
 
     it(
+  "narrows focused marker questions to the resolved marker evidence",
+  () => {
+    const {
+      latestReport,
+    } =
+      createLatestReport();
+
+    const result =
+      selectAssistantClinicalExplanationEvidence({
+        latestReport,
+
+        mode:
+          "cause-reasoning",
+
+        responseScope:
+          "focused",
+
+        focusedMarkerSubject:
+          "LDL",
+      });
+
+    expect(
+      result
+    ).toHaveLength(
+      1
+    );
+
+    expect(
+      result[0]
+        ?.marker
+    ).toBe(
+      "LDL"
+    );
+  }
+);
+
+it(
+  "falls back safely when the focused marker cannot be matched",
+  () => {
+    const {
+      latestReport,
+      reportEvidence,
+    } =
+      createLatestReport();
+
+    const result =
+      selectAssistantClinicalExplanationEvidence({
+        latestReport,
+
+        mode:
+          "cause-reasoning",
+
+        responseScope:
+          "focused",
+
+        focusedMarkerSubject:
+          "Unknown Marker",
+      });
+
+    expect(
+      result
+    ).toBe(
+      reportEvidence
+    );
+  }
+);
+
+    it(
       "uses expanded Parser v2 evidence for explicit full-report analysis",
       () => {
         const {

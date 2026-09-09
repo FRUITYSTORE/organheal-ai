@@ -47,15 +47,35 @@ function shouldUseGeneralIntelligence(
   }
 
   if (
-    input.deterministicResult
-      .reasoning.clinicalUrgencyLevel !==
-    "none"
-  ) {
-    return false;
-  }
+  input.deterministicResult
+    .reasoning.clinicalUrgencyLevel !==
+  "none"
+) {
+  return false;
+}
 
-  const semanticDecision =
-    input.semanticRoutingDecision;
+/*
+ * A successfully generated clinical answer is authoritative
+ * for the current request.
+ *
+ * General Intelligence must never run afterward, even when
+ * semantic routing fell back to "unclear" because of timeout
+ * or provider failure.
+ */
+const clinicalNarrative =
+  input.deterministicResult
+    .reasoning
+    .clinicalNarrative;
+
+if (
+  typeof clinicalNarrative === "string" &&
+  clinicalNarrative.trim().length > 0
+) {
+  return false;
+}
+
+const semanticDecision =
+  input.semanticRoutingDecision;
 
   if (!semanticDecision) {
     return false;

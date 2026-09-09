@@ -25,27 +25,87 @@ export type SelectAssistantClinicalExplanationEvidenceInput = {
 
   responseScope:
     AssistantClinicalConversationResponseScope;
+
+  focusedMarkerSubject?:
+    string | null;
 };
 
+function normalizeMarkerTokens(
+  value:
+    string
+): string[] {
+  return value
+    .toLowerCase()
+    .split(
+      /[\s_\-./():]+/
+    )
+    .map(
+      (token) =>
+        token.trim()
+    )
+    .filter(
+      Boolean
+    );
+}
+
+function markerMatchesSubject(
+  marker:
+    string,
+  subject:
+    string
+): boolean {
+  const markerTokens =
+    normalizeMarkerTokens(
+      marker
+    );
+
+  const subjectTokens =
+    normalizeMarkerTokens(
+      subject
+    );
+
+  if (
+    subjectTokens.length ===
+    0
+  ) {
+    return false;
+  }
+
+  if (
+    markerTokens.join(" ") ===
+    subjectTokens.join(" ")
+  ) {
+    return true;
+  }
+
+  return subjectTokens.every(
+    (token) =>
+      markerTokens.includes(
+        token
+      )
+  );
+}
+
 /**
- * Selects the report evidence that is safe and useful
- * for the current conversational scope.
+ * Selects report evidence for the current
+ * conversational scope.
  *
- * Full report interpretation may use Parser v2 expanded
- * evidence for completeness.
+ * Full report interpretation may use expanded
+ * Parser v2 evidence for completeness.
  *
- * Focused conversational questions must stay on the
- * already-focused report evidence instead of expanding
- * back into the entire report.
+ * Focused marker questions narrow the evidence
+ * to the resolved semantic marker when possible.
  *
- * Legacy full-mode behavior remains unchanged when
- * semantic conversation scope is unavailable.
+ * If the semantic marker cannot be matched safely,
+ * the selector falls back to the existing evidence
+ * rather than dropping clinical context.
  */
 export function selectAssistantClinicalExplanationEvidence(
   {
     latestReport,
     mode,
     responseScope,
+    focusedMarkerSubject,
   }:
     SelectAssistantClinicalExplanationEvidenceInput
 ): LatestReportContext["reportEvidence"] {
@@ -65,12 +125,36 @@ export function selectAssistantClinicalExplanationEvidence(
     ) >
       0;
 
-  if (
+  const selectedEvidence =
     shouldUseExpandedEvidence
+      ? expandedEvidence!
+      : latestReport
+          .reportEvidence;
+
+  if (
+    responseScope !==
+      "focused" ||
+    !focusedMarkerSubject
+      ?.trim()
   ) {
-    return expandedEvidence!;
+    return selectedEvidence;
   }
 
-  return latestReport
-    .reportEvidence;
+  const focusedEvidence =
+    selectedEvidence.filter(
+      (item) =>
+        markerMatchesSubject(
+          item.marker,
+          focusedMarkerSubject
+        )
+    );
+
+  /*
+   * Never discard evidence only because semantic
+   * wording does not match the report marker label.
+   */
+  return focusedEvidence.length >
+    0
+    ? focusedEvidence
+    : selectedEvidence;
 }

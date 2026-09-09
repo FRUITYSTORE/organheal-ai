@@ -1100,6 +1100,233 @@ expect(
     });
     }
    );
+
+   it(
+  "sends only the focused LDL marker graph for a focused clinical question",
+  async () => {
+    vi.stubEnv(
+      "OPENAI_API_KEY",
+      "test-api-key"
+    );
+
+    const input =
+      createInput();
+
+    const sourceMarkerNode =
+      input.knowledge.nodes.find(
+        (node) =>
+          node.type ===
+          "laboratory-marker"
+      );
+
+    expect(
+      sourceMarkerNode
+    ).toBeDefined();
+
+    if (!sourceMarkerNode) {
+      throw new Error(
+        "Expected a laboratory marker fixture."
+      );
+    }
+
+    const ldlEvidence =
+      input.report.reportEvidence.filter(
+        (item) =>
+          item.marker ===
+          "LDL"
+      );
+
+    expect(
+      ldlEvidence
+    ).toHaveLength(
+      1
+    );
+
+    input.report.reportEvidence =
+      ldlEvidence;
+
+    input.mode =
+      "cause-reasoning";
+
+    input.question = [
+      "Why might my LDL be high?",
+      "",
+      "Resolved semantic conversation context:",
+      "Conversation response scope: focused",
+      "Resolved subject: LDL",
+    ].join(
+      "\n"
+    );
+
+    input.knowledge.nodes.push({
+      ...sourceMarkerNode,
+
+      id:
+        `marker:${input.report.reportId}:ldl`,
+
+      label:
+        "LDL",
+
+      description:
+        "LDL laboratory marker.",
+
+      evidence:
+        sourceMarkerNode.evidence.map(
+          (evidence) => ({
+            ...evidence,
+
+            sourceType:
+              "laboratory-result",
+
+            sourceId:
+              String(
+                input.report.reportId
+              ),
+          })
+        ),
+    });
+
+    const fetchMock =
+      vi.spyOn(
+        globalThis,
+        "fetch"
+      )
+        .mockResolvedValue(
+          new Response(
+            JSON.stringify({
+              output_text:
+                JSON.stringify(
+                  generatedExplanation
+                ),
+            }),
+            {
+              status:
+                200,
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
+            }
+          )
+        );
+
+    await openAIAssistantClinicalExplanationClient.generate(
+      input
+    );
+
+    const requestInit =
+      fetchMock.mock.calls[0]?.[1];
+
+    const body =
+      JSON.parse(
+        String(
+          requestInit?.body
+        )
+      );
+
+    const clinicalInput =
+      JSON.parse(
+        body.input
+      ) as {
+        report: {
+          structuredEvidence:
+            Array<{
+              marker:
+                string;
+            }>;
+        };
+
+        clinicalKnowledge: {
+          markerNodes:
+            Array<{
+              id:
+                string;
+
+              label:
+                string;
+            }>;
+
+          relationships:
+            Array<{
+              sourceNodeId:
+                string;
+
+              targetNodeId:
+                string;
+            }>;
+        };
+      };
+
+    expect(
+      clinicalInput
+        .report
+        .structuredEvidence
+    ).toHaveLength(
+      1
+    );
+
+    expect(
+      clinicalInput
+        .report
+        .structuredEvidence[0]
+        ?.marker
+    ).toBe(
+      "LDL"
+    );
+
+    expect(
+      clinicalInput
+        .clinicalKnowledge
+        .markerNodes
+    ).toHaveLength(
+      1
+    );
+
+    expect(
+      clinicalInput
+        .clinicalKnowledge
+        .markerNodes[0]
+        ?.label
+    ).toBe(
+      "LDL"
+    );
+
+    expect(
+      clinicalInput
+        .clinicalKnowledge
+        .markerNodes[0]
+        ?.id
+    ).toBe(
+      `marker:${input.report.reportId}:ldl`
+    );
+
+    expect(
+      clinicalInput
+        .clinicalKnowledge
+        .markerNodes.some(
+          (node) =>
+            node.label ===
+              "Glucose" ||
+            node.label ===
+              "HbA1c" ||
+            node.label ===
+              "Triglycerides"
+        )
+    ).toBe(
+      false
+    );
+
+    expect(
+      clinicalInput
+        .clinicalKnowledge
+        .relationships
+    ).toHaveLength(
+      0
+    );
+  }
+);
+
    it(
   "routes next-step explanations to the focused Terra model",
   async () => {

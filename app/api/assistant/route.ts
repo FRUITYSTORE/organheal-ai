@@ -251,9 +251,56 @@ export async function POST(
     ? activeReportId
     : null;
 
-    let healthContext:
-      AssistantResponseHealthContext | null =
-        null;
+const deterministicSemanticDecision =
+  resolveAssistantSemanticRouting(
+    message.trim()
+  );
+
+const startSemanticRouting =
+  () => {
+    const semanticRoutingTimer =
+      startApiTimer();
+
+    return resolveAssistantSemanticRoutingWithModel({
+      input: {
+        currentMessage:
+          message.trim(),
+
+        language:
+          normalizedLanguage,
+
+        conversation:
+          normalizedConversation,
+
+        deterministicDecision:
+          deterministicSemanticDecision,
+      },
+
+      client:
+        openAIAssistantSemanticModelClient,
+    }).then(
+      (
+        decision
+      ) => {
+        logStageCompleted(
+          "semantic_routing",
+          semanticRoutingTimer
+        );
+
+        return decision;
+      }
+    );
+  };
+
+let semanticRoutingPromise:
+  ReturnType<
+    typeof startSemanticRouting
+  > | null =
+    null;
+
+let healthContext:
+  AssistantResponseHealthContext | null =
+    null;
 
     let authenticatedContext:
       | {
@@ -384,13 +431,21 @@ export async function POST(
         );
       }
 
-      authenticatedContext = {
-        userId:
-          authentication.user.id,
+      /*
+ * Authentication and rate limiting have succeeded.
+ * Semantic routing can now run concurrently with
+ * health-context and clinical-interview loading.
+ */
+semanticRoutingPromise =
+  startSemanticRouting();
 
-        client:
-          authentication.client,
-      };
+authenticatedContext = {
+  userId:
+    authentication.user.id,
+
+  client:
+    authentication.client,
+};
 
       const {
         buildAuthenticatedAssistantContext,
@@ -575,41 +630,21 @@ export async function POST(
       }
     }
 
-    const deterministicSemanticDecision =
-      resolveAssistantSemanticRouting(
-        message.trim()
-      );
-
     currentStage =
-      "semantic_routing";
+  "semantic_routing";
 
-    const semanticRoutingTimer =
-      startApiTimer();
+/*
+ * Authenticated requests normally started this work
+ * earlier, after rate limiting.
+ *
+ * Keep the fallback for request paths where no
+ * authenticated early start occurred.
+ */
+semanticRoutingPromise ??=
+  startSemanticRouting();
 
-    const semanticRoutingDecision =
-      await resolveAssistantSemanticRoutingWithModel({
-        input: {
-          currentMessage:
-            message.trim(),
-
-          language:
-            normalizedLanguage,
-
-          conversation:
-            normalizedConversation,
-
-          deterministicDecision:
-            deterministicSemanticDecision,
-        },
-
-        client:
-          openAIAssistantSemanticModelClient,
-      });
-
-    logStageCompleted(
-      "semantic_routing",
-      semanticRoutingTimer
-    );
+const semanticRoutingDecision =
+  await semanticRoutingPromise;
 
     currentStage =
       "orchestrator";

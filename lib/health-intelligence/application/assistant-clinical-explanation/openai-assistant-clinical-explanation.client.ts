@@ -192,6 +192,62 @@ function extractResponseText(
   return null;
 }
 
+function normalizeClinicalMarkerTokens(
+  value:
+    string
+): string[] {
+  return value
+    .toLowerCase()
+    .split(
+      /[\s_\-./():]+/
+    )
+    .map(
+      (token) =>
+        token.trim()
+    )
+    .filter(
+      Boolean
+    );
+}
+
+function clinicalMarkerNameMatches(
+  markerName:
+    string,
+  evidenceMarker:
+    string
+): boolean {
+  const markerTokens =
+    normalizeClinicalMarkerTokens(
+      markerName
+    );
+
+  const evidenceTokens =
+    normalizeClinicalMarkerTokens(
+      evidenceMarker
+    );
+
+  if (
+    evidenceTokens.length ===
+    0
+  ) {
+    return false;
+  }
+
+  if (
+    markerTokens.join(" ") ===
+    evidenceTokens.join(" ")
+  ) {
+    return true;
+  }
+
+  return evidenceTokens.every(
+    (token) =>
+      markerTokens.includes(
+        token
+      )
+  );
+}
+
 function buildClinicalExplanationInput(
   input:
     AssistantClinicalExplanationInput
@@ -201,19 +257,59 @@ function buildClinicalExplanationInput(
       input.report.reportId
     );
 
-  const reportMarkerNodes =
-    input.knowledge.nodes.filter(
-      (node) =>
-        node.type ===
-          "laboratory-marker" &&
-        node.evidence.some(
-          (evidence) =>
-            evidence.sourceType ===
-              "laboratory-result" &&
-            evidence.sourceId ===
-              reportId
-        )
+  const allReportMarkerNodes =
+  input.knowledge.nodes.filter(
+    (node) =>
+      node.type ===
+        "laboratory-marker" &&
+      node.evidence.some(
+        (evidence) =>
+          evidence.sourceType ===
+            "laboratory-result" &&
+          evidence.sourceId ===
+            reportId
+      )
+  );
+
+const useFocusedMarkerSet =
+  input.mode ===
+    "cause-reasoning" ||
+  input.mode ===
+    "next-step" ||
+  input.question.includes(
+    "Conversation response scope: focused"
+  );
+
+const focusedEvidenceMarkerNames =
+  input.report.reportEvidence
+    .map(
+      (item) =>
+        item.marker.trim()
+    )
+    .filter(
+      Boolean
     );
+
+const focusedReportMarkerNodes =
+  useFocusedMarkerSet
+    ? allReportMarkerNodes.filter(
+        (node) =>
+          focusedEvidenceMarkerNames.some(
+            (marker) =>
+              clinicalMarkerNameMatches(
+                node.label,
+                marker
+              )
+          )
+      )
+    : [];
+
+const reportMarkerNodes =
+  useFocusedMarkerSet &&
+  focusedReportMarkerNodes.length >
+    0
+    ? focusedReportMarkerNodes
+    : allReportMarkerNodes;
 
   const markerNodeIds =
     new Set(
@@ -224,10 +320,7 @@ function buildClinicalExplanationInput(
     );
 
  const useFocusedRelationshipSet =
-  input.mode ===
-    "cause-reasoning" ||
-  input.mode ===
-    "next-step";
+  useFocusedMarkerSet;
 
 const reportRelationships =
   input.knowledge.relationships.filter(

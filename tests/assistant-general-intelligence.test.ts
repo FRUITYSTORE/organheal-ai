@@ -418,6 +418,70 @@ describe(
     );
 
     it(
+  "does not override a completed clinical explanation when semantic routing fell back to unclear",
+  async () => {
+    const generate =
+      vi.fn()
+        .mockResolvedValue(
+          "General intelligence response."
+        );
+
+    const client:
+      AssistantGeneralIntelligenceClient = {
+        generate,
+      };
+
+    const clinicalResult =
+      createResult();
+
+    clinicalResult.response =
+      "Focused clinical answer about LDL.";
+
+    clinicalResult.reasoning.clinicalNarrative =
+      "Focused clinical answer about LDL.";
+
+    const result =
+      await enhanceAssistantGeneralResponse({
+        message:
+          "بالنسبة للـ LDL لماذا قد يكون مرتفعًا؟",
+
+        language:
+          "ar",
+
+        conversation:
+          [],
+
+        semanticRoutingDecision:
+          createDecision(
+            "unclear"
+          ),
+
+        deterministicResult:
+          clinicalResult,
+
+        client,
+      });
+
+    expect(
+      generate
+    ).not.toHaveBeenCalled();
+
+    expect(
+      result.response
+    ).toBe(
+      "Focused clinical answer about LDL."
+    );
+
+    expect(
+      result.reasoning
+        .clinicalNarrative
+    ).toBe(
+      "Focused clinical answer about LDL."
+    );
+  }
+);
+
+    it(
       "falls back safely when the provider fails",
       async () => {
         const generate =

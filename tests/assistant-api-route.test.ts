@@ -1020,6 +1020,148 @@ mockedEnhanceAssistantMultiReportClinicalResponse
   }
 );
 
+it(
+  "starts authenticated health-context loading while semantic routing is still in flight",
+  async () => {
+    const authenticatedClient =
+      {} as never;
+
+    mockedAuthenticateApiRequest
+      .mockResolvedValueOnce({
+        success:
+          true,
+
+        user: {
+          id:
+            "user-semantic-parallel",
+        },
+
+        client:
+          authenticatedClient,
+      } as never);
+
+    const semanticControl: {
+  release:
+    (() => void) | null;
+} = {
+  release:
+    null,
+};
+
+    mockedResolveAssistantSemanticRoutingWithModel
+      .mockImplementationOnce(
+        ({
+          input,
+        }) =>
+          new Promise(
+            (
+              resolve
+            ) => {
+             semanticControl.release =
+  () => {
+    resolve(
+      input
+        .deterministicDecision
+    );
+  };
+            }
+          )
+      );
+
+    mockedBuildAuthenticatedAssistantContext
+      .mockResolvedValueOnce(
+        {} as never
+      );
+
+    mockedGetLatestActiveClinicalInterview
+      .mockResolvedValueOnce(
+        null
+      );
+
+    const orchestratorResult =
+      createOrchestratorResult(
+        "You can upload your report."
+      );
+
+    mockedRunAssistantOrchestrator
+      .mockReturnValue(
+        orchestratorResult
+      );
+
+    const responsePromise =
+      POST(
+        new Request(
+          "http://localhost/api/assistant",
+          {
+            method:
+              "POST",
+
+            headers: {
+              authorization:
+                "Bearer test-token",
+
+              "content-type":
+                "application/json",
+            },
+
+            body:
+              JSON.stringify({
+                message:
+                  "Where can I upload my report?",
+
+                language:
+                  "en",
+
+                conversation:
+                  [],
+              }),
+          }
+        )
+      );
+
+    /*
+     * Semantic routing is intentionally unresolved here.
+     * Health-context loading must still have started.
+     */
+    await vi.waitFor(
+      () => {
+        expect(
+          mockedResolveAssistantSemanticRoutingWithModel
+        ).toHaveBeenCalledTimes(
+          1
+        );
+
+        expect(
+          mockedBuildAuthenticatedAssistantContext
+        ).toHaveBeenCalledTimes(
+          1
+        );
+      }
+    );
+
+    expect(
+  semanticControl.release
+).not.toBeNull();
+
+semanticControl.release?.();
+
+    const response =
+      await responsePromise;
+
+    expect(
+      response.status
+    ).toBe(
+      200
+    );
+
+    expect(
+      mockedResolveAssistantSemanticRoutingWithModel
+    ).toHaveBeenCalledTimes(
+      1
+    );
+  }
+);
+
     it(
       "returns the public assistant response contract",
       async () => {
