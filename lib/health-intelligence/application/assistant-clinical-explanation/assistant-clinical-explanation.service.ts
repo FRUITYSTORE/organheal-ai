@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   AssistantOrchestratorResult,
 } from "@/lib/health-intelligence/application/assistant-orchestrator.service";
 
@@ -15,6 +15,10 @@ import type {
   AssistantClinicalExplanationLanguage,
   AssistantClinicalExplanationMode,
 } from "@/lib/health-intelligence/application/assistant-clinical-explanation/assistant-clinical-explanation.types";
+
+import {
+  selectAssistantClinicalExplanationEvidence,
+} from "@/lib/health-intelligence/application/assistant-clinical-explanation/assistant-clinical-evidence-selector";
 
 import {
   detectAssistantIntent,
@@ -290,33 +294,6 @@ contextLines.push(
   );
 }
 
-function resolveClinicalExplanationEvidence(
-  latestReport:
-    NonNullable<
-      AssistantResponseHealthContext["latestReportContext"]
-    >,
-  mode:
-    AssistantClinicalExplanationMode
-) {
-  if (
-  mode ===
-    "full" &&
-  (
-    latestReport
-      .expandedReportEvidence
-      ?.length ??
-    0
-  ) >
-    0
-) {
-  return latestReport
-    .expandedReportEvidence!;
-}
-
-  return latestReport
-    .reportEvidence;
-}
-
 function canGenerateClinicalExplanation(
   input:
     EnhanceAssistantClinicalResponseInput
@@ -405,12 +382,21 @@ const semanticClinicalQuestion =
     input.question,
     input.semanticRoutingDecision
   );
-
-    const explanationEvidence =
-    resolveClinicalExplanationEvidence(
-      latestReport,
-      explanationMode
+  const conversationResponseScope =
+    resolveConversationResponseScope(
+      input.semanticRoutingDecision
     );
+
+  const explanationEvidence =
+    selectAssistantClinicalExplanationEvidence({
+      latestReport,
+
+      mode:
+        explanationMode,
+
+      responseScope:
+        conversationResponseScope,
+    });
 
   const explanationReport = {
     ...latestReport,
