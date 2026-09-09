@@ -16,6 +16,14 @@ vi.mock(
 );
 
 vi.mock(
+  "@/lib/api/api-after-response",
+  () => ({
+    scheduleAfterResponse:
+      vi.fn(),
+  })
+);
+
+vi.mock(
   "@/lib/health-intelligence/application/assistant-semantic-routing/assistant-semantic-model.service",
   () => ({
     resolveAssistantSemanticRoutingWithModel:
@@ -2022,6 +2030,235 @@ it(
 );
 
 dateNowSpy.mockRestore();
+  }
+);
+
+it(
+  "does not wait for clinical interview persistence before returning the assistant response",
+  async () => {
+    const authenticatedClient =
+      {} as never;
+
+    const reasoningState:
+      ClinicalReasoningState = {
+      id:
+        "reasoning_state_pending_persistence",
+
+      originalQuestion:
+        "I have dizziness today.",
+
+      currentQuestion:
+        "I have dizziness today.",
+
+      intent:
+        "cause-reasoning",
+
+      language:
+        "en",
+
+      status:
+        "awaiting-clarification",
+
+      askedClarificationQuestionIds:
+        [],
+
+      resolvedGapTypes:
+        [],
+
+      collectedEvidence:
+        [],
+
+      runtimeHistory:
+        [],
+
+      currentRuntime:
+        {} as ClinicalReasoningState["currentRuntime"],
+
+      createdAt:
+        "2026-08-20T12:00:00.000Z",
+
+      updatedAt:
+        "2026-08-20T12:00:00.000Z",
+    };
+
+    mockedAuthenticateApiRequest
+      .mockResolvedValue({
+        success:
+          true,
+
+        user: {
+          id:
+            "user-1",
+        },
+
+        client:
+          authenticatedClient,
+      } as never);
+
+    mockedBuildAuthenticatedAssistantContext
+      .mockResolvedValue({
+        wholeBodyKnowledge:
+          {},
+      } as never);
+
+    mockedGetLatestActiveClinicalInterview
+      .mockResolvedValue(
+        null
+      );
+
+    const orchestratorResult =
+      createOrchestratorResult(
+        "What symptoms are you having today?"
+      );
+
+    orchestratorResult
+      .clinicalReasoningState =
+        reasoningState;
+
+    mockedRunAssistantOrchestrator
+      .mockReturnValue(
+        orchestratorResult
+      );
+
+    type CreatedInterview =
+      Awaited<
+        ReturnType<
+          typeof createClinicalInterview
+        >
+      >;
+
+    const pendingPersistence =
+  new Promise<
+    CreatedInterview
+  >(
+    () => {
+      /*
+       * Intentionally never resolves.
+       *
+       * The route must still return its
+       * user-facing response without
+       * waiting for persistence.
+       */
+    }
+  );
+
+    mockedCreateClinicalInterview
+      .mockReturnValue(
+        pendingPersistence
+      );
+
+    const request =
+      new Request(
+        "http://localhost/api/assistant",
+        {
+          method:
+            "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+
+            Authorization:
+              "Bearer test-token",
+          },
+
+          body:
+            JSON.stringify({
+              message:
+                "I have dizziness today.",
+
+              language:
+                "en",
+
+              conversation:
+                [],
+            }),
+        }
+      );
+
+    let timeoutHandle:
+      ReturnType<
+        typeof setTimeout
+      > |
+      null =
+        null;
+
+    const outcome =
+      await Promise.race([
+        POST(
+          request
+        ).then(
+          (response) => ({
+            kind:
+              "response" as const,
+
+            response,
+          })
+        ),
+
+        new Promise<{
+          kind:
+            "timeout";
+        }>(
+          (resolve) => {
+            timeoutHandle =
+              setTimeout(
+                () => {
+                  resolve({
+                    kind:
+                      "timeout",
+                  });
+                },
+                1000
+              );
+          }
+        ),
+      ]);
+
+    if (
+      timeoutHandle
+    ) {
+      clearTimeout(
+        timeoutHandle
+      );
+    }
+
+    expect(
+      outcome.kind
+    ).toBe(
+      "response"
+    );
+
+    if (
+      outcome.kind !==
+      "response"
+    ) {
+      throw new Error(
+        "Assistant response waited for clinical interview persistence."
+      );
+    }
+
+    expect(
+      outcome.response.status
+    ).toBe(
+      200
+    );
+
+    expect(
+      mockedCreateClinicalInterview
+    ).toHaveBeenCalledWith(
+      {
+        userId:
+          "user-1",
+
+        reasoningState,
+
+        status:
+          "active",
+      },
+
+      authenticatedClient
+    );
   }
 );
 

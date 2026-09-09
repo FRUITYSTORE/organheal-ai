@@ -102,6 +102,10 @@ import {
   openAIAssistantMultiReportClinicalExplanationClient,
 } from "@/lib/health-intelligence/application/assistant-clinical-explanation/openai-assistant-clinical-explanation.client";
 
+import {
+  scheduleAfterResponse,
+} from "@/lib/api/api-after-response";
+
 const CLINICAL_INTERVIEW_RESUME_WINDOW_MS =
   24 *
   60 *
@@ -1062,48 +1066,90 @@ currentStage =
   "parallel_clinical_processing";
 
 /*
- * The clinical answer is the critical user-facing path.
+ * Clinical-interview persistence starts immediately so it
+ * can overlap with clinical response generation.
  *
- * Clinical-interview persistence is useful for continuity,
- * but it must never hold a completed clinical answer hostage
- * or turn a persistence timeout into an HTTP 500.
+ * It must never delay an already completed user-facing
+ * answer. Next.js keeps the persistence work alive after
+ * the response through scheduleAfterResponse().
  */
+const fallbackClinicalInterviewId =
+  activeClinicalInterviewId;
+
+let settledClinicalInterviewId =
+  fallbackClinicalInterviewId;
+
+let clinicalInterviewPersistenceSettled =
+  false;
+
 const clinicalInterviewPersistenceSafePromise =
-  Promise.race<
-    string | null
-  >([
-    clinicalInterviewPersistencePromise
-      .catch(
-        () =>
-          activeClinicalInterviewId
-      ),
+  clinicalInterviewPersistencePromise
+    .then(
+      (
+        persistedClinicalInterviewId
+      ) => {
+        settledClinicalInterviewId =
+          persistedClinicalInterviewId;
 
-    new Promise<
-      string | null
-    >(
-      (resolve) => {
-        setTimeout(
-          () =>
-            resolve(
-              activeClinicalInterviewId
-            ),
-          5000
-        );
+        clinicalInterviewPersistenceSettled =
+          true;
+
+        return persistedClinicalInterviewId;
       }
-    ),
-  ]);
+    )
+    .catch(
+      () => {
+        settledClinicalInterviewId =
+          fallbackClinicalInterviewId;
 
-const [
-  finalOrchestratorResult,
-  persistedClinicalInterviewId,
-] =
-  await Promise.all([
-    finalAssistantResponsePromise,
-    clinicalInterviewPersistenceSafePromise,
-  ]);
+        clinicalInterviewPersistenceSettled =
+          true;
 
-activeClinicalInterviewId =
-  persistedClinicalInterviewId;
+        return fallbackClinicalInterviewId;
+      }
+    );
+
+scheduleAfterResponse(
+  async () => {
+    await clinicalInterviewPersistenceSafePromise;
+  }
+);
+
+currentStage =
+  "parallel_clinical_processing";
+
+const finalOrchestratorResult =
+  await finalAssistantResponsePromise;
+
+/*
+ * If persistence completed naturally while the clinical
+ * answer was being generated, use its authoritative id.
+ *
+ * Otherwise return immediately without waiting for the
+ * database. Existing active interviews keep their known id.
+ */
+if (
+  clinicalInterviewPersistenceSettled
+) {
+  activeClinicalInterviewId =
+    settledClinicalInterviewId;
+}
+
+/*
+ * A closed reasoning state should never keep exposing an
+ * active interview id merely because persistence is still
+ * finishing in the background.
+ */
+if (
+  authenticatedContext &&
+  orchestratorResult
+    .clinicalReasoningState
+    ?.status ===
+    "closed"
+) {
+  activeClinicalInterviewId =
+    null;
+}
 
     currentStage =
       "build_response_contract";
