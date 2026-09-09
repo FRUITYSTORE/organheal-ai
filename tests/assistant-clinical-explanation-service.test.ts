@@ -610,10 +610,189 @@ describe(
             "req_next_step_evidence",
         });
 
+        await enhanceAssistantClinicalResponse({
+  question:
+    "Why might my LDL be high?",
+
+  language:
+    "en",
+
+  healthContext,
+
+  deterministicResult:
+    createDeterministicResult(),
+
+  semanticRoutingDecision: {
+    domain:
+      "clinical_question",
+
+    confidence:
+      "high",
+
+    source:
+      "model",
+
+    productDestination:
+      null,
+
+    requiresConversationContext:
+      false,
+
+    reason:
+      "Focused LDL cause question.",
+
+    understanding: {
+      goals: [
+        "explain",
+        "cause",
+      ],
+
+      primaryGoal:
+        "cause",
+
+      subject: {
+        kind:
+          "marker",
+
+        value:
+          "LDL",
+      },
+
+      reportReference:
+        null,
+
+      referentStatus:
+        "resolved",
+
+      referentConfidence:
+        "high",
+
+      isFollowUp:
+        false,
+
+      refersToPreviousTurn:
+        false,
+
+      needsReportEvidence:
+        true,
+
+      needsHistory:
+        false,
+
+      asksForDiagnosis:
+        false,
+
+      asksForUrgency:
+        false,
+
+      asksForAction:
+        false,
+
+      requestedDepth:
+        "normal",
+    },
+  },
+
+  client,
+
+  requestId:
+    "req_explain_cause_mode",
+});
+
+await enhanceAssistantClinicalResponse({
+  question:
+    "Why is my LDL high, is it risky, and explain it?",
+
+  language:
+    "en",
+
+  healthContext,
+
+  deterministicResult:
+    createDeterministicResult(),
+
+  semanticRoutingDecision: {
+    domain:
+      "clinical_question",
+
+    confidence:
+      "high",
+
+    source:
+      "model",
+
+    productDestination:
+      null,
+
+    requiresConversationContext:
+      false,
+
+    reason:
+      "True multi-goal LDL question.",
+
+    understanding: {
+      goals: [
+        "explain",
+        "cause",
+        "risk",
+      ],
+
+      primaryGoal:
+        "cause",
+
+      subject: {
+        kind:
+          "marker",
+
+        value:
+          "LDL",
+      },
+
+      reportReference:
+        null,
+
+      referentStatus:
+        "resolved",
+
+      referentConfidence:
+        "high",
+
+      isFollowUp:
+        false,
+
+      refersToPreviousTurn:
+        false,
+
+      needsReportEvidence:
+        true,
+
+      needsHistory:
+        false,
+
+      asksForDiagnosis:
+        false,
+
+      asksForUrgency:
+        false,
+
+      asksForAction:
+        false,
+
+      requestedDepth:
+        "normal",
+    },
+  },
+
+  client,
+
+  requestId:
+    "req_true_multi_goal_mode",
+});
+
         expect(
           generate
         ).toHaveBeenCalledTimes(
-          3
+          5
         );
 
         const fullInput =
@@ -627,6 +806,14 @@ describe(
         const nextStepInput =
           generate.mock
             .calls[2][0];
+
+        const explainCauseInput =
+          generate.mock
+            .calls[3][0];
+
+        const trueMultiGoalInput =
+          generate.mock
+           .calls[4][0];
 
         expect(
           fullInput.mode
@@ -685,6 +872,18 @@ describe(
         ).toBe(
           "next-step"
         );
+
+        expect(
+          explainCauseInput.mode
+        ).toBe(
+          "cause-reasoning"
+        );
+
+        expect(
+          trueMultiGoalInput.mode
+        ).toBe(
+          "full"
+      );
 
         expect(
           nextStepInput.report

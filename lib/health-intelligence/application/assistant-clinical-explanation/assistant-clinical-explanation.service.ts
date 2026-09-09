@@ -117,21 +117,43 @@ function resolveClinicalExplanationMode(
 
   if (understanding) {
     const goals =
-      understanding.goals;
+  understanding.goals;
 
-    /*
-     * Multi-goal questions require one integrated response.
-     *
-     * Example:
-     * "Why is my glucose high, is it dangerous,
-     * and what should I do?"
-     *
-     * A focused cause or next-step mode would discard
-     * part of the user's request, so use full mode.
-     */
-    if (goals.length > 1) {
-      return "full";
-    }
+/*
+ * "explain" is a presentation-level goal when paired
+ * with a more specific clinical goal such as cause
+ * or next-step.
+ *
+ * Do not treat ["explain", "cause"] as a true
+ * multi-goal request.
+ */
+const substantiveGoals =
+  goals.filter(
+    (goal) =>
+      goal !==
+      "explain"
+  );
+
+const effectiveGoals =
+  substantiveGoals.length >
+    0
+    ? substantiveGoals
+    : goals;
+
+/*
+ * True multi-goal questions still require one
+ * integrated full response.
+ *
+ * Example:
+ * "Why is my glucose high, is it dangerous,
+ * and what should I do?"
+ */
+if (
+  effectiveGoals.length >
+  1
+) {
+  return "full";
+}
 
     if (
       understanding.primaryGoal ===
