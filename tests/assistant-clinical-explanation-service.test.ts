@@ -8,6 +8,7 @@ import {
 
 import {
   enhanceAssistantClinicalResponse,
+  generateAssistantClinicalResponseOutcome,
 } from "@/lib/health-intelligence/application/assistant-clinical-explanation/assistant-clinical-explanation.service";
 
 import type {
@@ -899,6 +900,307 @@ await enhanceAssistantClinicalResponse({
         ).toHaveLength(
           2
         );
+      }
+    );
+  }
+);
+describe(
+  "clinical generation outcome contract",
+  () => {
+    afterEach(
+      () => {
+        vi.unstubAllEnvs();
+      }
+    );
+
+    it(
+      "returns completed after a validated clinical generation",
+      async () => {
+        vi.stubEnv(
+          "OPENAI_CLINICAL_EXPLANATION_ENABLED",
+          "true"
+        );
+
+        const client:
+          AssistantClinicalExplanationClient = {
+            generate:
+              vi.fn().mockResolvedValue(
+                validExplanation
+              ),
+          };
+
+        const outcome =
+          await generateAssistantClinicalResponseOutcome({
+            question:
+              "Explain my latest report.",
+
+            language:
+              "en",
+
+            healthContext:
+              createHealthContext(),
+
+            deterministicResult:
+              createDeterministicResult(),
+
+            client,
+
+            requestId:
+              "req_outcome_completed",
+          });
+
+        expect(
+          outcome.status
+        ).toBe(
+          "completed"
+        );
+
+        expect(
+          outcome.result.reasoning
+            .clinicalNarrative
+        ).toBeTruthy();
+      }
+    );
+
+    it(
+      "returns not-eligible without invoking the provider when generation is disabled",
+      async () => {
+        vi.stubEnv(
+          "OPENAI_CLINICAL_EXPLANATION_ENABLED",
+          "false"
+        );
+
+        const generate =
+          vi.fn();
+
+        const client:
+          AssistantClinicalExplanationClient = {
+            generate,
+          };
+
+        const deterministicResult =
+          createDeterministicResult();
+
+        const outcome =
+          await generateAssistantClinicalResponseOutcome({
+            question:
+              "Explain my latest report.",
+
+            language:
+              "en",
+
+            healthContext:
+              createHealthContext(),
+
+            deterministicResult,
+
+            client,
+
+            requestId:
+              "req_outcome_not_eligible",
+          });
+
+        expect(
+          outcome.status
+        ).toBe(
+          "not-eligible"
+        );
+
+        expect(
+          generate
+        ).not.toHaveBeenCalled();
+
+        expect(
+          outcome.result
+        ).toBe(
+          deterministicResult
+        );
+      }
+    );
+
+    it(
+      "returns validation-rejected when generated evidence fails validation",
+      async () => {
+        vi.stubEnv(
+          "OPENAI_CLINICAL_EXPLANATION_ENABLED",
+          "true"
+        );
+
+        const invalidExplanation = {
+          ...validExplanation,
+
+          priorityFindings: [
+            {
+              ...validExplanation
+                .priorityFindings[0],
+
+              evidenceMarkers: [
+                "Invented Marker",
+              ],
+            },
+          ],
+        };
+
+        const client:
+          AssistantClinicalExplanationClient = {
+            generate:
+              vi.fn().mockResolvedValue(
+                invalidExplanation
+              ),
+          };
+
+        const deterministicResult =
+          createDeterministicResult();
+
+        const outcome =
+          await generateAssistantClinicalResponseOutcome({
+            question:
+              "Explain my latest report.",
+
+            language:
+              "en",
+
+            healthContext:
+              createHealthContext(),
+
+            deterministicResult,
+
+            client,
+
+            requestId:
+              "req_outcome_validation_rejected",
+          });
+
+        expect(
+          outcome.status
+        ).toBe(
+          "validation-rejected"
+        );
+
+        expect(
+          outcome.result
+        ).toBe(
+          deterministicResult
+        );
+
+        expect(
+          outcome.result.reasoning
+            .clinicalNarrative
+        ).toBeNull();
+      }
+    );
+
+    it(
+      "returns safety-rejected when generated urgency is not authoritative",
+      async () => {
+        vi.stubEnv(
+          "OPENAI_CLINICAL_EXPLANATION_ENABLED",
+          "true"
+        );
+
+        const client:
+          AssistantClinicalExplanationClient = {
+            generate:
+              vi.fn().mockResolvedValue({
+                ...validExplanation,
+
+                urgency:
+                  "urgent",
+              }),
+          };
+
+        const deterministicResult =
+          createDeterministicResult();
+
+        const outcome =
+          await generateAssistantClinicalResponseOutcome({
+            question:
+              "Explain my latest report.",
+
+            language:
+              "en",
+
+            healthContext:
+              createHealthContext(),
+
+            deterministicResult,
+
+            client,
+
+            requestId:
+              "req_outcome_safety_rejected",
+          });
+
+        expect(
+          outcome.status
+        ).toBe(
+          "safety-rejected"
+        );
+
+        expect(
+          outcome.result
+        ).toBe(
+          deterministicResult
+        );
+      }
+    );
+
+    it(
+      "returns provider-failed instead of collapsing provider failure into an ordinary fallback",
+      async () => {
+        vi.stubEnv(
+          "OPENAI_CLINICAL_EXPLANATION_ENABLED",
+          "true"
+        );
+
+        const client:
+          AssistantClinicalExplanationClient = {
+            generate:
+              vi.fn().mockRejectedValue(
+                new Error(
+                  "provider unavailable"
+                )
+              ),
+          };
+
+        const deterministicResult =
+          createDeterministicResult();
+
+        const outcome =
+          await generateAssistantClinicalResponseOutcome({
+            question:
+              "Why is my HbA1c high?",
+
+            language:
+              "en",
+
+            healthContext:
+              createHealthContext(),
+
+            deterministicResult,
+
+            client,
+
+            requestId:
+              "req_outcome_provider_failed",
+          });
+
+        expect(
+          outcome.status
+        ).toBe(
+          "provider-failed"
+        );
+
+        expect(
+          outcome.result
+        ).toBe(
+          deterministicResult
+        );
+
+        expect(
+          outcome.result.reasoning
+            .clinicalNarrative
+        ).toBeNull();
       }
     );
   }

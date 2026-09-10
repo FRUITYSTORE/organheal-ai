@@ -19,6 +19,7 @@ import {
 
 import {
   runAssistantOrchestrator,
+  type AssistantOrchestratorResult,
   type AssistantOrchestratorLanguage,
 } from "@/lib/health-intelligence/application/assistant-orchestrator.service";
 
@@ -52,7 +53,7 @@ import type {
 } from "@/lib/health-intelligence/application/assistant-response.service";
 
 import {
-  enhanceAssistantClinicalResponse,
+  generateAssistantClinicalResponseOutcome,
 } from "@/lib/health-intelligence/application/assistant-clinical-explanation/assistant-clinical-explanation.service";
 
 import {
@@ -95,7 +96,7 @@ import type {
 } from "@/lib/application/clinical/patient-clinical-longitudinal-comparison.service";
 
 import {
-  enhanceAssistantMultiReportClinicalResponse,
+  generateAssistantMultiReportClinicalResponseOutcome,
 } from "@/lib/health-intelligence/application/assistant-multi-report-comparison/assistant-multi-report-clinical-explanation.service";
 
 import {
@@ -120,6 +121,30 @@ const ASSISTANT_RATE_LIMIT = {
     60_000,
 } as const;
 
+function buildClinicalGenerationFailureResponse(
+  result:
+    AssistantOrchestratorResult,
+  language:
+    AssistantOrchestratorLanguage
+): AssistantOrchestratorResult {
+  const response =
+    language === "ar"
+      ? "لم أتمكن من إكمال تفسير سريري موثوق ومخصص لبياناتك لهذا السؤال الآن. لن أستبدله بإجابة عامة قد تكون مضللة. حاول مرة أخرى بعد قليل. إذا كانت لديك أعراض شديدة أو تتفاقم بسرعة، فاطلب رعاية طبية عاجلة."
+      : "I couldn't complete a reliable patient-specific clinical interpretation for this question right now. I won't replace it with a generic answer that could be misleading. Please try again shortly. If you have severe or rapidly worsening symptoms, seek urgent medical care.";
+
+  return {
+    ...result,
+
+    response,
+
+    reasoning: {
+      ...result.reasoning,
+
+      clinicalNarrative:
+        null,
+    },
+  };
+}
 type AssistantRequestBody = {
   message?:
     unknown;
@@ -986,10 +1011,10 @@ const multiReportDeterministicResult =
       }
     : orchestratorResult;
 
-const clinicalExplanationPromise =
+const clinicalGenerationPromise =
   hasMultiReportSelection
     ? multiReportComparison
-      ? enhanceAssistantMultiReportClinicalResponse({
+      ? generateAssistantMultiReportClinicalResponseOutcome({
           question:
             message.trim(),
 
@@ -1009,10 +1034,14 @@ const clinicalExplanationPromise =
 
           requestId,
         })
-      : Promise.resolve(
-          multiReportDeterministicResult
-        )
-    : enhanceAssistantClinicalResponse({
+      : Promise.resolve({
+          status:
+            "not-eligible" as const,
+
+          result:
+            multiReportDeterministicResult,
+        })
+    : generateAssistantClinicalResponseOutcome({
         question:
           message.trim(),
 
@@ -1032,28 +1061,118 @@ const clinicalExplanationPromise =
         requestId,
       });
 
-const clinicalExplanationResultPromise =
-  clinicalExplanationPromise.then(
+const clinicalGenerationOutcomePromise =
+  clinicalGenerationPromise.then(
     (
-      result
+      outcome
     ) => {
       logStageCompleted(
         "clinical_explanation",
         clinicalExplanationTimer
       );
 
-      return result;
+      return outcome;
     }
   );
 
 const finalAssistantResponsePromise =
-  clinicalExplanationResultPromise.then(
+  clinicalGenerationOutcomePromise.then(
     async (
-      clinicalResult
+      clinicalOutcome
     ) => {
       const generalIntelligenceTimer =
         startApiTimer();
 
+      /*
+       * A completed patient-specific clinical generation is
+       * authoritative for this request.
+       *
+       * General Intelligence must not run afterward.
+       */
+      if (
+        clinicalOutcome.status ===
+          "completed"
+      ) {
+        logApiInfo(
+          "assistant.general_intelligence.skipped",
+          {
+            route:
+              "/api/assistant",
+
+            requestId,
+
+            reason:
+              "clinical_generation_completed",
+          }
+        );
+
+        logStageCompleted(
+          "general_intelligence",
+          generalIntelligenceTimer
+        );
+
+        return clinicalOutcome.result;
+      }
+
+      /*
+       * A clinical generation that was attempted but could not
+       * be trusted must never silently collapse into a generic
+       * or deterministic report answer.
+       *
+       * The user receives a truthful safe fallback instead.
+       */
+      if (
+        clinicalOutcome.status !==
+          "not-eligible"
+      ) {
+        logApiInfo(
+          "assistant.clinical_generation.safe_fallback",
+          {
+            route:
+              "/api/assistant",
+
+            requestId,
+
+            clinicalGenerationStatus:
+              clinicalOutcome.status,
+          }
+        );
+
+        logApiInfo(
+          "assistant.general_intelligence.skipped",
+          {
+            route:
+              "/api/assistant",
+
+            requestId,
+
+            reason:
+              "clinical_generation_not_completed",
+
+            clinicalGenerationStatus:
+              clinicalOutcome.status,
+          }
+        );
+
+        const safeResult =
+          buildClinicalGenerationFailureResponse(
+            clinicalOutcome.result,
+            normalizedLanguage
+          );
+
+        logStageCompleted(
+          "general_intelligence",
+          generalIntelligenceTimer
+        );
+
+        return safeResult;
+      }
+
+      /*
+       * Only a genuinely non-eligible clinical generation
+       * continues through the ordinary General Intelligence
+       * enhancement path.
+       */
       const result =
         await enhanceAssistantGeneralResponse({
           message:
@@ -1068,7 +1187,7 @@ const finalAssistantResponsePromise =
           semanticRoutingDecision,
 
           deterministicResult:
-            clinicalResult,
+            clinicalOutcome.result,
 
           client:
             openAIAssistantGeneralIntelligenceClient,
@@ -1082,7 +1201,6 @@ const finalAssistantResponsePromise =
       return result;
     }
   );
-
 const clinicalInterviewPersistencePromise =
   (async (): Promise<
     string | null

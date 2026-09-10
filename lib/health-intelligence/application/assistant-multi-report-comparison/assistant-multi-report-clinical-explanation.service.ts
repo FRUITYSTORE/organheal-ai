@@ -13,6 +13,10 @@ import type {
 } from "@/lib/health-intelligence/application/assistant-orchestrator.service";
 
 import type {
+  AssistantClinicalGenerationOutcome,
+} from "@/lib/health-intelligence/application/assistant-clinical-explanation/assistant-clinical-generation-outcome";
+
+import type {
   AssistantSemanticRoutingDecision,
 } from "@/lib/health-intelligence/application/assistant-semantic-routing/assistant-semantic-routing.types";
 
@@ -156,19 +160,24 @@ function canGenerate(
   );
 }
 
-export async function enhanceAssistantMultiReportClinicalResponse(
+export async function generateAssistantMultiReportClinicalResponseOutcome(
   input:
     EnhanceAssistantMultiReportClinicalResponseInput
 ): Promise<
-  AssistantOrchestratorResult
+  AssistantClinicalGenerationOutcome
 > {
   if (
     !canGenerate(
       input
     )
   ) {
-    return input
-      .deterministicResult;
+    return {
+      status:
+        "not-eligible",
+
+      result:
+        input.deterministicResult,
+    };
   }
 
   const timer =
@@ -236,8 +245,13 @@ export async function enhanceAssistantMultiReportClinicalResponse(
         }
       );
 
-      return input
-        .deterministicResult;
+      return {
+        status:
+          "validation-rejected",
+
+        result:
+          input.deterministicResult,
+      };
     }
 
     const response =
@@ -274,20 +288,28 @@ export async function enhanceAssistantMultiReportClinicalResponse(
       }
     );
 
-    return {
-      ...input
-        .deterministicResult,
-
-      response,
-
-      reasoning: {
+    const result:
+      AssistantOrchestratorResult = {
         ...input
-          .deterministicResult
-          .reasoning,
+          .deterministicResult,
 
-        clinicalNarrative:
-          response,
-      },
+        response,
+
+        reasoning: {
+          ...input
+            .deterministicResult
+            .reasoning,
+
+          clinicalNarrative:
+            response,
+        },
+      };
+
+    return {
+      status:
+        "completed",
+
+      result,
     };
   } catch (
     error
@@ -311,7 +333,32 @@ export async function enhanceAssistantMultiReportClinicalResponse(
       }
     );
 
-    return input
-      .deterministicResult;
+    return {
+      status:
+        "provider-failed",
+
+      result:
+        input.deterministicResult,
+    };
   }
+}
+
+/*
+ * Backward-compatible API.
+ *
+ * Existing callers continue receiving AssistantOrchestratorResult
+ * while the assistant route migrates to the explicit outcome contract.
+ */
+export async function enhanceAssistantMultiReportClinicalResponse(
+  input:
+    EnhanceAssistantMultiReportClinicalResponseInput
+): Promise<
+  AssistantOrchestratorResult
+> {
+  const outcome =
+    await generateAssistantMultiReportClinicalResponseOutcome(
+      input
+    );
+
+  return outcome.result;
 }

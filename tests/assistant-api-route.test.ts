@@ -112,6 +112,13 @@ vi.mock(
 );
 
 vi.mock(
+  "@/lib/health-intelligence/application/assistant-clinical-explanation/assistant-clinical-explanation.service",
+  () => ({
+    generateAssistantClinicalResponseOutcome:
+      vi.fn(),
+  })
+);
+vi.mock(
   "@/lib/health-intelligence/application/assistant-multi-report-comparison/assistant-multi-report-comparison.service",
   () => ({
     buildAssistantMultiReportComparison:
@@ -130,7 +137,7 @@ vi.mock(
 vi.mock(
   "@/lib/health-intelligence/application/assistant-multi-report-comparison/assistant-multi-report-clinical-explanation.service",
   () => ({
-    enhanceAssistantMultiReportClinicalResponse:
+    generateAssistantMultiReportClinicalResponseOutcome:
       vi.fn(),
   })
 );
@@ -156,6 +163,10 @@ import {
 } from "@/lib/health-intelligence/application/assistant-report-reference/trusted-assistant-report-reference-resolver";
 
 import {
+  generateAssistantClinicalResponseOutcome,
+} from "@/lib/health-intelligence/application/assistant-clinical-explanation/assistant-clinical-explanation.service";
+
+import {
   buildAssistantMultiReportComparison,
 } from "@/lib/health-intelligence/application/assistant-multi-report-comparison/assistant-multi-report-comparison.service";
 
@@ -164,7 +175,7 @@ import {
 } from "@/lib/health-intelligence/application/assistant-multi-report-comparison/render-assistant-multi-report-comparison";
 
 import {
-  enhanceAssistantMultiReportClinicalResponse,
+  generateAssistantMultiReportClinicalResponseOutcome,
 } from "@/lib/health-intelligence/application/assistant-multi-report-comparison/assistant-multi-report-clinical-explanation.service";
 
 import {
@@ -234,6 +245,10 @@ const mockedCreateTrustedAssistantReportReferenceResolver =
     createTrustedAssistantReportReferenceResolver
   );
 
+const mockedGenerateAssistantClinicalResponseOutcome =
+  vi.mocked(
+    generateAssistantClinicalResponseOutcome
+  );
 const mockedBuildAssistantMultiReportComparison =
   vi.mocked(
     buildAssistantMultiReportComparison
@@ -244,9 +259,9 @@ const mockedRenderAssistantMultiReportComparison =
     renderAssistantMultiReportComparison
   );
 
-const mockedEnhanceAssistantMultiReportClinicalResponse =
+const mockedGenerateAssistantMultiReportClinicalResponseOutcome =
   vi.mocked(
-    enhanceAssistantMultiReportClinicalResponse
+    generateAssistantMultiReportClinicalResponseOutcome
   );
 
 const mockedReportResolverResolve =
@@ -439,21 +454,43 @@ mockedCreateTrustedAssistantReportReferenceResolver
       mockedReportResolverResolve,
   } as never);
 
+mockedGenerateAssistantClinicalResponseOutcome
+  .mockReset();
+
+mockedGenerateAssistantClinicalResponseOutcome
+  .mockImplementation(
+    async ({
+      deterministicResult,
+    }) => ({
+      status:
+        "not-eligible",
+
+      result:
+        deterministicResult,
+    })
+  );
+
+// req_route_failure_safety_default
 mockedBuildAssistantMultiReportComparison
   .mockReset();
 
 mockedRenderAssistantMultiReportComparison
   .mockReset();
 
-mockedEnhanceAssistantMultiReportClinicalResponse
+mockedGenerateAssistantMultiReportClinicalResponseOutcome
   .mockReset();
 
-mockedEnhanceAssistantMultiReportClinicalResponse
+mockedGenerateAssistantMultiReportClinicalResponseOutcome
   .mockImplementation(
     async ({
       deterministicResult,
-    }) =>
-      deterministicResult
+    }) => ({
+      status:
+        "not-eligible",
+
+      result:
+        deterministicResult,
+    })
   );
 
         mockedCreateClinicalInterview
@@ -2728,7 +2765,7 @@ it(
      * No provider request is performed.
      */
     expect(
-      mockedEnhanceAssistantMultiReportClinicalResponse
+      mockedGenerateAssistantMultiReportClinicalResponseOutcome
     ).toHaveBeenCalledTimes(
       1
     );
@@ -3006,6 +3043,211 @@ it(
         expect(
           mockedRunAssistantOrchestrator
         ).not.toHaveBeenCalled();
+      }
+    );
+  }
+);
+
+describe(
+  "clinical provider failure safety",
+  () => {
+    beforeEach(
+      () => {
+        mockedRunAssistantOrchestrator
+          .mockReset();
+
+        mockedResolveAssistantSemanticRoutingWithModel
+          .mockReset();
+
+        mockedBuildAssistantResponseContract
+          .mockReset();
+
+        mockedGenerateAssistantClinicalResponseOutcome
+          .mockReset();
+
+        const deterministicResult =
+          createOrchestratorResult(
+            "Deterministic clinical fallback."
+          );
+
+        mockedRunAssistantOrchestrator
+          .mockReturnValue(
+            deterministicResult
+          );
+
+        mockedResolveAssistantSemanticRoutingWithModel
+          .mockResolvedValue({
+            domain:
+              "clinical_question",
+
+            confidence:
+              "high",
+
+            source:
+              "model",
+
+            productDestination:
+              null,
+
+            requiresConversationContext:
+              false,
+
+            reason:
+              "Clinical failure safety test.",
+
+            understanding:
+              null,
+          } as never);
+
+        mockedBuildAssistantResponseContract
+          .mockImplementation(
+            (
+              value,
+              clinicalInterviewId = null,
+              _language = "en",
+              activeReportId =
+                undefined
+            ) =>
+              ({
+                ...value,
+
+                clinicalInterviewId,
+
+                ...(activeReportId !==
+                undefined
+                  ? {
+                      activeReportId,
+                    }
+                  : {}),
+              }) as unknown as ReturnType<
+                typeof buildAssistantResponseContract
+              >
+          );
+      }
+    );
+
+    for (
+      const status of [
+        "provider-failed",
+        "validation-rejected",
+        "safety-rejected",
+      ] as const
+    ) {
+      it(
+        `returns a truthful safe fallback for ${status}`,
+        async () => {
+          const deterministicResult =
+            createOrchestratorResult(
+              "Deterministic clinical fallback."
+            );
+
+          mockedRunAssistantOrchestrator
+            .mockReturnValue(
+              deterministicResult
+            );
+
+          mockedGenerateAssistantClinicalResponseOutcome
+            .mockResolvedValue({
+              status,
+
+              result:
+                deterministicResult,
+            });
+
+          const response =
+            await POST(
+              createAssistantRequest({
+                message:
+                  "Why is my LDL high?",
+
+                language:
+                  "en",
+              })
+            );
+
+          expect(
+            response.status
+          ).toBe(
+            200
+          );
+
+          const body =
+            (await response.json()) as {
+              response?:
+                string;
+            };
+
+          expect(
+            body.response
+          ).toContain(
+            "I couldn't complete a reliable patient-specific clinical interpretation"
+          );
+
+          expect(
+            body.response
+          ).toContain(
+            "I won't replace it with a generic answer"
+          );
+
+          expect(
+            body.response
+          ).not.toBe(
+            "Deterministic clinical fallback."
+          );
+        }
+      );
+    }
+
+    it(
+      "returns the Arabic safe fallback in Arabic mode",
+      async () => {
+        const deterministicResult =
+          createOrchestratorResult(
+            "Deterministic clinical fallback."
+          );
+
+        mockedRunAssistantOrchestrator
+          .mockReturnValue(
+            deterministicResult
+          );
+
+        mockedGenerateAssistantClinicalResponseOutcome
+          .mockResolvedValue({
+            status:
+              "provider-failed",
+
+            result:
+              deterministicResult,
+          });
+
+        const response =
+          await POST(
+            createAssistantRequest({
+              message:
+                "لماذا LDL مرتفع عندي؟",
+
+              language:
+                "ar",
+            })
+          );
+
+        const body =
+          (await response.json()) as {
+            response?:
+              string;
+          };
+
+        expect(
+          body.response
+        ).toContain(
+          "لم أتمكن من إكمال تفسير سريري موثوق"
+        );
+
+        expect(
+          body.response
+        ).toContain(
+          "لن أستبدله بإجابة عامة"
+        );
       }
     );
   }

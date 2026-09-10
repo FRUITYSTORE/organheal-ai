@@ -3,6 +3,10 @@
 } from "@/lib/health-intelligence/application/assistant-orchestrator.service";
 
 import type {
+  AssistantClinicalGenerationOutcome,
+} from "@/lib/health-intelligence/application/assistant-clinical-explanation/assistant-clinical-generation-outcome";
+
+import type {
   AssistantResponseHealthContext,
 } from "@/lib/health-intelligence/application/assistant-response/assistant-response.types";
 
@@ -363,16 +367,24 @@ function canGenerateClinicalExplanation(
   );
 }
 
-export async function enhanceAssistantClinicalResponse(
+export async function generateAssistantClinicalResponseOutcome(
   input:
     EnhanceAssistantClinicalResponseInput
-): Promise<AssistantOrchestratorResult> {
+): Promise<
+  AssistantClinicalGenerationOutcome
+> {
   if (
     !canGenerateClinicalExplanation(
       input
     )
   ) {
-    return input.deterministicResult;
+    return {
+      status:
+        "not-eligible",
+
+      result:
+        input.deterministicResult,
+    };
   }
 
   const latestReport =
@@ -387,43 +399,50 @@ export async function enhanceAssistantClinicalResponse(
     !latestReport ||
     !knowledge
   ) {
-    return input.deterministicResult;
+    return {
+      status:
+        "not-eligible",
+
+      result:
+        input.deterministicResult,
+    };
   }
 
   const timer =
     startApiTimer();
 
   const explanationMode =
-  resolveClinicalExplanationMode(
-    input.question,
-    input.semanticRoutingDecision
-  );
+    resolveClinicalExplanationMode(
+      input.question,
+      input.semanticRoutingDecision
+    );
 
-const semanticClinicalQuestion =
-  buildSemanticClinicalQuestion(
-    input.question,
-    input.semanticRoutingDecision
-  );
+  const semanticClinicalQuestion =
+    buildSemanticClinicalQuestion(
+      input.question,
+      input.semanticRoutingDecision
+    );
+
   const conversationResponseScope =
     resolveConversationResponseScope(
       input.semanticRoutingDecision
     );
 
-    const semanticSubject =
-  input.semanticRoutingDecision
-    ?.understanding
-    ?.subject ??
-  null;
+  const semanticSubject =
+    input.semanticRoutingDecision
+      ?.understanding
+      ?.subject ??
+    null;
 
-const focusedMarkerSubject =
-  conversationResponseScope ===
-    "focused" &&
-  semanticSubject?.kind ===
-    "marker" &&
-  typeof semanticSubject.value ===
-    "string"
-    ? semanticSubject.value
-    : null;
+  const focusedMarkerSubject =
+    conversationResponseScope ===
+      "focused" &&
+    semanticSubject?.kind ===
+      "marker" &&
+    typeof semanticSubject.value ===
+      "string"
+      ? semanticSubject.value
+      : null;
 
   const explanationEvidence =
     selectAssistantClinicalExplanationEvidence({
@@ -435,7 +454,7 @@ const focusedMarkerSubject =
       responseScope:
         conversationResponseScope,
 
-        focusedMarkerSubject,
+      focusedMarkerSubject,
     });
 
   const explanationReport = {
@@ -476,42 +495,48 @@ const focusedMarkerSubject =
       });
 
     const explanation =
-    validateAssistantClinicalExplanation(
-      rawExplanation,
-      explanationEvidence
-   );
+      validateAssistantClinicalExplanation(
+        rawExplanation,
+        explanationEvidence
+      );
 
     if (!explanation) {
-  const validationReason =
-    diagnoseAssistantClinicalExplanationValidationFailure(
-      rawExplanation,
-      explanationEvidence
-    );
+      const validationReason =
+        diagnoseAssistantClinicalExplanationValidationFailure(
+          rawExplanation,
+          explanationEvidence
+        );
 
-  logApiInfo(
-    "assistant.clinical_explanation.rejected",
-    {
-      route:
-        "/api/assistant",
+      logApiInfo(
+        "assistant.clinical_explanation.rejected",
+        {
+          route:
+            "/api/assistant",
 
-      requestId:
-        input.requestId,
+          requestId:
+            input.requestId,
 
-      reportId:
-        latestReport.reportId,
+          reportId:
+            latestReport.reportId,
 
-      reason:
-        "validation_failed",
+          reason:
+            "validation_failed",
 
-      validationReason,
+          validationReason,
 
-      durationMs:
-        timer.elapsedMs(),
+          durationMs:
+            timer.elapsedMs(),
+        }
+      );
+
+      return {
+        status:
+          "validation-rejected",
+
+        result:
+          input.deterministicResult,
+      };
     }
-  );
-
-  return input.deterministicResult;
-}
 
     if (
       explanation.urgency ===
@@ -539,15 +564,21 @@ const focusedMarkerSubject =
         }
       );
 
-      return input.deterministicResult;
+      return {
+        status:
+          "safety-rejected",
+
+        result:
+          input.deterministicResult,
+      };
     }
 
     const response =
-  renderAssistantClinicalExplanation(
-    explanation,
-    input.language,
-    explanationMode
-  );
+      renderAssistantClinicalExplanation(
+        explanation,
+        input.language,
+        explanationMode
+      );
 
     logApiInfo(
       "assistant.clinical_explanation.completed",
@@ -576,19 +607,27 @@ const focusedMarkerSubject =
       }
     );
 
+    const result:
+      AssistantOrchestratorResult = {
+        ...input.deterministicResult,
+
+        response,
+
+        reasoning: {
+          ...input
+            .deterministicResult
+            .reasoning,
+
+          clinicalNarrative:
+            response,
+        },
+      };
+
     return {
-      ...input.deterministicResult,
+      status:
+        "completed",
 
-      response,
-
-      reasoning: {
-        ...input
-          .deterministicResult
-          .reasoning,
-
-        clinicalNarrative:
-          response,
-      },
+      result,
     };
   } catch (error) {
     logApiError(
@@ -609,6 +648,32 @@ const focusedMarkerSubject =
       }
     );
 
-    return input.deterministicResult;
+    return {
+      status:
+        "provider-failed",
+
+      result:
+        input.deterministicResult,
+    };
   }
+}
+
+/*
+ * Backward-compatible API.
+ *
+ * Existing callers continue receiving AssistantOrchestratorResult
+ * until the assistant route adopts the explicit generation outcome.
+ */
+export async function enhanceAssistantClinicalResponse(
+  input:
+    EnhanceAssistantClinicalResponseInput
+): Promise<
+  AssistantOrchestratorResult
+> {
+  const outcome =
+    await generateAssistantClinicalResponseOutcome(
+      input
+    );
+
+  return outcome.result;
 }

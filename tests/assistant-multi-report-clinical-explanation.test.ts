@@ -9,6 +9,7 @@ import {
 
 import {
   enhanceAssistantMultiReportClinicalResponse,
+  generateAssistantMultiReportClinicalResponseOutcome,
 } from "@/lib/health-intelligence/application/assistant-multi-report-comparison/assistant-multi-report-clinical-explanation.service";
 
 import {
@@ -512,6 +513,208 @@ describe(
           result.response
         ).toBe(
           "deterministic fallback"
+        );
+      }
+    );
+  }
+);
+describe(
+  "multi-report clinical generation outcome contract",
+  () => {
+    afterEach(
+      () => {
+        vi.unstubAllEnvs();
+      }
+    );
+
+    it(
+      "returns completed for a validated multi-report clinical explanation",
+      async () => {
+        vi.stubEnv(
+          "OPENAI_CLINICAL_EXPLANATION_ENABLED",
+          "true"
+        );
+
+        const client:
+          AssistantMultiReportClinicalExplanationClient = {
+            generate:
+              vi.fn(
+                async () =>
+                  buildValidExplanation()
+              ),
+          };
+
+        const outcome =
+          await generateAssistantMultiReportClinicalResponseOutcome({
+            question:
+              "Compare my latest reports.",
+
+            language:
+              "en",
+
+            comparison:
+              buildComparison(),
+
+            deterministicResult:
+              buildDeterministicResult(),
+
+            semanticRoutingDecision:
+              null,
+
+            client,
+
+            requestId:
+              "req_multi_outcome_completed",
+          });
+
+        expect(
+          outcome.status
+        ).toBe(
+          "completed"
+        );
+
+        expect(
+          outcome.result.reasoning
+            .clinicalNarrative
+        ).toBeTruthy();
+      }
+    );
+
+    it(
+      "returns validation-rejected when multi-report model output fails validation",
+      async () => {
+        vi.stubEnv(
+          "OPENAI_CLINICAL_EXPLANATION_ENABLED",
+          "true"
+        );
+
+        const client:
+          AssistantMultiReportClinicalExplanationClient = {
+            generate:
+              vi.fn(
+                async () => ({
+                  ...buildValidExplanation(),
+
+                  importantChanges: [
+                    {
+                      marker:
+                        "Invented Marker",
+
+                      explanation:
+                        "Invalid.",
+
+                      importance:
+                        "important",
+
+                      confidence:
+                        "high",
+                    },
+                  ],
+                })
+              ),
+          };
+
+        const deterministicResult =
+          buildDeterministicResult();
+
+        const outcome =
+          await generateAssistantMultiReportClinicalResponseOutcome({
+            question:
+              "Compare my latest reports.",
+
+            language:
+              "en",
+
+            comparison:
+              buildComparison(),
+
+            deterministicResult,
+
+            semanticRoutingDecision:
+              null,
+
+            client,
+
+            requestId:
+              "req_multi_outcome_validation",
+          });
+
+        expect(
+          outcome.status
+        ).toBe(
+          "validation-rejected"
+        );
+
+        expect(
+          outcome.result
+        ).toBe(
+          deterministicResult
+        );
+      }
+    );
+
+    it(
+      "returns provider-failed when the multi-report clinical provider fails",
+      async () => {
+        vi.stubEnv(
+          "OPENAI_CLINICAL_EXPLANATION_ENABLED",
+          "true"
+        );
+
+        const client:
+          AssistantMultiReportClinicalExplanationClient = {
+            generate:
+              vi.fn(
+                async () => {
+                  throw new Error(
+                    "provider unavailable"
+                  );
+                }
+              ),
+          };
+
+        const deterministicResult =
+          buildDeterministicResult();
+
+        const outcome =
+          await generateAssistantMultiReportClinicalResponseOutcome({
+            question:
+              "Compare my latest reports.",
+
+            language:
+              "en",
+
+            comparison:
+              buildComparison(),
+
+            deterministicResult,
+
+            semanticRoutingDecision:
+              null,
+
+            client,
+
+            requestId:
+              "req_multi_outcome_provider_failed",
+          });
+
+        expect(
+          outcome.status
+        ).toBe(
+          "provider-failed"
+        );
+
+        expect(
+          outcome.result
+        ).toBe(
+          deterministicResult
+        );
+
+        expect(
+          outcome.result.reasoning
+            .clinicalNarrative
+        ).toBe(
+          "deterministic comparison"
         );
       }
     );
