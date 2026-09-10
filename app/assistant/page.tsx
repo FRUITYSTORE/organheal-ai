@@ -29,6 +29,11 @@ type Message = {
   action?: MessageAction;
 };
 
+type AssistantActiveSubject = {
+  kind: "marker";
+  value: string;
+};
+
 type AssistantResponse = {
   response?: string;
   error?: string;
@@ -36,6 +41,9 @@ type AssistantResponse = {
 
   activeReportId?:
   number | null;
+
+  activeSubject?:
+  AssistantActiveSubject | null;
 
   action?: {
     label: string;
@@ -83,6 +91,13 @@ const voiceAudioRef =
   setActiveReportId,
 ] =
   useState<number | null>(
+    null
+  );
+  const [
+  activeSubject,
+  setActiveSubject,
+] =
+  useState<AssistantActiveSubject | null>(
     null
   );
   const [isContextLoading, setIsContextLoading] = useState(true);
@@ -379,6 +394,7 @@ const result =
               ),
           clinicalInterviewId,
           activeReportId,
+          activeSubject,
         }),
     }
   );
@@ -423,6 +439,21 @@ if (
   setActiveReportId(
     null
   );
+}
+
+if (
+  data.activeSubject?.kind === "marker" &&
+  typeof data.activeSubject.value === "string" &&
+  data.activeSubject.value.trim()
+) {
+  setActiveSubject({
+    kind: "marker",
+    value: data.activeSubject.value.trim(),
+  });
+} else if (
+  data.activeSubject === null
+) {
+  setActiveSubject(null);
 }
 
       setMessages((current) => [

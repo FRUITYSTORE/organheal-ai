@@ -736,6 +736,13 @@ mockedGenerateAssistantMultiReportClinicalResponseOutcome
 
           clinicalInterviewId:
             null,
+
+          activeSubject:
+            null,
+
+          clinicalGoal:
+            null,
+
         });
       }
     );
@@ -795,6 +802,13 @@ mockedGenerateAssistantMultiReportClinicalResponseOutcome
 
           clinicalInterviewId:
             null,
+
+          activeSubject:
+            null,
+
+          clinicalGoal:
+            null,
+
         });
       }
     );
@@ -856,6 +870,13 @@ mockedGenerateAssistantMultiReportClinicalResponseOutcome
 
           clinicalInterviewId:
             null,
+
+          activeSubject:
+            null,
+
+          clinicalGoal:
+            null,
+
         });
       }
     );
@@ -1233,6 +1254,13 @@ semanticControl.release?.();
 
           clinicalInterviewId:
             null,
+
+          activeSubject:
+            null,
+
+          clinicalGoal:
+            null,
+
         });
       }
     );
@@ -2626,18 +2654,25 @@ it(
             },
 
               body:
-                JSON.stringify({
-              message,
+  JSON.stringify({
+    message,
+    language:
+      "ar",
 
-              language:
-                "ar",
+    conversation:
+      [],
 
-              conversation:
-                [],
+    activeReportId:
+      105,
 
-              activeReportId:
-                105,
-    }),
+    activeSubject: {
+      kind:
+        "marker",
+
+      value:
+        "LDL",
+    },
+  }),
           }
         )
       );
@@ -2801,12 +2836,791 @@ it(
     );
 
     expect(
+  responseBody.activeSubject
+).toBe(
+  null
+);
+
+expect(
+  responseBody.clinicalGoal
+).toBe(
+  null
+);
+
+    expect(
       responseBody.response
     ).toBe(
       "مقارنة آخر 3 تقارير"
     );
   }
 );
+
+    it(
+      "resolves a verified prior LDL subject for an omitted clinical follow-up",
+      async () => {
+        const authenticatedClient =
+          {} as never;
+
+        mockedAuthenticateApiRequest
+          .mockResolvedValueOnce({
+            success:
+              true,
+
+            token:
+              "test-token",
+
+            user: {
+              id:
+                "user-continuity",
+            },
+
+            client:
+              authenticatedClient,
+          } as never);
+
+        mockedBuildAuthenticatedAssistantContext
+          .mockResolvedValueOnce({
+            latestReportContext: {
+              reportId:
+                108,
+
+              reportEvidence: [
+                {
+                  marker:
+                    "LDL",
+
+                  value:
+                    4.26,
+
+                  unit:
+                    "mmol/L",
+
+                  status:
+                    "High",
+
+                  referenceLow:
+                    null,
+
+                  referenceHigh:
+                    3,
+
+                  referenceSource:
+                    "report",
+                },
+
+                {
+                  marker:
+                    "HbA1c",
+
+                  value:
+                    6.1,
+
+                  unit:
+                    "%",
+
+                  status:
+                    "High",
+
+                  referenceLow:
+                    null,
+
+                  referenceHigh:
+                    5.7,
+
+                  referenceSource:
+                    "report",
+                },
+              ],
+            },
+          } as never);
+
+        mockedGetLatestActiveClinicalInterview
+          .mockResolvedValueOnce(
+            null
+          );
+
+        mockedResolveAssistantSemanticRoutingWithModel
+          .mockResolvedValueOnce({
+            domain:
+              "clinical_question",
+
+            confidence:
+              "high",
+
+            source:
+              "model",
+
+            productDestination:
+              null,
+
+            requiresConversationContext:
+              true,
+
+            reason:
+              "Follow-up asks for action on the previous result.",
+
+            understanding: {
+              goals: [
+                "next-step",
+              ],
+
+              primaryGoal:
+                "next-step",
+
+              subject: {
+                kind:
+                  "previous-topic",
+
+                value:
+                  null,
+              },
+
+              reportReference:
+                null,
+
+              referentStatus:
+                "missing",
+
+              referentConfidence:
+                "low",
+
+              isFollowUp:
+                true,
+
+              refersToPreviousTurn:
+                true,
+
+              needsReportEvidence:
+                true,
+
+              needsHistory:
+                false,
+
+              asksForDiagnosis:
+                false,
+
+              asksForUrgency:
+                false,
+
+              asksForAction:
+                true,
+
+              requestedDepth:
+                "normal",
+            },
+          } as never);
+
+        const orchestratorResult =
+          createOrchestratorResult(
+            "LDL follow-up response."
+          );
+
+        mockedRunAssistantOrchestrator
+          .mockReturnValueOnce(
+            orchestratorResult
+          );
+
+        const response =
+          await POST(
+            new Request(
+              "http://localhost/api/assistant",
+              {
+                method:
+                  "POST",
+
+                headers: {
+                  "Content-Type":
+                    "application/json",
+
+                  Authorization:
+                    "Bearer test-token",
+                },
+
+                body:
+                  JSON.stringify({
+                    message:
+                      "What should I do about it?",
+
+                    language:
+                      "en",
+
+                    conversation:
+                      [],
+
+                    activeSubject: {
+                      kind:
+                        "marker",
+
+                      value:
+                        "LDL",
+                    },
+                  }),
+              }
+            )
+          );
+
+        expect(
+          response.status
+        ).toBe(
+          200
+        );
+
+        expect(
+          mockedRunAssistantOrchestrator
+        ).toHaveBeenCalledWith(
+          expect.objectContaining({
+            semanticRoutingDecision:
+              expect.objectContaining({
+                understanding:
+                  expect.objectContaining({
+                    primaryGoal:
+                      "next-step",
+
+                    subject: {
+                      kind:
+                        "marker",
+
+                      value:
+                        "LDL",
+                    },
+
+                    referentStatus:
+                      "resolved",
+
+                    referentConfidence:
+                      "high",
+                  }),
+              }),
+          })
+        );
+
+        expect(
+          mockedGenerateAssistantClinicalResponseOutcome
+        ).toHaveBeenCalledWith(
+          expect.objectContaining({
+            semanticRoutingDecision:
+              expect.objectContaining({
+                understanding:
+                  expect.objectContaining({
+                    subject: {
+                      kind:
+                        "marker",
+
+                      value:
+                        "LDL",
+                    },
+
+                    primaryGoal:
+                      "next-step",
+                  }),
+              }),
+          })
+        );
+
+        const responseBody =
+          await response.json();
+
+        expect(
+          responseBody.activeSubject
+        ).toEqual({
+          kind:
+            "marker",
+
+          value:
+            "LDL",
+        });
+
+        expect(
+          responseBody.clinicalGoal
+        ).toBe(
+          "next-step"
+        );
+      }
+    );
+
+
+    it(
+      "rejects an unverified client-carried clinical subject",
+      async () => {
+        const authenticatedClient =
+          {} as never;
+
+        mockedAuthenticateApiRequest
+          .mockResolvedValueOnce({
+            success:
+              true,
+
+            token:
+              "test-token",
+
+            user: {
+              id:
+                "user-continuity",
+            },
+
+            client:
+              authenticatedClient,
+          } as never);
+
+        mockedBuildAuthenticatedAssistantContext
+          .mockResolvedValueOnce({
+            latestReportContext: {
+              reportId:
+                108,
+
+              reportEvidence: [
+                {
+                  marker:
+                    "LDL",
+
+                  value:
+                    4.26,
+
+                  unit:
+                    "mmol/L",
+
+                  status:
+                    "High",
+
+                  referenceLow:
+                    null,
+
+                  referenceHigh:
+                    3,
+
+                  referenceSource:
+                    "report",
+                },
+              ],
+            },
+          } as never);
+
+        mockedGetLatestActiveClinicalInterview
+          .mockResolvedValueOnce(
+            null
+          );
+
+        mockedResolveAssistantSemanticRoutingWithModel
+          .mockResolvedValueOnce({
+            domain:
+              "clinical_question",
+
+            confidence:
+              "high",
+
+            source:
+              "model",
+
+            productDestination:
+              null,
+
+            requiresConversationContext:
+              true,
+
+            reason:
+              "Follow-up references a previous result.",
+
+            understanding: {
+              goals: [
+                "next-step",
+              ],
+
+              primaryGoal:
+                "next-step",
+
+              subject: {
+                kind:
+                  "previous-topic",
+
+                value:
+                  null,
+              },
+
+              reportReference:
+                null,
+
+              referentStatus:
+                "missing",
+
+              referentConfidence:
+                "low",
+
+              isFollowUp:
+                true,
+
+              refersToPreviousTurn:
+                true,
+
+              needsReportEvidence:
+                true,
+
+              needsHistory:
+                false,
+
+              asksForDiagnosis:
+                false,
+
+              asksForUrgency:
+                false,
+
+              asksForAction:
+                true,
+
+              requestedDepth:
+                "normal",
+            },
+          } as never);
+
+        const orchestratorResult =
+          createOrchestratorResult(
+            "Missing subject response."
+          );
+
+        mockedRunAssistantOrchestrator
+          .mockReturnValueOnce(
+            orchestratorResult
+          );
+
+        const response =
+          await POST(
+            new Request(
+              "http://localhost/api/assistant",
+              {
+                method:
+                  "POST",
+
+                headers: {
+                  "Content-Type":
+                    "application/json",
+
+                  Authorization:
+                    "Bearer test-token",
+                },
+
+                body:
+                  JSON.stringify({
+                    message:
+                      "What should I do about it?",
+
+                    language:
+                      "en",
+
+                    conversation:
+                      [],
+
+                    activeSubject: {
+                      kind:
+                        "marker",
+
+                      value:
+                        "Troponin",
+                    },
+                  }),
+              }
+            )
+          );
+
+        expect(
+          response.status
+        ).toBe(
+          200
+        );
+
+        expect(
+          mockedRunAssistantOrchestrator
+        ).toHaveBeenCalledWith(
+          expect.objectContaining({
+            semanticRoutingDecision:
+              expect.objectContaining({
+                understanding:
+                  expect.objectContaining({
+                    subject: {
+                      kind:
+                        "previous-topic",
+
+                      value:
+                        null,
+                    },
+
+                    referentStatus:
+                      "missing",
+                  }),
+              }),
+          })
+        );
+
+        const responseBody =
+          await response.json();
+
+        expect(
+          responseBody.activeSubject
+        ).toBeNull();
+
+        expect(
+          responseBody.clinicalGoal
+        ).toBe(
+          "next-step"
+        );
+      }
+    );
+
+
+    it(
+      "prefers an explicit current HbA1c subject over a prior LDL subject",
+      async () => {
+        const authenticatedClient =
+          {} as never;
+
+        mockedAuthenticateApiRequest
+          .mockResolvedValueOnce({
+            success:
+              true,
+
+            token:
+              "test-token",
+
+            user: {
+              id:
+                "user-continuity",
+            },
+
+            client:
+              authenticatedClient,
+          } as never);
+
+        mockedBuildAuthenticatedAssistantContext
+          .mockResolvedValueOnce({
+            latestReportContext: {
+              reportId:
+                108,
+
+              reportEvidence: [
+                {
+                  marker:
+                    "LDL",
+
+                  value:
+                    4.26,
+
+                  unit:
+                    "mmol/L",
+
+                  status:
+                    "High",
+
+                  referenceLow:
+                    null,
+
+                  referenceHigh:
+                    3,
+
+                  referenceSource:
+                    "report",
+                },
+
+                {
+                  marker:
+                    "HbA1c",
+
+                  value:
+                    6.1,
+
+                  unit:
+                    "%",
+
+                  status:
+                    "High",
+
+                  referenceLow:
+                    null,
+
+                  referenceHigh:
+                    5.7,
+
+                  referenceSource:
+                    "report",
+                },
+              ],
+            },
+          } as never);
+
+        mockedGetLatestActiveClinicalInterview
+          .mockResolvedValueOnce(
+            null
+          );
+
+        mockedResolveAssistantSemanticRoutingWithModel
+          .mockResolvedValueOnce({
+            domain:
+              "clinical_question",
+
+            confidence:
+              "high",
+
+            source:
+              "model",
+
+            productDestination:
+              null,
+
+            requiresConversationContext:
+              false,
+
+            reason:
+              "The current message explicitly asks about HbA1c.",
+
+            understanding: {
+              goals: [
+                "risk",
+              ],
+
+              primaryGoal:
+                "risk",
+
+              subject: {
+                kind:
+                  "marker",
+
+                value:
+                  "HbA1c",
+              },
+
+              reportReference:
+                null,
+
+              referentStatus:
+                "resolved",
+
+              referentConfidence:
+                "high",
+
+              isFollowUp:
+                true,
+
+              refersToPreviousTurn:
+                false,
+
+              needsReportEvidence:
+                true,
+
+              needsHistory:
+                false,
+
+              asksForDiagnosis:
+                false,
+
+              asksForUrgency:
+                false,
+
+              asksForAction:
+                false,
+
+              requestedDepth:
+                "normal",
+            },
+          } as never);
+
+        const orchestratorResult =
+          createOrchestratorResult(
+            "HbA1c risk response."
+          );
+
+        mockedRunAssistantOrchestrator
+          .mockReturnValueOnce(
+            orchestratorResult
+          );
+
+        const response =
+          await POST(
+            new Request(
+              "http://localhost/api/assistant",
+              {
+                method:
+                  "POST",
+
+                headers: {
+                  "Content-Type":
+                    "application/json",
+
+                  Authorization:
+                    "Bearer test-token",
+                },
+
+                body:
+                  JSON.stringify({
+                    message:
+                      "Is my HbA1c dangerous?",
+
+                    language:
+                      "en",
+
+                    conversation:
+                      [],
+
+                    activeSubject: {
+                      kind:
+                        "marker",
+
+                      value:
+                        "LDL",
+                    },
+                  }),
+              }
+            )
+          );
+
+        expect(
+          response.status
+        ).toBe(
+          200
+        );
+
+        expect(
+          mockedRunAssistantOrchestrator
+        ).toHaveBeenCalledWith(
+          expect.objectContaining({
+            semanticRoutingDecision:
+              expect.objectContaining({
+                understanding:
+                  expect.objectContaining({
+                    subject: {
+                      kind:
+                        "marker",
+
+                      value:
+                        "HbA1c",
+                    },
+
+                    primaryGoal:
+                      "risk",
+
+                    referentStatus:
+                      "resolved",
+                  }),
+              }),
+          })
+        );
+
+        const responseBody =
+          await response.json();
+
+        expect(
+          responseBody.activeSubject
+        ).toEqual({
+          kind:
+            "marker",
+
+          value:
+            "HbA1c",
+        });
+
+        expect(
+          responseBody.clinicalGoal
+        ).toBe(
+          "risk"
+        );
+      }
+    );
 
     it(
       "returns 500 when the orchestrator throws an error",
@@ -3247,7 +4061,7 @@ describe(
           body.response
         ).toContain(
           "لن أستبدله بإجابة عامة"
-        );
+            );
       }
     );
   }

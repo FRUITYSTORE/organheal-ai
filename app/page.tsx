@@ -70,6 +70,17 @@ const [
     null
   );
 
+const [
+  heroActiveSubject,
+  setHeroActiveSubject,
+] =
+  useState<{
+    kind: "marker";
+    value: string;
+  } | null>(
+    null
+  );
+
 const [heroLoading, setHeroLoading] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 const [heroHealthContext, setHeroHealthContext] = useState<Record<string, unknown> | null>(null);
@@ -255,6 +266,9 @@ const result =
 
   activeReportId:
     heroActiveReportId,
+
+  activeSubject:
+    heroActiveSubject,
 }),
     }
   );
@@ -319,6 +333,34 @@ if (
     null
 ) {
   setHeroActiveReportId(
+    null
+  );
+}
+
+if (
+  data.activeSubject &&
+  typeof data.activeSubject ===
+    "object" &&
+  data.activeSubject.kind ===
+    "marker" &&
+  typeof data.activeSubject.value ===
+    "string" &&
+  data.activeSubject.value.trim() &&
+  data.activeSubject.value.trim().length <=
+    120
+) {
+  setHeroActiveSubject({
+    kind:
+      "marker",
+
+    value:
+      data.activeSubject.value.trim(),
+  });
+} else if (
+  data.activeSubject ===
+    null
+) {
+  setHeroActiveSubject(
     null
   );
 }

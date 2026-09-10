@@ -194,3 +194,109 @@ describe("Assistant response contract", () => {
     expect(result.reasoning.hasDecisionTrace).toBe(false);
   });
 });
+
+describe(
+  "Assistant continuity response contract",
+  () => {
+    it(
+      "exposes a verified active subject and current clinical goal when supplied",
+      () => {
+        const result =
+          buildAssistantResponseContract(
+            createOrchestratorResult(),
+            null,
+            "en",
+            108,
+            {
+              activeSubject: {
+                kind:
+                  "marker",
+
+                value:
+                  "LDL",
+              },
+
+              clinicalGoal:
+                "next-step",
+            }
+          );
+
+        expect(
+          result.activeReportId
+        ).toBe(
+          108
+        );
+
+        expect(
+          result.activeSubject
+        ).toEqual({
+          kind:
+            "marker",
+
+          value:
+            "LDL",
+        });
+
+        expect(
+          result.clinicalGoal
+        ).toBe(
+          "next-step"
+        );
+      }
+    );
+
+    it(
+      "preserves explicit null continuity so clients can clear stale state",
+      () => {
+        const result =
+          buildAssistantResponseContract(
+            createOrchestratorResult(),
+            null,
+            "en",
+            null,
+            {
+              activeSubject:
+                null,
+
+              clinicalGoal:
+                null,
+            }
+          );
+
+        expect(
+          result.activeReportId
+        ).toBeNull();
+
+        expect(
+          result.activeSubject
+        ).toBeNull();
+
+        expect(
+          result.clinicalGoal
+        ).toBeNull();
+      }
+    );
+
+    it(
+      "keeps continuity fields absent for legacy callers",
+      () => {
+        const result =
+          buildAssistantResponseContract(
+            createOrchestratorResult()
+          );
+
+        expect(
+          result
+        ).not.toHaveProperty(
+          "activeSubject"
+        );
+
+        expect(
+          result
+        ).not.toHaveProperty(
+          "clinicalGoal"
+        );
+      }
+    );
+  }
+);

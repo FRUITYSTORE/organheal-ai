@@ -3,6 +3,10 @@ import type {
   AssistantOrchestratorLanguage,
 } from "@/lib/health-intelligence/application/assistant-orchestrator.service";
 
+import type {
+  AssistantClinicalContinuityState,
+} from "@/lib/health-intelligence/application/assistant-continuity/assistant-active-subject-continuity.service";
+
 import {
   getProductNavigationAction,
 } from "@/lib/health-intelligence/application/product-navigation/resolve-product-navigation";
@@ -45,6 +49,13 @@ export type AssistantResponseContract = {
 
   activeReportId?:
     number | null;
+
+
+  activeSubject?:
+    AssistantClinicalContinuityState["activeSubject"];
+
+  clinicalGoal?:
+    AssistantClinicalContinuityState["clinicalGoal"];
 
   action:
     AssistantProductAction | null;
@@ -183,6 +194,10 @@ export function buildAssistantResponseContract(
     null |
     undefined =
       undefined,
+  continuityState:
+    | AssistantClinicalContinuityState
+    | undefined =
+      undefined,
 ): AssistantResponseContract {
   return {
   success: true,
@@ -198,6 +213,19 @@ export function buildAssistantResponseContract(
         activeReportId,
       }
     : {}),
+
+  ...(continuityState !==
+  undefined
+    ? {
+        activeSubject:
+          continuityState.activeSubject,
+
+        clinicalGoal:
+          continuityState.clinicalGoal,
+      }
+    : {}),
+
+
 
   action:
     resolveProductAction(

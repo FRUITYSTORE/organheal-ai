@@ -53,6 +53,11 @@ import type {
 } from "@/lib/health-intelligence/application/assistant-response.service";
 
 import {
+  parseAssistantActiveSubjectHint,
+  resolveAssistantActiveSubjectContinuity,
+} from "@/lib/health-intelligence/application/assistant-continuity/assistant-active-subject-continuity.service";
+
+import {
   generateAssistantClinicalResponseOutcome,
 } from "@/lib/health-intelligence/application/assistant-clinical-explanation/assistant-clinical-explanation.service";
 
@@ -160,6 +165,9 @@ type AssistantRequestBody = {
 
   activeReportId?:
     unknown;
+
+  activeSubject?:
+    unknown;
 };
 
 export async function POST(
@@ -216,6 +224,8 @@ export async function POST(
   conversation,
   clinicalInterviewId,
   activeReportId,
+  activeSubject,
+
 } = body;
 
     if (
@@ -275,6 +285,11 @@ export async function POST(
     0
     ? activeReportId
     : null;
+
+const normalizedActiveSubjectHint =
+  parseAssistantActiveSubjectHint(
+    activeSubject
+  );
 
 const deterministicSemanticDecision =
   resolveAssistantSemanticRouting(
@@ -668,7 +683,7 @@ authenticatedContext = {
 semanticRoutingPromise ??=
   startSemanticRouting();
 
-const semanticRoutingDecision =
+let semanticRoutingDecision =
   await semanticRoutingPromise;
 
     currentStage =
@@ -912,7 +927,137 @@ if (
   }
 }
 
+    const hasMultiReportContinuityBoundary =
+
+      Boolean(
+
+        resolvedReportSelection &&
+
+        resolvedReportSelection
+
+          .reports.length >
+
+          1
+
+      );
+
+
+    const continuityResolution =
+
+      resolveAssistantActiveSubjectContinuity({
+
+        semanticRoutingDecision,
+
+
+        healthContext,
+
+
+        priorActiveSubject:
+
+          normalizedActiveSubjectHint,
+
+
+        allowPriorContinuity:
+
+          !hasMultiReportContinuityBoundary,
+
+      });
+
+
+    /*
+
+     * From this point forward, reasoning layers receive the
+
+     * server-verified effective semantic decision.
+
+     *
+
+     * Report selection above intentionally used the original
+
+     * semantic decision. A client continuity hint therefore
+
+     * cannot select or authorize a report.
+
+     */
+
+    semanticRoutingDecision =
+
+      continuityResolution
+
+        .semanticRoutingDecision;
+
+
+    /*
+
+     * Single-subject inheritance is deliberately cleared when
+
+     * this request is operating on multiple reports.
+
+     */
+
+    const responseContinuityState =
+
+      hasMultiReportContinuityBoundary
+
+        ? {
+
+            activeSubject:
+
+              null,
+
+
+            clinicalGoal:
+
+              null,
+
+          }
+
+        : continuityResolution.state;
+
+
+    logApiInfo(
+
+      "assistant.active_subject_continuity.resolved",
+
+      {
+
+        route:
+
+          "/api/assistant",
+
+
+        requestId,
+
+
+        source:
+
+          continuityResolution.source,
+
+
+        hasActiveSubject:
+
+          Boolean(
+
+            responseContinuityState
+
+              .activeSubject
+
+          ),
+
+
+        clinicalGoal:
+
+          responseContinuityState
+
+            .clinicalGoal,
+
+      }
+
+    );
+
+
     const orchestratorTimer =
+
       startApiTimer();
 
     const orchestratorResult =
@@ -1384,7 +1529,7 @@ if (
     const responseContractTimer =
       startApiTimer();
 
-    const publicContract =
+    const basePublicContract =
   resolvedActiveReportId ===
     undefined
     ? buildAssistantResponseContract(
@@ -1398,6 +1543,21 @@ if (
         normalizedLanguage,
         resolvedActiveReportId
       );
+
+const publicContract = {
+  ...basePublicContract,
+
+  /*
+   * Explicit nulls tell the client to clear stale continuity.
+   */
+  activeSubject:
+    responseContinuityState
+      .activeSubject,
+
+  clinicalGoal:
+    responseContinuityState
+      .clinicalGoal,
+};
 
     logStageCompleted(
       "build_response_contract",
