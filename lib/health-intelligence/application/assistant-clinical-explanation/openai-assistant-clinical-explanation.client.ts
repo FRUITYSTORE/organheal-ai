@@ -632,11 +632,11 @@ function buildClinicalExplanationSchema(
         "array",
 
       maxItems:
-       isFull
-         ? 5
-    : isCauseReasoning
-         ? 4
-         : 0,
+        isFull
+          ? 5
+          : isCauseReasoning
+            ? 2
+            : 0,
 
       items: {
         type:
@@ -697,9 +697,9 @@ function buildClinicalExplanationSchema(
       maxItems:
         isFull
           ? 6
-        : isCauseReasoning
-          ? 4
-          : 0,
+          : isCauseReasoning
+            ? 3
+            : 0,
 
       items: {
         type:
@@ -754,10 +754,10 @@ function buildClinicalExplanationSchema(
 
       maxItems:
         isFull
-          ? 8
-      : isCauseReasoning
-         ? 6
-         : 0,
+        ? 8
+        : isCauseReasoning
+          ? 3
+          : 0,
 
       items: {
         type:
@@ -770,9 +770,11 @@ function buildClinicalExplanationSchema(
         "array",
 
       maxItems:
-        isFull || isNextStep
+        isFull
           ? 6
-          : 0,
+          : isNextStep
+            ? 4
+            : 0,
 
       items: {
         type:
@@ -786,9 +788,9 @@ function buildClinicalExplanationSchema(
 
       maxItems:
         isFull
-          ? 6
-    : isNextStep
-          ? 4
+        ? 6
+        : isNextStep
+          ? 2
           : 0,
 
       items: {
@@ -817,7 +819,9 @@ function buildClinicalExplanationSchema(
         1,
 
       maxItems:
-        6,
+        isFull
+        ? 6
+        : 2,
 
       items: {
         type:
@@ -942,9 +946,9 @@ function buildModeInstructions(
       "The user is asking for a focused next-step answer, not a full report interpretation.",
       "Answer the user's current question directly.",
       "Keep overview to one short sentence.",
-      "Populate nextSteps with a concise, prioritized action plan grounded in the supplied report evidence.",
-      "Populate questionsForClinician only when they materially help the user act.",
-      "Keep limitations concise.",
+      "Return no more than four nextSteps, ordered by priority; keep each step to one concise sentence.",
+      "Return no more than two questionsForClinician, and only when they materially help the user act.",
+      "Keep limitations to one or two brief items.",
       "Do not repeat unrelated report findings or restart the full report interpretation.",
       "Treat short follow-up questions as a continuation of the active conversational topic.",
       "Return only the fields required by the supplied response schema.",
@@ -959,11 +963,13 @@ function buildModeInstructions(
   ) {
     return [
       "The user is asking a focused why/cause/relationship question, not for a full report interpretation.",
-      "Answer the user's exact current question directly in overview.",
+      "Answer the user's exact current question directly in no more than two short overview sentences.",
       "Stay on the resolved conversational subject.",
-      "Use relationships only for markers materially relevant to the current question.",
-      "Use possibleContributors only for plausible contributors that require confirmation.",
-      "Use missingContext only for information that would materially change the answer.",
+      "Return no more than two relationships, and only when materially relevant to the current question.",
+      "Return no more than three possibleContributors, ordered by relevance.",
+      "For each possible contributor, keep factor concise and keep whyPossible and confirmationNeeded to one short sentence each.",
+      "Return no more than three missingContext items, and only when they would materially change the answer.",
+      "Keep limitations to one or two brief items.",
       "Do not repeat unrelated findings from the report.",
       "Treat short follow-up questions as a continuation of the active conversational topic.",
       "Do not turn an association into a confirmed diagnosis or causal claim.",
@@ -1718,11 +1724,11 @@ export const openAIAssistantClinicalExplanationClient:
             "Units and internationally recognized abbreviations may remain in their standard form when necessary.",
             "Return only the required structured output.",
             buildModeInstructions(
-              input
-            ),
-          ].join(
-            "\n"
+             input
           ),
+           ].join(
+            "\n"
+      ),
 
           serializedInput:
             buildClinicalExplanationInput(

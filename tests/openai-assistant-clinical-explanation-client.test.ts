@@ -926,7 +926,7 @@ expect(
     .relationships
     .maxItems
 ).toBe(
-  4
+  2
 );
 
 expect(
@@ -934,7 +934,7 @@ expect(
     .possibleContributors
     .maxItems
 ).toBe(
-  4
+  3
 );
 
 expect(
@@ -942,7 +942,7 @@ expect(
     .missingContext
     .maxItems
 ).toBe(
-  6
+  3
 );
 
 expect(
@@ -950,7 +950,7 @@ expect(
     .limitations
     .maxItems
 ).toBe(
-  6
+  2
 );
 
 expect(
@@ -1389,12 +1389,62 @@ expect(
       ) as {
         model:
           string;
+
+        text: {
+          format: {
+            schema: {
+              properties: {
+                nextSteps: {
+                  maxItems:
+                    number;
+                };
+
+                questionsForClinician: {
+                  maxItems:
+                    number;
+                };
+
+                limitations: {
+                  maxItems:
+                    number;
+                };
+              };
+            };
+          };
+        };
       };
 
     expect(
       body.model
     ).toBe(
       "gpt-5.6-terra"
+    );
+
+    const schema =
+      body.text.format.schema;
+
+    expect(
+      schema.properties
+        .nextSteps
+        .maxItems
+    ).toBe(
+      4
+    );
+
+    expect(
+      schema.properties
+        .questionsForClinician
+        .maxItems
+    ).toBe(
+      2
+    );
+
+    expect(
+      schema.properties
+        .limitations
+        .maxItems
+    ).toBe(
+      2
     );
   }
 );
