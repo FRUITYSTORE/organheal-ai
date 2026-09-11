@@ -40,10 +40,13 @@ type AssistantResponse = {
   clinicalInterviewId?: string | null;
 
   activeReportId?:
-  number | null;
+    number | null;
+
+  activeReportIds?:
+    number[] | null;
 
   activeSubject?:
-  AssistantActiveSubject | null;
+    AssistantActiveSubject | null;
 
   action?: {
     label: string;
@@ -91,6 +94,13 @@ const voiceAudioRef =
   setActiveReportId,
 ] =
   useState<number | null>(
+    null
+  );
+  const [
+  activeReportIds,
+  setActiveReportIds,
+] =
+  useState<number[] | null>(
     null
   );
   const [
@@ -394,6 +404,7 @@ const result =
               ),
           clinicalInterviewId,
           activeReportId,
+          activeReportIds,
           activeSubject,
         }),
     }
@@ -437,6 +448,41 @@ if (
     null
 ) {
   setActiveReportId(
+    null
+  );
+}
+
+if (
+  Array.isArray(
+    data.activeReportIds
+  ) &&
+  data.activeReportIds.length >=
+    2 &&
+  data.activeReportIds.length <=
+    50 &&
+  data.activeReportIds.every(
+    (
+      reportId
+    ) =>
+      Number.isSafeInteger(
+        reportId
+      ) &&
+      reportId >
+        0
+  ) &&
+  new Set(
+    data.activeReportIds
+  ).size ===
+    data.activeReportIds.length
+) {
+  setActiveReportIds([
+    ...data.activeReportIds,
+  ]);
+} else if (
+  data.activeReportIds ===
+    null
+) {
+  setActiveReportIds(
     null
   );
 }

@@ -35,6 +35,126 @@ function normalizeRequestedCount(
   );
 }
 
+function parseAssistantActiveReportIdsHint(
+  reportIds:
+    unknown
+): number[] | null {
+  if (
+    !Array.isArray(
+      reportIds
+    ) ||
+    reportIds.length <
+      2 ||
+    reportIds.length >
+      MAX_REQUESTED_REPORTS
+  ) {
+    return null;
+  }
+
+  if (
+    reportIds.some(
+      (
+        reportId
+      ) =>
+        !Number.isSafeInteger(
+          reportId
+        ) ||
+        reportId <=
+          0
+    )
+  ) {
+    return null;
+  }
+
+  if (
+    new Set(
+      reportIds
+    ).size !==
+    reportIds.length
+  ) {
+    return null;
+  }
+
+  return [
+    ...reportIds,
+  ];
+}
+
+async function getVerifiedActiveReportSet(
+  input:
+    AssistantReportReferenceResolverInput,
+  dependencies:
+    AssistantReportReferenceResolverDependencies
+): Promise<
+  UploadedReportSummary[] | null
+> {
+  const reportIds =
+    parseAssistantActiveReportIdsHint(
+      input.activeReportIds
+  );
+
+  if (
+    !reportIds
+  ) {
+    return null;
+  }
+
+  const reports =
+    await dependencies
+      .getReportsByIds(
+        input.userId,
+        reportIds
+      );
+
+  /*
+   * Continuity is all-or-nothing.
+   *
+   * Never silently continue with only part of a
+   * client-carried report set.
+   */
+  if (
+    reports.length !==
+    reportIds.length
+  ) {
+    return null;
+  }
+
+  const reportsById =
+    new Map(
+      reports.map(
+        (
+          report
+        ) => [
+          report.id,
+          report,
+        ] as const
+      )
+    );
+
+  const orderedReports =
+    reportIds.map(
+      (
+        reportId
+      ) =>
+        reportsById.get(
+          reportId
+        )
+    );
+
+  if (
+    orderedReports.some(
+      (
+        report
+      ) =>
+        !report
+    )
+  ) {
+    return null;
+  }
+
+  return orderedReports as UploadedReportSummary[];
+}
+
 function createResolution({
   input,
   status,
@@ -410,6 +530,57 @@ export function createAssistantReportReferenceResolver(
         }
 
         case "current-conversation": {
+          const hasActiveReportSetHint =
+            input.activeReportIds !==
+              null &&
+            input.activeReportIds !==
+              undefined;
+
+          if (
+            hasActiveReportSetHint
+          ) {
+            const activeReports =
+              await getVerifiedActiveReportSet(
+                input,
+                dependencies
+              );
+
+            if (
+              !activeReports
+            ) {
+              return createResolution({
+                input,
+
+                status:
+                  "not-found",
+
+                reports:
+                  [],
+
+                requestedCount,
+
+                reason:
+                  "The active report set could not be verified for the authenticated user.",
+              });
+            }
+
+            return createResolution({
+              input,
+
+              status:
+                "resolved",
+
+              reports:
+                activeReports,
+
+              requestedCount:
+                activeReports.length,
+
+              reason:
+                "The report set active in the current conversation was verified.",
+            });
+          }
+
           if (
             input.activeReportId ===
               null ||
@@ -601,6 +772,58 @@ export function createAssistantReportReferenceResolver(
            * report rather than asking the user
            * to repeat information unnecessarily.
            */
+
+          const hasActiveReportSetHint =
+            input.activeReportIds !==
+              null &&
+            input.activeReportIds !==
+              undefined;
+
+          if (
+            hasActiveReportSetHint
+          ) {
+            const activeReports =
+              await getVerifiedActiveReportSet(
+                input,
+                dependencies
+              );
+
+            if (
+              !activeReports
+            ) {
+              return createResolution({
+                input,
+
+                status:
+                  "not-found",
+
+                reports:
+                  [],
+
+                requestedCount,
+
+                reason:
+                  "The active report set could not be verified for the authenticated user.",
+              });
+            }
+
+            return createResolution({
+              input,
+
+              status:
+                "resolved",
+
+              reports:
+                activeReports,
+
+              requestedCount:
+                activeReports.length,
+
+              reason:
+                "The active conversation report set was used for the unspecified report reference.",
+            });
+          }
+
           if (
             input.activeReportId !==
               null &&

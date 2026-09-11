@@ -390,6 +390,260 @@ describe(
     );
 
     it(
+      "verifies a current-conversation multi-report set against the authenticated user",
+      async () => {
+        const {
+          resolver,
+          getReportsByIds,
+        } =
+          createHarness();
+
+        const result =
+          await resolver.resolve({
+            userId:
+              "user-1",
+
+            reference: {
+              kind:
+                "current-conversation",
+
+              count:
+                null,
+
+              value:
+                null,
+            },
+
+            activeReportId:
+              null,
+
+            activeReportIds: [
+              105,
+              103,
+              104,
+            ],
+          });
+
+        expect(
+          result.status
+        ).toBe(
+          "resolved"
+        );
+
+        expect(
+          result.reports.map(
+            (
+              report
+            ) =>
+              report.id
+          )
+        ).toEqual([
+          105,
+          103,
+          104,
+        ]);
+
+        expect(
+          getReportsByIds
+        ).toHaveBeenCalledWith(
+          "user-1",
+          [
+            105,
+            103,
+            104,
+          ]
+        );
+      }
+    );
+
+    it(
+      "rejects the whole active report set when any carried report cannot be verified",
+      async () => {
+        const {
+          resolver,
+          getReportsByIds,
+          getRecentReports,
+        } =
+          createHarness();
+
+        const result =
+          await resolver.resolve({
+            userId:
+              "user-1",
+
+            reference: {
+              kind:
+                "current-conversation",
+
+              count:
+                null,
+
+              value:
+                null,
+            },
+
+            activeReportId:
+              null,
+
+            activeReportIds: [
+              105,
+              999,
+            ],
+          });
+
+        expect(
+          result.status
+        ).toBe(
+          "not-found"
+        );
+
+        expect(
+          result.reports
+        ).toEqual([]);
+
+        expect(
+          getReportsByIds
+        ).toHaveBeenCalledWith(
+         "user-1",
+         [
+           105,
+           999,
+        ]
+       );
+        expect(
+          getRecentReports
+        ).not.toHaveBeenCalled();
+      }
+    );
+
+    it(
+      "rejects an invalid multi-report continuity hint before repository verification",
+      async () => {
+        const {
+          resolver,
+          getReportsByIds,
+          getRecentReports,
+        } =
+          createHarness();
+
+        const result =
+          await resolver.resolve({
+            userId:
+              "user-1",
+
+            reference: {
+              kind:
+                "current-conversation",
+
+              count:
+                null,
+
+              value:
+                null,
+            },
+
+            activeReportId:
+              null,
+
+            activeReportIds: [
+              105,
+              105,
+            ],
+          });
+
+        expect(
+          result.status
+        ).toBe(
+          "not-found"
+        );
+
+        expect(
+          result.reports
+        ).toEqual([]);
+
+        expect(
+          getReportsByIds
+        ).not.toHaveBeenCalled();
+
+        expect(
+          getRecentReports
+        ).not.toHaveBeenCalled();
+      }
+    );
+
+    it(
+      "prefers a verified active report set for an unspecified follow-up",
+      async () => {
+        const {
+          resolver,
+          getReportsByIds,
+          getRecentReports,
+        } =
+          createHarness();
+
+        const result =
+          await resolver.resolve({
+            userId:
+              "user-1",
+
+            reference: {
+              kind:
+                "unspecified",
+
+              count:
+                null,
+
+              value:
+                null,
+            },
+
+            activeReportId:
+              104,
+
+            activeReportIds: [
+              105,
+              103,
+              102,
+            ],
+          });
+
+        expect(
+          result.status
+        ).toBe(
+          "resolved"
+        );
+
+        expect(
+          result.reports.map(
+            (
+              report
+            ) =>
+              report.id
+          )
+        ).toEqual([
+          105,
+          103,
+          102,
+        ]);
+
+        expect(
+          getReportsByIds
+        ).toHaveBeenCalledWith(
+          "user-1",
+          [
+            105,
+            103,
+            102,
+          ]
+        );
+
+        expect(
+          getRecentReports
+        ).not.toHaveBeenCalled();
+      }
+    );
+
+    it(
       "does not guess a current-conversation report when none is active",
       async () => {
         const {
@@ -512,6 +766,73 @@ describe(
         ).toBe(
           105
         );
+      }
+    );
+
+    it(
+      "lets an explicit latest request override a stale active report set",
+      async () => {
+        const {
+          resolver,
+          getRecentReports,
+          getReportsByIds,
+        } =
+          createHarness();
+
+        const result =
+          await resolver.resolve({
+            userId:
+              "user-1",
+
+            reference: {
+              kind:
+                "latest",
+
+              count:
+                2,
+
+              value:
+                null,
+            },
+
+            activeReportId:
+              null,
+
+            activeReportIds: [
+              105,
+              103,
+              102,
+            ],
+          });
+
+        expect(
+          result.status
+        ).toBe(
+          "resolved"
+        );
+
+        expect(
+          result.reports.map(
+            (
+              report
+            ) =>
+              report.id
+          )
+        ).toEqual([
+          105,
+          104,
+        ]);
+
+        expect(
+          getRecentReports
+        ).toHaveBeenCalledWith(
+          "user-1",
+          2
+        );
+
+        expect(
+          getReportsByIds
+        ).not.toHaveBeenCalled();
       }
     );
 

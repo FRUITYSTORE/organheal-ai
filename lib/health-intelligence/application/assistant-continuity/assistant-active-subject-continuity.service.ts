@@ -35,6 +35,15 @@ export type ResolveAssistantActiveSubjectContinuityInput = {
   healthContext:
     AssistantResponseHealthContext | null;
 
+  /**
+   * Marker names derived from an already authenticated,
+   * server-built multi-report comparison.
+   *
+   * Never populate this from client input.
+   */
+  verifiedMarkerNames?:
+    readonly string[];
+
   priorActiveSubject?:
     AssistantActiveSubject | null;
 
@@ -74,18 +83,10 @@ function findVerifiedReportMarker(
   value:
     string,
   healthContext:
-    AssistantResponseHealthContext | null
+    AssistantResponseHealthContext | null,
+  verifiedMarkerNames:
+    readonly string[] = []
 ): string | null {
-  const latestReport =
-    healthContext
-      ?.latestReportContext;
-
-  if (
-    !latestReport
-  ) {
-    return null;
-  }
-
   const requestedMarker =
     normalizeMarker(
       value
@@ -97,30 +98,47 @@ function findVerifiedReportMarker(
     return null;
   }
 
-  const evidence = [
-    ...latestReport
-      .reportEvidence,
+  const latestReport =
+    healthContext
+      ?.latestReportContext;
 
+  const markerNames = [
     ...(
       latestReport
-        .expandedReportEvidence ??
-      []
+        ? [
+            ...latestReport
+              .reportEvidence,
+
+            ...(
+              latestReport
+                .expandedReportEvidence ??
+              []
+            ),
+          ].map(
+            (
+              item
+            ) =>
+              item.marker
+          )
+        : []
     ),
+
+    ...verifiedMarkerNames,
   ];
 
   const match =
-    evidence.find(
+    markerNames.find(
       (
-        item
+        marker
       ) =>
         normalizeMarker(
-          item.marker
+          marker
         ) ===
         requestedMarker
     );
 
   return (
-    match?.marker ??
+    match ??
     null
   );
 }
@@ -273,7 +291,8 @@ export function resolveAssistantActiveSubjectContinuity(
       findVerifiedReportMarker(
         understanding
           .subject.value,
-        input.healthContext
+      input.healthContext,
+      input.verifiedMarkerNames
       );
 
     if (
@@ -407,7 +426,8 @@ export function resolveAssistantActiveSubjectContinuity(
   const verifiedMarker =
     findVerifiedReportMarker(
       priorActiveSubject.value,
-      input.healthContext
+    input.healthContext,
+    input.verifiedMarkerNames
     );
 
   if (

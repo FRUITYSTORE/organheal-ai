@@ -49,6 +49,17 @@ export type AssistantReportReferenceResolverInput = {
    */
   activeReportId?:
     number | null;
+
+  /**
+   * Multi-report set carried from prior assistant
+   * conversation state.
+   *
+   * This is an untrusted continuity hint only.
+   * Every ID must be re-verified against the
+   * authenticated user's reports before use.
+   */
+  activeReportIds?:
+    unknown;
 };
 
 export type AssistantReportReferenceResolverDependencies = {

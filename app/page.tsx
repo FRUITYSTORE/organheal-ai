@@ -71,6 +71,14 @@ const [
   );
 
 const [
+  heroActiveReportIds,
+  setHeroActiveReportIds,
+] =
+  useState<number[] | null>(
+    null
+  );
+
+const [
   heroActiveSubject,
   setHeroActiveSubject,
 ] =
@@ -267,6 +275,9 @@ const result =
   activeReportId:
     heroActiveReportId,
 
+  activeReportIds:
+    heroActiveReportIds,
+
   activeSubject:
     heroActiveSubject,
 }),
@@ -333,6 +344,43 @@ if (
     null
 ) {
   setHeroActiveReportId(
+    null
+  );
+}
+
+if (
+  Array.isArray(
+    data.activeReportIds
+  ) &&
+  data.activeReportIds.length >=
+    2 &&
+  data.activeReportIds.length <=
+    50 &&
+  data.activeReportIds.every(
+    (
+      reportId: unknown
+    ) =>
+      typeof reportId ===
+        "number" &&
+      Number.isSafeInteger(
+        reportId
+      ) &&
+      reportId >
+        0
+  ) &&
+  new Set(
+    data.activeReportIds
+  ).size ===
+    data.activeReportIds.length
+) {
+  setHeroActiveReportIds([
+    ...data.activeReportIds,
+  ]);
+} else if (
+  data.activeReportIds ===
+    null
+) {
+  setHeroActiveReportIds(
     null
   );
 }

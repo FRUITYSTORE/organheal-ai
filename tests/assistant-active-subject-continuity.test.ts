@@ -606,5 +606,209 @@ describe(
         ).toBeNull();
       }
     );
+        it(
+      "verifies a current marker against trusted multi-report marker names",
+      () => {
+        const decision =
+          createDecision({
+            subject: {
+              kind:
+                "marker",
+
+              value:
+                "ldl",
+            },
+
+            referentStatus:
+              "resolved",
+          });
+
+        const result =
+          resolveAssistantActiveSubjectContinuity({
+            semanticRoutingDecision:
+              decision,
+
+            healthContext:
+              null,
+
+            verifiedMarkerNames: [
+              "HbA1c",
+              "LDL",
+              "Triglycerides",
+            ],
+          });
+
+        expect(
+          result.source
+        ).toBe(
+          "current-semantic"
+        );
+
+        expect(
+          result.state.activeSubject
+        ).toEqual({
+          kind:
+            "marker",
+
+          value:
+            "LDL",
+        });
+      }
+    );
+
+    it(
+      "resolves a prior marker from trusted multi-report marker names",
+      () => {
+        const decision =
+          createDecision({
+            subject: {
+              kind:
+                "previous-topic",
+
+              value:
+                null,
+            },
+
+            referentStatus:
+              "missing",
+
+            isFollowUp:
+              true,
+
+            refersToPreviousTurn:
+              true,
+
+            primaryGoal:
+              "next-step",
+          });
+
+        const result =
+          resolveAssistantActiveSubjectContinuity({
+            semanticRoutingDecision:
+              decision,
+
+            healthContext:
+              null,
+
+            verifiedMarkerNames: [
+              "LDL",
+              "HbA1c",
+            ],
+
+            priorActiveSubject: {
+              kind:
+                "marker",
+
+              value:
+                "LDL",
+            },
+
+            allowPriorContinuity:
+              true,
+          });
+
+        expect(
+          result.source
+        ).toBe(
+          "verified-prior"
+        );
+
+        expect(
+          result.semanticRoutingDecision
+            .understanding
+            ?.subject
+        ).toEqual({
+          kind:
+            "marker",
+
+          value:
+            "LDL",
+        });
+
+        expect(
+          result.state.activeSubject
+        ).toEqual({
+          kind:
+            "marker",
+
+          value:
+            "LDL",
+        });
+
+        expect(
+          result.state.clinicalGoal
+        ).toBe(
+          "next-step"
+        );
+      }
+    );
+
+    it(
+      "rejects a carried marker that is absent from trusted multi-report marker names",
+      () => {
+        const decision =
+          createDecision({
+            subject: {
+              kind:
+                "previous-topic",
+
+              value:
+                null,
+            },
+
+            referentStatus:
+              "missing",
+
+            isFollowUp:
+              true,
+
+            refersToPreviousTurn:
+              true,
+          });
+
+        const result =
+          resolveAssistantActiveSubjectContinuity({
+            semanticRoutingDecision:
+              decision,
+
+            healthContext:
+              null,
+
+            verifiedMarkerNames: [
+              "LDL",
+              "HbA1c",
+            ],
+
+            priorActiveSubject: {
+              kind:
+                "marker",
+
+              value:
+                "Troponin",
+            },
+
+            allowPriorContinuity:
+              true,
+          });
+
+        expect(
+          result.source
+        ).toBe(
+          "none"
+        );
+
+        expect(
+          result.state.activeSubject
+        ).toBeNull();
+
+        expect(
+          result.semanticRoutingDecision
+            .understanding
+            ?.referentStatus
+        ).toBe(
+          "missing"
+        );
+      }
+    );
   }
 );

@@ -442,11 +442,11 @@ mockedResolveAssistantSemanticRoutingWithModel
         mockedBuildAuthenticatedAssistantContext
           .mockReset();
 
-          mockedCreateTrustedAssistantReportReferenceResolver
-  .mockReset();
+        mockedCreateTrustedAssistantReportReferenceResolver
+          .mockReset();
 
-mockedReportResolverResolve
-  .mockReset();
+        mockedReportResolverResolve
+          .mockReset();
 
 mockedCreateTrustedAssistantReportReferenceResolver
   .mockReturnValue({
@@ -737,6 +737,9 @@ mockedGenerateAssistantMultiReportClinicalResponseOutcome
           clinicalInterviewId:
             null,
 
+          activeReportIds:
+            null,
+
           activeSubject:
             null,
 
@@ -801,6 +804,9 @@ mockedGenerateAssistantMultiReportClinicalResponseOutcome
           ...orchestratorResult,
 
           clinicalInterviewId:
+            null,
+
+          activeReportIds:
             null,
 
           activeSubject:
@@ -869,6 +875,9 @@ mockedGenerateAssistantMultiReportClinicalResponseOutcome
           ...orchestratorResult,
 
           clinicalInterviewId:
+            null,
+
+          activeReportIds:
             null,
 
           activeSubject:
@@ -1253,6 +1262,9 @@ semanticControl.release?.();
           ...orchestratorResult,
 
           clinicalInterviewId:
+            null,
+
+          activeReportIds:
             null,
 
           activeSubject:
@@ -2559,8 +2571,9 @@ it(
       },
     ];
 
-    const comparison =
-      {} as never;
+    const comparison = {
+      markerSeries: [],
+    } as never;
 
     mockedAuthenticateApiRequest
       .mockResolvedValue({
@@ -2806,10 +2819,10 @@ it(
     );
 
     expect(
-  mockedReportResolverResolve
-).toHaveBeenCalledWith(
-  expect.objectContaining({
-    userId:
+      mockedReportResolverResolve
+    ).toHaveBeenCalledWith(
+    expect.objectContaining({
+      userId:
       "user-1",
 
     reference:
@@ -2836,15 +2849,23 @@ it(
     );
 
     expect(
-  responseBody.activeSubject
-).toBe(
-  null
-);
+      responseBody.activeReportIds
+    ).toEqual([
+      203,
+      202,
+      201,
+   ]);
 
-expect(
+    expect(
+      responseBody.activeSubject
+    ).toBe(
+      null
+   );
+
+    expect(
   responseBody.clinicalGoal
 ).toBe(
-  null
+  "compare"
 );
 
     expect(
@@ -2854,6 +2875,414 @@ expect(
     );
   }
 );
+
+    it(
+      "continues a verified multi-report set and subject for an omitted follow-up reference",
+      async () => {
+        const authenticatedClient =
+          {} as never;
+
+        const adminClient =
+          {} as never;
+
+        const reports = [
+          {
+            id:
+              203,
+
+            file_name:
+              "follow-up-2.txt",
+
+            file_path:
+              "user-1/follow-up-2.txt",
+
+            report_type:
+              "laboratory",
+
+            extraction_status:
+              "completed",
+
+            created_at:
+              "2026-09-07T12:00:00.000Z",
+          },
+
+          {
+            id:
+              202,
+
+            file_name:
+              "follow-up-1.docx",
+
+            file_path:
+              "user-1/follow-up-1.docx",
+
+            report_type:
+              "laboratory",
+
+            extraction_status:
+              "completed",
+
+            created_at:
+              "2026-09-06T12:00:00.000Z",
+          },
+
+          {
+            id:
+              201,
+
+            file_name:
+              "baseline.pdf",
+
+            file_path:
+              "user-1/baseline.pdf",
+
+            report_type:
+              "laboratory",
+
+            extraction_status:
+              "completed",
+
+            created_at:
+              "2026-09-05T12:00:00.000Z",
+          },
+        ];
+
+        const comparison = {
+          markerSeries: [
+        {
+          marker:
+            "LDL",
+       },
+     ],
+    } as never;
+
+        mockedAuthenticateApiRequest
+          .mockResolvedValueOnce({
+            success:
+              true,
+
+            token:
+              "test-token",
+
+            user: {
+              id:
+                "user-1",
+            },
+
+            client:
+              authenticatedClient,
+          } as never);
+
+        mockedGetSupabaseAdminClient
+          .mockReturnValue(
+            adminClient
+          );
+
+        mockedBuildAuthenticatedAssistantContext
+          .mockResolvedValueOnce(
+            {} as never
+          );
+
+        mockedGetLatestActiveClinicalInterview
+          .mockResolvedValueOnce(
+            null
+          );
+
+        mockedResolveAssistantSemanticRoutingWithModel
+          .mockResolvedValueOnce({
+            domain:
+              "clinical_question",
+
+            confidence:
+              "high",
+
+            source:
+              "model",
+
+            productDestination:
+              null,
+
+            requiresConversationContext:
+              true,
+
+            reason:
+              "The user is following up on the prior report comparison.",
+
+            understanding: {
+              goals: [
+                "next-step",
+              ],
+
+              primaryGoal:
+                "next-step",
+
+              subject: {
+                kind:
+                  "previous-topic",
+
+                value:
+                  null,
+              },
+
+              reportReference: {
+                kind:
+                  "unspecified",
+
+                count:
+                  null,
+
+                value:
+                  null,
+              },
+
+              referentStatus:
+                "missing",
+
+              referentConfidence:
+                "low",
+
+              isFollowUp:
+                true,
+
+              refersToPreviousTurn:
+                true,
+
+              needsReportEvidence:
+                true,
+
+              needsHistory:
+                true,
+
+              asksForDiagnosis:
+                false,
+
+              asksForUrgency:
+                false,
+
+              asksForAction:
+                true,
+
+              requestedDepth:
+                "normal",
+            },
+          } as never);
+
+        mockedReportResolverResolve
+          .mockResolvedValueOnce({
+            status:
+              "resolved",
+
+            reference: {
+              kind:
+                "unspecified",
+
+              count:
+                null,
+
+              value:
+                null,
+            },
+
+            reports,
+
+            requestedCount:
+              3,
+
+            resolvedCount:
+              3,
+
+            reason:
+              "The active conversation report set was verified.",
+          });
+
+        const orchestratorResult =
+          createOrchestratorResult(
+            "Multi-report follow-up."
+          );
+
+        mockedRunAssistantOrchestrator
+          .mockReturnValueOnce(
+            orchestratorResult
+          );
+
+        mockedBuildAssistantMultiReportComparison
+          .mockResolvedValueOnce(
+            comparison
+          );
+
+        mockedRenderAssistantMultiReportComparison
+          .mockReturnValueOnce(
+            "Follow-up comparison."
+          );
+
+        const response =
+          await POST(
+            new Request(
+              "http://localhost/api/assistant",
+              {
+                method:
+                  "POST",
+
+                headers: {
+                  "Content-Type":
+                    "application/json",
+
+                  Authorization:
+                    "Bearer test-token",
+                },
+
+                body:
+                  JSON.stringify({
+                    message:
+                      "What should I do about that?",
+
+                    language:
+                      "en",
+
+                    conversation:
+                      [],
+
+                    activeReportIds: [
+                      203,
+                      202,
+                      201,
+                    ],
+
+                    activeSubject: {
+                      kind:
+                        "marker",
+
+                      value:
+                        "LDL",
+                    },
+                  }),
+              }
+            )
+          );
+
+        expect(
+          response.status
+        ).toBe(
+          200
+        );
+
+        /*
+         * Client-carried IDs are hints only.
+         * They must reach the trusted resolver before use.
+         */
+        expect(
+          mockedReportResolverResolve
+        ).toHaveBeenCalledWith(
+          expect.objectContaining({
+            userId:
+              "user-1",
+
+            reference: {
+              kind:
+                "unspecified",
+
+              count:
+                null,
+
+              value:
+                null,
+            },
+
+            activeReportId:
+              null,
+
+            activeReportIds: [
+              203,
+              202,
+              201,
+            ],
+          })
+        );
+
+        /*
+         * Only the server-resolved report set reaches
+         * the longitudinal comparison capability.
+         */
+        expect(
+  mockedRunAssistantOrchestrator
+).toHaveBeenCalledWith(
+  expect.objectContaining({
+    semanticRoutingDecision:
+      expect.objectContaining({
+        understanding:
+          expect.objectContaining({
+            subject: {
+              kind:
+                "marker",
+
+              value:
+                "LDL",
+            },
+
+            referentStatus:
+              "resolved",
+
+            referentConfidence:
+              "high",
+
+            primaryGoal:
+              "next-step",
+          }),
+      }),
+  })
+);
+
+        expect(
+          mockedBuildAssistantMultiReportComparison
+        ).toHaveBeenCalledWith(
+          expect.objectContaining({
+            userId:
+              "user-1",
+
+            reports,
+          })
+        );
+
+        expect(
+          mockedGenerateAssistantMultiReportClinicalResponseOutcome
+        ).toHaveBeenCalledTimes(
+          1
+        );
+
+        const responseBody =
+          await response.json();
+
+        expect(
+          responseBody.activeReportId
+        ).toBe(
+          null
+        );
+
+        expect(
+          responseBody.activeReportIds
+        ).toEqual([
+          203,
+          202,
+          201,
+        ]);
+
+        expect(
+  responseBody.activeSubject
+).toEqual({
+  kind:
+    "marker",
+
+  value:
+    "LDL",
+});
+
+expect(
+  responseBody.clinicalGoal
+).toBe(
+  "next-step"
+);
+      }
+    );
 
     it(
       "resolves a verified prior LDL subject for an omitted clinical follow-up",

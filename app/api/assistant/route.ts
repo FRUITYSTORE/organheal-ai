@@ -166,6 +166,8 @@ type AssistantRequestBody = {
   activeReportId?:
     unknown;
 
+  activeReportIds?:
+    unknown;
   activeSubject?:
     unknown;
 };
@@ -219,14 +221,14 @@ export async function POST(
         AssistantRequestBody;
 
     const {
-  message,
-  language = "en",
-  conversation,
-  clinicalInterviewId,
-  activeReportId,
-  activeSubject,
-
-} = body;
+      message,
+      language = "en",
+      conversation,
+      clinicalInterviewId,
+      activeReportId,
+      activeReportIds,
+      activeSubject,
+   } = body;
 
     if (
       typeof message !==
@@ -275,29 +277,29 @@ export async function POST(
         ? clinicalInterviewId.trim()
         : null;
 
-        const normalizedActiveReportId =
-  typeof activeReportId ===
-    "number" &&
-  Number.isSafeInteger(
-    activeReportId
-  ) &&
-  activeReportId >
-    0
-    ? activeReportId
-    : null;
+    const normalizedActiveReportId =
+      typeof activeReportId ===
+        "number" &&
+      Number.isSafeInteger(
+        activeReportId
+      ) &&
+      activeReportId >
+      0
+      ? activeReportId
+      : null;
 
-const normalizedActiveSubjectHint =
-  parseAssistantActiveSubjectHint(
-    activeSubject
-  );
+    const normalizedActiveSubjectHint =
+      parseAssistantActiveSubjectHint(
+        activeSubject
+      );
 
-const deterministicSemanticDecision =
-  resolveAssistantSemanticRouting(
-    message.trim()
-  );
+    const deterministicSemanticDecision =
+      resolveAssistantSemanticRouting(
+        message.trim()
+      );
 
-const startSemanticRouting =
-  () => {
+    const startSemanticRouting =
+      () => {
     const semanticRoutingTimer =
       startApiTimer();
 
@@ -762,6 +764,10 @@ let resolvedActiveReportId:
   undefined =
     undefined;
 
+let resolvedActiveReportIds:
+  number[] | null =
+    null;
+
 const semanticUnderstanding =
   semanticRoutingDecision
     .understanding;
@@ -802,6 +808,8 @@ if (
     ?.latestReportContext
     ?.reportId ??
   null,
+
+  activeReportIds,
     });
 
   logStageCompleted(
@@ -865,6 +873,24 @@ if (
     null;
 }
 
+resolvedActiveReportIds =
+  resolvedReportSelection &&
+  (
+    resolvedReportSelection.status ===
+      "resolved" ||
+    resolvedReportSelection.status ===
+      "partial"
+  ) &&
+  resolvedReportSelection.reports.length >
+    1
+    ? resolvedReportSelection.reports.map(
+        (
+          report
+        ) =>
+          report.id
+      )
+    : null;
+
   /*
    * Existing clinical intelligence is currently
    * single-report oriented.
@@ -927,170 +953,6 @@ if (
   }
 }
 
-    const hasMultiReportContinuityBoundary =
-
-      Boolean(
-
-        resolvedReportSelection &&
-
-        resolvedReportSelection
-
-          .reports.length >
-
-          1
-
-      );
-
-
-    const continuityResolution =
-
-      resolveAssistantActiveSubjectContinuity({
-
-        semanticRoutingDecision,
-
-
-        healthContext,
-
-
-        priorActiveSubject:
-
-          normalizedActiveSubjectHint,
-
-
-        allowPriorContinuity:
-
-          !hasMultiReportContinuityBoundary,
-
-      });
-
-
-    /*
-
-     * From this point forward, reasoning layers receive the
-
-     * server-verified effective semantic decision.
-
-     *
-
-     * Report selection above intentionally used the original
-
-     * semantic decision. A client continuity hint therefore
-
-     * cannot select or authorize a report.
-
-     */
-
-    semanticRoutingDecision =
-
-      continuityResolution
-
-        .semanticRoutingDecision;
-
-
-    /*
-
-     * Single-subject inheritance is deliberately cleared when
-
-     * this request is operating on multiple reports.
-
-     */
-
-    const responseContinuityState =
-
-      hasMultiReportContinuityBoundary
-
-        ? {
-
-            activeSubject:
-
-              null,
-
-
-            clinicalGoal:
-
-              null,
-
-          }
-
-        : continuityResolution.state;
-
-
-    logApiInfo(
-
-      "assistant.active_subject_continuity.resolved",
-
-      {
-
-        route:
-
-          "/api/assistant",
-
-
-        requestId,
-
-
-        source:
-
-          continuityResolution.source,
-
-
-        hasActiveSubject:
-
-          Boolean(
-
-            responseContinuityState
-
-              .activeSubject
-
-          ),
-
-
-        clinicalGoal:
-
-          responseContinuityState
-
-            .clinicalGoal,
-
-      }
-
-    );
-
-
-    const orchestratorTimer =
-
-      startApiTimer();
-
-    const orchestratorResult =
-      runAssistantOrchestrator({
-        message:
-          message.trim(),
-
-        language:
-          normalizedLanguage,
-
-        healthContext,
-
-        conversation:
-          normalizedConversation,
-
-        semanticRoutingDecision,
-
-        ...(trustedClinicalReasoningState
-          ? {
-              clinicalReasoningState:
-                trustedClinicalReasoningState,
-            }
-          : {}),
-      });
-
-    logStageCompleted(
-      "orchestrator",
-      orchestratorTimer
-    );
-
-    const clinicalExplanationTimer =
-  startApiTimer();
-
 const hasMultiReportSelection =
   Boolean(
     resolvedReportSelection &&
@@ -1099,7 +961,7 @@ const hasMultiReportSelection =
       1
   );
 
-  let multiReportComparison:
+let multiReportComparison:
   PatientClinicalLongitudinalComparison | null =
     null;
 
@@ -1107,6 +969,17 @@ let multiReportComparisonResponse:
   string | null =
     null;
 
+/*
+ * Build the trusted longitudinal comparison before
+ * resolving subject continuity.
+ *
+ * The report set has already been authenticated and
+ * verified by the report-reference resolver.
+ *
+ * This comparison is reused later for rendering and
+ * clinical generation, so this does not introduce a
+ * second report-marker query.
+ */
 if (
   hasMultiReportSelection &&
   authenticatedContext &&
@@ -1119,7 +992,7 @@ if (
     startApiTimer();
 
   multiReportComparison =
-  await buildAssistantMultiReportComparison({
+    await buildAssistantMultiReportComparison({
       userId:
         authenticatedContext
           .userId,
@@ -1144,6 +1017,115 @@ if (
     multiReportComparisonTimer
   );
 }
+
+const verifiedMultiReportMarkerNames =
+  multiReportComparison
+    ?.markerSeries.map(
+      (
+        series
+      ) =>
+        series.marker
+    ) ??
+  [];
+
+const continuityResolution =
+  resolveAssistantActiveSubjectContinuity({
+    semanticRoutingDecision,
+
+    /*
+     * During a multi-report flow the subject must be
+     * verified only against the selected trusted report
+     * set, never against an unrelated latest-report
+     * context.
+     */
+    healthContext:
+      hasMultiReportSelection
+        ? null
+        : healthContext,
+
+    verifiedMarkerNames:
+      verifiedMultiReportMarkerNames,
+
+    priorActiveSubject:
+      normalizedActiveSubjectHint,
+
+    allowPriorContinuity:
+      !hasMultiReportSelection ||
+      multiReportComparison !==
+        null,
+  });
+
+/*
+ * From this point forward, reasoning layers receive the
+ * server-verified effective semantic decision.
+ *
+ * Report selection above intentionally used the original
+ * semantic decision. A client continuity hint therefore
+ * cannot select or authorize a report.
+ */
+semanticRoutingDecision =
+  continuityResolution
+    .semanticRoutingDecision;
+
+const responseContinuityState =
+  continuityResolution.state;
+
+logApiInfo(
+  "assistant.active_subject_continuity.resolved",
+  {
+    route:
+      "/api/assistant",
+
+    requestId,
+
+    source:
+      continuityResolution.source,
+
+    hasActiveSubject:
+      Boolean(
+        responseContinuityState
+          .activeSubject
+      ),
+
+    clinicalGoal:
+      responseContinuityState
+        .clinicalGoal,
+  }
+);
+
+const orchestratorTimer =
+  startApiTimer();
+
+const orchestratorResult =
+  runAssistantOrchestrator({
+    message:
+      message.trim(),
+
+    language:
+      normalizedLanguage,
+
+    healthContext,
+
+    conversation:
+      normalizedConversation,
+
+    semanticRoutingDecision,
+
+    ...(trustedClinicalReasoningState
+      ? {
+          clinicalReasoningState:
+            trustedClinicalReasoningState,
+        }
+      : {}),
+  });
+
+logStageCompleted(
+  "orchestrator",
+  orchestratorTimer
+);
+
+const clinicalExplanationTimer =
+  startApiTimer();
 
 const multiReportDeterministicResult =
   hasMultiReportSelection
@@ -1550,6 +1532,9 @@ const publicContract = {
   /*
    * Explicit nulls tell the client to clear stale continuity.
    */
+  activeReportIds:
+    resolvedActiveReportIds,
+
   activeSubject:
     responseContinuityState
       .activeSubject,
