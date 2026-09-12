@@ -12,6 +12,8 @@ import {
   type ReportsLibraryCard,
 } from "@/lib/services/reports/reports.service";
 import VoiceInputButton from "@/app/components/voice/VoiceInputButton";
+import HealthUpdatesTicker from "@/app/components/home/HealthUpdatesTicker";
+import FeaturedHealthArticles from "@/app/components/home/FeaturedHealthArticles";
 type Language = "en" | "ar";
 
 type TrustCard = {
@@ -1750,6 +1752,8 @@ if (
         }
       `}</style>
 
+      <HealthUpdatesTicker />
+
       <div className="ohContainer ohStack large" style={{ padding: "32px 0 64px" }}>
         <section className="ohHero homeHero homeCommandHero">
           <div className="homeCommandGrid">
@@ -2242,6 +2246,8 @@ if (
     </div>
   </div>
 </section>
+
+<FeaturedHealthArticles />
 
         <section className="homePreviewPanel">
           <div className="ohCardHeader">
