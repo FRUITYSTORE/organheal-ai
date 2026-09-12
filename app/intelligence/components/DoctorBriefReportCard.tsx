@@ -5,6 +5,10 @@ import type {
   DoctorIntelligencePresentation,
 } from "../../../lib/health-intelligence/presentation/doctor-intelligence.presenter";
 import { text, useArabicUi } from "./ArabicUiHelper";
+import {
+  presentIntelligenceClinicalText,
+  presentIntelligencePrioritySystem,
+} from "@/lib/services/intelligence/intelligence-presentation";
 
 type ExecutiveSummary = {
   currentScore?: number;
@@ -490,16 +494,32 @@ export default function DoctorBriefReportCard({
   const isArabic = useArabicUi();
   const printRef = useRef<HTMLElement>(null);
 
-  const generatedAtText = new Date().toLocaleString(
-    isArabic ? "ar" : undefined
+const generatedAtText =
+  new Date().toLocaleString(
+    isArabic
+      ? "ar-AE"
+      : undefined
   );
 
-  const doctorBriefReportId = createDoctorBriefReportId(
+const doctorBriefReportId =
+  createDoctorBriefReportId(
     fileName,
     uploadedAtText
   );
 
-  const labMarkers = extractLabMarkers(
+const presentationLanguage =
+  isArabic
+    ? "ar"
+    : "en";
+
+const displayFileName =
+  isArabic &&
+  fileName === "Medical report"
+    ? "تقرير طبي"
+    : fileName;
+
+const labMarkers =
+  extractLabMarkers(
     summary,
     keyFindings,
     riskSignals,
@@ -507,68 +527,174 @@ export default function DoctorBriefReportCard({
     doctorBrief
   );
 
-  const abnormalLabMarkers = labMarkers.filter(
-    (marker) => marker.status.toLowerCase() !== "normal"
+const abnormalLabMarkers =
+  labMarkers.filter(
+    (marker) =>
+      marker.status
+        .toLowerCase() !==
+      "normal"
   );
 
-  const mainFocus = arabicValue(executiveSummary?.prioritySystem);
-  const reportType = arabicValue(reportTypeLabel);
-  const scoreTone = getScoreTone(executiveSummary?.currentScore);
-  const forecastTone = getScoreTone(executiveSummary?.forecastScore);
+const mainFocus =
+  presentIntelligencePrioritySystem(
+    executiveSummary?.prioritySystem,
+    presentationLanguage
+  );
 
- const rawDoctorBrief =
-  typeof doctorBrief === "string" ? doctorBrief.trim() : "";
+const reportType =
+  arabicValue(
+    reportTypeLabel
+  );
+
+const scoreTone =
+  getScoreTone(
+    executiveSummary?.currentScore
+  );
+
+const forecastTone =
+  getScoreTone(
+    executiveSummary?.forecastScore
+  );
+
+const rawDoctorBrief =
+  typeof doctorBrief === "string"
+    ? doctorBrief.trim()
+    : "";
 
 const doctorBriefLooksLikeLegacyDocument =
-  /doctor[-\s]?ready report summary/i.test(rawDoctorBrief) ||
+  /doctor[-\s]?ready report summary/i.test(
+    rawDoctorBrief
+  ) ||
   /structured medical intelligence summary prepared for clinical review/i.test(
     rawDoctorBrief
   );
 
-const clinicalSummary =
-  doctorPresentation?.clinicalSummary ??
+const rawClinicalSummary =
+  doctorPresentation
+    ?.clinicalSummary ??
   summary ??
-  (!doctorBriefLooksLikeLegacyDocument ? doctorBrief : null) ??
+  (!doctorBriefLooksLikeLegacyDocument
+    ? doctorBrief
+    : null) ??
   null;
 
-  const evidenceSummary =
-    doctorPresentation?.evidenceSummary ?? null;
+const clinicalSummary =
+  presentIntelligenceClinicalText(
+    rawClinicalSummary,
+    presentationLanguage,
+    "تم حفظ الملخص السريري، لكن العرض العربي غير متاح لهذا السجل.",
+    "Clinical summary is not currently available."
+  );
 
-  const momentumSummary =
-    doctorPresentation?.momentumSummary ?? null;
+const safeKeyFindings =
+  presentIntelligenceClinicalText(
+    keyFindings,
+    presentationLanguage,
+    "تم حفظ النتائج السريرية، لكن العرض العربي غير متاح لهذا السجل.",
+    "Clinical findings are not currently available."
+  );
 
-  const decisionSummary =
-    doctorPresentation?.decisionSummary ?? null;
+const safeRiskSignals =
+  presentIntelligenceClinicalText(
+    riskSignals,
+    presentationLanguage,
+    "تم حفظ إشارات الخطر والمتابعة، لكن العرض العربي غير متاح لهذا السجل.",
+    "Risk and attention signals are not currently available."
+  );
 
-  const shouldShowKeyFindings =
-    isMeaningfulText(keyFindings) &&
-    normalizedText(keyFindings) !== normalizedText(clinicalSummary);
+const safeRecommendations =
+  presentIntelligenceClinicalText(
+    recommendations,
+    presentationLanguage,
+    "تم حفظ توصيات المتابعة، لكن العرض العربي غير متاح لهذا السجل.",
+    "Follow-up recommendations are not currently available."
+  );
 
-  const labSummaryText = isArabic
+const evidenceSummary =
+  doctorPresentation
+    ?.evidenceSummary ??
+  null;
+
+const momentumSummary =
+  doctorPresentation
+    ?.momentumSummary ??
+  null;
+
+const decisionSummary =
+  doctorPresentation
+    ?.decisionSummary ??
+  null;
+
+const shouldShowKeyFindings =
+  isMeaningfulText(
+    keyFindings
+  ) &&
+  normalizedText(
+    keyFindings
+  ) !==
+    normalizedText(
+      rawClinicalSummary
+    );
+
+const labSummaryText =
+  isArabic
     ? `تم رصد ${labMarkers.length} مؤشرًا مخبريًا، منها ${abnormalLabMarkers.length} مؤشر غير طبيعي يحتاج إلى مراجعة سريرية ضمن سياق حالة المريض.`
     : `${labMarkers.length} laboratory marker(s) were identified, including ${abnormalLabMarkers.length} abnormal marker(s) requiring clinical review in the context of the patient.`;
 
-    
-  const optionalSections = [
-    {
-      key: "evidence",
-      titleEn: "6. Evidence Summary",
-      titleAr: "٦. ملخص الأدلة",
-      value: evidenceSummary,
-    },
-    {
-      key: "momentum",
-      titleEn: "7. Momentum Summary",
-      titleAr: "٧. ملخص التقدم",
-      value: momentumSummary,
-    },
-    {
-      key: "decision",
-      titleEn: "8. Decision Summary",
-      titleAr: "٨. ملخص القرار",
-      value: decisionSummary,
-    },
-  ].filter((section) => isMeaningfulText(section.value));
+const optionalSections = [
+  {
+    key: "evidence",
+    titleEn:
+      "6. Evidence Summary",
+    titleAr:
+      "٦. ملخص الأدلة",
+    value:
+      evidenceSummary,
+    fallbackAr:
+      "ملخص الأدلة العربي غير متاح لهذا السجل.",
+  },
+  {
+    key: "momentum",
+    titleEn:
+      "7. Momentum Summary",
+    titleAr:
+      "٧. ملخص التقدم",
+    value:
+      momentumSummary,
+    fallbackAr:
+      "ملخص التقدم العربي غير متاح لهذا السجل.",
+  },
+  {
+    key: "decision",
+    titleEn:
+      "8. Decision Summary",
+    titleAr:
+      "٨. ملخص القرار",
+    value:
+      decisionSummary,
+    fallbackAr:
+      "ملخص القرار العربي غير متاح لهذا السجل.",
+  },
+]
+  .filter(
+    (section) =>
+      isMeaningfulText(
+        section.value
+      )
+  )
+  .map(
+    (section) => ({
+      ...section,
+
+      displayValue:
+        presentIntelligenceClinicalText(
+          section.value,
+          presentationLanguage,
+          section.fallbackAr,
+          "N/A"
+        ),
+    })
+  );
 
   async function downloadDoctorBriefPdf() {
     let temporaryContainer: HTMLDivElement | null = null;
@@ -700,20 +826,26 @@ const clinicalSummary =
           pdf.setTextColor(100, 116, 139);
 
           pdf.text(
-            "OrganHeal AI · Clinical Intelligence Brief",
+            isArabic
+            ? "OrganHeal AI · Clinical Brief"
+            : "OrganHeal AI · Clinical Intelligence Brief",
             18,
             pageHeight - 8
           );
 
           pdf.text(
-            `Report ID: ${doctorBriefReportId}`,
+            isArabic
+            ? `ID: ${doctorBriefReportId}`
+            : `Report ID: ${doctorBriefReportId}`,
             pageWidth / 2,
             pageHeight - 8,
             { align: "center" }
           );
 
           pdf.text(
-            `Page ${pageNumber} of ${totalPages}`,
+            isArabic
+            ? `${pageNumber} / ${totalPages}`
+            : `Page ${pageNumber} of ${totalPages}`,
             pageWidth - 18,
             pageHeight - 8,
             { align: "right" }
@@ -1418,7 +1550,7 @@ const clinicalSummary =
                 {isArabic ? "المصدر" : "Source Report"}
               </span>
               <span className="doctorBriefReferenceValue">
-                {fileName}
+                {displayFileName}
               </span>
             </div>
           </div>
@@ -1429,7 +1561,7 @@ const clinicalSummary =
             <span className="ohMetricLabel">
               {isArabic ? "التقرير" : "Report"}
             </span>
-            <span className="ohMetricHint">{fileName}</span>
+            <span className="ohMetricHint">{displayFileName}</span>
           </article>
 
           <article className="ohMetricCard">
@@ -1464,7 +1596,10 @@ const clinicalSummary =
               {isArabic ? "النتيجة الحالية" : "Current Score"}
             </span>
             <span className={`ohStatusBadge ${scoreTone}`}>
-              {executiveSummary?.currentScore ?? "N/A"}
+              {executiveSummary?.currentScore ??
+                (isArabic
+                ? "غير متاح"
+                : "N/A")}
             </span>
           </article>
 
@@ -1473,7 +1608,10 @@ const clinicalSummary =
               {isArabic ? "نتيجة التوقع" : "Forecast Score"}
             </span>
             <span className={`ohStatusBadge ${forecastTone}`}>
-              {executiveSummary?.forecastScore ?? "N/A"}
+              {executiveSummary?.forecastScore ??
+                (isArabic
+                ? "غير متاح"
+                : "N/A")}
             </span>
           </article>
         </div>
@@ -1509,17 +1647,11 @@ const clinicalSummary =
 
             {isArabic ? (
               <ArabicParagraph>
-                {text(
-                  clinicalSummary,
-                  "ملخص سريري غير متاح حاليًا."
-                )}
+                {clinicalSummary}
               </ArabicParagraph>
             ) : (
               <EnglishParagraph>
-                {text(
-                  clinicalSummary,
-                  "Clinical summary is not currently available."
-                )}
+                {clinicalSummary}
               </EnglishParagraph>
             )}
           </article>
@@ -1608,9 +1740,13 @@ const clinicalSummary =
               </h3>
 
               {isArabic ? (
-                <ArabicParagraph>{keyFindings}</ArabicParagraph>
+                <ArabicParagraph>
+                  {safeKeyFindings}
+                </ArabicParagraph>
               ) : (
-                <EnglishParagraph>{keyFindings}</EnglishParagraph>
+                <EnglishParagraph>
+                  {safeKeyFindings}
+                </EnglishParagraph>
               )}
             </article>
           )}
@@ -1627,9 +1763,9 @@ const clinicalSummary =
               </h3>
 
               {isArabic ? (
-                <ArabicParagraph>{riskSignals}</ArabicParagraph>
+                <ArabicParagraph>{safeRiskSignals}</ArabicParagraph>
               ) : (
-                <EnglishParagraph>{riskSignals}</EnglishParagraph>
+                <EnglishParagraph>{safeRiskSignals}</EnglishParagraph>
               )}
             </article>
           )}
@@ -1646,9 +1782,9 @@ const clinicalSummary =
               </h3>
 
               {isArabic ? (
-                <ArabicParagraph>{recommendations}</ArabicParagraph>
+                <ArabicParagraph>{safeRecommendations}</ArabicParagraph>
               ) : (
-                <EnglishParagraph>{recommendations}</EnglishParagraph>
+                <EnglishParagraph>{safeRecommendations}</EnglishParagraph>
               )}
             </article>
           )}
@@ -1664,11 +1800,11 @@ const clinicalSummary =
 
               {isArabic ? (
                 <ArabicParagraph>
-                  {text(section.value, "غير متاح")}
+                  {section.displayValue}
                 </ArabicParagraph>
               ) : (
                 <EnglishParagraph>
-                  {text(section.value, "N/A")}
+                  {section.displayValue}
                 </EnglishParagraph>
               )}
             </article>

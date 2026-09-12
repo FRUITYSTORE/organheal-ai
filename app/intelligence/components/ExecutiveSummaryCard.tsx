@@ -1,4 +1,11 @@
-﻿type ExecutiveSummaryCardProps = {
+﻿import {
+  presentIntelligenceConfidenceLevel,
+  presentIntelligenceLegacyNextAction,
+  presentIntelligencePrioritySystem,
+  presentIntelligenceTrend,
+} from "@/lib/services/intelligence/intelligence-presentation";
+
+type ExecutiveSummaryCardProps = {
   summary: {
     currentScore: number;
     trend: string;
@@ -64,6 +71,35 @@ export default function ExecutiveSummaryCard({
   const healthState = getHealthState(
     summary.currentScore,
     isArabic
+  );
+
+  const presentationLanguage =
+  isArabic
+    ? "ar"
+    : "en";
+
+const prioritySystem =
+  presentIntelligencePrioritySystem(
+    summary.prioritySystem,
+    presentationLanguage
+  );
+
+const trend =
+  presentIntelligenceTrend(
+    summary.trend,
+    presentationLanguage
+  );
+
+const confidenceLevel =
+  presentIntelligenceConfidenceLevel(
+    summary.confidenceLevel,
+    presentationLanguage
+  );
+
+const nextBestAction =
+  presentIntelligenceLegacyNextAction(
+    summary.nextBestAction,
+    presentationLanguage
   );
 
   function text(en: string, ar: string) {
@@ -205,7 +241,7 @@ export default function ExecutiveSummaryCard({
                 lineHeight: 1.5,
               }}
             >
-              {summary.prioritySystem}
+              {prioritySystem}
             </strong>
           </article>
 
@@ -224,7 +260,7 @@ export default function ExecutiveSummaryCard({
                 lineHeight: 1.5,
               }}
             >
-              {summary.trend}
+              {trend}
             </strong>
           </article>
 
@@ -262,7 +298,7 @@ export default function ExecutiveSummaryCard({
                 marginTop: "10px",
               }}
             >
-              {summary.confidenceLevel}
+              {confidenceLevel}
             </span>
 
             <span
@@ -309,7 +345,7 @@ export default function ExecutiveSummaryCard({
                 lineHeight: 1.7,
               }}
             >
-              {summary.nextBestAction}
+              {nextBestAction}
             </p>
           </div>
         </div>

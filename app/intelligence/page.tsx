@@ -61,6 +61,11 @@ import {
 import {
   sendProductAnalyticsEvent,
 } from "@/lib/analytics/product-analytics.client";
+import {
+  presentIntelligencePrioritySystem,
+  presentIntelligenceRiskLevel,
+  presentIntelligenceStatus,
+} from "@/lib/services/intelligence/intelligence-presentation";
 
 type Assessment = {
   organ_name: string;
@@ -1843,7 +1848,10 @@ const hasReportEvidence = Boolean(
                     focusedReportInsight.extraction_status === "Completed" ? "good" : "moderate"
                   }`}>
                     {text("Extraction", "الاستخراج")}:{" "}
-                    {focusedReportInsight.extraction_status || "Pending"}
+                    {presentIntelligenceStatus(
+                      focusedReportInsight.extraction_status,
+                      uiLanguage
+                    )}
                   </span>
 
                   <span className={`intelligencePill ${
@@ -2152,11 +2160,10 @@ const hasReportEvidence = Boolean(
     </p>
 
     <p className="intelligenceHealthStatusValue">
-      {focusedReportInsight.risk_level ||
-        text(
-          "Not currently specified",
-          "غير محدد حاليًا"
-        )}
+      {presentIntelligenceRiskLevel(
+        focusedReportInsight.risk_level,
+        uiLanguage
+     )}
     </p>
   </div>
 
@@ -2187,11 +2194,11 @@ const hasReportEvidence = Boolean(
     </p>
 
     <p className="intelligenceHealthStatusValue">
-      {generatedResult.executiveSummary?.prioritySystem ||
-        text(
-          "General health",
-          "الصحة العامة"
-        )}
+      {presentIntelligencePrioritySystem(
+        generatedResult.executiveSummary
+          ?.prioritySystem,
+        uiLanguage
+      )}
     </p>
   </div>
 </div>

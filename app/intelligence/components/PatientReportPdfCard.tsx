@@ -5,6 +5,10 @@ import type {
   PatientIntelligencePresentation,
 } from "@/lib/health-intelligence/presentation/patient-intelligence.presenter";
 import { text, useArabicUi } from "./ArabicUiHelper";
+import {
+  presentIntelligenceClinicalText,
+  presentIntelligencePrioritySystem,
+} from "@/lib/services/intelligence/intelligence-presentation";
 
 type ExecutiveSummary = {
   currentScore?: number;
@@ -437,34 +441,106 @@ export default function PatientReportPdfCard({
     };
   }, []);
 
-  const generatedAtText = new Date().toLocaleString(isArabic ? "ar" : undefined);
-  const reportId = createPatientReportId(fileName, uploadedAtText);
-  const labMarkers = extractLabMarkers(
+  const generatedAtText =
+  new Date().toLocaleString(
+    isArabic
+      ? "ar-AE"
+      : undefined
+  );
+
+const reportId =
+  createPatientReportId(
+    fileName,
+    uploadedAtText
+  );
+
+const presentationLanguage =
+  isArabic
+    ? "ar"
+    : "en";
+
+const displayFileName =
+  isArabic &&
+  fileName === "Medical report"
+    ? "تقرير طبي"
+    : fileName;
+
+const labMarkers =
+  extractLabMarkers(
     summary,
     keyFindings,
     riskSignals,
     recommendations
   );
-  const mainFocus = arabicValue(executiveSummary?.prioritySystem);
-  const currentScoreTone = getScoreTone(executiveSummary?.currentScore);
-  const forecastScoreTone = getScoreTone(executiveSummary?.forecastScore);
 
-  const patientWhatThisMeans =
-    patientPresentation?.whatThisMeans || summary;
+const mainFocus =
+  presentIntelligencePrioritySystem(
+    executiveSummary
+      ?.prioritySystem,
+    presentationLanguage
+  );
 
-  const patientMainThingsNoticed =
-    patientPresentation?.mainThingsNoticed || keyFindings;
+const currentScoreTone =
+  getScoreTone(
+    executiveSummary?.currentScore
+  );
 
-  const patientWhatNeedsAttention =
-    patientPresentation?.whatNeedsAttention || riskSignals;
+const forecastScoreTone =
+  getScoreTone(
+    executiveSummary?.forecastScore
+  );
 
-  const patientHelpfulNextSteps =
-    patientPresentation?.helpfulNextSteps ||
-    recommendations ||
-    executiveSummary?.nextBestAction;
+const patientWhatThisMeans =
+  presentIntelligenceClinicalText(
+    patientPresentation
+      ?.whatThisMeans ??
+      summary,
+    presentationLanguage,
+    "تمت مراجعة تقريرك، لكن الملخص العربي غير متاح لهذا السجل.",
+    "Your report was reviewed, but a summary is not currently available."
+  );
 
-  const patientHealthStory =
-    patientPresentation?.healthStory || healthStory;
+const patientMainThingsNoticed =
+  presentIntelligenceClinicalText(
+    patientPresentation
+      ?.mainThingsNoticed ??
+      keyFindings,
+    presentationLanguage,
+    "تمت مراجعة التقرير، لكن العرض العربي للنتائج الرئيسية غير متاح لهذا السجل.",
+    "No major findings are currently available."
+  );
+
+const patientWhatNeedsAttention =
+  presentIntelligenceClinicalText(
+    patientPresentation
+      ?.whatNeedsAttention ??
+      riskSignals,
+    presentationLanguage,
+    "تمت مراجعة إشارات المتابعة، لكن العرض العربي غير متاح لهذا السجل.",
+    "No attention signals are currently available."
+  );
+
+const patientHelpfulNextSteps =
+  presentIntelligenceClinicalText(
+    patientPresentation
+      ?.helpfulNextSteps ??
+      recommendations ??
+      executiveSummary
+        ?.nextBestAction,
+    presentationLanguage,
+    "راجع نتائجك مع مقدم رعاية صحية مرخص واتبع خطة المتابعة المناسبة.",
+    "Review the recommended next steps with your healthcare provider."
+  );
+
+const patientHealthStory =
+  presentIntelligenceClinicalText(
+    patientPresentation
+      ?.healthStory ??
+      healthStory,
+    presentationLanguage,
+    "ستصبح قصة صحتك أوضح مع إضافة المزيد من التقارير والفحوصات والمتابعات.",
+    "Your health story will become clearer as more reliable health data becomes available."
+  );
 
   const patientReportSections = [
     {
@@ -611,20 +687,26 @@ await pdfWorker.get("pdf").then((pdf: any) => {
     pdf.setTextColor(100, 116, 139);
 
     pdf.text(
-      "OrganHeal AI · Patient Health Intelligence Report",
+      isArabic
+      ? "OrganHeal AI · Patient Health Report"
+      : "OrganHeal AI · Patient Health Intelligence Report",
       18,
       pageHeight - 8
     );
 
     pdf.text(
-      `Report ID: ${reportId}`,
+      isArabic
+      ? `ID: ${reportId}`
+      : `Report ID: ${reportId}`,
       pageWidth / 2,
       pageHeight - 8,
       { align: "center" }
     );
 
     pdf.text(
-      `Page ${pageNumber} of ${totalPages}`,
+      isArabic
+      ? `${pageNumber} / ${totalPages}`
+      : `Page ${pageNumber} of ${totalPages}`,
       pageWidth - 18,
       pageHeight - 8,
       { align: "right" }
@@ -1231,7 +1313,7 @@ await pdfWorker.save();
           {isArabic ? "الملف الأصلي" : "Source Report"}
         </span>
         <span className="patientReportReferenceValue">
-          {fileName}
+          {displayFileName}
         </span>
       </div>
     </div>
@@ -1264,7 +1346,7 @@ await pdfWorker.save();
             <span className="ohMetricLabel">
               {isArabic ? "التقرير" : "Report"}
             </span>
-            <span className="ohMetricHint">{fileName}</span>
+            <span className="ohMetricHint">{displayFileName}</span>
           </article>
 
           <article className="ohMetricCard">
@@ -1295,7 +1377,10 @@ await pdfWorker.save();
               {isArabic ? "النتيجة الحالية" : "Current Score"}
             </span>
             <span className={`ohStatusBadge ${currentScoreTone}`}>
-              {executiveSummary?.currentScore ?? "N/A"}
+              {executiveSummary?.currentScore ??
+                (isArabic
+                ? "غير متاح"
+                : "N/A")}
             </span>
           </article>
 
@@ -1304,7 +1389,10 @@ await pdfWorker.save();
               {isArabic ? "الاتجاه المتوقع" : "Forecast Score"}
             </span>
             <span className={`ohStatusBadge ${forecastScoreTone}`}>
-              {executiveSummary?.forecastScore ?? "N/A"}
+              {executiveSummary?.forecastScore ??
+                (isArabic
+                ? "غير متاح"
+                : "N/A")}
             </span>
           </article>
         </div>
