@@ -103,22 +103,62 @@ export default function ProfilePage() {
     });
   }
 
-  function localizeOrganName(value: string | null | undefined) {
-    if (!value) return text("N/A", "غير متاح");
-    if (!isArabic) return value;
+function hasArabicText(value: string) {
+  return /[\u0600-\u06FF]/.test(value);
+}
 
-    const normalized = value.toLowerCase();
+function localizeOrganName(value: string | null | undefined) {
+  if (!value) {
+    return text("N/A", "غير متاح");
+  }
 
-    if (normalized.includes("heart")) return "القلب";
-    if (normalized.includes("liver")) return "الكبد";
-    if (normalized.includes("kidney")) return "الكلى";
-    if (normalized.includes("lung")) return "الرئة";
-    if (normalized.includes("brain")) return "الدماغ";
-    if (normalized.includes("metabolic")) return "الأيض";
-    if (normalized.includes("general")) return "الصحة العامة";
-
+  if (!isArabic) {
     return value;
   }
+
+  if (hasArabicText(value)) {
+    return value;
+  }
+
+  const normalized =
+    value.toLowerCase();
+
+  if (normalized.includes("heart")) return "القلب";
+  if (normalized.includes("liver")) return "الكبد";
+  if (normalized.includes("kidney")) return "الكلى";
+  if (normalized.includes("renal")) return "الكلى";
+  if (normalized.includes("lung")) return "الرئة";
+  if (normalized.includes("respiratory")) return "الرئة";
+  if (normalized.includes("brain")) return "الدماغ";
+  if (normalized.includes("neuro")) return "الدماغ";
+  if (normalized.includes("metabolic")) return "الأيض";
+  if (normalized.includes("general")) return "الصحة العامة";
+
+  return "مجال صحي";
+}
+
+function localizeMood(value: string | null | undefined) {
+  if (!value) {
+    return text("Not recorded", "غير مسجل");
+  }
+
+  if (!isArabic) {
+    return value;
+  }
+
+  if (hasArabicText(value)) {
+    return value;
+  }
+
+  const moodMap: Record<string, string> = {
+    Excellent: "ممتاز",
+    Good: "جيد",
+    Average: "متوسط",
+    Poor: "ضعيف",
+  };
+
+  return moodMap[value] || "غير مسجل";
+}
 
   async function fetchProfileData() {
     setLoading(true);
@@ -154,15 +194,15 @@ export default function ProfilePage() {
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
-    if (organError) {
-      setMessage(
-        currentIsArabic
-          ? "حدث خطأ في قاعدة البيانات: " + organError.message
-          : "Database error: " + organError.message
-      );
-      setLoading(false);
-      return;
-    }
+if (organError) {
+  setMessage(
+    currentIsArabic
+      ? "تعذر تحميل بيانات ملفك الصحي. يرجى المحاولة مرة أخرى."
+      : "We could not load your health profile data. Please try again."
+  );
+  setLoading(false);
+  return;
+}
 
     const { data: checkInData, error: checkInError } = await supabase
       .from("daily_checkins")
@@ -172,15 +212,15 @@ export default function ProfilePage() {
       .limit(1)
       .single();
 
-    if (checkInError && checkInError.code !== "PGRST116") {
-      setMessage(
-        currentIsArabic
-          ? "حدث خطأ في قاعدة البيانات: " + checkInError.message
-          : "Database error: " + checkInError.message
-      );
-      setLoading(false);
-      return;
-    }
+if (checkInError && checkInError.code !== "PGRST116") {
+  setMessage(
+    currentIsArabic
+      ? "تعذر تحميل بيانات التحديث اليومي. يرجى المحاولة مرة أخرى."
+      : "We could not load your daily check-in data. Please try again."
+  );
+  setLoading(false);
+  return;
+}
 
     const { data: uploadedReportsData } = await supabase
       .from("uploaded_lab_files")
@@ -333,7 +373,7 @@ export default function ProfilePage() {
             "أضف آخر حالة للنوم، المزاج، الضغط، الترطيب، الطاقة، والنشاط."
           ),
           href: "/checkin",
-          buttonText: text("Open Check-In", "افتح Check-In"),
+          buttonText: text("Open Check-In", "افتح التحديث اليومي"),
         }
       : {
           label: text("Continue your follow-up plan", "تابع خطة المتابعة الصحية"),
@@ -372,7 +412,7 @@ export default function ProfilePage() {
             <p className="ohLead">
               {text(
                 "OrganHeal is connecting your profile, assessments, reports, check-ins, and saved intelligence.",
-                "يقوم OrganHeal بربط ملفك، التقييمات، التقارير، Check-Ins، والتحليل الصحي المحفوظ."
+                "يقوم OrganHeal بربط ملفك، التقييمات، التقارير، التحديثات اليومية، والتحليل الصحي المحفوظ."
               )}
             </p>
           </section>
@@ -401,7 +441,7 @@ export default function ProfilePage() {
                   <p className="ohLead">
                     {text(
                       "A clear view of your saved health identity, assessments, reports, intelligence, check-ins, and the next best action.",
-                      "نظرة واضحة على هويتك الصحية المحفوظة، التقييمات، التقارير، التحليل الصحي، Check-Ins، والخطوة التالية الأفضل."
+                      "نظرة واضحة على هويتك الصحية المحفوظة، التقييمات، التقارير، التحليل الصحي، التحديثات اليومية، والخطوة التالية الأفضل."
                     )}
                   </p>
 
@@ -514,13 +554,17 @@ export default function ProfilePage() {
               </article>
 
               <article className="ohMetricCard">
-                <span className="ohMetricLabel">Check-In</span>
+                <span className="ohMetricLabel">
+                  {text("Check-In", "التحديث اليومي")}
+                </span>
                 <span className="ohMetricValue">
                   {dailyCheckIn ? dailyCheckIn.wellness_score : "—"}
                 </span>
                 <span className="ohMetricHint">
                   {dailyCheckIn
-                    ? `${dailyCheckIn.mood} · ${formatDate(dailyCheckIn.created_at)}`
+                    ? `${localizeMood(dailyCheckIn.mood)} · ${formatDate(
+                    dailyCheckIn.created_at
+                  )}`
                     : text("Not started yet", "لم يبدأ بعد")}
                 </span>
               </article>
@@ -587,7 +631,7 @@ export default function ProfilePage() {
                 <div className="ohCardHeader">
                   <div>
                     <p className="ohMetricLabel">
-                      {text("Account Summary", "ملخص الحساب")}
+                      {text("      ", "ملخص الحساب")}
                     </p>
                     <h2 className="ohCardTitle">{displayName}</h2>
                   </div>
@@ -597,20 +641,30 @@ export default function ProfilePage() {
                   </span>
                 </div>
 
-                                <div className="ohStack">
-                  <p className="ohCardText">
-                    <strong>{text("Email:", "Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ:")}</strong>{" "}
-                    {email || text("Not available", "ØºÙŠØ± Ù…ØªØ§Ø")}
-                  </p>
+                  <div className="ohStack">
+                    <p className="ohCardText">
+                     <strong>
+                      {text("Email:", "البريد الإلكتروني:")}
+                    </strong>{" "}
+                    {email || text("Not available", "غير متاح")}
+                    </p>
 
-                  <p className="ohCardText">
-                    <strong>{text("Member since:", "Ø¹Ø¶Ùˆ Ù…Ù†Ø°:")}</strong>{" "}
+                    <p className="ohCardText">
+                     <strong>
+                      {text("Member since:", "عضو منذ:")}
+                    </strong>{" "}
                     {memberSinceLabel}
-                  </p>
+                    </p>
 
-                  <p className="ohCardText">
-                    <strong>{text("Latest report:", "Ø¢Ø®Ø± ØªÙ‚Ø±ÙŠØ±:")}</strong>{" "}
-                    {latestReportDate || text("No reports uploaded yet", "Ù„Ø§ ØªÙˆØ¬Ø¯ ØªÙ‚Ø§Ø±ÙŠØ± Ù…Ø±ÙÙˆØ¹Ø© Ø¨Ø¹Ø¯")}
+                    <p className="ohCardText">
+                     <strong>
+                      {text("Latest report:", "آخر تقرير:")}
+                     </strong>{" "}
+                    {latestReportDate ||
+                      text(
+                       "No reports uploaded yet",
+                       "لا توجد تقارير مرفوعة بعد"
+                     )}
                   </p>
 
                   <div className="ohButtonRow" style={{ marginTop: "8px" }}>
@@ -741,11 +795,15 @@ export default function ProfilePage() {
                 <div className="ohTimelineItem">
                   <span className="ohTimelineDot" />
                   <div>
-                    <p className="ohTimelineTitle">Wellness Check-In</p>
+                    <p className="ohTimelineTitle">
+                        {text("Wellness Check-In", "التحديث اليومي للعافية")}
+                    </p>
                     <p className="ohTimelineMeta">
                       {dailyCheckIn
-                        ? `${dailyCheckIn.wellness_score}/100 · ${dailyCheckIn.mood}`
-                        : text("No check-in yet", "لا يوجد Check-In بعد")}
+                        ? `${dailyCheckIn.wellness_score}/100 · ${localizeMood(
+                        dailyCheckIn.mood
+                      )}`
+                        : text("No check-in yet", "لا يوجد تحديث يومي بعد")}
                     </p>
                   </div>
                   <Link href="/checkin" className="secondaryBtn">
@@ -784,7 +842,7 @@ export default function ProfilePage() {
                   <p className="ohCardText">
                     {text(
                       "Your profile connects your account, assessments, reports, intelligence results, check-ins, and follow-up plan.",
-                      "ملفك يربط الحساب، التقييمات، التقارير، نتائج التحليل الصحي، Check-Ins، وخطة المتابعة في مكان واحد."
+                      "ملفك يربط الحساب، التقييمات، التقارير، نتائج التحليل الصحي، التحديثات اليومية، وخطة المتابعة في مكان واحد."
                     )}
                   </p>
                 </div>
@@ -1201,7 +1259,7 @@ export default function ProfilePage() {
         .followUpCleanV4 [class*="Hero"] .ohCard::after,
         .followUpCleanV4 .ohContainer > section:first-of-type aside::after,
         .followUpCleanV4 .ohContainer > section:first-of-type .ohCard::after {
-          content: "Live health signal";
+          content: "${isArabic ? "إشارة صحية مباشرة" : "Live health signal"}";
           display: flex;
           align-items: center;
           justify-content: center;
