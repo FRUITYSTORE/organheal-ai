@@ -14,6 +14,9 @@ import HistoryOverviewCard from "@/app/components/history/HistoryOverviewCard";
 import HistoryTrendCard from "@/app/components/history/HistoryTrendCard";
 import HistoryPriorityCard from "@/app/components/history/HistoryPriorityCard";
 import HistoryTimelineFilters from "@/app/components/history/HistoryTimelineFilters";
+import {
+  presentHistoryTimelineEvent,
+} from "@/lib/services/history/history-presentation";
 
 type Language = "en" | "ar";
 
@@ -558,27 +561,56 @@ const officialTimelineItems: TimelineItem[] =
   officialTimeline?.data.events.map(
     (event) => {
       const typeMap: Record<
-  typeof event.type,
-  TimelineItem["type"]
-> = {
-  assessment: "Assessment",
-  checkin: "Check-In",
-  report: "Report",
-  analysis: "Analysis",
-  trend: "Trend",
-  followup: "Check-In",
-};
+        typeof event.type,
+        TimelineItem["type"]
+      > = {
+        assessment:
+          "Assessment",
+
+        checkin:
+          "Check-In",
+
+        report:
+          "Report",
+
+        analysis:
+          "Analysis",
+
+        trend:
+          "Trend",
+
+        followup:
+          "Check-In",
+      };
+
+      const presentation =
+        presentHistoryTimelineEvent(
+          event,
+          language
+        );
 
       return {
-        id: event.id,
-        type: typeMap[event.type],
-        title: event.organ
-          ? localizeModuleName(event.organ)
-          : event.title,
-        subtitle: event.description,
-        score: event.score,
-        date: event.date,
-        href: event.href || "/history",
+        id:
+          event.id,
+
+        type:
+          typeMap[event.type],
+
+        title:
+          presentation.title,
+
+        subtitle:
+          presentation.subtitle,
+
+        score:
+          event.score,
+
+        date:
+          event.date,
+
+        href:
+          event.href ||
+          "/history",
       };
     }
   ) ?? [];
@@ -588,7 +620,16 @@ const timelineItems = officialTimelineItems;
   const filters = [
     { value: "All", label: text("All", "الكل") },
     { value: "Assessment", label: text("Assessment", "التقييمات") },
-    { value: "Check-In", label: "Check-In" },
+    {
+      value:
+        "Check-In",
+
+      label:
+        text(
+          "Check-In",
+          "التحديث اليومي"
+        ),
+    },
     { value: "Report", label: text("Report", "التقارير") },
     { value: "Analysis", label: text("Analysis", "التحليل الصحي") },
     {
