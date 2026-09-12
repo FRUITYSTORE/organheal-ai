@@ -1,9 +1,26 @@
 "use client";
 
-import { ReactNode, useEffect, useMemo, useState } from "react";
+import {
+  ReactNode,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+
+import {
+  usePathname,
+  useRouter,
+} from "next/navigation";
+
+import {
+  supabase,
+} from "@/lib/supabase";
+
+type Language =
+  | "en"
+  | "ar";
 
 const protectedPrefixes = [
   "/dashboard",
@@ -18,90 +35,350 @@ const protectedPrefixes = [
   "/admin",
 ];
 
-function isProtectedRoute(pathname: string) {
+function isProtectedRoute(
+  pathname: string
+) {
   return protectedPrefixes.some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+    (prefix) =>
+      pathname === prefix ||
+      pathname.startsWith(
+        `${prefix}/`
+      )
   );
 }
 
-export default function RouteAccessGuard({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
-  const router = useRouter();
+function getStoredLanguage(): Language {
+  if (
+    typeof window ===
+    "undefined"
+  ) {
+    return "en";
+  }
 
-  const [isChecking, setIsChecking] = useState(true);
-  const [isAllowed, setIsAllowed] = useState(false);
+  const value =
+    localStorage.getItem(
+      "organheal-language"
+    );
 
-  const protectedRoute = useMemo(() => {
-    return isProtectedRoute(pathname || "/");
-  }, [pathname]);
+  return value === "ar"
+    ? "ar"
+    : "en";
+}
+
+export default function RouteAccessGuard({
+  children,
+}: {
+  children:
+    ReactNode;
+}) {
+  const pathname =
+    usePathname();
+
+  const router =
+    useRouter();
+
+  const [
+    language,
+    setLanguage,
+  ] =
+    useState<Language>("en");
+
+  const [
+    languageReady,
+    setLanguageReady,
+  ] =
+    useState(false);
+
+  const [
+    isChecking,
+    setIsChecking,
+  ] =
+    useState(true);
+
+  const [
+    isAllowed,
+    setIsAllowed,
+  ] =
+    useState(false);
+
+  const isArabic =
+    language === "ar";
+
+  function text(
+    en: string,
+    ar: string
+  ) {
+    return isArabic
+      ? ar
+      : en;
+  }
+
+  const protectedRoute =
+    useMemo(() => {
+      return isProtectedRoute(
+        pathname || "/"
+      );
+    }, [
+      pathname,
+    ]);
 
   useEffect(() => {
-    let isMounted = true;
+    function syncLanguage() {
+      const selectedLanguage =
+        getStoredLanguage();
+
+      setLanguage(
+        selectedLanguage
+      );
+
+      setLanguageReady(
+        true
+      );
+    }
+
+    syncLanguage();
+
+    window.addEventListener(
+      "storage",
+      syncLanguage
+    );
+
+    window.addEventListener(
+      "organheal-language-change",
+      syncLanguage
+    );
+
+    return () => {
+      window.removeEventListener(
+        "storage",
+        syncLanguage
+      );
+
+      window.removeEventListener(
+        "organheal-language-change",
+        syncLanguage
+      );
+    };
+  }, []);
+
+  useEffect(() => {
+    let isMounted =
+      true;
 
     async function checkAccess() {
-      if (!protectedRoute) {
-        if (!isMounted) return;
-        setIsAllowed(true);
-        setIsChecking(false);
+      if (
+        !protectedRoute
+      ) {
+        if (
+          !isMounted
+        ) {
+          return;
+        }
+
+        setIsAllowed(
+          true
+        );
+
+        setIsChecking(
+          false
+        );
+
         return;
       }
 
-      setIsChecking(true);
+      setIsChecking(
+        true
+      );
 
-      const { data, error } = await supabase.auth.getUser();
+      const {
+        data,
+        error,
+      } =
+        await supabase.auth
+          .getUser();
 
-      if (!isMounted) return;
-
-      if (error || !data.user) {
-        setIsAllowed(false);
-        setIsChecking(false);
-
-        const nextPath = pathname ? `?next=${encodeURIComponent(pathname)}` : "";
-        router.replace(`/login${nextPath}`);
+      if (
+        !isMounted
+      ) {
         return;
       }
 
-      setIsAllowed(true);
-      setIsChecking(false);
+      if (
+        error ||
+        !data.user
+      ) {
+        setIsAllowed(
+          false
+        );
+
+        setIsChecking(
+          false
+        );
+
+        const nextPath =
+          pathname
+            ? `?next=${encodeURIComponent(
+                pathname
+              )}`
+            : "";
+
+        router.replace(
+          `/login${nextPath}`
+        );
+
+        return;
+      }
+
+      setIsAllowed(
+        true
+      );
+
+      setIsChecking(
+        false
+      );
     }
 
     checkAccess();
 
     const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!protectedRoute) return;
+      data: {
+        subscription,
+      },
+    } =
+      supabase.auth
+        .onAuthStateChange(
+          (
+            _event,
+            session
+          ) => {
+            if (
+              !protectedRoute
+            ) {
+              return;
+            }
 
-      if (!session?.user) {
-        setIsAllowed(false);
-        router.replace("/login");
-        return;
-      }
+            if (
+              !session?.user
+            ) {
+              setIsAllowed(
+                false
+              );
 
-      setIsAllowed(true);
-    });
+              router.replace(
+                "/login"
+              );
+
+              return;
+            }
+
+            setIsAllowed(
+              true
+            );
+          }
+        );
 
     return () => {
-      isMounted = false;
+      isMounted =
+        false;
+
       subscription.unsubscribe();
     };
-  }, [pathname, protectedRoute, router]);
+  }, [
+    pathname,
+    protectedRoute,
+    router,
+  ]);
 
-  if (!protectedRoute) {
-    return <>{children}</>;
+  if (
+    !protectedRoute
+  ) {
+    return (
+      <>
+        {children}
+      </>
+    );
   }
 
-  if (isChecking) {
+  if (
+    !languageReady
+  ) {
     return (
-      <main className="ohPageShell" style={{ minHeight: "70vh" }}>
-        <div className="ohContainer" style={{ padding: "64px 0" }}>
-          <section className="ohCard" style={{ maxWidth: 760, margin: "0 auto", textAlign: "center" }}>
-            <p className="ohMetricLabel">Protected workspace</p>
-            <h1 className="ohCardTitle" style={{ fontSize: "2rem" }}>
-              Checking your access...
+      <main
+        className="ohPageShell"
+        style={{
+          minHeight:
+            "70vh",
+        }}
+      />
+    );
+  }
+
+  if (
+    isChecking
+  ) {
+    return (
+      <main
+        className="ohPageShell"
+        dir={
+          isArabic
+            ? "rtl"
+            : "ltr"
+        }
+        lang={
+          isArabic
+            ? "ar"
+            : "en"
+        }
+        style={{
+          minHeight:
+            "70vh",
+        }}
+      >
+        <div
+          className="ohContainer"
+          style={{
+            padding:
+              "64px 0",
+          }}
+        >
+          <section
+            className="ohCard"
+            style={{
+              maxWidth:
+                760,
+
+              margin:
+                "0 auto",
+
+              textAlign:
+                "center",
+            }}
+          >
+            <p className="ohMetricLabel">
+              {text(
+                "Protected workspace",
+                "مساحة صحية محمية"
+              )}
+            </p>
+
+            <h1
+              className="ohCardTitle"
+              style={{
+                fontSize:
+                  "2rem",
+              }}
+            >
+              {text(
+                "Checking your access...",
+                "جارٍ التحقق من صلاحية الوصول..."
+              )}
             </h1>
+
             <p className="ohCardText">
-              Please wait while OrganHeal confirms your signed-in session.
+              {text(
+                "Please wait while OrganHeal confirms your signed-in session.",
+                "يرجى الانتظار بينما يتحقق OrganHeal من جلسة تسجيل الدخول."
+              )}
             </p>
           </section>
         </div>
@@ -109,26 +386,102 @@ export default function RouteAccessGuard({ children }: { children: ReactNode }) 
     );
   }
 
-  if (!isAllowed) {
+  if (
+    !isAllowed
+  ) {
     return (
-      <main className="ohPageShell" style={{ minHeight: "70vh" }}>
-        <div className="ohContainer" style={{ padding: "64px 0" }}>
-          <section className="ohCard" style={{ maxWidth: 760, margin: "0 auto", textAlign: "center" }}>
-            <p className="ohMetricLabel">Private health workspace</p>
-            <h1 className="ohCardTitle" style={{ fontSize: "2rem" }}>
-              Sign in to continue
-            </h1>
-            <p className="ohCardText">
-              This area belongs to your private OrganHeal workspace. Sign in or create an account to access it.
+      <main
+        className="ohPageShell"
+        dir={
+          isArabic
+            ? "rtl"
+            : "ltr"
+        }
+        lang={
+          isArabic
+            ? "ar"
+            : "en"
+        }
+        style={{
+          minHeight:
+            "70vh",
+        }}
+      >
+        <div
+          className="ohContainer"
+          style={{
+            padding:
+              "64px 0",
+          }}
+        >
+          <section
+            className="ohCard"
+            style={{
+              maxWidth:
+                760,
+
+              margin:
+                "0 auto",
+
+              textAlign:
+                "center",
+            }}
+          >
+            <p className="ohMetricLabel">
+              {text(
+                "Private health workspace",
+                "مساحة صحية خاصة"
+              )}
             </p>
 
-            <div className="ohButtonRow" style={{ justifyContent: "center", marginTop: "22px" }}>
-              <Link href="/login" className="primaryBtn">
-                Sign In
+            <h1
+              className="ohCardTitle"
+              style={{
+                fontSize:
+                  "2rem",
+              }}
+            >
+              {text(
+                "Sign in to continue",
+                "سجّل الدخول للمتابعة"
+              )}
+            </h1>
+
+            <p className="ohCardText">
+              {text(
+                "This area belongs to your private OrganHeal workspace. Sign in or create an account to access it.",
+                "هذه المنطقة جزء من مساحة OrganHeal الصحية الخاصة بك. سجّل الدخول أو أنشئ حسابًا للوصول إليها."
+              )}
+            </p>
+
+            <div
+              className="ohButtonRow"
+              style={{
+                justifyContent:
+                  "center",
+
+                marginTop:
+                  "22px",
+              }}
+            >
+              <Link
+                href="/login"
+                className="primaryBtn"
+              >
+                {text(
+                  "Sign In",
+                  "تسجيل الدخول"
+                )}
               </Link>
 
-              <Link href="/signup" className="secondaryBtn">
-                Create Account
+              <Link
+                href="/signup"
+                className="secondaryBtn"
+              >
+                {text(
+                  "Create Account",
+                  "إنشاء حساب"
+                )}
               </Link>
             </div>
           </section>
@@ -137,7 +490,9 @@ export default function RouteAccessGuard({ children }: { children: ReactNode }) 
     );
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+    </>
+  );
 }
-
-
