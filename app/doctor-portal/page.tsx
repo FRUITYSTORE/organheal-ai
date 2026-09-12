@@ -22,6 +22,9 @@ import type {
 import {
   healthIntelligencePresenter,
 } from "@/lib/health-intelligence/presentation/health-intelligence.presenter";
+import {
+  presentDoctorPortalClinicalText,
+} from "@/lib/services/doctor-portal/doctor-portal-presentation";
 
 type Language = "en" | "ar";
 
@@ -402,25 +405,32 @@ const doctorSummary =
     generatedInsights.find((item) => item.doctor_brief) || null;
 
   const latestReportSummary =
-    generatedInsights.find((item) => item.summary)?.summary ||
-    text(
-      "No generated report summary is available yet.",
-      "لا يوجد ملخص تقرير مولّد متاح بعد."
-    );
+  presentDoctorPortalClinicalText(
+    generatedInsights.find(
+      (item) =>
+        item.summary
+    )?.summary,
+    language,
+    "report-summary"
+  );
 
-  const latestDoctorBrief =
-    latestDoctorBriefInsight?.doctor_brief ||
-    text(
-      "No saved report-specific doctor brief is available yet. Generate intelligence from the reports page to prepare one.",
-      "لا يوجد ملخص طبي محفوظ خاص بالتقرير بعد. ولّد التحليل الصحي من صفحة التقارير لتحضير واحد."
-    );
+const latestDoctorBrief =
+  presentDoctorPortalClinicalText(
+    latestDoctorBriefInsight
+      ?.doctor_brief,
+    language,
+    "doctor-brief"
+  );
 
-  const latestRecommendations =
-    generatedInsights.find((item) => item.recommendations)?.recommendations ||
-    text(
-      "No saved report-specific recommendations are available yet.",
-      "لا توجد توصيات محفوظة خاصة بالتقرير بعد."
-    );
+const latestRecommendations =
+  presentDoctorPortalClinicalText(
+    generatedInsights.find(
+      (item) =>
+        item.recommendations
+    )?.recommendations,
+    language,
+    "recommendations"
+  );
 const hasClinicalBaseline =
   assessments.length > 0 ||
   Boolean(dailyCheckIn) ||
@@ -569,15 +579,15 @@ const officialPriorityOrgan =
       : null;
 
   const doctorBriefText =
-    doctorPresentation?.brief ??
+  doctorPresentation?.brief ??
+  presentDoctorPortalClinicalText(
     healthIntelligence
       ?.doctorBrief
       .data
-      .brief ??
-    text(
-      "Not enough data is available to prepare the doctor brief.",
-      "لا تتوفر بيانات كافية لإعداد ملخص الطبيب."
-    );
+      .brief,
+    language,
+    "doctor-brief"
+  );
   const recommendedAction =
     doctorPresentation &&
     doctorSummaryV2
@@ -1165,8 +1175,11 @@ healthIntelligence ? (
                   {text("Shared Report Summary", "ملخص التقرير المشترك")}
                 </p>
                 <p className="ohCardText">
-                  {sharedReport.report_summary ||
-                    text("No summary available.", "لا يوجد ملخص متاح.")}
+                  {presentDoctorPortalClinicalText(
+                    sharedReport.report_summary,
+                    language,
+                    "report-summary"
+                  )}
                 </p>
               </article>
 
@@ -1175,8 +1188,11 @@ healthIntelligence ? (
                   {text("Shared Recommendations", "التوصيات المشتركة")}
                 </p>
                 <p className="ohCardText">
-                  {sharedReport.recommendations ||
-                    text("No recommendations available.", "لا توجد توصيات متاحة.")}
+                  {presentDoctorPortalClinicalText(
+                    sharedReport.recommendations,
+                    language,
+                    "recommendations"
+                  )}
                 </p>
               </article>
             </div>
