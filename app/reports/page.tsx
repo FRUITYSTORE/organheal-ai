@@ -9,6 +9,13 @@ import FeaturedReportCard from "@/app/components/reports/FeaturedReportCard";
 import CompactReportRow from "@/app/components/reports/CompactReportRow";
 import StatusBadge from "@/app/components/ui/StatusBadge";
 import { getReportsLibrary } from "@/lib/services/reports/reports.service";
+import {
+  formatReportDate,
+  presentReportRiskLevel,
+  presentReportStatus,
+  presentReportSummary,
+  presentReportType,
+} from "@/lib/services/reports/reports-presentation";
 type Language = "en" | "ar";
 
 type UploadedReport = {
@@ -85,26 +92,51 @@ function getReportTypeLabel(type?: string | null) {
   return type || "Medical Report";
 }
 
-function getStatusTone(status: string) {
-  const clean = status.toLowerCase();
+function getStatusTone(
+  status: string
+) {
+  const clean =
+    status
+      .trim()
+      .toLowerCase();
+
+  if (
+    clean.includes("failed") ||
+    clean.includes("error") ||
+    clean.includes("high") ||
+    clean.includes("critical") ||
+    clean.includes("تعذر") ||
+    clean.includes("مرتفع") ||
+    clean.includes("حرج")
+  ) {
+    return "risk";
+  }
 
   if (
     clean.includes("generated") ||
     clean.includes("completed") ||
     clean.includes("saved") ||
-    clean.includes("ready")
+    clean.includes("ready") ||
+    clean.includes("low") ||
+    clean.includes("stable") ||
+    clean.includes("مكتمل") ||
+    clean.includes("محفوظ") ||
+    clean.includes("جاهز") ||
+    clean.includes("منخفض") ||
+    clean.includes("مستقر")
   ) {
     return "good";
-  }
-
-  if (clean.includes("failed")) {
-    return "risk";
   }
 
   if (
     clean.includes("processing") ||
     clean.includes("pending") ||
-    clean.includes("next")
+    clean.includes("moderate") ||
+    clean.includes("medium") ||
+    clean.includes("review") ||
+    clean.includes("قيد") ||
+    clean.includes("متوسط") ||
+    clean.includes("مراجعة")
   ) {
     return "moderate";
   }
@@ -175,9 +207,20 @@ try {
   const reportsLibrary = await getReportsLibrary(userId);
   setReports(reportsLibrary as ReportCard[]);
 } catch (error) {
-  setMessage(
-    error instanceof Error ? error.message : "Failed to load reports."
-  );
+  const currentLanguage =
+  (
+    localStorage.getItem(
+      "organheal-language"
+    ) as Language | null
+  ) ?? "en";
+
+setMessage(
+  currentLanguage === "ar"
+    ? "تعذر تحميل التقارير حاليًا. يرجى المحاولة مرة أخرى."
+    : error instanceof Error
+      ? error.message
+      : "Failed to load reports."
+);
   setLoading(false);
   return;
 }
@@ -211,6 +254,12 @@ try {
     const cleanSearch = searchTerm.trim().toLowerCase();
 
     return reports.filter((report) => {
+      const localizedReportType =
+        presentReportType(
+        report.reportType,
+        language
+      )
+    .toLowerCase();
       const matchesSearch =
         !cleanSearch ||
         report.fileName.toLowerCase().includes(cleanSearch) ||
@@ -229,13 +278,30 @@ try {
 
       return true;
     });
-  }, [reports, searchTerm, filter]);
+  }, [
+      reports,
+      searchTerm,
+      filter,
+      language,
+  ]);
 
   const savedCount = reports.filter((item) => item.hasSavedAnalysis).length;
   const needAnalysisCount = reports.filter((item) => !item.hasSavedAnalysis).length;
-  const extractionCompletedCount = reports.filter((item) =>
-    item.extractionStatus.toLowerCase().includes("completed")
-  ).length;
+  const extractionCompletedCount =
+  reports.filter((item) => {
+    const status =
+      item.extractionStatus
+        .toLowerCase();
+
+    return (
+      status.includes(
+        "completed"
+      ) ||
+      status.includes(
+        "generated"
+      )
+    );
+  }).length;
 
   const featuredReport =
     filteredReports.find((item) => !item.hasSavedAnalysis) ||
@@ -903,13 +969,27 @@ const visibleCompactReports = showAllReports
     fileName={featuredReport.fileName}
     hasSavedAnalysis={featuredReport.hasSavedAnalysis}
     uploadedAt={featuredReport.uploadedAt}
-    extractionStatus={featuredReport.extractionStatus}
-    riskLevel={featuredReport.riskLevel}
-    summary={featuredReport.summary}
+    extractionStatus={presentReportStatus(
+      featuredReport.extractionStatus,
+      language
+  )}
+    riskLevel={presentReportRiskLevel(
+      featuredReport.riskLevel,
+      language
+  )}
+    summary={presentReportSummary(
+      featuredReport.summary,
+      language
+  )}
     filePath={featuredReport.filePath}
     analysisHref={getAnalysisHref(featuredReport)}
     statusTone={getStatusTone}
-    formatDate={formatDate}
+    formatDate={(value) =>
+      formatReportDate(
+        value,
+        language
+    )
+  }
     onOpenFile={() => openMedicalReport(featuredReport.filePath)}
     labels={{
       latestAnalysisFocus: text("Latest analysis focus", "آخر تحليل للمتابعة"),
@@ -1003,14 +1083,22 @@ const visibleCompactReports = showAllReports
                           key={report.reportId}
                           reportId={report.reportId}
                           fileName={report.fileName}
-                          reportType={report.reportType}
+                          reportType={presentReportType(
+                            report.reportType,
+                            language
+                          )}
                           uploadedAt={report.uploadedAt}
                           extractionStatus={report.extractionStatus}
                           hasSavedAnalysis={isSaved}
                           filePath={report.filePath}
                           analysisHref={getAnalysisHref(report)}
                           statusTone={getStatusTone}
-                          formatDate={formatDate}
+                          formatDate={(value) =>
+                            formatReportDate(
+                              value,
+                              language
+                            )
+                          }
                           onOpenFile={() => openMedicalReport(report.filePath)}
                           labels={{
                             savedAnalysis: text("Saved analysis", "تحليل محفوظ"),
