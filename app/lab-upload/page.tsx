@@ -129,6 +129,28 @@ function isAllowedFile(
     return `${file.name}-${file.size}-${file.lastModified}`;
   }
 
+  function getUnsupportedFileMessage(
+  file: File
+) {
+  if (isArabic) {
+    return `${file.name} - صيغة الملف غير مدعومة`;
+  }
+
+  return `${file.name} - ${getReportFileRejectionReason({
+    fileName: file.name,
+    mimeType: file.type,
+  })}`;
+}
+
+function getOversizedFileMessage(
+  file: File
+) {
+  return text(
+    `${file.name} - larger than ${MAX_FILE_SIZE_MB} MB`,
+    `${file.name} - حجم الملف أكبر من ${MAX_FILE_SIZE_MB} MB`
+  );
+}
+
   function addFiles(files: File[]) {
     const validFiles: File[] = [];
     const rejectedFiles: string[] = [];
@@ -138,19 +160,19 @@ function isAllowedFile(
 
       if (!isAllowedFile(file)) {
         rejectedFiles.push(
-  `${file.name} - ${getReportFileRejectionReason({
-    fileName:
-      file.name,
-
-    mimeType:
-      file.type,
-  })}`
-);
+          getUnsupportedFileMessage(
+        file
+       )
+      );
         continue;
       }
 
       if (sizeMb > MAX_FILE_SIZE_MB) {
-        rejectedFiles.push(`${file.name} - larger than ${MAX_FILE_SIZE_MB} MB`);
+        rejectedFiles.push(
+          getOversizedFileMessage(
+        file
+       )
+     );
         continue;
       }
 
@@ -283,74 +305,75 @@ function isAllowedFile(
 
       if (uploadError || !uploadData?.path) {
         setMessage(
-          uploadError
-            ? `Upload error: ${uploadError.message}`
-            : text(
-                "Upload failed because no saved file path was returned.",
-                "فشل الرفع لأن مسار الملف المحفوظ لم يتم إرجاعه."
-              )
+          text(
+            "The report could not be uploaded. Please try again.",
+            "تعذر رفع التقرير. يرجى المحاولة مرة أخرى."
+          )
         );
         setUploading(false);
         setUploadStep("error");
         return;
       }
 
-      const savedFilePath = uploadData.path;
+const savedFilePath = uploadData.path;
 
-      const { data: signedUrlData, error: signedUrlError } =
-        await supabase.storage
-          .from("lab-reports")
-          .createSignedUrl(savedFilePath, 60 * 60);
+const { data: signedUrlData, error: signedUrlError } =
+  await supabase.storage
+    .from("lab-reports")
+    .createSignedUrl(savedFilePath, 60 * 60);
 
-      if (signedUrlError || !signedUrlData?.signedUrl) {
-        await supabase.storage.from("lab-reports").remove([savedFilePath]);
+if (signedUrlError || !signedUrlData?.signedUrl) {
+  await supabase.storage
+    .from("lab-reports")
+    .remove([savedFilePath]);
 
-        setMessage(
-          signedUrlError
-            ? `Signed URL error: ${signedUrlError.message}`
-            : text(
-                "The uploaded report could not be prepared for secure access.",
-                "تعذر تجهيز التقرير المرفوع للوصول الآمن."
-              )
-        );
-        setUploading(false);
-        setUploadStep("error");
-        return;
-      }
+  setMessage(
+    text(
+      "The uploaded report could not be prepared for secure access. Please try again.",
+      "تعذر تجهيز التقرير المرفوع للوصول الآمن. يرجى المحاولة مرة أخرى."
+    )
+  );
 
-      const { data: insertedFile, error: databaseError } = await supabase
-        .from("uploaded_lab_files")
-        .insert({
-          user_id: user.id,
-          file_name: file.name,
-          file_path: savedFilePath,
-          file_url: signedUrlData.signedUrl,
-          report_type: reportType,
-          analysis_status: "uploaded",
-          ai_summary:
-            "Medical report uploaded successfully. Report intelligence can be generated from the Reports Library.",
-          extraction_status: "Pending",
-          extracted_text: null,
-          extracted_at: null,
-        })
-        .select("id")
-        .single();
+  setUploading(false);
+  setUploadStep("error");
+  return;
+}
 
-      if (databaseError || !insertedFile) {
-        await supabase.storage.from("lab-reports").remove([savedFilePath]);
+const { data: insertedFile, error: databaseError } =
+  await supabase
+    .from("uploaded_lab_files")
+    .insert({
+      user_id: user.id,
+      file_name: file.name,
+      file_path: savedFilePath,
+      file_url: signedUrlData.signedUrl,
+      report_type: reportType,
+      analysis_status: "uploaded",
+      ai_summary:
+        "Medical report uploaded successfully. Report intelligence can be generated from the Reports Library.",
+      extraction_status: "Pending",
+      extracted_text: null,
+      extracted_at: null,
+    })
+    .select("id")
+    .single();
 
-        setMessage(
-          databaseError
-            ? `Database error: ${databaseError.message}`
-            : text(
-                "The uploaded report could not be saved. Please try again.",
-                "تعذر حفظ التقرير المرفوع. يرجى المحاولة مرة أخرى."
-              )
-        );
-        setUploading(false);
-        setUploadStep("error");
-        return;
-      }
+if (databaseError || !insertedFile) {
+  await supabase.storage
+    .from("lab-reports")
+    .remove([savedFilePath]);
+
+  setMessage(
+    text(
+      "The uploaded report could not be saved. Please try again.",
+      "تعذر حفظ التقرير المرفوع. يرجى المحاولة مرة أخرى."
+    )
+  );
+
+  setUploading(false);
+  setUploadStep("error");
+  return;
+}
 
       const { error: insightError } = await supabase
         .from("health_insights")
@@ -416,7 +439,7 @@ function isAllowedFile(
     setMessage(
   text(
     `${uploadedNames.length} report(s) saved successfully and ready for the next step.`,
-    `تم حفظ ${uploadedNames.length} تقرير بنجاح وأصبحت جاهزة للخطوة التالية.`
+    `تم حفظ ${uploadedNames.length} من التقارير بنجاح، وهي جاهزة للخطوة التالية.`
   )
 );
   }
