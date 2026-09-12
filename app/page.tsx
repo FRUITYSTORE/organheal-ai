@@ -1841,6 +1841,7 @@ if (
                           </div>
 
             <aside
+              id="ask-organheal"
               className="homeAICommandCard"
               aria-label={text(
                 "Ask OrganHeal AI",

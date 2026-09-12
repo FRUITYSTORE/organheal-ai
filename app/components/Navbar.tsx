@@ -1,12 +1,20 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+
 import { supabase } from "../../lib/supabase";
 import LanguageToggle from "./LanguageToggle";
 import NotificationBell from "./notifications/NotificationBell";
 
-type Language = "en" | "ar";
+type Language =
+  | "en"
+  | "ar";
 
 function OrganHealLogo() {
   return (
@@ -18,10 +26,27 @@ function OrganHealLogo() {
       aria-label="OrganHeal logo"
     >
       <defs>
-        <linearGradient id="ohGradient" x1="90" y1="380" x2="420" y2="110">
-          <stop offset="0%" stopColor="#22C55E" />
-          <stop offset="50%" stopColor="#14B8A6" />
-          <stop offset="100%" stopColor="#3B82F6" />
+        <linearGradient
+          id="ohGradient"
+          x1="90"
+          y1="380"
+          x2="420"
+          y2="110"
+        >
+          <stop
+            offset="0%"
+            stopColor="#22C55E"
+          />
+
+          <stop
+            offset="50%"
+            stopColor="#14B8A6"
+          />
+
+          <stop
+            offset="100%"
+            stopColor="#3B82F6"
+          />
         </linearGradient>
       </defs>
 
@@ -43,9 +68,26 @@ function OrganHealLogo() {
         strokeLinejoin="round"
       />
 
-      <circle cx="393" cy="154" r="18" fill="#3B82F6" />
-      <circle cx="126" cy="338" r="18" fill="#22C55E" />
-      <circle cx="394" cy="354" r="18" fill="#3B82F6" />
+      <circle
+        cx="393"
+        cy="154"
+        r="18"
+        fill="#3B82F6"
+      />
+
+      <circle
+        cx="126"
+        cy="338"
+        r="18"
+        fill="#22C55E"
+      />
+
+      <circle
+        cx="394"
+        cy="354"
+        r="18"
+        fill="#3B82F6"
+      />
 
       <text
         x="256"
@@ -63,182 +105,546 @@ function OrganHealLogo() {
 }
 
 export default function Navbar() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [language, setLanguage] = useState<Language>("en");
-  const [isMoreOpen, setIsMoreOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const moreMenuRef = useRef<HTMLDivElement | null>(null);
+  const pathname =
+    usePathname();
 
-  const isArabic = language === "ar";
+  const [
+    isLoggedIn,
+    setIsLoggedIn,
+  ] =
+    useState(false);
+
+  const [
+    language,
+    setLanguage,
+  ] =
+    useState<Language>(
+      "en"
+    );
+
+  const [
+    isMoreOpen,
+    setIsMoreOpen,
+  ] =
+    useState(false);
+
+  const [
+    isMobileMenuOpen,
+    setIsMobileMenuOpen,
+  ] =
+    useState(false);
+
+  const moreMenuRef =
+    useRef<HTMLDivElement | null>(
+      null
+    );
+
+  const isArabic =
+    language ===
+    "ar";
+
+  const text = (
+    en: string,
+    ar: string
+  ) =>
+    isArabic
+      ? ar
+      : en;
 
   const labels = {
-    home: isArabic ? "الرئيسية" : "Home",
-    features: isArabic ? "الميزات" : "Features",
-    education: isArabic ? "مركز التعلم" : "Learning Hub",
-    about: isArabic ? "عن المنصة" : "About",
-    dashboard: isArabic ? "لوحة التحكم" : "Dashboard",
-    uploadReport: isArabic ? "رفع تقرير" : "Upload Report",
-    reports: isArabic ? "التقارير" : "Reports",
-    healthPlan: isArabic ? "الخطة الصحية" : "Health Plan",
-    history: isArabic ? "التاريخ الصحي" : "History",
-    doctorPortal: isArabic ? "بوابة الطبيب" : "Doctor Portal",
-    profile: isArabic ? "الملف الشخصي" : "Profile",
-    communicationSettings:
-  isArabic
-    ? "إعدادات التواصل"
-    : "Communication Settings",
-    more: isArabic ? "المزيد" : "More",
-    createAccount: isArabic ? "إنشاء حساب" : "Create Account",
-    signIn: isArabic ? "تسجيل الدخول" : "Sign In",
-    signOut: isArabic ? "تسجيل الخروج" : "Sign Out",
-    tagline: isArabic ? "ذكاء صحي مدعوم بالذكاء الاصطناعي" : "AI HEALTH INTELLIGENCE",
+    home:
+      text(
+        "Home",
+        "الرئيسية"
+      ),
+
+    ask:
+      text(
+        "Ask AI",
+        "اسأل AI"
+      ),
+
+    myHealth:
+      text(
+        "My Health",
+        "صحتي"
+      ),
+
+    reports:
+      text(
+        "Reports",
+        "تقاريري"
+      ),
+
+    learn:
+      text(
+        "Learn",
+        "تعلّم"
+      ),
+
+    howItWorks:
+      text(
+        "How It Works",
+        "كيف يعمل"
+      ),
+
+    about:
+      text(
+        "About",
+        "عن OrganHeal"
+      ),
+
+    more:
+      text(
+        "More",
+        "المزيد"
+      ),
+
+    healthPlan:
+      text(
+        "Health Plan",
+        "الخطة الصحية"
+      ),
+
+    history:
+      text(
+        "Health History",
+        "السجل الصحي"
+      ),
+
+    doctorPrep:
+      text(
+        "Doctor Preparation",
+        "التحضير للطبيب"
+      ),
+
+    profile:
+      text(
+        "Profile",
+        "الملف الشخصي"
+      ),
+
+    communications:
+      text(
+        "Communication Settings",
+        "إعدادات التواصل"
+      ),
+
+    signIn:
+      text(
+        "Sign In",
+        "تسجيل الدخول"
+      ),
+
+    startFree:
+      text(
+        "Start Free",
+        "ابدأ مجانًا"
+      ),
+
+    signOut:
+      text(
+        "Sign Out",
+        "تسجيل الخروج"
+      ),
+
+    tagline:
+      text(
+        "AI HEALTH INTELLIGENCE",
+        "ذكاء صحي مدعوم بالذكاء الاصطناعي"
+      ),
+
+    openMenu:
+      text(
+        "Open navigation menu",
+        "فتح قائمة التنقل"
+      ),
   };
 
-  useEffect(() => {
-    checkUser();
+  useEffect(
+    () => {
+      void checkUser();
 
-    const savedLanguage =
-      (localStorage.getItem("organheal-language") as Language | null) || "en";
+      const savedLanguage =
+        (
+          localStorage.getItem(
+            "organheal-language"
+          ) as
+            | Language
+            | null
+        ) ??
+        "en";
 
-    setLanguage(savedLanguage);
-    document.documentElement.lang = savedLanguage;
-    document.documentElement.dir = savedLanguage === "ar" ? "rtl" : "ltr";
+      setLanguage(
+        savedLanguage
+      );
 
-    function syncLanguage() {
-      const currentLanguage =
-        (localStorage.getItem("organheal-language") as Language | null) || "en";
+      document.documentElement.lang =
+        savedLanguage;
 
-      setLanguage(currentLanguage);
-      document.documentElement.lang = currentLanguage;
-      document.documentElement.dir = currentLanguage === "ar" ? "rtl" : "ltr";
-    }
+      document.documentElement.dir =
+        savedLanguage ===
+        "ar"
+          ? "rtl"
+          : "ltr";
 
-    window.addEventListener("storage", syncLanguage);
-    window.addEventListener("organheal-language-change", syncLanguage);
+      function syncLanguage() {
+        const currentLanguage =
+          (
+            localStorage.getItem(
+              "organheal-language"
+            ) as
+              | Language
+              | null
+          ) ??
+          "en";
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsLoggedIn(Boolean(session?.user));
-    });
+        setLanguage(
+          currentLanguage
+        );
 
-    return () => {
-      subscription.unsubscribe();
-      window.removeEventListener("storage", syncLanguage);
-      window.removeEventListener("organheal-language-change", syncLanguage);
-    };
-  }, []);
+        document.documentElement.lang =
+          currentLanguage;
 
-  useEffect(() => {
-    function closeMoreOnOutsideClick(event: MouseEvent) {
-      if (!moreMenuRef.current) return;
-
-      if (!moreMenuRef.current.contains(event.target as Node)) {
-        setIsMoreOpen(false);
+        document.documentElement.dir =
+          currentLanguage ===
+          "ar"
+            ? "rtl"
+            : "ltr";
       }
-    }
 
-    function closeMoreOnEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setIsMoreOpen(false);
+      window.addEventListener(
+        "storage",
+        syncLanguage
+      );
+
+      window.addEventListener(
+        "organheal-language-change",
+        syncLanguage
+      );
+
+      const {
+        data: {
+          subscription,
+        },
+      } =
+        supabase.auth
+          .onAuthStateChange(
+            (
+              _event,
+              session
+            ) => {
+              setIsLoggedIn(
+                Boolean(
+                  session
+                    ?.user
+                )
+              );
+            }
+          );
+
+      return () => {
+        subscription
+          .unsubscribe();
+
+        window.removeEventListener(
+          "storage",
+          syncLanguage
+        );
+
+        window.removeEventListener(
+          "organheal-language-change",
+          syncLanguage
+        );
+      };
+    },
+    []
+  );
+
+  useEffect(
+    () => {
+      function closeOnOutsideClick(
+        event: MouseEvent
+      ) {
+        if (
+          moreMenuRef
+            .current &&
+          !moreMenuRef
+            .current
+            .contains(
+              event.target as Node
+            )
+        ) {
+          setIsMoreOpen(
+            false
+          );
+        }
       }
-    }
 
-    document.addEventListener("mousedown", closeMoreOnOutsideClick);
-    document.addEventListener("keydown", closeMoreOnEscape);
+      function closeOnEscape(
+        event: KeyboardEvent
+      ) {
+        if (
+          event.key ===
+          "Escape"
+        ) {
+          setIsMoreOpen(
+            false
+          );
 
-    return () => {
-      document.removeEventListener("mousedown", closeMoreOnOutsideClick);
-      document.removeEventListener("keydown", closeMoreOnEscape);
-    };
-  }, []);
+          setIsMobileMenuOpen(
+            false
+          );
+        }
+      }
+
+      document.addEventListener(
+        "mousedown",
+        closeOnOutsideClick
+      );
+
+      document.addEventListener(
+        "keydown",
+        closeOnEscape
+      );
+
+      return () => {
+        document.removeEventListener(
+          "mousedown",
+          closeOnOutsideClick
+        );
+
+        document.removeEventListener(
+          "keydown",
+          closeOnEscape
+        );
+      };
+    },
+    []
+  );
+
+  useEffect(
+    () => {
+      setIsMobileMenuOpen(
+        false
+      );
+
+      setIsMoreOpen(
+        false
+      );
+    },
+    [
+      pathname,
+    ]
+  );
 
   async function checkUser() {
-    const { data } = await supabase.auth.getUser();
-    setIsLoggedIn(Boolean(data.user));
+    const {
+      data,
+    } =
+      await supabase.auth
+        .getUser();
+
+    setIsLoggedIn(
+      Boolean(
+        data.user
+      )
+    );
   }
 
   async function signOut() {
-    await supabase.auth.signOut();
-    setIsLoggedIn(false);
-    setIsMoreOpen(false);
-    window.location.href = "/";
+    await supabase.auth
+      .signOut();
+
+    setIsLoggedIn(
+      false
+    );
+
+    setIsMoreOpen(
+      false
+    );
+
+    setIsMobileMenuOpen(
+      false
+    );
+
+    window.location.href =
+      "/";
   }
 
-  function closeMore() {
-    setIsMoreOpen(false);
+  function closeMenus() {
+    setIsMoreOpen(
+      false
+    );
+
+    setIsMobileMenuOpen(
+      false
+    );
+  }
+
+  function routeClass(
+    href: string
+  ) {
+    if (
+      href ===
+      "/"
+    ) {
+      return pathname ===
+        "/"
+        ? "navRouteActive"
+        : "";
+    }
+
+    return pathname
+      ?.startsWith(
+        href
+      )
+      ? "navRouteActive"
+      : "";
   }
 
   return (
-    <nav className="navbar" dir={isArabic ? "rtl" : "ltr"}>
+    <nav
+      className="navbar organHealNavbar"
+      dir={
+        isArabic
+          ? "rtl"
+          : "ltr"
+      }
+    >
       <style>{`
-        .navMoreMenu {
+        .organHealNavbar {
+          gap: 18px;
+        }
+
+        .organHealNavbar .navLinks {
+          flex-wrap: nowrap;
+          gap: 12px;
+        }
+
+        .organHealNavbar .navLinks > a,
+        .organHealNavbar .navMoreTrigger {
+          position: relative;
+          white-space: nowrap;
+        }
+
+        .organHealNavbar .navRouteActive {
+          color: #ffffff !important;
+        }
+
+        .organHealNavbar .navRouteActive::after {
+          content: "";
+          position: absolute;
+          inset-inline: 18%;
+          bottom: -8px;
+          height: 2px;
+          border-radius: 999px;
+          background: #5eead4;
+        }
+
+        .organHealNavbar .navAskLink {
+          padding: 9px 14px;
+          border: 1px solid rgba(94, 234, 212, 0.32);
+          border-radius: 999px;
+          background: rgba(20, 184, 166, 0.13);
+          color: #99f6e4;
+        }
+
+        .organHealNavbar .navAskLink:hover {
+          background: rgba(20, 184, 166, 0.22);
+          color: white;
+        }
+
+        .organHealNavbar .navMoreMenu {
           position: relative;
         }
 
-        .navMoreTrigger {
+        .organHealNavbar .navMoreTrigger {
+          appearance: none;
           border: 0;
           background: transparent;
-          color: inherit;
+          color: #67e8f9;
           cursor: pointer;
           font: inherit;
-          font-weight: 900;
+          font-size: 0.92rem;
+          font-weight: 700;
           padding: 0;
         }
 
-        .navMoreTrigger::after {
+        .organHealNavbar .navMoreTrigger:hover {
+          color: white;
+        }
+
+        .organHealNavbar .navMoreTrigger::after {
           content: "▾";
           margin-inline-start: 6px;
           font-size: 0.72rem;
           opacity: 0.78;
         }
 
-        .navMorePanel {
+        .organHealNavbar .navMorePanel {
           position: absolute;
-          top: calc(100% + 12px);
-          right: 0;
+          top: calc(100% + 16px);
+          inset-inline-end: 0;
           z-index: 80;
-          min-width: 210px;
+          min-width: 230px;
           display: grid;
-          gap: 6px;
+          gap: 5px;
           padding: 10px;
+          border: 1px solid rgba(148, 163, 184, 0.24);
           border-radius: 18px;
-          border: 1px solid rgba(148, 163, 184, 0.26);
-          background: rgba(2, 6, 23, 0.96);
-          box-shadow: 0 20px 50px rgba(2, 6, 23, 0.32);
+          background: rgba(2, 6, 23, 0.98);
+          box-shadow: 0 22px 56px rgba(2, 6, 23, 0.42);
         }
 
-        [dir="rtl"] .navMorePanel {
-          right: auto;
-          left: 0;
-        }
-
-        .navMorePanel a {
+        .organHealNavbar .navMorePanel a,
+        .organHealNavbar .navMorePanel button {
+          width: 100%;
           padding: 10px 12px;
-          border-radius: 12px;
+          border-radius: 11px;
+          background: transparent;
+          color: #cbd5e1;
+          text-align: start;
           white-space: nowrap;
+          font-size: 0.88rem;
+          font-weight: 750;
         }
 
-        .navMorePanel a:hover {
+        .organHealNavbar .navMorePanel a:hover,
+        .organHealNavbar .navMorePanel button:hover {
           background: rgba(20, 184, 166, 0.14);
+          color: white;
+          transform: none;
+          box-shadow: none;
         }
 
-        .navMobileCta {
-          display: none;
+        .organHealNavbar .navMoreDivider {
+          height: 1px;
+          margin: 4px 6px;
+          background: rgba(148, 163, 184, 0.18);
         }
 
-        .navMobileTrigger {
-          display: none;
-          width: 46px;
-          height: 46px;
-          padding: 11px;
-          border: 1px solid rgba(94, 234, 212, 0.34);
-          border-radius: 14px;
-          background: rgba(15, 23, 42, 0.72);
+        .organHealNavbar .navSignOutMenu {
+          border: 0;
           cursor: pointer;
         }
 
-        .navMobileTrigger span {
+        .organHealNavbar .navMobileCta,
+        .organHealNavbar .navMobileTrigger {
+          display: none;
+        }
+
+        .organHealNavbar .navMobileTrigger {
+          width: 44px;
+          height: 44px;
+          padding: 10px;
+          border: 1px solid rgba(94, 234, 212, 0.32);
+          border-radius: 13px;
+          background: rgba(15, 23, 42, 0.75);
+          color: #67e8f9;
+        }
+
+        .organHealNavbar .navMobileTrigger span {
           display: block;
           width: 100%;
           height: 2px;
@@ -247,194 +653,483 @@ export default function Navbar() {
           background: currentColor;
         }
 
+        @media (max-width: 1080px) {
+          .organHealNavbar .logoText small {
+            display: none;
+          }
+
+          .organHealNavbar .navLinks {
+            gap: 10px;
+          }
+        }
+
         @media (max-width: 900px) {
-        .navMobileCta {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          min-height: 44px;
-          margin-inline-start: auto;
-          padding: 0 16px;
-          border-radius: 14px;
-          background: linear-gradient(135deg, #22d3ee, #38bdf8);
-          color: #07111f;
-          font-size: 0.88rem;
-          font-weight: 900;
-          text-decoration: none;
-          white-space: nowrap;
-        }
+          .organHealNavbar {
+            flex-direction: row;
+            flex-wrap: wrap;
+            align-items: center;
+          }
 
-        .navMobileTrigger {
-          display: block;
-          margin-inline-start: 0;
-        }
+          .organHealNavbar .navMobileCta {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 42px;
+            margin-inline-start: auto;
+            padding: 0 14px;
+            border-radius: 13px;
+            background: linear-gradient(
+              135deg,
+              #22d3ee,
+              #38bdf8
+            );
+            color: #07111f;
+            font-size: 0.84rem;
+            font-weight: 900;
+            text-decoration: none;
+            white-space: nowrap;
+          }
 
-          .navLinks {
+          .organHealNavbar .navMobileTrigger {
+            display: block;
+          }
+
+          .organHealNavbar .navLinks {
             display: none;
             width: 100%;
           }
 
-          .navLinks.navLinksOpen {
+          .organHealNavbar .navLinks.navLinksOpen {
             display: flex;
             flex-direction: column;
             align-items: stretch;
-            gap: 10px;
-            padding-top: 14px;
+            gap: 8px;
+            padding-top: 12px;
           }
 
-          .navLinks.navLinksOpen > a,
-          .navLinks.navLinksOpen > button {
+          .organHealNavbar .navLinks.navLinksOpen > a {
             width: 100%;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 12px;
+            border-radius: 12px;
             text-align: center;
           }
 
-          .navMoreMenu {
+          .organHealNavbar .navRouteActive::after {
+            display: none;
+          }
+
+          .organHealNavbar .navMoreMenu {
             width: 100%;
           }
 
-          .navMoreTrigger {
+          .organHealNavbar .navMoreTrigger {
             width: 100%;
+            min-height: 44px;
             text-align: center;
           }
 
-          .navMorePanel {
+          .organHealNavbar .navMorePanel {
             position: static;
             min-width: 0;
-            margin-top: 8px;
+            margin-top: 6px;
+          }
+
+          .organHealNavbar .languageToggleBtn {
+            width: 100%;
+          }
+        }
+
+        @media (max-width: 520px) {
+          .organHealNavbar .logoText {
+            display: none;
+          }
+
+          .organHealNavbar .navMobileCta {
+            padding-inline: 11px;
           }
         }
       `}</style>
 
-      <Link href="/" className="logo" aria-label="OrganHeal home">
+      <Link
+        href="/"
+        className="logo"
+        aria-label="OrganHeal home"
+        onClick={
+          closeMenus
+        }
+      >
         <OrganHealLogo />
 
         <div className="logoText">
-          <span>OrganHeal</span>
-          <small>{labels.tagline}</small>
+          <span>
+            OrganHeal
+          </span>
+
+          <small>
+            {
+              labels.tagline
+            }
+          </small>
         </div>
       </Link>
 
       <Link
-  href={isLoggedIn ? "/assistant" : "/signup"}
-  className="navMobileCta"
->
-  {isLoggedIn
-    ? isArabic
-      ? "اسأل AI"
-      : "Ask AI"
-    : isArabic
-      ? "ابدأ مجانًا"
-      : "Start Free"}
-</Link>
+        href={
+          isLoggedIn
+            ? "/assistant"
+            : "/#ask-organheal"
+        }
+        className="navMobileCta"
+        onClick={
+          closeMenus
+        }
+      >
+        {
+          labels.ask
+        }
+      </Link>
 
-<button
-  type="button"
-  className="navMobileTrigger"
-  aria-label={isArabic ? "فتح قائمة التنقل" : "Open navigation menu"}
-  aria-expanded={isMobileMenuOpen}
-  onClick={() => setIsMobileMenuOpen((current) => !current)}
->
-  <span />
-  <span />
-  <span />
-</button>
+      <button
+        type="button"
+        className="navMobileTrigger"
+        aria-label={
+          labels.openMenu
+        }
+        aria-expanded={
+          isMobileMenuOpen
+        }
+        onClick={
+          () =>
+            setIsMobileMenuOpen(
+              current =>
+                !current
+            )
+        }
+      >
+        <span />
+        <span />
+        <span />
+      </button>
 
-      <div className={`navLinks ${isMobileMenuOpen ? "navLinksOpen" : ""}`}>
-        {isLoggedIn ? (
-          <>
-            <Link href="/dashboard">
-              {language === "ar" ? "صحتي" : "My Health"}
-            </Link>
-
-            <Link href="/assistant">
-              {language === "ar" ? "اسأل OrganHeal" : "Ask OrganHeal"}
-            </Link>
-
-            <Link href="/reports">{labels.reports}</Link>
-
-            <Link href="/health-plan">
-              {language === "ar" ? "الخطة" : "Plan"}
-            </Link>
-
-            <Link href="/library">
-              {language === "ar" ? "تعلّم" : "Learn"}
-            </Link>
-
-            <div className="navMoreMenu" ref={moreMenuRef}>
-              <button
-                type="button"
-                className="navMoreTrigger"
-                aria-expanded={isMoreOpen}
-                aria-haspopup="menu"
-                onClick={() => setIsMoreOpen((current) => !current)}
+      <div
+        className={
+          `navLinks ${
+            isMobileMenuOpen
+              ? "navLinksOpen"
+              : ""
+          }`
+        }
+      >
+        {isLoggedIn
+          ? (
+            <>
+              <Link
+                href="/"
+                className={
+                  routeClass(
+                    "/"
+                  )
+                }
+                onClick={
+                  closeMenus
+                }
               >
-                {labels.more}
-              </button>
+                {
+                  labels.home
+                }
+              </Link>
 
-              {isMoreOpen && (
-                <div className="navMorePanel" role="menu">
-                  <Link href="/history" onClick={closeMore}>
-                    {labels.history}
-                  </Link>
+              <Link
+                href="/assistant"
+                className={
+                  `navAskLink ${
+                    routeClass(
+                      "/assistant"
+                    )
+                  }`
+                }
+                onClick={
+                  closeMenus
+                }
+              >
+                {
+                  labels.ask
+                }
+              </Link>
 
-                  <Link href="/doctor-portal" onClick={closeMore}>
-                    {labels.doctorPortal}
-                  </Link>
+              <Link
+                href="/dashboard"
+                className={
+                  routeClass(
+                    "/dashboard"
+                  )
+                }
+                onClick={
+                  closeMenus
+                }
+              >
+                {
+                  labels.myHealth
+                }
+              </Link>
 
-                  <Link href="/profile" onClick={closeMore}>
-                   {labels.profile}
-                  </Link>
+              <Link
+                href="/reports"
+                className={
+                  routeClass(
+                    "/reports"
+                  )
+                }
+                onClick={
+                  closeMenus
+                }
+              >
+                {
+                  labels.reports
+                }
+              </Link>
 
-                  <Link
-                  href="/settings/communications"
-                  onClick={closeMore}
->
-                 {labels.communicationSettings}
-                 </Link>
-                </div>
-              )}
-            </div>
+              <Link
+                href="/library"
+                className={
+                  routeClass(
+                    "/library"
+                  )
+                }
+                onClick={
+                  closeMenus
+                }
+              >
+                {
+                  labels.learn
+                }
+              </Link>
 
-                        <NotificationBell
-              isArabic={
-                isArabic
-              }
-            />
+              <div
+                className="navMoreMenu"
+                ref={
+                  moreMenuRef
+                }
+              >
+                <button
+                  type="button"
+                  className="navMoreTrigger"
+                  aria-expanded={
+                    isMoreOpen
+                  }
+                  aria-haspopup="menu"
+                  onClick={
+                    () =>
+                      setIsMoreOpen(
+                        current =>
+                          !current
+                      )
+                  }
+                >
+                  {
+                    labels.more
+                  }
+                </button>
 
-            <LanguageToggle />
+                {isMoreOpen && (
+                  <div
+                    className="navMorePanel"
+                    role="menu"
+                  >
+                    <Link
+                      href="/health-plan"
+                      onClick={
+                        closeMenus
+                      }
+                    >
+                      {
+                        labels.healthPlan
+                      }
+                    </Link>
 
-            <button
-              type="button"
-              className="navLogoutBtn"
-              onClick={
-                signOut
-              }
-            >
-              {labels.signOut}
-            </button>
-          </>
-        ) : (
-          <>
-            <Link href="/">{labels.home}</Link>
-            <Link href="/features">{labels.features}</Link>
-            <Link href="/library">{labels.education}</Link>
-            <Link href="/about">{labels.about}</Link>
+                    <Link
+                      href="/history"
+                      onClick={
+                        closeMenus
+                      }
+                    >
+                      {
+                        labels.history
+                      }
+                    </Link>
 
-            <LanguageToggle />
+                    <Link
+                      href="/library/doctor-prep"
+                      onClick={
+                        closeMenus
+                      }
+                    >
+                      {
+                        labels.doctorPrep
+                      }
+                    </Link>
 
-            <Link href="/signup" className="navPrimaryBtn">
-              {labels.createAccount}
-            </Link>
+                    <Link
+                      href="/profile"
+                      onClick={
+                        closeMenus
+                      }
+                    >
+                      {
+                        labels.profile
+                      }
+                    </Link>
 
-            <Link href="/login" className="navSigninBtn">
-              {labels.signIn}
-            </Link>
-          </>
-        )}
+                    <Link
+                      href="/settings/communications"
+                      onClick={
+                        closeMenus
+                      }
+                    >
+                      {
+                        labels.communications
+                      }
+                    </Link>
+
+                    <div className="navMoreDivider" />
+
+                    <button
+                      type="button"
+                      className="navSignOutMenu"
+                      onClick={
+                        signOut
+                      }
+                    >
+                      {
+                        labels.signOut
+                      }
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <NotificationBell
+                isArabic={
+                  isArabic
+                }
+              />
+
+              <LanguageToggle />
+            </>
+          )
+          : (
+            <>
+              <Link
+                href="/"
+                className={
+                  routeClass(
+                    "/"
+                  )
+                }
+                onClick={
+                  closeMenus
+                }
+              >
+                {
+                  labels.home
+                }
+              </Link>
+
+              <Link
+                href="/#ask-organheal"
+                className="navAskLink"
+                onClick={
+                  closeMenus
+                }
+              >
+                {
+                  text(
+                    "Ask OrganHeal AI",
+                    "اسأل OrganHeal AI"
+                  )
+                }
+              </Link>
+
+              <Link
+                href="/library"
+                className={
+                  routeClass(
+                    "/library"
+                  )
+                }
+                onClick={
+                  closeMenus
+                }
+              >
+                {
+                  labels.learn
+                }
+              </Link>
+
+              <Link
+                href="/features"
+                className={
+                  routeClass(
+                    "/features"
+                  )
+                }
+                onClick={
+                  closeMenus
+                }
+              >
+                {
+                  labels.howItWorks
+                }
+              </Link>
+
+              <Link
+                href="/about"
+                className={
+                  routeClass(
+                    "/about"
+                  )
+                }
+                onClick={
+                  closeMenus
+                }
+              >
+                {
+                  labels.about
+                }
+              </Link>
+
+              <LanguageToggle />
+
+              <Link
+                href="/login"
+                className="navSigninBtn"
+                onClick={
+                  closeMenus
+                }
+              >
+                {
+                  labels.signIn
+                }
+              </Link>
+
+              <Link
+                href="/signup"
+                className="navPrimaryBtn"
+                onClick={
+                  closeMenus
+                }
+              >
+                {
+                  labels.startFree
+                }
+              </Link>
+            </>
+          )}
       </div>
     </nav>
   );
 }
-
-
-
