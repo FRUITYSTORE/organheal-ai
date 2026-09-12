@@ -193,7 +193,8 @@ export async function buildUnifiedHealthRuntime({
           intelligenceRuntime
             .modules
             .summary
-            .data
+            .data,
+          language
         )
       : null;
 

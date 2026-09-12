@@ -3,6 +3,10 @@ import type {
 } from "react";
 
 import type DashboardHeroIntelligence from "./DashboardHeroIntelligence";
+import {
+  localizeDashboardActionSummary,
+  localizeDashboardFindings,
+} from "@/lib/application/dashboard/dashboard-presentation-localization";
 import type DashboardJourneySection from "./DashboardJourneySection";
 import type DashboardNextActionSection from "./DashboardNextActionSection";
 import type DashboardOverviewSection from "./DashboardOverviewSection";
@@ -119,6 +123,18 @@ export function buildDashboardViewState({
   nextAction,
   overview,
 }: BuildDashboardViewStateInput): DashboardViewState {
+
+  const localizedFindings =
+    localizeDashboardFindings(
+      findings,
+      isArabic
+    );
+
+  const localizedActionSummary =
+    localizeDashboardActionSummary(
+      actionSummary,
+      isArabic
+    );
   return {
     hero:
       dashboardIntelligence
@@ -179,12 +195,16 @@ export function buildDashboardViewState({
         : null,
 
     healthIntelligenceCard:
-      actionSummary
-        ? {
-            findings,
-            actionSummary,
-            isArabic,
-          }
-        : null,
+  localizedActionSummary
+    ? {
+        findings:
+          localizedFindings,
+
+        actionSummary:
+          localizedActionSummary,
+
+        isArabic,
+      }
+    : null,
   };
 }

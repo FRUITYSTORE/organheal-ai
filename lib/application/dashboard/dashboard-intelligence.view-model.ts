@@ -60,15 +60,15 @@ export type DashboardIntelligenceViewModel = {
 };
 
 export function buildDashboardIntelligenceViewModel(
-  summary: HealthIntelligenceSummaryData
+  summary: HealthIntelligenceSummaryData,
+  language: "en" | "ar" = "en"
 ): DashboardIntelligenceViewModel {
-    const presentedDecision =
-    healthIntelligencePresenter
-      .presentNextDecision(
-        summary.decision.type,
-        summary.decision.urgency,
-        "en"
-      );
+  const presentedDecision =
+    healthIntelligencePresenter.presentNextDecision(
+      summary.decision.type,
+      summary.decision.urgency,
+      language
+    );
   return {
     hero: {
       headline:

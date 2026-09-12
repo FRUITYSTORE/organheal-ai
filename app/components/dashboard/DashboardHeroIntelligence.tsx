@@ -4,6 +4,12 @@ import type {
   DashboardIntelligenceViewModel,
 } from "@/lib/application/dashboard/dashboard-intelligence.view-model";
 
+import {
+  presentDashboardEvidenceState,
+  presentDashboardEvidenceStrength,
+  presentDashboardImpact,
+} from "@/lib/application/dashboard/dashboard-presentation-localization";
+
 type DashboardHeroIntelligenceProps = {
   intelligence:
     DashboardIntelligenceViewModel;
@@ -52,7 +58,10 @@ export default function DashboardHeroIntelligence({
             </strong>
 
             <small>
-              {evidence.strength}
+              {presentDashboardEvidenceStrength(
+                evidence.strength,
+                isArabic
+            )}
             </small>
           </article>
 
@@ -64,7 +73,10 @@ export default function DashboardHeroIntelligence({
             </span>
 
             <strong>
-              {evidence.overallState}
+              {presentDashboardEvidenceState(
+                evidence.overallState,
+                isArabic
+              )}
             </strong>
           </article>
 
@@ -76,10 +88,10 @@ export default function DashboardHeroIntelligence({
             </span>
 
             <strong>
-              {impact.primaryImpact ??
-                (isArabic
-                  ? "قيد التحديد"
-                  : "Not determined")}
+              {presentDashboardImpact(
+                impact.primaryImpact,
+              isArabic
+              )}
             </strong>
 
             <small>
