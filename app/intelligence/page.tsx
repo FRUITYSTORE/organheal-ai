@@ -566,9 +566,10 @@ export default function IntelligencePage() {
       const signedUrl = await createUploadedReportSignedUrl(filePath);
       window.open(signedUrl, "_blank");
     } catch (error) {
-      alert(
-        "Could not open report: " +
-          (error instanceof Error ? error.message : String(error))
+      window.alert(
+        isArabicUi
+          ? "تعذر فتح التقرير حاليًا. يرجى المحاولة مرة أخرى."
+          : "Could not open the report right now. Please try again."
       );
     }
   }
@@ -576,7 +577,11 @@ export default function IntelligencePage() {
     const sessionResult = await getIntelligenceSession();
 
     if (!sessionResult.success) {
-      alert(sessionResult.errorMessage);
+      window.alert(
+        isArabicUi
+          ? "تعذر التحقق من جلسة المستخدم. يرجى تسجيل الدخول أو المحاولة مرة أخرى."
+          : "Could not verify your session. Please sign in or try again."
+      );
       return;
     }
 
@@ -586,9 +591,10 @@ export default function IntelligencePage() {
     });
 
     if (!savedResultRuntime.success) {
-      alert(
-        "Could not load saved intelligence result: " +
-          savedResultRuntime.errorMessage
+      window.alert(
+        isArabicUi
+          ? "تعذر تحميل نتيجة التحليل الصحي المحفوظة. يرجى المحاولة مرة أخرى."
+          : "Could not load the saved health intelligence result. Please try again."
       );
       return;
     }
@@ -630,7 +636,11 @@ export default function IntelligencePage() {
     const sessionResult = await getIntelligenceSession();
 
     if (!sessionResult.success) {
-      alert(sessionResult.errorMessage);
+      window.alert(
+        isArabicUi
+          ? "تعذر التحقق من جلسة المستخدم. يرجى تسجيل الدخول أو المحاولة مرة أخرى."
+          : "Could not verify your session. Please sign in or try again."
+      );
       return;
     }
 
@@ -692,23 +702,29 @@ const generationResult =
 
   return;
 }
-      if (generationResult.stage === "report-text") {
-        alert(generationResult.errorMessage);
+    if (generationResult.stage === "report-text") {
+      window.alert(
+        isArabicUi
+          ? "تعذر تجهيز نص التقرير للتحليل. يرجى المحاولة مرة أخرى."
+          : "Could not prepare the report text for analysis. Please try again."
+      );
 
-        if (generationResult.requiresLogin) {
-          window.location.href = "/login";
-        }
-      } else if (generationResult.stage === "health-insight") {
-        alert(
-          "Could not generate intelligence: " +
-            generationResult.errorMessage
-        );
-      } else {
-        alert(
-          "Could not save generated intelligence result: " +
-            generationResult.errorMessage
-        );
+      if (generationResult.requiresLogin) {
+        window.location.href = "/login";
       }
+    } else if (generationResult.stage === "health-insight") {
+      window.alert(
+        isArabicUi
+          ? "تعذر إنشاء التحليل الصحي للتقرير. يرجى المحاولة مرة أخرى."
+          : "Could not generate health intelligence for this report. Please try again."
+      );
+    } else {
+      window.alert(
+        isArabicUi
+          ? "تعذر حفظ نتيجة التحليل الصحي. يرجى المحاولة مرة أخرى."
+          : "Could not save the generated health intelligence result. Please try again."
+      );
+    }
 
       return;
     }

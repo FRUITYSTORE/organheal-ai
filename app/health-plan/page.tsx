@@ -336,7 +336,9 @@ try {
   setHealthPlanView(summary.healthPlanView);
 } catch (error) {
   setMessage(
-    error instanceof Error ? "Database error: " + error.message : "Database error"
+    isArabic
+      ? "تعذر تحميل الخطة الصحية حاليًا. يرجى المحاولة مرة أخرى."
+      : "Could not load your health plan right now. Please try again."
   );
   setLoading(false);
   return;

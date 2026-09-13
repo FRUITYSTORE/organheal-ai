@@ -314,9 +314,8 @@ const doctorSummary =
 } catch (error) {
   setMessage(
     currentIsArabic
-      ? "حدث خطأ في قاعدة البيانات: " +
-          (error instanceof Error ? error.message : "")
-      : "Database error: " + (error instanceof Error ? error.message : "")
+      ? "تعذر تحميل بيانات التحضير للطبيب حاليًا. يرجى المحاولة مرة أخرى."
+      : "Could not load doctor preparation data right now. Please try again."
   );
   setLoading(false);
   return;

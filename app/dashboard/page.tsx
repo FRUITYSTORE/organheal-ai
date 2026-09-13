@@ -363,7 +363,9 @@ const knowledgeResponse =
 }
 } catch (error) {
   setMessage(
-    error instanceof Error ? "Database error: " + error.message : "Database error"
+    isArabic
+      ? "تعذر تحميل بيانات لوحة التحكم حاليًا. يرجى المحاولة مرة أخرى."
+      : "Could not load dashboard data right now. Please try again."
   );
   setLoading(false);
   return;

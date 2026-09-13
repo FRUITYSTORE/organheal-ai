@@ -217,9 +217,7 @@ try {
 setMessage(
   currentLanguage === "ar"
     ? "تعذر تحميل التقارير حاليًا. يرجى المحاولة مرة أخرى."
-    : error instanceof Error
-      ? error.message
-      : "Failed to load reports."
+    : "Could not load reports right now. Please try again."
 );
   setLoading(false);
   return;
