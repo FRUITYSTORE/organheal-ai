@@ -176,13 +176,27 @@ function localizeMood(value: string | null | undefined) {
 
     const user = userData.user;
 
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("username, email, created_at, plan")
-      .eq("id", user.id)
-      .single();
+const {
+  data: profileData,
+  error: profileError,
+} = await supabase
+  .from("profiles")
+  .select("username, email, created_at, plan")
+  .eq("id", user.id)
+  .maybeSingle();
 
-    const profile = profileData as Profile | null;
+if (profileError) {
+  setMessage(
+    currentIsArabic
+      ? "تعذر تحميل بيانات الملف الشخصي. يرجى المحاولة مرة أخرى."
+      : "We could not load your profile data. Please try again."
+  );
+  setLoading(false);
+  return;
+}
+
+const profile =
+  profileData as Profile | null;
 
     setEmail(profile?.email || user.email || "");
     setUsername(profile?.username || "");
@@ -204,15 +218,28 @@ if (organError) {
   return;
 }
 
-    const { data: checkInData, error: checkInError } = await supabase
-      .from("daily_checkins")
-      .select("mood, wellness_score, created_at")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .single();
+const {
+  data: checkInData,
+  error: checkInError,
+} = await supabase
+  .from("daily_checkins")
+  .select(
+    "mood, wellness_score, created_at"
+  )
+  .eq(
+    "user_id",
+    user.id
+  )
+  .order(
+    "created_at",
+    {
+      ascending: false,
+    }
+  )
+  .limit(1)
+  .maybeSingle();
 
-if (checkInError && checkInError.code !== "PGRST116") {
+if (checkInError) {
   setMessage(
     currentIsArabic
       ? "تعذر تحميل بيانات التحديث اليومي. يرجى المحاولة مرة أخرى."
