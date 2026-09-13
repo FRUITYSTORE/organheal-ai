@@ -15,52 +15,93 @@ type LearningRoute = {
   promiseAr: string;
   examples: string[];
   examplesAr: string[];
+  href: string;
 };
 
 const learningRoutes: LearningRoute[] = [
   {
     code: "LAB",
-    title: "Understand Lab Markers",
-    titleAr: "افهم مؤشرات المختبر",
+    title: "Lab Tests & Markers",
+    titleAr: "الفحوصات ومؤشرات المختبر",
     promise:
-      "Learn what common values may mean and what questions they raise for your clinician.",
+      "Understand common lab values, what they measure, and which questions they may raise.",
     promiseAr:
-      "تعلّم ما قد تعنيه القيم الشائعة وما الأسئلة التي يمكن أن تطرحها على الطبيب.",
+      "افهم القيم المخبرية الشائعة، وما الذي تقيسه، وما الأسئلة التي قد تثيرها.",
     examples: ["LDL / HDL", "HbA1c", "Creatinine", "eGFR"],
     examplesAr: ["LDL / HDL", "HbA1c", "الكرياتينين", "eGFR"],
+    href: "/blog",
   },
   {
-    code: "ORG",
-    title: "Learn by Body System",
-    titleAr: "تعلّم حسب أجهزة الجسم",
+    code: "SYM",
+    title: "Symptoms & Conditions",
+    titleAr: "الأعراض والحالات الصحية",
     promise:
-      "Explore heart, kidney, liver, brain, and metabolic health through clear articles.",
+      "Learn how common symptoms and health conditions are described and what information matters.",
     promiseAr:
-      "استكشف صحة القلب والكلى والكبد والدماغ والصحة الأيضية من خلال مقالات واضحة.",
-    examples: ["Heart", "Kidney", "Liver", "Brain"],
-    examplesAr: ["القلب", "الكلى", "الكبد", "الدماغ"],
+      "تعرّف على كيفية وصف الأعراض والحالات الصحية الشائعة وما المعلومات المهمة لفهمها.",
+    examples: ["Symptoms", "Conditions", "Warning signs", "Follow-up"],
+    examplesAr: ["الأعراض", "الحالات الصحية", "علامات التحذير", "المتابعة"],
+    href: "/blog",
+  },
+  {
+    code: "PRE",
+    title: "Prevention & Lifestyle",
+    titleAr: "الوقاية ونمط الحياة",
+    promise:
+      "Explore practical learning around nutrition, activity, sleep, prevention, and daily health habits.",
+    promiseAr:
+      "استكشف معلومات عملية حول التغذية والنشاط والنوم والوقاية والعادات الصحية اليومية.",
+    examples: ["Nutrition", "Exercise", "Sleep", "Prevention"],
+    examplesAr: ["التغذية", "الرياضة", "النوم", "الوقاية"],
+    href: "/blog",
+  },
+  {
+    code: "MED",
+    title: "Medications & Treatment Basics",
+    titleAr: "الأدوية وأساسيات العلاج",
+    promise:
+      "Learn general medication concepts, common terms, monitoring, and useful questions for clinicians.",
+    promiseAr:
+      "تعرّف على المفاهيم العامة للأدوية والمصطلحات الشائعة والمتابعة والأسئلة المفيدة للطبيب.",
+    examples: ["Medication terms", "Monitoring", "Safety", "Questions"],
+    examplesAr: ["مصطلحات الأدوية", "المتابعة", "السلامة", "الأسئلة"],
+    href: "/blog",
   },
   {
     code: "REP",
-    title: "Read Reports Better",
-    titleAr: "اقرأ التقارير بشكل أفضل",
+    title: "Understand Medical Reports",
+    titleAr: "فهم التقارير الطبية",
     promise:
       "Build confidence with report language, reference ranges, abnormal flags, and trends.",
     promiseAr:
-      "ابنِ ثقة أكبر في فهم لغة التقارير والقيم المرجعية والعلامات والاتجاهات.",
+      "افهم لغة التقارير والقيم المرجعية والعلامات غير الطبيعية والاتجاهات بصورة أوضح.",
     examples: ["Ranges", "Flags", "Trends", "Summary"],
-    examplesAr: ["القيم", "العلامات", "الاتجاهات", "الملخص"],
+    examplesAr: ["القيم المرجعية", "العلامات", "الاتجاهات", "الملخص"],
+    href: "/library/reports",
   },
   {
     code: "VIS",
     title: "Prepare for Doctor Visits",
-    titleAr: "حضّر زيارة الطبيب",
+    titleAr: "التحضير لزيارة الطبيب",
     promise:
-      "Use learning content to organize concerns and prepare better questions.",
+      "Organize concerns, prepare useful questions, and know what information to bring.",
     promiseAr:
-      "استخدم المحتوى التعليمي لتنظيم مخاوفك وتحضير أسئلة أفضل.",
+      "نظّم مخاوفك وحضّر أسئلة مفيدة واعرف المعلومات التي يُفضل إحضارها معك.",
     examples: ["Questions", "Symptoms", "Medication list", "Follow-up"],
-    examplesAr: ["الأسئلة", "الأعراض", "الأدوية", "المتابعة"],
+    examplesAr: ["الأسئلة", "الأعراض", "قائمة الأدوية", "المتابعة"],
+    href: "/library/doctor-prep",
+  },
+  {
+    code: "SYS",
+    title: "Body Systems & Organs",
+    titleAr: "أجهزة الجسم والأعضاء",
+    promise:
+      "Explore health information by body system when an organ-specific view is useful.",
+    promiseAr:
+      "استكشف المعلومات الصحية حسب أجهزة الجسم عندما يكون العرض المرتبط بعضو معين مفيدًا.",
+    examples: ["Heart", "Kidney", "Liver", "Brain"],
+    examplesAr: ["القلب", "الكلى", "الكبد", "الدماغ"],
+    href: "/library/organs",
   },
 ];
 
@@ -508,7 +549,7 @@ export default function LibraryPage() {
 
         .healthLearningHubPage .learningIntentGrid {
           display: grid;
-          grid-template-columns: repeat(5, minmax(0, 1fr));
+          grid-template-columns: repeat(4, minmax(0, 1fr));
           gap: 14px;
         }
 
@@ -711,36 +752,110 @@ export default function LibraryPage() {
           </div>
 
           <div className="learningIntentGrid">
-            <Link href="/blog" className="learningIntentCard learningIntentLink">
-              <span className="learningIntentCode">01</span>
-              <h3 className="learningIntentTitle">{text("Understand a Lab Result", "فهم نتيجة مختبر")}</h3>
-              <p className="learningIntentText">{text("LDL, HbA1c, Vitamin D, kidney and liver markers.", "LDL، HbA1c، فيتامين D، ومؤشرات الكلى والكبد.")}</p>
-            </Link>
+  <Link href="/blog" className="learningIntentCard learningIntentLink">
+    <span className="learningIntentCode">01</span>
+    <h3 className="learningIntentTitle">
+      {text("Lab Tests", "الفحوصات المخبرية")}
+    </h3>
+    <p className="learningIntentText">
+      {text(
+        "Understand markers such as LDL, HbA1c, Vitamin D, kidney, and liver tests.",
+        "افهم مؤشرات مثل LDL وHbA1c وفيتامين D وفحوصات الكلى والكبد."
+      )}
+    </p>
+  </Link>
 
-            <Link href="/library/organs" className="learningIntentCard learningIntentLink">
-              <span className="learningIntentCode">02</span>
-              <h3 className="learningIntentTitle">{text("Learn by Organ", "التعلّم حسب العضو")}</h3>
-              <p className="learningIntentText">{text("Heart, kidney, liver, lung, brain, and metabolic health.", "القلب، الكلى، الكبد، الرئة، الدماغ، والصحة الأيضية.")}</p>
-            </Link>
+  <Link href="/blog" className="learningIntentCard learningIntentLink">
+    <span className="learningIntentCode">02</span>
+    <h3 className="learningIntentTitle">
+      {text("Symptoms & Conditions", "الأعراض والحالات الصحية")}
+    </h3>
+    <p className="learningIntentText">
+      {text(
+        "Learn about common symptoms, health conditions, and useful warning signs.",
+        "تعرّف على الأعراض والحالات الصحية الشائعة وعلامات التحذير المهمة."
+      )}
+    </p>
+  </Link>
 
-            <Link href="/library/reports" className="learningIntentCard learningIntentLink">
-              <span className="learningIntentCode">03</span>
-              <h3 className="learningIntentTitle">{text("Understand My Report", "فهم تقريري")}</h3>
-              <p className="learningIntentText">{text("Learn from uploaded reports and turn results into clearer next steps.", "تعلّم من التقارير المرفوعة وحوّل النتائج إلى خطوات أوضح.")}</p>
-            </Link>
+  <Link href="/blog" className="learningIntentCard learningIntentLink">
+    <span className="learningIntentCode">03</span>
+    <h3 className="learningIntentTitle">
+      {text("Prevention & Lifestyle", "الوقاية ونمط الحياة")}
+    </h3>
+    <p className="learningIntentText">
+      {text(
+        "Nutrition, activity, sleep, prevention, and practical daily habits.",
+        "التغذية والنشاط والنوم والوقاية والعادات اليومية العملية."
+      )}
+    </p>
+  </Link>
 
-            <Link href="/library/doctor-prep" className="learningIntentCard learningIntentLink">
-              <span className="learningIntentCode">04</span>
-              <h3 className="learningIntentTitle">{text("Prepare for My Doctor", "التحضير للطبيب")}</h3>
-              <p className="learningIntentText">{text("Questions, follow-up points, and what to bring.", "أسئلة، نقاط متابعة، وما يجب إحضاره.")}</p>
-            </Link>
+  <Link href="/blog" className="learningIntentCard learningIntentLink">
+    <span className="learningIntentCode">04</span>
+    <h3 className="learningIntentTitle">
+      {text("Medications", "الأدوية")}
+    </h3>
+    <p className="learningIntentText">
+      {text(
+        "Understand general medication concepts, monitoring, and safety questions.",
+        "افهم المفاهيم العامة للأدوية والمتابعة وأسئلة السلامة."
+      )}
+    </p>
+  </Link>
 
-            <article className="learningIntentCard">
-              <span className="learningIntentCode">05</span>
-              <h3 className="learningIntentTitle">{text("Improve My Lifestyle", "تحسين نمط الحياة")}</h3>
-              <p className="learningIntentText">{text("Food, exercise, sleep, and simple daily actions.", "الغذاء، الرياضة، النوم، وخطوات يومية بسيطة.")}</p>
-            </article>
-          </div>
+  <Link href="/library/reports" className="learningIntentCard learningIntentLink">
+    <span className="learningIntentCode">05</span>
+    <h3 className="learningIntentTitle">
+      {text("Understand My Report", "فهم تقريري")}
+    </h3>
+    <p className="learningIntentText">
+      {text(
+        "Learn how to read reports, ranges, flags, and health trends.",
+        "تعلّم كيفية قراءة التقارير والقيم المرجعية والعلامات والاتجاهات الصحية."
+      )}
+    </p>
+  </Link>
+
+  <Link href="/library/doctor-prep" className="learningIntentCard learningIntentLink">
+    <span className="learningIntentCode">06</span>
+    <h3 className="learningIntentTitle">
+      {text("Prepare for My Doctor", "التحضير للطبيب")}
+    </h3>
+    <p className="learningIntentText">
+      {text(
+        "Prepare questions, follow-up points, and the information to bring.",
+        "حضّر الأسئلة ونقاط المتابعة والمعلومات التي تحتاج إلى إحضارها."
+      )}
+    </p>
+  </Link>
+
+  <Link href="/library/organs" className="learningIntentCard learningIntentLink">
+    <span className="learningIntentCode">07</span>
+    <h3 className="learningIntentTitle">
+      {text("Body Systems & Organs", "أجهزة الجسم والأعضاء")}
+    </h3>
+    <p className="learningIntentText">
+      {text(
+        "Explore organ-specific learning when you need a body-system view.",
+        "استكشف المحتوى المرتبط بالأعضاء عندما تحتاج إلى عرض حسب أجهزة الجسم."
+      )}
+    </p>
+  </Link>
+
+  <Link href="/health-plan" className="learningIntentCard learningIntentLink">
+    <span className="learningIntentCode">08</span>
+    <h3 className="learningIntentTitle">
+      {text("Improve My Health Plan", "تحسين خطتي الصحية")}
+    </h3>
+    <p className="learningIntentText">
+      {text(
+        "Turn what you learn into practical follow-up actions in your personal health plan.",
+        "حوّل ما تتعلمه إلى خطوات متابعة عملية ضمن خطتك الصحية الشخصية."
+      )}
+    </p>
+    </Link>
+</div>
         </section>
 
         <section id="featured-guides" className="featuredSection">
@@ -760,13 +875,13 @@ export default function LibraryPage() {
               <p className="featuredText">
                 {text(
                   "These guides are available now and lead directly to readable health education.",
-                  "هذه الأدلة متاحة الآن وتقود مباشرة إلى محتوى صحي قابل للقراءة."
+                  "هذه الأدلة متاحة الآن وتقود مباشرة إلى محتوى صحي واضح وسهل القراءة."
                 )}
               </p>
             </div>
 
             <Link href="/blog" className="primaryBtn">
-              {text("Open Full Article Finder", "ابحث عن وحدات تعليمية الكامل")}
+              {text("Open Full Article Finder", "فتح جميع المقالات الصحية")}
             </Link>
           </div>
 
@@ -847,16 +962,8 @@ export default function LibraryPage() {
                   ))}
                 </div>
 
-                <Link
-  href={
-    route.code === "ORG"
-      ? "/library/organs"
-      : route.code === "VIS"
-      ? "/library/doctor-prep"
-      : route.code === "REP"
-      ? "/library/reports"
-      : "/blog"
-  }
+<Link
+  href={route.href}
   className="secondaryBtn"
   style={{ justifyContent: "center" }}
 >
