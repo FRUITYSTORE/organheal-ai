@@ -4,6 +4,9 @@ import {
   TrendStability,
 } from "@/lib/health-intelligence/engines/trend.engine";
 import { TrendSummaryData } from "@/lib/health-intelligence/engines/trend-summary.engine";
+import {
+  presentDashboardOrganName,
+} from "@/lib/application/dashboard/dashboard-presentation-localization";
 
 type HealthDirectionCardProps = {
   summary: TrendSummaryData;
@@ -119,6 +122,14 @@ export default function HealthDirectionCard({
     ? getArabicPeriodLabel(summary.periodDays)
     : summary.periodLabel;
 
+  const summaryDescription =
+  isArabic
+    ? summary.direction ===
+      "insufficient-data"
+      ? "لا تتوفر بيانات تاريخية كافية حاليًا لتقديم وصف موثوق لاتجاه الصحة."
+      : "يلخص هذا القسم اتجاه النتائج الصحية المسجلة عبر الزمن بناءً على البيانات المتاحة."
+    : summary.summary;
+
   return (
     <section className="healthDirectionCard">
       <div className="healthDirectionHeader">
@@ -132,7 +143,7 @@ export default function HealthDirectionCard({
           </h2>
 
           <p className="healthDirectionDescription">
-            {summary.summary}
+            {summaryDescription}
           </p>
         </div>
 
@@ -239,7 +250,12 @@ export default function HealthDirectionCard({
                 className={`healthDirectionSignal ${signal.direction}`}
               >
                 <div>
-                  <strong>{signal.organ}</strong>
+                  <strong>
+                    {presentDashboardOrganName(
+                      signal.organ,
+                      isArabic
+                    )}
+                  </strong>
 
                   <span>
                     {getQualityLabel(signal.quality, isArabic)}

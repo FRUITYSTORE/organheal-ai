@@ -25,6 +25,19 @@ function localizeOrganName(
   );
 }
 
+export function presentDashboardOrganName(
+  value: string,
+  isArabic: boolean
+): string {
+  if (!isArabic) {
+    return value;
+  }
+
+  return localizeOrganName(
+    value
+  );
+}
+
 function extractScore(
   value: string
 ): string | null {
@@ -89,42 +102,43 @@ function localizeAssessmentFinding(
       finding.description
     );
 
-  if (
-    !rawOrgan ||
-    !score
-  ) {
-    return finding;
-  }
+if (!rawOrgan) {
+  return finding;
+}
 
   const organ =
     localizeOrganName(
       rawOrgan
     );
 
-  if (
-    finding.id ===
-    "assessment-critical-lowest"
-  ) {
-    return {
-      ...finding,
-
-      title:
-        `${organ} يحتاج إلى اهتمام ذي أولوية`,
-
-      description:
-        `${organ} لديه أدنى نتيجة في التقييم الصحي، وهي ${score}/100.`,
-    };
-  }
-
+if (
+  finding.id ===
+  "assessment-critical-lowest"
+) {
   return {
     ...finding,
 
     title:
-      `${organ} أقل من المستوى المستهدف`,
+      `${organ} يحتاج إلى اهتمام ذي أولوية`,
 
     description:
-      `${organ} لديه أدنى نتيجة في التقييم الصحي، وهي ${score}/100.`,
+      score
+        ? `${organ} لديه أدنى نتيجة في التقييم الصحي، وهي ${score}/100.`
+        : `${organ} هو المجال الصحي الذي يحتاج إلى أكبر قدر من الاهتمام حاليًا وفق التقييمات المتاحة.`,
   };
+}
+
+return {
+  ...finding,
+
+  title:
+    `${organ} أقل من المستوى المستهدف`,
+
+  description:
+    score
+      ? `${organ} لديه أدنى نتيجة في التقييم الصحي، وهي ${score}/100.`
+      : `${organ} هو المجال الصحي الأقل تقييمًا حاليًا وفق البيانات المتاحة.`,
+};
 }
 
 function localizeCheckInFinding(

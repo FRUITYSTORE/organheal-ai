@@ -28,6 +28,22 @@ export default function DashboardHeroIntelligence({
     impact,
   } = intelligence;
 
+const presentedHeadline =
+  isArabic
+    ? hero.tone === "attention"
+      ? "إشارات صحية تحتاج إلى المتابعة"
+      : hero.tone === "insufficient-data"
+        ? "نحتاج إلى بيانات صحية أكثر"
+        : hero.tone === "positive"
+          ? "اتجاه صحي إيجابي في بياناتك"
+          : "اتجاه صحتك المسجل مستقر"
+    : hero.headline;
+
+const presentedNarrative =
+  isArabic
+    ? "يعرض OrganHeal ملخصًا مبنيًا على البيانات الصحية المتاحة لديك. راجع المؤشرات والقرار التالي لمعرفة ما يحتاج إلى المتابعة."
+    : hero.narrative;
+
   return (
     <section
       className={`dashboardIntelligenceHero tone-${hero.tone}`}
@@ -39,10 +55,12 @@ export default function DashboardHeroIntelligence({
             : "Health Intelligence Summary"}
         </span>
 
-        <h2>{hero.headline}</h2>
+        <h2>
+           {presentedHeadline}
+        </h2>
 
         <p className="dashboardIntelligenceHeroNarrative">
-          {hero.narrative}
+          {presentedNarrative}
         </p>
 
         <div className="dashboardIntelligenceHeroSignals">

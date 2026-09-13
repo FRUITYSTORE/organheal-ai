@@ -486,29 +486,57 @@ const nextStep: NextStep = !hasAssessments && !hasReports
     unifiedExperience?.primaryAction ??
     null;
 
-    const resolvedNextStep: NextStep =
-    unifiedPrimaryAction
-      ? {
-                      tag:
-              isArabic
-                ? "موصى به الآن"
-                : "Recommended now",
+const resolvedNextStep: NextStep =
+  unifiedPrimaryAction
+    ? {
+        tag:
+          isArabic
+            ? "موصى به الآن"
+            : "Recommended now",
 
-          label:
-            unifiedPrimaryAction.title,
+        label:
+          isArabic
+            ? unifiedPrimaryAction.href ===
+              "/doctor-portal"
+              ? "راجع الإشارة الصحية المهمة"
+              : unifiedPrimaryAction.href ===
+                  "/checkin"
+                ? "حدّث حالتك الصحية"
+                : unifiedPrimaryAction.href ===
+                    "/reports"
+                  ? "راجع تقاريرك الصحية"
+                  : unifiedPrimaryAction.href ===
+                      "/health-plan"
+                    ? "راجع خطة المتابعة الصحية"
+                    : "راجع الخطوة الصحية التالية"
+            : unifiedPrimaryAction.title,
 
-          description:
-            unifiedPrimaryAction.description,
+        description:
+          isArabic
+            ? unifiedPrimaryAction.href ===
+              "/doctor-portal"
+              ? "توجد إشارة صحية مهمة تستحق المراجعة مع مختص مؤهل في الرعاية الصحية."
+              : unifiedPrimaryAction.href ===
+                  "/checkin"
+                ? "أكمل تحديثًا صحيًا جديدًا لإضافة حالتك الحالية إلى بيانات المتابعة."
+                : unifiedPrimaryAction.href ===
+                    "/reports"
+                  ? "راجع التقارير الصحية المتاحة لفهم أحدث المعلومات المسجلة."
+                  : unifiedPrimaryAction.href ===
+                      "/health-plan"
+                    ? "راجع خطة المتابعة الحالية والخطوات الصحية المقترحة بناءً على البيانات المتاحة."
+                    : "راجع الخطوة التالية ضمن خطة المتابعة الصحية الحالية."
+            : unifiedPrimaryAction.description,
 
-          href:
-            unifiedPrimaryAction.href,
+        href:
+          unifiedPrimaryAction.href,
 
-                      buttonText:
-              isArabic
-                ? "افتح الخطوة التالية"
-                : "Open next step",
-        }
-      : nextStep;
+        buttonText:
+          isArabic
+            ? "افتح الخطوة التالية"
+            : "Open next step",
+      }
+    : nextStep;
 
   const overviewCards = [
     {
