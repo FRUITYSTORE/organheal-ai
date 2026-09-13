@@ -65,6 +65,170 @@ function getStatusTone(status?: string | null) {
   return "neutral";
 }
 
+function hasArabicText(value?: string | null) {
+  return Boolean(
+    value &&
+      /[\u0600-\u06FF]/.test(value)
+  );
+}
+
+function localizeAdminStatus(
+  status: string | null | undefined,
+  isArabic: boolean
+) {
+  const raw = (status || "").trim();
+
+  if (!raw) {
+    return isArabic
+      ? "بانتظار"
+      : "Pending";
+  }
+
+  if (!isArabic || hasArabicText(raw)) {
+    return raw;
+  }
+
+  const normalized =
+    raw.toLowerCase();
+
+  if (
+    normalized.includes("complete") ||
+    normalized.includes("success") ||
+    normalized.includes("done") ||
+    normalized.includes("extracted") ||
+    normalized.includes("generated")
+  ) {
+    return "مكتمل";
+  }
+
+  if (
+    normalized.includes("fail") ||
+    normalized.includes("error") ||
+    normalized.includes("reject")
+  ) {
+    return "فشل";
+  }
+
+  if (
+    normalized.includes("pending")
+  ) {
+    return "بانتظار";
+  }
+
+  if (
+    normalized.includes("upload")
+  ) {
+    return "مرفوع";
+  }
+
+  if (
+    normalized.includes("extract")
+  ) {
+    return "قيد الاستخراج";
+  }
+
+  if (
+    normalized.includes("process")
+  ) {
+    return "قيد المعالجة";
+  }
+
+  if (
+    normalized.includes("generat") ||
+    normalized.includes("analy")
+  ) {
+    return "قيد التحليل";
+  }
+
+  return "حالة غير معروفة";
+}
+
+function presentAdminReportType(
+  reportType: string | null | undefined,
+  isArabic: boolean
+) {
+  const raw =
+    (reportType || "").trim();
+
+  if (!raw) {
+    return isArabic
+      ? "تقرير طبي"
+      : "Medical Report";
+  }
+
+  if (!isArabic || hasArabicText(raw)) {
+    return raw;
+  }
+
+  const normalized =
+    raw.toLowerCase();
+
+  if (
+    normalized.includes("lab") ||
+    normalized.includes("laboratory")
+  ) {
+    return "تقرير مختبر";
+  }
+
+  if (
+    normalized.includes("medical")
+  ) {
+    return "تقرير طبي";
+  }
+
+  if (
+    normalized.includes("radiology") ||
+    normalized.includes("imaging")
+  ) {
+    return "تقرير تصوير طبي";
+  }
+
+  return "تقرير طبي";
+}
+
+function presentAdminExtractedText(
+  value: string | null | undefined,
+  isArabic: boolean
+) {
+  const raw =
+    (value || "").trim();
+
+  if (!raw) {
+    return isArabic
+      ? "لا يوجد نص مستخرج حتى الآن."
+      : "No extracted text available yet.";
+  }
+
+  if (!isArabic || hasArabicText(raw)) {
+    return raw;
+  }
+
+  return "النص المستخرج متاح ويمكن مراجعته عند استخدام الواجهة الإنجليزية.";
+}
+
+function formatAdminDate(
+  value: string | null | undefined,
+  isArabic: boolean
+) {
+  if (!value) {
+    return isArabic
+      ? "لم يتم الاستخراج"
+      : "Not extracted";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return isArabic
+      ? "لم يتم الاستخراج"
+      : value;
+  }
+
+  return date.toLocaleString(
+    isArabic ? "ar-AE" : "en-US"
+  );
+}
+
 export default function AdminReportsPage() {
   const [language, setLanguage] = useState<Language>("en");
   const [reports, setReports] = useState<Report[]>([]);
@@ -111,8 +275,7 @@ export default function AdminReportsPage() {
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error(error);
-      setErrorMessage(error.message);
+      setErrorMessage("load_failed");
       setReports([]);
       setLoading(false);
       return;
@@ -233,7 +396,7 @@ export default function AdminReportsPage() {
                   <br />
                   {text(
                     "A full admin role gate should be added later when the admin permissions schema is finalized.",
-                    "يجب إضافة بوابة صلاحيات Admin كاملة لاحقًا عند تثبيت مخطط الصلاحيات."
+                    "يجب إضافة بوابة صلاحيات كاملة للمشرف لاحقًا عند تثبيت مخطط الصلاحيات."
                   )}
                 </div>
               </div>
@@ -291,7 +454,10 @@ export default function AdminReportsPage() {
                 {text("Unable to load reports", "تعذر تحميل التقارير")}
               </strong>
               <br />
-              {errorMessage}
+              {text(
+                "The report records could not be loaded. Please try again.",
+                "تعذر تحميل سجلات التقارير. يرجى المحاولة مرة أخرى."
+              )}
             </div>
           </section>
         )}
@@ -349,12 +515,18 @@ export default function AdminReportsPage() {
                     <div className="ohButtonRow">
                       <span className={`ohStatusBadge ${extractionTone}`}>
                         {text("Extraction:", "الاستخراج:")}{" "}
-                        {report.extraction_status || text("Pending", "بانتظار")}
+                        {localizeAdminStatus(
+                           report.extraction_status,
+                           isArabic
+                        )}
                       </span>
 
                       <span className={`ohStatusBadge ${aiTone}`}>
                         {text("AI:", "الذكاء:")}{" "}
-                        {report.analysis_status || text("Pending", "بانتظار")}
+                        {localizeAdminStatus(
+                           report.analysis_status,
+                           isArabic
+                        )}
                       </span>
                     </div>
                   </div>
@@ -365,7 +537,10 @@ export default function AdminReportsPage() {
                         {text("Report Type", "نوع التقرير")}
                       </span>
                       <span className="ohMetricHint">
-                        {report.report_type || text("Medical Report", "تقرير طبي")}
+                        {presentAdminReportType(
+                           report.report_type,
+                           isArabic
+                        )}
                       </span>
                     </div>
 
@@ -374,7 +549,10 @@ export default function AdminReportsPage() {
                         {text("Extracted At", "وقت الاستخراج")}
                       </span>
                       <span className="ohMetricHint">
-                        {report.extracted_at || text("Not extracted", "لم يتم الاستخراج")}
+                        {formatAdminDate(
+                           report.extracted_at,
+                           isArabic
+                        )}
                       </span>
                     </div>
 
@@ -384,8 +562,14 @@ export default function AdminReportsPage() {
                       </span>
                       <span className="ohMetricHint">
                         {report.extracted_text
-                          ? `${report.extracted_text.length.toLocaleString()} chars`
-                          : text("No text", "لا يوجد نص")}
+                          ? text(
+                             `${report.extracted_text.length.toLocaleString()} chars`,
+                             `${report.extracted_text.length.toLocaleString("ar-AE")} حرفًا`
+                            )
+                          : text(
+                              "No text",
+                              "لا يوجد نص"
+                            )}
                       </span>
                     </div>
                   </div>
@@ -411,11 +595,10 @@ export default function AdminReportsPage() {
                         color: "#334155",
                       }}
                     >
-                      {report.extracted_text ||
-                        text(
-                          "No extracted text available yet.",
-                          "لا يوجد نص مستخرج حتى الآن."
-                        )}
+                      {presentAdminExtractedText(
+                        report.extracted_text,
+                        isArabic
+                      )}
                     </div>
                   </div>
                 </article>
