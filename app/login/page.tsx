@@ -345,7 +345,13 @@ export default function LoginPage() {
     });
 
     if (error) {
-      showMessage(error.message, "error");
+      showMessage(
+        text(
+          "Could not resend the verification email. Please try again.",
+          "تعذر إعادة إرسال رسالة التأكيد. يرجى المحاولة مرة أخرى."
+        ),
+        "error"
+      );
       setLoadingAction("");
       return;
     }
@@ -384,9 +390,15 @@ export default function LoginPage() {
     });
 
     if (error) {
-      showMessage(error.message, "error");
-      setLoadingAction("");
-      return;
+      showMessage(
+        text(
+          "Could not send the password reset email. Please try again.",
+          "تعذر إرسال رابط إعادة تعيين كلمة المرور. يرجى المحاولة مرة أخرى."
+        ),
+        "error"
+    );
+    setLoadingAction("");
+    return;
     }
 
     showMessage(

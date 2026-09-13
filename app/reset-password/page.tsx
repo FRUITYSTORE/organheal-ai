@@ -87,7 +87,7 @@ export default function ResetPasswordPage() {
         showMessage(
           textByLanguage(
             currentLanguage,
-            error.message || "Could not verify reset link. Please request a new link.",
+            "Could not verify reset link. Please request a new link.",
             "تعذر التحقق من رابط إعادة التعيين. يرجى طلب رابط جديد."
           ),
           "error"
@@ -229,7 +229,7 @@ export default function ResetPasswordPage() {
     if (error) {
       showMessage(
         text(
-          error.message || "Could not update password. Please try again.",
+          "Could not update password. Please try again.",
           "تعذر تحديث كلمة المرور الآن. يرجى المحاولة مرة أخرى."
         ),
         "error"

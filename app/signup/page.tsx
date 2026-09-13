@@ -154,7 +154,13 @@ export default function SignupPage() {
       .maybeSingle();
 
     if (emailCheckError) {
-      showMessage(emailCheckError.message, "error");
+      showMessage(
+        text(
+          "Could not verify email availability. Please try again.",
+          "تعذر التحقق من توفر البريد الإلكتروني. يرجى المحاولة مرة أخرى."
+        ),
+        "error"
+      );
       setLoading(false);
       return;
     }
@@ -178,7 +184,13 @@ export default function SignupPage() {
       .maybeSingle();
 
     if (usernameCheckError) {
-      showMessage(usernameCheckError.message, "error");
+      showMessage(
+        text(
+          "Could not verify username availability. Please try again.",
+          "تعذر التحقق من توفر اسم المستخدم. يرجى المحاولة مرة أخرى."
+        ),
+        "error"
+      );
       setLoading(false);
       return;
     }
@@ -214,7 +226,13 @@ export default function SignupPage() {
     });
 
     if (error) {
-      showMessage(error.message, "error");
+      showMessage(
+        text(
+          "Could not create your account. Please try again.",
+          "تعذر إنشاء الحساب. يرجى المحاولة مرة أخرى."
+        ),
+        "error"
+      );
       setLoading(false);
       return;
     }
