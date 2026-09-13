@@ -455,50 +455,48 @@ export default function CommunicationSettingsPage() {
           }
         );
 
-      const payload =
-        await response
-          .json() as
-          PreferencesResponse;
+    const payload =
+      await response
+        .json() as
+        PreferencesResponse;
 
-      if (
-        !response.ok ||
-        !payload
-          .preferences
-      ) {
-        throw new Error(
-          payload.error ||
-          "Could not load communication preferences."
-        );
-      }
+    if (response.status === 401) {
+      window.location.href =
+        "/login";
+      return;
+    }
 
-      applyPreferences(
-        payload
-          .preferences
+    if (
+      !response.ok ||
+      !payload.preferences
+    ) {
+      throw new Error(
+        "load_failed"
       );
+    }
+
+    applyPreferences(
+      payload.preferences
+    );
     } catch (
       loadError
     ) {
-      const message =
-        loadError instanceof
-          Error
-          ? loadError
-              .message
-          : "Could not load communication preferences.";
-
       if (
-        message ===
-        "Authentication is required."
+        loadError instanceof
+          Error &&
+        loadError.message ===
+          "Authentication is required."
       ) {
-        window
-          .location
-          .href =
-            "/login";
-
+        window.location.href =
+          "/login";
         return;
       }
 
       setError(
-        message
+        text(
+          "Could not load communication preferences. Please try again.",
+          "تعذر تحميل تفضيلات التواصل. يرجى المحاولة مرة أخرى."
+        )
       );
     } finally {
       setLoading(
@@ -525,6 +523,30 @@ export default function CommunicationSettingsPage() {
     setMessage(
       ""
     );
+
+    const whatsappPhone =
+  form.whatsappPhoneE164
+    .trim();
+
+if (
+  whatsappPhone &&
+  !/^\+[1-9][0-9]{7,14}$/.test(
+    whatsappPhone
+  )
+) {
+  setError(
+    text(
+      "Enter a valid WhatsApp number in E.164 format, for example +971501234567.",
+      "أدخل رقم واتساب صحيحًا بصيغة E.164، مثل +971501234567."
+    )
+  );
+
+  setSaving(
+    false
+  );
+
+  return;
+}
 
     try {
       const token =
@@ -572,9 +594,7 @@ export default function CommunicationSettingsPage() {
                     .pushEnabled,
 
                 whatsappPhoneE164:
-                  form
-                    .whatsappPhoneE164
-                    .trim() ||
+                  whatsappPhone ||
                   null,
 
                 emailConsent:
@@ -597,14 +617,18 @@ export default function CommunicationSettingsPage() {
           .json() as
           PreferencesResponse;
 
+      if (response.status === 401) {
+        window.location.href =
+          "/login";
+        return;
+      }
+
       if (
         !response.ok ||
-        !payload
-          .preferences
+        !payload.preferences
       ) {
         throw new Error(
-          payload.error ||
-          "Could not save communication preferences."
+          "save_failed"
         );
       }
 
@@ -622,15 +646,22 @@ export default function CommunicationSettingsPage() {
     } catch (
       saveError
     ) {
-      setError(
+      if (
         saveError instanceof
-          Error
-          ? saveError
-              .message
-          : text(
-              "Could not save communication preferences.",
-              "تعذر حفظ تفضيلات التواصل."
-            )
+          Error &&
+        saveError.message ===
+          "Authentication is required."
+      ) {
+        window.location.href =
+          "/login";
+        return;
+      }
+
+      setError(
+        text(
+          "Could not save communication preferences. Please try again.",
+          "تعذر حفظ تفضيلات التواصل. يرجى المحاولة مرة أخرى."
+        )
       );
     } finally {
       setSaving(
@@ -838,8 +869,11 @@ export default function CommunicationSettingsPage() {
                     {form
                       .preferredLanguage ===
                     "ar"
-                      ? "العربية"
-                      : "English"}
+                    ? "العربية"
+                    : text(
+                        "English",
+                        "الإنجليزية"
+                      )}
                   </span>
                 </div>
 
@@ -876,7 +910,10 @@ export default function CommunicationSettingsPage() {
                       }
                     >
                       <option value="en">
-                        English
+                        {text(
+                          "English",
+                          "الإنجليزية"
+                        )}
                       </option>
 
                       <option value="ar">
@@ -976,7 +1013,10 @@ export default function CommunicationSettingsPage() {
                           ),
 
                       label:
-                        "Dashboard notifications",
+                        text(
+                          "Dashboard notifications",
+                          "إشعارات لوحة التحكم"
+                        ),
                     })}
                   </div>
 
@@ -999,7 +1039,10 @@ export default function CommunicationSettingsPage() {
                   <div className="ohCardHeader">
                     <div>
                       <p className="ohMetricLabel">
-                        Email
+                        {text(
+                          "Email",
+                          "البريد الإلكتروني"
+                        )}
                       </p>
 
                       <h2 className="ohCardTitle">
@@ -1037,7 +1080,10 @@ export default function CommunicationSettingsPage() {
                           ),
 
                       label:
-                        "Email notifications",
+                        text(
+                          "Email notifications",
+                          "إشعارات البريد الإلكتروني"
+                        ),
                     })}
                   </div>
 
@@ -1090,7 +1136,10 @@ export default function CommunicationSettingsPage() {
                   <div className="ohCardHeader">
                     <div>
                       <p className="ohMetricLabel">
-                        WhatsApp
+                        {text(
+                          "WhatsApp",
+                          "واتساب"
+                        )}
                       </p>
 
                       <h2 className="ohCardTitle">
@@ -1128,7 +1177,10 @@ export default function CommunicationSettingsPage() {
                           ),
 
                       label:
-                        "WhatsApp notifications",
+                        text(
+                          "WhatsApp notifications",
+                          "إشعارات واتساب"
+                        ),
                     })}
                   </div>
 
@@ -1242,7 +1294,10 @@ export default function CommunicationSettingsPage() {
                   <div className="ohCardHeader">
                     <div>
                       <p className="ohMetricLabel">
-                        Push
+                        {text(
+                          "Push",
+                          "الإشعارات الفورية"
+                        )}
                       </p>
 
                       <h2 className="ohCardTitle">
@@ -1280,7 +1335,10 @@ export default function CommunicationSettingsPage() {
                           ),
 
                       label:
-                        "Push notifications",
+                        text(
+                          "Push notifications",
+                          "الإشعارات الفورية"
+                        ),
                     })}
                   </div>
 
