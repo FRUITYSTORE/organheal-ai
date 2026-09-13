@@ -210,10 +210,15 @@ export default function CheckInPage() {
       .limit(7);
 
     if (error) {
-      setMessage(text("Database error: ", "خطأ في قاعدة البيانات: ") + error.message);
-      setLoading(false);
-      return;
-    }
+      setMessage(
+        text(
+          "We could not load your recent wellness updates. Please try again.",
+          "تعذر تحميل تحديثات العافية الأخيرة. يرجى المحاولة مرة أخرى."
+      )
+    );
+    setLoading(false);
+    return;
+  }
 
     const checkIns = (data || []) as DailyCheckIn[];
 
@@ -236,7 +241,10 @@ export default function CheckInPage() {
 
     setMessage(
       savedToday
-        ? text("Updating today check-in...", "جاري تحديث Check-In لهذا اليوم...")
+        ? text(
+            "Updating today check-in...",
+            "جاري تحديث بيانات اليوم..."
+        )
         : text("Saving daily check-in...", "جاري حفظ التحديث الصحي...")
     );
 
@@ -281,7 +289,12 @@ export default function CheckInPage() {
         });
 
     if (error) {
-      setMessage(text("Database error: ", "خطأ في قاعدة البيانات: ") + error.message);
+      setMessage(
+        text(
+          "We could not save your daily wellness update. Please try again.",
+          "تعذر حفظ التحديث اليومي للعافية. يرجى المحاولة مرة أخرى."
+        )
+      );
       setSaving(false);
       return;
     }
@@ -290,7 +303,7 @@ export default function CheckInPage() {
       savedToday
         ? text(
             `Today check-in updated successfully. Wellness Score: ${wellnessScore}/100`,
-            `تم تحديث Check-In اليوم بنجاح. النتيجة: ${wellnessScore}/100`
+            `تم تحديث بيانات اليوم بنجاح. النتيجة: ${wellnessScore}/100`
           )
         : text(
             `Check-in saved successfully. Wellness Score: ${wellnessScore}/100`,
@@ -501,7 +514,7 @@ export default function CheckInPage() {
         {loading ? (
           <section className="ohHero">
             <p className="ohEyebrow">
-              {text("Loading Check-In", "تحميل Check-In")}
+              text("Loading Check-In", "تحميل التحديث اليومي")
             </p>
             <h1 className="ohTitle">
               {text("Preparing your daily wellness view...", "جاري تحضير متابعة العافية اليومية...")}
@@ -537,7 +550,7 @@ export default function CheckInPage() {
                     <a href="#daily-checkin-form" className="primaryBtn">
                       {savedToday
                         ? text("Update Today", "تحديث اليوم")
-                        : text("Start Check-In", "ابدأ Check-In")}
+                        : text("Start Check-In", "ابدأ التحديث اليومي")}
                     </a>
 
                     <Link href="/history" className="secondaryBtn">
@@ -748,8 +761,8 @@ export default function CheckInPage() {
                       {saving
                         ? text("Saving...", "جاري الحفظ...")
                         : savedToday
-                        ? text("Update Today's Check-In", "تحديث Check-In اليوم")
-                        : text("Save Daily Check-In", "حفظ Check-In اليوم")}
+                        ? text("Update Today's Check-In", "تحديث بيانات اليوم")
+                        : text("Save Daily Check-In", "حفظ التحديث اليومي")}
                     </button>
 
                     <Link href="/history" className="secondaryBtn">
@@ -910,7 +923,7 @@ export default function CheckInPage() {
 
               {recentCheckIns.length === 0 ? (
                 <div className="ohEmptyState">
-                  <h2>{text("Start your first check-in", "ابدأ أول Check-In")}</h2>
+                  <h2>{text("Start your first check-in", "ابدأ أول تحديث يومي")}</h2>
                   <p>
                     {text(
                       "Save today's wellness signals to begin building your personal pattern.",
@@ -958,7 +971,7 @@ export default function CheckInPage() {
                 <br />
                 {text(
                   "Daily check-ins help organize wellness patterns for education and follow-up preparation. They do not diagnose disease or replace urgent care. Seek medical help for severe symptoms, chest pain, shortness of breath, fainting, confusion, or thoughts of self-harm.",
-                  "تساعد تحديثات Check-In على تنظيم نمط العافية للتعليم والتحضير للمتابعة. لا تشخّص المرض ولا تستبدل الرعاية العاجلة. اطلب مساعدة طبية عند وجود أعراض شديدة، ألم صدر، ضيق نفس، إغماء، تشوش، أو أفكار لإيذاء النفس."
+                  "تساعد التحديثات اليومية على تنظيم نمط العافية للتعليم والتحضير للمتابعة. لا تشخّص المرض ولا تستبدل الرعاية العاجلة. اطلب مساعدة طبية عند وجود أعراض شديدة، ألم صدر، ضيق نفس، إغماء، تشوش، أو أفكار لإيذاء النفس."
                 )}
               </div>
             </section>
@@ -971,13 +984,16 @@ export default function CheckInPage() {
                   </p>
 
                   <h2 className="ohCardTitle">
-                    {text("Connect check-ins to your health plan", "اربط Check-Ins بخطتك الصحية")}
+                    {text(
+                       "Connect check-ins to your health plan",
+                       "اربط التحديثات اليومية بخطتك الصحية"
+                    )}
                   </h2>
 
                   <p className="ohCardText">
                     {text(
                       "After saving your daily check-in, compare your trend, open the health plan, or connect your pattern with reports and intelligence.",
-                      "بعد حفظ Check-In اليومي، قارن الاتجاه، افتح الخطة الصحية، أو اربط نمطك بالتقارير والتحليل الصحي."
+                      "بعد حفظ التحديث اليومي، قارن الاتجاه، افتح الخطة الصحية، أو اربط نمطك بالتقارير والتحليل الصحي."
                     )}
                   </p>
                 </div>
