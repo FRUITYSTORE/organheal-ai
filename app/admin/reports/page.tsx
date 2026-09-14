@@ -265,25 +265,113 @@ export default function AdminReportsPage() {
     return isArabic ? ar : en;
   }
 
-  async function loadReports() {
-    setLoading(true);
-    setErrorMessage("");
+async function loadReports() {
+  setLoading(true);
+  setErrorMessage("");
 
-    const { data, error } = await supabase
-      .from("uploaded_lab_files")
-      .select("*")
-      .order("created_at", { ascending: false });
+  try {
+    const {
+      data:
+        sessionData,
+      error:
+        sessionError,
+    } =
+      await supabase.auth
+        .getSession();
 
-    if (error) {
-      setErrorMessage("load_failed");
+    const accessToken =
+      sessionData
+        .session
+        ?.access_token;
+
+    if (
+      sessionError ||
+      !accessToken
+    ) {
       setReports([]);
+      setErrorMessage(
+        "authentication_required"
+      );
       setLoading(false);
       return;
     }
 
-    setReports((data || []) as Report[]);
+    const response =
+      await fetch(
+        "/api/admin/reports",
+        {
+          method:
+            "GET",
+
+          headers: {
+            Authorization:
+              `Bearer ${accessToken}`,
+          },
+
+          cache:
+            "no-store",
+        }
+      );
+
+    const payload =
+      (await response
+        .json()
+        .catch(
+          () =>
+            null
+        )) as
+        | {
+            reports?: Report[];
+            error?: string;
+          }
+        | null;
+
+    if (
+      response.status === 401
+    ) {
+      setReports([]);
+      setErrorMessage(
+        "authentication_required"
+      );
+      setLoading(false);
+      return;
+    }
+
+    if (
+      response.status === 403
+    ) {
+      setReports([]);
+      setErrorMessage(
+        "admin_required"
+      );
+      setLoading(false);
+      return;
+    }
+
+    if (
+      !response.ok ||
+      !payload
+    ) {
+      setReports([]);
+      setErrorMessage(
+        "load_failed"
+      );
+      setLoading(false);
+      return;
+    }
+
+    setReports(
+      payload.reports ?? []
+    );
+  } catch {
+    setReports([]);
+    setErrorMessage(
+      "load_failed"
+    );
+  } finally {
     setLoading(false);
   }
+}
 
   const metrics = useMemo(() => {
     const total = reports.length;
@@ -387,19 +475,33 @@ export default function AdminReportsPage() {
                 )}
               </p>
 
-              <div className="ohTrustNotice" style={{ marginTop: "16px" }}>
-                <span aria-hidden="true">🛡️</span>
-                <div>
-                  <strong>
-                    {text("Security note", "ملاحظة أمان")}
-                  </strong>
-                  <br />
-                  {text(
-                    "A full admin role gate should be added later when the admin permissions schema is finalized.",
-                    "يجب إضافة بوابة صلاحيات كاملة للمشرف لاحقًا عند تثبيت مخطط الصلاحيات."
-                  )}
-                </div>
-              </div>
+<div
+  className="ohTrustNotice"
+  style={{
+    marginTop:
+      "16px",
+  }}
+>
+  <span aria-hidden="true">
+    🛡️
+  </span>
+
+  <div>
+    <strong>
+      {text(
+        "Protected admin access",
+        "وصول إداري محمي"
+      )}
+    </strong>
+
+    <br />
+
+    {text(
+      "Report data is loaded through a server-authorized administrator endpoint.",
+      "يتم تحميل بيانات التقارير من خلال نقطة وصول إدارية محمية ومتحقق منها على الخادم."
+    )}
+  </div>
+</div>
             </div>
           </div>
         </section>
@@ -446,21 +548,56 @@ export default function AdminReportsPage() {
           </article>
         </section>
 
-        {errorMessage && (
-          <section className="ohTrustNotice">
-            <span aria-hidden="true">⚠️</span>
-            <div>
-              <strong>
-                {text("Unable to load reports", "تعذر تحميل التقارير")}
-              </strong>
-              <br />
-              {text(
-                "The report records could not be loaded. Please try again.",
-                "تعذر تحميل سجلات التقارير. يرجى المحاولة مرة أخرى."
+{errorMessage && (
+  <section className="ohTrustNotice">
+    <span aria-hidden="true">
+      {errorMessage ===
+      "admin_required"
+        ? "🔒"
+        : "⚠️"}
+    </span>
+
+    <div>
+      <strong>
+        {errorMessage ===
+        "authentication_required"
+          ? text(
+              "Sign-in required",
+              "تسجيل الدخول مطلوب"
+            )
+          : errorMessage ===
+              "admin_required"
+            ? text(
+                "Administrator access required",
+                "صلاحية المشرف مطلوبة"
+              )
+            : text(
+                "Unable to load reports",
+                "تعذر تحميل التقارير"
               )}
-            </div>
-          </section>
-        )}
+      </strong>
+
+      <br />
+
+      {errorMessage ===
+      "authentication_required"
+        ? text(
+            "Please sign in before accessing this internal console.",
+            "يرجى تسجيل الدخول قبل الوصول إلى لوحة الإدارة الداخلية."
+          )
+        : errorMessage ===
+            "admin_required"
+          ? text(
+              "Your account does not have permission to access the admin report console.",
+              "لا يملك حسابك صلاحية الوصول إلى لوحة إدارة التقارير."
+            )
+          : text(
+              "The report records could not be loaded. Please try again.",
+              "تعذر تحميل سجلات التقارير. يرجى المحاولة مرة أخرى."
+            )}
+    </div>
+  </section>
+)}
 
         {loading ? (
           <section className="ohEmptyState">
@@ -472,7 +609,7 @@ export default function AdminReportsPage() {
               )}
             </p>
           </section>
-        ) : reports.length === 0 ? (
+        ) : errorMessage ? null : reports.length === 0 ? (
           <section className="ohEmptyState">
             <h2>{text("No uploaded reports found", "لا توجد تقارير مرفوعة")}</h2>
             <p>

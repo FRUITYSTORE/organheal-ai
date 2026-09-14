@@ -41,8 +41,43 @@ describe(
 
         expect(
           source
+        ).toMatch(
+          /setErrorMessage\(\s*"load_failed"\s*\)/
+        );
+      }
+    );
+
+    it(
+      "keeps authentication and authorization failures as safe presentation states",
+      () => {
+        expect(
+          source
+        ).toMatch(
+          /setErrorMessage\(\s*"authentication_required"\s*\)/
+        );
+
+        expect(
+          source
+        ).toMatch(
+          /setErrorMessage\(\s*"admin_required"\s*\)/
+        );
+
+        expect(
+          source
         ).toContain(
-          'setErrorMessage("load_failed")'
+          "تسجيل الدخول مطلوب"
+        );
+
+        expect(
+          source
+        ).toContain(
+          "صلاحية المشرف مطلوبة"
+        );
+
+        expect(
+          source
+        ).toContain(
+          "لا يملك حسابك صلاحية الوصول إلى لوحة إدارة التقارير."
         );
       }
     );
@@ -146,7 +181,7 @@ describe(
     );
 
     it(
-      "removes English Admin wording from the Arabic security note",
+      "presents the protected admin security state in Arabic",
       () => {
         expect(
           source
@@ -156,8 +191,31 @@ describe(
 
         expect(
           source
-        ).toContain(
+        ).not.toContain(
           "صلاحيات كاملة للمشرف"
+        );
+
+        expect(
+          source
+        ).toContain(
+          "وصول إداري محمي"
+        );
+
+        expect(
+          source
+        ).toContain(
+          "يتم تحميل بيانات التقارير من خلال نقطة وصول إدارية محمية ومتحقق منها على الخادم."
+        );
+      }
+    );
+
+    it(
+      "does not show the empty reports state after an authorization failure",
+      () => {
+        expect(
+          source
+        ).toMatch(
+          /errorMessage\s*\?\s*null\s*:\s*reports\.length\s*===\s*0/
         );
       }
     );
