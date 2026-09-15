@@ -167,6 +167,9 @@ if (
           authentication
             .client,
 
+        backgroundJobClient:
+          adminClient,
+
         language,
 
         requestId,

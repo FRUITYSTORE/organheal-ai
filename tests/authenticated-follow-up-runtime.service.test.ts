@@ -29,7 +29,10 @@ import {
 const mockedEnqueueFollowUpDelivery =
   vi.fn();
 
-vi.mock(
+const mockedBackgroundJobServiceClient =
+  vi.fn();
+
+  vi.mock(
   "@/lib/services/shared/patient-summary.service",
   () => ({
     getPatientSummary:
@@ -66,6 +69,14 @@ vi.mock(
   () => ({
     BackgroundJobService:
       class {
+        constructor(
+          client: unknown
+      ) {
+        mockedBackgroundJobServiceClient(
+          client
+        );
+      }
+
         enqueueFollowUpDelivery =
           mockedEnqueueFollowUpDelivery;
       },
@@ -266,7 +277,16 @@ describe(
           });
 
         const client =
-          {} as never;
+          {
+            kind:
+             "authenticated-client",
+          } as never;
+
+        const backgroundJobClient =
+          {
+            kind:
+             "service-role-client",
+          } as never;
 
         const result =
           await executeAuthenticatedFollowUp({
@@ -274,6 +294,8 @@ describe(
               " user-123 ",
 
             client,
+
+            backgroundJobClient,
 
             language:
               "en",
@@ -343,6 +365,11 @@ describe(
         });
 
         expect(
+          mockedBackgroundJobServiceClient
+        ).toHaveBeenCalledWith(
+          backgroundJobClient
+        );
+        expect(
           result.enqueueResult
         ).toEqual({
           jobId:
@@ -401,10 +428,17 @@ describe(
 
             client:
               {} as never,
+
+            backgroundJobClient:
+              {} as never,
           });
 
         expect(
           mockedEnqueueFollowUpDelivery
+        ).not.toHaveBeenCalled();
+
+        expect(
+          mockedBackgroundJobServiceClient
         ).not.toHaveBeenCalled();
 
         expect(
@@ -418,7 +452,6 @@ describe(
         );
       }
     );
-
     it(
       "fails safely when the health runtime has no ready next decision",
       async () => {
@@ -454,6 +487,9 @@ describe(
               "user-123",
 
             client:
+              {} as never,
+
+            backgroundJobClient:
               {} as never,
           })
         ).rejects.toThrow(

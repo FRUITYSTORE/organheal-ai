@@ -40,6 +40,9 @@ export type ExecuteAuthenticatedFollowUpInput = {
   client:
     SupabaseClient;
 
+  backgroundJobClient:
+    SupabaseClient;
+
   language?:
     FollowUpMessageLanguage;
 
@@ -77,6 +80,7 @@ function requireUserId(
 export async function executeAuthenticatedFollowUp({
   userId,
   client,
+  backgroundJobClient,
   language = "en",
   requestId = null,
   referenceTime,
@@ -196,7 +200,7 @@ export async function executeAuthenticatedFollowUp({
 
   const backgroundJobService =
     new BackgroundJobService(
-      client
+      backgroundJobClient
     );
 
   const enqueueResult =

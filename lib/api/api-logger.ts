@@ -392,12 +392,7 @@ export function logApiError(
     {
       ...sanitizedDetails,
 
-      error:
-        error instanceof Error
-          ? error
-          : String(
-              error
-            ),
+      error,
     }
   );
 
@@ -440,12 +435,7 @@ export async function logApiErrorAndFlush(
     {
       ...sanitizedDetails,
 
-      error:
-        error instanceof Error
-          ? error
-          : String(
-              error
-            ),
+      error,
     }
   );
 

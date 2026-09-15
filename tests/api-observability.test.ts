@@ -137,6 +137,101 @@ describe(
     );
 
     it(
+      "preserves structured object errors without leaking sensitive fields",
+      () => {
+        logApiError(
+          "follow_up.runtime_failed",
+          {
+            code:
+              "42501",
+
+            message:
+              "permission denied for function",
+
+            details:
+              "RPC execution was rejected",
+
+            hint:
+              "Check execute privileges",
+
+            token:
+              "secret-token",
+
+            user_id:
+              "user-123",
+
+            nested: {
+              extractedText:
+                "private medical text",
+
+              safeValue:
+                "visible",
+            },
+          },
+          {
+            route:
+              "/api/follow-up",
+
+            requestId:
+              "req_structured_error",
+          }
+        );
+
+        const loggedValue =
+          consoleErrorSpy
+            .mock
+            .calls[0]?.[0];
+
+        const parsedLog =
+          JSON.parse(
+            loggedValue as string
+          ) as {
+            error?: {
+              code?: string;
+              message?: string;
+              details?: string;
+              hint?: string;
+              token?: string;
+              user_id?: string;
+              nested?: {
+                extractedText?: string;
+                safeValue?: string;
+              };
+            };
+          };
+
+        expect(
+          parsedLog.error
+        ).toMatchObject({
+          code:
+            "42501",
+
+          message:
+            "permission denied for function",
+
+          details:
+            "RPC execution was rejected",
+
+          hint:
+            "Check execute privileges",
+
+          token:
+            "[REDACTED]",
+
+          user_id:
+            "[REDACTED]",
+
+          nested: {
+            extractedText:
+              "[REDACTED]",
+
+            safeValue:
+              "visible",
+          },
+        });
+      }
+    );
+    it(
       "redacts sensitive values at nested levels",
       () => {
         logApiError(
