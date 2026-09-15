@@ -2282,7 +2282,8 @@ const hasReportEvidence = Boolean(
                     {generatedResult.strategy && (
                       <PersonalHealthStrategyCard
                         strategy={generatedResult.strategy}
-                      />
+                        isArabic={isArabicUi}
+                    />
                     )}
 
                     {generatedResult.actionPlan && (

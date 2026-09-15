@@ -117,7 +117,11 @@ export function buildReportIntelligenceResult({
     detectedMarkers
   );
 
-  const healthStrategy = buildHealthStrategy(detectedMarkers);
+  const healthStrategy =
+  buildHealthStrategy(
+    detectedMarkers,
+    language
+  );
 
   const unifiedHealth = buildUnifiedHealthIntelligence({
     detectedMarkers,
@@ -170,11 +174,13 @@ export function buildReportIntelligenceResult({
     language,
   });
 
-  const actionPlan = buildActionPlan({
+const actionPlan =
+  buildActionPlan({
     digitalTwin,
     forecast,
     longitudinalRisk,
     crossSource,
+    language,
   });
 
   const executiveSummary = {

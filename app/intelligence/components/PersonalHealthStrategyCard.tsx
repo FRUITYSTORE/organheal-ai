@@ -7,6 +7,7 @@ type PersonalHealthStrategy = {
 
 type PersonalHealthStrategyCardProps = {
   strategy: PersonalHealthStrategy;
+  isArabic: boolean;
 };
 
 function StrategySection({
@@ -54,9 +55,20 @@ function StrategySection({
 
 export default function PersonalHealthStrategyCard({
   strategy,
+  isArabic,
 }: PersonalHealthStrategyCardProps) {
+  const text = (
+    english: string,
+    arabic: string
+  ) =>
+    isArabic
+      ? arabic
+      : english;
   return (
-    <section className="personalStrategySnapshot">
+    <section
+       className="personalStrategySnapshot"
+       dir={isArabic ? "rtl" : "ltr"}
+    >
       <style>{`
         .personalStrategySnapshot,
         .personalStrategySnapshot * {
@@ -244,56 +256,91 @@ export default function PersonalHealthStrategyCard({
         }
       `}</style>
 
-      <div className="strategySnapshotHeader">
-        <div>
-          <p className="strategySnapshotEyebrow">
-            Personal Health Strategy
-          </p>
+<div className="strategySnapshotHeader">
+  <div>
+    <p className="strategySnapshotEyebrow">
+      {text(
+        "Personal Health Strategy",
+        "استراتيجيتك الصحية الشخصية"
+      )}
+    </p>
 
-          <h2 className="strategySnapshotHeading">
-            Your strategy at a glance
-          </h2>
+    <h2 className="strategySnapshotHeading">
+      {text(
+        "Your strategy at a glance",
+        "استراتيجيتك بنظرة سريعة"
+      )}
+    </h2>
 
-          <p className="strategySnapshotDescription">
-            Review the main risk, action, lifestyle, and follow-up directions.
-            Open any section for the full details.
-          </p>
-        </div>
+    <p className="strategySnapshotDescription">
+      {text(
+        "Review the main risk, action, lifestyle, and follow-up directions. Open any section for the full details.",
+        "راجع أهم اتجاهات الخطورة والإجراءات ونمط الحياة والمتابعة. افتح أي قسم لعرض التفاصيل كاملة."
+      )}
+    </p>
+  </div>
 
-        <span className="strategySnapshotStatus">
-          Strategy
-        </span>
-      </div>
+  <span className="strategySnapshotStatus">
+    {text(
+      "Strategy",
+      "استراتيجية"
+    )}
+  </span>
+</div>
 
-      <div className="strategySnapshotGrid">
-        <StrategySection
-          title="Health Risks"
-          badge="Risk focus"
-          icon="⚠️"
-          body={strategy.healthRisks}
-        />
+<div className="strategySnapshotGrid">
+  <StrategySection
+    title={text(
+      "Health Risks",
+      "المخاطر الصحية"
+    )}
+    badge={text(
+      "Risk focus",
+      "محور الخطورة"
+    )}
+    icon="⚠️"
+    body={strategy.healthRisks}
+  />
 
-        <StrategySection
-          title="90-Day Action Plan"
-          badge="Action direction"
-          icon="📆"
-          body={strategy.actionPlan90Days}
-        />
+  <StrategySection
+    title={text(
+      "90-Day Action Plan",
+      "خطة العمل خلال 90 يومًا"
+    )}
+    badge={text(
+      "Action direction",
+      "اتجاه العمل"
+    )}
+    icon="📆"
+    body={strategy.actionPlan90Days}
+  />
 
-        <StrategySection
-          title="Nutrition Strategy"
-          badge="Lifestyle support"
-          icon="🥗"
-          body={strategy.nutritionStrategy}
-        />
+  <StrategySection
+    title={text(
+      "Nutrition Strategy",
+      "استراتيجية التغذية"
+    )}
+    badge={text(
+      "Lifestyle support",
+      "دعم نمط الحياة"
+    )}
+    icon="🥗"
+    body={strategy.nutritionStrategy}
+  />
 
-        <StrategySection
-          title="Follow-Up Plan"
-          badge="Monitoring"
-          icon="🩺"
-          body={strategy.followUpPlan}
-        />
-      </div>
+  <StrategySection
+    title={text(
+      "Follow-Up Plan",
+      "خطة المتابعة"
+    )}
+    badge={text(
+      "Monitoring",
+      "المتابعة"
+    )}
+    icon="🩺"
+    body={strategy.followUpPlan}
+  />
+</div>
     </section>
   );
 }
