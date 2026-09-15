@@ -710,20 +710,51 @@ export function buildLabMarkerSummary(
   markers: LabMarkerResult[],
   language: "en" | "ar" = "en"
 ) {
-  const patterns = detectLabPatterns(markers);
-  const isArabic = language === "ar";
+  const patterns =
+    detectLabPatterns(
+      markers
+    );
+
+  const isArabic =
+    language === "ar";
 
   const statusLabel = (
     status: LabMarkerResult["status"]
   ) => {
-    if (!isArabic) return status;
+    if (!isArabic) {
+      return status;
+    }
 
-    if (status === "High") return "مرتفع";
-    if (status === "Low") return "منخفض";
-    if (status === "Normal") return "طبيعي";
+    if (status === "High") {
+      return "مرتفع";
+    }
 
-    return status;
+    if (status === "Low") {
+      return "منخفض";
+    }
+
+    if (status === "Normal") {
+      return "طبيعي";
+    }
+
+    return "تم اكتشافه";
   };
+
+  const severityRank: Record<
+    LabPatternInsight["severity"],
+    number
+  > = {
+    High: 3,
+    Moderate: 2,
+    Low: 1,
+  };
+
+  const prioritizedPatterns =
+    [...patterns].sort(
+      (left, right) =>
+        severityRank[right.severity] -
+        severityRank[left.severity]
+    );
 
   if (markers.length === 0) {
     return {
@@ -732,95 +763,251 @@ export function buildLabMarkerSummary(
         : "No structured lab markers were detected clearly from this report.",
 
       keyFindings: isArabic
-        ? "تم استخراج نص التقرير، لكن القيم المخبرية لم تكن منظمة بشكل واضح."
-        : "OCR text was extracted, but lab values were not clearly structured.",
+        ? "تم استخراج نص التقرير، لكن القيم المخبرية لم تكن منظمة بشكل يسمح بتفسير موثوق."
+        : "Report text was extracted, but the lab values were not structured clearly enough for reliable interpretation.",
 
       riskSignals: isArabic
         ? "لم يتم اكتشاف إشارات مخبرية محددة تستدعي الانتباه."
-        : "No specific lab risk signals detected.",
+        : "No specific lab risk signals were identified.",
 
       recommendations: isArabic
-        ? "راجع التقرير الأصلي مع مختص رعاية صحية مرخص."
-        : "Review the original report with a licensed healthcare professional.",
+        ? "راجع التقرير الأصلي مع مختص رعاية صحية مرخص إذا كانت لديك أعراض أو مخاوف، لأن عدم اكتشاف المؤشرات آليًا لا يعني أن التقرير طبيعي."
+        : "Review the original report with a licensed healthcare professional if you have symptoms or concerns, because failure to detect structured markers does not mean the report is normal.",
     };
   }
 
-  const abnormal = markers.filter(
-    (item) =>
-      item.status === "High" ||
-      item.status === "Low"
+  const abnormal =
+    markers.filter(
+      (item) =>
+        item.status === "High" ||
+        item.status === "Low"
+    );
+
+  const normal =
+    markers.filter(
+      (item) =>
+        item.status === "Normal"
+    );
+
+  const unclassified =
+    markers.filter(
+      (item) =>
+        item.status === "Detected"
+    );
+
+  const formatMarker = (
+    item: LabMarkerResult
+  ) => {
+    const valueText =
+      item.value !== null
+        ? `${item.value}${
+            item.unit
+              ? ` ${item.unit}`
+              : ""
+          }`
+        : isArabic
+          ? "تم اكتشاف المؤشر"
+          : "Detected";
+
+    const hasReferenceRange =
+      typeof item.referenceLow ===
+        "number" &&
+      typeof item.referenceHigh ===
+        "number";
+
+    const referenceText =
+      hasReferenceRange
+        ? isArabic
+          ? ` | المرجع: ${item.referenceLow}-${item.referenceHigh}${
+              item.referenceSource
+                ? ` (${item.referenceSource === "report" ? "من التقرير" : "افتراضي"})`
+                : ""
+            }`
+          : ` | Ref: ${item.referenceLow}-${item.referenceHigh}${
+              item.referenceSource
+                ? ` (${item.referenceSource})`
+                : ""
+            }`
+        : "";
+
+    return `${item.marker}: ${valueText} (${statusLabel(
+      item.status
+    )})${referenceText}`;
+  };
+
+  const priorityPattern =
+    prioritizedPatterns[0] ??
+    null;
+
+  const summary =
+    abnormal.length > 0
+      ? isArabic
+        ? `${abnormal.length} من أصل ${markers.length} مؤشرًا مخبريًا مكتشفًا يقع خارج النطاقات المرجعية المتاحة. ${
+            priorityPattern
+              ? "كما تم اكتشاف نمط مخبري مترابط يستحق أولوية في المراجعة."
+              : "تحتاج النتائج غير الطبيعية إلى تفسيرها مع السياق السريري الكامل."
+          } ${
+            normal.length > 0
+              ? `وفي المقابل، ظهر ${normal.length} مؤشرًا ضمن النطاق المرجعي المتاح.`
+              : ""
+          }`
+        : `${abnormal.length} of ${markers.length} detected lab markers are outside the available reference ranges. ${
+            priorityPattern
+              ? `The highest-priority pattern identified by the rule-based analysis is ${priorityPattern.title}.`
+              : "The abnormal findings should be interpreted together with the full clinical context."
+          } ${
+            normal.length > 0
+              ? `${normal.length} marker(s) were within the available reference ranges.`
+              : ""
+          }`
+      : isArabic
+        ? `تم اكتشاف ${markers.length} مؤشرًا مخبريًا، ولم يظهر أي منها خارج النطاقات المرجعية المتاحة حاليًا.${
+            unclassified.length > 0
+              ? ` تعذر تصنيف ${unclassified.length} مؤشرًا بشكل كامل بسبب عدم توفر نطاق مرجعي مناسب.`
+              : ""
+          }`
+        : `${markers.length} lab marker(s) were detected, with no marker classified outside the currently available reference ranges.${
+            unclassified.length > 0
+              ? ` ${unclassified.length} marker(s) could not be fully classified because an appropriate reference range was unavailable.`
+              : ""
+          }`;
+
+  const keyFindingsSections: string[] =
+    [];
+
+  keyFindingsSections.push(
+    isArabic
+      ? "النتائج التي تحتاج إلى الانتباه:"
+      : "Abnormal findings:"
   );
 
-  const normal = markers.filter(
-    (item) =>
-      item.status === "Normal"
-  );
+  if (abnormal.length > 0) {
+    keyFindingsSections.push(
+      ...abnormal.map(
+        (item) =>
+          `- ${formatMarker(
+            item
+          )}`
+      )
+    );
+  } else {
+    keyFindingsSections.push(
+      isArabic
+        ? "- لم يتم تصنيف أي مؤشر مكتشف كمرتفع أو منخفض."
+        : "- No detected marker was classified as high or low."
+    );
+  }
 
-  const keyFindings = [
-    ...abnormal.map(
-      (item) =>
-        `${item.marker}: ${item.value ?? (isArabic ? "مكتشف" : "Detected")} ${item.unit ?? ""} (${statusLabel(item.status)})${
-          item.referenceLow !== undefined &&
-          item.referenceHigh !== undefined
-            ? ` | ${
-                isArabic
-                  ? "المرجع"
-                  : "Ref"
-              }: ${item.referenceLow}-${item.referenceHigh} (${item.referenceSource})`
-            : ""
-        }`
-    ),
+  if (normal.length > 0) {
+    keyFindingsSections.push(
+      "",
+      isArabic
+        ? "نتائج مطمئنة ضمن النطاقات المتاحة:"
+        : "Reassuring findings within the available ranges:",
+      ...normal.map(
+        (item) =>
+          `- ${formatMarker(
+            item
+          )}`
+      )
+    );
+  }
 
-    ...normal.map(
-      (item) =>
-        `${item.marker}: ${item.value ?? (isArabic ? "مكتشف" : "Detected")} ${item.unit ?? ""} (${statusLabel(item.status)})${
-          item.referenceLow !== undefined &&
-          item.referenceHigh !== undefined
-            ? ` | ${
-                isArabic
-                  ? "المرجع"
-                  : "Ref"
-              }: ${item.referenceLow}-${item.referenceHigh} (${item.referenceSource})`
-            : ""
-        }`
-    ),
-  ].join(" | ");
+  if (unclassified.length > 0) {
+    keyFindingsSections.push(
+      "",
+      isArabic
+        ? "مؤشرات تحتاج إلى سياق إضافي:"
+        : "Markers needing additional context:",
+      ...unclassified.map(
+        (item) =>
+          `- ${formatMarker(
+            item
+          )}`
+      )
+    );
+  }
+
+  const keyFindings =
+    keyFindingsSections.join(
+      "\n"
+    );
 
   const riskSignals =
-    patterns.length > 0
-      ? patterns
+    prioritizedPatterns.length > 0
+      ? prioritizedPatterns
           .map(
-            (pattern) =>
+            (
+              pattern,
+              index
+            ) =>
               isArabic
-                ? `${pattern.title}: ${pattern.message}`
-                : `${pattern.title} (${pattern.severity}): ${pattern.message}`
+                ? `${
+                    index === 0
+                      ? "الأولوية الأعلى"
+                      : "نمط إضافي"
+                  }: ${pattern.title}\n${pattern.message}`
+                : `${
+                    index === 0
+                      ? "Top priority"
+                      : "Additional pattern"
+                  }: ${pattern.title} (${pattern.severity})\nWhy it matters: ${pattern.message}`
           )
-          .join("\n")
+          .join(
+            "\n\n"
+          )
       : abnormal.length > 0
         ? abnormal
             .map(
               (item) =>
-                `${item.marker}: ${statusLabel(item.status)}`
+                `${item.marker}: ${statusLabel(
+                  item.status
+                )}`
             )
-            .join("\n")
+            .join(
+              "\n"
+            )
         : isArabic
-          ? "لم يتم اكتشاف مؤشرات غير طبيعية وفق نطاقات مرجعية شائعة للبالغين."
-          : "No abnormal marker detected based on common adult reference ranges.";
+          ? "لم يتم اكتشاف نمط مخبري غير طبيعي واضح من المؤشرات المصنفة."
+          : "No clear abnormal laboratory pattern was identified from the classified markers.";
 
   const recommendations =
     abnormal.length > 0
       ? isArabic
-        ? "توجد بعض النتائج التي قد تكون خارج النطاقات المرجعية الشائعة. يُنصح بمراجعتها مع مختص رعاية صحية مرخص ضمن السياق السريري الكامل."
-        : "Some markers may be outside common adult reference ranges. Please review with a licensed healthcare professional."
+        ? [
+            "الخطوة التالية: راجع النتائج غير الطبيعية مع مقدم رعاية صحية مرخص وفسرها مع التاريخ المرضي والأعراض والأدوية والنتائج السابقة.",
+            "توقيت المتابعة: يعتمد توقيت إعادة الفحوصات على نوع المؤشرات غير الطبيعية وعلى وجود تغيير في العلاج أو نمط الحياة، ويُحدد مع الطبيب.",
+            "مراجعة أبكر: اطلب مراجعة طبية أبكر إذا ظهرت أعراض جديدة أو متفاقمة، أو إذا كان التقرير الأصلي يصنف أي نتيجة على أنها حرجة.",
+            "حدود التفسير: يعتمد هذا التحليل على القيم المستخرجة والنطاقات المرجعية المتاحة ولا يثبت تشخيصًا بمفرده.",
+          ].join(
+            "\n"
+          )
+        : [
+            "Next step: Review the abnormal findings with a licensed clinician and interpret them together with your medical history, symptoms, medications, and prior results.",
+            "Follow-up timing: The repeat-testing interval should be individualized according to the abnormal markers and whether treatment or lifestyle changes are made.",
+            "Earlier review: Seek earlier medical review if symptoms are new or worsening, or if the original laboratory report labels any result as critical.",
+            "Limitations: This interpretation uses extracted report values and available reference ranges and does not establish a diagnosis by itself.",
+          ].join(
+            "\n"
+          )
       : isArabic
-        ? "تبدو المؤشرات المكتشفة عمومًا ضمن النطاقات المرجعية الشائعة. استمر في المتابعة الصحية الدورية."
-        : "Detected markers appear generally within common adult reference ranges. Continue regular health monitoring.";
+        ? [
+            "النتائج المصنفة تبدو عمومًا ضمن النطاقات المرجعية المتاحة.",
+            "استمر في المتابعة الصحية الدورية حسب حالتك وعوامل الخطورة لديك.",
+            "هذه النتيجة لا تستبعد وجود مشكلة صحية لم يتم تمثيلها في المؤشرات المكتشفة من التقرير.",
+          ].join(
+            "\n"
+          )
+        : [
+            "The classified markers appear generally within the available reference ranges.",
+            "Continue routine health follow-up according to your individual health history and risk factors.",
+            "This does not exclude a health issue that may not be represented by the markers detected from this report.",
+          ].join(
+            "\n"
+          );
 
   return {
-    summary: isArabic
-      ? `تم اكتشاف ${markers.length} مؤشرًا مخبريًا من التقرير المرفوع.`
-      : `${markers.length} lab marker(s) detected from the uploaded report.`,
-
+    summary,
     keyFindings,
     riskSignals,
     recommendations,

@@ -139,12 +139,50 @@ export function buildHealthInsightUpdate({
   const isArabic =
     language === "ar";
 
-  const localizedPatterns =
-    isArabic
-      ? clinicalPatterns.map(
-          getArabicClinicalPattern
-        )
-      : clinicalPatterns;
+const localizedPatterns =
+  clinicalPatterns.map(
+    (pattern) =>
+      isArabic
+        ? {
+            ...pattern,
+            ...getArabicClinicalPattern(
+              pattern
+            ),
+          }
+        : pattern
+  );
+
+const severityRank: Record<
+  string,
+  number
+> = {
+  High: 3,
+  Moderate: 2,
+  Low: 1,
+};
+
+const prioritizedPatterns =
+  [...localizedPatterns].sort(
+    (left, right) =>
+      (
+        severityRank[
+          String(
+            right?.severity ??
+              ""
+          )
+        ] ??
+        0
+      ) -
+      (
+        severityRank[
+          String(
+            left?.severity ??
+              ""
+          )
+        ] ??
+        0
+      )
+  );
 
   const summary =
     isRadiologyReport
@@ -156,27 +194,112 @@ export function buildHealthInsightUpdate({
       ? radiologySummary.riskSignals
       : markerSummary.keyFindings;
 
-  const riskSignals =
-    localizedPatterns.length > 0
-      ? localizedPatterns
-          .map(
-            (pattern) =>
-              `${pattern.title}: ${pattern.summary}`
-          )
-          .join("\n")
-      : markerSummary.riskSignals;
+const riskSignals =
+  prioritizedPatterns.length > 0
+    ? prioritizedPatterns
+        .map(
+          (
+            pattern,
+            index
+          ) => {
+            const priorityLabel =
+              isArabic
+                ? index === 0
+                  ? "الأولوية الأعلى"
+                  : "نمط إضافي"
+                : index === 0
+                  ? "Top priority"
+                  : "Additional pattern";
 
-  const recommendations =
-    isRadiologyReport
-      ? radiologySummary.recommendations
-      : localizedPatterns.length > 0
-        ? localizedPatterns
-            .map(
-              (pattern) =>
-                `${pattern.title}: ${pattern.suggestedFocus}`
-            )
-            .join("\n")
-        : markerSummary.recommendations;
+            const severityText =
+              isArabic
+                ? pattern?.severity ===
+                  "High"
+                  ? "مرتفع"
+                  : pattern?.severity ===
+                      "Moderate"
+                    ? "متوسط"
+                    : "منخفض"
+                : String(
+                    pattern?.severity ??
+                      ""
+                  );
+
+            const evidence =
+              Array.isArray(
+                pattern
+                  ?.involvedMarkers
+              )
+                ? pattern.involvedMarkers
+                    .filter(
+                      Boolean
+                    )
+                    .join(
+                      ", "
+                    )
+                : "";
+
+            return isArabic
+              ? [
+                  `${priorityLabel}: ${pattern.title}`,
+                  `مستوى الانتباه: ${severityText}`,
+                  `سبب الأهمية: ${pattern.summary}`,
+                ].join(
+                  "\n"
+                )
+              : [
+                  `${priorityLabel}: ${pattern.title}`,
+                  `Attention level: ${severityText}`,
+                  `Why it matters: ${pattern.summary}`,
+                  evidence
+                    ? `Evidence: ${evidence}`
+                    : "",
+                ]
+                  .filter(
+                    Boolean
+                  )
+                  .join(
+                    "\n"
+                  );
+          }
+        )
+        .join(
+          "\n\n"
+        )
+    : markerSummary.riskSignals;
+
+const recommendations =
+  isRadiologyReport
+    ? radiologySummary.recommendations
+    : prioritizedPatterns.length > 0
+      ? [
+          ...prioritizedPatterns.map(
+            (
+              pattern,
+              index
+            ) =>
+              `${index + 1}. ${
+                pattern.suggestedFocus
+              }`
+          ),
+
+          "",
+
+          isArabic
+            ? "توقيت المتابعة: يجب تحديد موعد إعادة الفحوصات أو المراجعة حسب المؤشرات غير الطبيعية، والأعراض، وعوامل الخطورة، وأي تغيير في العلاج."
+            : "Follow-up timing: The timing of repeat testing or clinical review should be individualized according to the abnormal findings, symptoms, risk factors, and any treatment changes.",
+
+          isArabic
+            ? "مراجعة أبكر: اطلب مراجعة طبية أبكر إذا ظهرت أعراض جديدة أو متفاقمة أو إذا كان التقرير الأصلي يصف أي نتيجة بأنها حرجة."
+            : "Earlier review: Seek earlier medical review if symptoms are new or worsening, or if the original report identifies any result as critical.",
+
+          isArabic
+            ? "حدود التفسير: تم بناء هذا التحليل من البيانات المستخرجة من التقرير والمعلومات الصحية المتاحة، ولا يمثل تشخيصًا نهائيًا."
+            : "Limitations: This interpretation is based on the extracted report evidence and currently available health context and does not establish a final diagnosis.",
+        ].join(
+          "\n"
+        )
+      : markerSummary.recommendations;
 
   const doctorBrief =
     isArabic

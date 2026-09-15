@@ -492,9 +492,9 @@ const forecastScoreTone =
 
 const patientWhatThisMeans =
   presentIntelligenceClinicalText(
-    patientPresentation
-      ?.whatThisMeans ??
-      summary,
+    summary ??
+      patientPresentation
+        ?.whatThisMeans,
     presentationLanguage,
     "تمت مراجعة تقريرك، لكن الملخص العربي غير متاح لهذا السجل.",
     "Your report was reviewed, but a summary is not currently available."
@@ -502,9 +502,9 @@ const patientWhatThisMeans =
 
 const patientMainThingsNoticed =
   presentIntelligenceClinicalText(
-    patientPresentation
-      ?.mainThingsNoticed ??
-      keyFindings,
+    keyFindings ??
+      patientPresentation
+        ?.mainThingsNoticed,
     presentationLanguage,
     "تمت مراجعة التقرير، لكن العرض العربي للنتائج الرئيسية غير متاح لهذا السجل.",
     "No major findings are currently available."
@@ -512,9 +512,9 @@ const patientMainThingsNoticed =
 
 const patientWhatNeedsAttention =
   presentIntelligenceClinicalText(
-    patientPresentation
-      ?.whatNeedsAttention ??
-      riskSignals,
+    riskSignals ??
+      patientPresentation
+        ?.whatNeedsAttention,
     presentationLanguage,
     "تمت مراجعة إشارات المتابعة، لكن العرض العربي غير متاح لهذا السجل.",
     "No attention signals are currently available."
@@ -522,14 +522,14 @@ const patientWhatNeedsAttention =
 
 const patientHelpfulNextSteps =
   presentIntelligenceClinicalText(
-    patientPresentation
-      ?.helpfulNextSteps ??
-      recommendations ??
+    recommendations ??
+      patientPresentation
+        ?.helpfulNextSteps ??
       executiveSummary
         ?.nextBestAction,
     presentationLanguage,
     "راجع نتائجك مع مقدم رعاية صحية مرخص واتبع خطة المتابعة المناسبة.",
-    "Review the recommended next steps with your healthcare provider."
+    "Review your results with a licensed healthcare professional and follow the appropriate follow-up plan."
   );
 
 const patientHealthStory =
