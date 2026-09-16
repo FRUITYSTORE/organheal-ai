@@ -1,3 +1,7 @@
+import {
+  presentHealthTimelineSummary,
+} from "@/lib/presentation/intelligence/lab-marker-presentation";
+
 type TimelineCardProps = {
   timeline: unknown;
   isArabic: boolean;
@@ -100,7 +104,11 @@ export default function TimelineCard({
     return isArabic ? ar : en;
   }
   const timelineItems = normalizeTimelineItems(timeline);
-  const timelineSummary = getTimelineSummary(timeline);
+  const timelineSummary =
+    presentHealthTimelineSummary(
+      getTimelineSummary(timeline),
+      isArabic ? "ar" : "en"
+    );
 
   const hasTimelineIntelligence =
     Boolean(timelineSummary) || timelineItems.length > 0;

@@ -9,6 +9,9 @@ import {
   presentIntelligenceClinicalText,
   presentIntelligencePrioritySystem,
 } from "@/lib/services/intelligence/intelligence-presentation";
+import {
+  presentLabMarkerName,
+} from "@/lib/presentation/intelligence/lab-marker-presentation";
 
 type ExecutiveSummary = {
   currentScore?: number;
@@ -278,22 +281,22 @@ function applyProfessionalPdfLayout(reportElement: HTMLElement, isArabic: boolea
       line-height: 1.35 !important;
     }
 
-   .organhealPdfPage p,
-.organhealPdfPage li {
-  break-inside: auto !important;
-  page-break-inside: auto !important;
+  .organhealPdfPage p,
+  .organhealPdfPage li {
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
   orphans: 3 !important;
   widows: 3 !important;
 }
 
-    .organhealPdfPage div {
-      orphans: 3 !important;
-      widows: 3 !important;
-    }
+.organhealPdfPage div {
+  orphans: 3 !important;
+  widows: 3 !important;
+}
 
-    .organhealPdfKeepTogether {
-  break-inside: auto !important;
-  page-break-inside: auto !important;
+.organhealPdfKeepTogether {
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
 }
 
 .organhealPdfSection {
@@ -342,8 +345,11 @@ function applyProfessionalPdfLayout(reportElement: HTMLElement, isArabic: boolea
 reportElement.querySelectorAll("p, li").forEach((element) => {
   const htmlElement = element as HTMLElement;
 
-  htmlElement.style.breakInside = "auto";
-  htmlElement.style.pageBreakInside = "auto";
+  htmlElement.style.breakInside =
+  "avoid";
+
+  htmlElement.style.pageBreakInside =
+  "avoid";
   htmlElement.style.orphans = "3";
   htmlElement.style.widows = "3";
   htmlElement.style.lineHeight = "1.85";
@@ -393,8 +399,11 @@ reportElement
   .forEach((element) => {
     const htmlElement = element as HTMLElement;
 
-    htmlElement.style.breakInside = "auto";
-    htmlElement.style.pageBreakInside = "auto";
+    htmlElement.style.breakInside =
+      "avoid";
+
+    htmlElement.style.pageBreakInside =
+      "avoid";
   });
   
 reportElement
@@ -646,10 +655,14 @@ const pdfWorker = html2pdf()
         "h1",
         "h2",
         "h3",
+        "p",
+        "li",
         "tr",
+        ".organhealPdfKeepTogether",
+        ".patientHealthStorySection",
         ".patientReportDocumentHeader",
         ".ohMetricCard",
-        ],
+      ],
     },
     margin: [16, 18, 20, 18],
    filename: `OrganHeal-Patient-Report-${safeFileName}-${Date.now()}.pdf`,
@@ -941,15 +954,6 @@ await pdfWorker.save();
 .patientLabTable tr {
   break-inside: avoid;
   page-break-inside: avoid;
-}
-
-.patientLabPageBreak {
-  display: block;
-  height: 0;
-  margin: 0;
-  padding: 0;
-  break-before: page;
-  page-break-before: always;
 }
 
 .patientLabTableWrapper {
@@ -1418,8 +1422,6 @@ await pdfWorker.save();
 
             {index === 1 && labMarkers.length > 0 && (
   <>
-    <div className="patientLabPageBreak" aria-hidden="true" />
-
     <div className="patientLabTableWrapper">
     <table className="patientLabTable">
       <thead>
@@ -1447,7 +1449,10 @@ await pdfWorker.save();
           return (
             <tr key={`${marker.name}-${markerIndex}`}>
               <td className="patientLabName">
-                {marker.name}
+                {presentLabMarkerName(
+                  marker.name,
+                  isArabic ? "ar" : "en"
+                )}
               </td>
 
               <td>

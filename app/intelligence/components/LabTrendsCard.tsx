@@ -1,6 +1,11 @@
 import {
   createIntelligenceText,
 } from "@/lib/presentation/intelligence/intelligence-ui-text";
+import {
+  presentLabMarkerName,
+  presentLabTrendDirection,
+  presentLabTrendSummary,
+} from "@/lib/presentation/intelligence/lab-marker-presentation";
 
 type LabTrendsCardProps = {
   labTrends: unknown;
@@ -18,6 +23,7 @@ type LabTrendItem = {
   trendSummary?: string;
   summary?: string;
   status?: string;
+  unit?: string;
 };
 
 function isRecord(
@@ -71,6 +77,9 @@ function normalizeLabTrendItems(
         getText(item.markerName),
       name: getText(item.name),
       title: getText(item.title),
+      unit:
+        getText(item.unit) ||
+        getText(item.units),
       earliestValue:
         getText(item.earliestValue),
       latestValue:
@@ -375,7 +384,8 @@ export default function LabTrendsCard({
       {realTrends.length > 0 && (
         <div className="labTrendGrid">
           {realTrends.map((item, index) => {
-            const name =
+
+                       const rawName =
               item.marker ||
               item.name ||
               item.title ||
@@ -384,9 +394,52 @@ export default function LabTrendsCard({
                 `مؤشر مخبري ${index + 1}`
               );
 
-            const direction =
+            const name =
+              presentLabMarkerName(
+                rawName,
+                isArabic
+                  ? "ar"
+                  : "en"
+              );
+
+            const rawDirection =
               item.trendDirection ||
-              text("Stable", "مستقر");
+              "Stable";
+
+            const direction =
+              presentLabTrendDirection(
+                rawDirection,
+                isArabic
+                  ? "ar"
+                  : "en"
+              );
+
+            const presentedSummary =
+              presentLabTrendSummary({
+                marker:
+                  rawName,
+
+                earliestValue:
+                  item.earliestValue,
+
+                latestValue:
+                  item.latestValue,
+
+                unit:
+                  item.unit,
+
+                direction:
+                  rawDirection,
+
+                fallbackSummary:
+                  item.trendSummary ||
+                  item.summary,
+
+                language:
+                  isArabic
+                    ? "ar"
+                    : "en",
+              });
 
             return (
               <article
@@ -400,7 +453,7 @@ export default function LabTrendsCard({
 
                   <span
                     className={`labTrendDirection ${getTrendTone(
-                      direction
+                      rawDirection
                     )}`}
                   >
                     {direction}
@@ -440,11 +493,9 @@ export default function LabTrendsCard({
                   </div>
                 )}
 
-                {(item.trendSummary ||
-                  item.summary) && (
+                {presentedSummary && (
                   <p className="labTrendSummary">
-                    {item.trendSummary ||
-                      item.summary}
+                    {presentedSummary}
                   </p>
                 )}
               </article>
