@@ -1,6 +1,11 @@
 "use client";
 
-import { type ReactNode, useEffect, useRef } from "react";
+import {
+  type ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import type {
   DoctorIntelligencePresentation,
 } from "../../../lib/health-intelligence/presentation/doctor-intelligence.presenter";
@@ -9,6 +14,15 @@ import {
   presentIntelligenceClinicalText,
   presentIntelligencePrioritySystem,
 } from "@/lib/services/intelligence/intelligence-presentation";
+import {
+  presentLabMarkerName,
+} from "@/lib/presentation/intelligence/lab-marker-presentation";
+import {
+  calculateAgeFromDateOfBirth,
+  loadCurrentReportPatientIdentity,
+  presentSexAtBirth,
+  type ReportPatientIdentity,
+} from "@/lib/presentation/reports/report-patient-identity";
 
 type ExecutiveSummary = {
   currentScore?: number;
@@ -355,6 +369,7 @@ function applyProfessionalPdfLayout(
     boxSizing: "border-box",
     width: "100%",
     maxWidth: "100%",
+    margin: "0",
     padding: "22px 24px",
     overflow: "visible",
     direction: isArabic ? "rtl" : "ltr",
@@ -379,12 +394,14 @@ function applyProfessionalPdfLayout(
   reportElement.querySelectorAll("p, li").forEach((element) => {
     const htmlElement = element as HTMLElement;
 
-    htmlElement.style.breakInside = "auto";
-    htmlElement.style.pageBreakInside = "auto";
+    htmlElement.style.breakInside =
+      "auto";
+
+   htmlElement.style.pageBreakInside =
+     "auto";
     htmlElement.style.orphans = "3";
     htmlElement.style.widows = "3";
   });
-
   reportElement.querySelectorAll(".ohStack").forEach((element) => {
     const htmlElement = element as HTMLElement;
 
@@ -492,6 +509,53 @@ export default function DoctorBriefReportCard({
   executiveSummary,
 }: DoctorBriefReportCardProps) {
   const isArabic = useArabicUi();
+  const [
+  patientIdentity,
+  setPatientIdentity,
+] =
+  useState<
+    ReportPatientIdentity |
+    null
+  >(null);
+
+const [
+  includePatientIdentity,
+  setIncludePatientIdentity,
+] =
+  useState(false);
+
+useEffect(() => {
+  let mounted =
+    true;
+
+  void loadCurrentReportPatientIdentity()
+    .then((identity) => {
+      if (!mounted) {
+        return;
+      }
+
+      setPatientIdentity(
+        identity
+      );
+
+      setIncludePatientIdentity(
+        identity?.preference ===
+          "identified"
+      );
+    });
+
+  return () => {
+    mounted =
+      false;
+  };
+}, []);
+
+const patientAge =
+  calculateAgeFromDateOfBirth(
+    patientIdentity
+      ?.dateOfBirth
+  );
+
   const printRef = useRef<HTMLElement>(null);
 
 const generatedAtText =
@@ -719,6 +783,7 @@ const optionalSections = [
       Object.assign(reportElement.style, {
         background: "#ffffff",
         color: "#111827",
+        margin: "0",
         padding: "22px 24px",
         border: "none",
         boxShadow: "none",
@@ -775,10 +840,11 @@ const optionalSections = [
               "tr",
               ".doctorBriefDocumentHeader",
               ".doctorBriefClinicalIntro",
+              ".doctorBriefSectionHeading",
               ".ohMetricCard",
             ],
           },
-          margin: [16, 18, 20, 18],
+          margin: [16, 18, 24, 18],
           filename: `OrganHeal-Doctor-Brief-${normalizedFileName}-${Date.now()}.pdf`,
           image: {
             type: "jpeg",
@@ -1440,6 +1506,33 @@ const optionalSections = [
         className="primaryBtn"
         onClick={downloadDoctorBriefPdf}
       >
+        {patientIdentity?.fullName && (
+  <label
+    style={{
+      display: "flex",
+      alignItems: "center",
+      gap: "7px",
+      fontSize: "0.78rem",
+      fontWeight: 800,
+    }}
+  >
+    <input
+      type="checkbox"
+      checked={
+        includePatientIdentity
+      }
+      onChange={(event) =>
+        setIncludePatientIdentity(
+          event.target.checked
+        )
+      }
+    />
+
+    {isArabic
+      ? "إظهار بيانات المريض"
+      : "Include patient details"}
+  </label>
+)}
         {isArabic ? "تنزيل PDF" : "Download PDF"}
       </button>
     </div>
@@ -1541,6 +1634,72 @@ const optionalSections = [
                 {isArabic ? "العربية" : "English"}
               </span>
             </div>
+
+          {includePatientIdentity &&
+  patientIdentity && (
+    <>
+      {patientIdentity.fullName && (
+        <div className="doctorBriefReferenceItem">
+          <span className="doctorBriefReferenceLabel">
+            {isArabic
+              ? "اسم المريض"
+              : "Patient"}
+          </span>
+
+          <span className="doctorBriefReferenceValue">
+            {patientIdentity.fullName}
+          </span>
+        </div>
+      )}
+
+      {patientAge !== null && (
+        <div className="doctorBriefReferenceItem">
+          <span className="doctorBriefReferenceLabel">
+            {isArabic
+              ? "العمر"
+              : "Age"}
+          </span>
+
+          <span className="doctorBriefReferenceValue">
+            {isArabic
+              ? `${patientAge} سنة`
+              : `${patientAge} years`}
+          </span>
+        </div>
+      )}
+
+      {patientIdentity.dateOfBirth && (
+        <div className="doctorBriefReferenceItem">
+          <span className="doctorBriefReferenceLabel">
+            {isArabic
+              ? "تاريخ الميلاد"
+              : "Date of birth"}
+          </span>
+
+          <span className="doctorBriefReferenceValue">
+            {patientIdentity.dateOfBirth}
+          </span>
+        </div>
+      )}
+
+      {patientIdentity.sexAtBirth && (
+        <div className="doctorBriefReferenceItem">
+          <span className="doctorBriefReferenceLabel">
+            {isArabic
+              ? "الجنس عند الولادة"
+              : "Sex at birth"}
+          </span>
+
+          <span className="doctorBriefReferenceValue">
+            {presentSexAtBirth(
+              patientIdentity.sexAtBirth,
+              isArabic
+            )}
+          </span>
+        </div>
+      )}
+    </>
+  )}
 
             <div
               className="doctorBriefReferenceItem"
@@ -1695,7 +1854,10 @@ const optionalSections = [
                       return (
                         <tr key={`${marker.name}-${markerIndex}`}>
                           <td className="doctorBriefLabName">
-                            {marker.name}
+                            {presentLabMarkerName(
+                              marker.name,
+                              isArabic ? "ar" : "en"
+                            )}
                           </td>
 
                           <td>

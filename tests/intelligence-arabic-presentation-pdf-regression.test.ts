@@ -91,6 +91,40 @@ describe(
     );
 
     it(
+  "keeps doctor brief PDF content inside safe page boundaries",
+  () => {
+    const source =
+      readFileSync(
+        resolve(
+          process.cwd(),
+          "app/intelligence/components/DoctorBriefReportCard.tsx"
+        ),
+        "utf8"
+      );
+
+    expect(source).toContain(
+      'presentLabMarkerName('
+    );
+
+    expect(source).toMatch(
+      /querySelectorAll\("p,\s*li"\)[\s\S]*?breakInside\s*=\s*"auto"[\s\S]*?pageBreakInside\s*=\s*"auto"/
+    );
+
+    expect(source).toContain(
+      'margin: "0"'
+    );
+
+    expect(source).toContain(
+      '".doctorBriefSectionHeading"'
+    );
+
+    expect(source).toContain(
+      'margin: [16, 18, 24, 18]'
+    );
+  }
+);
+
+    it(
       "localizes laboratory trend direction and summary",
       () => {
         expect(

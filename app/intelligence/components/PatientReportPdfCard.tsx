@@ -1,6 +1,11 @@
 "use client";
 
-import { type ReactNode, useEffect, useRef } from "react";
+import {
+  type ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import type {
   PatientIntelligencePresentation,
 } from "@/lib/health-intelligence/presentation/patient-intelligence.presenter";
@@ -12,6 +17,12 @@ import {
 import {
   presentLabMarkerName,
 } from "@/lib/presentation/intelligence/lab-marker-presentation";
+import {
+  calculateAgeFromDateOfBirth,
+  loadCurrentReportPatientIdentity,
+  presentSexAtBirth,
+  type ReportPatientIdentity,
+} from "@/lib/presentation/reports/report-patient-identity";
 
 type ExecutiveSummary = {
   currentScore?: number;
@@ -430,6 +441,55 @@ export default function PatientReportPdfCard({
   patientPresentation,
 }: PatientReportPdfCardProps) {
   const isArabic = useArabicUi();
+  const [
+  patientIdentity,
+  setPatientIdentity,
+] =
+  useState<
+    ReportPatientIdentity |
+    null
+  >(null);
+
+const [
+  includePatientIdentity,
+  setIncludePatientIdentity,
+] =
+  useState(false);
+
+useEffect(() => {
+  let mounted =
+    true;
+
+  void loadCurrentReportPatientIdentity()
+    .then((identity) => {
+      if (
+        !mounted
+      ) {
+        return;
+      }
+
+      setPatientIdentity(
+        identity
+      );
+
+      setIncludePatientIdentity(
+        identity?.preference ===
+          "identified"
+      );
+    });
+
+  return () => {
+    mounted =
+      false;
+  };
+}, []);
+
+const patientAge =
+  calculateAgeFromDateOfBirth(
+    patientIdentity
+      ?.dateOfBirth
+  );
+
   const patientReportRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -1203,6 +1263,33 @@ await pdfWorker.save();
         type="button"
         onClick={downloadPatientPdf}
       >
+        {patientIdentity?.fullName && (
+  <label
+    style={{
+      display: "flex",
+      alignItems: "center",
+      gap: "7px",
+      fontSize: "0.78rem",
+      fontWeight: 800,
+    }}
+  >
+    <input
+      type="checkbox"
+      checked={
+        includePatientIdentity
+      }
+      onChange={(event) =>
+        setIncludePatientIdentity(
+          event.target.checked
+        )
+      }
+    />
+
+    {isArabic
+      ? "إظهار بيانات المريض"
+      : "Include patient details"}
+  </label>
+)}
         {isArabic ? "تنزيل PDF" : "Download PDF"}
       </button>
     </div>
@@ -1313,6 +1400,71 @@ await pdfWorker.save();
         className="patientReportReferenceItem"
         style={{ gridColumn: "1 / -1" }}
       >
+        {includePatientIdentity &&
+  patientIdentity && (
+    <>
+      {patientIdentity.fullName && (
+        <div className="patientReportReferenceItem">
+          <span className="patientReportReferenceLabel">
+            {isArabic
+              ? "اسم المريض"
+              : "Patient"}
+          </span>
+
+          <span className="patientReportReferenceValue">
+            {patientIdentity.fullName}
+          </span>
+        </div>
+      )}
+
+      {patientAge !== null && (
+        <div className="patientReportReferenceItem">
+          <span className="patientReportReferenceLabel">
+            {isArabic
+              ? "العمر"
+              : "Age"}
+          </span>
+
+          <span className="patientReportReferenceValue">
+            {isArabic
+              ? `${patientAge} سنة`
+              : `${patientAge} years`}
+          </span>
+        </div>
+      )}
+
+      {patientIdentity.dateOfBirth && (
+        <div className="patientReportReferenceItem">
+          <span className="patientReportReferenceLabel">
+            {isArabic
+              ? "تاريخ الميلاد"
+              : "Date of birth"}
+          </span>
+
+          <span className="patientReportReferenceValue">
+            {patientIdentity.dateOfBirth}
+          </span>
+        </div>
+      )}
+
+      {patientIdentity.sexAtBirth && (
+        <div className="patientReportReferenceItem">
+          <span className="patientReportReferenceLabel">
+            {isArabic
+              ? "الجنس عند الولادة"
+              : "Sex at birth"}
+          </span>
+
+          <span className="patientReportReferenceValue">
+            {presentSexAtBirth(
+              patientIdentity.sexAtBirth,
+              isArabic
+            )}
+          </span>
+        </div>
+      )}
+    </>
+  )}
         <span className="patientReportReferenceLabel">
           {isArabic ? "الملف الأصلي" : "Source Report"}
         </span>

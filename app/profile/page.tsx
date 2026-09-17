@@ -20,9 +20,26 @@ type DailyCheckIn = {
 };
 
 type Profile = {
-  username: string | null;
-  email: string | null;
-  created_at: string | null;
+  username:
+    string | null;
+
+  email:
+    string | null;
+
+  created_at:
+    string | null;
+
+  full_name:
+    string | null;
+
+  date_of_birth:
+    string | null;
+
+  sex_at_birth:
+    string | null;
+
+  report_identity_preference:
+    string | null;
 };
 
 type UploadedReport = {
@@ -45,6 +62,42 @@ type SavedAnalysis = {
 export default function ProfilePage() {
   const [language, setLanguage] = useState<Language>("en");
   const isArabic = language === "ar";
+
+  const [
+  fullName,
+  setFullName,
+] =
+  useState("");
+
+const [
+  dateOfBirth,
+  setDateOfBirth,
+] =
+  useState("");
+
+const [
+  sexAtBirth,
+  setSexAtBirth,
+] =
+  useState("");
+
+const [
+  reportIdentityPreference,
+  setReportIdentityPreference,
+] =
+  useState("ask");
+
+const [
+  savingIdentity,
+  setSavingIdentity,
+] =
+  useState(false);
+
+const [
+  identityMessage,
+  setIdentityMessage,
+] =
+  useState("");
 
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
@@ -181,7 +234,9 @@ const {
   error: profileError,
 } = await supabase
   .from("profiles")
-  .select("username, email, created_at, plan")
+  .select(
+  "username,email,created_at,plan,full_name,date_of_birth,sex_at_birth,report_identity_preference"
+  )
   .eq("id", user.id)
   .maybeSingle();
 
@@ -201,6 +256,47 @@ const profile =
     setEmail(profile?.email || user.email || "");
     setUsername(profile?.username || "");
     setMemberSince(profile?.created_at || null);
+    setFullName(
+  profile?.full_name ||
+  (
+    typeof user.user_metadata
+      ?.full_name ===
+      "string"
+      ? user.user_metadata
+          .full_name
+      : ""
+  )
+);
+
+setDateOfBirth(
+  profile?.date_of_birth ||
+  (
+    typeof user.user_metadata
+      ?.date_of_birth ===
+      "string"
+      ? user.user_metadata
+          .date_of_birth
+      : ""
+  )
+);
+
+setSexAtBirth(
+  profile?.sex_at_birth ||
+  (
+    typeof user.user_metadata
+      ?.sex_at_birth ===
+      "string"
+      ? user.user_metadata
+          .sex_at_birth
+      : ""
+  )
+);
+
+setReportIdentityPreference(
+  profile
+    ?.report_identity_preference ||
+  "ask"
+);
 
     const { data: organData, error: organError } = await supabase
       .from("organ_assessments")
@@ -284,7 +380,64 @@ if (checkInError) {
     setLoading(false);
   }
 
-  const displayName = username || email || text("User", "مستخدم");
+  async function saveReportIdentityProfile() {
+  setSavingIdentity(true);
+  setIdentityMessage("");
+
+  const {
+    error,
+  } =
+    await supabase.rpc(
+      "update_my_report_profile",
+      {
+        p_full_name:
+          fullName.trim() ||
+          null,
+
+        p_date_of_birth:
+          dateOfBirth ||
+          null,
+
+        p_sex_at_birth:
+          sexAtBirth ||
+          null,
+
+        p_report_identity_preference:
+          reportIdentityPreference,
+      }
+    );
+
+  if (error) {
+    setIdentityMessage(
+      text(
+        "Could not save report identity settings. Please try again.",
+        "تعذر حفظ بيانات هوية التقرير. يرجى المحاولة مرة أخرى."
+      )
+    );
+
+    setSavingIdentity(false);
+    return;
+  }
+
+  setIdentityMessage(
+    text(
+      "Report identity settings saved.",
+      "تم حفظ إعدادات هوية التقرير."
+    )
+  );
+
+  setSavingIdentity(false);
+}
+
+  const displayName =
+  fullName ||
+  username ||
+  email ||
+  text(
+    "User",
+    "مستخدم"
+  );
+
   const memberSinceLabel = memberSince ? formatDate(memberSince) : text("Recently", "حديثًا");
 
   const uploadedReportsCount = uploadedReports.length;
@@ -524,6 +677,217 @@ if (checkInError) {
                 </div>
               </div>
             </section>
+
+            <section className="ohCard">
+  <div className="ohCardHeader">
+    <div>
+      <p className="ohMetricLabel">
+        {text(
+          "REPORT IDENTITY",
+          "هوية التقرير"
+        )}
+      </p>
+
+      <h2 className="ohCardTitle">
+        {text(
+          "Patient details used in exported reports",
+          "بيانات المريض المستخدمة في التقارير"
+        )}
+      </h2>
+
+      <p className="ohCardText">
+        {text(
+          "These details identify the patient in Patient Reports and Doctor Briefs. Username and email are never used as patient identity.",
+          "تُستخدم هذه البيانات لتعريف المريض في تقرير المريض وملخص الطبيب. لا يتم استخدام اسم المستخدم أو البريد الإلكتروني كهوية للمريض."
+        )}
+      </p>
+    </div>
+  </div>
+
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns:
+        "repeat(auto-fit, minmax(220px, 1fr))",
+      gap: "14px",
+      marginTop: "18px",
+    }}
+  >
+    <label className="ohStack">
+      <strong>
+        {text(
+          "Full name",
+          "الاسم الكامل"
+        )}
+      </strong>
+
+      <input
+        className="ohInput"
+        type="text"
+        value={fullName}
+        onChange={(event) =>
+          setFullName(
+            event.target.value
+          )
+        }
+      />
+    </label>
+
+    <label className="ohStack">
+      <strong>
+        {text(
+          "Date of birth",
+          "تاريخ الميلاد"
+        )}
+      </strong>
+
+      <input
+        className="ohInput"
+        type="date"
+        value={dateOfBirth}
+        max={
+          new Date()
+            .toISOString()
+            .split("T")[0]
+        }
+        onChange={(event) =>
+          setDateOfBirth(
+            event.target.value
+          )
+        }
+      />
+    </label>
+
+    <label className="ohStack">
+      <strong>
+        {text(
+          "Sex at birth",
+          "الجنس عند الولادة"
+        )}
+      </strong>
+
+      <select
+        className="ohInput"
+        value={sexAtBirth}
+        onChange={(event) =>
+          setSexAtBirth(
+            event.target.value
+          )
+        }
+      >
+        <option value="">
+          {text(
+            "Not specified",
+            "غير محدد"
+          )}
+        </option>
+
+        <option value="male">
+          {text("Male", "ذكر")}
+        </option>
+
+        <option value="female">
+          {text("Female", "أنثى")}
+        </option>
+
+        <option value="intersex">
+          {text(
+            "Intersex",
+            "اختلاف في الخصائص الجنسية"
+          )}
+        </option>
+
+        <option value="unknown">
+          {text(
+            "Unknown",
+            "غير معروف"
+          )}
+        </option>
+
+        <option value="prefer_not_to_say">
+          {text(
+            "Prefer not to say",
+            "أفضل عدم الإفصاح"
+          )}
+        </option>
+      </select>
+    </label>
+
+    <label className="ohStack">
+      <strong>
+        {text(
+          "Default report privacy",
+          "خصوصية التقرير الافتراضية"
+        )}
+      </strong>
+
+      <select
+        className="ohInput"
+        value={
+          reportIdentityPreference
+        }
+        onChange={(event) =>
+          setReportIdentityPreference(
+            event.target.value
+          )
+        }
+      >
+        <option value="ask">
+          {text(
+            "Ask each time",
+            "اسألني في كل مرة"
+          )}
+        </option>
+
+        <option value="identified">
+          {text(
+            "Include patient identity",
+            "إظهار هوية المريض"
+          )}
+        </option>
+
+        <option value="deidentified">
+          {text(
+            "Hide patient identity",
+            "إخفاء هوية المريض"
+          )}
+        </option>
+      </select>
+    </label>
+  </div>
+
+  <div
+    className="ohButtonRow"
+    style={{
+      marginTop: "18px",
+    }}
+  >
+    <button
+      type="button"
+      className="primaryBtn"
+      onClick={
+        saveReportIdentityProfile
+      }
+      disabled={savingIdentity}
+    >
+      {savingIdentity
+        ? text(
+            "Saving...",
+            "جارٍ الحفظ..."
+          )
+        : text(
+            "Save patient details",
+            "حفظ بيانات المريض"
+          )}
+    </button>
+
+    {identityMessage && (
+      <span className="ohCardText">
+        {identityMessage}
+      </span>
+    )}
+  </div>
+</section>
 
             <section className="ohActionPanel">
               <div className="ohCardHeader" style={{ marginBottom: 0 }}>

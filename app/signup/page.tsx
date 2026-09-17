@@ -28,6 +28,20 @@ export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [confirmEmail, setConfirmEmail] = useState("");
   const [username, setUsername] = useState("");
+  const [fullName, setFullName] =
+  useState("");
+
+const [
+  dateOfBirth,
+  setDateOfBirth,
+] =
+  useState("");
+
+const [
+  sexAtBirth,
+  setSexAtBirth,
+] =
+  useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [terms, setTerms] = useState(false);
@@ -99,6 +113,22 @@ export default function SignupPage() {
     const cleanEmail = email.trim().toLowerCase();
     const cleanConfirmEmail = confirmEmail.trim().toLowerCase();
     const cleanUsername = username.trim().toLowerCase();
+    const cleanFullName =
+  fullName.trim();
+
+if (
+  cleanFullName.length < 2
+) {
+  showMessage(
+    text(
+      "Please enter the patient's full name.",
+      "يرجى إدخال الاسم الكامل للمريض."
+    ),
+    "error"
+  );
+
+  return;
+}
 
     if (cleanEmail !== cleanConfirmEmail) {
       showMessage(text("Emails do not match.", "البريد الإلكتروني غير متطابق."), "error");
@@ -220,7 +250,22 @@ export default function SignupPage() {
       options: {
         emailRedirectTo: `${window.location.origin}/login`,
         data: {
-          username: cleanUsername,
+          username:
+            cleanUsername,
+
+          full_name:
+            cleanFullName,
+
+          date_of_birth:
+            dateOfBirth ||
+            null,
+
+          sex_at_birth:
+            sexAtBirth ||
+            null,
+
+          report_identity_preference:
+            "ask",
         },
       },
     });
@@ -258,6 +303,9 @@ export default function SignupPage() {
     setEmail("");
     setConfirmEmail("");
     setUsername("");
+    setFullName("");
+    setDateOfBirth("");
+    setSexAtBirth("");
     setPassword("");
     setConfirmPassword("");
     setTerms(false);
@@ -332,7 +380,9 @@ export default function SignupPage() {
 
         .signupCommandPage input[type="email"],
         .signupCommandPage input[type="text"],
-        .signupCommandPage input[type="password"] {
+        .signupCommandPage input[type="date"],
+        .signupCommandPage input[type="password"],
+        .signupCommandPage select {
           width: 100%;
           box-sizing: border-box;
           min-width: 0;
@@ -509,6 +559,118 @@ export default function SignupPage() {
                 />
               </label>
             </div>
+
+          <div className="signupGrid">
+  <label className="signupField">
+    <span>
+      {text(
+        "Full name",
+        "الاسم الكامل"
+      )}
+    </span>
+
+    <input
+      type="text"
+      value={fullName}
+      onChange={(event) =>
+        setFullName(
+          event.target.value
+        )
+      }
+      autoComplete="name"
+      placeholder={text(
+        "Patient full name",
+        "اسم المريض الكامل"
+      )}
+      required
+    />
+  </label>
+
+  <label className="signupField">
+    <span>
+      {text(
+        "Date of birth",
+        "تاريخ الميلاد"
+      )}
+    </span>
+
+    <input
+      type="date"
+      value={dateOfBirth}
+      onChange={(event) =>
+        setDateOfBirth(
+          event.target.value
+        )
+      }
+      max={
+        new Date()
+          .toISOString()
+          .split("T")[0]
+      }
+    />
+  </label>
+</div>
+
+<label className="signupField">
+  <span>
+    {text(
+      "Sex at birth",
+      "الجنس عند الولادة"
+    )}
+  </span>
+
+  <select
+    value={sexAtBirth}
+    onChange={(event) =>
+      setSexAtBirth(
+        event.target.value
+      )
+    }
+  >
+    <option value="">
+      {text(
+        "Prefer to add later",
+        "يمكن إضافته لاحقًا"
+      )}
+    </option>
+
+    <option value="male">
+      {text("Male", "ذكر")}
+    </option>
+
+    <option value="female">
+      {text("Female", "أنثى")}
+    </option>
+
+    <option value="intersex">
+      {text(
+        "Intersex",
+        "اختلاف في الخصائص الجنسية"
+      )}
+    </option>
+
+    <option value="unknown">
+      {text(
+        "Unknown",
+        "غير معروف"
+      )}
+    </option>
+
+    <option value="prefer_not_to_say">
+      {text(
+        "Prefer not to say",
+        "أفضل عدم الإفصاح"
+      )}
+    </option>
+  </select>
+
+  <small className="signupHelp">
+    {text(
+      "This can help present age- and sex-relevant medical information correctly. You can change it later.",
+      "يمكن أن تساعد هذه البيانات في عرض المعلومات الطبية المرتبطة بالعمر والجنس بشكل أدق، ويمكن تعديلها لاحقًا."
+    )}
+  </small>
+</label>
 
             <label className="signupField">
               <span>
