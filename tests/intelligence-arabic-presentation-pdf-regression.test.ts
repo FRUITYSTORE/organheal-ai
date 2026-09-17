@@ -125,6 +125,47 @@ describe(
 );
 
     it(
+  "localizes patient PDF marker names and keeps health trend pagination flexible",
+  () => {
+    const source =
+      readFileSync(
+        resolve(
+          process.cwd(),
+          "app/intelligence/components/PatientReportPdfCard.tsx"
+        ),
+        "utf8"
+      );
+
+    expect(source).toContain(
+      "presentPatientReportMarkerText"
+    );
+
+    expect(source).toContain(
+      'presentLabMarkerName('
+    );
+
+    expect(source).toMatch(
+      /\.patientHealthStorySection\s*\{[\s\S]*?break-inside:\s*auto[\s\S]*?page-break-inside:\s*auto/
+    );
+
+    expect(source).toMatch(
+      /querySelectorAll\([\s\S]*?"\.patientHealthStorySection"[\s\S]*?\)[\s\S]*?breakInside\s*=\s*"auto"[\s\S]*?pageBreakInside\s*=\s*"auto"/
+    );
+
+    const pagebreakAvoid =
+      source.match(
+        /pagebreak:\s*\{[\s\S]*?avoid:\s*\[([\s\S]*?)\]/
+      )?.[1] ?? "";
+
+    expect(
+      pagebreakAvoid
+    ).not.toContain(
+      '".patientHealthStorySection"'
+    );
+  }
+);
+
+    it(
       "localizes laboratory trend direction and summary",
       () => {
         expect(

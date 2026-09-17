@@ -196,6 +196,53 @@ function extractLabMarkers(...values: Array<string | null | undefined>) {
   return Array.from(uniqueMarkers.values());
 }
 
+const PATIENT_REPORT_LOCALIZABLE_MARKERS = [
+  "Total Cholesterol",
+  "Triglycerides",
+  "Creatinine",
+  "Hemoglobin",
+  "Glucose",
+  "Cholesterol",
+  "Vitamin D",
+  "Ferritin",
+  "Bilirubin",
+  "Platelets",
+  "Urea",
+] as const;
+
+function escapePatientMarkerPattern(
+  value: string
+) {
+  return value.replace(
+    /[.*+?^${}()|[\]\\]/g,
+    "\\$&"
+  );
+}
+
+function presentPatientReportMarkerText(
+  value: string
+) {
+  return PATIENT_REPORT_LOCALIZABLE_MARKERS.reduce(
+    (
+      result,
+      markerName
+    ) =>
+      result.replace(
+        new RegExp(
+          `\\b${escapePatientMarkerPattern(
+            markerName
+          )}\\b`,
+          "gi"
+        ),
+        presentLabMarkerName(
+          markerName,
+          "ar"
+        )
+      ),
+    value
+  );
+}
+
 function ArabicParagraph({ children }: { children: ReactNode }) {
   return (
     <p
@@ -209,7 +256,11 @@ function ArabicParagraph({ children }: { children: ReactNode }) {
         fontFamily: "Tahoma, Arial, sans-serif",
       }}
     >
-      {children}
+      {typeof children === "string"
+  ? presentPatientReportMarkerText(
+      children
+    )
+  : children}
     </p>
   );
 }
@@ -305,9 +356,9 @@ function applyProfessionalPdfLayout(reportElement: HTMLElement, isArabic: boolea
   widows: 3 !important;
 }
 
-.organhealPdfKeepTogether {
-  break-inside: avoid !important;
-  page-break-inside: avoid !important;
+.patientHealthStorySection {
+  break-inside: auto !important;
+  page-break-inside: auto !important;
 }
 
 .organhealPdfSection {
@@ -406,15 +457,18 @@ reportElement.querySelectorAll(".ohStack > article").forEach((element) => {
 });
 
 reportElement
-  .querySelectorAll(".patientHealthStorySection")
+  .querySelectorAll(
+    ".patientHealthStorySection"
+  )
   .forEach((element) => {
-    const htmlElement = element as HTMLElement;
+    const htmlElement =
+      element as HTMLElement;
 
     htmlElement.style.breakInside =
-      "avoid";
+      "auto";
 
     htmlElement.style.pageBreakInside =
-      "avoid";
+      "auto";
   });
   
 reportElement
@@ -719,7 +773,6 @@ const pdfWorker = html2pdf()
         "li",
         "tr",
         ".organhealPdfKeepTogether",
-        ".patientHealthStorySection",
         ".patientReportDocumentHeader",
         ".ohMetricCard",
       ],
