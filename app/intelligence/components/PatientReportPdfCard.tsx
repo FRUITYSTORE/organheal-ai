@@ -357,8 +357,11 @@ function applyProfessionalPdfLayout(reportElement: HTMLElement, isArabic: boolea
 }
 
 .patientHealthStorySection {
-  break-inside: auto !important;
-  page-break-inside: auto !important;
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+  margin-top: 8px !important;
+  margin-bottom: 8px !important;
+  padding: 12px 14px !important;
 }
 
 .organhealPdfSection {
@@ -453,7 +456,7 @@ reportElement.querySelectorAll(".ohStack > article").forEach((element) => {
   htmlElement.style.display = "block";
   htmlElement.style.breakInside = "auto";
   htmlElement.style.pageBreakInside = "auto";
-  htmlElement.style.marginBottom = "18px";
+  htmlElement.style.marginBottom = "10px";
 });
 
 reportElement
@@ -465,10 +468,19 @@ reportElement
       element as HTMLElement;
 
     htmlElement.style.breakInside =
-      "auto";
+      "avoid";
 
     htmlElement.style.pageBreakInside =
-      "auto";
+      "avoid";
+
+    htmlElement.style.marginTop =
+      "8px";
+
+    htmlElement.style.marginBottom =
+      "8px";
+
+    htmlElement.style.padding =
+      "12px 14px";
   });
   
 reportElement
@@ -775,6 +787,7 @@ const pdfWorker = html2pdf()
         ".organhealPdfKeepTogether",
         ".patientReportDocumentHeader",
         ".ohMetricCard",
+        ".patientHealthStorySection",
       ],
     },
     margin: [16, 18, 20, 18],

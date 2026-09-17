@@ -144,24 +144,28 @@ describe(
       'presentLabMarkerName('
     );
 
-    expect(source).toMatch(
-      /\.patientHealthStorySection\s*\{[\s\S]*?break-inside:\s*auto[\s\S]*?page-break-inside:\s*auto/
-    );
+expect(source).toMatch(
+  /\.patientHealthStorySection\s*\{[\s\S]*?break-inside:\s*avoid[\s\S]*?page-break-inside:\s*avoid/
+);
 
-    expect(source).toMatch(
-      /querySelectorAll\([\s\S]*?"\.patientHealthStorySection"[\s\S]*?\)[\s\S]*?breakInside\s*=\s*"auto"[\s\S]*?pageBreakInside\s*=\s*"auto"/
-    );
+expect(source).toMatch(
+  /querySelectorAll\([\s\S]*?"\.patientHealthStorySection"[\s\S]*?\)[\s\S]*?breakInside\s*=\s*"avoid"[\s\S]*?pageBreakInside\s*=\s*"avoid"/
+);
 
-    const pagebreakAvoid =
-      source.match(
-        /pagebreak:\s*\{[\s\S]*?avoid:\s*\[([\s\S]*?)\]/
-      )?.[1] ?? "";
+expect(source).toContain(
+  'htmlElement.style.marginBottom = "10px"'
+);
 
-    expect(
-      pagebreakAvoid
-    ).not.toContain(
-      '".patientHealthStorySection"'
-    );
+const pagebreakAvoid =
+  source.match(
+    /pagebreak:\s*\{[\s\S]*?avoid:\s*\[([\s\S]*?)\]/
+  )?.[1] ?? "";
+
+expect(
+  pagebreakAvoid
+).toContain(
+  '".patientHealthStorySection"'
+);
   }
 );
 
