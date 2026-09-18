@@ -17,6 +17,12 @@ type DashboardNextActionSectionProps = {
   progressPercent: number;
   completedSteps: number;
   currentPriority: string;
+
+  // The hero intelligence card already renders its own primary
+  // "best next decision" CTA when it's shown, so this section's own
+  // primary button is redundant in that case — pass false to hide it
+  // and keep only the secondary "Review Reports" link plus the stats.
+  showPrimaryAction?: boolean;
 };
 
 export default function DashboardNextActionSection({
@@ -25,6 +31,7 @@ export default function DashboardNextActionSection({
   progressPercent,
   completedSteps,
   currentPriority,
+  showPrimaryAction = true,
 }: DashboardNextActionSectionProps) {
    return (
     <section className="dashboardNextActionCompact">
@@ -44,12 +51,14 @@ export default function DashboardNextActionSection({
         </div>
 
         <div className="dashboardNextActionCompactButtons">
-          <Link
-            href={nextStep.href}
-            className="dashboardPrimaryAction"
-          >
-            {nextStep.buttonText}
-          </Link>
+          {showPrimaryAction && (
+            <Link
+              href={nextStep.href}
+              className="dashboardPrimaryAction"
+            >
+              {nextStep.buttonText}
+            </Link>
+          )}
 
           <Link
             href="/reports"

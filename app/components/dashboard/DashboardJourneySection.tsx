@@ -82,7 +82,7 @@ export default function DashboardJourneySection({
         hasSavedIntelligence,
 
       href:
-        "/reports",
+        "/intelligence",
     },
     {
       step: "04",

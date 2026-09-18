@@ -26,6 +26,7 @@ import DashboardOverviewSection from "@/app/components/dashboard/DashboardOvervi
 import {
   buildDashboardViewState,
 } from "@/app/components/dashboard/dashboard-view-state";
+import HealthUpdatesTicker from "@/app/components/home/HealthUpdatesTicker";
 
 type Language = "en" | "ar";
 
@@ -591,63 +592,6 @@ const resolvedNextStep: NextStep =
     },
   ];
 
-  const commandCards = [
-    {
-      label: isArabic ? "أولوية اليوم" : "Today priority",
-      value: currentPriority,
-      note: isArabic
-        ? "مبنية على التقييمات والتحديث الصحي."
-        : "Based on assessments and latest check-in.",
-      href: "/health-plan",
-    },
-    {
-      label: isArabic ? "حالة المتابعة" : "Follow-up status",
-      value: hasCheckIn
-        ? getStatus(dailyCheckIn?.wellness_score || 0, isArabic)
-        : isArabic
-        ? "بحاجة تحديث"
-        : "Needs check-in",
-      note: hasCheckIn
-        ? isArabic
-          ? "آخر تحديث صحي متصل بالخطة."
-          : "Latest check-in is connected to your plan."
-        : isArabic
-        ? "أكمل تحديثًا صحيًا لجعل الخطة واقعية."
-        : "Complete a check-in to make the plan realistic.",
-      href: "/checkin",
-    },
-    {
-      label: isArabic ? "جاهزية الرحلة" : "Journey readiness",
-      value: `${progressPercent}%`,
-      note: isArabic
-        ? `${completedSteps} من 4 عناصر أساسية مكتملة.`
-        : `${completedSteps} of 4 core elements completed.`,
-      href: "/dashboard",
-    },
-  ];
-
-  const quickActions = [
-    {
-      title: isArabic ? "التقييم الصحي" : "Assessment",
-      text: isArabic ? "تحديث تقييم صحة الأعضاء." : "Update organ health assessment.",
-      href: "/assessment",
-    },
-    {
-      title: isArabic ? "التحديث الصحي" : "Check-In",
-      text: isArabic ? "أضف حالة اليوم وخلي الخطة واقعية." : "Add today status and keep your plan realistic.",
-      href: "/checkin",
-    },
-    {
-      title: isArabic ? "مكتبة التقارير" : "Analysis",
-      text: isArabic ? "راجع ملخص المريض وملخص الطبيب." : "Review patient and doctor-ready summaries.",
-      href: "/reports",
-    },
-    {
-      title: isArabic ? "خطة المتابعة" : "Health Plan",
-      text: isArabic ? "راجع المهام وخطة 7/30/90 يوم." : "Review tasks and 7/30/90-day plan.",
-      href: "/health-plan",
-    },
-  ];
       const resolvedDashboardIntelligence =
     dashboardIntelligence &&
     unifiedExperience
@@ -737,6 +681,33 @@ const resolvedNextStep: NextStep =
     });
   return (
     <main className="smartDashboardPage dashboardCommandCenterPage" dir={isArabic ? "rtl" : "ltr"} lang={isArabic ? "ar" : "en"}>
+      <HealthUpdatesTicker />
+
+      <div className="dashboardTodayActions">
+        <Link href="/assistant" className="dashboardTodayAction dashboardTodayActionPrimary">
+          <span>{isArabic ? "اسأل OrganHeal AI" : "Ask OrganHeal AI"}</span>
+          <small>
+            {isArabic
+              ? "اسأل عن نتيجة أو خطوتك التالية"
+              : "Ask about a result or your next step"}
+          </small>
+        </Link>
+
+        <Link href="/reports" className="dashboardTodayAction dashboardTodayActionSecondary">
+          <span>{isArabic ? "مراجعة التقارير" : "Review Reports"}</span>
+          <small>
+            {isArabic ? "افتح تقاريرك المحفوظة" : "Open your saved reports"}
+          </small>
+        </Link>
+
+        <Link href="/health-plan" className="dashboardTodayAction dashboardTodayActionSecondary">
+          <span>{isArabic ? "خطة المتابعة" : "Health Plan"}</span>
+          <small>
+            {isArabic ? "راجع خطوتك التالية الموصى بها" : "Review your recommended next step"}
+          </small>
+        </Link>
+      </div>
+
       {dashboardViewState.hero && (
   <DashboardHeroIntelligence
     {...dashboardViewState.hero}
@@ -2838,6 +2809,7 @@ const resolvedNextStep: NextStep =
 
           <DashboardNextActionSection
             {...dashboardViewState.nextAction}
+            showPrimaryAction={!dashboardViewState.hero}
           />
            <DashboardJourneySection
   {...dashboardViewState.journey}
