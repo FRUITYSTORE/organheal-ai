@@ -596,7 +596,6 @@ if (result.status === "error") {
           max-width: 1180px !important;
         }
 
-        .assessmentForceV2 a[href="/dashboard"],
         .assessmentForceV2 a[href="/assessment"] {
           display: inline-flex !important;
           align-items: center !important;

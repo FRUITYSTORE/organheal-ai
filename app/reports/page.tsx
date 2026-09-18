@@ -9,6 +9,7 @@ import FeaturedReportCard from "@/app/components/reports/FeaturedReportCard";
 import CompactReportRow from "@/app/components/reports/CompactReportRow";
 import StatusBadge from "@/app/components/ui/StatusBadge";
 import { getReportsLibrary } from "@/lib/services/reports/reports.service";
+import PageBackActions from "@/app/components/PageBackActions";
 import {
   formatReportDate,
   presentReportRiskLevel,
@@ -767,6 +768,10 @@ const visibleCompactReports = showAllReports
       `}</style>
 
       <div className="ohContainer ohStack large" style={{ padding: "28px 0 56px" }}>
+        <PageBackActions
+          label={text("Back", "رجوع")}
+        />
+
         {isSelectingForIntelligence && (
           <section
             className="reportSelectionNotice"
@@ -796,13 +801,6 @@ const visibleCompactReports = showAllReports
             </div>
           </section>
         )}
-        <Link
-          href="/dashboard"
-          className="ohMetricHint"
-          style={{ color: "var(--oh-primary)", fontWeight: 900 }}
-        >
-          ← {text("Back to Dashboard", "العودة إلى لوحة التحكم")}
-        </Link>
 
         <section className="ohHero reportsHero">
           <div className="ohHeroGrid">

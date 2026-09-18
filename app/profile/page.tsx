@@ -1269,26 +1269,6 @@ if (checkInError) {
           max-width: 1180px !important;
         }
 
-        .followUpCleanV4 .organhealBackButton,
-        .followUpCleanV4 .ohContainer > a[href="/dashboard"],
-        .followUpCleanV4 .ohContainer > div:first-child a[href="/dashboard"] {
-          display: inline-flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          width: fit-content !important;
-          min-height: 44px !important;
-          padding: 0 18px !important;
-          margin: 0 0 18px 0 !important;
-          border-radius: 999px !important;
-          background: #0f172a !important;
-          color: #ffffff !important;
-          border: 1px solid rgba(15, 23, 42, 0.25) !important;
-          box-shadow: 0 14px 34px rgba(15, 23, 42, 0.24) !important;
-          font-weight: 950 !important;
-          font-size: 0.9rem !important;
-          text-decoration: none !important;
-        }
-
         /* Main hero only */
         .followUpCleanV4 .ohHero,
         .followUpCleanV4 [class*="Hero"],

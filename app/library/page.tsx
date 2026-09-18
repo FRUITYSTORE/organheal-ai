@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { blogPosts } from "@/lib/blogData";
+import PageBackActions from "@/app/components/PageBackActions";
 
 type Language = "en" | "ar";
 type BlogPost = (typeof blogPosts)[number];
@@ -654,11 +655,10 @@ export default function LibraryPage() {
       `}</style>
 
       <div className="ohContainer ohStack large" style={{ padding: "32px 0 64px" }}>
-        <div className="ohButtonRow">
-          <Link href="/dashboard" className="secondaryBtn">
-            {text("← Back to Dashboard", "← العودة إلى لوحة التحكم")}
-          </Link>
-        </div>
+        <PageBackActions
+          label={text("Back", "رجوع")}
+        />
+
         <section className="ohHero learningHero">
           <div className="ohHeroGrid">
             <div>

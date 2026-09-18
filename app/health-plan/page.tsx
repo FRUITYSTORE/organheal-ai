@@ -14,6 +14,7 @@ import TodaysHealthMission from "@/app/components/health-plan/TodaysHealthMissio
 import { buildFallbackNextAction } from "@/lib/services/health-plan/health-plan-fallback";
 import { buildFallbackTasks } from "@/lib/services/health-plan/task-library";
 import HealthScoreBreakdown from "@/app/components/health-plan/HealthScoreBreakdown";
+import PageBackActions from "@/app/components/PageBackActions";
 
 type Language = "en" | "ar";
 
@@ -383,20 +384,6 @@ try {
           margin: 0 auto;
           display: grid;
           gap: 22px;
-        }
-
-        .hpBack {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          width: fit-content;
-          min-height: 44px;
-          padding: 0 18px;
-          border-radius: 999px;
-          background: #0f172a;
-          color: white;
-          font-weight: 950;
-          box-shadow: 0 14px 34px rgba(15, 23, 42, 0.24);
         }
 
         .hpHero {
@@ -989,9 +976,9 @@ try {
       `}</style>
 
       <div className="hpContainer">
-        <Link href="/dashboard" className="hpBack">
-          {text("← Back to Dashboard", "← العودة إلى لوحة التحكم")}
-        </Link>
+        <PageBackActions
+          label={text("Back", "رجوع")}
+        />
 
        <HealthPlanHero
   eyebrow={text("Personal follow-up intelligence", "خطة متابعة شخصية")}

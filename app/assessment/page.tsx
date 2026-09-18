@@ -414,25 +414,6 @@ export default function AssessmentPage() {
           max-width: 1180px !important;
         }
 
-        .assessmentForceV2 a[href="/dashboard"],
-        .assessmentForceV2 a[href="/assessment"] {
-          display: inline-flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          width: fit-content !important;
-          min-height: 44px !important;
-          padding: 0 18px !important;
-          margin: 0 0 18px 0 !important;
-          border-radius: 999px !important;
-          background: #0f172a !important;
-          color: #ffffff !important;
-          border: 1px solid rgba(15, 23, 42, 0.25) !important;
-          box-shadow: 0 14px 34px rgba(15, 23, 42, 0.24) !important;
-          font-weight: 950 !important;
-          font-size: 0.9rem !important;
-          text-decoration: none !important;
-        }
-
         .assessmentForceV2 .ohHero,
         .assessmentForceV2 section:first-of-type {
           background:
