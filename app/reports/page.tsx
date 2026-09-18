@@ -892,6 +892,34 @@ const visibleCompactReports = showAllReports
   />
 </section>
 
+        {reports.length >= 2 && (
+          <section className="ohActionPanel reportsPlusTeaser">
+            <div>
+              <p className="ohMetricLabel">
+                {text("OrganHeal Plus", "OrganHeal بلس")}
+              </p>
+
+              <h2 className="ohCardTitle" style={{ fontSize: "1.4rem" }}>
+                {text(
+                  `You have ${reports.length} reports. Plus is built to connect them into one deeper picture.`,
+                  `لديك ${reports.length} تقارير. Plus مصممة لربطها في صورة صحية أعمق.`
+                )}
+              </h2>
+
+              <p className="ohCardText">
+                {text(
+                  "Recurring-pattern intelligence across your history, richer longitudinal trends, and advanced doctor-ready summaries — coming to OrganHeal Plus.",
+                  "التعرّف على الأنماط المتكررة عبر سجلك، اتجاهات زمنية أعمق، وملخصات متقدمة للطبيب — قادمة مع OrganHeal Plus."
+                )}
+              </p>
+            </div>
+
+            <Link href="/pricing" className="secondaryBtn">
+              {text("See OrganHeal Plus", "استكشف OrganHeal Plus")}
+            </Link>
+          </section>
+        )}
+
         <section className="reportsToolbar">
           <div className="reportsControl">
             <label>{text("Find a report", "ابحث عن تقرير")}</label>
