@@ -22,10 +22,23 @@ type OnboardingStep = {
   statusAr: string;
 };
 
+type OnboardingProgress = {
+  hasAssessments: boolean;
+  hasReports: boolean;
+  hasSavedIntelligence: boolean;
+  hasCheckIn: boolean;
+};
+
 export default function OnboardingPage() {
   const [language, setLanguage] = useState<Language>("en");
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(true);
+  const [progress, setProgress] = useState<OnboardingProgress>({
+    hasAssessments: false,
+    hasReports: false,
+    hasSavedIntelligence: false,
+    hasCheckIn: false,
+  });
 
   const isArabic = language === "ar";
 
@@ -63,13 +76,51 @@ export default function OnboardingPage() {
       return;
     }
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("username, email")
-      .eq("id", userData.user.id)
-      .maybeSingle();
+    const userId = userData.user.id;
+
+    const [
+      { data: profile },
+      { data: assessments },
+      { data: reports },
+      { data: intelligence },
+      { data: checkins },
+    ] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("username, email")
+        .eq("id", userId)
+        .maybeSingle(),
+      supabase
+        .from("organ_assessments")
+        .select("id")
+        .eq("user_id", userId)
+        .limit(1),
+      supabase
+        .from("uploaded_lab_files")
+        .select("id")
+        .eq("user_id", userId)
+        .limit(1),
+      supabase
+        .from("generated_intelligence_results")
+        .select("insight_id")
+        .eq("user_id", userId)
+        .limit(1),
+      supabase
+        .from("daily_checkins")
+        .select("id")
+        .eq("user_id", userId)
+        .limit(1),
+    ]);
 
     setUsername(profile?.username || userData.user.email || "User");
+
+    setProgress({
+      hasAssessments: Boolean(assessments?.length),
+      hasReports: Boolean(reports?.length),
+      hasSavedIntelligence: Boolean(intelligence?.length),
+      hasCheckIn: Boolean(checkins?.length),
+    });
+
     setLoading(false);
   }
 
@@ -160,6 +211,21 @@ export default function OnboardingPage() {
       statusAr: "مستمر",
     },
   ];
+
+  const progressFlags = [
+    progress.hasAssessments,
+    progress.hasReports,
+    progress.hasSavedIntelligence,
+    progress.hasAssessments ||
+      progress.hasReports ||
+      progress.hasSavedIntelligence ||
+      progress.hasCheckIn,
+    progress.hasCheckIn,
+  ];
+
+  const completedStepCount = progressFlags.filter(Boolean).length;
+  const progressPercent = Math.round((completedStepCount / progressFlags.length) * 100);
+  const activeStepIndex = progressFlags.findIndex((done) => !done);
 
   return (
     <main className="ohPageShell onboardingPage" dir={isArabic ? "rtl" : "ltr"}>
@@ -383,10 +449,10 @@ export default function OnboardingPage() {
         }
 
         .onboardingPage .onboardingProgressFill {
-          width: 20%;
           height: 100%;
           border-radius: inherit;
           background: linear-gradient(135deg, #0ea5e9, #0891b2);
+          transition: width 0.4s ease;
         }
 
         .onboardingPage .onboardingProgressSteps {
@@ -661,6 +727,32 @@ export default function OnboardingPage() {
           </div>
         </section>
 
+        <section className="ohActionPanel onboardingAskAiPanel">
+          <div>
+            <p className="ohMetricLabel">
+              {text("Not sure where to start?", "ما تعرف من وين تبدأ؟")}
+            </p>
+
+            <h2 className="ohCardTitle" style={{ fontSize: "1.55rem" }}>
+              {text(
+                "Ask OrganHeal AI instead of following the steps in order.",
+                "اسأل OrganHeal AI بدل ما تتبع الخطوات بالترتيب."
+              )}
+            </h2>
+
+            <p className="ohCardText">
+              {text(
+                "Describe what you want help with — a symptom, a report, or a question for your doctor — and OrganHeal AI will guide you to the right next step.",
+                "اشرح اللي تبي مساعدة فيه — عرض صحي، تقرير، أو سؤال لطبيبك — وراح يوجهك OrganHeal AI للخطوة الصحيحة التالية."
+              )}
+            </p>
+          </div>
+
+          <Link href="/assistant" className="primaryBtn">
+            {text("Ask OrganHeal AI", "اسأل OrganHeal AI")}
+          </Link>
+        </section>
+
         <section className="ohMetricGrid">
           <article className="ohMetricCard">
             <span className="ohMetricLabel">
@@ -718,19 +810,33 @@ export default function OnboardingPage() {
               </p>
             </div>
 
-            <div className="onboardingProgressPercent">20%</div>
+            <div className="onboardingProgressPercent">{progressPercent}%</div>
           </div>
 
           <div className="onboardingProgressTrack">
-            <div className="onboardingProgressFill" />
+            <div
+              className="onboardingProgressFill"
+              style={{ width: `${progressPercent}%` }}
+            />
           </div>
 
           <div className="onboardingProgressSteps">
-            <div className="onboardingProgressStep active">{text("Assessment", "التقييم")}</div>
-            <div className="onboardingProgressStep">{text("Documents", "المستندات")}</div>
-            <div className="onboardingProgressStep">{text("Reports", "التقارير")}</div>
-            <div className="onboardingProgressStep">{text("Plan", "الخطة")}</div>
-            <div className="onboardingProgressStep">{text("Check-Ins", "المتابعة")}</div>
+            {[
+              text("Assessment", "التقييم"),
+              text("Documents", "المستندات"),
+              text("Reports", "التقارير"),
+              text("Plan", "الخطة"),
+              text("Check-Ins", "المتابعة"),
+            ].map((label, index) => (
+              <div
+                key={label}
+                className={`onboardingProgressStep ${
+                  progressFlags[index] ? "active" : ""
+                }`}
+              >
+                {label}
+              </div>
+            ))}
           </div>
         </section>
 
@@ -790,26 +896,43 @@ export default function OnboardingPage() {
           <div className="ohCardHeader" style={{ marginBottom: 0 }}>
             <div>
               <p className="ohMetricLabel">
-                {text("Recommended first move", "الخطوة الأولى المقترحة")}
+                {completedStepCount > 0
+                  ? text("You're set up", "أنت جاهز")
+                  : text("Recommended first move", "الخطوة الأولى المقترحة")}
               </p>
 
               <h2 className="ohCardTitle" style={{ fontSize: "1.55rem" }}>
-                {text(
-                  "Start with one assessment, then continue at your pace.",
-                  "ابدأ بتقييم واحد، ثم تابع حسب وتيرتك."
-                )}
+                {completedStepCount > 0
+                  ? text(
+                      "Continue to your dashboard whenever you're ready.",
+                      "تابع إلى لوحة التحكم وقتما تكون جاهزًا."
+                    )
+                  : text(
+                      "Start with one assessment, then continue at your pace.",
+                      "ابدأ بتقييم واحد، ثم تابع حسب وتيرتك."
+                    )}
               </h2>
 
               <p className="ohCardText">
-                {text(
-                  "A single assessment gives OrganHeal a starting point. You can review your dashboard or add documents whenever they are available.",
-                  "تقييم واحد يعطي OrganHeal نقطة بداية. يمكنك مراجعة لوحة التحكم أو إضافة مستندات عندما تكون متوفرة."
-                )}
+                {completedStepCount > 0
+                  ? text(
+                      "Your dashboard brings together your health intelligence, next steps, and daily actions in one place. You can always come back to finish the remaining steps.",
+                      "تجمع لوحة التحكم ذكاءك الصحي وخطواتك التالية وإجراءاتك اليومية في مكان واحد. تقدر ترجع أي وقت لإكمال باقي الخطوات."
+                    )
+                  : text(
+                      "A single assessment gives OrganHeal a starting point. You can review your dashboard or add documents whenever they are available.",
+                      "تقييم واحد يعطي OrganHeal نقطة بداية. يمكنك مراجعة لوحة التحكم أو إضافة مستندات عندما تكون متوفرة."
+                    )}
               </p>
             </div>
 
-            <Link href="/assessment" className="primaryBtn">
-              {text("Begin Now", "ابدأ الآن")}
+            <Link
+              href={completedStepCount > 0 ? "/dashboard" : "/assessment"}
+              className="primaryBtn"
+            >
+              {completedStepCount > 0
+                ? text("Go to Dashboard", "الذهاب إلى لوحة التحكم")
+                : text("Begin Now", "ابدأ الآن")}
             </Link>
           </div>
         </section>
