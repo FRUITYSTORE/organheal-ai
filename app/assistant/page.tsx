@@ -754,10 +754,30 @@ async function playSpokenResponse(
 
         .assistantCommandPage .assistantInputForm {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr auto auto auto;
   gap: 10px;
   align-items: center;
 }
+
+        .assistantCommandPage .assistantAttachAction {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          min-height: 52px;
+          padding: 0 14px;
+          border-radius: 16px;
+          border: 1px solid rgba(148, 163, 184, 0.36);
+          background: rgba(255, 255, 255, 0.94);
+          color: var(--oh-text);
+          font-weight: 800;
+          font-size: 0.86rem;
+          white-space: nowrap;
+        }
+
+        .assistantCommandPage .assistantAttachAction:hover {
+          border-color: rgba(20, 184, 166, 0.5);
+          color: #0f766e;
+        }
 
         .assistantCommandPage .assistantInputForm input {
           width: 100%;
@@ -807,11 +827,15 @@ async function playSpokenResponse(
 
         @media (max-width: 760px) {
           .assistantCommandPage .assistantInputForm {
-            grid-template-columns: 1fr auto;
+            grid-template-columns: repeat(3, 1fr);
           }
 
           .assistantCommandPage .assistantInputForm input {
             grid-column: 1 / -1;
+          }
+
+          .assistantCommandPage .assistantAttachAction {
+            justify-content: center;
           }
 
           .assistantCommandPage .assistantMessage {
@@ -1076,6 +1100,11 @@ async function playSpokenResponse(
                 });
               }}
             />
+
+            <Link href="/lab-upload" className="assistantAttachAction">
+              <span aria-hidden="true">＋</span>
+              {text("Attach report", "إرفاق تقرير")}
+            </Link>
 
             <button
               className="primaryBtn"
