@@ -63,6 +63,10 @@ export default function SiteFooter() {
               {text("Features", "الميزات")}
             </Link>
 
+            <Link href="/pricing">
+              {text("Pricing", "الأسعار")}
+            </Link>
+
             <Link href="/library">
               {text("Health Learning Hub", "مركز التعلّم الصحي")}
             </Link>

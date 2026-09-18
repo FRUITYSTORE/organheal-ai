@@ -29,8 +29,6 @@ export default function robots(): MetadataRoute.Robots {
           "/admin/",
           "/onboarding",
           "/onboarding/",
-          "/pricing",
-          "/pricing/",
           "/reset-password",
           "/reset-password/",
           "/api",

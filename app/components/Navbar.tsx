@@ -194,6 +194,12 @@ export default function Navbar() {
         "عن OrganHeal"
       ),
 
+    pricing:
+      text(
+        "Pricing",
+        "الأسعار"
+      ),
+
     more:
       text(
         "More",
@@ -990,6 +996,17 @@ export default function Navbar() {
                     </Link>
 
                     <Link
+                      href="/pricing"
+                      onClick={
+                        closeMenus
+                      }
+                    >
+                      {
+                        labels.pricing
+                      }
+                    </Link>
+
+                    <Link
                       href="/settings/communications"
                       onClick={
                         closeMenus
@@ -1088,6 +1105,22 @@ export default function Navbar() {
               >
                 {
                   labels.about
+                }
+              </Link>
+
+              <Link
+                href="/pricing"
+                className={
+                  routeClass(
+                    "/pricing"
+                  )
+                }
+                onClick={
+                  closeMenus
+                }
+              >
+                {
+                  labels.pricing
                 }
               </Link>
 
