@@ -1788,61 +1788,7 @@ if (
                       "يربط OrganHeal تقاريرك وسجلّك الصحي ليُظهر لك ما الذي يهم الآن، وما الذي تغيّر، وما هي خطوتك التالية."
                     )}
               </p>
-
-              <div className="homePrimaryActions">
-                {isLoggedIn ? null : (
-                  <>
-                    <Link href="/signup" className="primaryBtn homeUploadAction">
-  <span className="homeActionIcon" aria-hidden="true">→</span>
-
-  <span>
-    <strong>
-      {text(
-        "Start Your Health Journey",
-        "ابدأ رحلتك الصحية"
-      )}
-    </strong>
-
-    <small>
-      {text(
-        "Create your private health intelligence workspace",
-        "أنشئ مساحة ذكائك الصحي الخاصة"
-      )}
-    </small>
-  </span>
-</Link>
-
-<Link
-  href="/lab-upload"
-  className="secondaryBtn homeSecondaryAction"
->
-  {text(
-    "Upload a Medical Report",
-    "رفع تقرير طبي"
-  )}
-</Link>
-                  </>
-                )}
-              </div>
-
-              <div className="homePrivacyPromise">
-                <span className="homePrivacyIcon" aria-hidden="true">✓</span>
-
-                <div>
-                  <strong>
-                    {text("Private by design", "الخصوصية جزء من التصميم")}
-                  </strong>
-
-                  <p>
-                    {text(
-                      "Your reports, conversations, and health workspace are connected to your account and are not visible to other users.",
-                      "تقاريرك ومحادثاتك ومساحتك الصحية مرتبطة بحسابك ولا تظهر للمستخدمين الآخرين."
-                    )}
-                  </p>
-                </div>
-              </div>
-
-                          </div>
+            </div>
 
             <aside
               id="ask-organheal"
@@ -2010,6 +1956,61 @@ if (
                 )}
               </p>
             </aside>
+
+            <div className="homeCommandIntro">
+              <div className="homePrimaryActions">
+                {isLoggedIn ? null : (
+                  <>
+                    <Link href="/signup" className="secondaryBtn homeUploadAction">
+                      <span className="homeActionIcon" aria-hidden="true">→</span>
+
+                      <span>
+                        <strong>
+                          {text(
+                            "Start Your Health Journey",
+                            "ابدأ رحلتك الصحية"
+                          )}
+                        </strong>
+
+                        <small>
+                          {text(
+                            "Create your private health intelligence workspace",
+                            "أنشئ مساحة ذكائك الصحي الخاصة"
+                          )}
+                        </small>
+                      </span>
+                    </Link>
+
+                    <Link
+                      href="/lab-upload"
+                      className="secondaryBtn homeSecondaryAction"
+                    >
+                      {text(
+                        "Upload a Medical Report",
+                        "رفع تقرير طبي"
+                      )}
+                    </Link>
+                  </>
+                )}
+              </div>
+
+              <div className="homePrivacyPromise">
+                <span className="homePrivacyIcon" aria-hidden="true">✓</span>
+
+                <div>
+                  <strong>
+                    {text("Private by design", "الخصوصية جزء من التصميم")}
+                  </strong>
+
+                  <p>
+                    {text(
+                      "Your reports, conversations, and health workspace are connected to your account and are not visible to other users.",
+                      "تقاريرك ومحادثاتك ومساحتك الصحية مرتبطة بحسابك ولا تظهر للمستخدمين الآخرين."
+                    )}
+                  </p>
+                </div>
+              </div>
+            </div>
 
             <div className="homeProductPromise">
               <span aria-hidden="true">✦</span>
