@@ -543,16 +543,37 @@ export default function Navbar() {
         }
 
         .organHealNavbar .navAskLink {
-          padding: 9px 14px;
-          border: 1px solid rgba(94, 234, 212, 0.32);
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 10px 18px;
+          border: 0;
           border-radius: 999px;
-          background: rgba(20, 184, 166, 0.13);
-          color: #99f6e4;
+          background: linear-gradient(135deg, #22d3ee, #0ea5e9);
+          color: #01111e;
+          font-weight: 900;
+          box-shadow: 0 6px 20px rgba(34, 211, 238, 0.32);
+          transition: transform 0.18s ease, box-shadow 0.18s ease;
         }
 
         .organHealNavbar .navAskLink:hover {
-          background: rgba(20, 184, 166, 0.22);
-          color: white;
+          transform: translateY(-1px);
+          color: #01111e;
+          box-shadow: 0 10px 28px rgba(34, 211, 238, 0.44);
+        }
+
+        .organHealNavbar .navAskLink.navRouteActive {
+          color: #01111e !important;
+        }
+
+        .organHealNavbar .navAskLink.navRouteActive::after {
+          display: none;
+        }
+
+        @media (max-width: 900px) {
+          .organHealNavbar .navLinks .navAskLink {
+            display: none;
+          }
         }
 
         .organHealNavbar .navMoreMenu {
@@ -828,22 +849,6 @@ export default function Navbar() {
           ? (
             <>
               <Link
-                href="/"
-                className={
-                  routeClass(
-                    "/"
-                  )
-                }
-                onClick={
-                  closeMenus
-                }
-              >
-                {
-                  labels.home
-                }
-              </Link>
-
-              <Link
                 href="/assistant"
                 className={
                   `navAskLink ${
@@ -1023,22 +1028,6 @@ export default function Navbar() {
           )
           : (
             <>
-              <Link
-                href="/"
-                className={
-                  routeClass(
-                    "/"
-                  )
-                }
-                onClick={
-                  closeMenus
-                }
-              >
-                {
-                  labels.home
-                }
-              </Link>
-
               <Link
                 href="/#ask-organheal"
                 className="navAskLink"
