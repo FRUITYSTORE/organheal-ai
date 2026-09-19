@@ -1,3 +1,5 @@
+import { type CSSProperties } from "react";
+
 import {
   createIntelligenceText,
 } from "@/lib/presentation/intelligence/intelligence-ui-text";
@@ -7,181 +9,200 @@ type DigitalTwinCardProps = {
   isArabic: boolean;
 };
 
-type DigitalTwinSignal = {
-  id?: string | number;
-  title?: string;
-  organ?: string;
-  system?: string;
-  category?: string;
-  status?: string;
-  riskLevel?: string;
-  confidence?: string;
-  signal?: string;
-  insight?: string;
-  summary?: string;
-  description?: string;
-  recommendation?: string;
+type DigitalTwinProfile = {
+  liverRisk: number;
+  cardiovascularRisk: number;
+  kidneyRisk: number;
+  metabolicRisk: number;
+  recoveryPotential: number;
+  primarySystem: string;
+  profileSummary: string;
+};
+
+type SystemTone = "good" | "moderate" | "risk";
+
+type SystemNode = {
+  key: "cardiovascular" | "liver" | "kidney" | "metabolic";
+  risk: number;
+  tone: SystemTone;
+  label: string;
+  cx: number;
+  cy: number;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function getText(value: unknown): string {
-  if (typeof value === "string") return value.trim();
-
+function getNumber(value: unknown): number {
   if (typeof value === "number" && Number.isFinite(value)) {
-    return String(value);
+    return Math.max(0, Math.min(100, value));
   }
 
-  return "";
+  return 0;
 }
 
-function normalizeDigitalTwinSignals(
+function getText(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+/**
+ * The digital twin is produced by lib/patientDigitalTwin.ts, which returns
+ * a flat { liverRisk, cardiovascularRisk, kidneyRisk, metabolicRisk,
+ * recoveryPotential, primarySystem, profileSummary } shape — not a
+ * signals/items array. Reading the real shape directly (rather than
+ * guessing at alternate field names) is what makes this card actually
+ * render instead of permanently falling back to its empty state.
+ */
+function normalizeDigitalTwin(
   digitalTwin: unknown
-): DigitalTwinSignal[] {
-  if (Array.isArray(digitalTwin)) {
-    return digitalTwin.filter(isRecord).map((item, index) => ({
-      id: getText(item.id) || index,
-      title: getText(item.title),
-      organ: getText(item.organ),
-      system: getText(item.system),
-      category: getText(item.category),
-      status: getText(item.status),
-      riskLevel: getText(item.riskLevel),
-      confidence: getText(item.confidence),
-      signal: getText(item.signal),
-      insight: getText(item.insight),
-      summary: getText(item.summary),
-      description: getText(item.description),
-      recommendation: getText(item.recommendation),
-    }));
+): DigitalTwinProfile | null {
+  if (!isRecord(digitalTwin)) {
+    return null;
   }
 
-  if (!isRecord(digitalTwin)) return [];
+  const hasAnyRiskField =
+    "liverRisk" in digitalTwin ||
+    "cardiovascularRisk" in digitalTwin ||
+    "kidneyRisk" in digitalTwin ||
+    "metabolicRisk" in digitalTwin;
 
-  const possibleItems =
-    digitalTwin.items ||
-    digitalTwin.signals ||
-    digitalTwin.systems ||
-    digitalTwin.organs ||
-    digitalTwin.organSignals ||
-    digitalTwin.digitalTwin ||
-    digitalTwin.twinSignals ||
-    digitalTwin.healthModel;
-
-  if (!Array.isArray(possibleItems)) return [];
-
-  return possibleItems.filter(isRecord).map((item, index) => ({
-    id: getText(item.id) || index,
-    title: getText(item.title),
-    organ: getText(item.organ),
-    system: getText(item.system),
-    category: getText(item.category),
-    status: getText(item.status),
-    riskLevel: getText(item.riskLevel),
-    confidence: getText(item.confidence),
-    signal: getText(item.signal),
-    insight: getText(item.insight),
-    summary: getText(item.summary),
-    description: getText(item.description),
-    recommendation: getText(item.recommendation),
-  }));
-}
-
-function getDigitalTwinSummary(digitalTwin: unknown): string {
-  if (typeof digitalTwin === "string") {
-    return digitalTwin.trim();
+  if (!hasAnyRiskField) {
+    return null;
   }
 
-  if (!isRecord(digitalTwin)) return "";
-
-  return (
-    getText(digitalTwin.summary) ||
-    getText(digitalTwin.overview) ||
-    getText(digitalTwin.narrative) ||
-    getText(digitalTwin.description)
-  );
+  return {
+    liverRisk: getNumber(digitalTwin.liverRisk),
+    cardiovascularRisk: getNumber(digitalTwin.cardiovascularRisk),
+    kidneyRisk: getNumber(digitalTwin.kidneyRisk),
+    metabolicRisk: getNumber(digitalTwin.metabolicRisk),
+    recoveryPotential: getNumber(digitalTwin.recoveryPotential) || 100,
+    primarySystem: getText(digitalTwin.primarySystem),
+    profileSummary: getText(digitalTwin.profileSummary),
+  };
 }
 
-function getDigitalTwinStatus(digitalTwin: unknown): string {
-  if (!isRecord(digitalTwin)) return "";
-
-  return (
-    getText(digitalTwin.status) ||
-    getText(digitalTwin.overallStatus) ||
-    getText(digitalTwin.healthState) ||
-    getText(digitalTwin.modelStatus)
-  );
+function getTone(risk: number): SystemTone {
+  if (risk >= 50) return "risk";
+  if (risk >= 25) return "moderate";
+  return "good";
 }
 
-function getDigitalTwinConfidence(digitalTwin: unknown): string {
-  if (!isRecord(digitalTwin)) return "";
-
-  return (
-    getText(digitalTwin.confidence) ||
-    getText(digitalTwin.confidenceLevel) ||
-    getText(digitalTwin.modelConfidence) ||
-    getText(digitalTwin.signalStrength)
-  );
-}
-
-function getTone(value: string) {
-  const normalized = value
-    .trim()
-    .toLowerCase();
-
-  if (
-    normalized.includes("high") ||
-    normalized.includes("strong") ||
-    normalized.includes("stable") ||
-    normalized.includes("مرتفع") ||
-    normalized.includes("قوي") ||
-    normalized.includes("مستقر")
-  ) {
-    return "good";
-  }
-
-  if (
-    normalized.includes("moderate") ||
-    normalized.includes("medium") ||
-    normalized.includes("متوسط")
-  ) {
-    return "moderate";
-  }
-
-  if (
-    normalized.includes("low") ||
-    normalized.includes("weak") ||
-    normalized.includes("risk") ||
-    normalized.includes("منخفض") ||
-    normalized.includes("ضعيف") ||
-    normalized.includes("مخاطر")
-  ) {
-    return "risk";
-  }
-
-  return "neutral";
-}
+const TONE_COLOR: Record<SystemTone, { fill: string; glow: string }> = {
+  good: { fill: "#0f766e", glow: "rgba(15, 118, 110, 0.35)" },
+  moderate: { fill: "#b45309", glow: "rgba(180, 83, 9, 0.35)" },
+  risk: { fill: "#b91c1c", glow: "rgba(185, 28, 28, 0.35)" },
+};
 
 export default function DigitalTwinCard({
   digitalTwin,
   isArabic,
 }: DigitalTwinCardProps) {
-  const text = createIntelligenceText(
-    isArabic ? "ar" : "en"
-  );
+  const text = createIntelligenceText(isArabic ? "ar" : "en");
 
-  const signals = normalizeDigitalTwinSignals(digitalTwin);
-  const summary = getDigitalTwinSummary(digitalTwin);
-  const status = getDigitalTwinStatus(digitalTwin);
-  const confidence = getDigitalTwinConfidence(digitalTwin);
+  const profile = normalizeDigitalTwin(digitalTwin);
 
-  const hasModelData =
-    Boolean(summary) ||
-    Boolean(status) ||
-    Boolean(confidence) ||
-    signals.length > 0;
+  if (!profile) {
+    return (
+      <section
+        className="digitalHealthModelResult"
+        dir={isArabic ? "rtl" : "ltr"}
+        lang={isArabic ? "ar" : "en"}
+      >
+        <style>{`
+          .digitalHealthModelResult {
+            padding: 20px;
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            border-radius: 18px;
+            background: #ffffff;
+          }
+
+          .digitalHealthModelEyebrow {
+            margin: 0;
+            color: #0f766e;
+            font-size: 0.68rem;
+            font-weight: 950;
+            letter-spacing: 0.09em;
+            text-transform: uppercase;
+          }
+
+          .digitalHealthModelEmpty {
+            margin-top: 14px;
+            padding: 14px 15px;
+            border: 1px dashed rgba(148, 163, 184, 0.4);
+            border-radius: 14px;
+            background: #f8fafc;
+            color: #64748b;
+            font-size: 0.82rem;
+            line-height: 1.6;
+          }
+        `}</style>
+
+        <p className="digitalHealthModelEyebrow">
+          {text("Personal health model", "النموذج الصحي الشخصي")}
+        </p>
+
+        <div className="digitalHealthModelEmpty">
+          {text(
+            "A fuller personal health model requires more connected and longitudinal data. OrganHeal will strengthen this model as your health history grows.",
+            "يتطلب بناء نموذج صحي شخصي أكثر اكتمالًا المزيد من البيانات الصحية المترابطة والتاريخية. وسيعمل OrganHeal على تقوية هذا النموذج مع نمو تاريخك الصحي."
+          )}
+        </div>
+      </section>
+    );
+  }
+
+  const systems: SystemNode[] = [
+    {
+      key: "cardiovascular",
+      risk: profile.cardiovascularRisk,
+      tone: getTone(profile.cardiovascularRisk),
+      label: text("Heart", "القلب"),
+      cx: 120,
+      cy: 108,
+    },
+    {
+      key: "liver",
+      risk: profile.liverRisk,
+      tone: getTone(profile.liverRisk),
+      label: text("Liver", "الكبد"),
+      cx: 152,
+      cy: 152,
+    },
+    {
+      key: "kidney",
+      risk: profile.kidneyRisk,
+      tone: getTone(profile.kidneyRisk),
+      label: text("Kidneys", "الكلى"),
+      cx: 120,
+      cy: 196,
+    },
+    {
+      key: "metabolic",
+      risk: profile.metabolicRisk,
+      tone: getTone(profile.metabolicRisk),
+      label: text("Metabolic", "الاستقلاب"),
+      cx: 120,
+      cy: 240,
+    },
+  ];
+
+  const primarySystemNode =
+    systems.find((system) =>
+      profile.primarySystem
+        .toLowerCase()
+        .includes(system.key === "cardiovascular" ? "cardio" : system.key)
+    ) ?? null;
+
+  const recoveryDashOffset =
+    282.6 - (282.6 * profile.recoveryPotential) / 100;
+
+  const toneLabel = (tone: SystemTone) =>
+    tone === "good"
+      ? text("Stable", "مستقر")
+      : tone === "moderate"
+        ? text("Needs attention", "يحتاج متابعة")
+        : text("Elevated risk", "مخاطر مرتفعة");
 
   return (
     <section
@@ -196,19 +217,10 @@ export default function DigitalTwinCard({
         }
 
         .digitalHealthModelResult {
-          padding: 20px;
+          padding: 22px;
           border: 1px solid rgba(15, 23, 42, 0.08);
           border-radius: 18px;
           background: #ffffff;
-        }
-
-        .digitalHealthModelHeader {
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          gap: 18px;
-          padding-bottom: 16px;
-          border-bottom: 1px solid rgba(15, 23, 42, 0.07);
         }
 
         .digitalHealthModelEyebrow {
@@ -229,51 +241,116 @@ export default function DigitalTwinCard({
         }
 
         .digitalHealthModelDescription {
-          max-width: 720px;
+          max-width: 640px;
           margin: 7px 0 0;
           color: #64748b;
           font-size: 0.82rem;
           line-height: 1.6;
         }
 
-        .digitalHealthModelBadges {
-          display: flex;
-          flex: 0 0 auto;
-          flex-wrap: wrap;
-          justify-content: flex-end;
-          gap: 7px;
+        .livingMapLayout {
+          display: grid;
+          grid-template-columns: minmax(180px, 240px) minmax(0, 1fr);
+          gap: 24px;
+          align-items: center;
+          margin-top: 18px;
         }
 
-        .digitalHealthModelBadge {
-          padding: 7px 10px;
+        .livingMapFigure {
+          position: relative;
+          display: grid;
+          place-items: center;
+        }
+
+        .livingMapPulse {
+          animation: livingMapPulse 2.4s ease-in-out infinite;
+          transform-origin: center;
+        }
+
+        @keyframes livingMapPulse {
+          0%, 100% { opacity: 0.55; r: 13; }
+          50% { opacity: 0.15; r: 20; }
+        }
+
+        .livingMapRecovery {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 4px;
+          margin-top: 4px;
+        }
+
+        .livingMapRecoveryValue {
+          font-size: 0.72rem;
+          font-weight: 950;
+          color: #0f172a;
+        }
+
+        .livingMapRecoveryLabel {
+          font-size: 0.64rem;
+          font-weight: 800;
+          color: #64748b;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+
+        .livingMapList {
+          display: grid;
+          gap: 10px;
+        }
+
+        .livingMapItem {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 12px 14px;
+          border-radius: 14px;
+          background: #f8fafc;
+          border: 1px solid rgba(148, 163, 184, 0.2);
+          border-inline-start: 4px solid var(--tone-color);
+        }
+
+        .livingMapItem.isPrimary {
+          background: #f0fdfa;
+        }
+
+        .livingMapItemLabel {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .livingMapDot {
+          width: 10px;
+          height: 10px;
           border-radius: 999px;
-          font-size: 0.68rem;
+          background: var(--tone-color);
+          flex: 0 0 auto;
+        }
+
+        .livingMapItemTitle {
+          margin: 0;
+          font-size: 0.88rem;
           font-weight: 900;
+          color: #0f172a;
+        }
+
+        .livingMapItemStatus {
+          margin: 1px 0 0;
+          font-size: 0.72rem;
+          color: #64748b;
+        }
+
+        .livingMapItemRisk {
+          font-size: 0.78rem;
+          font-weight: 950;
+          color: var(--tone-color);
           white-space: nowrap;
         }
 
-        .digitalHealthModelBadge.good {
-          background: #ecfdf5;
-          color: #047857;
-        }
-
-        .digitalHealthModelBadge.moderate {
-          background: #fffbeb;
-          color: #b45309;
-        }
-
-        .digitalHealthModelBadge.risk {
-          background: #fef2f2;
-          color: #b91c1c;
-        }
-
-        .digitalHealthModelBadge.neutral {
-          background: #f1f5f9;
-          color: #475569;
-        }
-
         .digitalHealthModelSignal {
-          margin-top: 16px;
+          margin-top: 18px;
           padding: 15px 16px;
           border: 1px solid rgba(15, 118, 110, 0.15);
           border-inline-start: 4px solid #0f766e;
@@ -297,302 +374,157 @@ export default function DigitalTwinCard({
           line-height: 1.65;
         }
 
-        .digitalHealthModelGrid {
-          display: grid;
-          gap: 10px;
-          margin-top: 16px;
-        }
-
-        .digitalHealthModelItem {
-          padding: 14px 15px;
-          border: 1px solid rgba(148, 163, 184, 0.2);
-          border-radius: 14px;
-          background: #f8fafc;
-        }
-
-        .digitalHealthModelItemHeader {
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          gap: 12px;
-        }
-
-        .digitalHealthModelItemTitle {
-          margin: 0;
-          color: #0f172a;
-          font-size: 0.9rem;
-          font-weight: 900;
-          line-height: 1.4;
-        }
-
-        .digitalHealthModelItemContext {
-          margin: 4px 0 0;
-          color: #64748b;
-          font-size: 0.72rem;
-          line-height: 1.45;
-        }
-
-        .digitalHealthModelRisk {
-          flex: 0 0 auto;
-          padding: 5px 8px;
-          border-radius: 999px;
-          background: #ffffff;
-          border: 1px solid rgba(148, 163, 184, 0.2);
-          color: #475569;
-          font-size: 0.67rem;
-          font-weight: 850;
-        }
-
-        .digitalHealthModelMeta {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 7px;
-          margin-top: 10px;
-        }
-
-        .digitalHealthModelMeta span {
-          padding: 5px 8px;
-          border-radius: 999px;
-          background: #ffffff;
-          border: 1px solid rgba(148, 163, 184, 0.2);
-          color: #64748b;
-          font-size: 0.67rem;
-          font-weight: 750;
-        }
-
-        .digitalHealthModelExplanation {
-          margin: 10px 0 0;
-          color: #475569;
-          font-size: 0.8rem;
-          line-height: 1.6;
-        }
-
-        .digitalHealthModelRecommendation {
-          margin-top: 10px;
-          padding: 11px 12px;
-          border: 1px solid rgba(37, 99, 235, 0.12);
-          border-radius: 12px;
-          background: #f8fbff;
-        }
-
-        .digitalHealthModelRecommendation strong {
-          display: block;
-          color: #1d4ed8;
-          font-size: 0.68rem;
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-        }
-
-        .digitalHealthModelRecommendation p {
-          margin: 5px 0 0;
-          color: #475569;
-          font-size: 0.78rem;
-          line-height: 1.6;
-        }
-
-        .digitalHealthModelEmpty {
-          margin-top: 16px;
-          padding: 14px 15px;
-          border: 1px dashed rgba(148, 163, 184, 0.4);
-          border-radius: 14px;
-          background: #f8fafc;
-          color: #64748b;
-          font-size: 0.82rem;
-          line-height: 1.6;
-        }
-
         @media (max-width: 640px) {
           .digitalHealthModelResult {
             padding: 16px;
           }
 
-          .digitalHealthModelHeader,
-          .digitalHealthModelItemHeader {
-            flex-direction: column;
-          }
-
-          .digitalHealthModelBadges {
-            justify-content: flex-start;
+          .livingMapLayout {
+            grid-template-columns: minmax(0, 1fr);
+            justify-items: center;
           }
         }
       `}</style>
 
-      <header className="digitalHealthModelHeader">
-        <div>
-          <p className="digitalHealthModelEyebrow">
-            {text(
-              "Personal health model",
-              "النموذج الصحي الشخصي"
-            )}
-          </p>
+      <p className="digitalHealthModelEyebrow">
+        {text("Personal health model", "النموذج الصحي الشخصي")}
+      </p>
 
-          <h3 className="digitalHealthModelTitle">
-            {text(
-              "Current modeled health state",
-              "الحالة الصحية الحالية في النموذج"
-            )}
-          </h3>
+      <h3 className="digitalHealthModelTitle">
+        {text("Your living health map", "خريطتك الصحية الحية")}
+      </h3>
 
-          <p className="digitalHealthModelDescription">
-            {text(
-              "OrganHeal builds a structured health model from the signals that are currently available. The model becomes more complete as more reliable health data is added over time.",
-              "يبني OrganHeal نموذجًا صحيًا منظمًا اعتمادًا على المؤشرات المتاحة حاليًا، ويصبح هذا النموذج أكثر اكتمالًا مع إضافة المزيد من البيانات الصحية الموثوقة مع مرور الوقت."
-            )}
-          </p>
-        </div>
-
-        {(status || confidence) && (
-          <div className="digitalHealthModelBadges">
-            {status && (
-              <span
-                className={`digitalHealthModelBadge ${getTone(
-                  status
-                )}`}
-              >
-                {text(
-                  `Status: ${status}`,
-                  `الحالة: ${status}`
-                )}
-              </span>
-            )}
-
-            {confidence && (
-              <span
-                className={`digitalHealthModelBadge ${getTone(
-                  confidence
-                )}`}
-              >
-                {text(
-                  `Confidence: ${confidence}`,
-                  `درجة الثقة: ${confidence}`
-                )}
-              </span>
-            )}
-          </div>
+      <p className="digitalHealthModelDescription">
+        {text(
+          "A visual model built from your reports. Colors reflect the signal detected for each system right now — it becomes more precise as more reports are added.",
+          "نموذج بصري مبني من تقاريرك. الألوان تعكس الإشارة المكتشفة لكل جهاز حاليًا — ويصبح أدق كلما أضفت تقارير أكثر."
         )}
-      </header>
+      </p>
 
-      {summary && (
-        <div className="digitalHealthModelSignal">
-          <p className="digitalHealthModelSignalLabel">
-            {text(
-              "Current model summary",
-              "ملخص النموذج الحالي"
-            )}
-          </p>
+      <div className="livingMapLayout">
+        <div className="livingMapFigure">
+          <svg viewBox="0 0 240 300" width="100%" role="img" aria-hidden="true">
+            <path
+              d="M85,72 C85,58 155,58 155,72 L163,140 C166,192 159,242 146,282 L94,282 C81,242 74,192 77,140 Z"
+              fill="#f1f5f9"
+              stroke="#cbd5e1"
+              strokeWidth="2"
+            />
+            <circle cx="120" cy="36" r="26" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="2" />
 
-          <p className="digitalHealthModelSignalText">
-            {summary}
-          </p>
-        </div>
-      )}
+            {systems.map((system) => {
+              const colors = TONE_COLOR[system.tone];
+              const isPrimary = primarySystemNode?.key === system.key;
 
-      {signals.length > 0 && (
-        <div className="digitalHealthModelGrid">
-          {signals.map((item, index) => {
-            const title =
-              item.title ||
-              item.organ ||
-              item.system ||
-              item.category ||
-              text(
-                `Health model signal ${index + 1}`,
-                `إشارة النموذج الصحي ${index + 1}`
+              return (
+                <g key={system.key}>
+                  {isPrimary && (
+                    <circle
+                      className="livingMapPulse"
+                      cx={system.cx}
+                      cy={system.cy}
+                      r={13}
+                      fill="none"
+                      stroke={colors.fill}
+                      strokeWidth="2.5"
+                    />
+                  )}
+
+                  <circle
+                    cx={system.cx}
+                    cy={system.cy}
+                    r={10}
+                    fill={colors.fill}
+                    opacity={0.92}
+                  />
+                </g>
               );
+            })}
+          </svg>
 
-            const explanation =
-              item.insight ||
-              item.summary ||
-              item.description ||
-              item.signal;
+          <div className="livingMapRecovery">
+            <svg width="64" height="64" viewBox="0 0 100 100" aria-hidden="true">
+              <circle
+                cx="50"
+                cy="50"
+                r="45"
+                fill="none"
+                stroke="#e2e8f0"
+                strokeWidth="8"
+              />
+              <circle
+                cx="50"
+                cy="50"
+                r="45"
+                fill="none"
+                stroke="#0f766e"
+                strokeWidth="8"
+                strokeLinecap="round"
+                strokeDasharray="282.6"
+                strokeDashoffset={recoveryDashOffset}
+                transform="rotate(-90 50 50)"
+              />
+              <text
+                x="50"
+                y="56"
+                textAnchor="middle"
+                fontSize="24"
+                fontWeight="950"
+                fill="#0f172a"
+              >
+                {profile.recoveryPotential}
+              </text>
+            </svg>
 
-            const context = [
-              item.organ,
-              item.system,
-              item.category,
-            ]
-              .filter(Boolean)
-              .join(" • ");
+            <span className="livingMapRecoveryLabel">
+              {text("Recovery potential", "إمكانية التعافي")}
+            </span>
+          </div>
+        </div>
+
+        <div className="livingMapList">
+          {systems.map((system) => {
+            const isPrimary = primarySystemNode?.key === system.key;
 
             return (
-              <article
-                className="digitalHealthModelItem"
-                key={item.id ?? `${title}-${index}`}
+              <div
+                key={system.key}
+                className={`livingMapItem ${isPrimary ? "isPrimary" : ""}`}
+                style={
+                  {
+                    "--tone-color": TONE_COLOR[system.tone].fill,
+                  } as CSSProperties
+                }
               >
-                <div className="digitalHealthModelItemHeader">
+                <div className="livingMapItemLabel">
+                  <span className="livingMapDot" />
                   <div>
-                    <h4 className="digitalHealthModelItemTitle">
-                      {title}
-                    </h4>
-
-                    {context && (
-                      <p className="digitalHealthModelItemContext">
-                        {context}
-                      </p>
-                    )}
+                    <p className="livingMapItemTitle">{system.label}</p>
+                    <p className="livingMapItemStatus">
+                      {toneLabel(system.tone)}
+                      {isPrimary
+                        ? ` · ${text("current focus", "التركيز الحالي")}`
+                        : ""}
+                    </p>
                   </div>
-
-                  {item.riskLevel && (
-                    <span className="digitalHealthModelRisk">
-                      {text(
-                        `Risk: ${item.riskLevel}`,
-                        `المخاطر: ${item.riskLevel}`
-                      )}
-                    </span>
-                  )}
                 </div>
 
-                {(item.status || item.confidence) && (
-                  <div className="digitalHealthModelMeta">
-                    {item.status && (
-                      <span>
-                        {text(
-                          `Status: ${item.status}`,
-                          `الحالة: ${item.status}`
-                        )}
-                      </span>
-                    )}
-
-                    {item.confidence && (
-                      <span>
-                        {text(
-                          `Confidence: ${item.confidence}`,
-                          `درجة الثقة: ${item.confidence}`
-                        )}
-                      </span>
-                    )}
-                  </div>
-                )}
-
-                {explanation && (
-                  <p className="digitalHealthModelExplanation">
-                    {explanation}
-                  </p>
-                )}
-
-                {item.recommendation && (
-                  <div className="digitalHealthModelRecommendation">
-                    <strong>
-                      {text(
-                        "Suggested focus",
-                        "التركيز المقترح"
-                      )}
-                    </strong>
-                    <p>{item.recommendation}</p>
-                  </div>
-                )}
-              </article>
+                <span className="livingMapItemRisk">{system.risk}/100</span>
+              </div>
             );
           })}
         </div>
-      )}
+      </div>
 
-      {!hasModelData && (
-        <div className="digitalHealthModelEmpty">
-          {text(
-            "A fuller personal health model requires more connected and longitudinal data. OrganHeal will strengthen this model as your health history grows.",
-            "يتطلب بناء نموذج صحي شخصي أكثر اكتمالًا المزيد من البيانات الصحية المترابطة والتاريخية. وسيعمل OrganHeal على تقوية هذا النموذج مع نمو تاريخك الصحي."
-          )}
+      {profile.profileSummary && (
+        <div className="digitalHealthModelSignal">
+          <p className="digitalHealthModelSignalLabel">
+            {text("Current model summary", "ملخص النموذج الحالي")}
+          </p>
+
+          <p className="digitalHealthModelSignalText">
+            {profile.profileSummary}
+          </p>
         </div>
       )}
     </section>
