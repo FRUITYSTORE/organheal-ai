@@ -14,6 +14,7 @@ import {
 import VoiceInputButton from "@/app/components/voice/VoiceInputButton";
 import HealthUpdatesTicker from "@/app/components/home/HealthUpdatesTicker";
 import FeaturedHealthArticles from "@/app/components/home/FeaturedHealthArticles";
+import DigitalTwinCard from "@/app/intelligence/components/DigitalTwinCard";
 type Language = "en" | "ar";
 
 type TrustCard = {
@@ -1244,6 +1245,38 @@ if (
           transform: rotate(180deg);
         }
 
+        .publicHomePage .homeTwinDemoSection {
+          width: min(1180px, calc(100% - 32px));
+          margin: 56px auto 0;
+          padding: clamp(28px, 4vw, 44px);
+          display: grid;
+          grid-template-columns: minmax(0, 0.9fr) minmax(280px, 0.7fr);
+          gap: clamp(24px, 4vw, 48px);
+          align-items: center;
+          border-radius: 30px;
+          background:
+            linear-gradient(145deg, #ffffff 0%, #f8fbff 52%, #f0fdfa 100%);
+          border: 1px solid rgba(15, 23, 42, 0.08);
+          box-shadow: 0 34px 90px rgba(15, 23, 42, 0.1);
+        }
+
+        .publicHomePage .homeTwinDemoTitle {
+          margin: 8px 0 0;
+          font-size: clamp(1.7rem, 3vw, 2.4rem);
+          line-height: 1.15;
+        }
+
+        .publicHomePage .homeTwinDemoLead {
+          margin-top: 12px;
+          max-width: 520px;
+        }
+
+        @media (max-width: 900px) {
+          .publicHomePage .homeTwinDemoSection {
+            grid-template-columns: minmax(0, 1fr);
+          }
+        }
+
         .publicHomePage .homeAICommandCard {
           position: relative;
           min-width: 0;
@@ -2072,6 +2105,51 @@ if (
             </div>
           </div>
         </section>
+
+        {!isLoggedIn && (
+          <section className="homeTwinDemoSection">
+            <div className="homeTwinDemoIntro">
+              <p className="ohEyebrow">
+                {text("Live example", "نموذج حي")}
+              </p>
+
+              <h2 className="ohTitle homeTwinDemoTitle">
+                {text(
+                  "This is what OrganHeal builds for you.",
+                  "هذا ما يبنيه OrganHeal من أجلك."
+                )}
+              </h2>
+
+              <p className="ohLead homeTwinDemoLead">
+                {text(
+                  "A sample health map, generated the same way yours would be from your own reports and assessments. Colors update automatically as your health history grows.",
+                  "خريطة صحية توضيحية، تُبنى بنفس الطريقة التي ستُبنى فيها خريطتك من تقاريرك وتقييماتك. الألوان تتحدّث تلقائيًا كلما نما سجلك الصحي."
+                )}
+              </p>
+
+              <Link href="/signup" className="primaryBtn" style={{ marginTop: "18px" }}>
+                {text("Build my own health map", "ابنِ خريطتي الصحية")}
+              </Link>
+            </div>
+
+            <DigitalTwinCard
+              isArabic={isArabic}
+              digitalTwin={{
+                liverRisk: 12,
+                cardiovascularRisk: 42,
+                kidneyRisk: 28,
+                metabolicRisk: 20,
+                recoveryPotential: 65,
+                primarySystem: "Cardiovascular Health",
+                profileSummary: text(
+                  "Sample data. Primary focus area: Cardiovascular Health. Recovery potential estimated at 65/100.",
+                  "بيانات توضيحية. مجال التركيز الأساسي: صحة القلب والأوعية الدموية. إمكانية التعافي المقدّرة 65/100."
+                ),
+              }}
+            />
+          </section>
+        )}
+
         {isLoggedIn && (
           <section
             className="homeContinuationCard"
