@@ -5,6 +5,7 @@ import "./globals.css";
 import Navbar from "./components/Navbar";
 import RouteAccessGuard from "./components/RouteAccessGuard";
 import SiteFooter from "./components/SiteFooter";
+import { themeInitScript } from "./components/theme/theme-init-script";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.organheal.com"),
@@ -75,7 +76,10 @@ export default function RootLayout({
   children: ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" data-theme="light" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body>
         <Navbar />
         <RouteAccessGuard>{children}</RouteAccessGuard>

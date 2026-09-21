@@ -1,0 +1,712 @@
+/* OrganHeal global navigation. Colors come from the --nav-* tokens defined
+   per theme in app/globals.css, so light, dark and RTL share one layout. */
+
+.ohNav {
+  position: sticky;
+  top: 0;
+  z-index: 90;
+  padding-top: env(safe-area-inset-top);
+  background: var(--nav-bg);
+  border-bottom: 1px solid var(--nav-border);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(140%);
+  color: var(--nav-text);
+  font-family: var(--font-geist-sans, Arial, Helvetica, sans-serif);
+}
+
+.ohNav *,
+.ohNavOverlay * {
+  box-sizing: border-box;
+}
+
+.ohNav :focus-visible,
+.ohNavOverlay :focus-visible {
+  outline: 2px solid var(--oh-focus-ring);
+  outline-offset: 2px;
+}
+
+.ohNavInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 64px;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* Brand ---------------------------------------------------------------- */
+
+.ohNavBrand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  flex-shrink: 0;
+  color: var(--nav-text);
+  text-decoration: none;
+}
+
+.ohNavWordmark {
+  color: var(--nav-text);
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.ohNavWordmark span {
+  color: var(--nav-wordmark-accent);
+}
+
+/* Desktop layout ------------------------------------------------------- */
+
+.ohNavCenter,
+.ohNavActions {
+  display: none;
+}
+
+.ohNavLink {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--nav-link);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 160ms ease, background-color 160ms ease;
+}
+
+.ohNavLink:hover {
+  color: var(--nav-link-hover);
+}
+
+.ohNavLink[aria-current="page"] {
+  color: var(--nav-link-hover);
+  background: var(--nav-link-active-bg);
+}
+
+.ohNavAsk {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #22d3ee 0%, #38bdf8 100%);
+  color: #04212f;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow: 0 6px 18px rgba(34, 211, 238, 0.22);
+  transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
+}
+
+.ohNavAsk:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+  box-shadow: 0 10px 24px rgba(34, 211, 238, 0.3);
+}
+
+.ohNavAskShort {
+  display: none;
+}
+
+.ohNavSignIn,
+.ohNavStart {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: transform 160ms ease, background-color 160ms ease,
+    border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.ohNavSignIn {
+  border: 1px solid var(--nav-control-border);
+  background: transparent;
+  color: var(--nav-text);
+}
+
+.ohNavSignIn:hover {
+  background: var(--nav-control-bg);
+  border-color: color-mix(in srgb, var(--nav-link-hover) 55%, transparent);
+}
+
+.ohNavStart {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: linear-gradient(135deg, #0b8a7c 0%, #0a7a6f 100%);
+  color: #ffffff;
+  box-shadow: 0 6px 16px rgba(11, 138, 124, 0.28);
+}
+
+.ohNavStart:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(11, 138, 124, 0.38);
+}
+
+.ohNavIconBtn,
+.ohLangCompact,
+.ohNavMenuButton,
+.ohNavCloseButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--nav-control-border);
+  border-radius: 12px;
+  background: var(--nav-control-bg);
+  color: var(--nav-text);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 160ms ease, border-color 160ms ease,
+    color 160ms ease;
+}
+
+.ohLangCompact {
+  padding: 0 12px;
+}
+
+.ohNavIconBtn:hover,
+.ohLangCompact:hover,
+.ohNavMenuButton:hover,
+.ohNavCloseButton:hover {
+  color: var(--nav-link-hover);
+  border-color: color-mix(in srgb, var(--nav-link-hover) 50%, transparent);
+}
+
+.ohThemeIconDark {
+  display: none;
+}
+
+:root[data-theme="dark"] .ohThemeIconLight {
+  display: none;
+}
+
+:root[data-theme="dark"] .ohThemeIconDark {
+  display: inline-flex;
+}
+
+.ohThemeIconLight,
+.ohThemeIconDark {
+  align-items: center;
+  justify-content: center;
+}
+
+/* Popovers (More menu, theme menu) ------------------------------------- */
+
+.ohNavMore,
+.ohThemeMenu {
+  position: relative;
+}
+
+.ohNavPopover {
+  position: absolute;
+  top: calc(100% + 10px);
+  inset-inline-end: 0;
+  z-index: 110;
+  display: grid;
+  gap: 2px;
+  min-width: 220px;
+  padding: 8px;
+  border: 1px solid var(--nav-menu-border);
+  border-radius: 16px;
+  background: var(--nav-menu-bg);
+  box-shadow: 0 18px 44px rgba(2, 8, 16, 0.28);
+}
+
+.ohNavMore .ohNavPopover {
+  inset-inline-end: auto;
+  inset-inline-start: 0;
+  min-width: 250px;
+}
+
+.ohNavPopoverItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--nav-text);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.ohNavPopoverItem:hover {
+  background: var(--nav-row-hover);
+}
+
+.ohNavPopoverItem[aria-pressed="true"],
+.ohNavPopoverItem[aria-current="page"] {
+  color: var(--nav-link-hover);
+}
+
+.ohNavPopoverItem svg {
+  flex-shrink: 0;
+  color: var(--nav-row-icon);
+}
+
+.ohNavPopoverCheck {
+  margin-inline-start: auto;
+  color: var(--nav-link-hover);
+  font-weight: 800;
+}
+
+.ohNavPopoverDivider {
+  height: 1px;
+  margin: 4px 6px;
+  background: var(--nav-row-border);
+}
+
+/* Mobile bar ----------------------------------------------------------- */
+
+.ohNavMobileBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ohNavAskCompact {
+  padding: 0 14px;
+}
+
+/* Mobile panel --------------------------------------------------------- */
+
+.ohNavOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 10px;
+  background: var(--nav-scrim);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+.ohNavPanel {
+  width: min(100%, 540px);
+  max-height: calc(100dvh - 20px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 18px;
+  border: 1px solid var(--nav-menu-border);
+  border-radius: 28px;
+  background: var(--nav-panel-bg);
+  box-shadow: var(--oh-shadow-lg);
+  color: var(--nav-text);
+  font-family: var(--font-geist-sans, Arial, Helvetica, sans-serif);
+  animation: ohNavPanelIn 200ms ease-out;
+}
+
+@keyframes ohNavPanelIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.ohNavPanelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ohNavBrandText {
+  display: grid;
+  gap: 3px;
+}
+
+.ohNavTagline {
+  color: var(--nav-muted);
+  font-size: 0.8rem;
+  line-height: 1.3;
+}
+
+.ohNavPanelAsk {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  min-height: 84px;
+  margin: 18px 0 12px;
+  padding: 14px 20px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #2fd9f4 0%, #38bdf8 48%, #3b82f6 100%);
+  color: #04202e;
+  text-decoration: none;
+  box-shadow: 0 12px 30px rgba(34, 211, 238, 0.24);
+  transition: transform 160ms ease, filter 160ms ease;
+}
+
+.ohNavPanelAsk:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+.ohNavPanelAsk .ohNavRowTitle {
+  color: #04202e;
+  font-size: 1.12rem;
+  font-weight: 800;
+}
+
+.ohNavPanelAsk .ohNavRowSubtitle {
+  color: rgba(4, 32, 46, 0.8);
+  font-size: 0.9rem;
+}
+
+.ohNavPanelAsk .ohNavDirectional {
+  color: #04202e;
+}
+
+.ohNavPanelAskIcon {
+  display: inline-flex;
+  justify-content: center;
+  width: 28px;
+}
+
+.ohNavPanelList {
+  display: grid;
+  gap: 10px;
+}
+
+.ohNavPanelListCompact {
+  gap: 8px;
+}
+
+.ohNavPanelLabel {
+  margin: 18px 4px 10px;
+  color: var(--nav-muted);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ohNavRow,
+.ohLangRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 72px;
+  padding: 12px 18px;
+  border: 1px solid var(--nav-row-border);
+  border-radius: 18px;
+  background: var(--nav-row-bg);
+  color: var(--nav-text);
+  font: inherit;
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.ohNavRow:hover,
+.ohLangRow:hover {
+  background: var(--nav-row-hover);
+  border-color: var(--nav-menu-border);
+}
+
+.ohNavRow[aria-current="page"] {
+  border-color: color-mix(in srgb, var(--nav-link-hover) 45%, transparent);
+}
+
+.ohNavRowCompact,
+.ohLangRow {
+  min-height: 56px;
+  padding: 8px 16px;
+  border-radius: 16px;
+}
+
+.ohNavRowIcon {
+  display: inline-flex;
+  justify-content: center;
+  width: 28px;
+  color: var(--nav-row-icon);
+}
+
+.ohNavRowText {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ohNavRowTitle {
+  color: var(--nav-text);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.ohNavRowSubtitle {
+  color: var(--nav-muted);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.ohLangRowLabel {
+  color: var(--nav-text);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.ohNavDirectional {
+  color: var(--nav-muted);
+}
+
+[dir="rtl"] .ohNavDirectional {
+  transform: scaleX(-1);
+}
+
+.ohNavPanelDivider {
+  height: 1px;
+  margin: 16px 0 12px;
+  background: var(--nav-row-border);
+}
+
+.ohNavPanelTheme {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 14px;
+}
+
+.ohNavPanelThemeLabel {
+  margin: 0 4px;
+  color: var(--nav-muted);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ohThemeSegmented {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  padding: 5px;
+  border: 1px solid var(--nav-row-border);
+  border-radius: 14px;
+  background: var(--nav-row-bg);
+}
+
+.ohThemeSegment {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--nav-muted);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.ohThemeSegment[aria-pressed="true"] {
+  border-color: color-mix(in srgb, var(--nav-link-hover) 40%, transparent);
+  background: var(--nav-link-active-bg);
+  color: var(--nav-link-hover);
+}
+
+.ohNavPanelSecondary,
+.ohNavPanelPrimary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  margin-top: 10px;
+  padding: 0 20px;
+  border-radius: 16px;
+  font: inherit;
+  font-size: 1.05rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 160ms ease, background-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.ohNavPanelSecondary {
+  border: 1.5px solid color-mix(in srgb, var(--nav-link-hover) 55%, transparent);
+  background: transparent;
+  color: var(--nav-text);
+}
+
+.ohNavPanelSecondary:hover {
+  background: var(--nav-link-active-bg);
+}
+
+.ohNavPanelSecondary svg {
+  color: var(--nav-link-hover);
+}
+
+.ohNavPanelPrimary {
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: linear-gradient(135deg, #0b8a7c 0%, #0a7a6f 100%);
+  color: #ffffff;
+  box-shadow: 0 10px 26px rgba(11, 138, 124, 0.3);
+}
+
+.ohNavPanelPrimary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 30px rgba(11, 138, 124, 0.4);
+}
+
+.ohNavPanelPrimary .ohNavDirectional {
+  position: absolute;
+  inset-inline-end: 20px;
+  color: #ffffff;
+}
+
+.ohNavPanelNote {
+  margin: 12px 0 2px;
+  color: var(--nav-muted);
+  font-size: 0.86rem;
+  text-align: center;
+}
+
+/* Small screens -------------------------------------------------------- */
+
+@media (max-width: 439px) {
+  .ohNavLoggedIn .ohNavWordmark {
+    display: none;
+  }
+}
+
+@media (max-width: 359px) {
+  .ohNavWordmark {
+    display: none;
+  }
+
+  .ohNavInner {
+    padding: 0 12px;
+  }
+}
+
+/* Desktop -------------------------------------------------------------- */
+
+@media (min-width: 1024px) {
+  .ohNavInner {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 20px;
+    min-height: 76px;
+    padding: 0 24px;
+  }
+
+  .ohNavCenter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
+
+  .ohNavActions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .ohNavMobileBar,
+  .ohNavOverlay {
+    display: none;
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .ohNavAskLong {
+    display: none;
+  }
+
+  .ohNavAskShort {
+    display: inline;
+  }
+
+  .ohNavLink {
+    padding: 0 10px;
+  }
+
+  .ohNavSignIn,
+  .ohNavStart,
+  .ohNavAsk {
+    padding: 0 14px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .ohNavInner {
+    padding: 0 32px;
+    gap: 28px;
+  }
+
+  .ohNavCenter {
+    gap: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ohNavPanel {
+    animation: none;
+  }
+
+  .ohNavAsk,
+  .ohNavStart,
+  .ohNavPanelAsk,
+  .ohNavPanelPrimary {
+    transition: none;
+  }
+
+  .ohNavAsk:hover,
+  .ohNavStart:hover,
+  .ohNavPanelAsk:hover,
+  .ohNavPanelPrimary:hover {
+    transform: none;
+  }
+}

@@ -2,11 +2,15 @@
    Font: Geist Sans via --font-geist-sans (layout.tsx)
    ============================================================ */
 
+html {
+  scroll-padding-top: 96px;
+}
+
 html,
 body {
   margin: 0;
   padding: 0;
-  background: #020617;
+  background: var(--oh-canvas, #020617);
   color: white;
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -5360,6 +5364,144 @@ html[dir="rtl"] .homeHeroActions {
   --oh-radius-md: 20px;
   --oh-radius-lg: 28px;
   --oh-max-width: 1180px;
+
+  color-scheme: light;
+
+  /* Additional surfaces and states (light values match the current UI). */
+  --oh-bg-secondary: #eef2f7;
+  --oh-surface-elevated: #ffffff;
+  --oh-surface-hover: #f1f5f9;
+  --oh-border-subtle: rgba(15, 23, 42, 0.05);
+  --oh-primary-hover: #115e59;
+  --oh-shadow-lg: 0 28px 80px rgba(15, 23, 42, 0.16);
+  --oh-input-bg: #ffffff;
+  --oh-input-border: rgba(148, 163, 184, 0.4);
+  --oh-focus-ring: rgba(20, 184, 166, 0.55);
+  --oh-canvas: #f6f8fb;
+
+  /* Navigation. */
+  --nav-bg: rgba(255, 255, 255, 0.88);
+  --nav-border: rgba(15, 23, 42, 0.08);
+  --nav-text: #0f172a;
+  --nav-link: #475569;
+  --nav-link-hover: #0f766e;
+  --nav-link-active-bg: rgba(15, 118, 110, 0.09);
+  --nav-control-bg: rgba(15, 23, 42, 0.04);
+  --nav-control-border: rgba(15, 23, 42, 0.12);
+  --nav-menu-bg: #ffffff;
+  --nav-menu-border: rgba(15, 23, 42, 0.1);
+  --nav-panel-bg: linear-gradient(180deg, #ffffff 0%, #f5f8fc 100%);
+  --nav-row-bg: #f6f9fc;
+  --nav-row-hover: #eef4fa;
+  --nav-row-border: rgba(15, 23, 42, 0.09);
+  --nav-row-icon: #0e7490;
+  --nav-muted: #64748b;
+  --nav-scrim: rgba(15, 23, 42, 0.38);
+  --nav-logo-ink: #0f172a;
+  --nav-wordmark-accent: #0891b2;
+
+  /* Names used across the application. They point at the --oh-* tokens
+     so a theme only has to override one set of values. */
+  --background: var(--oh-bg);
+  --background-secondary: var(--oh-bg-secondary);
+  --surface: var(--oh-surface);
+  --surface-elevated: var(--oh-surface-elevated);
+  --surface-hover: var(--oh-surface-hover);
+  --text-primary: var(--oh-text);
+  --text-secondary: var(--oh-soft-text);
+  --text-muted: var(--oh-muted);
+  --border: var(--oh-border);
+  --border-subtle: var(--oh-border-subtle);
+  --primary: var(--oh-primary);
+  --primary-hover: var(--oh-primary-hover);
+  --primary-soft: var(--oh-primary-soft);
+  --success: var(--oh-good);
+  --warning: var(--oh-warning);
+  --danger: var(--oh-risk);
+  --info: var(--oh-blue);
+  --input-background: var(--oh-input-bg);
+  --input-border: var(--oh-input-border);
+  --shadow-sm: var(--oh-shadow-sm);
+  --shadow-md: var(--oh-shadow-md);
+  --shadow-lg: var(--oh-shadow-lg);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --oh-bg: #0b1118;
+  --oh-bg-secondary: #0f161f;
+  --oh-surface: #131b25;
+  --oh-surface-soft: #101720;
+  --oh-surface-elevated: #182230;
+  --oh-surface-hover: #1d2836;
+  --oh-border: rgba(148, 163, 184, 0.15);
+  --oh-border-strong: rgba(148, 163, 184, 0.27);
+  --oh-border-subtle: rgba(148, 163, 184, 0.09);
+  --oh-text: #e8eef5;
+  --oh-soft-text: #b3c0cf;
+  --oh-muted: #8b9bb0;
+  --oh-primary: #2dd4bf;
+  --oh-primary-dark: #99f6e4;
+  --oh-primary-hover: #5eead4;
+  --oh-primary-soft: rgba(45, 212, 191, 0.13);
+  --oh-blue: #7db4ff;
+  --oh-blue-soft: rgba(96, 165, 250, 0.15);
+  --oh-good: #4ade9c;
+  --oh-good-soft: rgba(52, 211, 153, 0.14);
+  --oh-warning: #f5b544;
+  --oh-warning-soft: rgba(245, 158, 11, 0.15);
+  --oh-risk: #f87979;
+  --oh-risk-soft: rgba(248, 113, 113, 0.15);
+  --oh-shadow-sm: 0 10px 30px rgba(0, 0, 0, 0.32);
+  --oh-shadow-md: 0 18px 55px rgba(0, 0, 0, 0.42);
+  --oh-shadow-lg: 0 28px 80px rgba(0, 0, 0, 0.5);
+  --oh-input-bg: #0e151d;
+  --oh-input-border: rgba(148, 163, 184, 0.28);
+  --oh-focus-ring: rgba(94, 234, 212, 0.6);
+  --oh-canvas: #0b1118;
+
+  --nav-bg: rgba(7, 19, 33, 0.88);
+  --nav-border: rgba(120, 180, 220, 0.14);
+  --nav-text: #eaf2fa;
+  --nav-link: #a9bccd;
+  --nav-link-hover: #67e8f9;
+  --nav-link-active-bg: rgba(103, 232, 249, 0.1);
+  --nav-control-bg: rgba(255, 255, 255, 0.045);
+  --nav-control-border: rgba(120, 180, 220, 0.2);
+  --nav-menu-bg: #0d1a29;
+  --nav-menu-border: rgba(120, 180, 220, 0.18);
+  --nav-panel-bg: linear-gradient(180deg, #071321 0%, #081728 55%, #06111d 100%);
+  --nav-row-bg: rgba(255, 255, 255, 0.035);
+  --nav-row-hover: rgba(255, 255, 255, 0.07);
+  --nav-row-border: rgba(120, 180, 220, 0.14);
+  --nav-row-icon: #5fb4ff;
+  --nav-muted: #8fa3b8;
+  --nav-scrim: rgba(2, 8, 16, 0.6);
+  --nav-logo-ink: #eaf2fa;
+  --nav-wordmark-accent: #38bdf8;
+}
+
+/* Fades colors only while the user is switching themes. */
+:root.themeSwitching,
+:root.themeSwitching *,
+:root.themeSwitching *::before,
+:root.themeSwitching *::after {
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    border-color 160ms ease,
+    fill 160ms ease,
+    stroke 160ms ease !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root.themeSwitching,
+  :root.themeSwitching *,
+  :root.themeSwitching *::before,
+  :root.themeSwitching *::after {
+    transition: none !important;
+  }
 }
 
 .ohPageShell {
