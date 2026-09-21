@@ -198,6 +198,26 @@ export async function getLatestGeneratedResultByInsightIds(
 
   return data as SavedGeneratedIntelligenceResult | null;
 }
+
+export async function getLatestGeneratedResultForUser(
+  userId: string,
+  client: SupabaseClient = supabase
+): Promise<SavedGeneratedIntelligenceResult | null> {
+  const { data, error } = await client
+    .from("generated_intelligence_results")
+    .select("insight_id, result, updated_at")
+    .eq("user_id", userId)
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data as SavedGeneratedIntelligenceResult | null;
+}
+
 export async function updateHealthInsight(
   userId: string,
   insightId: number,

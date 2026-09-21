@@ -27,6 +27,8 @@ import {
   buildDashboardViewState,
 } from "@/app/components/dashboard/dashboard-view-state";
 import HealthUpdatesTicker from "@/app/components/home/HealthUpdatesTicker";
+import DigitalTwinCard from "@/app/intelligence/components/DigitalTwinCard";
+import { getLatestGeneratedResultForUser } from "@/lib/repositories/insight.repository";
 
 type Language = "en" | "ar";
 
@@ -206,6 +208,22 @@ export default function DashboardPage() {
   setUnifiedExperience(
     dashboardSummary.unifiedExperience
   );
+
+  try {
+    const latestResult = await getLatestGeneratedResultForUser(user.id);
+    const resultPayload = latestResult?.result;
+
+    setDigitalTwin(
+      resultPayload &&
+        typeof resultPayload === "object" &&
+        "digitalTwin" in resultPayload
+        ? (resultPayload as { digitalTwin: unknown }).digitalTwin
+        : null
+    );
+  } catch (digitalTwinError) {
+    console.error("Could not load digital twin:", digitalTwinError);
+    setDigitalTwin(null);
+  }
     try {
     const {
   data:
@@ -387,6 +405,7 @@ const [healthIntelligence, setHealthIntelligence] =
   knowledgeRecommendations,
   setKnowledgeRecommendations,
 ] = useState<PersonalizedKnowledgeRecommendations | null>(null);
+  const [digitalTwin, setDigitalTwin] = useState<unknown>(null);
 
   const latestAssessment = assessments[0] || null;
 
@@ -2817,6 +2836,9 @@ const resolvedNextStep: NextStep =
 <DashboardOverviewSection
             {...dashboardViewState.overview}
           />
+{Boolean(digitalTwin) && (
+  <DigitalTwinCard digitalTwin={digitalTwin} isArabic={isArabic} />
+)}
 {healthIntelligence && (
   <section className="healthIntelligenceCommandCenter">
     <div className="healthCommandCenterHeader">
