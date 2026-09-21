@@ -14,6 +14,10 @@ import type {
   HealthEngineContext,
 } from "./shared/health-engine-context";
 
+import {
+  presentOrganName,
+} from "../presentation/organ-name.presentation";
+
 export type HealthStoryTone =
   | "positive"
   | "stable"
@@ -313,7 +317,7 @@ export function buildHealthStory(
       ? text(
           language,
           `${priorityArea} is currently the main health priority with a score of ${priorityScore}/100.`,
-          `تمثل ${priorityArea} الأولوية الصحية الحالية بمؤشر ${priorityScore}/100.`
+          `تمثل ${presentOrganName(priorityArea, "ar")} الأولوية الصحية الحالية بمؤشر ${priorityScore}/100.`
         )
       : null;
 
@@ -323,7 +327,7 @@ export function buildHealthStory(
       ? text(
           language,
           `${strongestArea} is currently your strongest assessed area with a score of ${strongestScore}/100.`,
-          `تمثل ${strongestArea} أقوى منطقة صحية مقيمة حاليًا بمؤشر ${strongestScore}/100.`
+          `تمثل ${presentOrganName(strongestArea, "ar")} أقوى منطقة صحية مقيمة حاليًا بمؤشر ${strongestScore}/100.`
         )
       : null;
 
@@ -333,7 +337,7 @@ export function buildHealthStory(
       ? text(
           language,
           `Your assessments average ${facts.scores.assessmentAverage}/100, while recent wellness Check-Ins average ${facts.scores.checkInAverage}/100.`,
-          `يبلغ متوسط تقييماتك ${facts.scores.assessmentAverage}/100، بينما يبلغ متوسط Check-Ins الأخيرة ${facts.scores.checkInAverage}/100.`
+          `يبلغ متوسط تقييماتك ${facts.scores.assessmentAverage}/100، بينما يبلغ متوسط تحديثاتك الصحية الأخيرة ${facts.scores.checkInAverage}/100.`
         )
       : null;
 

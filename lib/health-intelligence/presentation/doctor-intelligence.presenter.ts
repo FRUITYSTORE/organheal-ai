@@ -11,6 +11,14 @@ import {
   type HealthIntelligencePresentationLanguage,
 } from "./presentation.types";
 
+const MOMENTUM_STATUS_AR: Record<string, string> = {
+  improving: "يتحسن",
+  stable: "مستقر",
+  declining: "يتراجع",
+  mixed: "متباين",
+  "insufficient-data": "بيانات غير كافية",
+};
+
 export type DoctorIntelligencePresentation = {
   clinicalSummary: string;
   evidenceSummary: string;
@@ -56,7 +64,10 @@ export function presentDoctorIntelligence(
     presentationText(
       language,
       `Current momentum: ${summary.momentum.status}.`,
-      `الاتجاه الصحي الحالي: ${summary.momentum.status}.`
+      `الاتجاه الصحي الحالي: ${
+        MOMENTUM_STATUS_AR[summary.momentum.status] ??
+        summary.momentum.status
+      }.`
     );
 
   const decisionSummary =
