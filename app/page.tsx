@@ -594,7 +594,7 @@ if (
         }
 
         .homeJourneyDescription {
-          color: #475569;
+          color: var(--oh-soft-text, #475569);
         }
 
         .publicHomePage .homeHero::before {
@@ -636,7 +636,7 @@ if (
           border: 1px solid rgba(15, 118, 110, 0.28);
           border-radius: 16px;
           padding: 13px 15px;
-          background: rgba(255, 255, 255, 0.98);
+          background: color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 98%, transparent);
           color: var(--oh-text);
           font: inherit;
           font-weight: 750;
@@ -673,7 +673,7 @@ if (
           background:
             radial-gradient(circle at 20% 20%, rgba(20, 184, 166, 0.18), transparent 28%),
             radial-gradient(circle at 82% 28%, rgba(37, 99, 235, 0.14), transparent 26%),
-            linear-gradient(135deg, rgba(255,255,255,0.96), rgba(240,253,250,0.9));
+            linear-gradient(135deg, color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 96%, transparent), color-mix(in srgb, var(--oh-c-bg-teal-50, #f0fdfa) 90%, transparent));
           box-shadow: 0 24px 70px rgba(15, 23, 42, 0.08);
           padding: 18px;
         }
@@ -752,7 +752,7 @@ if (
           width: min(214px, calc(100% - 36px));
           padding: 13px;
           border-radius: 18px;
-          background: rgba(255, 255, 255, 0.92);
+          background: color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 92%, transparent);
           border: 1px solid rgba(148, 163, 184, 0.2);
           box-shadow: 0 16px 38px rgba(15, 23, 42, 0.08);
           backdrop-filter: blur(14px);
@@ -815,7 +815,7 @@ if (
           border: 1px solid rgba(15, 118, 110, 0.18);
           background:
             radial-gradient(circle at 12% 22%, rgba(20, 184, 166, 0.14), transparent 28%),
-            linear-gradient(135deg, rgba(240, 253, 250, 0.96), rgba(255, 255, 255, 0.96));
+            linear-gradient(135deg, color-mix(in srgb, var(--oh-c-bg-teal-50, #f0fdfa) 96%, transparent), color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 96%, transparent));
           box-shadow: 0 24px 70px rgba(15, 23, 42, 0.08);
           padding: 24px;
         }
@@ -856,9 +856,9 @@ if (
           width: fit-content;
           padding: 8px 11px;
           border-radius: 999px;
-          background: white;
+          background: var(--oh-c-bg-white, white);
           border: 1px solid rgba(15, 118, 110, 0.18);
-          color: #0f766e;
+          color: var(--oh-c-ink-teal-700, #0f766e);
           font-size: 0.84rem;
           font-weight: 900;
           box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
@@ -872,7 +872,7 @@ if (
           border-radius: 20px;
           border: 1px solid rgba(37, 99, 235, 0.16);
           border-inline-start: 5px solid #2563eb;
-          background: rgba(239, 246, 255, 0.78);
+          background: color-mix(in srgb, var(--oh-c-bg-blue-50, #eff6ff) 78%, transparent);
           color: var(--oh-muted);
           line-height: 1.65;
         }
@@ -902,7 +902,7 @@ if (
         }
 
         .publicHomePage .homeTrustInline span {
-          color: #475569;
+          color: var(--oh-soft-text, #475569);
           font-size: 0.78rem;
           font-weight: 750;
         }
@@ -915,7 +915,7 @@ if (
           justify-content: center;
           border-radius: 999px;
           background: rgba(37, 99, 235, 0.12);
-          color: #1d4ed8;
+          color: var(--oh-c-ink-blue-700, #1d4ed8);
           font-weight: 950;
         }
 
@@ -978,7 +978,7 @@ if (
           background:
             radial-gradient(circle at 8% 8%, rgba(20, 184, 166, 0.17), transparent 30%),
             radial-gradient(circle at 92% 12%, rgba(37, 99, 235, 0.14), transparent 32%),
-            linear-gradient(145deg, #ffffff 0%, #f8fbff 52%, #f0fdfa 100%);
+            linear-gradient(145deg, var(--oh-c-bg-white, #ffffff) 0%, var(--oh-c-bg-blue-25, #f8fbff) 52%, var(--oh-c-bg-teal-50, #f0fdfa) 100%);
           box-shadow: 0 34px 90px rgba(15, 23, 42, 0.1);
         }
 
@@ -1004,7 +1004,7 @@ if (
           padding: 0;
           border: 0;
           background: transparent;
-          color: #0f766e;
+          color: var(--oh-c-ink-teal-700, #0f766e);
           font-size: 0.76rem;
           font-weight: 850;
           letter-spacing: 0.08em;
@@ -1094,7 +1094,7 @@ if (
           min-height: 56px;
           padding: 13px 20px;
           border-color: rgba(15, 118, 110, 0.2);
-          background: rgba(255, 255, 255, 0.7);
+          background: color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 70%, transparent);
           box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
           backdrop-filter: blur(12px);
         }
@@ -1118,8 +1118,8 @@ if (
           background:
             linear-gradient(
               135deg,
-              rgba(240, 253, 250, 0.96),
-              rgba(255, 255, 255, 0.98)
+              color-mix(in srgb, var(--oh-c-bg-teal-50, #f0fdfa) 96%, transparent),
+              color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 98%, transparent)
             );
           box-shadow: 0 18px 44px rgba(15, 23, 42, 0.06);
         }
@@ -1132,7 +1132,7 @@ if (
 
         .publicHomePage .homeContinuationEyebrow {
           margin: 0;
-          color: #0f766e;
+          color: var(--oh-c-ink-teal-700, #0f766e);
           font-size: 0.76rem;
           font-weight: 900;
           letter-spacing: 0.09em;
@@ -1157,7 +1157,7 @@ if (
         }
 
         .publicHomePage .homeContinuationStatus {
-          color: #0f766e;
+          color: var(--oh-c-ink-teal-700, #0f766e);
         }
 
         .publicHomePage .homeContinuationDescription {
@@ -1191,20 +1191,20 @@ if (
           flex: 0 0 32px;
           place-items: center;
           border-radius: 10px;
-          background: #dcfce7;
-          color: #15803d;
+          background: var(--oh-c-bg-green-100, #dcfce7);
+          color: var(--oh-c-ink-green-700, #15803d);
           font-weight: 950;
         }
 
         .publicHomePage .homePrivacyPromise strong {
-          color: #334155;
+          color: var(--oh-c-ink-ink-700, #334155);
           font-size: 0.84rem;
           font-weight: 800;
         }
 
         .publicHomePage .homePrivacyPromise p {
           margin: 3px 0 0;
-          color: #64748b;
+          color: var(--oh-muted, #64748b);
           font-size: 0.76rem;
           line-height: 1.55;
         }
@@ -1224,13 +1224,13 @@ if (
         }
 
         .publicHomePage .homeJourneyItem span {
-          color: #0f766e;
+          color: var(--oh-c-ink-teal-700, #0f766e);
           font-size: 0.68rem;
           font-weight: 950;
         }
 
         .publicHomePage .homeJourneyItem strong {
-          color: #334155;
+          color: var(--oh-c-ink-ink-700, #334155);
           font-size: 0.78rem;
           line-height: 1.3;
         }
@@ -1255,8 +1255,8 @@ if (
           align-items: center;
           border-radius: 30px;
           background:
-            linear-gradient(145deg, #ffffff 0%, #f8fbff 52%, #f0fdfa 100%);
-          border: 1px solid rgba(15, 23, 42, 0.08);
+            linear-gradient(145deg, var(--oh-c-bg-white, #ffffff) 0%, var(--oh-c-bg-blue-25, #f8fbff) 52%, var(--oh-c-bg-teal-50, #f0fdfa) 100%);
+          border: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(8% * var(--oh-line-scale, 1)), transparent);
           box-shadow: 0 34px 90px rgba(15, 23, 42, 0.1);
         }
 
@@ -1380,7 +1380,7 @@ if (
           padding: 10px;
           border: 1px solid rgba(148, 163, 184, 0.22);
           border-radius: 20px;
-          background: rgba(255, 255, 255, 0.97);
+          background: color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 97%, transparent);
         }
 
         .publicHomePage .homeAITextarea {
@@ -1411,14 +1411,14 @@ if (
           display: inline-flex;
           align-items: center;
           gap: 6px;
-          color: #475569;
+          color: var(--oh-soft-text, #475569);
           font-size: 0.77rem;
           font-weight: 900;
         }
 
         .publicHomePage .homeAttachAction span {
           font-size: 1.1rem;
-          color: #0f766e;
+          color: var(--oh-c-ink-teal-700, #0f766e);
         }
 
         .publicHomePage .homeAskAction {
@@ -1528,7 +1528,7 @@ if (
           min-height: 46px;
           padding: 10px 14px;
           border-radius: 13px;
-          color: #0f766e;
+          color: var(--oh-c-ink-teal-700, #0f766e);
           font-size: 0.9rem;
           font-weight: 850;
         }

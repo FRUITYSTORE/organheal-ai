@@ -37,7 +37,7 @@ export default async function KnowledgePackPage({
       <Link
         href="/knowledge"
         style={{
-          color: "#0f766e",
+          color: "var(--oh-c-ink-teal-700, #0f766e)",
           fontWeight: 800,
           textDecoration: "none",
         }}
@@ -110,8 +110,8 @@ export default async function KnowledgePackPage({
               style={{
                 padding: 24,
                 borderRadius: 20,
-                border: "1px solid #e2e8f0",
-                background: "#ffffff",
+                border: "1px solid var(--oh-c-line-slate-200, #e2e8f0)",
+                background: "var(--oh-c-bg-white, #ffffff)",
               }}
             >
               <div
@@ -126,7 +126,7 @@ export default async function KnowledgePackPage({
                   <h2
                     style={{
                       margin: 0,
-                      color: "#0f172a",
+                      color: "var(--oh-text, #0f172a)",
                       fontSize: 24,
                     }}
                   >
@@ -137,7 +137,7 @@ export default async function KnowledgePackPage({
                     <p
                       style={{
                         margin: "8px 0 0",
-                        color: "#64748b",
+                        color: "var(--oh-muted, #64748b)",
                         lineHeight: 1.6,
                       }}
                     >
@@ -151,8 +151,8 @@ export default async function KnowledgePackPage({
                     flexShrink: 0,
                     padding: "7px 11px",
                     borderRadius: 999,
-                    background: "#ecfeff",
-                    color: "#0e7490",
+                    background: "var(--oh-c-bg-cyan-50, #ecfeff)",
+                    color: "var(--oh-c-ink-cyan-700, #0e7490)",
                     fontSize: 12,
                     fontWeight: 900,
                   }}
@@ -177,8 +177,8 @@ export default async function KnowledgePackPage({
                         display: "block",
                         padding: 16,
                         borderRadius: 16,
-                        border: "1px solid #e2e8f0",
-                        background: "#f8fafc",
+                        border: "1px solid var(--oh-c-line-slate-200, #e2e8f0)",
+                        background: "var(--oh-c-bg-slate-50, #f8fafc)",
                         color: "inherit",
                         textDecoration: "none",
                       }}
@@ -186,7 +186,7 @@ export default async function KnowledgePackPage({
                       <span
                         style={{
                           display: "block",
-                          color: "#0891b2",
+                          color: "var(--oh-c-ink-cyan-600, #0891b2)",
                           fontSize: 12,
                           fontWeight: 900,
                           textTransform: "uppercase",
@@ -199,7 +199,7 @@ export default async function KnowledgePackPage({
                         style={{
                           display: "block",
                           marginTop: 6,
-                          color: "#0f172a",
+                          color: "var(--oh-text, #0f172a)",
                           fontSize: 18,
                         }}
                       >

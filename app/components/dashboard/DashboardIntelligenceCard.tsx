@@ -31,7 +31,7 @@ export default function DashboardIntelligenceCard({
   className="dashboardIntelligenceCard"
   style={{
     overflow: "hidden",
-    background: "rgba(255, 255, 255, 0.94)",
+    background: "color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 94%, transparent)",
     border: "1px solid rgba(148, 163, 184, 0.22)",
     borderRadius: "22px",
     boxShadow:
@@ -47,7 +47,7 @@ export default function DashboardIntelligenceCard({
 >
   <span
     style={{
-      color: "#0891b2",
+      color: "var(--oh-c-ink-cyan-600, #0891b2)",
       fontWeight: 900,
       letterSpacing: "0.06em",
       textTransform: "uppercase",
@@ -61,7 +61,7 @@ export default function DashboardIntelligenceCard({
   <h2
     style={{
       margin: "10px 0 6px",
-      color: "#0f172a",
+      color: "var(--oh-text, #0f172a)",
     }}
   >
     {isArabic
@@ -71,7 +71,7 @@ export default function DashboardIntelligenceCard({
 
   <p
     style={{
-      color: "#64748b",
+      color: "var(--oh-muted, #64748b)",
       margin: 0,
       lineHeight: 1.7,
     }}
@@ -83,7 +83,7 @@ export default function DashboardIntelligenceCard({
 </div>
 
       <div style={{ padding: "18px 0 0" }}>
-        <span style={{ color: "#0891b2", fontWeight: 900 }}>
+        <span style={{ color: "var(--oh-c-ink-cyan-600, #0891b2)", fontWeight: 900 }}>
           {isArabic ? "أهم المؤشرات الصحية" : "Key Health Signals"}
         </span>
 
@@ -132,7 +132,7 @@ export default function DashboardIntelligenceCard({
               <div
                 style={{
                   border: "1px solid rgba(148, 163, 184, 0.18)",
-                  background: "rgba(248, 250, 252, 0.75)",
+                  background: "color-mix(in srgb, var(--oh-c-bg-slate-50, #f8fafc) 75%, transparent)",
                   borderRadius: "20px",
                   padding: "15px 16px",
                 }}
@@ -148,11 +148,11 @@ export default function DashboardIntelligenceCard({
                   {severityLabel(finding.severity, isArabic)}
                 </p>
 
-                <p style={{ margin: "6px 0 0", fontWeight: 900, color: "#0f172a" }}>
+                <p style={{ margin: "6px 0 0", fontWeight: 900, color: "var(--oh-text, #0f172a)" }}>
                   {finding.title}
                 </p>
 
-                <p style={{ margin: "6px 0 0", color: "#475569" }}>
+                <p style={{ margin: "6px 0 0", color: "var(--oh-soft-text, #475569)" }}>
                   {finding.description}
                 </p>
               </div>
@@ -169,11 +169,11 @@ paddingTop: "20px",
       "1px solid rgba(148,163,184,0.18)",
   }}
 >
-        <span style={{ color: "#0f766e", fontWeight: 900 }}>
+        <span style={{ color: "var(--oh-c-ink-teal-700, #0f766e)", fontWeight: 900 }}>
           {isArabic ? "خطوات اليوم" : "Today’s Actions"}
         </span>
 
-        <p style={{ margin: "8px 0 16px", color: "#475569" }}>
+        <p style={{ margin: "8px 0 16px", color: "var(--oh-soft-text, #475569)" }}>
           {actionSummary}
         </p>
 

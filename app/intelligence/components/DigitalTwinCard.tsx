@@ -89,9 +89,9 @@ function getTone(risk: number): SystemTone {
 }
 
 const TONE_COLOR: Record<SystemTone, { fill: string; glow: string }> = {
-  good: { fill: "#0f766e", glow: "rgba(15, 118, 110, 0.35)" },
-  moderate: { fill: "#b45309", glow: "rgba(180, 83, 9, 0.35)" },
-  risk: { fill: "#b91c1c", glow: "rgba(185, 28, 28, 0.35)" },
+  good: { fill: "var(--oh-tone-good, #0f766e)", glow: "rgba(15, 118, 110, 0.35)" },
+  moderate: { fill: "var(--oh-tone-moderate, #b45309)", glow: "rgba(180, 83, 9, 0.35)" },
+  risk: { fill: "var(--oh-tone-risk, #b91c1c)", glow: "rgba(185, 28, 28, 0.35)" },
 };
 
 export default function DigitalTwinCard({
@@ -112,14 +112,14 @@ export default function DigitalTwinCard({
         <style>{`
           .digitalHealthModelResult {
             padding: 20px;
-            border: 1px solid rgba(15, 23, 42, 0.08);
+            border: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(8% * var(--oh-line-scale, 1)), transparent);
             border-radius: 18px;
-            background: #ffffff;
+            background: var(--oh-c-bg-white, #ffffff);
           }
 
           .digitalHealthModelEyebrow {
             margin: 0;
-            color: #0f766e;
+            color: var(--oh-c-ink-teal-700, #0f766e);
             font-size: 0.68rem;
             font-weight: 950;
             letter-spacing: 0.09em;
@@ -131,8 +131,8 @@ export default function DigitalTwinCard({
             padding: 14px 15px;
             border: 1px dashed rgba(148, 163, 184, 0.4);
             border-radius: 14px;
-            background: #f8fafc;
-            color: #64748b;
+            background: var(--oh-c-bg-slate-50, #f8fafc);
+            color: var(--oh-muted, #64748b);
             font-size: 0.82rem;
             line-height: 1.6;
           }
@@ -218,14 +218,14 @@ export default function DigitalTwinCard({
 
         .digitalHealthModelResult {
           padding: 22px;
-          border: 1px solid rgba(15, 23, 42, 0.08);
+          border: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(8% * var(--oh-line-scale, 1)), transparent);
           border-radius: 18px;
-          background: #ffffff;
+          background: var(--oh-c-bg-white, #ffffff);
         }
 
         .digitalHealthModelEyebrow {
           margin: 0;
-          color: #0f766e;
+          color: var(--oh-c-ink-teal-700, #0f766e);
           font-size: 0.68rem;
           font-weight: 950;
           letter-spacing: 0.09em;
@@ -234,7 +234,7 @@ export default function DigitalTwinCard({
 
         .digitalHealthModelTitle {
           margin: 6px 0 0;
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
           font-size: 1.18rem;
           font-weight: 950;
           line-height: 1.3;
@@ -243,7 +243,7 @@ export default function DigitalTwinCard({
         .digitalHealthModelDescription {
           max-width: 640px;
           margin: 7px 0 0;
-          color: #64748b;
+          color: var(--oh-muted, #64748b);
           font-size: 0.82rem;
           line-height: 1.6;
         }
@@ -283,13 +283,13 @@ export default function DigitalTwinCard({
         .livingMapRecoveryValue {
           font-size: 0.72rem;
           font-weight: 950;
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
         }
 
         .livingMapRecoveryLabel {
           font-size: 0.64rem;
           font-weight: 800;
-          color: #64748b;
+          color: var(--oh-muted, #64748b);
           text-transform: uppercase;
           letter-spacing: 0.05em;
         }
@@ -306,13 +306,13 @@ export default function DigitalTwinCard({
           gap: 12px;
           padding: 12px 14px;
           border-radius: 14px;
-          background: #f8fafc;
+          background: var(--oh-c-bg-slate-50, #f8fafc);
           border: 1px solid rgba(148, 163, 184, 0.2);
           border-inline-start: 4px solid var(--tone-color);
         }
 
         .livingMapItem.isPrimary {
-          background: #f0fdfa;
+          background: var(--oh-c-bg-teal-50, #f0fdfa);
         }
 
         .livingMapItemLabel {
@@ -333,13 +333,13 @@ export default function DigitalTwinCard({
           margin: 0;
           font-size: 0.88rem;
           font-weight: 900;
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
         }
 
         .livingMapItemStatus {
           margin: 1px 0 0;
           font-size: 0.72rem;
-          color: #64748b;
+          color: var(--oh-muted, #64748b);
         }
 
         .livingMapItemRisk {
@@ -353,14 +353,14 @@ export default function DigitalTwinCard({
           margin-top: 18px;
           padding: 15px 16px;
           border: 1px solid rgba(15, 118, 110, 0.15);
-          border-inline-start: 4px solid #0f766e;
+          border-inline-start: 4px solid var(--oh-tone-good, #0f766e);
           border-radius: 14px;
-          background: #f0fdfa;
+          background: var(--oh-c-bg-teal-50, #f0fdfa);
         }
 
         .digitalHealthModelSignalLabel {
           margin: 0;
-          color: #0f766e;
+          color: var(--oh-c-ink-teal-700, #0f766e);
           font-size: 0.66rem;
           font-weight: 950;
           letter-spacing: 0.08em;
@@ -369,7 +369,7 @@ export default function DigitalTwinCard({
 
         .digitalHealthModelSignalText {
           margin: 7px 0 0;
-          color: #334155;
+          color: var(--oh-c-ink-ink-700, #334155);
           font-size: 0.88rem;
           line-height: 1.65;
         }
@@ -406,11 +406,10 @@ export default function DigitalTwinCard({
           <svg viewBox="0 0 240 300" width="100%" role="img" aria-hidden="true">
             <path
               d="M85,72 C85,58 155,58 155,72 L163,140 C166,192 159,242 146,282 L94,282 C81,242 74,192 77,140 Z"
-              fill="#f1f5f9"
-              stroke="#cbd5e1"
               strokeWidth="2"
+              style={{ fill: "var(--oh-c-bg-slate-100, #f1f5f9)", stroke: "var(--oh-c-bg-slate-300, #cbd5e1)" }}
             />
-            <circle cx="120" cy="36" r="26" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="2" />
+            <circle cx="120" cy="36" r="26" strokeWidth="2" style={{ fill: "var(--oh-c-bg-slate-100, #f1f5f9)", stroke: "var(--oh-c-bg-slate-300, #cbd5e1)" }} />
 
             {systems.map((system) => {
               const colors = TONE_COLOR[system.tone];
@@ -425,7 +424,7 @@ export default function DigitalTwinCard({
                       cy={system.cy}
                       r={13}
                       fill="none"
-                      stroke={colors.fill}
+                      style={{ stroke: colors.fill }}
                       strokeWidth="2.5"
                     />
                   )}
@@ -434,7 +433,7 @@ export default function DigitalTwinCard({
                     cx={system.cx}
                     cy={system.cy}
                     r={10}
-                    fill={colors.fill}
+                    style={{ fill: colors.fill }}
                     opacity={0.92}
                   />
                 </g>
@@ -449,7 +448,7 @@ export default function DigitalTwinCard({
                 cy="50"
                 r="45"
                 fill="none"
-                stroke="#e2e8f0"
+                style={{ stroke: "var(--oh-c-bg-slate-200, #e2e8f0)" }}
                 strokeWidth="8"
               />
               <circle
@@ -457,7 +456,7 @@ export default function DigitalTwinCard({
                 cy="50"
                 r="45"
                 fill="none"
-                stroke="#0f766e"
+                style={{ stroke: "var(--oh-tone-good, #0f766e)" }}
                 strokeWidth="8"
                 strokeLinecap="round"
                 strokeDasharray="282.6"
@@ -470,7 +469,7 @@ export default function DigitalTwinCard({
                 textAnchor="middle"
                 fontSize="24"
                 fontWeight="950"
-                fill="#0f172a"
+                style={{ fill: "var(--oh-text, #0f172a)" }}
               >
                 {profile.recoveryPotential}
               </text>

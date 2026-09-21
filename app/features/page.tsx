@@ -266,7 +266,7 @@ export default function FeaturesPage() {
           margin-top: auto;
           padding: 14px;
           border-radius: 18px;
-          background: rgba(248, 250, 252, 0.9);
+          background: color-mix(in srgb, var(--oh-c-bg-slate-50, #f8fafc) 90%, transparent);
           border: 1px solid rgba(148, 163, 184, 0.18);
           color: var(--oh-muted);
           font-size: 0.92rem;
@@ -366,7 +366,7 @@ export default function FeaturesPage() {
           border-radius: 20px;
           border: 1px solid rgba(37, 99, 235, 0.16);
           border-inline-start: 5px solid #2563eb;
-          background: rgba(239, 246, 255, 0.78);
+          background: color-mix(in srgb, var(--oh-c-bg-blue-50, #eff6ff) 78%, transparent);
           color: var(--oh-muted);
           line-height: 1.65;
         }
@@ -384,7 +384,7 @@ export default function FeaturesPage() {
           justify-content: center;
           border-radius: 999px;
           background: rgba(37, 99, 235, 0.12);
-          color: #1d4ed8;
+          color: var(--oh-c-ink-blue-700, #1d4ed8);
           font-weight: 950;
         }
 

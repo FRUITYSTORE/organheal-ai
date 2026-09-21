@@ -871,9 +871,9 @@ await pdfWorker.save();
           <style>{`
           .patientReportPreviewShell {
   overflow: hidden;
-  border: 1px solid rgba(15, 23, 42, 0.09);
+  border: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(9% * var(--oh-line-scale, 1)), transparent);
   border-radius: 22px;
-  background: #ffffff;
+  background: var(--oh-c-bg-white, #ffffff);
   box-shadow: 0 12px 34px rgba(15, 23, 42, 0.05);
 }
 
@@ -891,7 +891,7 @@ await pdfWorker.save();
 
 .patientReportPreviewEyebrow {
   margin: 0;
-  color: #0f766e;
+  color: var(--oh-c-ink-teal-700, #0f766e);
   font-size: 0.7rem;
   font-weight: 950;
   letter-spacing: 0.09em;
@@ -900,7 +900,7 @@ await pdfWorker.save();
 
 .patientReportPreviewTitle {
   margin: 6px 0 0;
-  color: #0f172a;
+  color: var(--oh-text, #0f172a);
   font-size: 1.12rem;
   font-weight: 950;
   line-height: 1.35;
@@ -909,7 +909,7 @@ await pdfWorker.save();
 .patientReportPreviewDescription {
   max-width: 680px;
   margin: 6px 0 0;
-  color: #64748b;
+  color: var(--oh-muted, #64748b);
   font-size: 0.84rem;
   line-height: 1.6;
 }
@@ -922,7 +922,7 @@ await pdfWorker.save();
 }
 
 .patientReportPreviewDetails {
-  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  border-top: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(8% * var(--oh-line-scale, 1)), transparent);
 }
 
 .patientReportPreviewSummary {
@@ -933,10 +933,10 @@ await pdfWorker.save();
   padding: 15px 20px;
   cursor: pointer;
   list-style: none;
-  color: #334155;
+  color: var(--oh-c-ink-ink-700, #334155);
   font-size: 0.82rem;
   font-weight: 900;
-  background: #f8fafc;
+  background: var(--oh-c-bg-slate-50, #f8fafc);
 }
 
 .patientReportPreviewSummary::-webkit-details-marker {
@@ -944,7 +944,7 @@ await pdfWorker.save();
 }
 
 .patientReportPreviewSummary:hover {
-  background: #f0fdfa;
+  background: var(--oh-c-bg-teal-50, #f0fdfa);
 }
 
 .patientReportPreviewChevron {
@@ -953,21 +953,21 @@ await pdfWorker.save();
   height: 30px;
   place-items: center;
   border-radius: 999px;
-  background: #e2e8f0;
-  color: #475569;
+  background: var(--oh-c-bg-slate-200, #e2e8f0);
+  color: var(--oh-soft-text, #475569);
   transition: transform 180ms ease;
 }
 
 .patientReportPreviewDetails[open]
   .patientReportPreviewChevron {
   transform: rotate(180deg);
-  background: #ccfbf1;
-  color: #0f766e;
+  background: var(--oh-c-bg-teal-100, #ccfbf1);
+  color: var(--oh-c-ink-teal-700, #0f766e);
 }
 
 .patientReportPreviewContent {
   padding: 18px;
-  background: #f8fafc;
+  background: var(--oh-c-bg-slate-50, #f8fafc);
 }
 
 .patientReportPreviewContent .patientReportPdfArea {
@@ -1012,9 +1012,9 @@ await pdfWorker.save();
   width: 100%;
   margin-top: 14px;
   overflow: hidden;
-  border: 1px solid #dbe4ee;
+  border: 1px solid var(--oh-c-line-slate-250, #dbe4ee);
   border-radius: 12px;
-  background: #ffffff;
+  background: var(--oh-c-bg-white, #ffffff);
   break-inside: auto;
   page-break-inside: auto;
 }
@@ -1027,21 +1027,21 @@ await pdfWorker.save();
 
 .patientLabTable th {
   padding: 10px 12px;
-  background: #f1f5f9;
-  color: #334155;
+  background: var(--oh-c-bg-slate-100, #f1f5f9);
+  color: var(--oh-c-ink-ink-700, #334155);
   font-size: 0.74rem;
   font-weight: 800;
   text-align: left;
-  border-bottom: 1px solid #dbe4ee;
+  border-bottom: 1px solid var(--oh-c-line-slate-250, #dbe4ee);
 }
 
 .patientLabTable td {
   padding: 11px 12px;
-  color: #1e293b;
+  color: var(--oh-c-ink-ink-800, #1e293b);
   font-size: 0.76rem;
   line-height: 1.45;
   vertical-align: middle;
-  border-bottom: 1px solid #e8edf3;
+  border-bottom: 1px solid var(--oh-c-line-slate-150, #e8edf3);
   overflow-wrap: anywhere;
 }
 
@@ -1092,7 +1092,7 @@ await pdfWorker.save();
 
 .patientLabName {
   font-weight: 800;
-  color: #0f172a !important;
+  color: var(--oh-text, #0f172a) !important;
 }
 
 .patientLabStatus {
@@ -1108,27 +1108,27 @@ await pdfWorker.save();
 }
 
 .patientLabStatus-high {
-  background: #fff1f2;
-  color: #be123c;
-  border: 1px solid #fecdd3;
+  background: var(--oh-c-bg-rose-50, #fff1f2);
+  color: var(--oh-c-ink-rose-700, #be123c);
+  border: 1px solid var(--oh-c-line-rose-200, #fecdd3);
 }
 
 .patientLabStatus-low {
-  background: #fff7ed;
-  color: #c2410c;
-  border: 1px solid #fed7aa;
+  background: var(--oh-c-bg-orange-50, #fff7ed);
+  color: var(--oh-c-ink-orange-700, #c2410c);
+  border: 1px solid var(--oh-c-line-orange-200, #fed7aa);
 }
 
 .patientLabStatus-normal {
-  background: #ecfdf5;
-  color: #047857;
-  border: 1px solid #a7f3d0;
+  background: var(--oh-c-bg-emerald-50, #ecfdf5);
+  color: var(--oh-c-ink-emerald-700, #047857);
+  border: 1px solid var(--oh-c-line-emerald-200, #a7f3d0);
 }
 
 .patientLabStatus-neutral {
-  background: #f1f5f9;
-  color: #475569;
-  border: 1px solid #cbd5e1;
+  background: var(--oh-c-bg-slate-100, #f1f5f9);
+  color: var(--oh-soft-text, #475569);
+  border: 1px solid var(--oh-c-line-slate-300, #cbd5e1);
 }
 
 .patientReportPdfArea[lang="ar"] .patientLabTable th,
@@ -1161,10 +1161,10 @@ await pdfWorker.save();
   gap: 22px;
   padding: 18px 20px;
   margin-bottom: 20px;
-  border: 1px solid #dbe4ee;
+  border: 1px solid var(--oh-c-line-slate-250, #dbe4ee);
   border-top: 4px solid #153f63;
   border-radius: 14px;
-  background: #f8fafc;
+  background: var(--oh-c-bg-slate-50, #f8fafc);
   break-inside: avoid;
   page-break-inside: avoid;
 }
@@ -1180,7 +1180,7 @@ await pdfWorker.save();
 
 .patientReportPlatformName {
   margin: 0;
-  color: #0f172a;
+  color: var(--oh-text, #0f172a);
   font-size: 1.22rem;
   font-weight: 850;
   line-height: 1.1;
@@ -1189,7 +1189,7 @@ await pdfWorker.save();
 .patientReportPlatformTagline {
   display: block;
   margin-top: 4px;
-  color: #64748b;
+  color: var(--oh-muted, #64748b);
   font-size: 0.63rem;
   font-weight: 800;
   line-height: 1.25;
@@ -1207,7 +1207,7 @@ await pdfWorker.save();
 
 .patientReportBrandName {
   margin: 0;
-  color: #153f63;
+  color: var(--oh-c-ink-navy-blue, #153f63);
   font-size: 1.45rem;
   font-weight: 800;
   line-height: 1.2;
@@ -1215,7 +1215,7 @@ await pdfWorker.save();
 
 .patientReportDocumentType {
   margin: 13px 0 0;
-  color: #153f63;
+  color: var(--oh-c-ink-navy-blue, #153f63);
   font-size: 0.96rem;
   font-weight: 800;
   line-height: 1.35;
@@ -1223,7 +1223,7 @@ await pdfWorker.save();
 
 .patientReportDocumentSubtitle {
   margin: 5px 0 0;
-  color: #64748b;
+  color: var(--oh-muted, #64748b);
   font-size: 0.79rem;
   line-height: 1.5;
 }
@@ -1242,7 +1242,7 @@ await pdfWorker.save();
 }
 
 .patientReportReferenceLabel {
-  color: #64748b;
+  color: var(--oh-muted, #64748b);
   font-size: 0.7rem;
   font-weight: 700;
   line-height: 1.3;
@@ -1250,7 +1250,7 @@ await pdfWorker.save();
 }
 
 .patientReportReferenceValue {
-  color: #111827;
+  color: var(--oh-c-ink-ink-900, #111827);
   font-size: 0.82rem;
   font-weight: 700;
   line-height: 1.45;
@@ -1263,10 +1263,10 @@ await pdfWorker.save();
   width: fit-content;
   margin-top: 12px;
   padding: 5px 9px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--oh-c-line-slate-300, #cbd5e1);
   border-radius: 999px;
-  color: #475569;
-  background: #ffffff;
+  color: var(--oh-soft-text, #475569);
+  background: var(--oh-c-bg-white, #ffffff);
   font-size: 0.7rem;
   font-weight: 700;
 }
@@ -1381,7 +1381,7 @@ await pdfWorker.save();
      
       <section
         ref={patientReportRef}
-        className="ohCard patientReportPdfArea arabicPdfSafeMargins organhealPdfPage"
+        className="ohCard ohPaper patientReportPdfArea arabicPdfSafeMargins organhealPdfPage"
         dir={isArabic ? "rtl" : "ltr"}
         lang={isArabic ? "ar" : "en"}
         style={{

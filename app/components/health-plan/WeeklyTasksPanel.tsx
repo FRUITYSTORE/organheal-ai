@@ -37,7 +37,7 @@ export default function WeeklyTasksPanel({
         <p className="hpPanelText">{description}</p>
       </div>
 
-      <div className="hpProgressWrap" style={{ background: "rgba(15,23,42,0.12)" }}>
+      <div className="hpProgressWrap" style={{ background: "color-mix(in srgb, var(--oh-line-base, #0f172a) 12%, transparent)" }}>
         <div className="hpProgressFill" style={{ width: `${progressPercent}%` }} />
       </div>
 

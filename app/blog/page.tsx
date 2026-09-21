@@ -234,7 +234,7 @@ export default function BlogPage() {
           border: 1px solid rgba(15, 118, 110, 0.18);
           background:
             radial-gradient(circle at 12% 22%, rgba(20, 184, 166, 0.22), transparent 28%),
-            linear-gradient(135deg, rgba(240, 253, 250, 0.96), rgba(255, 255, 255, 0.96));
+            linear-gradient(135deg, color-mix(in srgb, var(--oh-c-bg-teal-50, #f0fdfa) 96%, transparent), color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 96%, transparent));
           box-shadow: 0 24px 70px rgba(15, 23, 42, 0.08);
           padding: 24px;
         }
@@ -284,7 +284,7 @@ export default function BlogPage() {
           justify-content: center;
           border-radius: 999px;
           background: rgba(20, 184, 166, 0.12);
-          color: #0f766e;
+          color: var(--oh-c-ink-teal-700, #0f766e);
           font-weight: 950;
           pointer-events: none;
         }
@@ -300,7 +300,7 @@ export default function BlogPage() {
           border: 1px solid rgba(15, 118, 110, 0.26);
           border-radius: 16px;
           padding: 13px 15px;
-          background: rgba(255, 255, 255, 0.98);
+          background: color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 98%, transparent);
           color: var(--oh-text);
           font: inherit;
           font-weight: 850;
@@ -348,8 +348,8 @@ export default function BlogPage() {
 
         .healthArticlesPage .articleQuickFilter {
           border: 1px solid rgba(15, 118, 110, 0.22);
-          background: rgba(255, 255, 255, 0.84);
-          color: #0f766e;
+          background: color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 84%, transparent);
+          color: var(--oh-c-ink-teal-700, #0f766e);
           border-radius: 999px;
           padding: 9px 12px;
           font-size: 0.84rem;
@@ -409,7 +409,7 @@ export default function BlogPage() {
           padding: 8px 11px;
           border-radius: 999px;
           background: rgba(15, 118, 110, 0.12);
-          color: #0f766e;
+          color: var(--oh-c-ink-teal-700, #0f766e);
           font-size: 0.76rem;
           font-weight: 950;
           letter-spacing: 0.05em;
@@ -439,7 +439,7 @@ export default function BlogPage() {
           width: fit-content;
           padding: 6px 9px;
           border-radius: 999px;
-          background: rgba(248, 250, 252, 0.94);
+          background: color-mix(in srgb, var(--oh-c-bg-slate-50, #f8fafc) 94%, transparent);
           border: 1px solid rgba(148, 163, 184, 0.2);
           color: var(--oh-muted);
           font-size: 0.78rem;
@@ -483,7 +483,7 @@ export default function BlogPage() {
           border-radius: 20px;
           border: 1px solid rgba(37, 99, 235, 0.16);
           border-inline-start: 5px solid #2563eb;
-          background: rgba(239, 246, 255, 0.78);
+          background: color-mix(in srgb, var(--oh-c-bg-blue-50, #eff6ff) 78%, transparent);
           color: var(--oh-muted);
           line-height: 1.65;
         }
@@ -501,7 +501,7 @@ export default function BlogPage() {
           justify-content: center;
           border-radius: 999px;
           background: rgba(37, 99, 235, 0.12);
-          color: #1d4ed8;
+          color: var(--oh-c-ink-blue-700, #1d4ed8);
           font-weight: 950;
         }
 

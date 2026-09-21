@@ -77,9 +77,9 @@ export default function PersonalHealthStrategyCard({
 
         .personalStrategySnapshot {
           padding: 24px;
-          border: 1px solid rgba(15, 23, 42, 0.08);
+          border: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(8% * var(--oh-line-scale, 1)), transparent);
           border-radius: 24px;
-          background: #ffffff;
+          background: var(--oh-c-bg-white, #ffffff);
         }
 
         .strategySnapshotHeader {
@@ -88,12 +88,12 @@ export default function PersonalHealthStrategyCard({
           justify-content: space-between;
           gap: 18px;
           padding-bottom: 20px;
-          border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+          border-bottom: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(8% * var(--oh-line-scale, 1)), transparent);
         }
 
         .strategySnapshotEyebrow {
           margin: 0;
-          color: #0f766e;
+          color: var(--oh-c-ink-teal-700, #0f766e);
           font-size: 0.72rem;
           font-weight: 950;
           letter-spacing: 0.1em;
@@ -102,7 +102,7 @@ export default function PersonalHealthStrategyCard({
 
         .strategySnapshotHeading {
           margin: 7px 0 0;
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
           font-size: clamp(1.3rem, 2vw, 1.7rem);
           font-weight: 950;
           line-height: 1.25;
@@ -112,7 +112,7 @@ export default function PersonalHealthStrategyCard({
         .strategySnapshotDescription {
           max-width: 760px;
           margin: 9px 0 0;
-          color: #64748b;
+          color: var(--oh-muted, #64748b);
           font-size: 0.9rem;
           line-height: 1.65;
         }
@@ -125,8 +125,8 @@ export default function PersonalHealthStrategyCard({
           padding: 0 11px;
           border: 1px solid rgba(16, 185, 129, 0.2);
           border-radius: 999px;
-          background: #ecfdf5;
-          color: #047857;
+          background: var(--oh-c-bg-emerald-50, #ecfdf5);
+          color: var(--oh-c-ink-emerald-700, #047857);
           font-size: 0.7rem;
           font-weight: 900;
         }
@@ -144,8 +144,8 @@ export default function PersonalHealthStrategyCard({
           border-radius: 18px;
           background: linear-gradient(
             180deg,
-            #ffffff 0%,
-            #f8fafc 100%
+            var(--oh-c-bg-white, #ffffff) 0%,
+            var(--oh-c-bg-slate-50, #f8fafc) 100%
           );
         }
 
@@ -170,7 +170,7 @@ export default function PersonalHealthStrategyCard({
         }
 
         .strategySnapshotSummary:hover {
-          background: rgba(240, 253, 250, 0.55);
+          background: color-mix(in srgb, var(--oh-c-bg-teal-50, #f0fdfa) 55%, transparent);
         }
 
         .strategySnapshotIdentity {
@@ -187,12 +187,12 @@ export default function PersonalHealthStrategyCard({
           flex: 0 0 38px;
           place-items: center;
           border-radius: 12px;
-          background: #f0fdfa;
+          background: var(--oh-c-bg-teal-50, #f0fdfa);
           font-size: 1rem;
         }
 
         .strategySnapshotBadge {
-          color: #64748b;
+          color: var(--oh-muted, #64748b);
           font-size: 0.64rem;
           font-weight: 900;
           letter-spacing: 0.08em;
@@ -201,7 +201,7 @@ export default function PersonalHealthStrategyCard({
 
         .strategySnapshotTitle {
           margin: 5px 0 0;
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
           font-size: 1rem;
           font-weight: 950;
           line-height: 1.3;
@@ -214,8 +214,8 @@ export default function PersonalHealthStrategyCard({
           flex: 0 0 34px;
           place-items: center;
           border-radius: 999px;
-          background: #f1f5f9;
-          color: #475569;
+          background: var(--oh-c-bg-slate-100, #f1f5f9);
+          color: var(--oh-soft-text, #475569);
           font-size: 0.9rem;
           font-weight: 950;
           transition: transform 180ms ease;
@@ -224,18 +224,18 @@ export default function PersonalHealthStrategyCard({
         .strategySnapshotCard[open]
           .strategySnapshotChevron {
           transform: rotate(180deg);
-          background: #ecfdf5;
-          color: #047857;
+          background: var(--oh-c-bg-emerald-50, #ecfdf5);
+          color: var(--oh-c-ink-emerald-700, #047857);
         }
 
         .strategySnapshotBody {
           padding: 0 16px 17px;
-          border-top: 1px solid rgba(15, 23, 42, 0.07);
+          border-top: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(7% * var(--oh-line-scale, 1)), transparent);
         }
 
         .strategySnapshotBody p {
           margin: 14px 0 0;
-          color: #475569;
+          color: var(--oh-soft-text, #475569);
           font-size: 0.84rem;
           line-height: 1.7;
           white-space: pre-line;

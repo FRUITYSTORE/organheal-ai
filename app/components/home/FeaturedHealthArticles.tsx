@@ -135,8 +135,8 @@ export default function FeaturedHealthArticles() {
             ),
             linear-gradient(
               145deg,
-              #ffffff,
-              #f8fafc
+              var(--oh-c-bg-white, #ffffff),
+              var(--oh-c-bg-slate-50, #f8fafc)
             );
           box-shadow:
             0 22px 58px
@@ -152,7 +152,7 @@ export default function FeaturedHealthArticles() {
 
         .featuredHealthArticlesEyebrow {
           margin: 0;
-          color: #0f766e;
+          color: var(--oh-c-ink-teal-700, #0f766e);
           font-size: 0.74rem;
           font-weight: 950;
           letter-spacing: 0.08em;
@@ -189,8 +189,8 @@ export default function FeaturedHealthArticles() {
           padding: 0 16px;
           border: 1px solid rgba(15, 118, 110, 0.22);
           border-radius: 999px;
-          background: white;
-          color: #0f766e;
+          background: var(--oh-c-bg-white, white);
+          color: var(--oh-c-ink-teal-700, #0f766e);
           font-weight: 900;
           text-decoration: none;
         }
@@ -215,7 +215,7 @@ export default function FeaturedHealthArticles() {
           border: 1px solid rgba(148, 163, 184, 0.2);
           border-top: 4px solid #14b8a6;
           border-radius: 20px;
-          background: rgba(255, 255, 255, 0.94);
+          background: color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 94%, transparent);
           text-decoration: none;
           box-shadow:
             0 14px 34px
@@ -247,13 +247,13 @@ export default function FeaturedHealthArticles() {
           border-radius: 999px;
           background:
             rgba(15, 118, 110, 0.1);
-          color: #0f766e;
+          color: var(--oh-c-ink-teal-700, #0f766e);
           font-size: 0.72rem;
           font-weight: 950;
         }
 
         .featuredHealthArticleReadTime {
-          color: #64748b;
+          color: var(--oh-muted, #64748b);
           font-size: 0.75rem;
           font-weight: 800;
         }
@@ -296,15 +296,15 @@ export default function FeaturedHealthArticles() {
         .featuredHealthArticleMarker {
           padding: 4px 7px;
           border-radius: 999px;
-          background: #f8fafc;
-          color: #64748b;
+          background: var(--oh-c-bg-slate-50, #f8fafc);
+          color: var(--oh-muted, #64748b);
           font-size: 0.68rem;
           font-weight: 800;
         }
 
         .featuredHealthArticleRead {
           flex: 0 0 auto;
-          color: #0f766e;
+          color: var(--oh-c-ink-teal-700, #0f766e);
           font-size: 0.82rem;
           font-weight: 950;
         }

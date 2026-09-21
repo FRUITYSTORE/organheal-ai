@@ -21,7 +21,7 @@ export default function SectionHeader({
       {eyebrow && (
         <p
           style={{
-            color: "#0891b2",
+            color: "var(--oh-c-ink-cyan-600, #0891b2)",
             fontWeight: 800,
             textTransform: "uppercase",
             letterSpacing: ".08em",
@@ -37,7 +37,7 @@ export default function SectionHeader({
       {description && (
         <p
           style={{
-            color: "#475569",
+            color: "var(--oh-soft-text, #475569)",
             lineHeight: 1.7,
             marginTop: 10,
           }}

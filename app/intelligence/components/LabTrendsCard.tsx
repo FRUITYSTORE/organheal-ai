@@ -189,19 +189,19 @@ export default function LabTrendsCard({
 
         .labHistoryResult {
           padding: 20px;
-          border: 1px solid rgba(15, 23, 42, 0.08);
+          border: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(8% * var(--oh-line-scale, 1)), transparent);
           border-radius: 18px;
-          background: #ffffff;
+          background: var(--oh-c-bg-white, #ffffff);
         }
 
         .labHistoryHeader {
           padding-bottom: 16px;
-          border-bottom: 1px solid rgba(15, 23, 42, 0.07);
+          border-bottom: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(7% * var(--oh-line-scale, 1)), transparent);
         }
 
         .labHistoryEyebrow {
           margin: 0;
-          color: #0f766e;
+          color: var(--oh-c-ink-teal-700, #0f766e);
           font-size: 0.68rem;
           font-weight: 950;
           letter-spacing: 0.09em;
@@ -210,7 +210,7 @@ export default function LabTrendsCard({
 
         .labHistoryTitle {
           margin: 6px 0 0;
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
           font-size: 1.18rem;
           font-weight: 950;
           line-height: 1.3;
@@ -219,7 +219,7 @@ export default function LabTrendsCard({
         .labHistoryDescription {
           max-width: 720px;
           margin: 7px 0 0;
-          color: #64748b;
+          color: var(--oh-muted, #64748b);
           font-size: 0.82rem;
           line-height: 1.6;
         }
@@ -230,8 +230,8 @@ export default function LabTrendsCard({
           margin-top: 12px;
           padding: 6px 9px;
           border-radius: 999px;
-          background: #f1f5f9;
-          color: #475569;
+          background: var(--oh-c-bg-slate-100, #f1f5f9);
+          color: var(--oh-soft-text, #475569);
           font-size: 0.68rem;
           font-weight: 850;
         }
@@ -246,7 +246,7 @@ export default function LabTrendsCard({
           padding: 14px 15px;
           border: 1px solid rgba(148, 163, 184, 0.2);
           border-radius: 14px;
-          background: #f8fafc;
+          background: var(--oh-c-bg-slate-50, #f8fafc);
         }
 
         .labTrendCardHeader {
@@ -258,7 +258,7 @@ export default function LabTrendsCard({
 
         .labTrendName {
           margin: 0;
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
           font-size: 0.9rem;
           font-weight: 900;
         }
@@ -272,18 +272,18 @@ export default function LabTrendsCard({
         }
 
         .labTrendDirection.good {
-          background: #ecfdf5;
-          color: #047857;
+          background: var(--oh-c-bg-emerald-50, #ecfdf5);
+          color: var(--oh-c-ink-emerald-700, #047857);
         }
 
         .labTrendDirection.risk {
-          background: #fef2f2;
-          color: #b91c1c;
+          background: var(--oh-c-bg-red-50, #fef2f2);
+          color: var(--oh-c-ink-red-700, #b91c1c);
         }
 
         .labTrendDirection.neutral {
-          background: #f1f5f9;
-          color: #475569;
+          background: var(--oh-c-bg-slate-100, #f1f5f9);
+          color: var(--oh-soft-text, #475569);
         }
 
         .labTrendValues {
@@ -291,14 +291,14 @@ export default function LabTrendsCard({
           flex-wrap: wrap;
           gap: 8px 14px;
           margin-top: 10px;
-          color: #475569;
+          color: var(--oh-soft-text, #475569);
           font-size: 0.78rem;
           font-weight: 750;
         }
 
         .labTrendSummary {
           margin: 9px 0 0;
-          color: #64748b;
+          color: var(--oh-muted, #64748b);
           font-size: 0.8rem;
           line-height: 1.6;
         }
@@ -308,12 +308,12 @@ export default function LabTrendsCard({
           padding: 14px 15px;
           border: 1px solid rgba(37, 99, 235, 0.12);
           border-radius: 14px;
-          background: #f8fbff;
+          background: var(--oh-c-bg-blue-25, #f8fbff);
         }
 
         .labHistoryTrackedLabel {
           margin: 0;
-          color: #1d4ed8;
+          color: var(--oh-c-ink-blue-700, #1d4ed8);
           font-size: 0.66rem;
           font-weight: 950;
           letter-spacing: 0.08em;
@@ -322,7 +322,7 @@ export default function LabTrendsCard({
 
         .labHistoryTrackedText {
           margin: 7px 0 0;
-          color: #475569;
+          color: var(--oh-soft-text, #475569);
           font-size: 0.8rem;
           line-height: 1.6;
         }
@@ -332,8 +332,8 @@ export default function LabTrendsCard({
           padding: 14px 15px;
           border: 1px dashed rgba(148, 163, 184, 0.4);
           border-radius: 14px;
-          background: #f8fafc;
-          color: #64748b;
+          background: var(--oh-c-bg-slate-50, #f8fafc);
+          color: var(--oh-muted, #64748b);
           font-size: 0.82rem;
           line-height: 1.6;
         }

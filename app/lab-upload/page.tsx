@@ -515,8 +515,8 @@ if (databaseError || !insertedFile) {
           background:
             radial-gradient(circle at 8% 0%, rgba(14, 165, 233, 0.1), transparent 26%),
             radial-gradient(circle at 92% 12%, rgba(13, 148, 136, 0.1), transparent 30%),
-            linear-gradient(180deg, #f8fbff 0%, #f1f5f9 46%, #ffffff 100%);
-          color: #0f172a;
+            linear-gradient(180deg, var(--oh-c-bg-blue-25, #f8fbff) 0%, var(--oh-c-bg-slate-100, #f1f5f9) 46%, var(--oh-c-bg-white, #ffffff) 100%);
+          color: var(--oh-text, #0f172a);
           font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
 
@@ -605,9 +605,9 @@ if (databaseError || !insertedFile) {
          grid-template-columns: repeat(4, minmax(0, 1fr));
           gap: 12px;
           padding: 14px;
-          border: 1px solid rgba(15, 23, 42, 0.08);
+          border: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(8% * var(--oh-line-scale, 1)), transparent);
           border-radius: 24px;
-          background: rgba(255, 255, 255, 0.94);
+          background: color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 94%, transparent);
           box-shadow: 0 12px 34px rgba(15, 23, 42, 0.06);
         }
 
@@ -619,22 +619,22 @@ if (databaseError || !insertedFile) {
           padding: 15px;
           border: 1px solid rgba(148, 163, 184, 0.2);
           border-radius: 18px;
-          background: #f8fafc;
+          background: var(--oh-c-bg-slate-50, #f8fafc);
         }
 
         .uploadJourneyItem.current {
           border-color: rgba(15, 118, 110, 0.45);
           background: linear-gradient(
             145deg,
-            rgba(204, 251, 241, 0.8),
-            rgba(239, 246, 255, 0.9)
+            color-mix(in srgb, var(--oh-c-bg-teal-100, #ccfbf1) 80%, transparent),
+            color-mix(in srgb, var(--oh-c-bg-blue-50, #eff6ff) 90%, transparent)
           );
           box-shadow: 0 14px 34px rgba(15, 118, 110, 0.12);
         }
 
         .uploadJourneyItem.completed {
           border-color: rgba(13, 148, 136, 0.22);
-          background: rgba(240, 253, 250, 0.9);
+          background: color-mix(in srgb, var(--oh-c-bg-teal-50, #f0fdfa) 90%, transparent);
         }
 
         .uploadJourneyNumber {
@@ -643,8 +643,8 @@ if (databaseError || !insertedFile) {
           display: grid;
           place-items: center;
           border-radius: 13px;
-          background: #e2e8f0;
-          color: #475569;
+          background: var(--oh-c-bg-slate-200, #e2e8f0);
+          color: var(--oh-soft-text, #475569);
           font-weight: 900;
         }
 
@@ -654,21 +654,21 @@ if (databaseError || !insertedFile) {
         }
 
         .uploadJourneyItem.completed .uploadJourneyNumber {
-          background: #ccfbf1;
-          color: #0f766e;
+          background: var(--oh-c-bg-teal-100, #ccfbf1);
+          color: var(--oh-c-ink-teal-700, #0f766e);
         }
 
         .uploadJourneyTitle {
           display: block;
           margin-bottom: 5px;
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
           font-size: 0.98rem;
           font-weight: 900;
         }
 
         .uploadJourneyDescription {
           margin: 0;
-          color: #64748b;
+          color: var(--oh-muted, #64748b);
           font-size: 0.82rem;
           line-height: 1.5;
         }
@@ -676,7 +676,7 @@ if (databaseError || !insertedFile) {
         .uploadJourneyState {
           display: inline-flex;
           margin-top: 9px;
-          color: #64748b;
+          color: var(--oh-muted, #64748b);
           font-size: 0.72rem;
           font-weight: 850;
           text-transform: uppercase;
@@ -685,7 +685,7 @@ if (databaseError || !insertedFile) {
 
         .uploadJourneyItem.current .uploadJourneyState,
         .uploadJourneyItem.completed .uploadJourneyState {
-          color: #0f766e;
+          color: var(--oh-c-ink-teal-700, #0f766e);
         }
 
         .uploadWorkspace {
@@ -699,9 +699,9 @@ if (databaseError || !insertedFile) {
         .supportedCard,
         .savedReceipt {
           padding: 24px;
-          border: 1px solid rgba(15, 23, 42, 0.09);
+          border: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(9% * var(--oh-line-scale, 1)), transparent);
           border-radius: 26px;
-          background: #ffffff;
+          background: var(--oh-c-bg-white, #ffffff);
           box-shadow: 0 16px 42px rgba(15, 23, 42, 0.07);
         }
 
@@ -728,7 +728,7 @@ if (databaseError || !insertedFile) {
           border-radius: 22px;
           background:
             radial-gradient(circle at 50% 20%, rgba(20, 184, 166, 0.11), transparent 30%),
-            linear-gradient(180deg, #ffffff, #f0fdfa);
+            linear-gradient(180deg, var(--oh-c-bg-white, #ffffff), var(--oh-c-bg-teal-50, #f0fdfa));
           text-align: center;
           cursor: pointer;
           transition: border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
@@ -747,8 +747,8 @@ if (databaseError || !insertedFile) {
           place-items: center;
           border-radius: 18px;
           border: 1px solid rgba(15, 118, 110, 0.14);
-          background: #ccfbf1;
-          color: #0f766e;
+          background: var(--oh-c-bg-teal-100, #ccfbf1);
+          color: var(--oh-c-ink-teal-700, #0f766e);
           font-size: 0.9rem;
           font-weight: 950;
         }
@@ -765,15 +765,15 @@ if (databaseError || !insertedFile) {
           gap: 12px;
           align-items: center;
           padding: 14px;
-          border: 1px solid rgba(15, 23, 42, 0.09);
+          border: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(9% * var(--oh-line-scale, 1)), transparent);
           border-radius: 18px;
-          background: #f8fafc;
+          background: var(--oh-c-bg-slate-50, #f8fafc);
         }
 
         .uploadFileRow strong {
           display: block;
           overflow: hidden;
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
           text-overflow: ellipsis;
           white-space: nowrap;
         }
@@ -781,7 +781,7 @@ if (databaseError || !insertedFile) {
         .uploadFileRow span {
           display: block;
           margin-top: 4px;
-          color: #64748b;
+          color: var(--oh-muted, #64748b);
           font-size: 0.82rem;
           font-weight: 750;
         }
@@ -792,21 +792,21 @@ if (databaseError || !insertedFile) {
           padding: 17px;
           border-radius: 20px;
           border: 1px solid rgba(15, 118, 110, 0.15);
-          background: #f0fdfa;
-          color: #134e4a;
+          background: var(--oh-c-bg-teal-50, #f0fdfa);
+          color: var(--oh-c-ink-teal-900, #134e4a);
         }
 
         .uploadNotice.error {
           border-color: rgba(185, 28, 28, 0.2);
-          background: #fef2f2;
-          color: #991b1b;
+          background: var(--oh-c-bg-red-50, #fef2f2);
+          color: var(--oh-c-ink-red-800, #991b1b);
         }
 
         .savedReceipt {
           border-top: 6px solid #10b981;
           background:
             radial-gradient(circle at 90% 10%, rgba(16, 185, 129, 0.11), transparent 30%),
-            #ffffff;
+            var(--oh-c-bg-white, #ffffff);
         }
 
         .savedFileList {
@@ -820,8 +820,8 @@ if (databaseError || !insertedFile) {
         .savedFileList li {
           padding: 11px 13px;
           border-radius: 14px;
-          background: #f0fdf4;
-          color: #166534;
+          background: var(--oh-c-bg-green-50, #f0fdf4);
+          color: var(--oh-c-ink-green-800, #166534);
           font-weight: 800;
         }
 
@@ -833,20 +833,20 @@ if (databaseError || !insertedFile) {
 
         .supportedItem {
           padding: 15px;
-          border: 1px solid rgba(15, 23, 42, 0.08);
+          border: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(8% * var(--oh-line-scale, 1)), transparent);
           border-inline-start: 4px solid #0f766e;
           border-radius: 16px;
-          background: #ffffff;
+          background: var(--oh-c-bg-white, #ffffff);
         }
 
         .supportedItem strong {
           display: block;
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
         }
 
         .supportedItem p {
           margin: 5px 0 0;
-          color: #64748b;
+          color: var(--oh-muted, #64748b);
           font-size: 0.86rem;
           line-height: 1.55;
         }
@@ -856,10 +856,10 @@ if (databaseError || !insertedFile) {
           width: 100%;
           min-height: 46px;
           padding: 0 14px;
-          border: 1px solid rgba(15, 23, 42, 0.2);
+          border: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(20% * var(--oh-line-scale, 1)), transparent);
           border-radius: 14px;
-          background: #ffffff;
-          color: #0f172a;
+          background: var(--oh-c-bg-white, #ffffff);
+          color: var(--oh-text, #0f172a);
           font-weight: 800;
         }
 
@@ -884,8 +884,8 @@ if (databaseError || !insertedFile) {
 
         .labUploadPageV4 .secondaryBtn {
           border: 1px solid rgba(15, 118, 110, 0.25);
-          background: #ffffff;
-          color: #0f766e;
+          background: var(--oh-c-bg-white, #ffffff);
+          color: var(--oh-c-ink-teal-700, #0f766e);
         }
 
         .labUploadPageV4 button:disabled {
@@ -909,7 +909,7 @@ if (databaseError || !insertedFile) {
   padding: 0 6px;
   border: 0;
   background: transparent;
-  color: #64748b;
+  color: var(--oh-muted, #64748b);
   font: inherit;
   font-size: 0.9rem;
   font-weight: 800;
@@ -917,7 +917,7 @@ if (databaseError || !insertedFile) {
 }
 
 .savedTertiaryAction:hover {
-  color: #0f766e;
+  color: var(--oh-c-ink-teal-700, #0f766e);
   text-decoration: underline;
 }
         @media (max-width: 980px) {
@@ -955,7 +955,7 @@ if (databaseError || !insertedFile) {
           background:
             radial-gradient(circle at 8% 0%, rgba(14, 165, 233, 0.08), transparent 27%),
             radial-gradient(circle at 92% 12%, rgba(13, 148, 136, 0.08), transparent 31%),
-            linear-gradient(180deg, #f8fafc 0%, #f1f5f9 48%, #ffffff 100%) !important;
+            linear-gradient(180deg, var(--oh-c-bg-slate-50, #f8fafc) 0%, var(--oh-c-bg-slate-100, #f1f5f9) 48%, var(--oh-c-bg-white, #ffffff) 100%) !important;
         }
 
         .labUploadPageV4 .labUploadHero {
@@ -1155,7 +1155,7 @@ if (databaseError || !insertedFile) {
     marginTop: "14px",
     marginBottom: 0,
     fontWeight: 700,
-    color: "#0f766e",
+    color: "var(--oh-c-ink-teal-700, #0f766e)",
   }}
 >
   {text(

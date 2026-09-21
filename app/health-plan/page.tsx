@@ -369,8 +369,8 @@ try {
           background:
             radial-gradient(circle at 12% 5%, rgba(6, 182, 212, 0.24), transparent 28%),
             radial-gradient(circle at 88% 18%, rgba(15, 118, 110, 0.26), transparent 34%),
-            linear-gradient(180deg, #dbeafe 0%, #e2e8f0 44%, #f8fafc 100%);
-          color: #0f172a;
+            linear-gradient(180deg, var(--oh-c-bg-blue-100, #dbeafe) 0%, var(--oh-c-bg-slate-200, #e2e8f0) 44%, var(--oh-c-bg-slate-50, #f8fafc) 100%);
+          color: var(--oh-text, #0f172a);
           padding: 26px 0 64px;
         }
 
@@ -461,8 +461,8 @@ try {
         }
 
         .hpSecondary {
-          background: rgba(255,255,255,0.96);
-          color: #0f766e;
+          background: color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 96%, transparent);
+          color: var(--oh-c-ink-teal-700, #0f766e);
           border: 1px solid rgba(15, 118, 110, 0.30);
         }
 
@@ -598,8 +598,8 @@ try {
         }
 
         .hpPanel {
-          background: white;
-          border: 1px solid rgba(15, 23, 42, 0.14);
+          background: var(--oh-c-bg-white, white);
+          border: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(14% * var(--oh-line-scale, 1)), transparent);
           border-radius: 30px;
           padding: 24px;
           box-shadow: 0 22px 58px rgba(15, 23, 42, 0.13);
@@ -639,7 +639,7 @@ try {
 
         .hpSignalText {
           margin-top: 6px;
-          color: #475569;
+          color: var(--oh-soft-text, #475569);
           font-weight: 720;
           line-height: 1.55;
         }
@@ -656,14 +656,14 @@ try {
         }
 
         .hpBadge.good {
-          background: #dcfce7;
-          color: #047857;
+          background: var(--oh-c-bg-green-100, #dcfce7);
+          color: var(--oh-c-ink-emerald-700, #047857);
           border: 1px solid rgba(5, 150, 105, 0.28);
         }
 
         .hpBadge.warn {
-          background: #fef3c7;
-          color: #b45309;
+          background: var(--oh-c-bg-amber-100, #fef3c7);
+          color: var(--oh-c-ink-amber-700, #b45309);
           border: 1px solid rgba(217, 119, 6, 0.28);
         }
 
@@ -679,14 +679,14 @@ try {
           align-items: center;
           padding: 15px;
           border-radius: 18px;
-          background: white;
-          border: 1px solid rgba(15, 23, 42, 0.12);
+          background: var(--oh-c-bg-white, white);
+          border: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(12% * var(--oh-line-scale, 1)), transparent);
           border-inline-start: 7px solid #d97706;
           box-shadow: 0 12px 28px rgba(15, 23, 42, 0.07);
         }
 
         .hpTask.done {
-          background: #dcfce7;
+          background: var(--oh-c-bg-green-100, #dcfce7);
           border-inline-start-color: #059669;
           border-color: rgba(5, 150, 105, 0.32);
         }
@@ -709,7 +709,7 @@ try {
         }
 
         .hpTaskText {
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
           font-weight: 900;
           line-height: 1.55;
         }
@@ -722,10 +722,10 @@ try {
         .hpListItem {
           padding: 14px;
           border-radius: 18px;
-          background: #f8fafc;
-          border: 1px solid rgba(15, 23, 42, 0.10);
+          background: var(--oh-c-bg-slate-50, #f8fafc);
+          border: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(10% * var(--oh-line-scale, 1)), transparent);
           border-inline-start: 6px solid #0f766e;
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
           font-weight: 860;
           line-height: 1.55;
         }
@@ -733,25 +733,25 @@ try {
         .hpSafety {
           padding: 18px;
           border-radius: 24px;
-          background: #eff6ff;
+          background: var(--oh-c-bg-blue-50, #eff6ff);
           border: 1px solid rgba(37, 99, 235, 0.18);
           border-inline-start: 7px solid #2563eb;
-          color: #1e293b;
+          color: var(--oh-c-ink-ink-800, #1e293b);
           font-weight: 760;
           line-height: 1.7;
         }
 
 
         .hpHero .hpSecondary {
-          background: #ffffff !important;
-          color: #0f766e !important;
-          border: 1px solid rgba(255, 255, 255, 0.78) !important;
+          background: var(--oh-c-bg-white, #ffffff) !important;
+          color: var(--oh-c-ink-teal-700, #0f766e) !important;
+          border: 1px solid color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 78%, transparent) !important;
           box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18) !important;
         }
 
         .hpHero .hpSecondary,
         .hpHero .hpSecondary * {
-          color: #0f766e !important;
+          color: var(--oh-c-ink-teal-700, #0f766e) !important;
           text-shadow: none !important;
         }
 
@@ -771,8 +771,8 @@ try {
 .hpScorePrimary,
 .hpScoreMeta {
   border-radius: 22px;
-  background: #f8fafc;
-  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: var(--oh-c-bg-slate-50, #f8fafc);
+  border: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(10% * var(--oh-line-scale, 1)), transparent);
 }
 
 .hpScorePrimary {
@@ -782,7 +782,7 @@ try {
 
 .hpScorePrimary span {
   display: block;
-  color: #475569;
+  color: var(--oh-soft-text, #475569);
   font-size: 0.78rem;
   font-weight: 950;
   letter-spacing: 0.06em;
@@ -792,7 +792,7 @@ try {
 .hpScorePrimary strong {
   display: block;
   margin-top: 9px;
-  color: #0f172a;
+  color: var(--oh-text, #0f172a);
   font-size: 2.2rem;
   font-weight: 950;
   line-height: 1;
@@ -800,7 +800,7 @@ try {
 
 .hpScorePrimary small {
   margin-inline-start: 4px;
-  color: #64748b;
+  color: var(--oh-muted, #64748b);
   font-size: 1rem;
   font-weight: 900;
 }
@@ -816,12 +816,12 @@ try {
 }
 
 .hpScoreMeta > div + div {
-  border-inline-start: 1px solid rgba(15, 23, 42, 0.1);
+  border-inline-start: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(10% * var(--oh-line-scale, 1)), transparent);
 }
 
 .hpScoreMeta span {
   display: block;
-  color: #64748b;
+  color: var(--oh-muted, #64748b);
   font-size: 0.76rem;
   font-weight: 900;
   text-transform: uppercase;
@@ -831,7 +831,7 @@ try {
 .hpScoreMeta strong {
   display: block;
   margin-top: 8px;
-  color: #0f172a;
+  color: var(--oh-text, #0f172a);
   font-size: 1.55rem;
   font-weight: 950;
 }
@@ -845,8 +845,8 @@ try {
 .hpContributorRow {
   padding: 16px 18px;
   border-radius: 20px;
-  background: #f8fafc;
-  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: var(--oh-c-bg-slate-50, #f8fafc);
+  border: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(10% * var(--oh-line-scale, 1)), transparent);
 }
 
 .hpContributorRow.available {
@@ -865,14 +865,14 @@ try {
 }
 
 .hpContributorRowLabel {
-  color: #0f172a;
+  color: var(--oh-text, #0f172a);
   font-size: 0.88rem;
   font-weight: 950;
 }
 
 .hpContributorRowText {
   margin: 5px 0 0;
-  color: #64748b;
+  color: var(--oh-muted, #64748b);
   font-size: 0.88rem;
   font-weight: 700;
   line-height: 1.5;
@@ -885,7 +885,7 @@ try {
 
 .hpContributorRowValue strong {
   display: block;
-  color: #0f172a;
+  color: var(--oh-text, #0f172a);
   font-size: 1.3rem;
   font-weight: 950;
 }
@@ -893,7 +893,7 @@ try {
 .hpContributorRowValue span {
   display: block;
   margin-top: 3px;
-  color: #64748b;
+  color: var(--oh-muted, #64748b);
   font-size: 0.72rem;
   font-weight: 900;
 }
@@ -903,7 +903,7 @@ try {
   margin-top: 13px;
   overflow: hidden;
   border-radius: 999px;
-  background: #e2e8f0;
+  background: var(--oh-c-bg-slate-200, #e2e8f0);
 }
 
 .hpContributorBar span {
@@ -949,7 +949,7 @@ try {
 
 .hpScoreMeta > div + div {
   border-inline-start: 0;
-  border-top: 1px solid rgba(15, 23, 42, 0.1);
+  border-top: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(10% * var(--oh-line-scale, 1)), transparent);
 }
 
 .hpContributorRowHeader {

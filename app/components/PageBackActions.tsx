@@ -91,9 +91,9 @@ export default function PageBackActions(props: BackProps) {
           min-height: 42px;
           padding: 0 18px 0 14px;
           border-radius: 999px;
-          background: #ffffff;
-          color: #334155 !important;
-          border: 1px solid rgba(15, 23, 42, 0.14);
+          background: var(--oh-c-bg-white, #ffffff);
+          color: var(--oh-c-ink-ink-700, #334155) !important;
+          border: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(14% * var(--oh-line-scale, 1)), transparent);
           box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
           font-size: 0.88rem;
           font-weight: 800;
@@ -114,7 +114,7 @@ export default function PageBackActions(props: BackProps) {
           transform: translateY(-1px);
           border-color: rgba(15, 118, 110, 0.4);
           background: rgba(15, 118, 110, 0.05);
-          color: #0f766e !important;
+          color: var(--oh-c-ink-teal-700, #0f766e) !important;
           box-shadow: 0 10px 24px rgba(15, 23, 42, 0.1);
         }
 

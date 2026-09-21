@@ -338,7 +338,7 @@ export default function LibraryPage() {
           border: 1px solid rgba(15, 118, 110, 0.18);
           background:
             radial-gradient(circle at 12% 22%, rgba(20, 184, 166, 0.14), transparent 28%),
-            linear-gradient(135deg, rgba(240, 253, 250, 0.96), rgba(255, 255, 255, 0.96));
+            linear-gradient(135deg, color-mix(in srgb, var(--oh-c-bg-teal-50, #f0fdfa) 96%, transparent), color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 96%, transparent));
           box-shadow: 0 24px 70px rgba(15, 23, 42, 0.08);
           padding: 24px;
         }
@@ -392,7 +392,7 @@ export default function LibraryPage() {
           padding: 8px 11px;
           border-radius: 999px;
           background: rgba(15, 118, 110, 0.12);
-          color: #0f766e;
+          color: var(--oh-c-ink-teal-700, #0f766e);
           font-size: 0.76rem;
           font-weight: 950;
           letter-spacing: 0.05em;
@@ -470,7 +470,7 @@ export default function LibraryPage() {
           padding: 7px 10px;
           border-radius: 999px;
           border: 1px solid rgba(148, 163, 184, 0.28);
-          background: rgba(255, 255, 255, 0.78);
+          background: color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 78%, transparent);
           color: var(--oh-muted);
           font-size: 0.82rem;
           font-weight: 850;
@@ -483,7 +483,7 @@ export default function LibraryPage() {
           align-items: center;
           border-radius: 28px;
           padding: 24px;
-          background: linear-gradient(135deg, rgba(239, 246, 255, 0.9), rgba(240, 253, 250, 0.94));
+          background: linear-gradient(135deg, color-mix(in srgb, var(--oh-c-bg-blue-50, #eff6ff) 90%, transparent), color-mix(in srgb, var(--oh-c-bg-teal-50, #f0fdfa) 94%, transparent));
           border: 1px solid rgba(37, 99, 235, 0.14);
         }
 
@@ -499,9 +499,9 @@ export default function LibraryPage() {
           width: fit-content;
           padding: 8px 11px;
           border-radius: 999px;
-          background: white;
+          background: var(--oh-c-bg-white, white);
           border: 1px solid rgba(15, 118, 110, 0.18);
-          color: #0f766e;
+          color: var(--oh-c-ink-teal-700, #0f766e);
           font-size: 0.84rem;
           font-weight: 900;
           box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
@@ -515,7 +515,7 @@ export default function LibraryPage() {
           border-radius: 20px;
           border: 1px solid rgba(37, 99, 235, 0.16);
           border-inline-start: 5px solid #2563eb;
-          background: rgba(239, 246, 255, 0.78);
+          background: color-mix(in srgb, var(--oh-c-bg-blue-50, #eff6ff) 78%, transparent);
           color: var(--oh-muted);
           line-height: 1.65;
         }
@@ -533,7 +533,7 @@ export default function LibraryPage() {
           justify-content: center;
           border-radius: 999px;
           background: rgba(37, 99, 235, 0.12);
-          color: #1d4ed8;
+          color: var(--oh-c-ink-blue-700, #1d4ed8);
           font-weight: 950;
         }
 
@@ -558,8 +558,8 @@ export default function LibraryPage() {
           display: block;
           padding: 20px;
           border-radius: 24px;
-          background: #ffffff;
-          border: 1px solid rgba(15, 23, 42, 0.14);
+          background: var(--oh-c-bg-white, #ffffff);
+          border: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(14% * var(--oh-line-scale, 1)), transparent);
           box-shadow: 0 18px 44px rgba(15, 23, 42, 0.10);
         }
 
@@ -578,7 +578,7 @@ export default function LibraryPage() {
 
         .healthLearningHubPage .learningIntentTitle {
           margin: 0;
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
           font-size: 1rem;
           font-weight: 950;
           line-height: 1.25;
@@ -596,7 +596,7 @@ export default function LibraryPage() {
 
         .healthLearningHubPage .learningIntentText {
           margin: 10px 0 0;
-          color: #475569;
+          color: var(--oh-soft-text, #475569);
           font-size: 0.9rem;
           font-weight: 750;
           line-height: 1.6;

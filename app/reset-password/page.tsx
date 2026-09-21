@@ -287,7 +287,7 @@ export default function ResetPasswordPage() {
           min-height: 48px;
           border-radius: 14px;
           border: 1px solid rgba(148, 163, 184, 0.36);
-          background: rgba(255, 255, 255, 0.94);
+          background: color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 94%, transparent);
           color: var(--oh-text);
           padding: 12px 14px;
           font: inherit;
@@ -310,7 +310,7 @@ export default function ResetPasswordPage() {
           padding: 12px;
           border: 1px solid rgba(148, 163, 184, 0.24);
           border-radius: 16px;
-          background: rgba(248, 250, 252, 0.78);
+          background: color-mix(in srgb, var(--oh-c-bg-slate-50, #f8fafc) 78%, transparent);
         }
 
         .resetPasswordPage .resetStrengthBar {
@@ -337,19 +337,19 @@ export default function ResetPasswordPage() {
 
         .resetPasswordPage .resetMessage.success {
           background: rgba(20, 184, 166, 0.1);
-          color: #0f766e;
+          color: var(--oh-c-ink-teal-700, #0f766e);
           border: 1px solid rgba(20, 184, 166, 0.28);
         }
 
         .resetPasswordPage .resetMessage.error {
           background: rgba(239, 68, 68, 0.08);
-          color: #b91c1c;
+          color: var(--oh-c-ink-red-700, #b91c1c);
           border: 1px solid rgba(239, 68, 68, 0.22);
         }
 
         .resetPasswordPage .resetMessage.info {
           background: rgba(59, 130, 246, 0.08);
-          color: #1d4ed8;
+          color: var(--oh-c-ink-blue-700, #1d4ed8);
           border: 1px solid rgba(59, 130, 246, 0.22);
         }
 

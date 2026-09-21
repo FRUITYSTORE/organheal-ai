@@ -183,8 +183,8 @@ export default function PricingPage() {
           min-height: 520px;
           padding: 30px;
           overflow: hidden;
-          background: #ffffff;
-          border: 1px solid rgba(15, 23, 42, 0.14);
+          background: var(--oh-c-bg-white, #ffffff);
+          border: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(14% * var(--oh-line-scale, 1)), transparent);
           box-shadow: 0 22px 52px rgba(15, 23, 42, 0.08);
         }
 
@@ -201,7 +201,7 @@ export default function PricingPage() {
               rgba(99, 102, 241, 0.11),
               transparent 34%
             ),
-            #ffffff;
+            var(--oh-c-bg-white, #ffffff);
         }
 
         .pricingPage .pricingPlanTop {
@@ -219,7 +219,7 @@ export default function PricingPage() {
           border-radius: 999px;
           background: rgba(99, 102, 241, 0.1);
           border: 1px solid rgba(99, 102, 241, 0.18);
-          color: #4338ca;
+          color: var(--oh-c-ink-indigo-700, #4338ca);
           font-size: 0.72rem;
           font-weight: 900;
           white-space: nowrap;
@@ -227,7 +227,7 @@ export default function PricingPage() {
 
         .pricingPage .pricingPrice {
           margin: 14px 0 0;
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
           font-size: clamp(2rem, 4vw, 3.4rem);
           font-weight: 950;
           line-height: 1;
@@ -236,7 +236,7 @@ export default function PricingPage() {
 
         .pricingPage .pricingDescription {
           margin: 18px 0 0;
-          color: #475569;
+          color: var(--oh-soft-text, #475569);
           line-height: 1.7;
         }
 
@@ -254,7 +254,7 @@ export default function PricingPage() {
           gap: 10px;
           align-items: flex-start;
           margin: 0;
-          color: #334155;
+          color: var(--oh-c-ink-ink-700, #334155);
           line-height: 1.55;
         }
 
@@ -265,7 +265,7 @@ export default function PricingPage() {
           place-items: center;
           border-radius: 999px;
           background: rgba(20, 184, 166, 0.12);
-          color: #0f766e;
+          color: var(--oh-c-ink-teal-700, #0f766e);
           font-size: 0.72rem;
           font-weight: 950;
         }
@@ -292,7 +292,7 @@ export default function PricingPage() {
           border: 1px solid rgba(99, 102, 241, 0.18);
           border-radius: 14px;
           background: rgba(99, 102, 241, 0.08);
-          color: #4f46e5;
+          color: var(--oh-c-ink-indigo-600, #4f46e5);
           font: inherit;
           font-weight: 900;
           cursor: default;
@@ -313,19 +313,19 @@ export default function PricingPage() {
         .pricingPage .pricingPrinciple {
           padding: 15px 17px;
           border-radius: 16px;
-          background: rgba(248, 250, 252, 0.92);
+          background: color-mix(in srgb, var(--oh-c-bg-slate-50, #f8fafc) 92%, transparent);
           border: 1px solid rgba(148, 163, 184, 0.18);
         }
 
         .pricingPage .pricingPrinciple strong {
           display: block;
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
         }
 
         .pricingPage .pricingPrinciple span {
           display: block;
           margin-top: 4px;
-          color: #64748b;
+          color: var(--oh-muted, #64748b);
           font-size: 0.9rem;
           line-height: 1.55;
         }

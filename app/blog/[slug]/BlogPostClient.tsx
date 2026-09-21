@@ -150,8 +150,8 @@ export default function BlogPostClient({ post }: { post: BlogPost }) {
           padding: 0 14px;
           border-radius: 999px;
           border: 1px solid rgba(15, 118, 110, 0.24);
-          background: rgba(255, 255, 255, 0.82);
-          color: #0f766e;
+          background: color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 82%, transparent);
+          color: var(--oh-c-ink-teal-700, #0f766e);
           font-weight: 950;
         }
 
@@ -161,14 +161,14 @@ export default function BlogPostClient({ post }: { post: BlogPost }) {
           border: 1px solid rgba(148, 163, 184, 0.18);
           background:
             radial-gradient(circle at 88% 18%, rgba(20, 184, 166, 0.16), transparent 26%),
-            linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.94));
+            linear-gradient(135deg, color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 96%, transparent), color-mix(in srgb, var(--oh-c-bg-slate-50, #f8fafc) 94%, transparent));
           box-shadow: 0 24px 70px rgba(15, 23, 42, 0.07);
         }
 
         [dir="rtl"] .articleReadingPage .articleHeader {
           background:
             radial-gradient(circle at 12% 18%, rgba(20, 184, 166, 0.16), transparent 26%),
-            linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.94));
+            linear-gradient(135deg, color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 96%, transparent), color-mix(in srgb, var(--oh-c-bg-slate-50, #f8fafc) 94%, transparent));
         }
 
         .articleReadingPage .articleHeaderGrid {
@@ -288,7 +288,7 @@ export default function BlogPostClient({ post }: { post: BlogPost }) {
 
         .articleReadingPage .articleBody p:first-child::first-letter {
           float: ${isArabic ? "none" : "left"};
-          color: #0f766e;
+          color: var(--oh-c-ink-teal-700, #0f766e);
           font-size: 3.2rem;
           line-height: 0.95;
           padding-inline-end: 8px;
@@ -311,7 +311,7 @@ export default function BlogPostClient({ post }: { post: BlogPost }) {
         .articleReadingPage .articleInfoItem {
           padding: 13px;
           border-radius: 17px;
-          background: rgba(248, 250, 252, 0.86);
+          background: color-mix(in srgb, var(--oh-c-bg-slate-50, #f8fafc) 86%, transparent);
           border: 1px solid rgba(148, 163, 184, 0.18);
         }
 
@@ -347,7 +347,7 @@ export default function BlogPostClient({ post }: { post: BlogPost }) {
           border-radius: 999px;
           background: rgba(15, 118, 110, 0.1);
           border: 1px solid rgba(15, 118, 110, 0.18);
-          color: #0f766e;
+          color: var(--oh-c-ink-teal-700, #0f766e);
           font-size: 0.8rem;
           font-weight: 900;
         }
@@ -360,7 +360,7 @@ export default function BlogPostClient({ post }: { post: BlogPost }) {
           border-radius: 20px;
           border: 1px solid rgba(37, 99, 235, 0.16);
           border-inline-start: 5px solid #2563eb;
-          background: rgba(239, 246, 255, 0.78);
+          background: color-mix(in srgb, var(--oh-c-bg-blue-50, #eff6ff) 78%, transparent);
           color: var(--oh-muted);
           line-height: 1.65;
         }
@@ -378,7 +378,7 @@ export default function BlogPostClient({ post }: { post: BlogPost }) {
           justify-content: center;
           border-radius: 999px;
           background: rgba(37, 99, 235, 0.12);
-          color: #1d4ed8;
+          color: var(--oh-c-ink-blue-700, #1d4ed8);
           font-weight: 950;
         }
 
@@ -409,7 +409,7 @@ export default function BlogPostClient({ post }: { post: BlogPost }) {
           padding: 7px 10px;
           border-radius: 999px;
           background: rgba(15, 118, 110, 0.12);
-          color: #0f766e;
+          color: var(--oh-c-ink-teal-700, #0f766e);
           font-size: 0.74rem;
           font-weight: 950;
           letter-spacing: 0.05em;

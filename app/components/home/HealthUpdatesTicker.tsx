@@ -153,8 +153,8 @@ export default function HealthUpdatesTicker() {
           background:
             linear-gradient(
               135deg,
-              rgba(240, 253, 250, 0.96),
-              rgba(248, 250, 252, 0.98)
+              color-mix(in srgb, var(--oh-c-bg-teal-50, #f0fdfa) 96%, transparent),
+              color-mix(in srgb, var(--oh-c-bg-slate-50, #f8fafc) 98%, transparent)
             );
           box-shadow:
             0 12px 34px
@@ -169,7 +169,7 @@ export default function HealthUpdatesTicker() {
           border-bottom:
             1px solid
             rgba(15, 118, 110, 0.12);
-          color: #0f766e;
+          color: var(--oh-c-ink-teal-700, #0f766e);
           font-size: 0.74rem;
           font-weight: 950;
           letter-spacing: 0.05em;
@@ -217,7 +217,7 @@ export default function HealthUpdatesTicker() {
           gap: 10px;
           min-height: 48px;
           padding: 0 26px;
-          color: #334155;
+          color: var(--oh-c-ink-ink-700, #334155);
           text-decoration: none;
           font-size: 0.86rem;
           font-weight: 750;
@@ -232,7 +232,7 @@ export default function HealthUpdatesTicker() {
           border-radius: 999px;
           background:
             rgba(15, 118, 110, 0.1);
-          color: #0f766e;
+          color: var(--oh-c-ink-teal-700, #0f766e);
           font-size: 0.68rem;
           font-weight: 950;
         }

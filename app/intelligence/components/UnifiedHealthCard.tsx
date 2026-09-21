@@ -151,19 +151,19 @@ export default function UnifiedHealthCard({
 
         .unifiedHealthPriorities {
           padding: 24px;
-          border: 1px solid rgba(15, 23, 42, 0.08);
+          border: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(8% * var(--oh-line-scale, 1)), transparent);
           border-radius: 24px;
-          background: #ffffff;
+          background: var(--oh-c-bg-white, #ffffff);
         }
 
         .unifiedHealthHeader {
           padding-bottom: 20px;
-          border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+          border-bottom: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(8% * var(--oh-line-scale, 1)), transparent);
         }
 
         .unifiedHealthEyebrow {
           margin: 0;
-          color: #0f766e;
+          color: var(--oh-c-ink-teal-700, #0f766e);
           font-size: 0.72rem;
           font-weight: 950;
           letter-spacing: 0.1em;
@@ -172,7 +172,7 @@ export default function UnifiedHealthCard({
 
         .unifiedHealthTitle {
           margin: 7px 0 0;
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
           font-size: clamp(1.35rem, 2vw, 1.75rem);
           font-weight: 950;
           line-height: 1.2;
@@ -182,7 +182,7 @@ export default function UnifiedHealthCard({
         .unifiedHealthLead {
           max-width: 760px;
           margin: 9px 0 0;
-          color: #64748b;
+          color: var(--oh-muted, #64748b);
           font-size: 0.9rem;
           font-weight: 650;
           line-height: 1.65;
@@ -203,7 +203,7 @@ export default function UnifiedHealthCard({
           border: 1px solid rgba(148, 163, 184, 0.22);
           border-radius: 20px;
           background:
-            linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+            linear-gradient(180deg, var(--oh-c-bg-white, #ffffff) 0%, var(--oh-c-bg-slate-50, #f8fafc) 100%);
           box-shadow: 0 10px 28px rgba(15, 23, 42, 0.045);
         }
 
@@ -213,7 +213,7 @@ export default function UnifiedHealthCard({
           justify-content: space-between;
           gap: 12px;
           padding: 17px;
-          border-bottom: 1px solid rgba(15, 23, 42, 0.07);
+          border-bottom: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(7% * var(--oh-line-scale, 1)), transparent);
         }
 
         .unifiedPriorityIdentity {
@@ -238,7 +238,7 @@ export default function UnifiedHealthCard({
 
         .unifiedPriorityLabel {
           margin: 0;
-          color: #64748b;
+          color: var(--oh-muted, #64748b);
           font-size: 0.64rem;
           font-weight: 900;
           letter-spacing: 0.08em;
@@ -247,7 +247,7 @@ export default function UnifiedHealthCard({
 
         .unifiedPriorityTitle {
           margin: 5px 0 0;
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
           font-size: 1rem;
           font-weight: 950;
           line-height: 1.3;
@@ -268,26 +268,26 @@ export default function UnifiedHealthCard({
 
         .unifiedPrioritySeverity.high {
           border-color: rgba(220, 38, 38, 0.18);
-          background: #fef2f2;
-          color: #b91c1c;
+          background: var(--oh-c-bg-red-50, #fef2f2);
+          color: var(--oh-c-ink-red-700, #b91c1c);
         }
 
         .unifiedPrioritySeverity.moderate {
           border-color: rgba(217, 119, 6, 0.18);
-          background: #fffbeb;
-          color: #b45309;
+          background: var(--oh-c-bg-amber-50, #fffbeb);
+          color: var(--oh-c-ink-amber-700, #b45309);
         }
 
         .unifiedPrioritySeverity.low {
           border-color: rgba(5, 150, 105, 0.18);
-          background: #ecfdf5;
-          color: #047857;
+          background: var(--oh-c-bg-emerald-50, #ecfdf5);
+          color: var(--oh-c-ink-emerald-700, #047857);
         }
 
         .unifiedPrioritySeverity.neutral {
           border-color: rgba(37, 99, 235, 0.16);
-          background: #eff6ff;
-          color: #1d4ed8;
+          background: var(--oh-c-bg-blue-50, #eff6ff);
+          color: var(--oh-c-ink-blue-700, #1d4ed8);
         }
 
         .unifiedPriorityBody {
@@ -300,7 +300,7 @@ export default function UnifiedHealthCard({
 
         .unifiedPrioritySectionLabel {
           margin: 0;
-          color: #64748b;
+          color: var(--oh-muted, #64748b);
           font-size: 0.66rem;
           font-weight: 900;
           letter-spacing: 0.07em;
@@ -309,7 +309,7 @@ export default function UnifiedHealthCard({
 
         .unifiedPriorityExplanation {
           margin: 6px 0 0;
-          color: #475569;
+          color: var(--oh-soft-text, #475569);
           font-size: 0.84rem;
           line-height: 1.65;
         }
@@ -319,23 +319,23 @@ export default function UnifiedHealthCard({
           padding: 13px;
           border: 1px solid rgba(15, 118, 110, 0.13);
           border-radius: 14px;
-          background: #f0fdfa;
+          background: var(--oh-c-bg-teal-50, #f0fdfa);
         }
 
         .unifiedPriorityRecommendation .unifiedPrioritySectionLabel {
-          color: #0f766e;
+          color: var(--oh-c-ink-teal-700, #0f766e);
         }
 
         .unifiedPriorityRecommendation p:last-child {
           margin: 6px 0 0;
-          color: #334155;
+          color: var(--oh-c-ink-ink-700, #334155);
           font-size: 0.8rem;
           line-height: 1.6;
         }
 
         .unifiedHealthDisclaimer {
           margin: 18px 0 0;
-          color: #64748b;
+          color: var(--oh-muted, #64748b);
           font-size: 0.72rem;
           line-height: 1.55;
         }

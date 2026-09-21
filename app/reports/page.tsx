@@ -339,8 +339,8 @@ const visibleCompactReports = showAllReports
           background:
             linear-gradient(
               135deg,
-              rgba(240, 253, 250, 0.98),
-              rgba(248, 250, 252, 0.98)
+              color-mix(in srgb, var(--oh-c-bg-teal-50, #f0fdfa) 98%, transparent),
+              color-mix(in srgb, var(--oh-c-bg-slate-50, #f8fafc) 98%, transparent)
             );
           box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
         }
@@ -352,7 +352,7 @@ const visibleCompactReports = showAllReports
 
         .reportSelectionNoticeLabel {
           margin: 0;
-          color: #0f766e;
+          color: var(--oh-c-ink-teal-700, #0f766e);
           font-size: 0.76rem;
           font-weight: 800;
           letter-spacing: 0.08em;
@@ -361,7 +361,7 @@ const visibleCompactReports = showAllReports
 
         .reportSelectionNoticeTitle {
           margin: 0;
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
           font-size: clamp(1.08rem, 2vw, 1.32rem);
           line-height: 1.35;
         }
@@ -369,7 +369,7 @@ const visibleCompactReports = showAllReports
         .reportSelectionNoticeText {
           margin: 0;
           max-width: 720px;
-          color: #475569;
+          color: var(--oh-soft-text, #475569);
           line-height: 1.65;
         }
 
@@ -385,7 +385,7 @@ const visibleCompactReports = showAllReports
           border: 1px solid rgba(15, 118, 110, 0.16);
           background:
             radial-gradient(circle at 90% 12%, rgba(20, 184, 166, 0.22), transparent 30%),
-            linear-gradient(135deg, #ffffff 0%, #eef9f8 54%, #f8fbff 100%);
+            linear-gradient(135deg, var(--oh-c-bg-white, #ffffff) 0%, var(--oh-c-bg-teal-30, #eef9f8) 54%, var(--oh-c-bg-blue-25, #f8fbff) 100%);
         }
 
         .reportsHero .ohHeroGrid {
@@ -465,8 +465,8 @@ const visibleCompactReports = showAllReports
           width: 100%;
           border: 1px solid rgba(255, 255, 255, 0.2);
           border-radius: 15px;
-          background: rgba(255, 255, 255, 0.96);
-          color: #0f172a;
+          background: color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 96%, transparent);
+          color: var(--oh-text, #0f172a);
           padding: 12px 13px;
           font-weight: 800;
           outline: none;
@@ -489,7 +489,7 @@ const visibleCompactReports = showAllReports
           border-top: 6px solid #0f766e;
           background:
             radial-gradient(circle at 88% 10%, rgba(20, 184, 166, 0.12), transparent 28%),
-            #ffffff;
+            var(--oh-c-bg-white, #ffffff);
           box-shadow: 0 22px 58px rgba(15, 23, 42, 0.08);
         }
 
@@ -528,9 +528,9 @@ const visibleCompactReports = showAllReports
           gap: 6px;
           border-radius: 999px;
           padding: 8px 11px;
-          border: 1px solid rgba(15, 23, 42, 0.08);
-          background: #f8fafc;
-          color: #334155;
+          border: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(8% * var(--oh-line-scale, 1)), transparent);
+          background: var(--oh-c-bg-slate-50, #f8fafc);
+          color: var(--oh-c-ink-ink-700, #334155);
           font-size: 0.78rem;
           font-weight: 900;
           line-height: 1;
@@ -539,19 +539,19 @@ const visibleCompactReports = showAllReports
 
         .reportStatusPill.good {
           background: rgba(16, 185, 129, 0.11);
-          color: #047857;
+          color: var(--oh-c-ink-emerald-700, #047857);
           border-color: rgba(16, 185, 129, 0.22);
         }
 
         .reportStatusPill.moderate {
           background: rgba(245, 158, 11, 0.12);
-          color: #b45309;
+          color: var(--oh-c-ink-amber-700, #b45309);
           border-color: rgba(245, 158, 11, 0.24);
         }
 
         .reportStatusPill.risk {
           background: rgba(239, 68, 68, 0.1);
-          color: #b91c1c;
+          color: var(--oh-c-ink-red-700, #b91c1c);
           border-color: rgba(239, 68, 68, 0.2);
         }
 
@@ -576,8 +576,8 @@ const visibleCompactReports = showAllReports
           min-height: 44px;
           padding: 0 16px;
           border-radius: 999px;
-          background: white;
-          color: #0f766e;
+          background: var(--oh-c-bg-white, white);
+          color: var(--oh-c-ink-teal-700, #0f766e);
           font-weight: 900;
           border: 1px solid rgba(15, 118, 110, 0.2);
           cursor: pointer;
@@ -609,8 +609,8 @@ const visibleCompactReports = showAllReports
         .compactReportRow {
           padding: 14px;
           border-radius: 20px;
-          border: 1px solid rgba(15, 23, 42, 0.08);
-          background: white;
+          border: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(8% * var(--oh-line-scale, 1)), transparent);
+          background: var(--oh-c-bg-white, white);
           box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
         }
 
@@ -670,8 +670,8 @@ const visibleCompactReports = showAllReports
         }
 
         .compactAction.secondary {
-          background: white;
-          color: #0f766e;
+          background: var(--oh-c-bg-white, white);
+          color: var(--oh-c-ink-teal-700, #0f766e);
         }
 
         @media (max-width: 980px) {
@@ -744,8 +744,8 @@ const visibleCompactReports = showAllReports
         }
 
         .reportsFocusPage .compactReportTable + .ohButtonRow .secondaryBtn {
-          background: #ffffff !important;
-          color: #0f766e !important;
+          background: var(--oh-c-bg-white, #ffffff) !important;
+          color: var(--oh-c-ink-teal-700, #0f766e) !important;
           border: 1px solid rgba(15, 118, 110, 0.34) !important;
           box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08) !important;
         }

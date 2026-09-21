@@ -821,18 +821,18 @@ const resolvedNextStep: NextStep =
 }
 
 .dashboardTodayActionPrimary small {
-  color: #115e59;
+  color: var(--oh-c-ink-teal-800, #115e59);
 }
 
 .dashboardTodayActionSecondary {
-  color: #0f766e;
-  background: #ffffff;
+  color: var(--oh-c-ink-teal-700, #0f766e);
+  background: var(--oh-c-bg-white, #ffffff);
   border: 1px solid
     rgba(15, 118, 110, 0.28);
 }
 
 .dashboardTodayActionSecondary small {
-  color: #64748b;
+  color: var(--oh-muted, #64748b);
 }
 
 .dashboardTodayActionPrimary:hover,
@@ -844,9 +844,9 @@ const resolvedNextStep: NextStep =
 }
 
 .dashboardTodayActionDisabled {
-  color: #64748b;
-  background: #f1f5f9;
-  border: 1px dashed #cbd5e1;
+  color: var(--oh-muted, #64748b);
+  background: var(--oh-c-bg-slate-100, #f1f5f9);
+  border: 1px dashed var(--oh-c-line-slate-300, #cbd5e1);
   cursor: not-allowed;
 }
 
@@ -914,7 +914,7 @@ const resolvedNextStep: NextStep =
   align-items: center;
   border-radius: 24px;
   background:
-    rgba(255, 255, 255, 0.94);
+    color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 94%, transparent);
   border: 1px solid
     rgba(15, 118, 110, 0.18);
   box-shadow:
@@ -924,7 +924,7 @@ const resolvedNextStep: NextStep =
 
 .dashboardWelcomeIdentity > span {
   display: block;
-  color: #0891b2;
+  color: var(--oh-c-ink-cyan-600, #0891b2);
   font-size: 0.74rem;
   font-weight: 950;
   letter-spacing: 0.07em;
@@ -933,7 +933,7 @@ const resolvedNextStep: NextStep =
 
 .dashboardWelcomeIdentity h1 {
   margin: 7px 0 5px;
-  color: #0f172a;
+  color: var(--oh-text, #0f172a);
   font-size:
     clamp(1.45rem, 3vw, 2.15rem);
   line-height: 1.2;
@@ -942,7 +942,7 @@ const resolvedNextStep: NextStep =
 
 .dashboardWelcomeIdentity p {
   margin: 0;
-  color: #64748b;
+  color: var(--oh-muted, #64748b);
   line-height: 1.6;
 }
 
@@ -957,14 +957,14 @@ const resolvedNextStep: NextStep =
   min-width: 0;
   padding: 14px;
   border-radius: 17px;
-  background: #f8fafc;
+  background: var(--oh-c-bg-slate-50, #f8fafc);
   border: 1px solid
     rgba(148, 163, 184, 0.18);
 }
 
 .dashboardWelcomeMetrics span {
   display: block;
-  color: #64748b;
+  color: var(--oh-muted, #64748b);
   font-size: 0.71rem;
   font-weight: 800;
 }
@@ -972,7 +972,7 @@ const resolvedNextStep: NextStep =
 .dashboardWelcomeMetrics strong {
   display: block;
   margin-top: 6px;
-  color: #0f172a;
+  color: var(--oh-text, #0f172a);
   font-size: 1.1rem;
   line-height: 1.25;
   overflow-wrap: anywhere;
@@ -1081,9 +1081,9 @@ const resolvedNextStep: NextStep =
   justify-content: center;
   padding: 24px;
   border-radius: 24px;
-  color: #0f172a;
+  color: var(--oh-text, #0f172a);
   background:
-    rgba(255, 255, 255, 0.96);
+    color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 96%, transparent);
   box-shadow:
     0 20px 50px
     rgba(2, 6, 23, 0.18);
@@ -1095,15 +1095,15 @@ const resolvedNextStep: NextStep =
   margin-bottom: 14px;
   padding: 7px 11px;
   border-radius: 999px;
-  color: #0f766e;
-  background: #ccfbf1;
+  color: var(--oh-c-ink-teal-700, #0f766e);
+  background: var(--oh-c-bg-teal-100, #ccfbf1);
   font-size: 0.74rem;
   font-weight: 900;
 }
 
 .dashboardIntelligenceDecisionLabel {
   margin: 0;
-  color: #0891b2;
+  color: var(--oh-c-ink-cyan-600, #0891b2);
   font-size: 0.76rem;
   font-weight: 950;
   letter-spacing: 0.07em;
@@ -1112,7 +1112,7 @@ const resolvedNextStep: NextStep =
 
 .dashboardIntelligenceDecision h3 {
   margin: 9px 0 10px;
-  color: #0f172a;
+  color: var(--oh-text, #0f172a);
   font-size:
     clamp(1.5rem, 3vw, 2.15rem);
   line-height: 1.18;
@@ -1122,7 +1122,7 @@ const resolvedNextStep: NextStep =
   .dashboardIntelligenceDecisionLabel
 ) {
   margin: 0;
-  color: #475569;
+  color: var(--oh-soft-text, #475569);
   line-height: 1.7;
 }
 
@@ -1185,9 +1185,9 @@ const resolvedNextStep: NextStep =
   align-items: center;
   border-radius: 999px;
   padding: 8px 14px;
-  background: #ecfeff;
-  color: #0f766e !important;
-  border: 1px solid #99f6e4;
+  background: var(--oh-c-bg-cyan-50, #ecfeff);
+  color: var(--oh-c-ink-teal-700, #0f766e) !important;
+  border: 1px solid var(--oh-c-line-teal-200, #99f6e4);
   font-weight: 900;
   font-size: 0.85rem;
 }
@@ -1277,13 +1277,13 @@ const resolvedNextStep: NextStep =
         }
 
         .dashboardCommandCenterPage .dashboardSecondaryAction {
-          background: #ffffff !important;
-          color: #0f766e !important;
+          background: var(--oh-c-bg-white, #ffffff) !important;
+          color: var(--oh-c-ink-teal-700, #0f766e) !important;
           border: 1px solid rgba(15, 118, 110, 0.28) !important;
           font-weight: 950 !important;
         }
 .dashboardSection {
-  background: rgba(255, 255, 255, 0.94);
+  background: color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 94%, transparent);
   border: 1px solid rgba(148, 163, 184, 0.22);
   border-radius: 28px;
   box-shadow: 0 24px 65px rgba(15, 23, 42, 0.08);
@@ -1301,7 +1301,7 @@ const resolvedNextStep: NextStep =
 
 .dashboardSectionEyebrow {
   display: block;
-  color: #0891b2;
+  color: var(--oh-c-ink-cyan-600, #0891b2);
   font-size: 0.76rem;
   font-weight: 950;
   letter-spacing: 0.08em;
@@ -1309,13 +1309,13 @@ const resolvedNextStep: NextStep =
 }
 
 .dashboardSectionTitle {
-  color: #0f172a;
+  color: var(--oh-text, #0f172a);
   margin: 8px 0 10px;
   font-size: clamp(1.7rem, 3vw, 2.5rem);
 }
 
 .dashboardSectionDescription {
-  color: #475569;
+  color: var(--oh-soft-text, #475569);
   line-height: 1.8;
   margin: 0;
   max-width: 760px;
@@ -1349,7 +1349,7 @@ const resolvedNextStep: NextStep =
 
         /* ORGANHEAL_DASHBOARD_JOURNEY_TIMELINE_STEP3 */
         .dashboardJourneyPanel {
-          background: rgba(255, 255, 255, 0.94);
+          background: color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 94%, transparent);
           border: 1px solid rgba(148, 163, 184, 0.22);
           border-radius: 28px;
           box-shadow: 0 24px 65px rgba(15, 23, 42, 0.08);
@@ -1401,22 +1401,22 @@ const resolvedNextStep: NextStep =
         }
 
         .dashboardJourneyHeader h2 {
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
           margin: 8px 0 10px;
           font-size: clamp(1.7rem, 3vw, 2.5rem);
         }
 
         .dashboardJourneyHeader p {
-          color: #475569;
+          color: var(--oh-soft-text, #475569);
           line-height: 1.8;
           margin: 0;
           max-width: 760px;
         }
 
         .dashboardJourneyNext {
-          border: 1px solid #99f6e4;
-          background: #ecfeff;
-          color: #0f766e;
+          border: 1px solid var(--oh-c-line-teal-200, #99f6e4);
+          background: var(--oh-c-bg-cyan-50, #ecfeff);
+          color: var(--oh-c-ink-teal-700, #0f766e);
           border-radius: 999px;
           padding: 10px 14px;
           font-weight: 900;
@@ -1435,8 +1435,8 @@ const resolvedNextStep: NextStep =
           display: block;
           text-decoration: none;
           color: inherit;
-          border: 1px solid #e2e8f0;
-          background: #f8fafc;
+          border: 1px solid var(--oh-c-line-slate-200, #e2e8f0);
+          background: var(--oh-c-bg-slate-50, #f8fafc);
           border-radius: 20px;
           padding: 16px;
           min-height: 170px;
@@ -1446,17 +1446,17 @@ const resolvedNextStep: NextStep =
         .dashboardJourneyStep:hover {
           transform: translateY(-2px);
           box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
-          border-color: #99f6e4;
+          border-color: var(--oh-c-line-teal-200, #99f6e4);
         }
 
         .dashboardJourneyStep.ready {
-          background: linear-gradient(135deg, #ecfeff, #ffffff);
-          border-color: #99f6e4;
+          background: linear-gradient(135deg, var(--oh-c-bg-cyan-50, #ecfeff), var(--oh-c-bg-white, #ffffff));
+          border-color: var(--oh-c-line-teal-200, #99f6e4);
         }
 
         .dashboardJourneyStep.pending {
-          background: #ffffff;
-          border-color: #e2e8f0;
+          background: var(--oh-c-bg-white, #ffffff);
+          border-color: var(--oh-c-line-slate-200, #e2e8f0);
         }
 
         .dashboardJourneyNumber {
@@ -1466,28 +1466,28 @@ const resolvedNextStep: NextStep =
           display: grid;
           place-items: center;
           font-weight: 900;
-          background: #ffffff;
-          border: 1px solid #cbd5e1;
-          color: #0f172a;
+          background: var(--oh-c-bg-white, #ffffff);
+          border: 1px solid var(--oh-c-line-slate-300, #cbd5e1);
+          color: var(--oh-text, #0f172a);
           margin-bottom: 12px;
         }
 
         .dashboardJourneyStep.ready .dashboardJourneyNumber {
-          background: #ccfbf1;
-          color: #0f766e;
-          border-color: #99f6e4;
+          background: var(--oh-c-bg-teal-100, #ccfbf1);
+          color: var(--oh-c-ink-teal-700, #0f766e);
+          border-color: var(--oh-c-line-teal-200, #99f6e4);
         }
 
         .dashboardJourneyStep strong {
           display: block;
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
           font-size: 1rem;
           line-height: 1.4;
           margin-bottom: 8px;
         }
 
         .dashboardJourneyStep p {
-          color: #475569;
+          color: var(--oh-soft-text, #475569);
           line-height: 1.65;
           margin: 0;
           font-size: 0.92rem;
@@ -1500,13 +1500,13 @@ const resolvedNextStep: NextStep =
           padding: 6px 9px;
           font-size: 0.75rem;
           font-weight: 900;
-          background: #f1f5f9;
-          color: #475569;
+          background: var(--oh-c-bg-slate-100, #f1f5f9);
+          color: var(--oh-soft-text, #475569);
         }
 
         .dashboardJourneyStep.ready .dashboardJourneyStatus {
-          background: #dcfce7;
-          color: #166534;
+          background: var(--oh-c-bg-green-100, #dcfce7);
+          color: var(--oh-c-ink-green-800, #166534);
         }
 
         .dashboardCommandCenterPage[dir="rtl"] .dashboardJourneyHeader {
@@ -1516,7 +1516,7 @@ const resolvedNextStep: NextStep =
   margin-bottom: 22px;
   padding: 26px;
   border-radius: 28px;
-  background: rgba(255, 255, 255, 0.96);
+  background: color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 96%, transparent);
   border: 1px solid rgba(148, 163, 184, 0.22);
   box-shadow: 0 24px 65px rgba(15, 23, 42, 0.07);
 }
@@ -1529,7 +1529,7 @@ const resolvedNextStep: NextStep =
 }
 
 .healthDirectionKicker {
-  color: #0891b2;
+  color: var(--oh-c-ink-cyan-600, #0891b2);
   font-size: 0.76rem;
   font-weight: 950;
   letter-spacing: 0.08em;
@@ -1538,7 +1538,7 @@ const resolvedNextStep: NextStep =
 
 .healthDirectionTitle {
   margin: 9px 0 8px;
-  color: #0f172a;
+  color: var(--oh-text, #0f172a);
   font-size: clamp(1.45rem, 3vw, 2rem);
   line-height: 1.15;
 }
@@ -1546,7 +1546,7 @@ const resolvedNextStep: NextStep =
 .healthDirectionDescription {
   max-width: 780px;
   margin: 0;
-  color: #64748b;
+  color: var(--oh-muted, #64748b);
   font-weight: 650;
   line-height: 1.65;
 }
@@ -1562,23 +1562,23 @@ const resolvedNextStep: NextStep =
 }
 
 .healthDirectionStatus.improving {
-  color: #047857;
-  background: #ecfdf5;
+  color: var(--oh-c-ink-emerald-700, #047857);
+  background: var(--oh-c-bg-emerald-50, #ecfdf5);
 }
 
 .healthDirectionStatus.worsening {
-  color: #b91c1c;
-  background: #fef2f2;
+  color: var(--oh-c-ink-red-700, #b91c1c);
+  background: var(--oh-c-bg-red-50, #fef2f2);
 }
 
 .healthDirectionStatus.stable {
-  color: #0369a1;
-  background: #f0f9ff;
+  color: var(--oh-c-ink-sky-700, #0369a1);
+  background: var(--oh-c-bg-sky-50, #f0f9ff);
 }
 
 .healthDirectionStatus.insufficient-data {
-  color: #92400e;
-  background: #fffbeb;
+  color: var(--oh-c-ink-amber-800, #92400e);
+  background: var(--oh-c-bg-amber-50, #fffbeb);
 }
 
 .healthDirectionMetrics {
@@ -1591,14 +1591,14 @@ const resolvedNextStep: NextStep =
 .healthDirectionMetrics article {
   padding: 18px;
   border-radius: 20px;
-  background: #f8fafc;
+  background: var(--oh-c-bg-slate-50, #f8fafc);
   border: 1px solid rgba(148, 163, 184, 0.18);
 }
 
 .healthDirectionMetrics span,
 .healthDirectionMetrics small {
   display: block;
-  color: #64748b;
+  color: var(--oh-muted, #64748b);
   font-size: 0.75rem;
   font-weight: 800;
 }
@@ -1606,7 +1606,7 @@ const resolvedNextStep: NextStep =
 .healthDirectionMetrics strong {
   display: block;
   margin: 8px 0 5px;
-  color: #0f172a;
+  color: var(--oh-text, #0f172a);
   font-size: 1.3rem;
   font-weight: 950;
 }
@@ -1621,11 +1621,11 @@ const resolvedNextStep: NextStep =
   display: flex;
   justify-content: space-between;
   gap: 18px;
-  color: #0f172a;
+  color: var(--oh-text, #0f172a);
 }
 
 .healthDirectionSignalsHeader span {
-  color: #64748b;
+  color: var(--oh-muted, #64748b);
   font-size: 0.84rem;
   font-weight: 750;
 }
@@ -1642,7 +1642,7 @@ const resolvedNextStep: NextStep =
   gap: 16px;
   padding: 14px 16px;
   border-radius: 18px;
-  background: #f8fafc;
+  background: var(--oh-c-bg-slate-50, #f8fafc);
   border-inline-start: 5px solid #0284c7;
 }
 
@@ -1661,7 +1661,7 @@ const resolvedNextStep: NextStep =
 .healthDirectionSignal > div > span {
   display: block;
   margin-top: 4px;
-  color: #64748b;
+  color: var(--oh-muted, #64748b);
   font-size: 0.78rem;
   font-weight: 750;
 }
@@ -1671,19 +1671,19 @@ const resolvedNextStep: NextStep =
 }
 
 .healthDirectionSignalValue strong {
-  color: #0f172a;
+  color: var(--oh-text, #0f172a);
   font-size: 1.1rem;
 }
 
 .healthDirectionSignalValue span {
-  color: #64748b;
+  color: var(--oh-muted, #64748b);
   font-size: 0.78rem;
 }
   .primaryPatternCard {
   margin-bottom: 22px;
   padding: 24px;
   border-radius: 26px;
-  background: rgba(255, 255, 255, 0.96);
+  background: color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 96%, transparent);
   border: 1px solid rgba(148, 163, 184, 0.22);
   box-shadow: 0 22px 58px rgba(15, 23, 42, 0.06);
   border-inline-start: 6px solid #64748b;
@@ -1717,7 +1717,7 @@ const resolvedNextStep: NextStep =
 }
 
 .primaryPatternKicker {
-  color: #0891b2;
+  color: var(--oh-c-ink-cyan-600, #0891b2);
   font-size: 0.76rem;
   font-weight: 950;
   letter-spacing: 0.08em;
@@ -1726,7 +1726,7 @@ const resolvedNextStep: NextStep =
 
 .primaryPatternCard h2 {
   margin: 9px 0 0;
-  color: #0f172a;
+  color: var(--oh-text, #0f172a);
   font-size: clamp(1.35rem, 2.5vw, 1.85rem);
   line-height: 1.2;
 }
@@ -1735,15 +1735,15 @@ const resolvedNextStep: NextStep =
   flex-shrink: 0;
   padding: 9px 13px;
   border-radius: 999px;
-  background: #f8fafc;
-  color: #334155;
+  background: var(--oh-c-bg-slate-50, #f8fafc);
+  color: var(--oh-c-ink-ink-700, #334155);
   font-size: 0.78rem;
   font-weight: 950;
 }
 
 .primaryPatternDescription {
   margin: 14px 0 0;
-  color: #64748b;
+  color: var(--oh-muted, #64748b);
   font-weight: 650;
   line-height: 1.65;
 }
@@ -1758,8 +1758,8 @@ const resolvedNextStep: NextStep =
 .primaryPatternMeta span {
   padding: 8px 11px;
   border-radius: 999px;
-  background: #f8fafc;
-  color: #475569;
+  background: var(--oh-c-bg-slate-50, #f8fafc);
+  color: var(--oh-soft-text, #475569);
   font-size: 0.78rem;
   font-weight: 850;
 }
@@ -1768,17 +1768,17 @@ const resolvedNextStep: NextStep =
   margin-top: 18px;
   padding: 16px;
   border-radius: 18px;
-  background: #f8fafc;
+  background: var(--oh-c-bg-slate-50, #f8fafc);
 }
 
 .primaryPatternAction strong {
-  color: #0f172a;
+  color: var(--oh-text, #0f172a);
   font-size: 0.82rem;
 }
 
 .primaryPatternAction p {
   margin: 5px 0 0;
-  color: #475569;
+  color: var(--oh-soft-text, #475569);
   line-height: 1.55;
 }
 
@@ -1789,8 +1789,8 @@ const resolvedNextStep: NextStep =
   background:
     linear-gradient(
       145deg,
-      rgba(239, 246, 255, 0.92),
-      rgba(240, 253, 250, 0.9)
+      color-mix(in srgb, var(--oh-c-bg-blue-50, #eff6ff) 92%, transparent),
+      color-mix(in srgb, var(--oh-c-bg-teal-50, #f0fdfa) 90%, transparent)
     );
   border: 1px solid rgba(14, 116, 144, 0.15);
   box-shadow: 0 26px 70px rgba(15, 23, 42, 0.08);
@@ -1808,7 +1808,7 @@ const resolvedNextStep: NextStep =
 
 .healthCommandCenterKicker {
   display: block;
-  color: #0e7490;
+  color: var(--oh-c-ink-cyan-700, #0e7490);
   font-size: 0.76rem;
   font-weight: 950;
   letter-spacing: 0.09em;
@@ -1818,7 +1818,7 @@ const resolvedNextStep: NextStep =
 .healthCommandCenterHeader h2 {
   max-width: 760px;
   margin: 9px 0 8px;
-  color: #0f172a;
+  color: var(--oh-text, #0f172a);
   font-size: clamp(1.45rem, 3vw, 2rem);
   line-height: 1.2;
 }
@@ -1826,7 +1826,7 @@ const resolvedNextStep: NextStep =
 .healthCommandCenterHeader p {
   max-width: 780px;
   margin: 0;
-  color: #64748b;
+  color: var(--oh-muted, #64748b);
   font-weight: 650;
   line-height: 1.65;
 }
@@ -1838,8 +1838,8 @@ const resolvedNextStep: NextStep =
   min-width: 90px;
   padding: 13px 16px;
   border-radius: 18px;
-  background: #ffffff;
-  color: #0f766e;
+  background: var(--oh-c-bg-white, #ffffff);
+  color: var(--oh-c-ink-teal-700, #0f766e);
   border: 1px solid rgba(15, 118, 110, 0.16);
   box-shadow: 0 12px 30px rgba(15, 23, 42, 0.07);
   font-size: 1.1rem;
@@ -1860,13 +1860,13 @@ const resolvedNextStep: NextStep =
   margin: 0;
   box-shadow: none;
   border: 1px solid rgba(15, 118, 110, 0.18);
-  background: rgba(255, 255, 255, 0.96);
+  background: color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 96%, transparent);
 }
 
 .healthEvidenceCard {
   padding: 24px;
   border-radius: 26px;
-  background: rgba(255, 255, 255, 0.96);
+  background: color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 96%, transparent);
   border: 1px solid rgba(14, 116, 144, 0.16);
   box-shadow: 0 20px 50px rgba(15, 23, 42, 0.05);
 }
@@ -1879,7 +1879,7 @@ const resolvedNextStep: NextStep =
 }
 
 .healthEvidenceKicker {
-  color: #0e7490;
+  color: var(--oh-c-ink-cyan-700, #0e7490);
   font-size: 0.76rem;
   font-weight: 950;
   letter-spacing: 0.08em;
@@ -1888,7 +1888,7 @@ const resolvedNextStep: NextStep =
 
 .healthEvidenceHeader h2 {
   margin: 9px 0 8px;
-  color: #0f172a;
+  color: var(--oh-text, #0f172a);
   font-size: clamp(1.3rem, 2.5vw, 1.8rem);
   line-height: 1.2;
 }
@@ -1896,7 +1896,7 @@ const resolvedNextStep: NextStep =
 .healthEvidenceHeader p {
   max-width: 760px;
   margin: 0;
-  color: #64748b;
+  color: var(--oh-muted, #64748b);
   font-weight: 650;
   line-height: 1.65;
 }
@@ -1906,13 +1906,13 @@ const resolvedNextStep: NextStep =
   min-width: 100px;
   padding: 13px 16px;
   border-radius: 18px;
-  background: #ecfeff;
+  background: var(--oh-c-bg-cyan-50, #ecfeff);
   text-align: center;
 }
 
 .healthEvidenceConfidence span {
   display: block;
-  color: #0e7490;
+  color: var(--oh-c-ink-cyan-700, #0e7490);
   font-size: 0.72rem;
   font-weight: 850;
 }
@@ -1920,7 +1920,7 @@ const resolvedNextStep: NextStep =
 .healthEvidenceConfidence strong {
   display: block;
   margin-top: 5px;
-  color: #0f172a;
+  color: var(--oh-text, #0f172a);
   font-size: 1.25rem;
 }
 
@@ -1934,13 +1934,13 @@ const resolvedNextStep: NextStep =
 .healthEvidenceMetrics article {
   padding: 15px;
   border-radius: 17px;
-  background: #f8fafc;
+  background: var(--oh-c-bg-slate-50, #f8fafc);
   border: 1px solid rgba(148, 163, 184, 0.16);
 }
 
 .healthEvidenceMetrics span {
   display: block;
-  color: #64748b;
+  color: var(--oh-muted, #64748b);
   font-size: 0.75rem;
   font-weight: 800;
 }
@@ -1948,7 +1948,7 @@ const resolvedNextStep: NextStep =
 .healthEvidenceMetrics strong {
   display: block;
   margin-top: 6px;
-  color: #0f172a;
+  color: var(--oh-text, #0f172a);
   font-size: 1.2rem;
 }
 
@@ -1962,7 +1962,7 @@ const resolvedNextStep: NextStep =
 
 .healthEvidenceListHeader {
   margin-bottom: 3px;
-  color: #0f172a;
+  color: var(--oh-text, #0f172a);
 }
 
 .healthEvidenceItem {
@@ -1971,39 +1971,39 @@ const resolvedNextStep: NextStep =
   gap: 16px;
   padding: 14px 16px;
   border-radius: 17px;
-  background: #f8fafc;
+  background: var(--oh-c-bg-slate-50, #f8fafc);
 }
 
 .healthEvidenceSource {
   display: block;
   margin-bottom: 4px;
-  color: #0891b2;
+  color: var(--oh-c-ink-cyan-600, #0891b2);
   font-size: 0.7rem;
   font-weight: 900;
   text-transform: uppercase;
 }
 
 .healthEvidenceItem strong {
-  color: #0f172a;
+  color: var(--oh-text, #0f172a);
 }
 
 .healthEvidenceItem p {
   margin: 4px 0 0;
-  color: #64748b;
+  color: var(--oh-muted, #64748b);
   font-size: 0.84rem;
   line-height: 1.5;
 }
 
 .healthEvidenceValue {
   flex-shrink: 0;
-  color: #0f766e;
+  color: var(--oh-c-ink-teal-700, #0f766e);
   font-weight: 950;
 }
 .dashboardTimelinePreview {
   padding: 24px;
   border: 1px solid rgba(14, 116, 144, 0.16);
   border-radius: 24px;
-  background: rgba(255, 255, 255, 0.96);
+  background: color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 96%, transparent);
   box-shadow: 0 18px 48px rgba(15, 23, 42, 0.05);
 }
 
@@ -2015,7 +2015,7 @@ const resolvedNextStep: NextStep =
 }
 
 .dashboardTimelinePreviewKicker {
-  color: #0891b2;
+  color: var(--oh-c-ink-cyan-600, #0891b2);
   font-size: 0.75rem;
   font-weight: 950;
   letter-spacing: 0.08em;
@@ -2024,14 +2024,14 @@ const resolvedNextStep: NextStep =
 
 .dashboardTimelinePreviewHeader h2 {
   margin: 8px 0;
-  color: #0f172a;
+  color: var(--oh-text, #0f172a);
   font-size: 1.55rem;
 }
 
 .dashboardTimelinePreviewHeader p {
   max-width: 720px;
   margin: 0;
-  color: #475569;
+  color: var(--oh-soft-text, #475569);
   line-height: 1.65;
 }
 
@@ -2039,13 +2039,13 @@ const resolvedNextStep: NextStep =
   flex-shrink: 0;
   padding: 12px 14px;
   border-radius: 16px;
-  background: #ecfeff;
+  background: var(--oh-c-bg-cyan-50, #ecfeff);
   text-align: center;
 }
 
 .dashboardTimelinePreviewMeta span {
   display: block;
-  color: #0e7490;
+  color: var(--oh-c-ink-cyan-700, #0e7490);
   font-size: 0.72rem;
   font-weight: 850;
 }
@@ -2053,7 +2053,7 @@ const resolvedNextStep: NextStep =
 .dashboardTimelinePreviewMeta strong {
   display: block;
   margin-top: 4px;
-  color: #0f172a;
+  color: var(--oh-text, #0f172a);
   font-size: 1.15rem;
 }
 
@@ -2066,16 +2066,16 @@ const resolvedNextStep: NextStep =
 .dashboardTimelinePreviewItem {
   display: block;
   padding: 16px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--oh-c-line-slate-200, #e2e8f0);
   border-radius: 18px;
-  background: #f8fafc;
+  background: var(--oh-c-bg-slate-50, #f8fafc);
   color: inherit;
   text-decoration: none;
 }
 
 .dashboardTimelinePreviewItem:hover {
   border-color: #67e8f9;
-  background: #ecfeff;
+  background: var(--oh-c-bg-cyan-50, #ecfeff);
 }
 
 .dashboardTimelinePreviewItemTop {
@@ -2092,7 +2092,7 @@ const resolvedNextStep: NextStep =
 }
 
 .dashboardTimelinePreviewItemTop time {
-  color: #64748b;
+  color: var(--oh-muted, #64748b);
   font-size: 0.76rem;
   font-weight: 750;
 }
@@ -2106,39 +2106,39 @@ const resolvedNextStep: NextStep =
 }
 
 .dashboardTimelineType {
-  background: #e2e8f0;
-  color: #475569;
+  background: var(--oh-c-bg-slate-200, #e2e8f0);
+  color: var(--oh-soft-text, #475569);
 }
 
 .dashboardTimelineSeverity.information {
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: var(--oh-c-bg-blue-100, #dbeafe);
+  color: var(--oh-c-ink-blue-700, #1d4ed8);
 }
 
 .dashboardTimelineSeverity.success {
-  background: #dcfce7;
-  color: #15803d;
+  background: var(--oh-c-bg-green-100, #dcfce7);
+  color: var(--oh-c-ink-green-700, #15803d);
 }
 
 .dashboardTimelineSeverity.warning {
-  background: #fef3c7;
-  color: #b45309;
+  background: var(--oh-c-bg-amber-100, #fef3c7);
+  color: var(--oh-c-ink-amber-700, #b45309);
 }
 
 .dashboardTimelineSeverity.critical {
-  background: #fee2e2;
-  color: #b91c1c;
+  background: var(--oh-c-bg-red-100, #fee2e2);
+  color: var(--oh-c-ink-red-700, #b91c1c);
 }
 
 .dashboardTimelineTitle {
   display: block;
   margin-top: 12px;
-  color: #0f172a;
+  color: var(--oh-text, #0f172a);
 }
 
 .dashboardTimelineDescription {
   margin: 6px 0 0;
-  color: #475569;
+  color: var(--oh-soft-text, #475569);
   font-size: 0.88rem;
   line-height: 1.6;
 }
@@ -2153,8 +2153,8 @@ const resolvedNextStep: NextStep =
 .dashboardTimelineSignals span {
   padding: 6px 9px;
   border-radius: 9px;
-  background: #ffffff;
-  color: #0f766e;
+  background: var(--oh-c-bg-white, #ffffff);
+  color: var(--oh-c-ink-teal-700, #0f766e);
   font-size: 0.72rem;
   font-weight: 850;
 }
@@ -2166,12 +2166,12 @@ const resolvedNextStep: NextStep =
   gap: 18px;
   margin-top: 20px;
   padding-top: 18px;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--oh-c-line-slate-200, #e2e8f0);
 }
 
 .dashboardTimelinePreviewFooter > div span {
   display: block;
-  color: #64748b;
+  color: var(--oh-muted, #64748b);
   font-size: 0.74rem;
   font-weight: 800;
 }
@@ -2179,7 +2179,7 @@ const resolvedNextStep: NextStep =
 .dashboardTimelinePreviewFooter > div strong {
   display: block;
   margin-top: 3px;
-  color: #0f172a;
+  color: var(--oh-text, #0f172a);
   font-size: 1.2rem;
 }
         @media (max-width: 1100px) {
@@ -2274,7 +2274,7 @@ const resolvedNextStep: NextStep =
         .dashboardCommandCenterPage .dashboardCommandCard,
         .dashboardCommandCenterPage .dashboardCommandPanel,
         .dashboardCommandCenterPage .dashboardNextActionPanel {
-          color: #0f172a !important;
+          color: var(--oh-text, #0f172a) !important;
         }
 
         .dashboardCommandCenterPage .dashboardCommandCard strong,
@@ -2282,7 +2282,7 @@ const resolvedNextStep: NextStep =
         .dashboardCommandCenterPage .dashboardNextActionPanel h2,
         .dashboardCommandCenterPage .dashboardSignalGrid strong,
         .dashboardCommandCenterPage .dashboardQuickActionGrid strong {
-          color: #0f172a !important;
+          color: var(--oh-text, #0f172a) !important;
         }
 
         .dashboardCommandCenterPage .dashboardCommandCard p,
@@ -2290,19 +2290,19 @@ const resolvedNextStep: NextStep =
         .dashboardCommandCenterPage .dashboardNextActionPanel p,
         .dashboardCommandCenterPage .dashboardSignalGrid p,
         .dashboardCommandCenterPage .dashboardQuickActionGrid p {
-          color: #475569 !important;
+          color: var(--oh-soft-text, #475569) !important;
         }
 
         .dashboardCommandCenterPage .dashboardScore.good {
-          color: #0891b2 !important;
+          color: var(--oh-c-ink-cyan-600, #0891b2) !important;
         }
 
         .dashboardCommandCenterPage .dashboardScore.moderate {
-          color: #0f766e !important;
+          color: var(--oh-c-ink-teal-700, #0f766e) !important;
         }
 
         .dashboardCommandCenterPage .dashboardScore.risk {
-          color: #b45309 !important;
+          color: var(--oh-c-ink-amber-700, #b45309) !important;
         }
 
         .dashboardCommandCenterPage[dir="rtl"] .dashboardActionRow,
@@ -2322,8 +2322,8 @@ const resolvedNextStep: NextStep =
           min-height: 100vh;
           background:
             radial-gradient(circle at top left, rgba(34, 211, 238, 0.2), transparent 35%),
-            linear-gradient(180deg, #ecfeff 0%, #f8fafc 45%, #ffffff 100%) !important;
-          color: #0f172a;
+            linear-gradient(180deg, var(--oh-c-bg-cyan-50, #ecfeff) 0%, var(--oh-c-bg-slate-50, #f8fafc) 45%, var(--oh-c-bg-white, #ffffff) 100%) !important;
+          color: var(--oh-text, #0f172a);
           padding: 28px 18px 56px;
         }
 
@@ -2340,7 +2340,7 @@ const resolvedNextStep: NextStep =
         .dashboardCommandCard,
         .dashboardCommandPanel,
         .dashboardNextActionPanel {
-          background: rgba(255, 255, 255, 0.94);
+          background: color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 94%, transparent);
           border: 1px solid rgba(148, 163, 184, 0.22);
           border-radius: 28px;
           box-shadow: 0 24px 65px rgba(15, 23, 42, 0.08);
@@ -2358,11 +2358,11 @@ const resolvedNextStep: NextStep =
           font-size: clamp(2.2rem, 5vw, 4rem);
           line-height: 1.15;
           margin: 10px 0 14px;
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
         }
 
         .dashboardCommandHero p {
-          color: #475569;
+          color: var(--oh-soft-text, #475569);
           line-height: 1.85;
           max-width: 780px;
         }
@@ -2428,7 +2428,7 @@ const resolvedNextStep: NextStep =
         .dashboardCommandPanel span,
         .dashboardNextActionPanel span {
           display: block;
-          color: #0891b2;
+          color: var(--oh-c-ink-cyan-600, #0891b2);
           font-weight: 900;
           font-size: 0.78rem;
           margin-bottom: 8px;
@@ -2437,12 +2437,12 @@ const resolvedNextStep: NextStep =
         .dashboardCommandCard strong {
           display: block;
           font-size: 1.8rem;
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
           line-height: 1.2;
         }
 
         .dashboardCommandCard p {
-          color: #475569;
+          color: var(--oh-soft-text, #475569);
           line-height: 1.65;
           margin: 8px 0 0;
         }
@@ -2463,12 +2463,12 @@ const resolvedNextStep: NextStep =
         .dashboardNextActionPanel h2 {
           margin: 8px 0 10px;
           font-size: clamp(1.7rem, 3vw, 2.5rem);
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
         }
 
         .dashboardCommandPanel p,
         .dashboardNextActionPanel p {
-          color: #475569;
+          color: var(--oh-soft-text, #475569);
           line-height: 1.8;
         }
 
@@ -2481,15 +2481,15 @@ const resolvedNextStep: NextStep =
 
         .dashboardSignalGrid article,
         .dashboardQuickActionGrid a {
-          border: 1px solid #e2e8f0;
-          background: #f8fafc;
+          border: 1px solid var(--oh-c-line-slate-200, #e2e8f0);
+          background: var(--oh-c-bg-slate-50, #f8fafc);
           border-radius: 18px;
           padding: 16px;
         }
 
         .dashboardSignalGrid strong {
           display: block;
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
           font-size: 1.05rem;
           line-height: 1.45;
         }
@@ -2508,7 +2508,7 @@ const resolvedNextStep: NextStep =
 
         .dashboardQuickActionGrid strong {
           display: block;
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
           font-size: 1.05rem;
         }
 
@@ -2533,17 +2533,17 @@ const resolvedNextStep: NextStep =
         }
 
         .dashboardSecondaryAction {
-          background: #ffffff;
-          color: #0f766e;
-          border: 1px solid #99f6e4;
+          background: var(--oh-c-bg-white, #ffffff);
+          color: var(--oh-c-ink-teal-700, #0f766e);
+          border: 1px solid var(--oh-c-line-teal-200, #99f6e4);
         }
 
         .dashboardErrorBox {
           padding: 18px;
-          background: #fff7ed;
-          border: 1px solid #fed7aa;
+          background: var(--oh-c-bg-orange-50, #fff7ed);
+          border: 1px solid var(--oh-c-line-orange-200, #fed7aa);
           border-radius: 18px;
-          color: #9a3412;
+          color: var(--oh-c-ink-orange-800, #9a3412);
           margin-bottom: 18px;
         }
 
@@ -2589,7 +2589,7 @@ const resolvedNextStep: NextStep =
   padding: 22px;
   margin-bottom: 22px;
   border-radius: 24px;
-  background: rgba(255, 255, 255, 0.96);
+  background: color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 96%, transparent);
   border: 1px solid rgba(15, 118, 110, 0.18);
   box-shadow: 0 18px 50px rgba(15, 23, 42, 0.07);
 }
@@ -2603,7 +2603,7 @@ const resolvedNextStep: NextStep =
 
 .dashboardNextActionCompactEyebrow {
   display: block;
-  color: #0891b2;
+  color: var(--oh-c-ink-cyan-600, #0891b2);
   font-size: 0.74rem;
   font-weight: 950;
   letter-spacing: 0.07em;
@@ -2612,7 +2612,7 @@ const resolvedNextStep: NextStep =
 
 .dashboardNextActionCompact h2 {
   margin: 7px 0;
-  color: #0f172a;
+  color: var(--oh-text, #0f172a);
   font-size: clamp(1.55rem, 3vw, 2.2rem);
   line-height: 1.2;
 }
@@ -2620,7 +2620,7 @@ const resolvedNextStep: NextStep =
 .dashboardNextActionCompactMain p {
   max-width: 720px;
   margin: 0;
-  color: #64748b;
+  color: var(--oh-muted, #64748b);
   line-height: 1.65;
 }
 
@@ -2655,14 +2655,14 @@ const resolvedNextStep: NextStep =
   min-width: 0;
   padding: 13px 15px;
   border-radius: 16px;
-  background: #f8fafc;
+  background: var(--oh-c-bg-slate-50, #f8fafc);
   border: 1px solid rgba(148, 163, 184, 0.16);
 }
 
 .dashboardNextActionCompactMeta span,
 .dashboardNextActionCompactMeta small {
   display: block;
-  color: #64748b;
+  color: var(--oh-muted, #64748b);
   font-size: 0.7rem;
   font-weight: 800;
 }
@@ -2670,7 +2670,7 @@ const resolvedNextStep: NextStep =
 .dashboardNextActionCompactMeta strong {
   display: block;
   margin: 5px 0 3px;
-  color: #0f172a;
+  color: var(--oh-text, #0f172a);
   font-size: 1rem;
   line-height: 1.3;
   overflow-wrap: anywhere;
@@ -2758,8 +2758,8 @@ const resolvedNextStep: NextStep =
 
 .dashboardSecondaryAction,
 .dashboardJourneyNext {
-  background: #ffffff;
-  color: #0f766e;
+  background: var(--oh-c-bg-white, #ffffff);
+  color: var(--oh-c-ink-teal-700, #0f766e);
   border: 1px solid rgba(15, 118, 110, 0.25);
 }
 

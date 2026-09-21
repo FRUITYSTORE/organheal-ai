@@ -178,7 +178,7 @@ export default function PostVisitNotesPanel({
         .postVisitPanel label {
           display: grid;
           gap: 6px;
-          color: #334155;
+          color: var(--oh-c-ink-ink-700, #334155);
           font-size: 0.82rem;
           font-weight: 800;
         }
@@ -189,8 +189,8 @@ export default function PostVisitNotesPanel({
           padding: 11px 13px;
           border: 1px solid rgba(148, 163, 184, 0.4);
           border-radius: 14px;
-          background: #ffffff;
-          color: #0f172a;
+          background: var(--oh-c-bg-white, #ffffff);
+          color: var(--oh-text, #0f172a);
           font: inherit;
           font-weight: 600;
         }
@@ -216,7 +216,7 @@ export default function PostVisitNotesPanel({
         .postVisitPanel .postVisitItem {
           padding: 14px 16px;
           border-radius: 16px;
-          background: #f8fafc;
+          background: var(--oh-c-bg-slate-50, #f8fafc);
           border: 1px solid rgba(148, 163, 184, 0.22);
           border-inline-start: 4px solid #0f766e;
         }
@@ -230,14 +230,14 @@ export default function PostVisitNotesPanel({
 
         .postVisitPanel .postVisitDate {
           margin: 0;
-          color: #0f766e;
+          color: var(--oh-c-ink-teal-700, #0f766e);
           font-size: 0.76rem;
           font-weight: 950;
         }
 
         .postVisitPanel .postVisitBody {
           margin: 8px 0 0;
-          color: #334155;
+          color: var(--oh-c-ink-ink-700, #334155);
           font-size: 0.88rem;
           line-height: 1.65;
           white-space: pre-wrap;
@@ -245,7 +245,7 @@ export default function PostVisitNotesPanel({
 
         .postVisitPanel .postVisitMeta {
           margin: 8px 0 0;
-          color: #64748b;
+          color: var(--oh-muted, #64748b);
           font-size: 0.78rem;
           line-height: 1.55;
           white-space: pre-wrap;
@@ -255,8 +255,8 @@ export default function PostVisitNotesPanel({
           padding: 6px 10px;
           border: 1px solid rgba(185, 28, 28, 0.25);
           border-radius: 999px;
-          background: #ffffff;
-          color: #b91c1c;
+          background: var(--oh-c-bg-white, #ffffff);
+          color: var(--oh-c-ink-red-700, #b91c1c);
           font-size: 0.72rem;
           font-weight: 800;
           cursor: pointer;
@@ -264,7 +264,7 @@ export default function PostVisitNotesPanel({
 
         .postVisitPanel .postVisitError {
           margin: 12px 0 0;
-          color: #b91c1c;
+          color: var(--oh-c-ink-red-700, #b91c1c);
           font-size: 0.82rem;
           font-weight: 700;
         }

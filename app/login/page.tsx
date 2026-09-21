@@ -462,7 +462,7 @@ export default function LoginPage() {
           min-height: 54px;
           border-radius: 14px;
           border: 1px solid rgba(148, 163, 184, 0.36);
-          background: rgba(255, 255, 255, 0.94);
+          background: color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 94%, transparent);
           color: var(--oh-text);
           padding: 12px 14px;
           font: inherit;
@@ -484,13 +484,13 @@ export default function LoginPage() {
 
         .loginCommandPage .loginMessage.success {
           background: rgba(20, 184, 166, 0.1);
-          color: #0f766e;
+          color: var(--oh-c-ink-teal-700, #0f766e);
           border: 1px solid rgba(20, 184, 166, 0.28);
         }
 
         .loginCommandPage .loginMessage.error {
           background: rgba(239, 68, 68, 0.08);
-          color: #b91c1c;
+          color: var(--oh-c-ink-red-700, #b91c1c);
           border: 1px solid rgba(239, 68, 68, 0.22);
         }
 
@@ -530,7 +530,7 @@ export default function LoginPage() {
                 .loginCommandPage .loginTextAction {
           border: 0;
           background: transparent;
-          color: #0f766e;
+          color: var(--oh-c-ink-teal-700, #0f766e);
           font: inherit;
           font-weight: 850;
           cursor: pointer;
@@ -560,7 +560,7 @@ export default function LoginPage() {
         }
 
         .loginCommandPage .loginPrivacyNote strong {
-          color: #0f766e;
+          color: var(--oh-c-ink-teal-700, #0f766e);
         }
 
         @media (max-width: 760px) {
@@ -696,7 +696,7 @@ export default function LoginPage() {
                 margin: 0,
               }}
             >
-              <Link href="/" style={{ color: "#0f766e", fontWeight: 850 }}>
+              <Link href="/" style={{ color: "var(--oh-c-ink-teal-700, #0f766e)", fontWeight: 850 }}>
                 {text("Back to OrganHeal", "العودة إلى OrganHeal")}
               </Link>
             </p>

@@ -1,0 +1,334 @@
+/* Palette tokens used by component styles. The light values equal the
+   original hard-coded colors, so light mode is unchanged; the dark values
+   are the tuned equivalents. Generated once, edit values here. */
+
+:root {
+--oh-c-ink-navy-900: #102a43;
+  --oh-c-ink-amber-950: #713f12;
+  --oh-c-ink-emerald-900: #064e3b;
+  --oh-c-ink-navy-950: #061827;
+  --oh-c-ink-red-800: #991b1b;
+  --oh-c-ink-indigo-700: #4338ca;
+  --oh-c-ink-indigo-600: #4f46e5;
+  --oh-line-base: #0f172a;
+  --oh-line-scale: 1;
+
+  --oh-tone-good: #0f766e;
+  --oh-tone-moderate: #b45309;
+  --oh-tone-risk: #b91c1c;
+
+  --oh-c-bg-slate-300: #cbd5e1;
+  --oh-c-bg-teal-100: #ccfbf1;
+  --oh-c-bg-slate-blue: #d9e5ec;
+  --oh-c-bg-blue-100: #dbeafe;
+  --oh-c-bg-green-100: #dcfce7;
+  --oh-c-bg-slate-200: #e2e8f0;
+  --oh-c-bg-slate-150: #e8edf3;
+  --oh-c-bg-teal-25: #eaf6f6;
+  --oh-c-bg-emerald-50: #ecfdf5;
+  --oh-c-bg-cyan-50: #ecfeff;
+  --oh-c-bg-teal-30: #eef9f8;
+  --oh-c-bg-cyan-50b: #eefcff;
+  --oh-c-bg-blue-50: #eff6ff;
+  --oh-c-bg-sky-50: #f0f9ff;
+  --oh-c-bg-green-50: #f0fdf4;
+  --oh-c-bg-teal-50: #f0fdfa;
+  --oh-c-bg-slate-100: #f1f5f9;
+  --oh-c-bg-slate-50: #f8fafc;
+  --oh-c-bg-blue-25: #f8fbff;
+  --oh-c-bg-red-100: #fee2e2;
+  --oh-c-bg-red-50: #fef2f2;
+  --oh-c-bg-amber-100: #fef3c7;
+  --oh-c-bg-yellow-100: #fef9c3;
+  --oh-c-bg-orange-100: #ffedd5;
+  --oh-c-bg-rose-50: #fff1f2;
+  --oh-c-bg-orange-50: #fff7ed;
+  --oh-c-bg-amber-50: #fffbeb;
+  --oh-c-bg-white: #ffffff;
+  --oh-c-ink-sky-700: #0369a1;
+  --oh-c-ink-emerald-700: #047857;
+  --oh-c-ink-cyan-600: #0891b2;
+  --oh-c-ink-cyan-700: #0e7490;
+  --oh-c-ink-teal-700: #0f766e;
+  --oh-c-ink-ink-900: #111827;
+  --oh-c-ink-teal-800: #115e59;
+  --oh-c-ink-teal-900: #134e4a;
+  --oh-c-ink-navy-blue: #153f63;
+  --oh-c-ink-green-700: #15803d;
+  --oh-c-ink-green-800: #166534;
+  --oh-c-ink-blue-700: #1d4ed8;
+  --oh-c-ink-ink-800: #1e293b;
+  --oh-c-ink-blue-900: #1e3a8a;
+  --oh-c-ink-blue-600: #2563eb;
+  --oh-c-ink-ink-700: #334155;
+  --oh-c-ink-amber-800: #92400e;
+  --oh-c-ink-orange-800: #9a3412;
+  --oh-c-ink-amber-700: #b45309;
+  --oh-c-ink-red-700: #b91c1c;
+  --oh-c-ink-rose-700: #be123c;
+  --oh-c-ink-orange-700: #c2410c;
+  --oh-c-line-teal-200: #99f6e4;
+  --oh-c-line-emerald-200: #a7f3d0;
+  --oh-c-line-blue-200: #bfdbfe;
+  --oh-c-line-slate-300: #cbd5e1;
+  --oh-c-line-slate-250: #dbe4ee;
+  --oh-c-line-slate-200: #e2e8f0;
+  --oh-c-line-slate-160: #e5edf5;
+  --oh-c-line-slate-150: #e8edf3;
+  --oh-c-line-rose-200: #fecdd3;
+  --oh-c-line-orange-200: #fed7aa;
+}
+
+:root[data-theme="dark"] {
+--oh-c-ink-navy-900: #dbe4ee;
+  --oh-c-ink-amber-950: #fcd34d;
+  --oh-c-ink-emerald-900: #6ee7b7;
+  --oh-c-ink-navy-950: #e8eef5;
+  --oh-c-ink-red-800: #fca5a5;
+  --oh-c-ink-indigo-700: #a5b4fc;
+  --oh-c-ink-indigo-600: #a5b4fc;
+  --oh-line-base: #94a3b8;
+  --oh-line-scale: 1.7;
+
+  --oh-tone-good: #2dd4bf;
+  --oh-tone-moderate: #fbbf24;
+  --oh-tone-risk: #f87171;
+
+  --oh-c-bg-slate-300: #33445a;
+  --oh-c-bg-teal-100: #162f33;
+  --oh-c-bg-slate-blue: #1f2d3a;
+  --oh-c-bg-blue-100: #182c44;
+  --oh-c-bg-green-100: #152f25;
+  --oh-c-bg-slate-200: #243244;
+  --oh-c-bg-slate-150: #1f2937;
+  --oh-c-bg-teal-25: #132a2b;
+  --oh-c-bg-emerald-50: #132a25;
+  --oh-c-bg-cyan-50: #142a35;
+  --oh-c-bg-teal-30: #132b2b;
+  --oh-c-bg-cyan-50b: #142b36;
+  --oh-c-bg-blue-50: #192636;
+  --oh-c-bg-sky-50: #14232f;
+  --oh-c-bg-green-50: #132a20;
+  --oh-c-bg-teal-50: #132a2e;
+  --oh-c-bg-slate-100: #1a2432;
+  --oh-c-bg-slate-50: #0f161f;
+  --oh-c-bg-blue-25: #141f2c;
+  --oh-c-bg-red-100: #33202a;
+  --oh-c-bg-red-50: #2b1a1f;
+  --oh-c-bg-amber-100: #33301a;
+  --oh-c-bg-yellow-100: #33301a;
+  --oh-c-bg-orange-100: #3a2a1b;
+  --oh-c-bg-rose-50: #2b1a20;
+  --oh-c-bg-orange-50: #2b2118;
+  --oh-c-bg-amber-50: #2a2717;
+  --oh-c-bg-white: #131b25;
+  --oh-c-ink-sky-700: #7dd3fc;
+  --oh-c-ink-emerald-700: #6ee7b7;
+  --oh-c-ink-cyan-600: #22d3ee;
+  --oh-c-ink-cyan-700: #67e8f9;
+  --oh-c-ink-teal-700: #5eead4;
+  --oh-c-ink-ink-900: #e8eef5;
+  --oh-c-ink-teal-800: #99f6e4;
+  --oh-c-ink-teal-900: #5eead4;
+  --oh-c-ink-navy-blue: #9cc9f5;
+  --oh-c-ink-green-700: #86efac;
+  --oh-c-ink-green-800: #86efac;
+  --oh-c-ink-blue-700: #93c5fd;
+  --oh-c-ink-ink-800: #dbe4ee;
+  --oh-c-ink-blue-900: #93c5fd;
+  --oh-c-ink-blue-600: #60a5fa;
+  --oh-c-ink-ink-700: #c3cfdc;
+  --oh-c-ink-amber-800: #fcd34d;
+  --oh-c-ink-orange-800: #fdba74;
+  --oh-c-ink-amber-700: #fbbf24;
+  --oh-c-ink-red-700: #fca5a5;
+  --oh-c-ink-rose-700: #fda4af;
+  --oh-c-ink-orange-700: #fdba74;
+  --oh-c-line-teal-200: rgba(45, 212, 191, 0.32);
+  --oh-c-line-emerald-200: rgba(52, 211, 153, 0.32);
+  --oh-c-line-blue-200: rgba(96, 165, 250, 0.32);
+  --oh-c-line-slate-300: rgba(148, 163, 184, 0.3);
+  --oh-c-line-slate-250: rgba(148, 163, 184, 0.22);
+  --oh-c-line-slate-200: rgba(148, 163, 184, 0.18);
+  --oh-c-line-slate-160: rgba(148, 163, 184, 0.16);
+  --oh-c-line-slate-150: rgba(148, 163, 184, 0.16);
+  --oh-c-line-rose-200: rgba(251, 113, 133, 0.3);
+  --oh-c-line-orange-200: rgba(251, 146, 60, 0.32);
+}
+
+/* Elements on fixed bright surfaces keep their dark text in dark mode.
+   Page styles such as ".x a { color: inherit }" would otherwise hand them
+   the light dark-theme text color. The extra :root keeps this ahead of
+   those page rules without !important. */
+:root[data-theme="dark"] a.primaryBtn,
+:root[data-theme="dark"] button.primaryBtn {
+  color: #01111e;
+}
+
+/* Report documents (printable paper) keep the light palette in dark mode,
+   so previews look like the PDF that is exported. */
+:root[data-theme="dark"] .ohPaper {
+  --oh-bg: #f6f8fb;
+  --oh-surface: #ffffff;
+  --oh-surface-soft: #f9fbfd;
+  --oh-border: rgba(15, 23, 42, 0.08);
+  --oh-border-strong: rgba(15, 23, 42, 0.14);
+  --oh-text: #0f172a;
+  --oh-muted: #64748b;
+  --oh-soft-text: #475569;
+  --oh-primary: #0f766e;
+  --oh-primary-dark: #115e59;
+  --oh-primary-soft: rgba(15, 118, 110, 0.1);
+  --oh-blue: #2563eb;
+  --oh-blue-soft: rgba(37, 99, 235, 0.1);
+  --oh-good: #059669;
+  --oh-good-soft: rgba(5, 150, 105, 0.1);
+  --oh-warning: #d97706;
+  --oh-warning-soft: rgba(217, 119, 6, 0.12);
+  --oh-risk: #dc2626;
+  --oh-risk-soft: rgba(220, 38, 38, 0.1);
+  --oh-shadow-sm: 0 10px 30px rgba(15, 23, 42, 0.06);
+  --oh-shadow-md: 0 18px 55px rgba(15, 23, 42, 0.1);
+  --oh-radius-sm: 14px;
+  --oh-radius-md: 20px;
+  --oh-radius-lg: 28px;
+  --oh-max-width: 1180px;
+  color-scheme: light;
+  --oh-bg-secondary: #eef2f7;
+  --oh-surface-elevated: #ffffff;
+  --oh-surface-hover: #f1f5f9;
+  --oh-border-subtle: rgba(15, 23, 42, 0.05);
+  --oh-primary-hover: #115e59;
+  --oh-shadow-lg: 0 28px 80px rgba(15, 23, 42, 0.16);
+  --oh-input-bg: #ffffff;
+  --oh-input-border: rgba(148, 163, 184, 0.4);
+  --oh-focus-ring: rgba(20, 184, 166, 0.55);
+  --oh-canvas: #f6f8fb;
+  --background: var(--oh-bg);
+  --background-secondary: var(--oh-bg-secondary);
+  --surface: var(--oh-surface);
+  --surface-elevated: var(--oh-surface-elevated);
+  --surface-hover: var(--oh-surface-hover);
+  --text-primary: var(--oh-text);
+  --text-secondary: var(--oh-soft-text);
+  --text-muted: var(--oh-muted);
+  --border: var(--oh-border);
+  --border-subtle: var(--oh-border-subtle);
+  --primary: var(--oh-primary);
+  --primary-hover: var(--oh-primary-hover);
+  --primary-soft: var(--oh-primary-soft);
+  --success: var(--oh-good);
+  --warning: var(--oh-warning);
+  --danger: var(--oh-risk);
+  --info: var(--oh-blue);
+  --input-background: var(--oh-input-bg);
+  --input-border: var(--oh-input-border);
+  --shadow-sm: var(--oh-shadow-sm);
+  --shadow-md: var(--oh-shadow-md);
+  --shadow-lg: var(--oh-shadow-lg);
+  --oh-c-ink-navy-900: #102a43;
+  --oh-c-ink-amber-950: #713f12;
+  --oh-c-ink-emerald-900: #064e3b;
+  --oh-c-ink-navy-950: #061827;
+  --oh-c-ink-red-800: #991b1b;
+  --oh-c-ink-indigo-700: #4338ca;
+  --oh-c-ink-indigo-600: #4f46e5;
+  --oh-line-base: #0f172a;
+  --oh-line-scale: 1;
+  --oh-tone-good: #0f766e;
+  --oh-tone-moderate: #b45309;
+  --oh-tone-risk: #b91c1c;
+  --oh-c-bg-slate-300: #cbd5e1;
+  --oh-c-bg-teal-100: #ccfbf1;
+  --oh-c-bg-slate-blue: #d9e5ec;
+  --oh-c-bg-blue-100: #dbeafe;
+  --oh-c-bg-green-100: #dcfce7;
+  --oh-c-bg-slate-200: #e2e8f0;
+  --oh-c-bg-slate-150: #e8edf3;
+  --oh-c-bg-teal-25: #eaf6f6;
+  --oh-c-bg-emerald-50: #ecfdf5;
+  --oh-c-bg-cyan-50: #ecfeff;
+  --oh-c-bg-teal-30: #eef9f8;
+  --oh-c-bg-cyan-50b: #eefcff;
+  --oh-c-bg-blue-50: #eff6ff;
+  --oh-c-bg-sky-50: #f0f9ff;
+  --oh-c-bg-green-50: #f0fdf4;
+  --oh-c-bg-teal-50: #f0fdfa;
+  --oh-c-bg-slate-100: #f1f5f9;
+  --oh-c-bg-slate-50: #f8fafc;
+  --oh-c-bg-blue-25: #f8fbff;
+  --oh-c-bg-red-100: #fee2e2;
+  --oh-c-bg-red-50: #fef2f2;
+  --oh-c-bg-amber-100: #fef3c7;
+  --oh-c-bg-yellow-100: #fef9c3;
+  --oh-c-bg-orange-100: #ffedd5;
+  --oh-c-bg-rose-50: #fff1f2;
+  --oh-c-bg-orange-50: #fff7ed;
+  --oh-c-bg-amber-50: #fffbeb;
+  --oh-c-bg-white: #ffffff;
+  --oh-c-ink-sky-700: #0369a1;
+  --oh-c-ink-emerald-700: #047857;
+  --oh-c-ink-cyan-600: #0891b2;
+  --oh-c-ink-cyan-700: #0e7490;
+  --oh-c-ink-teal-700: #0f766e;
+  --oh-c-ink-ink-900: #111827;
+  --oh-c-ink-teal-800: #115e59;
+  --oh-c-ink-teal-900: #134e4a;
+  --oh-c-ink-navy-blue: #153f63;
+  --oh-c-ink-green-700: #15803d;
+  --oh-c-ink-green-800: #166534;
+  --oh-c-ink-blue-700: #1d4ed8;
+  --oh-c-ink-ink-800: #1e293b;
+  --oh-c-ink-blue-900: #1e3a8a;
+  --oh-c-ink-blue-600: #2563eb;
+  --oh-c-ink-ink-700: #334155;
+  --oh-c-ink-amber-800: #92400e;
+  --oh-c-ink-orange-800: #9a3412;
+  --oh-c-ink-amber-700: #b45309;
+  --oh-c-ink-red-700: #b91c1c;
+  --oh-c-ink-rose-700: #be123c;
+  --oh-c-ink-orange-700: #c2410c;
+  --oh-c-line-teal-200: #99f6e4;
+  --oh-c-line-emerald-200: #a7f3d0;
+  --oh-c-line-blue-200: #bfdbfe;
+  --oh-c-line-slate-300: #cbd5e1;
+  --oh-c-line-slate-250: #dbe4ee;
+  --oh-c-line-slate-200: #e2e8f0;
+  --oh-c-line-slate-160: #e5edf5;
+  --oh-c-line-slate-150: #e8edf3;
+  --oh-c-line-rose-200: #fecdd3;
+  --oh-c-line-orange-200: #fed7aa;
+}
+
+/* Form controls in dark mode: placeholders, autofill and text selection.
+   Page styles keep control of borders and backgrounds through the tokens. */
+:where(:root[data-theme="dark"]) ::placeholder {
+  color: var(--oh-muted);
+  opacity: 0.75;
+}
+
+:root[data-theme="dark"] input:-webkit-autofill,
+:root[data-theme="dark"] input:-webkit-autofill:hover,
+:root[data-theme="dark"] input:-webkit-autofill:focus,
+:root[data-theme="dark"] textarea:-webkit-autofill,
+:root[data-theme="dark"] select:-webkit-autofill {
+  -webkit-text-fill-color: var(--oh-text);
+  caret-color: var(--oh-text);
+  -webkit-box-shadow: 0 0 0 1000px var(--oh-input-bg) inset;
+  box-shadow: 0 0 0 1000px var(--oh-input-bg) inset;
+  transition: background-color 99999s ease-out 0s;
+}
+
+:where(:root[data-theme="dark"]) ::selection {
+  background: rgba(45, 212, 191, 0.3);
+}
+
+:where(:root[data-theme="dark"]) :where(input, textarea, select, button):disabled {
+  opacity: 0.55;
+}
+
+/* Small captions on the tinted home panels need a little more contrast in dark. */
+:root[data-theme="dark"] .publicHomePage .homeAIPrivacyNote,
+:root[data-theme="dark"] .publicHomePage .homeAIOutcomePanel > p {
+  color: var(--oh-soft-text);
+}

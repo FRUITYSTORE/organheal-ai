@@ -207,9 +207,9 @@ export default function ForecastCard({
 
         .healthForecastResult {
           padding: 20px;
-          border: 1px solid rgba(15, 23, 42, 0.08);
+          border: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(8% * var(--oh-line-scale, 1)), transparent);
           border-radius: 18px;
-          background: #ffffff;
+          background: var(--oh-c-bg-white, #ffffff);
         }
 
         .healthForecastHeader {
@@ -218,12 +218,12 @@ export default function ForecastCard({
           justify-content: space-between;
           gap: 18px;
           padding-bottom: 16px;
-          border-bottom: 1px solid rgba(15, 23, 42, 0.07);
+          border-bottom: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(7% * var(--oh-line-scale, 1)), transparent);
         }
 
         .healthForecastEyebrow {
           margin: 0;
-          color: #0f766e;
+          color: var(--oh-c-ink-teal-700, #0f766e);
           font-size: 0.68rem;
           font-weight: 950;
           letter-spacing: 0.09em;
@@ -232,7 +232,7 @@ export default function ForecastCard({
 
         .healthForecastTitle {
           margin: 6px 0 0;
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
           font-size: 1.18rem;
           font-weight: 950;
           line-height: 1.3;
@@ -241,7 +241,7 @@ export default function ForecastCard({
         .healthForecastDescription {
           max-width: 720px;
           margin: 7px 0 0;
-          color: #64748b;
+          color: var(--oh-muted, #64748b);
           font-size: 0.82rem;
           line-height: 1.6;
         }
@@ -257,31 +257,31 @@ export default function ForecastCard({
         .healthForecastBadge {
           padding: 7px 10px;
           border-radius: 999px;
-          background: #f1f5f9;
-          color: #475569;
+          background: var(--oh-c-bg-slate-100, #f1f5f9);
+          color: var(--oh-soft-text, #475569);
           font-size: 0.68rem;
           font-weight: 900;
           white-space: nowrap;
         }
 
         .healthForecastBadge.good {
-          background: #ecfdf5;
-          color: #047857;
+          background: var(--oh-c-bg-emerald-50, #ecfdf5);
+          color: var(--oh-c-ink-emerald-700, #047857);
         }
 
         .healthForecastBadge.moderate {
-          background: #fffbeb;
-          color: #b45309;
+          background: var(--oh-c-bg-amber-50, #fffbeb);
+          color: var(--oh-c-ink-amber-700, #b45309);
         }
 
         .healthForecastBadge.risk {
-          background: #fef2f2;
-          color: #b91c1c;
+          background: var(--oh-c-bg-red-50, #fef2f2);
+          color: var(--oh-c-ink-red-700, #b91c1c);
         }
 
         .healthForecastBadge.neutral {
-          background: #f1f5f9;
-          color: #475569;
+          background: var(--oh-c-bg-slate-100, #f1f5f9);
+          color: var(--oh-soft-text, #475569);
         }
 
         .healthForecastSignal {
@@ -290,12 +290,12 @@ export default function ForecastCard({
           border: 1px solid rgba(15, 118, 110, 0.15);
           border-inline-start: 4px solid #0f766e;
           border-radius: 14px;
-          background: #f0fdfa;
+          background: var(--oh-c-bg-teal-50, #f0fdfa);
         }
 
         .healthForecastSignalLabel {
           margin: 0;
-          color: #0f766e;
+          color: var(--oh-c-ink-teal-700, #0f766e);
           font-size: 0.66rem;
           font-weight: 950;
           letter-spacing: 0.08em;
@@ -304,7 +304,7 @@ export default function ForecastCard({
 
         .healthForecastSignalText {
           margin: 7px 0 0;
-          color: #334155;
+          color: var(--oh-c-ink-ink-700, #334155);
           font-size: 0.88rem;
           line-height: 1.65;
         }
@@ -319,7 +319,7 @@ export default function ForecastCard({
           padding: 14px 15px;
           border: 1px solid rgba(148, 163, 184, 0.2);
           border-radius: 14px;
-          background: #f8fafc;
+          background: var(--oh-c-bg-slate-50, #f8fafc);
         }
 
         .healthForecastItemHeader {
@@ -331,7 +331,7 @@ export default function ForecastCard({
 
         .healthForecastItemTitle {
           margin: 0;
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
           font-size: 0.9rem;
           font-weight: 900;
           line-height: 1.4;
@@ -339,7 +339,7 @@ export default function ForecastCard({
 
         .healthForecastContext {
           margin: 4px 0 0;
-          color: #64748b;
+          color: var(--oh-muted, #64748b);
           font-size: 0.72rem;
           line-height: 1.45;
         }
@@ -348,9 +348,9 @@ export default function ForecastCard({
           flex: 0 0 auto;
           padding: 5px 8px;
           border-radius: 999px;
-          background: #ffffff;
+          background: var(--oh-c-bg-white, #ffffff);
           border: 1px solid rgba(148, 163, 184, 0.2);
-          color: #475569;
+          color: var(--oh-soft-text, #475569);
           font-size: 0.67rem;
           font-weight: 850;
         }
@@ -365,16 +365,16 @@ export default function ForecastCard({
         .healthForecastMeta span {
           padding: 5px 8px;
           border-radius: 999px;
-          background: #ffffff;
+          background: var(--oh-c-bg-white, #ffffff);
           border: 1px solid rgba(148, 163, 184, 0.2);
-          color: #64748b;
+          color: var(--oh-muted, #64748b);
           font-size: 0.67rem;
           font-weight: 750;
         }
 
         .healthForecastExplanation {
           margin: 10px 0 0;
-          color: #475569;
+          color: var(--oh-soft-text, #475569);
           font-size: 0.8rem;
           line-height: 1.6;
         }
@@ -384,12 +384,12 @@ export default function ForecastCard({
           padding: 11px 12px;
           border: 1px solid rgba(37, 99, 235, 0.12);
           border-radius: 12px;
-          background: #f8fbff;
+          background: var(--oh-c-bg-blue-25, #f8fbff);
         }
 
         .healthForecastRecommendation strong {
           display: block;
-          color: #1d4ed8;
+          color: var(--oh-c-ink-blue-700, #1d4ed8);
           font-size: 0.68rem;
           text-transform: uppercase;
           letter-spacing: 0.06em;
@@ -397,7 +397,7 @@ export default function ForecastCard({
 
         .healthForecastRecommendation p {
           margin: 5px 0 0;
-          color: #475569;
+          color: var(--oh-soft-text, #475569);
           font-size: 0.78rem;
           line-height: 1.6;
         }
@@ -407,8 +407,8 @@ export default function ForecastCard({
           padding: 14px 15px;
           border: 1px dashed rgba(148, 163, 184, 0.4);
           border-radius: 14px;
-          background: #f8fafc;
-          color: #64748b;
+          background: var(--oh-c-bg-slate-50, #f8fafc);
+          color: var(--oh-muted, #64748b);
           font-size: 0.82rem;
           line-height: 1.6;
         }

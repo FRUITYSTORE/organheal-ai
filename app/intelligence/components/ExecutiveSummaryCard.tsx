@@ -185,7 +185,7 @@ const nextBestAction =
               minWidth: "132px",
               padding: "18px 20px",
               borderRadius: "18px",
-              background: "rgba(255, 255, 255, 0.86)",
+              background: "color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 86%, transparent)",
               border: "1px solid rgba(15, 78, 95, 0.12)",
               textAlign: "center",
             }}

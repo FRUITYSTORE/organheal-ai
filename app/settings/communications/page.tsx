@@ -1484,7 +1484,7 @@ if (
         .communicationSettingsPage .communicationField {
           display: grid;
           gap: 8px;
-          color: #334155;
+          color: var(--oh-c-ink-ink-700, #334155);
           font-size: 0.86rem;
           font-weight: 800;
         }
@@ -1496,8 +1496,8 @@ if (
           padding: 10px 12px;
           border: 1px solid rgba(148, 163, 184, 0.36);
           border-radius: 13px;
-          background: #ffffff;
-          color: #0f172a;
+          background: var(--oh-c-bg-white, #ffffff);
+          color: var(--oh-text, #0f172a);
           font: inherit;
           outline: none;
         }
@@ -1516,7 +1516,7 @@ if (
           padding: 0;
           border: 0;
           border-radius: 999px;
-          background: #cbd5e1;
+          background: var(--oh-c-bg-slate-300, #cbd5e1);
           cursor: pointer;
           transition: 160ms ease;
         }
@@ -1528,7 +1528,7 @@ if (
           width: 20px;
           height: 20px;
           border-radius: 999px;
-          background: #ffffff;
+          background: var(--oh-c-bg-white, #ffffff);
           box-shadow: 0 2px 7px rgba(15, 23, 42, 0.2);
           transition: 160ms ease;
         }
@@ -1562,7 +1562,7 @@ if (
           padding: 12px 14px;
           border-radius: 14px;
           background: rgba(15, 118, 110, 0.06);
-          color: #475569;
+          color: var(--oh-soft-text, #475569);
           font-size: 0.84rem;
           line-height: 1.6;
         }
@@ -1585,12 +1585,12 @@ if (
 
         .communicationSettingsPage .communicationMessage.success {
           background: rgba(16, 185, 129, 0.1);
-          color: #047857;
+          color: var(--oh-c-ink-emerald-700, #047857);
         }
 
         .communicationSettingsPage .communicationMessage.error {
           background: rgba(239, 68, 68, 0.09);
-          color: #b91c1c;
+          color: var(--oh-c-ink-red-700, #b91c1c);
         }
 
         @media (max-width: 820px) {

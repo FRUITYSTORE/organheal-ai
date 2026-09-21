@@ -702,8 +702,8 @@ export default function VoiceInputButton({
           place-items: center;
           border-radius: 16px;
           border: 1px solid rgba(13, 148, 136, 0.28);
-          background: linear-gradient(145deg, #f0fdfa, #ffffff);
-          color: #0f766e;
+          background: linear-gradient(145deg, var(--oh-c-bg-teal-50, #f0fdfa), var(--oh-c-bg-white, #ffffff));
+          color: var(--oh-c-ink-teal-700, #0f766e);
           cursor: pointer;
           box-shadow: 0 8px 22px rgba(15, 118, 110, 0.08);
           transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
@@ -724,7 +724,7 @@ export default function VoiceInputButton({
 
         .organhealVoiceButton.processing {
           cursor: wait;
-          background: linear-gradient(145deg, #ecfeff, #f0fdfa);
+          background: linear-gradient(145deg, var(--oh-c-bg-cyan-50, #ecfeff), var(--oh-c-bg-teal-50, #f0fdfa));
         }
 
         .organhealVoiceButton:disabled {
@@ -768,7 +768,7 @@ export default function VoiceInputButton({
 
         .organhealVoiceStatus {
           max-width: 280px;
-          color: #64748b;
+          color: var(--oh-muted, #64748b);
           font-size: 0.74rem;
           font-weight: 750;
           line-height: 1.4;
@@ -776,7 +776,7 @@ export default function VoiceInputButton({
         }
 
         .organhealVoiceStatus.error {
-          color: #b91c1c;
+          color: var(--oh-c-ink-red-700, #b91c1c);
         }
 
         .organhealVoiceSpinner {

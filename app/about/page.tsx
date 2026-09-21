@@ -133,8 +133,8 @@ export default function AboutPage() {
           background:
             radial-gradient(circle at 12% 5%, rgba(6, 182, 212, 0.22), transparent 28%),
             radial-gradient(circle at 88% 18%, rgba(15, 118, 110, 0.28), transparent 34%),
-            linear-gradient(180deg, #dbeafe 0%, #e2e8f0 46%, #f8fafc 100%);
-          color: #0f172a;
+            linear-gradient(180deg, var(--oh-c-bg-blue-100, #dbeafe) 0%, var(--oh-c-bg-slate-200, #e2e8f0) 46%, var(--oh-c-bg-slate-50, #f8fafc) 100%);
+          color: var(--oh-text, #0f172a);
           padding: 30px 0 64px;
         }
 
@@ -219,8 +219,8 @@ export default function AboutPage() {
         }
 
         .aboutSecondary {
-          background: #ffffff;
-          color: #0f766e;
+          background: var(--oh-c-bg-white, #ffffff);
+          color: var(--oh-c-ink-teal-700, #0f766e);
           border: 1px solid rgba(15, 118, 110, 0.30);
           box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
         }
@@ -230,8 +230,8 @@ export default function AboutPage() {
           gap: 16px;
           padding: 24px;
           border-radius: 30px;
-          background: #ffffff;
-          color: #0f172a;
+          background: var(--oh-c-bg-white, #ffffff);
+          color: var(--oh-text, #0f172a);
           box-shadow: 0 30px 78px rgba(0, 0, 0, 0.24);
           border: 1px solid rgba(255, 255, 255, 0.24);
         }
@@ -262,34 +262,34 @@ export default function AboutPage() {
         .previewBox {
           padding: 18px;
           border-radius: 20px;
-          background: #f8fafc;
-          border: 1px solid rgba(15, 23, 42, 0.10);
+          background: var(--oh-c-bg-slate-50, #f8fafc);
+          border: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(10% * var(--oh-line-scale, 1)), transparent);
         }
 
         .previewBox strong {
           display: block;
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
           font-weight: 950;
           margin-bottom: 8px;
         }
 
         .previewBox p {
           margin: 0;
-          color: #475569;
+          color: var(--oh-soft-text, #475569);
           font-weight: 760;
           line-height: 1.6;
         }
 
         .aboutPanel {
-          background: #ffffff;
-          border: 1px solid rgba(15, 23, 42, 0.14);
+          background: var(--oh-c-bg-white, #ffffff);
+          border: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(14% * var(--oh-line-scale, 1)), transparent);
           border-radius: 32px;
           padding: 26px;
           box-shadow: 0 22px 58px rgba(15, 23, 42, 0.13);
         }
 
         .panelLabel {
-          color: #0f766e;
+          color: var(--oh-c-ink-teal-700, #0f766e);
           font-size: 0.74rem;
           font-weight: 950;
           letter-spacing: 0.09em;
@@ -299,7 +299,7 @@ export default function AboutPage() {
 
         .panelTitle {
           margin: 0;
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
           font-size: clamp(1.7rem, 3vw, 2.5rem);
           line-height: 1.14;
           letter-spacing: -0.035em;
@@ -307,7 +307,7 @@ export default function AboutPage() {
 
         .panelText {
           margin: 12px 0 0;
-          color: #334155;
+          color: var(--oh-c-ink-ink-700, #334155);
           font-weight: 740;
           line-height: 1.7;
           max-width: 860px;
@@ -324,8 +324,8 @@ export default function AboutPage() {
           min-height: 210px;
           padding: 22px;
           border-radius: 24px;
-          background: #ffffff;
-          border: 1px solid rgba(15, 23, 42, 0.12);
+          background: var(--oh-c-bg-white, #ffffff);
+          border: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(12% * var(--oh-line-scale, 1)), transparent);
           border-top: 7px solid #0f766e;
           box-shadow: 0 16px 38px rgba(15, 23, 42, 0.10);
         }
@@ -352,15 +352,15 @@ export default function AboutPage() {
           width: 44px;
           height: 44px;
           border-radius: 16px;
-          background: #ecfeff;
-          color: #0f766e;
+          background: var(--oh-c-bg-cyan-50, #ecfeff);
+          color: var(--oh-c-ink-teal-700, #0f766e);
           font-weight: 950;
           margin-bottom: 16px;
         }
 
         .aboutCard h3 {
           margin: 0;
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
           font-size: 1.2rem;
           line-height: 1.25;
           font-weight: 950;
@@ -368,7 +368,7 @@ export default function AboutPage() {
 
         .aboutCard p {
           margin: 10px 0 0;
-          color: #475569;
+          color: var(--oh-soft-text, #475569);
           font-weight: 740;
           line-height: 1.65;
         }
@@ -392,8 +392,8 @@ export default function AboutPage() {
           align-items: start;
           padding: 16px;
           border-radius: 20px;
-          background: #f8fafc;
-          border: 1px solid rgba(15, 23, 42, 0.10);
+          background: var(--oh-c-bg-slate-50, #f8fafc);
+          border: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(10% * var(--oh-line-scale, 1)), transparent);
         }
 
         .stepNumber {
@@ -409,14 +409,14 @@ export default function AboutPage() {
 
         .stepItem strong {
           display: block;
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
           font-weight: 950;
           margin-bottom: 4px;
         }
 
         .stepItem p {
           margin: 0;
-          color: #475569;
+          color: var(--oh-soft-text, #475569);
           font-weight: 740;
           line-height: 1.55;
         }
@@ -432,15 +432,15 @@ export default function AboutPage() {
           min-height: 92px;
           padding: 16px;
           border-radius: 20px;
-          background: linear-gradient(180deg, #ffffff, #f8fafc);
-          border: 1px solid rgba(15, 23, 42, 0.10);
+          background: linear-gradient(180deg, var(--oh-c-bg-white, #ffffff), var(--oh-c-bg-slate-50, #f8fafc));
+          border: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(10% * var(--oh-line-scale, 1)), transparent);
           border-inline-start: 6px solid #0f766e;
           box-shadow: 0 10px 24px rgba(15, 23, 42, 0.07);
         }
 
         .moduleItem strong {
           display: block;
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
           font-size: 1.05rem;
           font-weight: 950;
         }
@@ -451,8 +451,8 @@ export default function AboutPage() {
           margin-top: 8px;
           padding: 6px 10px;
           border-radius: 999px;
-          background: #ecfeff;
-          color: #0f766e;
+          background: var(--oh-c-bg-cyan-50, #ecfeff);
+          color: var(--oh-c-ink-teal-700, #0f766e);
           border: 1px solid rgba(15, 118, 110, 0.18);
           font-size: 0.74rem;
           font-weight: 950;
@@ -469,20 +469,20 @@ export default function AboutPage() {
           min-height: 170px;
           padding: 18px;
           border-radius: 22px;
-          background: #f8fafc;
-          border: 1px solid rgba(15, 23, 42, 0.10);
+          background: var(--oh-c-bg-slate-50, #f8fafc);
+          border: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(10% * var(--oh-line-scale, 1)), transparent);
         }
 
         .safetyCard strong {
           display: block;
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
           font-weight: 950;
           margin-bottom: 8px;
         }
 
         .safetyCard p {
           margin: 0;
-          color: #475569;
+          color: var(--oh-soft-text, #475569);
           font-weight: 740;
           line-height: 1.6;
         }
@@ -494,21 +494,21 @@ export default function AboutPage() {
           gap: 18px;
           padding: 28px;
           border-radius: 32px;
-          background: linear-gradient(135deg, #ecfeff, #ffffff);
+          background: linear-gradient(135deg, var(--oh-c-bg-cyan-50, #ecfeff), var(--oh-c-bg-white, #ffffff));
           border: 1px solid rgba(15, 118, 110, 0.18);
           box-shadow: 0 22px 58px rgba(15, 23, 42, 0.10);
         }
 
         .aboutCTA h2 {
           margin: 0;
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
           font-size: clamp(1.5rem, 3vw, 2.2rem);
           line-height: 1.15;
         }
 
         .aboutCTA p {
           margin: 8px 0 0;
-          color: #475569;
+          color: var(--oh-soft-text, #475569);
           font-weight: 740;
           line-height: 1.65;
         }

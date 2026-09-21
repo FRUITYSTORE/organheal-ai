@@ -1099,8 +1099,8 @@ const timelineItems = officialTimelineItems;
           background:
             radial-gradient(circle at 12% 5%, rgba(6, 182, 212, 0.22), transparent 28%),
             radial-gradient(circle at 88% 18%, rgba(15, 118, 110, 0.26), transparent 34%),
-            linear-gradient(180deg, #dbeafe 0%, #d9e5ec 45%, #f8fafc 100%) !important;
-          color: #0f172a !important;
+            linear-gradient(180deg, var(--oh-c-bg-blue-100, #dbeafe) 0%, var(--oh-c-bg-slate-blue, #d9e5ec) 45%, var(--oh-c-bg-slate-50, #f8fafc) 100%) !important;
+          color: var(--oh-text, #0f172a) !important;
         }
 
         .followUpCleanV4 .ohContainer,
@@ -1141,9 +1141,9 @@ const timelineItems = officialTimelineItems;
         .followUpCleanV4 .ohActionPanel,
         .followUpCleanV4 form,
         .followUpCleanV4 article {
-          background: #ffffff !important;
-          color: #0f172a !important;
-          border: 1px solid rgba(15, 23, 42, 0.14) !important;
+          background: var(--oh-c-bg-white, #ffffff) !important;
+          color: var(--oh-text, #0f172a) !important;
+          border: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(14% * var(--oh-line-scale, 1)), transparent) !important;
           border-radius: 28px !important;
           box-shadow: 0 22px 58px rgba(15, 23, 42, 0.13) !important;
         }
@@ -1153,13 +1153,13 @@ const timelineItems = officialTimelineItems;
         .followUpCleanV4 .ohActionPanel :is(h1,h2,h3,h4,p,span,strong,small,label,li,div),
         .followUpCleanV4 form :is(h1,h2,h3,h4,p,span,strong,small,label,li,div),
         .followUpCleanV4 article :is(h1,h2,h3,h4,p,span,strong,small,label,li,div) {
-          color: #0f172a !important;
+          color: var(--oh-text, #0f172a) !important;
         }
 
         .followUpCleanV4 p,
         .followUpCleanV4 small,
         .followUpCleanV4 li {
-          color: #334155 !important;
+          color: var(--oh-c-ink-ink-700, #334155) !important;
           font-weight: 720 !important;
           line-height: 1.65 !important;
         }
@@ -1170,7 +1170,7 @@ const timelineItems = officialTimelineItems;
         .followUpCleanV4 h4,
         .followUpCleanV4 strong,
         .followUpCleanV4 label {
-          color: #0f172a !important;
+          color: var(--oh-text, #0f172a) !important;
           font-weight: 950 !important;
         }
 
@@ -1275,8 +1275,8 @@ const timelineItems = officialTimelineItems;
           min-height: 38px !important;
           padding: 0 14px !important;
           border-radius: 999px !important;
-          background: #ffffff !important;
-          color: #0f766e !important;
+          background: var(--oh-c-bg-white, #ffffff) !important;
+          color: var(--oh-c-ink-teal-700, #0f766e) !important;
           border: 1px solid rgba(15, 118, 110, 0.34) !important;
           box-shadow: 0 10px 24px rgba(15, 23, 42, 0.10) !important;
         }
@@ -1285,22 +1285,22 @@ const timelineItems = officialTimelineItems;
         .followUpCleanV4 a[class*="Secondary"] *,
         .followUpCleanV4 button[class*="Secondary"] *,
         .followUpCleanV4 .ohContainer > section:not(:first-of-type) a[href] * {
-          color: #0f766e !important;
+          color: var(--oh-c-ink-teal-700, #0f766e) !important;
         }
 
         .followUpCleanV4 input,
         .followUpCleanV4 select,
         .followUpCleanV4 textarea {
-          background: #ffffff !important;
-          color: #0f172a !important;
-          border: 1px solid rgba(15, 23, 42, 0.22) !important;
+          background: var(--oh-c-bg-white, #ffffff) !important;
+          color: var(--oh-text, #0f172a) !important;
+          border: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(22% * var(--oh-line-scale, 1)), transparent) !important;
           border-radius: 14px !important;
           box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08) !important;
         }
 
         .followUpCleanV4 input::placeholder,
         .followUpCleanV4 textarea::placeholder {
-          color: #64748b !important;
+          color: var(--oh-muted, #64748b) !important;
           opacity: 1 !important;
         }
 
@@ -1316,7 +1316,7 @@ const timelineItems = officialTimelineItems;
         .followUpCleanV4 [style*="background-color: white"],
         .followUpCleanV4 [style*="background-color:#fff"],
         .followUpCleanV4 [style*="background-color: #fff"] {
-          color: #0f172a !important;
+          color: var(--oh-text, #0f172a) !important;
         }
 
         .followUpCleanV4 [style*="background: white"] *,
@@ -1325,7 +1325,7 @@ const timelineItems = officialTimelineItems;
         .followUpCleanV4 [style*="background-color: white"] *,
         .followUpCleanV4 [style*="background-color:#fff"] *,
         .followUpCleanV4 [style*="background-color: #fff"] * {
-          color: #0f172a !important;
+          color: var(--oh-text, #0f172a) !important;
         }
       `}</style>
       <style>{`
@@ -1367,9 +1367,9 @@ const timelineItems = officialTimelineItems;
         .followUpCleanV4 .ohContainer > section:not(:first-of-type) > div:first-child input,
         .followUpCleanV4 .ohContainer > section:not(:first-of-type) > div:first-child select,
         .followUpCleanV4 .ohContainer > section:not(:first-of-type) > div:first-child textarea {
-          background: #ffffff !important;
-          color: #0f172a !important;
-          border: 1px solid rgba(15, 23, 42, 0.22) !important;
+          background: var(--oh-c-bg-white, #ffffff) !important;
+          color: var(--oh-text, #0f172a) !important;
+          border: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(22% * var(--oh-line-scale, 1)), transparent) !important;
         }
 
         /* Fix buttons on dark bars */
@@ -1385,9 +1385,9 @@ const timelineItems = officialTimelineItems;
           min-height: 40px !important;
           padding: 0 16px !important;
           border-radius: 999px !important;
-          background: #ffffff !important;
-          color: #0f766e !important;
-          border: 1px solid rgba(255, 255, 255, 0.78) !important;
+          background: var(--oh-c-bg-white, #ffffff) !important;
+          color: var(--oh-c-ink-teal-700, #0f766e) !important;
+          border: 1px solid color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 78%, transparent) !important;
           box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18) !important;
           font-weight: 950 !important;
           text-decoration: none !important;
@@ -1399,7 +1399,7 @@ const timelineItems = officialTimelineItems;
         .followUpCleanV4 .ohCard > div:first-child button *,
         .followUpCleanV4 article > div:first-child a[href] *,
         .followUpCleanV4 article > div:first-child button * {
-          color: #0f766e !important;
+          color: var(--oh-c-ink-teal-700, #0f766e) !important;
         }
 
         /* Improve hero right preview card */
@@ -1413,8 +1413,8 @@ const timelineItems = officialTimelineItems;
           min-height: 300px !important;
           padding: 24px !important;
           border-radius: 26px !important;
-          background: #ffffff !important;
-          color: #0f172a !important;
+          background: var(--oh-c-bg-white, #ffffff) !important;
+          color: var(--oh-text, #0f172a) !important;
           display: flex !important;
           flex-direction: column !important;
           justify-content: space-between !important;
@@ -1427,7 +1427,7 @@ const timelineItems = officialTimelineItems;
         .followUpCleanV4 [class*="Hero"] .ohCard *,
         .followUpCleanV4 .ohContainer > section:first-of-type aside *,
         .followUpCleanV4 .ohContainer > section:first-of-type .ohCard * {
-          color: #0f172a !important;
+          color: var(--oh-text, #0f172a) !important;
         }
 
         .followUpCleanV4 .ohHero aside > div:first-child,
@@ -1475,8 +1475,8 @@ const timelineItems = officialTimelineItems;
           justify-content: center;
           min-height: 42px;
           border-radius: 14px;
-          background: #f8fafc;
-          color: #0f766e;
+          background: var(--oh-c-bg-slate-50, #f8fafc);
+          color: var(--oh-c-ink-teal-700, #0f766e);
           border: 1px solid rgba(15, 118, 110, 0.18);
           font-weight: 950;
           margin-top: 14px;
@@ -1514,12 +1514,12 @@ const timelineItems = officialTimelineItems;
 
         .followUpCleanV4 a[href]:not(.organhealBackButton):not([class*="Primary"]),
         .followUpCleanV4 button:not([class*="Primary"]) {
-          color: #0f766e !important;
+          color: var(--oh-c-ink-teal-700, #0f766e) !important;
         }
 
         .followUpCleanV4 a[href]:not(.organhealBackButton):not([class*="Primary"]) *,
         .followUpCleanV4 button:not([class*="Primary"]) * {
-          color: #0f766e !important;
+          color: var(--oh-c-ink-teal-700, #0f766e) !important;
         }
       `}</style></main>
   );

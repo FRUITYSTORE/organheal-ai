@@ -732,7 +732,7 @@ async function playSpokenResponse(
 
         .assistantCommandPage .assistantMessage.ai {
           justify-self: start;
-          background: rgba(255, 255, 255, 0.92);
+          background: color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 92%, transparent);
         }
 
         .assistantCommandPage .assistantMessage.user {
@@ -767,7 +767,7 @@ async function playSpokenResponse(
           padding: 0 14px;
           border-radius: 16px;
           border: 1px solid rgba(148, 163, 184, 0.36);
-          background: rgba(255, 255, 255, 0.94);
+          background: color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 94%, transparent);
           color: var(--oh-text);
           font-weight: 800;
           font-size: 0.86rem;
@@ -776,7 +776,7 @@ async function playSpokenResponse(
 
         .assistantCommandPage .assistantAttachAction:hover {
           border-color: rgba(20, 184, 166, 0.5);
-          color: #0f766e;
+          color: var(--oh-c-ink-teal-700, #0f766e);
         }
 
         .assistantCommandPage .assistantInputForm input {
@@ -784,7 +784,7 @@ async function playSpokenResponse(
           min-height: 52px;
           border-radius: 16px;
           border: 1px solid rgba(148, 163, 184, 0.36);
-          background: rgba(255, 255, 255, 0.94);
+          background: color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 94%, transparent);
           color: var(--oh-text);
           padding: 12px 14px;
           font: inherit;
@@ -811,7 +811,7 @@ async function playSpokenResponse(
         .assistantCommandPage .suggestedQuestionBtn {
           text-align: start;
           border: 1px solid rgba(148, 163, 184, 0.28);
-          background: rgba(255, 255, 255, 0.9);
+          background: color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 90%, transparent);
           border-radius: 16px;
           padding: 14px;
           cursor: pointer;
@@ -822,7 +822,7 @@ async function playSpokenResponse(
 
         .assistantCommandPage .suggestedQuestionBtn:hover:not(:disabled) {
           border-color: rgba(20, 184, 166, 0.5);
-          color: #0f766e;
+          color: var(--oh-c-ink-teal-700, #0f766e);
         }
 
         @media (max-width: 760px) {

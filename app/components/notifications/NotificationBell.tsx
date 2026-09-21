@@ -707,8 +707,8 @@ export default function NotificationBell({
           overflow: hidden;
           border-radius: 24px;
           border: 1px solid rgba(148, 163, 184, 0.25);
-          background: rgba(255, 255, 255, 0.98);
-          color: #0f172a;
+          background: color-mix(in srgb, var(--oh-c-bg-white, #ffffff) 98%, transparent);
+          color: var(--oh-text, #0f172a);
           box-shadow: 0 28px 80px rgba(2, 6, 23, 0.34);
         }
 
@@ -722,21 +722,21 @@ export default function NotificationBell({
           background:
             linear-gradient(
               135deg,
-              #f0fdfa,
-              #ecfeff
+              var(--oh-c-bg-teal-50, #f0fdfa),
+              var(--oh-c-bg-cyan-50, #ecfeff)
             );
         }
 
         .notificationDrawerHeader h2 {
           margin: 0;
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
           font-size: 1.15rem;
         }
 
         .notificationDrawerHeader span {
           display: block;
           margin-top: 4px;
-          color: #64748b;
+          color: var(--oh-muted, #64748b);
           font-size: 0.76rem;
           font-weight: 800;
         }
@@ -748,8 +748,8 @@ export default function NotificationBell({
           place-items: center;
           border: 0;
           border-radius: 999px;
-          background: rgba(15, 23, 42, 0.07);
-          color: #334155;
+          background: color-mix(in srgb, var(--oh-line-base, #0f172a) calc(7% * var(--oh-line-scale, 1)), transparent);
+          color: var(--oh-c-ink-ink-700, #334155);
           cursor: pointer;
           font-size: 1rem;
         }
@@ -767,18 +767,18 @@ export default function NotificationBell({
 
         .notificationState strong {
           display: block;
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
           font-size: 1rem;
         }
 
         .notificationState p {
           margin: 8px 0 0;
-          color: #64748b;
+          color: var(--oh-muted, #64748b);
           line-height: 1.65;
         }
 
         .notificationStateError {
-          color: #b91c1c;
+          color: var(--oh-c-ink-red-700, #b91c1c);
         }
 
         .notificationList {
@@ -790,15 +790,15 @@ export default function NotificationBell({
           padding: 16px;
           border-radius: 18px;
           border: 1px solid rgba(148, 163, 184, 0.2);
-          background: #f8fafc;
+          background: var(--oh-c-bg-slate-50, #f8fafc);
         }
 
         .notificationItem.unread {
           background:
             linear-gradient(
               135deg,
-              #ecfeff,
-              #ffffff
+              var(--oh-c-bg-cyan-50, #ecfeff),
+              var(--oh-c-bg-white, #ffffff)
             );
           border-color: rgba(13, 148, 136, 0.28);
           box-shadow: inset 4px 0 0 #14b8a6;
@@ -819,20 +819,20 @@ export default function NotificationBell({
           display: inline-flex;
           padding: 5px 9px;
           border-radius: 999px;
-          background: #e2e8f0;
-          color: #475569;
+          background: var(--oh-c-bg-slate-200, #e2e8f0);
+          color: var(--oh-soft-text, #475569);
           font-size: 0.68rem;
           font-weight: 950;
         }
 
         .notificationPriority.high {
-          background: #ffedd5;
-          color: #c2410c;
+          background: var(--oh-c-bg-orange-100, #ffedd5);
+          color: var(--oh-c-ink-orange-700, #c2410c);
         }
 
         .notificationPriority.critical {
-          background: #fee2e2;
-          color: #b91c1c;
+          background: var(--oh-c-bg-red-100, #fee2e2);
+          color: var(--oh-c-ink-red-700, #b91c1c);
         }
 
         .notificationDate {
@@ -844,14 +844,14 @@ export default function NotificationBell({
 
         .notificationItem h3 {
           margin: 12px 0 7px;
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
           font-size: 0.98rem;
           line-height: 1.4;
         }
 
         .notificationItem p {
           margin: 0;
-          color: #64748b;
+          color: var(--oh-muted, #64748b);
           font-size: 0.86rem;
           line-height: 1.6;
         }
@@ -860,9 +860,9 @@ export default function NotificationBell({
           margin-top: 11px !important;
           padding: 10px 12px;
           border-radius: 13px;
-          background: #fff7ed;
-          color: #9a3412 !important;
-          border: 1px solid #fed7aa;
+          background: var(--oh-c-bg-orange-50, #fff7ed);
+          color: var(--oh-c-ink-orange-800, #9a3412) !important;
+          border: 1px solid var(--oh-c-line-orange-200, #fed7aa);
           font-weight: 800;
         }
 
@@ -895,14 +895,14 @@ export default function NotificationBell({
 
         .notificationActionSecondary {
           border: 1px solid rgba(15, 118, 110, 0.24);
-          background: #ffffff;
-          color: #0f766e;
+          background: var(--oh-c-bg-white, #ffffff);
+          color: var(--oh-c-ink-teal-700, #0f766e);
         }
 
         .notificationActionDismiss {
           border: 0;
           background: transparent;
-          color: #64748b;
+          color: var(--oh-muted, #64748b);
         }
 
         .notificationActions button:disabled {

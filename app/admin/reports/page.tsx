@@ -724,12 +724,12 @@ async function loadReports() {
                         overflowY: "auto",
                         whiteSpace: "pre-wrap",
                         padding: "14px",
-                        background: "rgba(248, 250, 252, 0.86)",
+                        background: "color-mix(in srgb, var(--oh-c-bg-slate-50, #f8fafc) 86%, transparent)",
                         border: "1px solid rgba(148, 163, 184, 0.24)",
                         borderRadius: "16px",
                         marginTop: "10px",
                         lineHeight: 1.7,
-                        color: "#334155",
+                        color: "var(--oh-c-ink-ink-700, #334155)",
                       }}
                     >
                       {presentAdminExtractedText(

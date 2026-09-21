@@ -355,13 +355,13 @@ export default function OnboardingPage() {
         }
 
         .onboardingPage .onboardingStepCard .secondaryBtn {
-          background: #ffffff;
+          background: var(--oh-c-bg-white, #ffffff);
           border: 1.5px solid rgba(15, 118, 110, 0.45);
-          color: #0f766e;
+          color: var(--oh-c-ink-teal-700, #0f766e);
         }
 
         .onboardingPage .onboardingStepCard .secondaryBtn:hover {
-          background: rgba(240, 253, 250, 0.95);
+          background: color-mix(in srgb, var(--oh-c-bg-teal-50, #f0fdfa) 95%, transparent);
           border-color: rgba(15, 118, 110, 0.75);
           transform: translateY(-1px);
         }
@@ -377,13 +377,13 @@ export default function OnboardingPage() {
         .onboardingPage .onboardingStepMetaItem {
           border-radius: 14px;
           padding: 11px 12px;
-          background: rgba(240, 253, 250, 0.95);
+          background: color-mix(in srgb, var(--oh-c-bg-teal-50, #f0fdfa) 95%, transparent);
           border: 1px solid rgba(15, 118, 110, 0.18);
         }
 
         .onboardingPage .onboardingStepMetaLabel {
           display: block;
-          color: #475569;
+          color: var(--oh-soft-text, #475569);
           font-size: 0.74rem;
           font-weight: 850;
           margin-bottom: 3px;
@@ -391,7 +391,7 @@ export default function OnboardingPage() {
 
         .onboardingPage .onboardingStepMetaValue {
           display: block;
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
           font-size: 0.88rem;
           font-weight: 950;
         }
@@ -402,7 +402,7 @@ export default function OnboardingPage() {
         .onboardingPage .onboardingProgressCard {
           padding: 24px;
           border-radius: 28px;
-          background: linear-gradient(135deg, #ffffff, #f0fdfa);
+          background: linear-gradient(135deg, var(--oh-c-bg-white, #ffffff), var(--oh-c-bg-teal-50, #f0fdfa));
           border: 1px solid rgba(15, 118, 110, 0.16);
           box-shadow: 0 20px 46px rgba(15, 23, 42, 0.10);
         }
@@ -417,14 +417,14 @@ export default function OnboardingPage() {
 
         .onboardingPage .onboardingProgressTitle {
           margin: 0;
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
           font-size: 1.25rem;
           font-weight: 950;
         }
 
         .onboardingPage .onboardingProgressText {
           margin: 6px 0 0;
-          color: #475569;
+          color: var(--oh-soft-text, #475569);
           font-weight: 750;
           line-height: 1.6;
         }
@@ -465,9 +465,9 @@ export default function OnboardingPage() {
         .onboardingPage .onboardingProgressStep {
           padding: 12px;
           border-radius: 16px;
-          background: #ffffff;
+          background: var(--oh-c-bg-white, #ffffff);
           border: 1px solid rgba(15, 118, 110, 0.16);
-          color: #334155;
+          color: var(--oh-c-ink-ink-700, #334155);
           font-size: 0.82rem;
           font-weight: 900;
           text-align: center;
@@ -487,7 +487,7 @@ export default function OnboardingPage() {
           border-radius: 20px;
           border: 1px solid rgba(37, 99, 235, 0.16);
           border-inline-start: 5px solid #2563eb;
-          background: rgba(239, 246, 255, 0.78);
+          background: color-mix(in srgb, var(--oh-c-bg-blue-50, #eff6ff) 78%, transparent);
           color: var(--oh-muted);
           line-height: 1.65;
         }
@@ -505,7 +505,7 @@ export default function OnboardingPage() {
           justify-content: center;
           border-radius: 999px;
           background: rgba(37, 99, 235, 0.12);
-          color: #1d4ed8;
+          color: var(--oh-c-ink-blue-700, #1d4ed8);
           font-weight: 950;
         }
 

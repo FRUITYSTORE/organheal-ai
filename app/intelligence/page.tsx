@@ -1043,7 +1043,7 @@ const hasReportEvidence = Boolean(
           border-top: 6px solid #0f766e;
           background:
             radial-gradient(circle at 88% 8%, rgba(20, 184, 166, 0.14), transparent 30%),
-            #ffffff;
+            var(--oh-c-bg-white, #ffffff);
           box-shadow: 0 22px 58px rgba(15, 23, 42, 0.08);
         }
 
@@ -1085,9 +1085,9 @@ const hasReportEvidence = Boolean(
           gap: 6px;
           border-radius: 999px;
           padding: 8px 11px;
-          border: 1px solid rgba(15, 23, 42, 0.08);
-          background: #f8fafc;
-          color: #334155;
+          border: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(8% * var(--oh-line-scale, 1)), transparent);
+          background: var(--oh-c-bg-slate-50, #f8fafc);
+          color: var(--oh-c-ink-ink-700, #334155);
           font-size: 0.78rem;
           font-weight: 900;
           line-height: 1;
@@ -1096,19 +1096,19 @@ const hasReportEvidence = Boolean(
 
         .intelligencePill.good {
           background: rgba(16, 185, 129, 0.11);
-          color: #047857;
+          color: var(--oh-c-ink-emerald-700, #047857);
           border-color: rgba(16, 185, 129, 0.22);
         }
 
         .intelligencePill.moderate {
           background: rgba(245, 158, 11, 0.12);
-          color: #b45309;
+          color: var(--oh-c-ink-amber-700, #b45309);
           border-color: rgba(245, 158, 11, 0.24);
         }
 
         .intelligencePill.neutral {
           background: rgba(37, 99, 235, 0.1);
-          color: #1d4ed8;
+          color: var(--oh-c-ink-blue-700, #1d4ed8);
           border-color: rgba(37, 99, 235, 0.18);
         }
 
@@ -1134,8 +1134,8 @@ const hasReportEvidence = Boolean(
           min-height: 44px;
           padding: 0 16px;
           border-radius: 999px;
-          background: white;
-          color: #0f766e;
+          background: var(--oh-c-bg-white, white);
+          color: var(--oh-c-ink-teal-700, #0f766e);
           font-weight: 900;
           border: 1px solid rgba(15, 118, 110, 0.2);
           cursor: pointer;
@@ -1153,12 +1153,12 @@ const hasReportEvidence = Boolean(
 
 .selectedReportActionGroup + .selectedReportActionGroup {
   padding-top: 16px;
-  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  border-top: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(8% * var(--oh-line-scale, 1)), transparent);
 }
 
 .selectedReportActionLabel {
   margin: 0;
-  color: #64748b;
+  color: var(--oh-muted, #64748b);
   font-size: 0.7rem;
   font-weight: 950;
   letter-spacing: 0.08em;
@@ -1180,8 +1180,8 @@ const hasReportEvidence = Boolean(
   padding: 0 16px;
   border: 1px solid rgba(15, 118, 110, 0.18);
   border-radius: 14px;
-  background: #ffffff;
-  color: #0f766e !important;
+  background: var(--oh-c-bg-white, #ffffff);
+  color: var(--oh-c-ink-teal-700, #0f766e) !important;
   font-size: 0.82rem;
   font-weight: 900;
   line-height: 1.2;
@@ -1194,7 +1194,7 @@ const hasReportEvidence = Boolean(
 }
 
 .selectedReportActionButton:hover {
-  background: #f0fdfa;
+  background: var(--oh-c-bg-teal-50, #f0fdfa);
   border-color: rgba(15, 118, 110, 0.3);
   transform: translateY(-1px);
 }
@@ -1219,7 +1219,7 @@ const hasReportEvidence = Boolean(
 }
 
 .selectedReportActionButton.document {
-  background: #f0fdfa;
+  background: var(--oh-c-bg-teal-50, #f0fdfa);
 }
 
 .selectedReportActionButton:disabled {
@@ -1249,7 +1249,7 @@ const hasReportEvidence = Boolean(
           display: grid;
           gap: 18px;
           padding: 22px;
-          border: 1px solid rgba(15, 23, 42, 0.08);
+          border: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(8% * var(--oh-line-scale, 1)), transparent);
           border-radius: 28px;
           background:
             radial-gradient(
@@ -1257,7 +1257,7 @@ const hasReportEvidence = Boolean(
               rgba(20, 184, 166, 0.09),
               transparent 30%
             ),
-            #ffffff;
+            var(--oh-c-bg-white, #ffffff);
           box-shadow: 0 18px 50px rgba(15, 23, 42, 0.06);
         }
 
@@ -1268,7 +1268,7 @@ const hasReportEvidence = Boolean(
               rgba(37, 99, 235, 0.09),
               transparent 30%
             ),
-            linear-gradient(180deg, #ffffff, #f8fbff);
+            linear-gradient(180deg, var(--oh-c-bg-white, #ffffff), var(--oh-c-bg-blue-25, #f8fbff));
         }
 
         .intelligenceLayerHeader {
@@ -1277,12 +1277,12 @@ const hasReportEvidence = Boolean(
           justify-content: space-between;
           gap: 20px;
           padding-bottom: 17px;
-          border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+          border-bottom: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(8% * var(--oh-line-scale, 1)), transparent);
         }
 
         .intelligenceLayerEyebrow {
           margin: 0 0 7px;
-          color: #0f766e;
+          color: var(--oh-c-ink-teal-700, #0f766e);
           font-size: 0.75rem;
           font-weight: 950;
           letter-spacing: 0.09em;
@@ -1291,7 +1291,7 @@ const hasReportEvidence = Boolean(
 
         .intelligenceLayerTitle {
           margin: 0;
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
           font-size: clamp(1.28rem, 2vw, 1.68rem);
           font-weight: 950;
           letter-spacing: -0.025em;
@@ -1300,7 +1300,7 @@ const hasReportEvidence = Boolean(
         .intelligenceLayerDescription {
           max-width: 760px;
           margin: 8px 0 0;
-          color: #64748b;
+          color: var(--oh-muted, #64748b);
           font-weight: 650;
           line-height: 1.7;
         }
@@ -1313,8 +1313,8 @@ const hasReportEvidence = Boolean(
           width: 44px;
           height: 44px;
           border-radius: 15px;
-          background: #ecfdf5;
-          color: #047857;
+          background: var(--oh-c-bg-emerald-50, #ecfdf5);
+          color: var(--oh-c-ink-emerald-700, #047857);
           font-size: 0.83rem;
           font-weight: 950;
         }
@@ -1331,12 +1331,12 @@ const hasReportEvidence = Boolean(
   padding: 13px 15px;
   border-radius: 16px;
   border: 1px solid rgba(15, 118, 110, 0.18);
-  background: #f0fdfa;
+  background: var(--oh-c-bg-teal-50, #f0fdfa);
 }
 
 .intelligenceEvidenceStatus.developing {
   border-color: rgba(245, 158, 11, 0.24);
-  background: #fffbeb;
+  background: var(--oh-c-bg-amber-50, #fffbeb);
 }
 
 .intelligenceEvidenceStatusMark {
@@ -1347,27 +1347,27 @@ const hasReportEvidence = Boolean(
   width: 30px;
   height: 30px;
   border-radius: 999px;
-  background: #ccfbf1;
-  color: #0f766e;
+  background: var(--oh-c-bg-teal-100, #ccfbf1);
+  color: var(--oh-c-ink-teal-700, #0f766e);
   font-size: 0.78rem;
   font-weight: 950;
 }
 
 .intelligenceEvidenceStatus.developing
   .intelligenceEvidenceStatusMark {
-  background: #fef3c7;
-  color: #b45309;
+  background: var(--oh-c-bg-amber-100, #fef3c7);
+  color: var(--oh-c-ink-amber-700, #b45309);
 }
 
 .intelligenceEvidenceStatus strong {
   display: block;
-  color: #0f172a;
+  color: var(--oh-text, #0f172a);
   font-size: 0.86rem;
 }
 
 .intelligenceEvidenceStatus p {
   margin: 3px 0 0;
-  color: #64748b;
+  color: var(--oh-muted, #64748b);
   font-size: 0.78rem;
   line-height: 1.55;
 }
@@ -1383,8 +1383,8 @@ const hasReportEvidence = Boolean(
   background:
     linear-gradient(
       135deg,
-      rgba(239, 246, 255, 0.96),
-      rgba(240, 253, 250, 0.92)
+      color-mix(in srgb, var(--oh-c-bg-blue-50, #eff6ff) 96%, transparent),
+      color-mix(in srgb, var(--oh-c-bg-teal-50, #f0fdfa) 92%, transparent)
     );
 }
 
@@ -1398,12 +1398,12 @@ const hasReportEvidence = Boolean(
 }
 
 .intelligenceHealthStatusMetric {
-  border-inline-start: 1px solid rgba(15, 23, 42, 0.08);
+  border-inline-start: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(8% * var(--oh-line-scale, 1)), transparent);
 }
 
 .intelligenceHealthStatusLabel {
   margin: 0;
-  color: #64748b;
+  color: var(--oh-muted, #64748b);
   font-size: 0.68rem;
   font-weight: 950;
   letter-spacing: 0.07em;
@@ -1412,7 +1412,7 @@ const hasReportEvidence = Boolean(
 
 .intelligenceHealthStatusValue {
   margin: 0;
-  color: #0f172a;
+  color: var(--oh-text, #0f172a);
   font-size: 0.94rem;
   font-weight: 950;
   line-height: 1.4;
@@ -1421,7 +1421,7 @@ const hasReportEvidence = Boolean(
 
 .intelligenceHealthStatusMain
   .intelligenceHealthStatusValue {
-  color: #0f766e;
+  color: var(--oh-c-ink-teal-700, #0f766e);
   font-size: 1.04rem;
 }
 
@@ -1432,15 +1432,15 @@ const hasReportEvidence = Boolean(
 
   .intelligenceHealthStatusMetric {
     border-inline-start: 0;
-    border-top: 1px solid rgba(15, 23, 42, 0.08);
+    border-top: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(8% * var(--oh-line-scale, 1)), transparent);
   }
 }
 
         .intelligenceDisclosure {
           overflow: hidden;
-          border: 1px solid rgba(15, 23, 42, 0.09);
+          border: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(9% * var(--oh-line-scale, 1)), transparent);
           border-radius: 27px;
-          background: #ffffff;
+          background: var(--oh-c-bg-white, #ffffff);
           box-shadow: 0 16px 46px rgba(15, 23, 42, 0.055);
         }
 
@@ -1464,7 +1464,7 @@ const hasReportEvidence = Boolean(
         }
 
         .intelligenceDisclosureSummary:hover {
-          background: rgba(248, 250, 252, 0.9);
+          background: color-mix(in srgb, var(--oh-c-bg-slate-50, #f8fafc) 90%, transparent);
         }
 
         .intelligenceDisclosureLead {
@@ -1490,7 +1490,7 @@ const hasReportEvidence = Boolean(
 
         .intelligenceDisclosureTitle {
           display: block;
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
           font-size: 1.08rem;
           font-weight: 950;
         }
@@ -1499,7 +1499,7 @@ const hasReportEvidence = Boolean(
           display: block;
           max-width: 760px;
           margin-top: 6px;
-          color: #64748b;
+          color: var(--oh-muted, #64748b);
           font-size: 0.88rem;
           font-weight: 650;
           line-height: 1.55;
@@ -1513,8 +1513,8 @@ const hasReportEvidence = Boolean(
           width: 40px;
           height: 40px;
           border-radius: 999px;
-          background: #f1f5f9;
-          color: #334155;
+          background: var(--oh-c-bg-slate-100, #f1f5f9);
+          color: var(--oh-c-ink-ink-700, #334155);
           font-size: 1rem;
           font-weight: 950;
           transition:
@@ -1526,15 +1526,15 @@ const hasReportEvidence = Boolean(
         .intelligenceDisclosure[open]
           .intelligenceDisclosureChevron {
           transform: rotate(180deg);
-          background: #ecfdf5;
-          color: #047857;
+          background: var(--oh-c-bg-emerald-50, #ecfdf5);
+          color: var(--oh-c-ink-emerald-700, #047857);
         }
 
         .intelligenceDisclosureContent {
           display: grid;
           gap: 16px;
           padding: 20px 22px 22px;
-          border-top: 1px solid rgba(15, 23, 42, 0.07);
+          border-top: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(7% * var(--oh-line-scale, 1)), transparent);
         }
 
         .intelligenceActionFooter {
@@ -1570,8 +1570,8 @@ const hasReportEvidence = Boolean(
           min-height: 44px;
           padding: 0 17px;
           border-radius: 999px;
-          background: #ffffff;
-          color: #0f766e !important;
+          background: var(--oh-c-bg-white, #ffffff);
+          color: var(--oh-c-ink-teal-700, #0f766e) !important;
           font-size: 0.86rem;
           font-weight: 950;
         }
@@ -1588,7 +1588,7 @@ const hasReportEvidence = Boolean(
   overflow: hidden;
   border: 1px solid rgba(148, 163, 184, 0.22);
   border-radius: 18px;
-  background: #ffffff;
+  background: var(--oh-c-bg-white, #ffffff);
 }
 
 .advancedIntelligenceCard > summary {
@@ -1606,7 +1606,7 @@ const hasReportEvidence = Boolean(
 }
 
 .advancedIntelligenceCard > summary:hover {
-  background: #f8fafc;
+  background: var(--oh-c-bg-slate-50, #f8fafc);
 }
 
 .advancedIntelligenceCard > summary > span:first-child {
@@ -1615,12 +1615,12 @@ const hasReportEvidence = Boolean(
 }
 
 .advancedIntelligenceCard > summary strong {
-  color: #0f172a;
+  color: var(--oh-text, #0f172a);
   font-size: 0.95rem;
 }
 
 .advancedIntelligenceCard > summary small {
-  color: #64748b;
+  color: var(--oh-muted, #64748b);
   font-size: 0.76rem;
   line-height: 1.45;
 }
@@ -1631,8 +1631,8 @@ const hasReportEvidence = Boolean(
   height: 30px;
   place-items: center;
   border-radius: 999px;
-  background: #f1f5f9;
-  color: #475569;
+  background: var(--oh-c-bg-slate-100, #f1f5f9);
+  color: var(--oh-soft-text, #475569);
   transition: transform 180ms ease;
 }
 
@@ -1640,16 +1640,16 @@ const hasReportEvidence = Boolean(
   > summary
   > span:last-child {
   transform: rotate(180deg);
-  background: #ecfdf5;
-  color: #047857;
+  background: var(--oh-c-bg-emerald-50, #ecfdf5);
+  color: var(--oh-c-ink-emerald-700, #047857);
 }
 
 .advancedIntelligenceCardBody {
   display: grid;
   gap: 14px;
   padding: 16px 18px 18px;
-  border-top: 1px solid rgba(15, 23, 42, 0.07);
-  background: #f8fafc;
+  border-top: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(7% * var(--oh-line-scale, 1)), transparent);
+  background: var(--oh-c-bg-slate-50, #f8fafc);
 }
           @media (max-width: 720px) {
           .intelligenceResultLayer {
@@ -1692,14 +1692,14 @@ const hasReportEvidence = Boolean(
   background:
     linear-gradient(
       135deg,
-      rgba(240, 253, 250, 0.9),
-      rgba(248, 250, 252, 0.96)
+      color-mix(in srgb, var(--oh-c-bg-teal-50, #f0fdfa) 90%, transparent),
+      color-mix(in srgb, var(--oh-c-bg-slate-50, #f8fafc) 96%, transparent)
     );
 }
 
 .advancedIntelligenceDevelopingEyebrow {
   margin: 0;
-  color: #0f766e;
+  color: var(--oh-c-ink-teal-700, #0f766e);
   font-size: 0.67rem;
   font-weight: 950;
   letter-spacing: 0.08em;
@@ -1708,7 +1708,7 @@ const hasReportEvidence = Boolean(
 
 .advancedIntelligenceDevelopingTitle {
   margin: 6px 0 0;
-  color: #0f172a;
+  color: var(--oh-text, #0f172a);
   font-size: 0.98rem;
   font-weight: 950;
   line-height: 1.4;
@@ -1717,7 +1717,7 @@ const hasReportEvidence = Boolean(
 .advancedIntelligenceDevelopingText {
   max-width: 760px;
   margin: 7px 0 0;
-  color: #64748b;
+  color: var(--oh-muted, #64748b);
   font-size: 0.8rem;
   line-height: 1.65;
 }
@@ -1735,8 +1735,8 @@ const hasReportEvidence = Boolean(
   padding: 0 10px;
   border: 1px solid rgba(15, 118, 110, 0.13);
   border-radius: 999px;
-  background: #ffffff;
-  color: #475569;
+  background: var(--oh-c-bg-white, #ffffff);
+  color: var(--oh-soft-text, #475569);
   font-size: 0.69rem;
   font-weight: 850;
 }
@@ -1832,7 +1832,7 @@ const hasReportEvidence = Boolean(
     className="ohMetricLabel"
     style={{
       marginTop: "8px",
-      color: "#047857",
+      color: "var(--oh-c-ink-emerald-700, #047857)",
     }}
   >
     {text(

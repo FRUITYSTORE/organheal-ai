@@ -407,7 +407,7 @@ export default function AssessmentPage() {
           background:
             radial-gradient(circle at 12% 5%, rgba(6, 182, 212, 0.26), transparent 28%),
             radial-gradient(circle at 88% 18%, rgba(15, 118, 110, 0.30), transparent 34%),
-            linear-gradient(180deg, #dbeafe 0%, #cbd5e1 45%, #f8fafc 100%) !important;
+            linear-gradient(180deg, var(--oh-c-bg-blue-100, #dbeafe) 0%, var(--oh-c-bg-slate-300, #cbd5e1) 45%, var(--oh-c-bg-slate-50, #f8fafc) 100%) !important;
         }
 
         .assessmentForceV2 .ohContainer {
@@ -456,8 +456,8 @@ export default function AssessmentPage() {
         }
 
         .assessmentForceV2 .secondaryBtn {
-          background: #ffffff !important;
-          color: #0f766e !important;
+          background: var(--oh-c-bg-white, #ffffff) !important;
+          color: var(--oh-c-ink-teal-700, #0f766e) !important;
           border: 1px solid rgba(15, 118, 110, 0.34) !important;
           font-weight: 950 !important;
           box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12) !important;
@@ -497,8 +497,8 @@ export default function AssessmentPage() {
         .assessmentForceV2 .ohActionPanel,
         .assessmentForceV2 article,
         .assessmentForceV2 form {
-          background: #ffffff !important;
-          border: 1px solid rgba(15, 23, 42, 0.16) !important;
+          background: var(--oh-c-bg-white, #ffffff) !important;
+          border: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(16% * var(--oh-line-scale, 1)), transparent) !important;
           box-shadow: 0 22px 58px rgba(15, 23, 42, 0.14) !important;
         }
 
@@ -519,13 +519,13 @@ export default function AssessmentPage() {
         .assessmentForceV2 h2,
         .assessmentForceV2 h3,
         .assessmentForceV2 strong {
-          color: #0f172a !important;
+          color: var(--oh-text, #0f172a) !important;
           font-weight: 950 !important;
         }
 
         .assessmentForceV2 p,
         .assessmentForceV2 small {
-          color: #334155 !important;
+          color: var(--oh-c-ink-ink-700, #334155) !important;
           font-weight: 720 !important;
           line-height: 1.65 !important;
         }
@@ -533,7 +533,7 @@ export default function AssessmentPage() {
         .assessmentForceV2 input,
         .assessmentForceV2 select,
         .assessmentForceV2 textarea {
-          border: 1px solid rgba(15, 23, 42, 0.22) !important;
+          border: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(22% * var(--oh-line-scale, 1)), transparent) !important;
           box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08) !important;
         }
       `}</style></main>

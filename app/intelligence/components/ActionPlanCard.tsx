@@ -113,9 +113,9 @@ export default function ActionPlanCard({
 
         .actionPlanPreview {
           padding: 24px;
-          border: 1px solid rgba(15, 23, 42, 0.08);
+          border: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(8% * var(--oh-line-scale, 1)), transparent);
           border-radius: 24px;
-          background: #ffffff;
+          background: var(--oh-c-bg-white, #ffffff);
         }
 
         .actionPreviewHeader {
@@ -124,12 +124,12 @@ export default function ActionPlanCard({
           justify-content: space-between;
           gap: 18px;
           padding-bottom: 20px;
-          border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+          border-bottom: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(8% * var(--oh-line-scale, 1)), transparent);
         }
 
         .actionPreviewEyebrow {
           margin: 0;
-          color: #2563eb;
+          color: var(--oh-c-ink-blue-600, #2563eb);
           font-size: 0.72rem;
           font-weight: 950;
           letter-spacing: 0.1em;
@@ -138,7 +138,7 @@ export default function ActionPlanCard({
 
         .actionPreviewHeading {
           margin: 7px 0 0;
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
           font-size: clamp(1.3rem, 2vw, 1.7rem);
           font-weight: 950;
           line-height: 1.25;
@@ -148,7 +148,7 @@ export default function ActionPlanCard({
         .actionPreviewDescription {
           max-width: 760px;
           margin: 9px 0 0;
-          color: #64748b;
+          color: var(--oh-muted, #64748b);
           font-size: 0.9rem;
           line-height: 1.65;
         }
@@ -161,8 +161,8 @@ export default function ActionPlanCard({
           padding: 0 11px;
           border: 1px solid rgba(37, 99, 235, 0.18);
           border-radius: 999px;
-          background: #eff6ff;
-          color: #1d4ed8;
+          background: var(--oh-c-bg-blue-50, #eff6ff);
+          color: var(--oh-c-ink-blue-700, #1d4ed8);
           font-size: 0.7rem;
           font-weight: 900;
         }
@@ -180,8 +180,8 @@ export default function ActionPlanCard({
           border-radius: 18px;
           background: linear-gradient(
             180deg,
-            #ffffff 0%,
-            #f8fafc 100%
+            var(--oh-c-bg-white, #ffffff) 0%,
+            var(--oh-c-bg-slate-50, #f8fafc) 100%
           );
         }
 
@@ -206,7 +206,7 @@ export default function ActionPlanCard({
         }
 
         .actionPreviewSummary:hover {
-          background: rgba(239, 246, 255, 0.55);
+          background: color-mix(in srgb, var(--oh-c-bg-blue-50, #eff6ff) 55%, transparent);
         }
 
         .actionPreviewIdentity {
@@ -230,7 +230,7 @@ export default function ActionPlanCard({
         }
 
         .actionPreviewBadge {
-          color: #64748b;
+          color: var(--oh-muted, #64748b);
           font-size: 0.64rem;
           font-weight: 900;
           letter-spacing: 0.08em;
@@ -239,7 +239,7 @@ export default function ActionPlanCard({
 
         .actionPreviewTitle {
           margin: 5px 0 0;
-          color: #0f172a;
+          color: var(--oh-text, #0f172a);
           font-size: 1rem;
           font-weight: 950;
           line-height: 1.3;
@@ -248,7 +248,7 @@ export default function ActionPlanCard({
         .actionPreviewCount {
           display: block;
           margin-top: 5px;
-          color: #64748b;
+          color: var(--oh-muted, #64748b);
           font-size: 0.72rem;
           font-weight: 750;
         }
@@ -260,8 +260,8 @@ export default function ActionPlanCard({
           flex: 0 0 34px;
           place-items: center;
           border-radius: 999px;
-          background: #f1f5f9;
-          color: #475569;
+          background: var(--oh-c-bg-slate-100, #f1f5f9);
+          color: var(--oh-soft-text, #475569);
           font-size: 0.9rem;
           font-weight: 950;
           transition: transform 180ms ease;
@@ -270,13 +270,13 @@ export default function ActionPlanCard({
         .actionPreviewCard[open]
           .actionPreviewChevron {
           transform: rotate(180deg);
-          background: #eff6ff;
-          color: #1d4ed8;
+          background: var(--oh-c-bg-blue-50, #eff6ff);
+          color: var(--oh-c-ink-blue-700, #1d4ed8);
         }
 
         .actionPreviewBody {
           padding: 15px 16px 17px;
-          border-top: 1px solid rgba(15, 23, 42, 0.07);
+          border-top: 1px solid color-mix(in srgb, var(--oh-line-base, #0f172a) calc(7% * var(--oh-line-scale, 1)), transparent);
         }
 
         .actionPreviewList {
@@ -302,7 +302,7 @@ export default function ActionPlanCard({
         .actionPreviewItem p,
         .actionPreviewEmpty {
           margin: 0;
-          color: #475569;
+          color: var(--oh-soft-text, #475569);
           font-size: 0.83rem;
           line-height: 1.65;
         }
