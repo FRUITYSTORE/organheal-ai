@@ -8,6 +8,7 @@ import RecommendedActionPanel from "@/app/components/doctor-portal/RecommendedAc
 import DoctorBriefCard from "@/app/components/doctor-portal/DoctorBriefCard";
 import ReportAnalysisBrief from "@/app/components/doctor-portal/ReportAnalysisBrief";
 import TrustNotice from "@/app/components/ui/TrustNotice";
+import PostVisitNotesPanel from "@/app/components/doctor-portal/PostVisitNotesPanel";
 import SectionHeader from "@/app/components/ui/SectionHeader";
 import StatusBadge from "@/app/components/ui/StatusBadge";
 import { HealthIntelligenceResult } from "@/lib/health-intelligence/models/health-intelligence-result";
@@ -1223,6 +1224,8 @@ healthIntelligence ? (
             )}
           </section>
         )}
+        <PostVisitNotesPanel isArabic={isArabic} />
+
                    <TrustNotice
   title={text("Medical safety disclaimer", "تنبيه طبي")}
   description={text(
