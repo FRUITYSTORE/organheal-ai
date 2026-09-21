@@ -224,6 +224,12 @@ export default function Navbar() {
         "التحضير للطبيب"
       ),
 
+    doctorVisit:
+      text(
+        "Doctor Brief & Visit Notes",
+        "ملخص الطبيب وملاحظات الزيارة"
+      ),
+
     profile:
       text(
         "Profile",
@@ -981,6 +987,17 @@ export default function Navbar() {
                     >
                       {
                         labels.doctorPrep
+                      }
+                    </Link>
+
+                    <Link
+                      href="/doctor-portal"
+                      onClick={
+                        closeMenus
+                      }
+                    >
+                      {
+                        labels.doctorVisit
                       }
                     </Link>
 
