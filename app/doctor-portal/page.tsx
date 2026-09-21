@@ -9,7 +9,6 @@ import DoctorBriefCard from "@/app/components/doctor-portal/DoctorBriefCard";
 import ReportAnalysisBrief from "@/app/components/doctor-portal/ReportAnalysisBrief";
 import TrustNotice from "@/app/components/ui/TrustNotice";
 import PostVisitNotesPanel from "@/app/components/doctor-portal/PostVisitNotesPanel";
-import SectionHeader from "@/app/components/ui/SectionHeader";
 import StatusBadge from "@/app/components/ui/StatusBadge";
 import { HealthIntelligenceResult } from "@/lib/health-intelligence/models/health-intelligence-result";
 import DoctorEvidenceCard from "@/app/components/doctor-portal/DoctorEvidenceCard";
@@ -24,6 +23,7 @@ import {
   healthIntelligencePresenter,
 } from "@/lib/health-intelligence/presentation/health-intelligence.presenter";
 import {
+  presentDoctorBriefLabel,
   presentDoctorPortalClinicalText,
 } from "@/lib/services/doctor-portal/doctor-portal-presentation";
 
@@ -81,14 +81,6 @@ type SavedAnalysis = {
   updated_at: string | null;
 };
 
-type HealthHistory = {
-  id: string;
-  module_name: string;
-  score: number;
-  status: string | null;
-  created_at: string;
-};
-
 type SharedReport = {
   share_code: string;
   report_type: string | null;
@@ -124,7 +116,6 @@ export default function DoctorPortalPage() {
   const [uploadedReports, setUploadedReports] = useState<UploadedReport[]>([]);
   const [healthInsights, setHealthInsights] = useState<HealthInsight[]>([]);
   const [savedAnalysis, setSavedAnalysis] = useState<SavedAnalysis[]>([]);
-  const [healthHistory, setHealthHistory] = useState<HealthHistory[]>([]);
   const [healthIntelligence, setHealthIntelligence] =
   useState<HealthIntelligenceResult | null>(null);
 
@@ -306,7 +297,6 @@ const doctorSummary =
   setUploadedReports(doctorSummary.uploadedReports as UploadedReport[]);
   setHealthInsights(doctorSummary.healthInsights as HealthInsight[]);
   setSavedAnalysis(doctorSummary.savedAnalysis as SavedAnalysis[]);
-  setHealthHistory(doctorSummary.healthHistory as HealthHistory[]);
   setHealthIntelligence(doctorSummary.healthIntelligence);
   setDoctorIntelligence(
   doctorSummary.doctorIntelligence ??
@@ -385,10 +375,6 @@ const doctorSummary =
       ? [...assessments].sort((a, b) => a.score - b.score)[0]
       : null;
 
-  const processedReports = uploadedReports.filter(
-    (item) => item.extraction_status === "Completed"
-  ).length;
-
   const pendingReports = uploadedReports.filter(
     (item) => item.extraction_status !== "Completed"
   ).length;
@@ -401,9 +387,6 @@ const doctorSummary =
     (item) => item.ai_status === "Generated" || savedAnalysisIds.has(item.id)
   );
 
-  const latestDoctorBriefInsight =
-    generatedInsights.find((item) => item.doctor_brief) || null;
-
   const latestReportSummary =
   presentDoctorPortalClinicalText(
     generatedInsights.find(
@@ -412,14 +395,6 @@ const doctorSummary =
     )?.summary,
     language,
     "report-summary"
-  );
-
-const latestDoctorBrief =
-  presentDoctorPortalClinicalText(
-    latestDoctorBriefInsight
-      ?.doctor_brief,
-    language,
-    "doctor-brief"
   );
 
 const latestRecommendations =
@@ -529,38 +504,6 @@ const officialPriorityOrgan =
           buttonText: text("Open Health Plan", "افتح الخطة الصحية"),
         };
 
-  const dataSources = [
-    {
-      label: text("Assessments", "التقييمات"),
-      value: assessments.length,
-      note: text("organ assessments", "تقييمات الأعضاء"),
-      ready: assessments.length > 0,
-    },
-    {
-      label: text("Reports", "التقارير"),
-      value: uploadedReports.length,
-      note: `${processedReports} ${text("processed", "مكتمل")} · ${pendingReports} ${text("pending", "قيد الانتظار")}`,
-      ready: uploadedReports.length > 0,
-    },
-    {
-      label: text("Generated Insights", "الذكاء المولد"),
-      value: generatedInsights.length,
-      note: text("doctor-ready results", "نتائج جاهزة للطبيب"),
-      ready: generatedInsights.length > 0,
-    },
-    {
-      label: text("History Records", "سجلات التاريخ"),
-      value: healthHistory.length,
-      note: text("recent records", "سجلات حديثة"),
-      ready: healthHistory.length > 0,
-    },
-    {
-      label: text("Latest Check-In", "آخر Check-In"),
-      value: dailyCheckIn ? text("Available", "متاح") : text("Missing", "غير متوفر"),
-      note: dailyCheckIn ? formatDate(dailyCheckIn.created_at) : text("not completed", "غير مكتمل"),
-      ready: Boolean(dailyCheckIn),
-    },
-  ];
   const doctorSummaryV2 =
     doctorIntelligence?.summary.status ===
       "ready" &&
@@ -674,39 +617,7 @@ const officialPriorityOrgan =
     )}
   </p>
 
-  <div className="ohDivider" />
 
-  <p className="ohMetricLabel">
-    {text(
-      "Priority Area",
-      "منطقة الأولوية"
-    )}
-  </p>
-
-  <p
-    className="ohMetricValue"
-    style={{
-      fontSize: "1.45rem",
-    }}
-  >
-    {localizeOrganName(
-      officialPriorityOrgan
-    )}
-  </p>
-
-    <div
-    className="ohButtonRow"
-    style={{
-      marginTop: "18px",
-    }}
-  >
-    <Link
-      href={recommendedAction.href}
-      className="primaryBtn"
-    >
-      {recommendedAction.buttonText}
-    </Link>
-  </div>
 </div>
 </div>
 </section>
@@ -982,14 +893,13 @@ healthIntelligence ? (
       </p>
 
       <p className="ohCardText">
-        {healthIntelligence
-          ?.doctorBrief
-          .data
-          .riskPattern ??
-          text(
-            "Not available",
-            "غير متاح"
-          )}
+        {presentDoctorBriefLabel(
+          healthIntelligence
+            ?.doctorBrief
+            .data
+            .riskPattern,
+          language
+        )}
       </p>
     </article>
 
@@ -1002,14 +912,13 @@ healthIntelligence ? (
       </p>
 
       <p className="ohCardText">
-        {healthIntelligence
-          ?.doctorBrief
-          .data
-          .profile ??
-          text(
-            "Not available",
-            "غير متاح"
-          )}
+        {presentDoctorBriefLabel(
+          healthIntelligence
+            ?.doctorBrief
+            .data
+            .profile,
+          language
+        )}
       </p>
     </article>
   </div>
@@ -1047,13 +956,6 @@ healthIntelligence ? (
   )}
   recommendations={
     latestRecommendations
-  }
-  doctorBriefLabel={text(
-    "Doctor Brief:",
-    "ملخص الطبيب:"
-  )}
-  doctorBrief={
-    latestDoctorBrief
   }
 />
       <section className="ohCard">

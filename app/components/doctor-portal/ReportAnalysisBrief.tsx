@@ -7,9 +7,6 @@ type ReportAnalysisBriefProps = {
 
   recommendationsLabel: string;
   recommendations: string;
-
-  doctorBriefLabel: string;
-  doctorBrief: string;
 };
 
 export default function ReportAnalysisBrief({
@@ -19,8 +16,6 @@ export default function ReportAnalysisBrief({
   summary,
   recommendationsLabel,
   recommendations,
-  doctorBriefLabel,
-  doctorBrief,
 }: ReportAnalysisBriefProps) {
   return (
     <section className="ohCard">
@@ -57,27 +52,6 @@ export default function ReportAnalysisBrief({
           </p>
         </article>
       </div>
-
-      <article
-        className="ohTrustNotice"
-        style={{
-          marginTop: "16px",
-        }}
-      >
-        <span aria-hidden="true">
-          🩺
-        </span>
-
-        <div>
-          <strong>
-            {doctorBriefLabel}
-          </strong>
-
-          <br />
-
-          {doctorBrief}
-        </div>
-      </article>
     </section>
   );
 }
