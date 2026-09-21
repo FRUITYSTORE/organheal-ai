@@ -45,6 +45,16 @@ const {
 );
 
   vi.mock(
+  "@/lib/billing/usage-guard",
+  () => ({
+    guardUsage:
+      vi.fn(
+        async () => null
+      ),
+  })
+);
+
+vi.mock(
   "@/lib/api/api-auth",
   () => ({
     authenticateApiRequest:

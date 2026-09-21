@@ -18,6 +18,10 @@ import {
 } from "@/lib/api/api-rate-limit";
 
 import {
+  guardUsage,
+} from "@/lib/billing/usage-guard";
+
+import {
   runAssistantOrchestrator,
   type AssistantOrchestratorResult,
   type AssistantOrchestratorLanguage,
@@ -473,6 +477,34 @@ let healthContext:
         );
       }
 
+      currentStage =
+        "usage_quota";
+
+      const memberUsageDenied =
+        await guardUsage({
+          client:
+            rateLimitClient,
+
+          feature:
+            "assistant",
+
+          request,
+
+          userId:
+            authentication.user.id,
+
+          language:
+            normalizedLanguage,
+
+          requestId,
+        });
+
+      if (
+        memberUsageDenied
+      ) {
+        return memberUsageDenied;
+      }
+
       /*
  * Authentication and rate limiting have succeeded.
  * Semantic routing can now run concurrently with
@@ -669,6 +701,38 @@ authenticatedContext = {
             abandonClinicalInterviewTimer
           );
         }
+      }
+    }
+
+    if (
+      !authenticatedContext
+    ) {
+      currentStage =
+        "usage_quota";
+
+      const visitorUsageDenied =
+        await guardUsage({
+          client:
+            getSupabaseAdminClient(),
+
+          feature:
+            "assistant",
+
+          request,
+
+          userId:
+            null,
+
+          language:
+            normalizedLanguage,
+
+          requestId,
+        });
+
+      if (
+        visitorUsageDenied
+      ) {
+        return visitorUsageDenied;
       }
     }
 

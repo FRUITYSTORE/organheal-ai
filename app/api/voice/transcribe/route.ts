@@ -3,6 +3,10 @@ import {
 } from "next/server";
 
 import {
+  guardUsage,
+} from "@/lib/billing/usage-guard";
+
+import {
   authenticateApiRequest,
 } from "@/lib/api/api-auth";
 
@@ -216,6 +220,32 @@ if (
     }
   );
 }
+
+    const usageDenied =
+      await guardUsage({
+        client:
+          rateLimitClient,
+
+        feature:
+          "voice_dictation",
+
+        request,
+
+        userId:
+          authenticatedUserId,
+
+        language:
+          "both",
+
+        requestId,
+      });
+
+    if (
+      usageDenied
+    ) {
+      return usageDenied;
+    }
+
 
     let formData:
       FormData;

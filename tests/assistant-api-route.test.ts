@@ -8,6 +8,16 @@ import {
 } from "vitest";
 
 vi.mock(
+  "@/lib/billing/usage-guard",
+  () => ({
+    guardUsage:
+      vi.fn(
+        async () => null
+      ),
+  })
+);
+
+vi.mock(
   "@/lib/health-intelligence/application/assistant-orchestrator.service",
   () => ({
     runAssistantOrchestrator:

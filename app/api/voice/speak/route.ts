@@ -3,6 +3,10 @@ import {
 } from "next/server";
 
 import {
+  guardUsage,
+} from "@/lib/billing/usage-guard";
+
+import {
   authenticateApiRequest,
 } from "@/lib/api/api-auth";
 
@@ -252,6 +256,32 @@ export async function POST(
         }
       );
     }
+
+    const usageDenied =
+      await guardUsage({
+        client:
+          rateLimitClient,
+
+        feature:
+          "voice_speech",
+
+        request,
+
+        userId:
+          authenticatedUserId,
+
+        language:
+          "both",
+
+        requestId,
+      });
+
+    if (
+      usageDenied
+    ) {
+      return usageDenied;
+    }
+
 
     const language:
       VoiceSynthesisLanguage =
