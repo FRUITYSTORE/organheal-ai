@@ -113,6 +113,19 @@ export default function Navbar() {
   const askLabel = text("Ask OrganHeal AI", "اسأل OrganHeal AI");
   const askHref = isLoggedIn ? "/assistant" : "/#ask-organheal";
 
+  const homeItem: NavItem = {
+
+    href: "/",
+
+    label: text("Home", "الرئيسية"),
+
+    subtitle: text("Ask, upload and explore", "اسأل وارفع واستكشف"),
+
+    icon: "home",
+
+  };
+
+
   const visitorItems: NavItem[] = [
     {
       href: "/library",
@@ -572,7 +585,7 @@ export default function Navbar() {
             </Link>
 
             <div className="ohNavPanelList">
-              {(isLoggedIn ? memberItems : visitorItems).map((item) =>
+              {[homeItem, ...(isLoggedIn ? memberItems : visitorItems)].map((item) =>
                 renderRow(item)
               )}
             </div>

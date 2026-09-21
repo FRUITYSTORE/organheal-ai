@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Geist } from "next/font/google";
 import type { ReactNode } from "react";
 import "./globals.css";
 import "./theme-palette.css";
@@ -7,6 +8,12 @@ import Navbar from "./components/Navbar";
 import RouteAccessGuard from "./components/RouteAccessGuard";
 import SiteFooter from "./components/SiteFooter";
 import { themeInitScript } from "./components/theme/theme-init-script";
+
+const geistSans = Geist({
+  subsets: ["latin"],
+  variable: "--font-geist-sans",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.organheal.com"),
@@ -77,7 +84,12 @@ export default function RootLayout({
   children: ReactNode;
 }>) {
   return (
-    <html lang="en" data-theme="light" suppressHydrationWarning>
+    <html
+      lang="en"
+      data-theme="light"
+      className={geistSans.variable}
+      suppressHydrationWarning
+    >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>

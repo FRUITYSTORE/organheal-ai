@@ -14,6 +14,7 @@ export type NavIconName =
   | "arrow"
   | "close"
   | "menu"
+  | "home"
   | "dashboard"
   | "reports"
   | "plan"
@@ -91,6 +92,12 @@ const PATHS: Record<NavIconName, ReactNode> = {
   ),
   close: <path d="M6 6l12 12M18 6L6 18" />,
   menu: <path d="M4 7h16M4 12h16M4 17h16" />,
+  home: (
+    <>
+      <path d="M4 11.2L12 4l8 7.2" />
+      <path d="M6 10v9.5a.5.5 0 00.5.5H10v-5.5h4V20h3.5a.5.5 0 00.5-.5V10" />
+    </>
+  ),
   dashboard: (
     <>
       <rect x="3.5" y="3.5" width="7" height="8" rx="1.6" />
