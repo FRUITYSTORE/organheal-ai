@@ -48,6 +48,27 @@ export async function listVisitNotes(
   return (data ?? []) as VisitNote[];
 }
 
+export async function getNextFollowUpDate(
+  userId: string,
+  today: string,
+  client: SupabaseClient = supabase
+): Promise<string | null> {
+  const { data, error } = await client
+    .from("visit_notes")
+    .select("follow_up_date")
+    .eq("user_id", userId)
+    .gte("follow_up_date", today)
+    .order("follow_up_date", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data as { follow_up_date: string | null } | null)?.follow_up_date ?? null;
+}
+
 export async function createVisitNote(
   userId: string,
   input: CreateVisitNoteInput,

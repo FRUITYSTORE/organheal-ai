@@ -29,6 +29,7 @@ import {
 import HealthUpdatesTicker from "@/app/components/home/HealthUpdatesTicker";
 import DigitalTwinCard from "@/app/intelligence/components/DigitalTwinCard";
 import { getLatestGeneratedResultForUser } from "@/lib/repositories/insight.repository";
+import { getNextFollowUpDate } from "@/lib/repositories/visit-notes.repository";
 
 type Language = "en" | "ar";
 
@@ -224,6 +225,17 @@ export default function DashboardPage() {
     console.error("Could not load digital twin:", digitalTwinError);
     setDigitalTwin(null);
   }
+
+  try {
+    setNextFollowUp(
+      await getNextFollowUpDate(
+        user.id,
+        new Date().toISOString().slice(0, 10)
+      )
+    );
+  } catch {
+    setNextFollowUp(null);
+  }
     try {
     const {
   data:
@@ -406,6 +418,7 @@ const [healthIntelligence, setHealthIntelligence] =
   setKnowledgeRecommendations,
 ] = useState<PersonalizedKnowledgeRecommendations | null>(null);
   const [digitalTwin, setDigitalTwin] = useState<unknown>(null);
+  const [nextFollowUp, setNextFollowUp] = useState<string | null>(null);
 
   const latestAssessment = assessments[0] || null;
 
@@ -726,6 +739,27 @@ const resolvedNextStep: NextStep =
           </small>
         </Link>
       </div>
+
+      {nextFollowUp && (
+        <Link
+          href="/doctor-portal"
+          className="dashboardTodayAction dashboardTodayActionSecondary"
+          style={{ marginBottom: "12px" }}
+        >
+          <span>
+            {isArabic ? "موعد متابعتك القادم" : "Your next follow-up"}
+          </span>
+          <small>
+            {new Date(`${nextFollowUp}T00:00:00`).toLocaleDateString(
+              isArabic ? "ar" : "en",
+              { year: "numeric", month: "long", day: "numeric" }
+            )}
+            {isArabic
+              ? " — افتح ملاحظات الزيارة"
+              : " — open your visit notes"}
+          </small>
+        </Link>
+      )}
 
       {dashboardViewState.hero && (
   <DashboardHeroIntelligence

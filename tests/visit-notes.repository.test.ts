@@ -7,6 +7,7 @@ vi.mock("@/lib/supabase", () => ({
 import {
   createVisitNote,
   deleteVisitNote,
+  getNextFollowUpDate,
   listVisitNotes,
 } from "@/lib/repositories/visit-notes.repository";
 
@@ -92,6 +93,41 @@ describe("visit notes repository", () => {
     ).rejects.toThrow("too long");
 
     expect(from).not.toHaveBeenCalled();
+  });
+
+  it("finds the nearest upcoming follow-up date, ignoring past ones", async () => {
+    const maybeSingle = vi.fn().mockResolvedValue({
+      data: { follow_up_date: "2026-10-05" },
+      error: null,
+    });
+    const limit = vi.fn(() => ({ maybeSingle }));
+    const order = vi.fn(() => ({ limit }));
+    const gte = vi.fn(() => ({ order }));
+    const eq = vi.fn(() => ({ gte }));
+    const select = vi.fn(() => ({ eq }));
+    const from = vi.fn(() => ({ select }));
+
+    const result = await getNextFollowUpDate("user-1", "2026-09-22", {
+      from,
+    } as never);
+
+    expect(result).toBe("2026-10-05");
+    expect(gte).toHaveBeenCalledWith("follow_up_date", "2026-09-22");
+    expect(order).toHaveBeenCalledWith("follow_up_date", { ascending: true });
+  });
+
+  it("returns null when there is no upcoming follow-up", async () => {
+    const maybeSingle = vi.fn().mockResolvedValue({ data: null, error: null });
+    const limit = vi.fn(() => ({ maybeSingle }));
+    const order = vi.fn(() => ({ limit }));
+    const gte = vi.fn(() => ({ order }));
+    const eq = vi.fn(() => ({ gte }));
+    const select = vi.fn(() => ({ eq }));
+    const from = vi.fn(() => ({ select }));
+
+    expect(
+      await getNextFollowUpDate("user-1", "2026-09-22", { from } as never)
+    ).toBeNull();
   });
 
   it("scopes deletes to the owning user", async () => {
