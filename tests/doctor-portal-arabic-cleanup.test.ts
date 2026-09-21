@@ -64,3 +64,24 @@ describe("doctor portal Arabic cleanup", () => {
     expect(presentOrganName("Unknown Organ", "ar")).toBe("Unknown Organ");
   });
 });
+
+describe("doctor portal English page", () => {
+  it("does not show a saved Arabic analysis as-is on the English page", () => {
+    const result = presentDoctorPortalClinicalText(
+      "ارتفع HbA1c إلى 7.8 ويلزم مراجعة الطبيب لمتابعة السكري.",
+      "en",
+      "report-summary"
+    );
+
+    expect(/[\u0600-\u06FF]/.test(result)).toBe(false);
+    expect(result).toContain("Arabic");
+  });
+
+  it("keeps English text that contains a few Arabic words", () => {
+    const text = "The LDL is elevated (الكوليسترول) and follow-up is advised.";
+
+    expect(presentDoctorPortalClinicalText(text, "en", "recommendations")).toBe(
+      text
+    );
+  });
+});

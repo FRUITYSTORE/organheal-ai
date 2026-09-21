@@ -24,6 +24,36 @@ function hasArabicText(
   );
 }
 
+// Saved analysis text keeps the language it was generated in, so an Arabic
+// analysis must not be shown as-is on the English page.
+function isMostlyArabic(
+  value: string
+): boolean {
+  const arabicLetters =
+    value.match(/[؀-ۿ]/g)?.length ?? 0;
+
+  const latinLetters =
+    value.match(/[A-Za-z]/g)?.length ?? 0;
+
+  return arabicLetters > latinLetters;
+}
+
+function getEnglishArabicContentFallback(
+  kind:
+    DoctorPortalClinicalTextKind
+): string {
+  switch (kind) {
+    case "report-summary":
+      return "A saved summary exists for this report in Arabic. Open the report analysis to review it.";
+
+    case "recommendations":
+      return "Saved recommendations exist for this report in Arabic. Open the report analysis to review them.";
+
+    case "doctor-brief":
+      return "A saved doctor brief exists in Arabic. Open the analysis to review it.";
+  }
+}
+
 function getArabicFallback(
   kind:
     DoctorPortalClinicalTextKind
@@ -76,7 +106,9 @@ export function presentDoctorPortalClinicalText(
   }
 
   if (language !== "ar") {
-    return clean;
+    return isMostlyArabic(clean)
+      ? getEnglishArabicContentFallback(kind)
+      : clean;
   }
 
   if (
