@@ -244,38 +244,31 @@ if (
         "signup",
     });
 
-    const { error } = await supabase.auth.signUp({
-      email: cleanEmail,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/login`,
-        data: {
-          username:
-            cleanUsername,
-
-          full_name:
-            cleanFullName,
-
-          date_of_birth:
-            dateOfBirth ||
-            null,
-
-          sex_at_birth:
-            sexAtBirth ||
-            null,
-
-          report_identity_preference:
-            "ask",
-        },
-      },
+    const signupResponse = await fetch("/api/auth/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: cleanEmail,
+        password,
+        username: cleanUsername,
+        fullName: cleanFullName,
+        dateOfBirth: dateOfBirth || null,
+        sexAtBirth: sexAtBirth || null,
+        language,
+      }),
     });
 
-    if (error) {
+    const signupResult = await signupResponse
+      .json()
+      .catch(() => ({ success: false, error: null }));
+
+    if (!signupResponse.ok || !signupResult.success) {
       showMessage(
-        text(
-          "Could not create your account. Please try again.",
-          "تعذر إنشاء الحساب. يرجى المحاولة مرة أخرى."
-        ),
+        signupResult.error ||
+          text(
+            "Could not create your account. Please try again.",
+            "تعذر إنشاء الحساب. يرجى المحاولة مرة أخرى."
+          ),
         "error"
       );
       setLoading(false);
