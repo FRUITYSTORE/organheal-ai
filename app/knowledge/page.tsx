@@ -6,11 +6,18 @@ import { getPublishedRegisteredKnowledgePacks } from "@/lib/services/knowledge/c
 import "./knowledge.css";
 import PageHero from "@/app/components/ui/PageHero";
 
-export const metadata: Metadata = {
-  title: "Knowledge Hub",
-  description:
-    "Evidence-based health education organized into structured knowledge packs for organs, families, patients, and clinicians.",
-};
+export function generateMetadata(): Metadata {
+  const packs = getPublishedRegisteredKnowledgePacks();
+
+  return {
+    title: "Knowledge Hub",
+    description:
+      "Evidence-based health education organized into structured knowledge packs for organs, families, patients, and clinicians.",
+    // Keep this out of search results while there is nothing published to
+    // show — it starts indexing itself the moment a pack goes live.
+    robots: packs.length === 0 ? { index: false, follow: true } : undefined,
+  };
+}
 
 export default function KnowledgeHubPage() {
   const packs = getPublishedRegisteredKnowledgePacks();

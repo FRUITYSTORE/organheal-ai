@@ -235,6 +235,10 @@ if (result.status === "error") {
                 <Link href="/assessment" className="secondaryBtn">
                   {text("All Assessments", "كل التقييمات")}
                 </Link>
+
+                <Link href="/library/organs/heart" className="secondaryBtn">
+                  {text("Learn About Heart Health", "تعلّم عن صحة القلب")}
+                </Link>
               </div>
             </div>
 

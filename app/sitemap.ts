@@ -1,5 +1,16 @@
 import type { MetadataRoute } from "next";
+
 import { blogPosts } from "../lib/blogData";
+import {
+  getPublishedRegisteredKnowledgeItems,
+  getPublishedRegisteredKnowledgePacks,
+} from "@/lib/services/knowledge/content-registry.service";
+
+// An item's `body` still reads the catalog's own placeholder text while its
+// full write-up is pending medical review. Submitting that to Google as an
+// article would be thin/placeholder content, so it waits out of the
+// sitemap until the real body replaces it.
+const PLACEHOLDER_ITEM_BODY = "Coming soon.";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = "https://www.organheal.com";
@@ -58,5 +69,28 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
-  return [...staticRoutes, ...blogRoutes];
+  const knowledgePackRoutes = getPublishedRegisteredKnowledgePacks().map(
+    (pack) => ({
+      url: `${baseUrl}/knowledge/${pack.slug}`,
+      lastModified: new Date(pack.review.updatedAt),
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+    })
+  );
+
+  const knowledgeItemRoutes = getPublishedRegisteredKnowledgeItems()
+    .filter((item) => (item.body ?? "").trim() !== PLACEHOLDER_ITEM_BODY)
+    .map((item) => ({
+      url: `${baseUrl}/knowledge/item/${item.slug}`,
+      lastModified: new Date(item.publishedAt),
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+    }));
+
+  return [
+    ...staticRoutes,
+    ...blogRoutes,
+    ...knowledgePackRoutes,
+    ...knowledgeItemRoutes,
+  ];
 }

@@ -27,6 +27,13 @@ export async function generateMetadata({
   return {
     title: item.title,
     description: item.summary,
+    // The body still reads the catalog's placeholder text while the full
+    // write-up is pending — don't let search engines index a stub as if it
+    // were the finished article. Matches the same check in app/sitemap.ts.
+    robots:
+      (item.body ?? "").trim() === "Coming soon."
+        ? { index: false, follow: true }
+        : undefined,
   };
 }
 

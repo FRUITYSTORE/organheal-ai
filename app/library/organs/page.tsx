@@ -12,7 +12,12 @@ type OrganLearningItem = {
   nameAr: string;
   text: string;
   textAr: string;
-  href: string;
+  // The dedicated educational reading page for this organ, if one has been
+  // written yet. Only Heart has one today — leave the rest unset rather
+  // than pointing "learn" copy at the assessment tool.
+  learnHref?: string;
+  // The interactive risk-assessment tool. Every organ has one.
+  assessHref: string;
 };
 
 const organs: OrganLearningItem[] = [
@@ -22,7 +27,8 @@ const organs: OrganLearningItem[] = [
     text: "Learn about cholesterol, blood pressure, circulation, and heart risk.",
     textAr:
       "تعرّف على الكوليسترول وضغط الدم والدورة الدموية وعوامل الخطورة المتعلقة بصحة القلب.",
-    href: "/library/organs/heart",
+    learnHref: "/library/organs/heart",
+    assessHref: "/heart",
   },
   {
     name: "Kidney",
@@ -30,7 +36,7 @@ const organs: OrganLearningItem[] = [
     text: "Understand creatinine, eGFR, urine markers, hydration, and kidney signals.",
     textAr:
       "افهم الكرياتينين وeGFR ومؤشرات البول والترطيب والإشارات المرتبطة بصحة الكلى.",
-    href: "/kidney",
+    assessHref: "/kidney",
   },
   {
     name: "Liver",
@@ -38,7 +44,7 @@ const organs: OrganLearningItem[] = [
     text: "Learn about ALT, AST, bilirubin, liver function, and follow-up questions.",
     textAr:
       "تعرّف على ALT وAST والبيليروبين ووظائف الكبد والأسئلة المهمة للمتابعة.",
-    href: "/liver",
+    assessHref: "/liver",
   },
   {
     name: "Lung",
@@ -46,7 +52,7 @@ const organs: OrganLearningItem[] = [
     text: "Understand breathing, oxygen, symptoms, and respiratory health basics.",
     textAr:
       "افهم التنفس والأكسجين والأعراض والأساسيات المرتبطة بصحة الجهاز التنفسي.",
-    href: "/lung",
+    assessHref: "/lung",
   },
   {
     name: "Brain",
@@ -54,7 +60,7 @@ const organs: OrganLearningItem[] = [
     text: "Learn about sleep, mood, focus, headaches, and nervous system health.",
     textAr:
       "تعرّف على النوم والمزاج والتركيز والصداع وصحة الجهاز العصبي.",
-    href: "/brain",
+    assessHref: "/brain",
   },
   {
     name: "Metabolic",
@@ -62,7 +68,7 @@ const organs: OrganLearningItem[] = [
     text: "Understand glucose, HbA1c, weight, energy, and metabolic health patterns.",
     textAr:
       "افهم الجلوكوز وHbA1c والوزن والطاقة والأنماط المرتبطة بالصحة الأيضية.",
-    href: "/metabolic",
+    assessHref: "/metabolic",
   },
 ];
 
@@ -181,10 +187,15 @@ export default function OrganLearningPage() {
                   key={organ.name}
                 >
                   <p className="ohMetricLabel">
-                    {text(
-                      "Organ learning",
-                      "التعلّم حسب العضو"
-                    )}
+                    {organ.learnHref
+                      ? text(
+                          "Organ learning",
+                          "التعلّم حسب العضو"
+                        )
+                      : text(
+                          "Risk assessment",
+                          "تقييم المخاطر"
+                        )}
                   </p>
 
                   <h2 className="ohCardTitle">
@@ -197,19 +208,41 @@ export default function OrganLearningPage() {
                       : organ.text}
                   </p>
 
-                  <Link
-                    href={organ.href}
-                    className="secondaryBtn"
+                  <div
+                    className="ohButtonRow"
                     style={{
                       marginTop: "18px",
-                      justifyContent: "center",
                     }}
                   >
-                    {text(
-                      `Open ${organ.name}`,
-                      `فتح ${organ.nameAr}`
+                    {organ.learnHref && (
+                      <Link
+                        href={organ.learnHref}
+                        className="secondaryBtn"
+                        style={{
+                          justifyContent: "center",
+                        }}
+                      >
+                        {text("Learn", "تعلّم")}
+                      </Link>
                     )}
-                  </Link>
+
+                    <Link
+                      href={organ.assessHref}
+                      className={
+                        organ.learnHref
+                          ? "secondaryBtn"
+                          : "primaryBtn"
+                      }
+                      style={{
+                        justifyContent: "center",
+                      }}
+                    >
+                      {text(
+                        `Check my ${organ.name}`,
+                        `افحص ${organ.nameAr}`
+                      )}
+                    </Link>
+                  </div>
                 </article>
               );
             }
