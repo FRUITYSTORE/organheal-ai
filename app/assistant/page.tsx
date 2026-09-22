@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import Link from "next/link";
+import FormattedAnswer from "@/app/components/assistant/FormattedAnswer";
 import { getHealthContext } from "@/lib/getHealthContext";
 import { supabase } from "@/lib/supabase";
 import PageBackActions from "../components/PageBackActions";
@@ -1001,7 +1002,11 @@ async function playSpokenResponse(
         : text("You", "أنت")}
     </strong>
 
-    <p>{message.text}</p>
+    {message.sender === "ai" ? (
+      <FormattedAnswer text={message.text} />
+    ) : (
+      <p>{message.text}</p>
+    )}
 
     {message.sender === "ai" && message.action && (
       <div style={{ marginTop: "12px" }}>

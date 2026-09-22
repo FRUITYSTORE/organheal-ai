@@ -1,0 +1,181 @@
+.ohUpdates {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--oh-border);
+  border-radius: 22px;
+  background: var(--oh-surface);
+  box-shadow: var(--oh-shadow-sm);
+}
+
+.ohUpdatesHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
+}
+
+.ohUpdatesHeading {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ohUpdatesPulse {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--oh-primary);
+  box-shadow: 0 0 0 5px var(--oh-primary-soft);
+}
+
+.ohUpdatesTitle {
+  margin: 0;
+  color: var(--oh-text);
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.ohUpdatesNote {
+  margin: 0;
+  color: var(--oh-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.ohUpdatesList {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ohUpdatesList > li {
+  display: flex;
+  min-width: 0;
+}
+
+.ohUpdateCard {
+  display: flex;
+  width: 100%;
+  min-height: 132px;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  border: 1px solid var(--oh-border);
+  border-radius: 16px;
+  background: var(--oh-surface-soft);
+  color: var(--oh-text);
+  text-decoration: none;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    transform 160ms ease;
+}
+
+a.ohUpdateCard:hover {
+  border-color: var(--oh-primary);
+  background: var(--oh-surface-hover);
+  transform: translateY(-2px);
+}
+
+a.ohUpdateCard:focus-visible {
+  outline: 2px solid var(--oh-focus-ring);
+  outline-offset: 2px;
+}
+
+.ohUpdateMeta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.ohUpdateSource {
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--oh-primary-soft);
+  color: var(--oh-primary-dark);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.ohUpdateMeta time {
+  color: var(--oh-muted);
+}
+
+.ohUpdateHeadline {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--oh-text);
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.ohUpdateRead {
+  margin-top: auto;
+  color: var(--oh-primary);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.ohUpdateSkeleton {
+  gap: 10px;
+}
+
+.ohUpdateSkeleton span {
+  display: block;
+  height: 12px;
+  border-radius: 6px;
+  background: var(--oh-border);
+  animation: ohUpdatePulse 1.4s ease-in-out infinite;
+}
+
+.ohUpdateSkeleton span:nth-child(1) {
+  width: 40%;
+}
+
+.ohUpdateSkeleton span:nth-child(2) {
+  width: 92%;
+}
+
+.ohUpdateSkeleton span:nth-child(3) {
+  width: 70%;
+}
+
+@keyframes ohUpdatePulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@media (max-width: 900px) {
+  .ohUpdatesList {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(250px, 78%);
+    overflow-x: auto;
+    padding-bottom: 6px;
+    scroll-snap-type: x proximity;
+  }
+
+  .ohUpdatesList > li {
+    scroll-snap-align: start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ohUpdateCard,
+  .ohUpdateSkeleton span {
+    animation: none;
+    transition: none;
+  }
+}

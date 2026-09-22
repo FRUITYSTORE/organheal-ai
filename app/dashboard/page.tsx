@@ -26,7 +26,7 @@ import DashboardOverviewSection from "@/app/components/dashboard/DashboardOvervi
 import {
   buildDashboardViewState,
 } from "@/app/components/dashboard/dashboard-view-state";
-import HealthUpdatesTicker from "@/app/components/home/HealthUpdatesTicker";
+import HealthUpdatesStrip from "@/app/components/home/HealthUpdatesStrip";
 import DigitalTwinCard from "@/app/intelligence/components/DigitalTwinCard";
 import { getLatestGeneratedResultForUser } from "@/lib/repositories/insight.repository";
 import { getNextFollowUpDate } from "@/lib/repositories/visit-notes.repository";
@@ -713,7 +713,7 @@ const resolvedNextStep: NextStep =
     });
   return (
     <main className="smartDashboardPage dashboardCommandCenterPage" dir={isArabic ? "rtl" : "ltr"} lang={isArabic ? "ar" : "en"}>
-      <HealthUpdatesTicker />
+      <HealthUpdatesStrip isArabic={isArabic} />
 
       <div className="dashboardTodayActions">
         <Link href="/assistant" className="dashboardTodayAction dashboardTodayActionPrimary">
