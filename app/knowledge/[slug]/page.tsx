@@ -1,17 +1,36 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import "../knowledge.css";
 
+import JsonLd from "@/app/components/seo/JsonLd";
 import {
   getKnowledgeItemsForSection,
   getKnowledgePackBySlug,
 } from "@/lib/services/knowledge/knowledge-pack.service";
+import { organizationJsonLd, SITE_URL } from "@/lib/seo/organization";
 
 type Props = {
   params: Promise<{
     slug: string;
   }>;
 };
+
+export async function generateMetadata({
+  params,
+}: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const pack = getKnowledgePackBySlug(slug);
+
+  if (!pack) {
+    return { title: "Knowledge Pack Not Found" };
+  }
+
+  return {
+    title: pack.name,
+    description: pack.summary,
+  };
+}
 
 export default async function KnowledgePackPage({
   params,
@@ -26,7 +45,22 @@ export default async function KnowledgePackPage({
 
   const sections = Object.entries(pack.sections);
 
+  const articleJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: pack.name,
+    description: pack.summary,
+    inLanguage: pack.language,
+    dateModified: pack.review.updatedAt,
+    datePublished: pack.review.createdAt,
+    author: { "@type": "Organization", name: "OrganHeal AI" },
+    publisher: organizationJsonLd,
+    mainEntityOfPage: `${SITE_URL}/knowledge/${pack.slug}`,
+  };
+
   return (
+    <>
+      <JsonLd data={articleJsonLd} />
     <main
       style={{
         maxWidth: 1100,
@@ -231,5 +265,6 @@ export default async function KnowledgePackPage({
         })}
       </div>
     </main>
+    </>
   );
 }

@@ -5,10 +5,12 @@ import type { ReactNode } from "react";
 import "./globals.css";
 import "./theme-palette.css";
 
+import JsonLd from "./components/seo/JsonLd";
 import Navbar from "./components/Navbar";
 import RouteAccessGuard from "./components/RouteAccessGuard";
 import SiteFooter from "./components/SiteFooter";
 import { themeInitScript } from "./components/theme/theme-init-script";
+import { organizationJsonLd, websiteJsonLd } from "@/lib/seo/organization";
 
 // Only loads in a production deployment with the measurement ID configured,
 // so local development and preview builds never send traffic into the real
@@ -101,6 +103,8 @@ export default function RootLayout({
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <JsonLd data={organizationJsonLd} />
+        <JsonLd data={websiteJsonLd} />
       </head>
       <body>
         <Navbar />

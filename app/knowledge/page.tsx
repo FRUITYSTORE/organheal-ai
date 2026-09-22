@@ -1,9 +1,16 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { getPublishedRegisteredKnowledgePacks } from "@/lib/services/knowledge/content-registry.service";
 
 import "./knowledge.css";
 import PageHero from "@/app/components/ui/PageHero";
+
+export const metadata: Metadata = {
+  title: "Knowledge Hub",
+  description:
+    "Evidence-based health education organized into structured knowledge packs for organs, families, patients, and clinicians.",
+};
 
 export default function KnowledgeHubPage() {
   const packs = getPublishedRegisteredKnowledgePacks();

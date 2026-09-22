@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import JsonLd from "@/app/components/seo/JsonLd";
 import { getKnowledgeItemBySlug } from "@/lib/services/knowledge/knowledge-item.service";
+import { organizationJsonLd, SITE_URL } from "@/lib/seo/organization";
 
 import "../../knowledge.css";
 
@@ -10,6 +13,22 @@ type Props = {
     slug: string;
   }>;
 };
+
+export async function generateMetadata({
+  params,
+}: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const item = getKnowledgeItemBySlug(slug);
+
+  if (!item) {
+    return { title: "Article Not Found" };
+  }
+
+  return {
+    title: item.title,
+    description: item.summary,
+  };
+}
 
 function formatLabel(value: string) {
   return value
@@ -33,8 +52,22 @@ export default async function KnowledgeItemPage({
     notFound();
   }
 
+  const articleJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: item.title,
+    description: item.summary,
+    inLanguage: item.language,
+    datePublished: item.publishedAt,
+    author: { "@type": "Organization", name: "OrganHeal AI" },
+    publisher: organizationJsonLd,
+    mainEntityOfPage: `${SITE_URL}/knowledge/item/${item.slug}`,
+  };
+
   return (
-    <main className="knowledgePage">
+    <>
+      <JsonLd data={articleJsonLd} />
+      <main className="knowledgePage">
       <div className="knowledgeArticleContainer">
         <Link
           href="/knowledge"
@@ -159,5 +192,6 @@ export default async function KnowledgeItemPage({
         </section>
       </div>
     </main>
+    </>
   );
 }

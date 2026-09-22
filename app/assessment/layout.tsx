@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Organ Health Assessment | OrganHeal AI",
+  title: "Organ Health Assessment",
   description:
     "Start guided organ health assessments for heart, lung, kidney, liver, brain, and metabolic wellness using OrganHeal AI.",
 };
