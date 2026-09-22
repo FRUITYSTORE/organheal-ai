@@ -166,8 +166,15 @@
 }
 
 /* Report documents (printable paper) keep the light palette in dark mode,
-   so previews look like the PDF that is exported. */
+   so previews look like the PDF that is exported. Redeclaring `color` here
+   (not just the --oh-* variables) matters: .ohPageShell sets
+   `color: var(--oh-text)` in dark mode and every descendant inherits that
+   already-resolved light-gray value regardless of what --oh-text is
+   redefined to further down — inherited `color` doesn't re-read variables
+   at each element the way a fresh `var()` reference does. Without this
+   line the paper text was unreadable: light-gray on white. */
 :root[data-theme="dark"] .ohPaper {
+  color: #0f172a;
   --oh-bg: #f6f8fb;
   --oh-surface: #ffffff;
   --oh-surface-soft: #f9fbfd;

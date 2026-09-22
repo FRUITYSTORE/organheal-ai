@@ -226,7 +226,7 @@ export default function HealthStoryCard({
           margin: "12px 0 0",
           lineHeight: 1.75,
           color:
-            "var(--oh-text-muted, #52656d)",
+            "var(--oh-soft-text, #475569)",
         }}
       >
         {text(

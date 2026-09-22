@@ -173,7 +173,7 @@ const nextBestAction =
                 maxWidth: "760px",
                 margin: 0,
                 lineHeight: 1.75,
-                color: "var(--oh-text-muted, #52656d)",
+                color: "var(--oh-soft-text, #475569)",
               }}
             >
               {healthState.description}

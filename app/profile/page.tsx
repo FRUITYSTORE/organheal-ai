@@ -1613,6 +1613,23 @@ if (checkInError) {
           color: #ffffff !important;
         }
 
+        /* The two rules above assume every .ohCard sits on a plain white
+           surface and hardcode #0f172a/#ffffff accordingly, with no dark
+           mode. The score ring is the one exception: its center circle
+           uses the theme-aware --oh-c-bg-white token so it always matches
+           the card's own surface, which makes it dark in dark mode — so
+           its text needs to stay theme-aware too, not follow the hardcoded
+           dark text meant for the surrounding white card. */
+        .followUpCleanV4 .ohHero .ohCard .ohScoreRing strong,
+        .followUpCleanV4 .ohContainer > section:first-of-type .ohCard .ohScoreRing strong {
+          color: var(--oh-text) !important;
+        }
+
+        .followUpCleanV4 .ohHero .ohCard .ohScoreRing span,
+        .followUpCleanV4 .ohContainer > section:first-of-type .ohCard .ohScoreRing span {
+          color: var(--oh-muted) !important;
+        }
+
         /* Make empty right-side circle stronger and useful visually */
         .followUpCleanV4 .ohHero svg,
         .followUpCleanV4 [class*="Hero"] svg,

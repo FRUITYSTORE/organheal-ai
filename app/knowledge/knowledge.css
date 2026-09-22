@@ -24,6 +24,26 @@
   --knowledge-danger: #ef4444;
 }
 
+/* These tokens were never given dark values, so every knowledge page and
+   the RecommendedKnowledgeCard on the dashboard rendered a solid white
+   card even in dark mode. Values mirror the equivalent --oh-* tokens in
+   app/globals.css so this stays visually consistent with the rest of the
+   site's dark palette. */
+:root[data-theme="dark"] {
+  --knowledge-bg: #0b1118;
+  --knowledge-surface: #131b25;
+  --knowledge-hero-start: #0b1118;
+  --knowledge-hero-end: #115e59;
+  --knowledge-text: #e8eef5;
+  --knowledge-text-muted: #bcc8d6;
+  --knowledge-border: rgba(148, 163, 184, 0.18);
+  --knowledge-primary: #22d3ee;
+  --knowledge-primary-dark: #2dd4bf;
+  --knowledge-success: #4ade9c;
+  --knowledge-warning: #f5b544;
+  --knowledge-danger: #f87979;
+}
+
 .knowledgePage {
   background: var(--knowledge-bg);
   min-height: 100vh;
