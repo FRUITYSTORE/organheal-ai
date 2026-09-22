@@ -114,6 +114,10 @@ export default function PrivacyContent() {
           "These services help operate the platform securely and reliably.",
           "تساعد هذه الخدمات في تشغيل المنصة بشكل آمن وموثوق."
         ),
+        text(
+          "OrganHeal AI uses Google Analytics to understand overall site traffic, such as which pages are visited and how users navigate the site. Google Analytics does not receive health information, report contents, or assistant conversations, and sets cookies for this purpose that can be controlled through browser settings.",
+          "يستخدم OrganHeal AI أداة Google Analytics لفهم حركة الزوار العامة على الموقع، مثل الصفحات التي تُزار وكيفية تنقل المستخدمين. لا تصل Google Analytics إلى المعلومات الصحية أو محتوى التقارير أو محادثات المساعد، وهي تضع ملفات تعريف ارتباط لهذا الغرض يمكن التحكم بها من إعدادات المتصفح."
+        ),
       ],
     },
     {

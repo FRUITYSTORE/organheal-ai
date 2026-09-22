@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import type { ReactNode } from "react";
 import "./globals.css";
 import "./theme-palette.css";
@@ -8,6 +9,14 @@ import Navbar from "./components/Navbar";
 import RouteAccessGuard from "./components/RouteAccessGuard";
 import SiteFooter from "./components/SiteFooter";
 import { themeInitScript } from "./components/theme/theme-init-script";
+
+// Only loads in a production deployment with the measurement ID configured,
+// so local development and preview builds never send traffic into the real
+// GA4 property.
+const googleAnalyticsId =
+  process.env.NODE_ENV === "production"
+    ? process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
+    : undefined;
 
 const geistSans = Geist({
   subsets: ["latin"],
@@ -98,6 +107,7 @@ export default function RootLayout({
         <RouteAccessGuard>{children}</RouteAccessGuard>
         <SiteFooter />
       </body>
+      {googleAnalyticsId && <GoogleAnalytics gaId={googleAnalyticsId} />}
     </html>
   );
 }
