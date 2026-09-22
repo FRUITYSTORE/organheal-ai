@@ -105,12 +105,21 @@ function createNotificationFixture({
     title:
       "Add a new health check-in",
 
+    titleAr:
+      "أضف تحديثًا صحيًا جديدًا",
+
     body:
       "Complete a new check-in.",
 
+    bodyAr:
+      "أكمل تحديثًا صحيًا جديدًا.",
+
     action: {
-      label:
+      labelEn:
         "Open Check-In",
+
+      labelAr:
+        "افتح التحديث الصحي",
 
       href:
         "/checkin",

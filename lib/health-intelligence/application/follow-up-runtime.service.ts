@@ -37,6 +37,10 @@ export type BuildFollowUpRuntimeInput = {
   recommendationDecision:
     RecommendationDecision;
 
+  // Which language's message is returned as `message` below, for a caller
+  // that wants one to display immediately. The dispatch plan (and the
+  // notification eventually persisted from it) always carries both
+  // languages regardless of this — see follow-up-dispatch.service.ts.
   language?:
     FollowUpMessageLanguage;
 
@@ -77,17 +81,33 @@ export function buildFollowUpRuntime({
       referenceTime,
     });
 
-  const message =
+  const messageEn =
     buildFollowUpMessage({
       decision,
-      language,
+      language:
+        "en",
       referenceTime,
     });
+
+  const messageAr =
+    buildFollowUpMessage({
+      decision,
+      language:
+        "ar",
+      referenceTime,
+    });
+
+  const message =
+    language ===
+      "ar"
+      ? messageAr
+      : messageEn;
 
   const dispatchPlan =
     buildFollowUpDispatchPlan({
       userId,
-      message,
+      messageEn,
+      messageAr,
       followUpRequired:
         decision.followUpRequired,
       requestId,

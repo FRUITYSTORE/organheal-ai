@@ -150,28 +150,37 @@ function createEnvelope(
       channel:
         "email",
 
-      language:
-        "en",
-
       priority:
         "medium",
 
       purpose:
         "repeat-checkin",
 
-      title:
+      titleEn:
         "Add a new health check-in",
 
-      body:
+      titleAr:
+        "أضف تحديثًا صحيًا جديدًا",
+
+      bodyEn:
         "Complete a new check-in.",
 
-      actionLabel:
+      bodyAr:
+        "أكمل تحديثًا جديدًا.",
+
+      actionLabelEn:
         "Open Check-In",
+
+      actionLabelAr:
+        "افتح التحديث الصحي",
 
       actionHref:
         "/checkin",
 
-      safetyNote:
+      safetyNoteEn:
+        null,
+
+      safetyNoteAr:
         null,
 
       requiresImmediateDelivery:
@@ -195,9 +204,6 @@ function createEnvelope(
 
       purpose:
         "repeat-checkin",
-
-      language:
-        "en",
 
       messageGeneratedAt:
         "2026-08-06T17:45:00.000Z",

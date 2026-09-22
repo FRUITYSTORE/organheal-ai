@@ -26,11 +26,6 @@ export type FollowUpDeliveryAuditMetadata = {
       "auditMetadata"
     ]["purpose"];
 
-  language:
-    FollowUpDispatchPlan[
-      "auditMetadata"
-    ]["language"];
-
   messageGeneratedAt:
     string;
 
@@ -161,11 +156,6 @@ function createAuditMetadata({
       plan
         .auditMetadata
         .purpose,
-
-    language:
-      plan
-        .auditMetadata
-        .language,
 
     messageGeneratedAt:
       plan

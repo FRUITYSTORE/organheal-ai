@@ -13,7 +13,41 @@ import type {
 } from "@/lib/notifications/notification";
 
 const NOTIFICATION_SELECT =
-  "id, user_id, purpose, priority, status, channels, title, body, action, safety, source, source_reference_id, idempotency_key, read_at, dismissed_at, expires_at, created_at";
+  "id, user_id, purpose, priority, status, channels, title, title_ar, body, body_ar, action, safety, source, source_reference_id, idempotency_key, read_at, dismissed_at, expires_at, created_at";
+
+// Rows written before the bilingual columns existed hold the single-language
+// shape ({label, href} / {note, ...}); rows written since hold both
+// languages. Typed loosely here because it can legitimately be either.
+type NotificationActionRow = {
+  label?:
+    string;
+
+  labelEn?:
+    string;
+
+  labelAr?:
+    string;
+
+  href:
+    string;
+};
+
+type NotificationSafetyRow = {
+  note?:
+    string;
+
+  noteEn?:
+    string;
+
+  noteAr?:
+    string;
+
+  requiresProfessionalReview:
+    boolean;
+
+  requiresUrgentReview:
+    boolean;
+};
 
 type NotificationRow = {
   id:
@@ -37,14 +71,20 @@ type NotificationRow = {
   title:
     string;
 
+  title_ar:
+    string | null;
+
   body:
     string;
 
+  body_ar:
+    string | null;
+
   action:
-    NotificationAction | null;
+    NotificationActionRow | null;
 
   safety:
-    NotificationSafety | null;
+    NotificationSafetyRow | null;
 
   source:
     string;
@@ -67,6 +107,69 @@ type NotificationRow = {
   created_at:
     string;
 };
+
+// Normalizes either shape into the bilingual one the app works with. For a
+// pre-migration row, the one language it has is used for both — an old
+// English notification still shows something for an Arabic viewer, rather
+// than nothing.
+function normalizeActionRow(
+  action:
+    NotificationActionRow | null
+): NotificationAction | null {
+  if (!action) {
+    return null;
+  }
+
+  const fallback =
+    action.label ??
+    action.labelEn ??
+    action.labelAr ??
+    "";
+
+  return {
+    labelEn:
+      action.labelEn ??
+      fallback,
+
+    labelAr:
+      action.labelAr ??
+      fallback,
+
+    href:
+      action.href,
+  };
+}
+
+function normalizeSafetyRow(
+  safety:
+    NotificationSafetyRow | null
+): NotificationSafety | null {
+  if (!safety) {
+    return null;
+  }
+
+  const fallback =
+    safety.note ??
+    safety.noteEn ??
+    safety.noteAr ??
+    "";
+
+  return {
+    noteEn:
+      safety.noteEn ??
+      fallback,
+
+    noteAr:
+      safety.noteAr ??
+      fallback,
+
+    requiresProfessionalReview:
+      safety.requiresProfessionalReview,
+
+    requiresUrgentReview:
+      safety.requiresUrgentReview,
+  };
+}
 
 export type SaveNotificationResult = {
   notification:
@@ -115,14 +218,26 @@ function mapNotificationRow(
     title:
       row.title,
 
+    titleAr:
+      row.title_ar ??
+      row.title,
+
     body:
       row.body,
 
+    bodyAr:
+      row.body_ar ??
+      row.body,
+
     action:
-      row.action,
+      normalizeActionRow(
+        row.action
+      ),
 
     safety:
-      row.safety,
+      normalizeSafetyRow(
+        row.safety
+      ),
 
     source:
       row.source,
@@ -190,8 +305,14 @@ export async function saveNotification(
         title:
           notification.title,
 
+        title_ar:
+          notification.titleAr,
+
         body:
           notification.body,
+
+        body_ar:
+          notification.bodyAr,
 
         action:
           notification.action,

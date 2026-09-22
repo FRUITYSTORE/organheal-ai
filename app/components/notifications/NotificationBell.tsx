@@ -26,7 +26,10 @@ type NotificationStatus =
   | "expired";
 
 type NotificationAction = {
-  label:
+  labelEn:
+    string;
+
+  labelAr:
     string;
 
   href:
@@ -34,7 +37,10 @@ type NotificationAction = {
 };
 
 type NotificationSafety = {
-  note:
+  noteEn:
+    string;
+
+  noteAr:
     string;
 
   requiresProfessionalReview:
@@ -60,7 +66,13 @@ type NotificationItem = {
   title:
     string;
 
+  titleAr:
+    string;
+
   body:
+    string;
+
+  bodyAr:
     string;
 
   action:
@@ -1091,24 +1103,32 @@ export default function NotificationBell({
 
                         <h3>
                           {
-                            notification.title
+                            isArabic
+                              ? notification.titleAr
+                              : notification.title
                           }
                         </h3>
 
                         <p>
                           {
-                            notification.body
+                            isArabic
+                              ? notification.bodyAr
+                              : notification.body
                           }
                         </p>
 
-                        {notification
-                          .safety
-                          ?.note && (
+                        {(isArabic
+                          ? notification.safety?.noteAr
+                          : notification.safety?.noteEn) && (
                           <p className="notificationSafety">
                             {
-                              notification
-                                .safety
-                                .note
+                              isArabic
+                                ? notification
+                                    .safety
+                                    ?.noteAr
+                                : notification
+                                    .safety
+                                    ?.noteEn
                             }
                           </p>
                         )}
@@ -1141,9 +1161,9 @@ export default function NotificationBell({
                                 }
                               }
                             >
-                              {notification
-                                .action
-                                .label ||
+                              {(isArabic
+                                ? notification.action.labelAr
+                                : notification.action.labelEn) ||
                                 labels.openAction}
                             </Link>
                           )}

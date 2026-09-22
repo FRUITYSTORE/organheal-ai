@@ -33,12 +33,21 @@ describe(
             title:
               "Add a new health check-in",
 
+            titleAr:
+              "أضف تحديثًا صحيًا جديدًا",
+
             body:
               "Complete a new check-in so OrganHeal can compare recent wellness signals.",
 
+            bodyAr:
+              "أكمل تحديثًا صحيًا جديدًا لمقارنة إشارات العافية الأخيرة.",
+
             action: {
-              label:
+              labelEn:
                 "Open Check-In",
+
+              labelAr:
+                "افتح التحديث الصحي",
 
               href:
                 "/checkin",
@@ -83,10 +92,19 @@ describe(
         ]);
 
         expect(
+          notification.titleAr
+        ).toBe(
+          "أضف تحديثًا صحيًا جديدًا"
+        );
+
+        expect(
           notification.action
         ).toEqual({
-          label:
+          labelEn:
             "Open Check-In",
+
+          labelAr:
+            "افتح التحديث الصحي",
 
           href:
             "/checkin",
@@ -125,8 +143,14 @@ describe(
             title:
               "Review your health plan",
 
+            titleAr:
+              "راجع خطتك الصحية",
+
             body:
               "Review your latest health actions.",
+
+            bodyAr:
+              "راجع أحدث إجراءاتك الصحية.",
 
             source:
               "follow-up-delivery",
@@ -166,12 +190,21 @@ describe(
             title:
               "Urgent health review recommended",
 
+            titleAr:
+              "يوصى بمراجعة صحية عاجلة",
+
             body:
               "Review the available information promptly.",
 
+            bodyAr:
+              "راجع المعلومات المتوفرة على الفور.",
+
             safety: {
-              note:
+              noteEn:
                 "Seek urgent medical care immediately for severe or worsening symptoms.",
+
+              noteAr:
+                "اطلب رعاية طبية عاجلة فورًا إذا كانت الأعراض شديدة أو تزداد سوءًا.",
 
               requiresProfessionalReview:
                 true,
@@ -190,8 +223,11 @@ describe(
         expect(
           notification.safety
         ).toEqual({
-          note:
+          noteEn:
             "Seek urgent medical care immediately for severe or worsening symptoms.",
+
+          noteAr:
+            "اطلب رعاية طبية عاجلة فورًا إذا كانت الأعراض شديدة أو تزداد سوءًا.",
 
           requiresProfessionalReview:
             true,
@@ -223,8 +259,14 @@ describe(
               title:
                 "Report ready",
 
+              titleAr:
+                "التقرير جاهز",
+
               body:
                 "Your report is ready.",
+
+              bodyAr:
+                "تقريرك جاهز.",
 
               source:
                 "report-analysis",
@@ -260,8 +302,14 @@ describe(
               title:
                 "Add a check-in",
 
+              titleAr:
+                "أضف تحديثًا",
+
               body:
                 "Complete a new check-in.",
+
+              bodyAr:
+                "أكمل تحديثًا جديدًا.",
 
               source:
                 "follow-up-delivery",
@@ -303,8 +351,14 @@ describe(
               title:
                 "   ",
 
+              titleAr:
+                "أضف تحديثًا",
+
               body:
                 "Complete a new check-in.",
+
+              bodyAr:
+                "أكمل تحديثًا جديدًا.",
 
               source:
                 "follow-up-delivery",
@@ -314,6 +368,49 @@ describe(
             })
         ).toThrow(
           "Notification title is required"
+        );
+      }
+    );
+
+    it(
+      "rejects blank Arabic patient-safe content",
+      () => {
+        expect(
+          () =>
+            createNotification({
+              userId:
+                "user-123",
+
+              purpose:
+                "repeat-checkin",
+
+              priority:
+                "medium",
+
+              channels: [
+                "dashboard",
+              ],
+
+              title:
+                "Add a check-in",
+
+              titleAr:
+                "   ",
+
+              body:
+                "Complete a new check-in.",
+
+              bodyAr:
+                "أكمل تحديثًا جديدًا.",
+
+              source:
+                "follow-up-delivery",
+
+              idempotencyKey:
+                "notification:user-123:repeat-checkin",
+            })
+        ).toThrow(
+          "Notification title (Arabic) is required"
         );
       }
     );

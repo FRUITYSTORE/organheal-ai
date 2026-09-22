@@ -5,7 +5,6 @@ import type {
 
 import type {
   FollowUpMessage,
-  FollowUpMessageLanguage,
   FollowUpMessagePurpose,
 } from "@/lib/health-intelligence/application/follow-up-message.service";
 
@@ -21,28 +20,37 @@ export type FollowUpDispatchPayload = {
   channel:
     FollowUpChannel;
 
-  language:
-    FollowUpMessageLanguage;
-
   priority:
     FollowUpPriority;
 
   purpose:
     FollowUpMessagePurpose;
 
-  title:
+  titleEn:
     string;
 
-  body:
+  titleAr:
     string;
 
-  actionLabel:
+  bodyEn:
+    string;
+
+  bodyAr:
+    string;
+
+  actionLabelEn:
+    string | null;
+
+  actionLabelAr:
     string | null;
 
   actionHref:
     string | null;
 
-  safetyNote:
+  safetyNoteEn:
+    string | null;
+
+  safetyNoteAr:
     string | null;
 
   requiresImmediateDelivery:
@@ -53,7 +61,13 @@ export type BuildFollowUpDispatchInput = {
   userId:
     string;
 
-  message:
+  // Channel, priority, purpose, timing and hrefs are identical between the
+  // two — only the text differs by language — so messageEn is used as the
+  // canonical source for everything except the bilingual text fields.
+  messageEn:
+    FollowUpMessage;
+
+  messageAr:
     FollowUpMessage;
 
   followUpRequired:
@@ -100,9 +114,6 @@ export type FollowUpDispatchPlan = {
   auditMetadata: {
     purpose:
       FollowUpMessagePurpose;
-
-    language:
-      FollowUpMessageLanguage;
 
     messageGeneratedAt:
       string;
@@ -354,9 +365,6 @@ function createUnavailablePlan({
       purpose:
         message.purpose,
 
-      language:
-        message.language,
-
       messageGeneratedAt:
         message.generatedAt,
 
@@ -373,7 +381,8 @@ function createUnavailablePlan({
 
 export function buildFollowUpDispatchPlan({
   userId,
-  message,
+  messageEn,
+  messageAr,
   followUpRequired,
   requestId = null,
   referenceTime,
@@ -400,7 +409,8 @@ export function buildFollowUpDispatchPlan({
       userId:
         normalizedUserId,
 
-      message,
+      message:
+        messageEn,
 
       requestId,
 
@@ -415,13 +425,15 @@ export function buildFollowUpDispatchPlan({
   }
 
   if (
-    !message.available
+    !messageEn.available ||
+    !messageAr.available
   ) {
     return createUnavailablePlan({
       userId:
         normalizedUserId,
 
-      message,
+      message:
+        messageEn,
 
       requestId,
 
@@ -437,7 +449,7 @@ export function buildFollowUpDispatchPlan({
 
   const dispatchAt =
     resolveDispatchAt(
-      message,
+      messageEn,
       normalizedReferenceTime
     );
 
@@ -447,34 +459,43 @@ export function buildFollowUpDispatchPlan({
         normalizedUserId,
 
       channel:
-        message.channel,
-
-      language:
-        message.language,
+        messageEn.channel,
 
       priority:
-        message.priority,
+        messageEn.priority,
 
       purpose:
-        message.purpose,
+        messageEn.purpose,
 
-      title:
-        message.title,
+      titleEn:
+        messageEn.title,
 
-      body:
-        message.body,
+      titleAr:
+        messageAr.title,
 
-      actionLabel:
-        message.actionLabel,
+      bodyEn:
+        messageEn.body,
+
+      bodyAr:
+        messageAr.body,
+
+      actionLabelEn:
+        messageEn.actionLabel,
+
+      actionLabelAr:
+        messageAr.actionLabel,
 
       actionHref:
-        message.actionHref,
+        messageEn.actionHref,
 
-      safetyNote:
-        message.safetyNote,
+      safetyNoteEn:
+        messageEn.safetyNote,
+
+      safetyNoteAr:
+        messageAr.safetyNote,
 
       requiresImmediateDelivery:
-        message
+        messageEn
           .requiresImmediateDelivery,
   };
 
@@ -488,10 +509,10 @@ export function buildFollowUpDispatchPlan({
     dispatchAt,
 
     channel:
-      message.channel,
+      messageEn.channel,
 
     priority:
-      message.priority,
+      messageEn.priority,
 
     payload,
 
@@ -500,7 +521,8 @@ export function buildFollowUpDispatchPlan({
         userId:
           normalizedUserId,
 
-        message,
+        message:
+          messageEn,
 
         dispatchAt,
       }),
@@ -509,25 +531,22 @@ export function buildFollowUpDispatchPlan({
 
     maxAttempts:
       resolveMaxAttempts(
-        message.channel,
-        message.priority
+        messageEn.channel,
+        messageEn.priority
       ),
 
     retryDelaysMinutes:
       resolveRetryDelaysMinutes(
-        message.channel,
-        message.priority
+        messageEn.channel,
+        messageEn.priority
       ),
 
     auditMetadata: {
       purpose:
-        message.purpose,
-
-      language:
-        message.language,
+        messageEn.purpose,
 
       messageGeneratedAt:
-        message.generatedAt,
+        messageEn.generatedAt,
 
       planGeneratedAt:
         generatedAt,

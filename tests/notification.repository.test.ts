@@ -330,12 +330,21 @@ describe(
             title:
               "Add a new health check-in",
 
+            titleAr:
+              "أضف تحديثًا صحيًا جديدًا",
+
             body:
               "Complete a new check-in.",
 
+            bodyAr:
+              "أكمل تحديثًا صحيًا جديدًا.",
+
             action: {
-              label:
+              labelEn:
                 "Open Check-In",
+
+              labelAr:
+                "افتح التحديث الصحي",
 
               href:
                 "/checkin",
@@ -385,6 +394,12 @@ describe(
 
             idempotency_key:
               "notification:user-123:repeat-checkin",
+
+            title_ar:
+              "أضف تحديثًا صحيًا جديدًا",
+
+            body_ar:
+              "أكمل تحديثًا صحيًا جديدًا.",
           }),
           {
             onConflict:
@@ -423,6 +438,37 @@ describe(
             "dashboard",
             "email",
           ],
+        });
+
+        /*
+         * This row predates the bilingual columns (no title_ar/body_ar,
+         * and the old {label, href} action shape) — the repository must
+         * fall back to the one language it has for both, rather than
+         * leaving titleAr/action.labelAr empty.
+         */
+        expect(
+          result[0].titleAr
+        ).toBe(
+          result[0].title
+        );
+
+        expect(
+          result[0].bodyAr
+        ).toBe(
+          result[0].body
+        );
+
+        expect(
+          result[0].action
+        ).toEqual({
+          labelEn:
+            "Open Check-In",
+
+          labelAr:
+            "Open Check-In",
+
+          href:
+            "/checkin",
         });
 
         expect(

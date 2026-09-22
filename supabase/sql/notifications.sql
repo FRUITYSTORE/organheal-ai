@@ -24,10 +24,22 @@ create table if not exists public.notifications (
 
   title text not null,
 
+  -- Arabic title. Null when a notification was created without a language
+  -- pair; the application falls back to `title` in that case. See
+  -- supabase/migrations/20260922120000_add_notification_translations.sql.
+  title_ar text null,
+
   body text not null,
 
+  -- Arabic body, same fallback rule as title_ar.
+  body_ar text null,
+
+  -- {labelEn, labelAr, href} once both languages are stored; older rows may
+  -- still hold {label, href}, which the application normalizes on read.
   action jsonb null,
 
+  -- {noteEn, noteAr, requiresProfessionalReview, requiresUrgentReview} once
+  -- both languages are stored; older rows may still hold {note, ...}.
   safety jsonb null,
 
   source text not null,

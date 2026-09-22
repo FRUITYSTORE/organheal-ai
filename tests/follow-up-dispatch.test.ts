@@ -76,7 +76,10 @@ describe(
             userId:
               "user-123",
 
-            message:
+            messageEn:
+              createFollowUpMessage(),
+
+            messageAr:
               createFollowUpMessage(),
 
             followUpRequired:
@@ -131,31 +134,37 @@ describe(
     it(
       "builds an immediate critical dispatch plan",
       () => {
+        const criticalMessage =
+          createFollowUpMessage({
+            channel:
+              "push",
+
+            priority:
+              "critical",
+
+            purpose:
+              "urgent-review",
+
+            recommendedDelayHours:
+              0,
+
+            requiresImmediateDelivery:
+              true,
+
+            safetyNote:
+              "Seek urgent medical care for severe or worsening symptoms.",
+          });
+
         const result =
           buildFollowUpDispatchPlan({
             userId:
               "user-critical",
 
-            message:
-              createFollowUpMessage({
-                channel:
-                  "push",
+            messageEn:
+              criticalMessage,
 
-                priority:
-                  "critical",
-
-                purpose:
-                  "urgent-review",
-
-                recommendedDelayHours:
-                  0,
-
-                requiresImmediateDelivery:
-                  true,
-
-                safetyNote:
-                  "Seek urgent medical care for severe or worsening symptoms.",
-              }),
+            messageAr:
+              criticalMessage,
 
             followUpRequired:
               true,
@@ -187,7 +196,7 @@ describe(
 
         expect(
           result.payload
-            ?.safetyNote
+            ?.safetyNoteEn
         ).toContain(
           "urgent medical care"
         );
@@ -197,25 +206,31 @@ describe(
     it(
       "does not dispatch when follow-up is not required",
       () => {
+        const routineMessage =
+          createFollowUpMessage({
+            channel:
+              "dashboard",
+
+            priority:
+              "low",
+
+            purpose:
+              "routine-continuity",
+
+            recommendedDelayHours:
+              168,
+          });
+
         const result =
           buildFollowUpDispatchPlan({
             userId:
               "user-routine",
 
-            message:
-              createFollowUpMessage({
-                channel:
-                  "dashboard",
+            messageEn:
+              routineMessage,
 
-                priority:
-                  "low",
-
-                purpose:
-                  "routine-continuity",
-
-                recommendedDelayHours:
-                  168,
-              }),
+            messageAr:
+              routineMessage,
 
             followUpRequired:
               false,
@@ -246,16 +261,22 @@ describe(
     it(
       "does not dispatch when the message is unavailable",
       () => {
+        const unavailableMessage =
+          createFollowUpMessage({
+            available:
+              false,
+          });
+
         const result =
           buildFollowUpDispatchPlan({
             userId:
               "user-no-message",
 
-            message:
-              createFollowUpMessage({
-                available:
-                  false,
-              }),
+            messageEn:
+              unavailableMessage,
+
+            messageAr:
+              unavailableMessage,
 
             followUpRequired:
               true,
@@ -284,12 +305,18 @@ describe(
     it(
       "creates deterministic daily deduplication metadata",
       () => {
+        const dedupeMessage =
+          createFollowUpMessage();
+
         const input = {
           userId:
             "user-dedupe",
 
-          message:
-            createFollowUpMessage(),
+          messageEn:
+            dedupeMessage,
+
+          messageAr:
+            dedupeMessage,
 
           followUpRequired:
             true,
@@ -331,7 +358,10 @@ describe(
               userId:
                 "   ",
 
-              message:
+              messageEn:
+                createFollowUpMessage(),
+
+              messageAr:
                 createFollowUpMessage(),
 
               followUpRequired:
@@ -351,7 +381,10 @@ describe(
             userId:
               "user-payload",
 
-            message:
+            messageEn:
+              createFollowUpMessage(),
+
+            messageAr:
               createFollowUpMessage({
                 language:
                   "ar",
@@ -376,11 +409,14 @@ describe(
           userId:
             "user-payload",
 
-          language:
-            "ar",
+          titleEn:
+            "Add a new health check-in",
 
-          title:
+          titleAr:
             "أضف تحديثًا صحيًا جديدًا",
+
+          actionLabelAr:
+            "افتح التحديث الصحي",
 
           actionHref:
             "/checkin",

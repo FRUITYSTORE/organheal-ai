@@ -74,12 +74,21 @@ function createSavedNotification(
     title:
       "Add a new health check-in",
 
+    titleAr:
+      "أضف تحديثًا صحيًا جديدًا",
+
     body:
       "Complete a new check-in.",
 
+    bodyAr:
+      "أكمل تحديثًا صحيًا جديدًا.",
+
     action: {
-      label:
+      labelEn:
         "Open Check-In",
+
+      labelAr:
+        "افتح التحديث الصحي",
 
       href:
         "/checkin",
@@ -159,12 +168,21 @@ describe(
             title:
               "Add a new health check-in",
 
+            titleAr:
+              "أضف تحديثًا صحيًا جديدًا",
+
             body:
               "Complete a new check-in.",
 
+            bodyAr:
+              "أكمل تحديثًا صحيًا جديدًا.",
+
             action: {
-              label:
+              labelEn:
                 "Open Check-In",
+
+              labelAr:
+                "افتح التحديث الصحي",
 
               href:
                 "/checkin",
@@ -282,8 +300,14 @@ describe(
             title:
               "Add a new health check-in",
 
+            titleAr:
+              "أضف تحديثًا صحيًا جديدًا",
+
             body:
               "Complete a new check-in.",
+
+            bodyAr:
+              "أكمل تحديثًا صحيًا جديدًا.",
 
             source:
               "follow-up-delivery",
@@ -333,12 +357,21 @@ describe(
           title:
             "Urgent health review recommended",
 
+          titleAr:
+            "يوصى بمراجعة صحية عاجلة",
+
           body:
             "Review the available information promptly.",
 
+          bodyAr:
+            "راجع المعلومات المتوفرة على الفور.",
+
           safety: {
-            note:
+            noteEn:
               "Seek urgent medical care immediately for severe or worsening symptoms.",
+
+            noteAr:
+              "اطلب رعاية طبية عاجلة فورًا إذا كانت الأعراض شديدة أو تزداد سوءًا.",
 
             requiresProfessionalReview:
               true,
@@ -368,8 +401,11 @@ describe(
               "critical",
 
             safety: {
-              note:
+              noteEn:
                 "Seek urgent medical care immediately for severe or worsening symptoms.",
+
+              noteAr:
+                "اطلب رعاية طبية عاجلة فورًا إذا كانت الأعراض شديدة أو تزداد سوءًا.",
 
               requiresProfessionalReview:
                 true,
@@ -406,8 +442,14 @@ describe(
             title:
               "Add a new check-in",
 
+            titleAr:
+              "أضف تحديثًا جديدًا",
+
             body:
               "Complete a new check-in.",
+
+            bodyAr:
+              "أكمل تحديثًا جديدًا.",
 
             source:
               "follow-up-delivery",
@@ -464,8 +506,14 @@ describe(
             title:
               "Add a new check-in",
 
+            titleAr:
+              "أضف تحديثًا جديدًا",
+
             body:
               "Complete a new check-in.",
+
+            bodyAr:
+              "أكمل تحديثًا جديدًا.",
 
             source:
               "follow-up-delivery",

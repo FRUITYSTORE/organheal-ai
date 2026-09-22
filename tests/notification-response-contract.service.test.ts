@@ -46,12 +46,21 @@ function createSummary():
         title:
           "Add a new health check-in",
 
+        titleAr:
+          "أضف تحديثًا صحيًا جديدًا",
+
         body:
           "Complete a new health check-in.",
 
+        bodyAr:
+          "أكمل تحديثًا صحيًا جديدًا.",
+
         action: {
-          label:
+          labelEn:
             "Open Check-In",
+
+          labelAr:
+            "افتح التحديث الصحي",
 
           href:
             "/checkin",
@@ -125,12 +134,21 @@ describe(
               title:
                 "Add a new health check-in",
 
+              titleAr:
+                "أضف تحديثًا صحيًا جديدًا",
+
               body:
                 "Complete a new health check-in.",
 
+              bodyAr:
+                "أكمل تحديثًا صحيًا جديدًا.",
+
               action: {
-                label:
+                labelEn:
                   "Open Check-In",
+
+                labelAr:
+                  "افتح التحديث الصحي",
 
                 href:
                   "/checkin",
@@ -222,8 +240,11 @@ describe(
             "critical",
 
           safety: {
-            note:
+            noteEn:
               "Seek urgent medical care immediately for severe or worsening symptoms.",
+
+            noteAr:
+              "اطلب رعاية طبية عاجلة فورًا إذا كانت الأعراض شديدة أو تزداد سوءًا.",
 
             requiresProfessionalReview:
               true,
@@ -242,8 +263,11 @@ describe(
           result.notifications[0]
             .safety
         ).toEqual({
-          note:
+          noteEn:
             "Seek urgent medical care immediately for severe or worsening symptoms.",
+
+          noteAr:
+            "اطلب رعاية طبية عاجلة فورًا إذا كانت الأعراض شديدة أو تزداد سوءًا.",
 
           requiresProfessionalReview:
             true,

@@ -28,7 +28,13 @@ export type NotificationResponseContractItem = {
   title:
     string;
 
+  titleAr:
+    string;
+
   body:
+    string;
+
+  bodyAr:
     string;
 
   action:
@@ -85,8 +91,14 @@ function buildNotificationItem(
     title:
       notification.title,
 
+    titleAr:
+      notification.titleAr,
+
     body:
       notification.body,
+
+    bodyAr:
+      notification.bodyAr,
 
     action:
       notification.action,

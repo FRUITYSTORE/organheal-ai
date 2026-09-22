@@ -42,12 +42,6 @@ const VALID_CHANNELS =
     "push",
   ]);
 
-const VALID_LANGUAGES =
-  new Set([
-    "en",
-    "ar",
-  ]);
-
 const VALID_PRIORITIES =
   new Set([
     "low",
@@ -152,11 +146,6 @@ function isFollowUpDeliveryPayload(
     VALID_CHANNELS.has(
       delivery.channel
     ) &&
-    typeof delivery.language ===
-      "string" &&
-    VALID_LANGUAGES.has(
-      delivery.language
-    ) &&
     typeof delivery.priority ===
       "string" &&
     VALID_PRIORITIES.has(
@@ -166,19 +155,31 @@ function isFollowUpDeliveryPayload(
       delivery.purpose
     ) &&
     isNonEmptyString(
-      delivery.title
+      delivery.titleEn
     ) &&
     isNonEmptyString(
-      delivery.body
+      delivery.titleAr
+    ) &&
+    isNonEmptyString(
+      delivery.bodyEn
+    ) &&
+    isNonEmptyString(
+      delivery.bodyAr
     ) &&
     isNullableString(
-      delivery.actionLabel
+      delivery.actionLabelEn
+    ) &&
+    isNullableString(
+      delivery.actionLabelAr
     ) &&
     isNullableString(
       delivery.actionHref
     ) &&
     isNullableString(
-      delivery.safetyNote
+      delivery.safetyNoteEn
+    ) &&
+    isNullableString(
+      delivery.safetyNoteAr
     ) &&
     typeof delivery
       .requiresImmediateDelivery ===
@@ -191,9 +192,6 @@ function isFollowUpDeliveryPayload(
     ) &&
     isNonEmptyString(
       auditMetadata.purpose
-    ) &&
-    isNonEmptyString(
-      auditMetadata.language
     ) &&
     isNonEmptyString(
       auditMetadata.messageGeneratedAt
@@ -221,20 +219,25 @@ function resolveNotificationAction(
     FollowUpDeliveryJobPayload
 ) {
   const {
-    actionLabel,
+    actionLabelEn,
+    actionLabelAr,
     actionHref,
   } = payload.delivery;
 
   if (
-    !actionLabel ||
+    !actionLabelEn ||
+    !actionLabelAr ||
     !actionHref
   ) {
     return null;
   }
 
   return {
-    label:
-      actionLabel,
+    labelEn:
+      actionLabelEn,
+
+    labelAr:
+      actionLabelAr,
 
     href:
       actionHref,
@@ -247,16 +250,23 @@ function resolveNotificationSafety(
 ) {
   const {
     purpose,
-    safetyNote,
+    safetyNoteEn,
+    safetyNoteAr,
   } = payload.delivery;
 
-  if (!safetyNote) {
+  if (
+    !safetyNoteEn ||
+    !safetyNoteAr
+  ) {
     return null;
   }
 
   return {
-    note:
-      safetyNote,
+    noteEn:
+      safetyNoteEn,
+
+    noteAr:
+      safetyNoteAr,
 
     requiresProfessionalReview:
       purpose ===
@@ -321,10 +331,16 @@ export function createFollowUpDeliveryHandler(
   resolveNotificationChannels(),
 
       title:
-        payload.delivery.title,
+        payload.delivery.titleEn,
+
+      titleAr:
+        payload.delivery.titleAr,
 
       body:
-        payload.delivery.body,
+        payload.delivery.bodyEn,
+
+      bodyAr:
+        payload.delivery.bodyAr,
 
       action:
         resolveNotificationAction(

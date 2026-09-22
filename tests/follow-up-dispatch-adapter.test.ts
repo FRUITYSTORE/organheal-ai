@@ -42,28 +42,37 @@ function createDispatchPlan(
       channel:
         "email",
 
-      language:
-        "en",
-
       priority:
         "medium",
 
       purpose:
         "repeat-checkin",
 
-      title:
+      titleEn:
         "Add a new health check-in",
 
-      body:
+      titleAr:
+        "أضف تحديثًا صحيًا جديدًا",
+
+      bodyEn:
         "Complete a new check-in so OrganHeal can compare your recent wellness signals.",
 
-      actionLabel:
+      bodyAr:
+        "أكمل تحديثًا صحيًا جديدًا لكي يقارن OrganHeal أحدث إشاراتك الصحية.",
+
+      actionLabelEn:
         "Open Check-In",
+
+      actionLabelAr:
+        "افتح التحديث الصحي",
 
       actionHref:
         "/checkin",
 
-      safetyNote:
+      safetyNoteEn:
+        null,
+
+      safetyNoteAr:
         null,
 
       requiresImmediateDelivery:
@@ -87,9 +96,6 @@ function createDispatchPlan(
     auditMetadata: {
       purpose:
         "repeat-checkin",
-
-      language:
-        "en",
 
       messageGeneratedAt:
         "2026-08-06T17:45:00.000Z",
@@ -216,9 +222,6 @@ describe(
 
           purpose:
             "repeat-checkin",
-
-          language:
-            "en",
         });
       }
     );

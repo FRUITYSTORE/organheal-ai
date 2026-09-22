@@ -32,8 +32,14 @@ export type NotificationPurpose =
   | "doctor-brief-ready"
   | "health-intelligence-updated";
 
+// Every user-facing string carries both languages so the UI can always show
+// whichever one matches the viewer's current preference, instead of the
+// language the notification happened to be created in.
 export type NotificationAction = {
-  label:
+  labelEn:
+    string;
+
+  labelAr:
     string;
 
   href:
@@ -41,7 +47,10 @@ export type NotificationAction = {
 };
 
 export type NotificationSafety = {
-  note:
+  noteEn:
+    string;
+
+  noteAr:
     string;
 
   requiresProfessionalReview:
@@ -73,7 +82,13 @@ export type Notification = {
   title:
     string;
 
+  titleAr:
+    string;
+
   body:
+    string;
+
+  bodyAr:
     string;
 
   action:
@@ -120,7 +135,13 @@ export type CreateNotificationInput = {
   title:
     string;
 
+  titleAr:
+    string;
+
   body:
+    string;
+
+  bodyAr:
     string;
 
   action?:
@@ -276,10 +297,16 @@ function normalizeAction(
   }
 
   return {
-    label:
+    labelEn:
       requireText(
-        action.label,
-        "Notification action label"
+        action.labelEn,
+        "Notification action label (English)"
+      ),
+
+    labelAr:
+      requireText(
+        action.labelAr,
+        "Notification action label (Arabic)"
       ),
 
     href:
@@ -299,10 +326,16 @@ function normalizeSafety(
   }
 
   return {
-    note:
+    noteEn:
       requireText(
-        safety.note,
-        "Notification safety note"
+        safety.noteEn,
+        "Notification safety note (English)"
+      ),
+
+    noteAr:
+      requireText(
+        safety.noteAr,
+        "Notification safety note (Arabic)"
       ),
 
     requiresProfessionalReview:
@@ -321,7 +354,9 @@ export function createNotification({
   priority,
   channels,
   title,
+  titleAr,
   body,
+  bodyAr,
   action = null,
   safety = null,
   source,
@@ -387,10 +422,22 @@ export function createNotification({
         "Notification title"
       ),
 
+    titleAr:
+      requireText(
+        titleAr,
+        "Notification title (Arabic)"
+      ),
+
     body:
       requireText(
         body,
         "Notification body"
+      ),
+
+    bodyAr:
+      requireText(
+        bodyAr,
+        "Notification body (Arabic)"
       ),
 
     action:

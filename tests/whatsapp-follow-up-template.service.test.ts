@@ -26,28 +26,37 @@ function createPayload(
       channel:
         "whatsapp",
 
-      language:
-        "en",
-
       priority:
         "medium",
 
       purpose:
         "repeat-checkin",
 
-      title:
+      titleEn:
         "Add a new health check-in",
 
-      body:
+      titleAr:
+        "أضف تحديثًا صحيًا جديدًا",
+
+      bodyEn:
         "Complete a new check-in so OrganHeal can compare your recent wellness signals.",
 
-      actionLabel:
+      bodyAr:
+        "أكمل تحديثًا صحيًا جديدًا لمتابعة التغيرات المهمة.",
+
+      actionLabelEn:
         "Open Check-In",
+
+      actionLabelAr:
+        "افتح التحديث الصحي",
 
       actionHref:
         "/checkin",
 
-      safetyNote:
+      safetyNoteEn:
+        null,
+
+      safetyNoteAr:
         null,
 
       requiresImmediateDelivery:
@@ -72,9 +81,6 @@ function createPayload(
       purpose:
         "repeat-checkin",
 
-      language:
-        "en",
-
       messageGeneratedAt:
         "2026-08-21T10:00:00.000Z",
 
@@ -97,7 +103,8 @@ describe(
       () => {
         const result =
           buildWhatsAppFollowUpTemplate(
-            createPayload()
+            createPayload(),
+            "en"
           );
 
         expect(
@@ -131,28 +138,12 @@ describe(
       "maps Arabic language without changing the follow-up purpose",
       () => {
         const payload =
-          createPayload({
-            delivery: {
-              ...createPayload()
-                .delivery,
-
-              language:
-                "ar",
-
-              title:
-                "أضف تحديثًا صحيًا جديدًا",
-
-              body:
-                "أكمل تحديثًا صحيًا جديدًا لمتابعة التغيرات المهمة.",
-
-              actionLabel:
-                "افتح التحديث الصحي",
-            },
-          });
+          createPayload();
 
         const result =
           buildWhatsAppFollowUpTemplate(
-            payload
+            payload,
+            "ar"
           );
 
         expect(
@@ -201,19 +192,19 @@ describe(
               purpose:
                 "urgent-review",
 
-              title:
+              titleEn:
                 "Urgent health review recommended",
 
-              body:
+              bodyEn:
                 "Your current information requires urgent clinical review.",
 
-              actionLabel:
+              actionLabelEn:
                 "Prepare Doctor Brief",
 
               actionHref:
                 "/doctor-portal",
 
-              safetyNote:
+              safetyNoteEn:
                 "Seek urgent medical care immediately if you have severe or worsening symptoms.",
 
               requiresImmediateDelivery:
@@ -223,7 +214,8 @@ describe(
 
         const result =
           buildWhatsAppFollowUpTemplate(
-            payload
+            payload,
+            "en"
           );
 
         expect(
@@ -264,7 +256,10 @@ describe(
               ...createPayload()
                 .delivery,
 
-              actionLabel:
+              actionLabelEn:
+                null,
+
+              actionLabelAr:
                 null,
 
               actionHref:
@@ -274,7 +269,8 @@ describe(
 
         const result =
           buildWhatsAppFollowUpTemplate(
-            payload
+            payload,
+            "en"
           );
 
         expect(
@@ -344,7 +340,8 @@ describe(
 
           expect(
             buildWhatsAppFollowUpTemplate(
-              payload
+              payload,
+              "en"
             ).templateName
           ).toBe(
             templateName
@@ -362,7 +359,7 @@ describe(
               ...createPayload()
                 .delivery,
 
-              title:
+              titleEn:
                 "   ",
             },
           });
@@ -370,7 +367,8 @@ describe(
         expect(
           () =>
             buildWhatsAppFollowUpTemplate(
-              payload
+              payload,
+              "en"
             )
         ).toThrow(
           "Follow-up title is required"
@@ -387,7 +385,7 @@ describe(
               ...createPayload()
                 .delivery,
 
-              body:
+              bodyEn:
                 "   ",
             },
           });
@@ -395,7 +393,8 @@ describe(
         expect(
           () =>
             buildWhatsAppFollowUpTemplate(
-              payload
+              payload,
+              "en"
             )
         ).toThrow(
           "Follow-up body is required"

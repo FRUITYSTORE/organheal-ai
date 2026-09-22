@@ -70,17 +70,46 @@ function requireText(
 
 export function buildWhatsAppFollowUpTemplate(
   payload:
-    FollowUpDeliveryJobPayload
+    FollowUpDeliveryJobPayload,
+  language:
+    WhatsAppCloudLanguage
 ): WhatsAppFollowUpTemplate {
   const {
-    language,
     purpose,
-    title,
-    body,
-    actionLabel,
-    safetyNote,
+    titleEn,
+    titleAr,
+    bodyEn,
+    bodyAr,
+    actionLabelEn,
+    actionLabelAr,
+    safetyNoteEn,
+    safetyNoteAr,
   } =
     payload.delivery;
+
+  const title =
+    language ===
+      "ar"
+      ? titleAr
+      : titleEn;
+
+  const body =
+    language ===
+      "ar"
+      ? bodyAr
+      : bodyEn;
+
+  const actionLabel =
+    language ===
+      "ar"
+      ? actionLabelAr
+      : actionLabelEn;
+
+  const safetyNote =
+    language ===
+      "ar"
+      ? safetyNoteAr
+      : safetyNoteEn;
 
   const parameters:
     WhatsAppTemplateParameter[] = [

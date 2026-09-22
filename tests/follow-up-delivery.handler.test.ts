@@ -105,28 +105,37 @@ function createJob(
         channel:
           "email",
 
-        language:
-          "en",
-
         priority:
           "medium",
 
         purpose:
           "repeat-checkin",
 
-        title:
+        titleEn:
           "Add a new health check-in",
 
-        body:
+        titleAr:
+          "أضف تحديثًا صحيًا جديدًا",
+
+        bodyEn:
           "Complete a new health check-in.",
 
-        actionLabel:
+        bodyAr:
+          "أكمل تحديثًا صحيًا جديدًا.",
+
+        actionLabelEn:
           "Open Check-In",
+
+        actionLabelAr:
+          "افتح التحديث الصحي",
 
         actionHref:
           "/checkin",
 
-        safetyNote:
+        safetyNoteEn:
+          null,
+
+        safetyNoteAr:
           null,
 
         requiresImmediateDelivery:
@@ -150,9 +159,6 @@ function createJob(
 
         purpose:
           "repeat-checkin",
-
-        language:
-          "en",
 
         messageGeneratedAt:
           "2026-08-06T17:45:00.000Z",
@@ -229,12 +235,21 @@ describe(
               title:
                 "Add a new health check-in",
 
+              titleAr:
+                "أضف تحديثًا صحيًا جديدًا",
+
               body:
                 "Complete a new health check-in.",
 
+              bodyAr:
+                "أكمل تحديثًا صحيًا جديدًا.",
+
               action: {
-                label:
+                labelEn:
                   "Open Check-In",
+
+                labelAr:
+                  "افتح التحديث الصحي",
 
                 href:
                   "/checkin",
@@ -336,12 +351,21 @@ describe(
           title:
             "Add a new health check-in",
 
+          titleAr:
+            "أضف تحديثًا صحيًا جديدًا",
+
           body:
             "Complete a new health check-in.",
 
+          bodyAr:
+            "أكمل تحديثًا صحيًا جديدًا.",
+
           action: {
-            label:
+            labelEn:
               "Open Check-In",
+
+            labelAr:
+              "افتح التحديث الصحي",
 
             href:
               "/checkin",
@@ -458,8 +482,11 @@ loadUserProfile:
             purpose:
               "urgent-review",
 
-            safetyNote:
+            safetyNoteEn:
               "Seek urgent medical care for severe or worsening symptoms.",
+
+            safetyNoteAr:
+              "اطلب رعاية طبية عاجلة إذا ساءت الأعراض أو كانت شديدة.",
 
             requiresImmediateDelivery:
               true,
@@ -490,8 +517,11 @@ loadUserProfile:
 ],
 
             safety: {
-              note:
+              noteEn:
                 "Seek urgent medical care for severe or worsening symptoms.",
+
+              noteAr:
+                "اطلب رعاية طبية عاجلة إذا ساءت الأعراض أو كانت شديدة.",
 
               requiresProfessionalReview:
                 true,

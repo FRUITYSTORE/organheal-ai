@@ -161,12 +161,21 @@ describe(
                 title:
                   "Add a new health check-in",
 
+                titleAr:
+                  "أضف تحديثًا صحيًا جديدًا",
+
                 body:
                   "Complete a new check-in.",
 
+                bodyAr:
+                  "أكمل تحديثًا جديدًا.",
+
                 action: {
-                  label:
+                  labelEn:
                     "Open Check-In",
+
+                  labelAr:
+                    "افتح التحديث الصحي",
 
                   href:
                     "/checkin",
@@ -227,12 +236,21 @@ describe(
                 title:
                   "Add a new health check-in",
 
+                titleAr:
+                  "أضف تحديثًا صحيًا جديدًا",
+
                 body:
                   "Complete a new check-in.",
 
+                bodyAr:
+                  "أكمل تحديثًا جديدًا.",
+
                 action: {
-                  label:
+                  labelEn:
                     "Open Check-In",
+
+                  labelAr:
+                    "افتح التحديث الصحي",
 
                   href:
                     "/checkin",
@@ -370,12 +388,21 @@ describe(
               title:
                 "Add a new health check-in",
 
+              titleAr:
+                "أضف تحديثًا صحيًا جديدًا",
+
               body:
                 "Complete a new check-in.",
 
+              bodyAr:
+                "أكمل تحديثًا جديدًا.",
+
               action: {
-                label:
+                labelEn:
                   "Open Check-In",
+
+                labelAr:
+                  "افتح التحديث الصحي",
 
                 href:
                   "/checkin",

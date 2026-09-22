@@ -328,18 +328,6 @@ sendEmail =
     );
   }
 
-  const title =
-    requireText(
-      payload.delivery.title,
-      "Delivery title"
-    );
-
-  const body =
-    requireText(
-      payload.delivery.body,
-      "Delivery body"
-    );
-
   const executedAt =
     normalizeReferenceTime(
       referenceTime
@@ -474,6 +462,35 @@ communicationPreferences =
     }
   }
 
+  /*
+   * Email and WhatsApp send one message, so they need one language —
+   * unlike the dashboard notification, which stores both and lets the
+   * viewer's current UI language pick between them at render time. The
+   * recipient's communication preference is the closest thing to a
+   * durable, explicit language choice available here; default to English
+   * when no preference could be loaded.
+   */
+  const useArabic =
+    communicationPreferences
+      ?.preferred_language ===
+    "ar";
+
+  const title =
+    requireText(
+      useArabic
+        ? payload.delivery.titleAr
+        : payload.delivery.titleEn,
+      "Delivery title"
+    );
+
+  const body =
+    requireText(
+      useArabic
+        ? payload.delivery.bodyAr
+        : payload.delivery.bodyEn,
+      "Delivery body"
+    );
+
   const emailDeliveryEnabled =
   process.env
     .EMAIL_DELIVERY_ENABLED ===
@@ -545,7 +562,7 @@ if (
         payload.delivery.purpose,
 
       language:
-        payload.delivery.language,
+        useArabic ? "ar" : "en",
 
       idempotencyKey,
 
@@ -610,7 +627,10 @@ if (
 
   const template =
     buildWhatsAppFollowUpTemplate(
-      payload
+      payload,
+      useArabic
+        ? "ar"
+        : "en"
     );
 
   const providerResult =
@@ -652,7 +672,7 @@ if (
         payload.delivery.purpose,
 
       language:
-        payload.delivery.language,
+        useArabic ? "ar" : "en",
 
       idempotencyKey,
 
@@ -724,7 +744,7 @@ if (
         payload.delivery.purpose,
 
       language:
-        payload.delivery.language,
+        useArabic ? "ar" : "en",
 
       idempotencyKey,
 
@@ -747,9 +767,13 @@ if (
 
       hasSafetyNote:
         Boolean(
-          payload
-            .delivery
-            .safetyNote
+          useArabic
+            ? payload
+                .delivery
+                .safetyNoteAr
+            : payload
+                .delivery
+                .safetyNoteEn
         ),
 
       titleLength:
