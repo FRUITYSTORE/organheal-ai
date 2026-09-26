@@ -14,6 +14,7 @@ import {
 import VoiceInputButton from "@/app/components/voice/VoiceInputButton";
 import FormattedAnswer from "@/app/components/assistant/FormattedAnswer";
 import HealthUpdatesStrip from "@/app/components/home/HealthUpdatesStrip";
+import HomeFeaturedNotes from "@/app/components/home/HomeFeaturedNotes";
 import {
   HomeAccessOverview,
   HomeFinalCta,
@@ -1767,6 +1768,8 @@ if (
             </aside>
           </div>
         </section>
+
+        <HomeFeaturedNotes isArabic={isArabic} />
 
         <HealthUpdatesStrip isArabic={isArabic} />
 

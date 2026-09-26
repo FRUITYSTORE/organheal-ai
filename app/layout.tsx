@@ -7,6 +7,7 @@ import "./theme-palette.css";
 
 import JsonLd from "./components/seo/JsonLd";
 import Navbar from "./components/Navbar";
+import HealthTickerBar from "./components/home/HealthTickerBar";
 import RouteAccessGuard from "./components/RouteAccessGuard";
 import SiteFooter from "./components/SiteFooter";
 import { themeInitScript } from "./components/theme/theme-init-script";
@@ -108,6 +109,7 @@ export default function RootLayout({
       </head>
       <body>
         <Navbar />
+        <HealthTickerBar />
         <RouteAccessGuard>{children}</RouteAccessGuard>
         <SiteFooter />
       </body>

@@ -223,3 +223,59 @@ a.ohUpdateFeatured:hover {
 .ohUpdateFeatured .ohUpdateRead {
   color: color-mix(in srgb, var(--oh-tone) 70%, var(--oh-text));
 }
+
+/* Dedicated homepage section for the owner's featured notes. */
+.ohFeaturedNotes {
+  display: grid;
+  gap: 14px;
+  padding: 20px;
+  border: 1px solid var(--oh-border);
+  border-radius: 22px;
+  background: var(--oh-surface);
+  box-shadow: var(--oh-shadow-sm);
+}
+
+.ohFeaturedNotesHeader {
+  display: grid;
+  gap: 2px;
+}
+
+.ohFeaturedNotesHeader .ohEyebrow {
+  margin: 0;
+}
+
+.ohFeaturedNotesTitle {
+  margin: 0;
+  color: var(--oh-text);
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.ohFeaturedNotesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ohFeaturedNotesGrid > li {
+  display: flex;
+  min-width: 0;
+}
+
+.ohFeaturedNotesGrid .ohUpdateCard {
+  min-height: 170px;
+  padding: 18px 20px;
+}
+
+.ohFeaturedNotesGrid .ohUpdateFeaturedTitle {
+  font-size: 1.1rem;
+}
+
+.ohFeaturedNotesGrid .ohUpdateFeaturedBody {
+  font-size: 0.95rem;
+  -webkit-line-clamp: 6;
+}

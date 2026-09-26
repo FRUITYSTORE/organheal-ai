@@ -407,6 +407,10 @@ export default function Navbar() {
         </Link>
 
         <div className="ohNavCenter">
+          <Link {...linkProps(homeItem.href)} className="ohNavLink">
+            {homeItem.label}
+          </Link>
+
           {isLoggedIn ? (
             <>
               {desktopMemberItems.map((item) => (
