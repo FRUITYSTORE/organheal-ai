@@ -14,7 +14,8 @@ export type UsageFeature =
   | "assistant"
   | "voice_dictation"
   | "voice_speech"
-  | "voice_realtime";
+  | "voice_realtime"
+  | "video_explainer";
 
 export type UsageTier = "visitor" | "free" | "plus";
 
@@ -43,5 +44,10 @@ export const USAGE_POLICIES: Record<
     visitor: null,
     free: { limit: 3, windowMs: DAY_MS },
     plus: { limit: 30, windowMs: DAY_MS },
+  },
+  video_explainer: {
+    visitor: { limit: 2, windowMs: DAY_MS },
+    free: { limit: 6, windowMs: DAY_MS },
+    plus: { limit: 40, windowMs: DAY_MS },
   },
 };
