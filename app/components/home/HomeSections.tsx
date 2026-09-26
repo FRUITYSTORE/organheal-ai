@@ -3,7 +3,6 @@
 import Link from "next/link";
 
 import NavIcon, { type NavIconName } from "@/app/components/navigation/NavIcons";
-import { USAGE_POLICIES } from "@/lib/billing/usage-limits";
 
 import "./home-sections.css";
 
@@ -13,17 +12,13 @@ function pick(value: Localized, isArabic: boolean): string {
   return isArabic ? value.ar : value.en;
 }
 
-const VISITOR_QUESTIONS = USAGE_POLICIES.assistant.visitor?.limit ?? 0;
-const FREE_QUESTIONS = USAGE_POLICIES.assistant.free?.limit ?? 0;
-const FREE_LIVE_VOICE = USAGE_POLICIES.voice_realtime.free?.limit ?? 0;
-
 /** Note under the visitor's main call to action. */
 export function VisitorFreeNote({ isArabic }: { isArabic: boolean }) {
   return (
     <p className="homeFreeNote">
       {isArabic
-        ? `بدون بطاقة بنكية. اسأل ${VISITOR_QUESTIONS} أسئلة مجانًا كل يوم دون حساب.`
-        : `No card needed. Ask ${VISITOR_QUESTIONS} questions a day free, no account required.`}
+        ? "ابدأ مجانًا: بلا بطاقة ولا تسجيل. أنشئ حسابًا مجانيًا لاحقًا لحفظ نتائجك ورفع تقاريرك."
+        : "Free to start: no card, no sign-up. Create a free account later to save your results and upload reports."}
     </p>
   );
 }
@@ -148,8 +143,8 @@ export function HomeHowItWorks({ isArabic }: { isArabic: boolean }) {
 export function HomeAccessOverview({ isArabic }: { isArabic: boolean }) {
   const withoutAccount: Localized[] = [
     {
-      en: `Ask up to ${VISITOR_QUESTIONS} questions a day`,
-      ar: `اسأل حتى ${VISITOR_QUESTIONS} أسئلة كل يوم`,
+      en: "Ask health questions right away, with no sign-up",
+      ar: "اسأل عن صحتك فورًا دون أي تسجيل",
     },
     { en: "Read the health library", ar: "تصفّح المكتبة الصحية" },
     { en: "Explore the sample health map", ar: "استكشف نموذج الخريطة الصحية" },
@@ -165,12 +160,16 @@ export function HomeAccessOverview({ isArabic }: { isArabic: boolean }) {
       ar: "خريطتك وسجلك الصحي الخاصان",
     },
     {
-      en: `Up to ${FREE_QUESTIONS} questions a day about your own results`,
-      ar: `حتى ${FREE_QUESTIONS} سؤالًا كل يوم عن نتائجك`,
+      en: "Ask about your own results and keep the conversation going",
+      ar: "اسأل عن نتائجك الشخصية وتابع الحديث بلا انقطاع",
     },
     {
-      en: `Voice input, read-aloud and ${FREE_LIVE_VOICE} live voice chats a day`,
-      ar: `الإدخال الصوتي والقراءة بصوت عالٍ و${FREE_LIVE_VOICE} محادثات صوتية مباشرة يوميًا`,
+      en: "Voice input, read-aloud and live voice chats",
+      ar: "الإدخال الصوتي والقراءة بصوت عالٍ والمحادثات الصوتية المباشرة",
+    },
+    {
+      en: "Follow-up reminders by email and WhatsApp",
+      ar: "تذكيرات متابعة عبر البريد الإلكتروني وواتساب",
     },
   ];
 

@@ -29,7 +29,7 @@ const HIDDEN_PREFIXES = [
   "/admin",
 ];
 
-const DISMISS_KEY = "organheal-ticker-dismissed";
+const COLLAPSE_KEY = "organheal-ticker-collapsed";
 const SECONDS_PER_ITEM = 14;
 
 function getStoredLanguage(): Language {
@@ -45,11 +45,19 @@ function getStoredLanguage(): Language {
   return saved.toLowerCase().startsWith("ar") ? "ar" : "en";
 }
 
-function readDismissed(): boolean {
+function readCollapsed(): boolean {
   try {
-    return sessionStorage.getItem(DISMISS_KEY) === "1";
+    return localStorage.getItem(COLLAPSE_KEY) === "1";
   } catch {
     return false;
+  }
+}
+
+function writeCollapsed(collapsed: boolean): void {
+  try {
+    localStorage.setItem(COLLAPSE_KEY, collapsed ? "1" : "0");
+  } catch {
+    // The choice simply won't be remembered.
   }
 }
 
@@ -115,7 +123,7 @@ export default function HealthTickerBar() {
   // browser storage in the initializers cannot cause a hydration mismatch.
   const [language, setLanguage] = useState<Language>(getStoredLanguage);
   const [items, setItems] = useState<TickerItem[]>([]);
-  const [dismissed, setDismissed] = useState(readDismissed);
+  const [collapsed, setCollapsed] = useState(readCollapsed);
 
   const isArabic = language === "ar";
   const hidden = HIDDEN_PREFIXES.some(
@@ -137,7 +145,7 @@ export default function HealthTickerBar() {
   }, []);
 
   useEffect(() => {
-    if (hidden || dismissed) return;
+    if (hidden) return;
 
     const controller = new AbortController();
 
@@ -175,10 +183,26 @@ export default function HealthTickerBar() {
     });
 
     return () => controller.abort();
-  }, [language, hidden, dismissed]);
+  }, [language, hidden]);
 
-  if (hidden || dismissed || items.length === 0) {
+  if (hidden || items.length === 0) {
     return null;
+  }
+
+  if (collapsed) {
+    return (
+      <div className="ohTickerCollapsed" dir={isArabic ? "rtl" : "ltr"}>
+        <button
+          type="button"
+          onClick={() => {
+            writeCollapsed(false);
+            setCollapsed(false);
+          }}
+        >
+          {isArabic ? "إظهار شريط النصائح الصحية ▾" : "Show health tips ▾"}
+        </button>
+      </div>
+    );
   }
 
   const group = (copy: number) => (
@@ -210,15 +234,11 @@ export default function HealthTickerBar() {
         <button
           type="button"
           className="ohTickerClose"
-          aria-label={isArabic ? "إغلاق الشريط" : "Dismiss bar"}
+          aria-label={isArabic ? "طي الشريط" : "Collapse bar"}
+          title={isArabic ? "طي الشريط" : "Collapse bar"}
           onClick={() => {
-            try {
-              sessionStorage.setItem(DISMISS_KEY, "1");
-            } catch {
-              // Dismissal simply won't persist for this tab.
-            }
-
-            setDismissed(true);
+            writeCollapsed(true);
+            setCollapsed(true);
           }}
         >
           ×

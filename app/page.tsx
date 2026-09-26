@@ -15,6 +15,7 @@ import VoiceInputButton from "@/app/components/voice/VoiceInputButton";
 import FormattedAnswer from "@/app/components/assistant/FormattedAnswer";
 import HealthUpdatesStrip from "@/app/components/home/HealthUpdatesStrip";
 import HomeTodaySection from "@/app/components/home/HomeTodaySection";
+import HomeStayConnected from "@/app/components/home/HomeStayConnected";
 import {
   HomeAccessOverview,
   HomeFinalCta,
@@ -24,6 +25,7 @@ import {
 } from "@/app/components/home/HomeSections";
 import FeaturedHealthArticles from "@/app/components/home/FeaturedHealthArticles";
 import DigitalTwinCard from "@/app/intelligence/components/DigitalTwinCard";
+import { localizeStoredText } from "@/lib/localizeStoredText";
 type Language = "en" | "ar";
 
 type TrustCard = {
@@ -535,7 +537,7 @@ if (
                   "\u0623\u062d\u062f\u062b \u0630\u0643\u0627\u0621 \u0635\u062d\u064a \u0644\u062f\u064a\u0643 \u062c\u0627\u0647\u0632."
                 ),
                 description:
-                  latestReport.nextBestAction ||
+                  localizeStoredText(latestReport.nextBestAction, isArabic) ||
                   text(
                     "Review the important findings and continue with your recommended next health step.",
                     "\u0631\u0627\u062c\u0639 \u0627\u0644\u0646\u062a\u0627\u0626\u062c \u0627\u0644\u0645\u0647\u0645\u0629 \u0648\u062a\u0627\u0628\u0639 \u062e\u0637\u0648\u062a\u0643 \u0627\u0644\u0635\u062d\u064a\u0629 \u0627\u0644\u062a\u0627\u0644\u064a\u0629 \u0627\u0644\u0645\u0648\u0635\u0649 \u0628\u0647\u0627."
@@ -1773,6 +1775,8 @@ if (
 
         <HomeTodaySection isArabic={isArabic} />
 
+        <HomeStayConnected isArabic={isArabic} isLoggedIn={isLoggedIn} />
+
         <HealthUpdatesStrip isArabic={isArabic} />
 
         {!isLoggedIn && <HomeHowItWorks isArabic={isArabic} />}
@@ -1902,7 +1906,7 @@ if (
                   </div>
 
                   <p className="homeContinuationDescription">
-                    {latestReport.nextBestAction ||
+                    {localizeStoredText(latestReport.nextBestAction, isArabic) ||
                       (latestReport.hasSavedAnalysis
                         ? text(
                             "Return to your saved intelligence and continue reviewing the important findings and next steps.",

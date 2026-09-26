@@ -143,3 +143,28 @@ button.ohTickerItem:hover .ohTickerText {
   .ohTickerTrack { animation: none; }
   .ohTickerGroup[aria-hidden="true"] { display: none; }
 }
+
+/* Collapsed state: a thin tab that always lets the visitor bring the bar back. */
+.ohTickerCollapsed {
+  display: flex;
+  justify-content: center;
+  border-bottom: 1px solid var(--oh-border);
+  background: var(--oh-surface);
+}
+
+.ohTickerCollapsed button {
+  padding: 4px 16px;
+  border: 0;
+  background: transparent;
+  color: var(--oh-muted);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ohTickerCollapsed button:hover,
+.ohTickerCollapsed button:focus-visible {
+  color: var(--oh-text);
+  text-decoration: underline;
+}

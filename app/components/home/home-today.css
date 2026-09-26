@@ -211,3 +211,87 @@
 @media (max-width: 900px) {
   .ohTodayTips { grid-template-columns: 1fr; }
 }
+
+/* "Stay connected": the follow-up channels at a glance. */
+.ohConnect {
+  display: grid;
+  gap: 20px;
+  padding: clamp(20px, 3vw, 34px);
+  border: 1px solid var(--oh-border);
+  border-radius: 28px;
+  background: var(--oh-surface);
+  box-shadow: var(--oh-shadow-sm);
+}
+
+.ohConnectHeader .ohEyebrow {
+  margin: 0 0 6px;
+}
+
+.ohConnectGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ohConnectCard {
+  --oh-channel: #0f766e;
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  padding: 20px;
+  border: 1px solid var(--oh-border);
+  border-radius: 20px;
+  background: var(--oh-surface-soft);
+}
+
+.ohConnectCard[data-channel="whatsapp"] { --oh-channel: #128c7e; }
+.ohConnectCard[data-channel="email"] { --oh-channel: #2563eb; }
+.ohConnectCard[data-channel="app"] { --oh-channel: #6d28d9; }
+
+.ohConnectIcon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--oh-channel) 16%, transparent);
+  color: var(--oh-channel);
+}
+
+.ohConnectCard h3 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0 0;
+  color: var(--oh-text);
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.ohConnectCard p {
+  margin: 0;
+  color: var(--oh-muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.ohConnectBadge {
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--oh-border);
+  color: var(--oh-text);
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.ohConnectActions {
+  display: flex;
+}
+
+@media (max-width: 900px) {
+  .ohConnectGrid { grid-template-columns: 1fr; }
+}
