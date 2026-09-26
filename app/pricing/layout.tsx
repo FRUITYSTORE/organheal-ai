@@ -9,8 +9,8 @@ export const metadata: Metadata = {
     "See OrganHeal AI plans. Start free with report uploads, health tracking, and AI questions about your own results — no card required.",
 };
 
-// Only the Free plan gets an Offer: Plus has no announced price yet, and
-// listing one would be inaccurate structured data.
+// Only the Free plan gets an Offer: Plus is shown but not purchasable yet,
+// and advertising it as buyable would be inaccurate structured data.
 const productJsonLd = {
   "@context": "https://schema.org",
   "@type": "Product",

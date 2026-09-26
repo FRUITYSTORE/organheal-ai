@@ -179,3 +179,47 @@ a.ohUpdateCard:focus-visible {
     transition: none;
   }
 }
+
+/* Owner-authored announcements: a tone sets one accent, everything else
+   keeps using the theme tokens so the cards stay readable in dark mode. */
+.ohUpdateFeatured {
+  --oh-tone: #0f766e;
+  border-color: color-mix(in srgb, var(--oh-tone) 55%, var(--oh-border));
+  background: color-mix(in srgb, var(--oh-tone) 12%, var(--oh-surface-soft));
+  border-inline-start: 4px solid var(--oh-tone);
+}
+
+.ohUpdateFeatured[data-tone="blue"] { --oh-tone: #2563eb; }
+.ohUpdateFeatured[data-tone="amber"] { --oh-tone: #b45309; }
+.ohUpdateFeatured[data-tone="rose"] { --oh-tone: #be123c; }
+.ohUpdateFeatured[data-tone="violet"] { --oh-tone: #6d28d9; }
+.ohUpdateFeatured[data-tone="slate"] { --oh-tone: #475569; }
+
+a.ohUpdateFeatured:hover {
+  border-color: var(--oh-tone);
+  background: color-mix(in srgb, var(--oh-tone) 18%, var(--oh-surface-soft));
+}
+
+.ohUpdateFeatured .ohUpdateSource {
+  background: var(--oh-tone);
+  color: #ffffff;
+}
+
+.ohUpdateFeaturedTitle {
+  -webkit-line-clamp: 2;
+}
+
+.ohUpdateFeaturedBody {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--oh-text);
+  font-size: 0.86rem;
+  line-height: 1.5;
+  opacity: 0.88;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+}
+
+.ohUpdateFeatured .ohUpdateRead {
+  color: color-mix(in srgb, var(--oh-tone) 70%, var(--oh-text));
+}

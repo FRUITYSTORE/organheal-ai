@@ -10,6 +10,8 @@ type Plan = {
   nameAr: string;
   price: string;
   priceAr: string;
+  priceAlt?: string;
+  priceAltAr?: string;
   note: string;
   noteAr: string;
   description: string;
@@ -56,8 +58,10 @@ const plans: Plan[] = [
   {
     name: "Plus",
     nameAr: "بلس",
-    price: "Coming soon",
-    priceAr: "قريبًا",
+    price: "$9.99 / month",
+    priceAr: "9.99$ / شهريًا",
+    priceAlt: "or $99 / year — about 17% less",
+    priceAltAr: "أو 99$ / سنويًا — أقل بحوالي 17%",
     note: "Go deeper over time",
     noteAr: "فهم أعمق مع مرور الوقت",
     description:
@@ -413,6 +417,12 @@ export default function PricingPage() {
                 <p className="pricingPrice">
                   {isArabic ? plan.priceAr : plan.price}
                 </p>
+
+                {plan.priceAlt && (
+                  <p className="pricingDescription" style={{ marginTop: -8 }}>
+                    {isArabic ? plan.priceAltAr : plan.priceAlt}
+                  </p>
+                )}
 
                 <p className="pricingDescription">
                   {isArabic ? plan.descriptionAr : plan.description}

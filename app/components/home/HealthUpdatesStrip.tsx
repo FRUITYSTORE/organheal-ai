@@ -40,12 +40,74 @@ const FALLBACK_SOURCES: FallbackSource[] = [
   },
 ];
 
+type Announcement = {
+  id: string;
+  title: string;
+  body: string;
+  url: string | null;
+  tone: string;
+};
+
 type LoadState =
   | { status: "loading" }
-  | { status: "ready"; items: HealthUpdate[] }
-  | { status: "fallback" };
+  | { status: "ready"; items: HealthUpdate[]; featured: Announcement[] }
+  | { status: "fallback"; featured: Announcement[] };
 
 const VISIBLE_ITEMS = 3;
+
+// Owner announcements come first; WHO news fills the remaining slots but
+// never disappears entirely.
+function newsSlots(featuredCount: number): number {
+  return Math.max(1, VISIBLE_ITEMS - featuredCount);
+}
+
+function FeaturedCard({
+  item,
+  isArabic,
+}: {
+  item: Announcement;
+  isArabic: boolean;
+}) {
+  const content = (
+    <>
+      <span className="ohUpdateMeta">
+        <span className="ohUpdateSource">
+          {isArabic ? "من OrganHeal" : "OrganHeal note"}
+        </span>
+      </span>
+
+      <span className="ohUpdateHeadline ohUpdateFeaturedTitle" dir="auto">
+        {item.title}
+      </span>
+
+      <span className="ohUpdateFeaturedBody" dir="auto">
+        {item.body}
+      </span>
+
+      {item.url && (
+        <span className="ohUpdateRead" aria-hidden="true">
+          {isArabic ? "اعرف المزيد ↖" : "Learn more ↗"}
+        </span>
+      )}
+    </>
+  );
+
+  return item.url ? (
+    <a
+      className="ohUpdateCard ohUpdateFeatured"
+      data-tone={item.tone}
+      href={item.url}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      {content}
+    </a>
+  ) : (
+    <div className="ohUpdateCard ohUpdateFeatured" data-tone={item.tone}>
+      {content}
+    </div>
+  );
+}
 
 function formatAge(publishedAt: string, isArabic: boolean): string {
   const days = Math.max(
@@ -80,22 +142,37 @@ export default function HealthUpdatesStrip({
   useEffect(() => {
     const controller = new AbortController();
 
-    fetch(`/api/health-updates?lang=${language}`, {
-      signal: controller.signal,
-    })
-      .then((response) => (response.ok ? response.json() : null))
-      .then((data: { items?: HealthUpdate[] } | null) => {
-        const items = data?.items ?? [];
+    const loadJson = <T,>(url: string): Promise<T | null> =>
+      fetch(url, { signal: controller.signal })
+        .then((response) => (response.ok ? (response.json() as Promise<T>) : null))
+        .catch((error: unknown) => {
+          if ((error as { name?: string })?.name === "AbortError") {
+            throw error;
+          }
+
+          return null;
+        });
+
+    Promise.all([
+      loadJson<{ items?: HealthUpdate[] }>(`/api/health-updates?lang=${language}`),
+      loadJson<{ items?: Announcement[] }>(
+        `/api/health-announcements?lang=${language}`
+      ),
+    ])
+      .then(([news, announcements]) => {
+        const items = news?.items ?? [];
+        const featured = (announcements?.items ?? []).slice(0, 3);
+        const slots = newsSlots(featured.length);
 
         setState(
           items.length >= VISIBLE_ITEMS
-            ? { status: "ready", items: items.slice(0, VISIBLE_ITEMS) }
-            : { status: "fallback" }
+            ? { status: "ready", items: items.slice(0, slots), featured }
+            : { status: "fallback", featured }
         );
       })
       .catch((error: unknown) => {
         if ((error as { name?: string })?.name !== "AbortError") {
-          setState({ status: "fallback" });
+          setState({ status: "fallback", featured: [] });
         }
       });
 
@@ -138,6 +215,13 @@ export default function HealthUpdatesStrip({
             </li>
           ))}
 
+        {state.status !== "loading" &&
+          state.featured.map((item) => (
+            <li key={item.id}>
+              <FeaturedCard item={item} isArabic={isArabic} />
+            </li>
+          ))}
+
         {state.status === "ready" &&
           state.items.map((item) => (
             <li key={item.url}>
@@ -166,7 +250,7 @@ export default function HealthUpdatesStrip({
           ))}
 
         {state.status === "fallback" &&
-          FALLBACK_SOURCES.map((item) => (
+          FALLBACK_SOURCES.slice(0, newsSlots(state.featured.length)).map((item) => (
             <li key={item.source}>
               <a
                 className="ohUpdateCard"
