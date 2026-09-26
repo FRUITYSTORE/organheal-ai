@@ -50,7 +50,7 @@
 
 .ohChatPanel {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  grid-template-rows: auto minmax(0, 1fr) auto auto auto;
   width: min(390px, calc(100vw - 32px));
   height: min(560px, calc(100vh - 150px));
   overflow: hidden;
@@ -290,4 +290,27 @@
 .ohChatMsg p + p,
 .ohChatMsg p + ul {
   margin-top: 8px;
+}
+
+.ohChatSave {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 14px;
+  border-top: 1px solid var(--oh-border);
+  background: color-mix(in srgb, var(--oh-primary) 12%, var(--oh-surface));
+  color: var(--oh-text);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.ohChatSave a {
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: #0f766e;
+  color: #ffffff;
+  font-weight: 800;
+  text-decoration: none;
 }

@@ -3,6 +3,7 @@
 import { type FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import GoogleSignInButton from "@/app/components/auth/GoogleSignInButton";
 import {
   sendProductAnalyticsEvent,
 } from "@/lib/analytics/product-analytics.client";
@@ -591,6 +592,8 @@ export default function LoginPage() {
               )}
             </p>
           </div>
+
+          <GoogleSignInButton isArabic={isArabic} />
 
           <form className="loginForm" onSubmit={handleLogin}>
             <label className="loginField">

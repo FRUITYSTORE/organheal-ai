@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { type FormEvent, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import GoogleSignInButton from "@/app/components/auth/GoogleSignInButton";
 import {
   sendProductAnalyticsEvent,
 } from "@/lib/analytics/product-analytics.client";
@@ -519,6 +520,8 @@ if (
               )}
             </p>
           </div>
+
+          <GoogleSignInButton isArabic={isArabic} />
 
           <form className="signupForm" onSubmit={handleSignup}>
             <div className="signupGrid">

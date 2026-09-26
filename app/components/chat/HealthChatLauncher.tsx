@@ -114,6 +114,7 @@ export default function HealthChatLauncher() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isMember, setIsMember] = useState(true);
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesRef = useRef<ChatMessage[]>([]);
@@ -151,6 +152,26 @@ export default function HealthChatLauncher() {
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
   }, [messages, loading, open]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        if (!cancelled) setIsMember(Boolean(data.session));
+      })
+      .catch(() => undefined);
+
+    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsMember(Boolean(session));
+    });
+
+    return () => {
+      cancelled = true;
+      subscription.subscription.unsubscribe();
+    };
+  }, []);
 
   const persist = useCallback((next: ChatMessage[]) => {
     messagesRef.current = next;
@@ -336,6 +357,18 @@ export default function HealthChatLauncher() {
               </div>
             )}
           </div>
+
+          {!isMember && messages.filter((message) => message.role === "user").length >= 2 && (
+            <div className="ohChatSave">
+              <span>
+                {text(
+                  "Want to keep this conversation and your answers?",
+                  "تريد الاحتفاظ بهذه المحادثة وإجاباتها؟"
+                )}
+              </span>
+              <Link href="/signup">{text("Create a free account", "أنشئ حسابًا مجانيًا")}</Link>
+            </div>
+          )}
 
           <form
             className="ohChatComposer"

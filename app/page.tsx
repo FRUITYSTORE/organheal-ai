@@ -16,6 +16,7 @@ import FormattedAnswer from "@/app/components/assistant/FormattedAnswer";
 import HealthUpdatesStrip from "@/app/components/home/HealthUpdatesStrip";
 import HomeTodaySection from "@/app/components/home/HomeTodaySection";
 import HomeStayConnected from "@/app/components/home/HomeStayConnected";
+import HomeMemberPulse from "@/app/components/home/HomeMemberPulse";
 import {
   HomeAccessOverview,
   HomeFinalCta,
@@ -1590,8 +1591,8 @@ if (
                       {text("Start Free", "ابدأ مجانًا")}
                     </Link>
 
-                    <Link href="#how-it-works" className="secondaryBtn">
-                      {text("See how it works", "شاهد كيف يعمل")}
+                    <Link href="/demo" className="secondaryBtn">
+                      {text("Try a sample report", "جرّب تقريرًا تجريبيًا")}
                     </Link>
                   </div>
 
@@ -1772,6 +1773,8 @@ if (
             </aside>
           </div>
         </section>
+
+        {isLoggedIn && <HomeMemberPulse isArabic={isArabic} />}
 
         <HomeTodaySection isArabic={isArabic} />
 

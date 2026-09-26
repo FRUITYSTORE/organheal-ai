@@ -1,0 +1,164 @@
+.demoPage {
+  display: grid;
+  gap: 28px;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: clamp(20px, 4vw, 44px) 20px 80px;
+}
+
+.demoHero {
+  display: grid;
+  gap: 14px;
+  padding: clamp(24px, 4vw, 44px);
+  border: 1px solid var(--oh-border);
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at 92% 0%, color-mix(in srgb, var(--oh-primary) 18%, transparent), transparent 40%),
+    var(--oh-surface);
+}
+
+.demoHero .ohEyebrow { margin: 0; }
+
+.demoHero h1 {
+  margin: 0;
+  max-width: 760px;
+  color: var(--oh-text);
+  font-size: clamp(1.9rem, 4vw, 3rem);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+}
+
+.demoHero p {
+  margin: 0;
+  max-width: 680px;
+  color: var(--oh-muted);
+  font-size: 1.02rem;
+  line-height: 1.7;
+}
+
+.demoHeroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.demoBlock {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  padding: clamp(18px, 3vw, 28px);
+  border: 1px solid var(--oh-border);
+  border-radius: 26px;
+  background: var(--oh-surface);
+  box-shadow: var(--oh-shadow-sm);
+}
+
+.demoBlock h2 {
+  margin: 0;
+  color: var(--oh-text);
+  font-size: 1.35rem;
+  font-weight: 850;
+}
+
+.demoMarkers {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.demoMarker {
+  --demo-tone: #16a34a;
+  display: grid;
+  gap: 6px;
+  padding: 16px 18px;
+  border: 1px solid var(--oh-border);
+  border-inline-start: 5px solid var(--demo-tone);
+  border-radius: 16px;
+  background: var(--oh-surface-soft);
+}
+
+.demoMarker[data-status="review"] { --demo-tone: #d97706; }
+
+.demoMarkerTop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  color: var(--oh-text);
+}
+
+.demoMarkerValue {
+  font-size: 1.15rem;
+  font-weight: 900;
+}
+
+.demoBadge {
+  padding: 3px 11px;
+  border-radius: 999px;
+  background: var(--demo-tone);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.demoMarker small { color: var(--oh-muted); font-weight: 700; }
+
+.demoMarker p {
+  margin: 0;
+  color: var(--oh-text);
+  line-height: 1.65;
+  opacity: 0.9;
+}
+
+.demoColumns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.demoQuestions {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding-inline-start: 22px;
+  color: var(--oh-text);
+  line-height: 1.6;
+}
+
+.demoNote {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--oh-primary) 12%, transparent);
+  color: var(--oh-text);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.demoCta {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+  padding: clamp(24px, 4vw, 40px);
+  border-radius: 28px;
+  background: linear-gradient(135deg, #0b3b39, #0c4a6e);
+  color: #ffffff;
+}
+
+.demoCta h2 { margin: 0; font-size: clamp(1.5rem, 3vw, 2rem); }
+.demoCta p { margin: 0; color: #c7e4e0; }
+
+.demoDisclaimer {
+  margin: 0;
+  color: var(--oh-muted);
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+@media (max-width: 860px) {
+  .demoColumns { grid-template-columns: 1fr; }
+}

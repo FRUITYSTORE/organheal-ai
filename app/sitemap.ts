@@ -17,7 +17,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   // High-priority pages: the ones a new visitor or search engine should
   // reach first.
-  const primaryRoutes = ["", "/pricing", "/features", "/library"];
+  const primaryRoutes = ["", "/pricing", "/features", "/library", "/demo"];
 
   // The rest of the public, unauthenticated site. Keep this in sync with
   // RouteAccessGuard's protectedPrefixes and robots.ts — a route only

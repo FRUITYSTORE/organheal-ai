@@ -1,0 +1,62 @@
+.googleAuth {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.googleAuthButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 13px 16px;
+  border: 1px solid var(--oh-border);
+  border-radius: 16px;
+  background: #ffffff;
+  color: #1f2937;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  transition: box-shadow 160ms ease, transform 160ms ease;
+}
+
+.googleAuthButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);
+}
+
+.googleAuthButton:disabled {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+.googleAuthButton:focus-visible {
+  outline: 3px solid var(--oh-focus-ring, #0ea5e9);
+  outline-offset: 2px;
+}
+
+.googleAuthError {
+  margin: 0;
+  color: var(--oh-risk, #dc2626);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.googleAuthOr {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 2px 0 0;
+  color: var(--oh-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.googleAuthOr::before,
+.googleAuthOr::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--oh-border);
+}
