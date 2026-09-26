@@ -250,7 +250,7 @@ export default function AdminAnnouncementsPage() {
         .announcementsField { display: grid; gap: 6px; }
         .announcementsField label { color: var(--oh-text); font-size: 0.85rem; font-weight: 700; }
         .announcementsField input, .announcementsField textarea {
-          width: 100%; padding: 10px 12px; border: 1px solid var(--oh-border); border-radius: 12px;
+          width: 100%; box-sizing: border-box; min-width: 0; padding: 10px 12px; border: 1px solid var(--oh-border); border-radius: 12px;
           background: var(--oh-surface-soft); color: var(--oh-text); font: inherit;
         }
         .announcementsField textarea { min-height: 96px; resize: vertical; }
