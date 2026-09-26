@@ -16,6 +16,7 @@ import FormattedAnswer from "@/app/components/assistant/FormattedAnswer";
 import HealthUpdatesStrip from "@/app/components/home/HealthUpdatesStrip";
 import HomeTodaySection from "@/app/components/home/HomeTodaySection";
 import HomeStayConnected from "@/app/components/home/HomeStayConnected";
+import HomeWatchSection from "@/app/components/home/HomeWatchSection";
 import HomeMemberPulse from "@/app/components/home/HomeMemberPulse";
 import {
   HomeAccessOverview,
@@ -1777,6 +1778,8 @@ if (
         {isLoggedIn && <HomeMemberPulse isArabic={isArabic} />}
 
         <HomeTodaySection isArabic={isArabic} />
+
+        <HomeWatchSection isArabic={isArabic} />
 
         <HomeStayConnected isArabic={isArabic} isLoggedIn={isLoggedIn} />
 
