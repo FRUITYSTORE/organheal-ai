@@ -1,88 +1,118 @@
-/* Slim top bar under the navbar. Owner notes use their tone as the bar color;
-   WHO headlines use theme tokens so the bar is readable in dark mode. */
+/* Slim moving bar under the navbar. One consistent brand look for every
+   item; only the small label chip changes color for the owner's notes. */
 .ohTicker {
-  --oh-tone: #0f766e;
-  border-bottom: 1px solid var(--oh-border);
-  background: var(--oh-surface);
-  color: var(--oh-text);
-  font-size: 0.86rem;
-}
-
-.ohTicker[data-tone="blue"] { --oh-tone: #2563eb; }
-.ohTicker[data-tone="amber"] { --oh-tone: #b45309; }
-.ohTicker[data-tone="rose"] { --oh-tone: #be123c; }
-.ohTicker[data-tone="violet"] { --oh-tone: #6d28d9; }
-.ohTicker[data-tone="slate"] { --oh-tone: #475569; }
-.ohTicker[data-tone="teal"] { --oh-tone: #0f766e; }
-
-.ohTicker[data-tone="teal"],
-.ohTicker[data-tone="blue"],
-.ohTicker[data-tone="amber"],
-.ohTicker[data-tone="rose"],
-.ohTicker[data-tone="violet"],
-.ohTicker[data-tone="slate"] {
-  background: var(--oh-tone);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(90deg, #0b3b39 0%, #0c4a6e 100%);
   color: #ffffff;
-  border-bottom-color: transparent;
+  font-size: 0.86rem;
 }
 
 .ohTickerInner {
   display: flex;
   align-items: center;
-  gap: 10px;
-  max-width: 1240px;
-  min-height: 40px;
+  gap: 8px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 6px 16px;
+  padding: 0 12px;
+}
+
+.ohTickerViewport {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
+}
+
+.ohTickerTrack {
+  display: flex;
+  width: max-content;
+  animation: ohTickerScroll var(--ohTickerDuration, 60s) linear infinite;
+}
+
+.ohTicker[dir="rtl"] .ohTickerTrack {
+  animation-name: ohTickerScrollRtl;
+}
+
+.ohTickerViewport:hover .ohTickerTrack,
+.ohTickerViewport:focus-within .ohTickerTrack {
+  animation-play-state: paused;
+}
+
+@keyframes ohTickerScroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes ohTickerScrollRtl {
+  from { transform: translateX(0); }
+  to { transform: translateX(50%); }
+}
+
+.ohTickerGroup {
+  display: flex;
+  flex: none;
+  align-items: center;
 }
 
 .ohTickerItem {
-  display: flex;
-  flex: 1;
+  display: inline-flex;
+  flex: none;
   align-items: center;
   gap: 10px;
-  min-width: 0;
+  padding: 9px 26px;
+  border: 0;
+  background: transparent;
   color: inherit;
+  font: inherit;
+  text-align: start;
   text-decoration: none;
+  white-space: nowrap;
+  cursor: default;
 }
 
-a.ohTickerItem:hover .ohTickerText {
+a.ohTickerItem,
+button.ohTickerItem {
+  cursor: pointer;
+}
+
+a.ohTickerItem:hover .ohTickerText,
+button.ohTickerItem:hover .ohTickerText {
   text-decoration: underline;
+}
+
+.ohTickerItem::after {
+  content: "";
+  width: 5px;
+  height: 5px;
+  margin-inline-start: 26px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.35);
 }
 
 .ohTickerLabel {
   flex: none;
-  padding: 2px 8px;
+  padding: 2px 9px;
   border-radius: 999px;
-  background: var(--oh-primary-soft);
-  color: var(--oh-primary-dark);
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
   font-size: 0.7rem;
   font-weight: 800;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
 }
 
-.ohTicker[data-tone="teal"] .ohTickerLabel,
-.ohTicker[data-tone="blue"] .ohTickerLabel,
-.ohTicker[data-tone="amber"] .ohTickerLabel,
-.ohTicker[data-tone="rose"] .ohTickerLabel,
-.ohTicker[data-tone="violet"] .ohTickerLabel,
-.ohTicker[data-tone="slate"] .ohTickerLabel {
-  background: rgba(255, 255, 255, 0.22);
-  color: #ffffff;
-}
-
-.ohTickerText {
-  overflow: hidden;
-  min-width: 0;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+.ohTickerLabel[data-tone="teal"] { background: #0f766e; }
+.ohTickerLabel[data-tone="blue"] { background: #2563eb; }
+.ohTickerLabel[data-tone="amber"] { background: #b45309; }
+.ohTickerLabel[data-tone="rose"] { background: #be123c; }
+.ohTickerLabel[data-tone="violet"] { background: #6d28d9; }
+.ohTickerLabel[data-tone="slate"] { background: #475569; }
 
 .ohTickerText strong {
   font-weight: 800;
 }
 
-.ohTickerBtn {
+.ohTickerClose {
   flex: none;
   width: 28px;
   height: 28px;
@@ -96,13 +126,20 @@ a.ohTickerItem:hover .ohTickerText {
   opacity: 0.8;
 }
 
-.ohTickerBtn:hover,
-.ohTickerBtn:focus-visible {
-  background: rgba(127, 127, 127, 0.22);
+.ohTickerClose:hover,
+.ohTickerClose:focus-visible {
+  background: rgba(255, 255, 255, 0.2);
   opacity: 1;
 }
 
 @media (max-width: 640px) {
   .ohTicker { font-size: 0.8rem; }
-  .ohTickerInner { padding-inline: 12px; }
+  .ohTickerItem { padding-inline: 18px; }
+}
+
+/* Motion-sensitive visitors get a static, scrollable line instead. */
+@media (prefers-reduced-motion: reduce) {
+  .ohTickerViewport { overflow-x: auto; }
+  .ohTickerTrack { animation: none; }
+  .ohTickerGroup[aria-hidden="true"] { display: none; }
 }

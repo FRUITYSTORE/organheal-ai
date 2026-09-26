@@ -14,7 +14,7 @@ import {
 import VoiceInputButton from "@/app/components/voice/VoiceInputButton";
 import FormattedAnswer from "@/app/components/assistant/FormattedAnswer";
 import HealthUpdatesStrip from "@/app/components/home/HealthUpdatesStrip";
-import HomeFeaturedNotes from "@/app/components/home/HomeFeaturedNotes";
+import HomeTodaySection from "@/app/components/home/HomeTodaySection";
 import {
   HomeAccessOverview,
   HomeFinalCta,
@@ -618,16 +618,17 @@ if (
         }
 
         .publicHomePage .homeHero .ohHeroGrid {
-          grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.86fr);
+          grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
           align-items: center;
+          gap: clamp(20px, 3vw, 44px);
           position: relative;
           z-index: 1;
         }
 
         .publicHomePage .homeHero .ohTitle {
           max-width: 860px;
-          font-size: clamp(2.55rem, 5vw, 5.2rem);
-          line-height: 0.96;
+          font-size: clamp(2.2rem, 3.9vw, 4rem);
+          line-height: 1;
         }
 
         .publicHomePage .homeHero .ohLead {
@@ -1130,9 +1131,9 @@ if (
           min-width: 0;
           width: 100%;
           overflow: hidden;
-          padding: clamp(22px, 3vw, 32px);
+          padding: clamp(26px, 3.4vw, 42px);
           border: 1px solid rgba(99, 102, 241, 0.2);
-          border-radius: 30px;
+          border-radius: 32px;
           background:
             radial-gradient(circle at 90% 4%, rgba(45, 212, 191, 0.18), transparent 29%),
             linear-gradient(150deg, #0f172a 0%, #152238 58%, #102c32 100%);
@@ -1157,9 +1158,9 @@ if (
 
         .publicHomePage .homeAICommandHeader h2 {
           margin: 9px 0 0;
-          max-width: 520px;
+          max-width: 680px;
           color: #ffffff;
-          font-size: clamp(1.55rem, 2.4vw, 2.3rem);
+          font-size: clamp(1.7rem, 2.7vw, 2.6rem);
           line-height: 1.15;
           letter-spacing: -0.035em;
         }
@@ -1202,13 +1203,13 @@ if (
 
         .publicHomePage .homeAISuggestion {
           appearance: none;
-          padding: 8px 11px;
+          padding: 9px 14px;
           border: 1px solid rgba(148, 163, 184, 0.23);
           border-radius: 999px;
           background: rgba(255, 255, 255, 0.07);
           color: #e2e8f0;
           font: inherit;
-          font-size: 0.75rem;
+          font-size: 0.82rem;
           font-weight: 800;
           cursor: pointer;
           transition:
@@ -1232,7 +1233,8 @@ if (
         }
 
         .publicHomePage .homeAITextarea {
-          min-height: 112px;
+          min-height: 140px;
+          font-size: 1.05rem;
           resize: vertical;
           border: 0;
           box-shadow: none;
@@ -1769,7 +1771,7 @@ if (
           </div>
         </section>
 
-        <HomeFeaturedNotes isArabic={isArabic} />
+        <HomeTodaySection isArabic={isArabic} />
 
         <HealthUpdatesStrip isArabic={isArabic} />
 

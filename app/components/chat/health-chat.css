@@ -1,0 +1,293 @@
+.ohChat {
+  position: fixed;
+  inset-block-end: 20px;
+  inset-inline-end: 20px;
+  z-index: 60;
+  display: grid;
+  justify-items: end;
+  gap: 12px;
+  font-family: inherit;
+}
+
+.ohChat[dir="rtl"] {
+  justify-items: start;
+}
+
+.ohChatFab {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #14b8a6, #0ea5e9);
+  color: #04222a;
+  font: inherit;
+  font-weight: 800;
+  box-shadow: 0 14px 34px rgba(14, 116, 144, 0.35);
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.ohChatFab:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 40px rgba(14, 116, 144, 0.42);
+}
+
+.ohChatFab:focus-visible,
+.ohChatIconBtn:focus-visible,
+.ohChatStarters button:focus-visible {
+  outline: 3px solid var(--oh-focus-ring, #0ea5e9);
+  outline-offset: 2px;
+}
+
+.ohChatFabIcon {
+  display: inline-grid;
+  place-items: center;
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.ohChatPanel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  width: min(390px, calc(100vw - 32px));
+  height: min(560px, calc(100vh - 150px));
+  overflow: hidden;
+  border: 1px solid var(--oh-border);
+  border-radius: 22px;
+  background: var(--oh-surface);
+  color: var(--oh-text);
+  box-shadow: 0 30px 70px rgba(15, 23, 42, 0.32);
+}
+
+.ohChatHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #0f3d3a, #0c4a6e);
+  color: #ffffff;
+}
+
+.ohChatHeader strong {
+  display: block;
+  font-size: 1rem;
+}
+
+.ohChatHeader span {
+  display: block;
+  color: #b6e3df;
+  font-size: 0.78rem;
+}
+
+.ohChatHeaderActions {
+  display: flex;
+  gap: 4px;
+}
+
+.ohChatIconBtn {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.ohChatIconBtn:hover {
+  background: rgba(255, 255, 255, 0.26);
+}
+
+.ohChatBody {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  padding: 14px;
+  overflow-y: auto;
+  background: var(--oh-surface-soft);
+}
+
+.ohChatWelcome p {
+  margin: 0 0 12px;
+  color: var(--oh-muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.ohChatStarters {
+  display: grid;
+  gap: 8px;
+}
+
+.ohChatStarters button {
+  padding: 10px 12px;
+  border: 1px solid var(--oh-border);
+  border-radius: 14px;
+  background: var(--oh-surface);
+  color: var(--oh-text);
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
+  text-align: start;
+  cursor: pointer;
+}
+
+.ohChatStarters button:hover {
+  border-color: var(--oh-primary);
+  background: var(--oh-surface-hover, var(--oh-surface));
+}
+
+.ohChatMsg {
+  max-width: 88%;
+  padding: 10px 13px;
+  border-radius: 16px;
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.ohChatMsg p {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.ohChatMsg.user {
+  justify-self: end;
+  border-end-end-radius: 4px;
+  background: #0f766e;
+  color: #ffffff;
+}
+
+.ohChatMsg.assistant {
+  justify-self: start;
+  border: 1px solid var(--oh-border);
+  border-end-start-radius: 4px;
+  background: var(--oh-surface);
+  color: var(--oh-text);
+}
+
+.ohChatAction {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: var(--oh-primary);
+  color: #04222a;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.ohChatTyping {
+  display: inline-flex;
+  gap: 5px;
+}
+
+.ohChatTyping span {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--oh-muted);
+  animation: ohChatDot 1.2s ease-in-out infinite;
+}
+
+.ohChatTyping span:nth-child(2) { animation-delay: 0.15s; }
+.ohChatTyping span:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes ohChatDot {
+  0%, 80%, 100% { opacity: 0.3; transform: translateY(0); }
+  40% { opacity: 1; transform: translateY(-3px); }
+}
+
+.ohChatComposer {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--oh-border);
+  background: var(--oh-surface);
+}
+
+.ohChatComposer textarea {
+  flex: 1;
+  min-width: 0;
+  max-height: 96px;
+  padding: 9px 12px;
+  border: 1px solid var(--oh-border);
+  border-radius: 14px;
+  background: var(--oh-surface-soft);
+  color: var(--oh-text);
+  font: inherit;
+  resize: none;
+}
+
+.ohChatComposer button {
+  padding: 0 16px;
+  border: 0;
+  border-radius: 14px;
+  background: #0f766e;
+  color: #ffffff;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.ohChatComposer button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ohChatNote {
+  margin: 0;
+  padding: 0 14px 10px;
+  background: var(--oh-surface);
+  color: var(--oh-muted);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+@media (max-width: 560px) {
+  .ohChat {
+    inset-block-end: 12px;
+    inset-inline-end: 12px;
+  }
+
+  .ohChatFabLabel {
+    display: none;
+  }
+
+  .ohChatFab {
+    padding: 14px;
+  }
+
+  .ohChatPanel {
+    width: calc(100vw - 24px);
+    height: min(70vh, 560px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ohChatFab,
+  .ohChatTyping span {
+    animation: none;
+    transition: none;
+  }
+}
+
+.ohChatMsg ul {
+  margin: 6px 0;
+  padding-inline-start: 18px;
+}
+
+.ohChatMsg li {
+  margin: 3px 0;
+}
+
+.ohChatMsg p + p,
+.ohChatMsg p + ul {
+  margin-top: 8px;
+}

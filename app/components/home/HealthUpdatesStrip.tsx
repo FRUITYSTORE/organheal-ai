@@ -113,7 +113,7 @@ export default function HealthUpdatesStrip({
         <div className="ohUpdatesHeading">
           <span className="ohUpdatesPulse" aria-hidden="true" />
           <h2 className="ohUpdatesTitle">
-            {isArabic ? "أحدث المعلومات الصحية" : "Health updates"}
+            {isArabic ? "أخبار صحية عالمية" : "Global health news"}
           </h2>
         </div>
 

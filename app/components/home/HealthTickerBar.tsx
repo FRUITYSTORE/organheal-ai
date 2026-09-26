@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 
+import { getDailyTips, TIP_CATEGORY_LABELS } from "@/lib/health-updates/daily-tips";
+import { openHealthChat } from "@/lib/health-updates/chat-events";
+
 import "./health-ticker.css";
 
 type TickerItem = {
@@ -12,6 +15,7 @@ type TickerItem = {
   detail: string;
   url: string | null;
   tone: string;
+  question: string | null;
 };
 
 type Language = "en" | "ar";
@@ -25,8 +29,8 @@ const HIDDEN_PREFIXES = [
   "/admin",
 ];
 
-const ROTATE_MS = 7000;
 const DISMISS_KEY = "organheal-ticker-dismissed";
+const SECONDS_PER_ITEM = 14;
 
 function getStoredLanguage(): Language {
   if (typeof window === "undefined") return "en";
@@ -49,14 +53,60 @@ function readDismissed(): boolean {
   }
 }
 
-async function loadJson<T>(url: string, signal: AbortSignal): Promise<T | null> {
+async function loadNotes(
+  language: Language,
+  signal: AbortSignal
+): Promise<{ id: string; title: string; body: string; url: string | null; tone: string }[]> {
   try {
-    const response = await fetch(url, { signal });
+    const response = await fetch(`/api/health-announcements?lang=${language}`, { signal });
 
-    return response.ok ? ((await response.json()) as T) : null;
+    if (!response.ok) return [];
+
+    const data = (await response.json()) as { items?: never[] };
+
+    return data.items ?? [];
   } catch {
-    return null;
+    return [];
   }
+}
+
+function TickerEntry({ item }: { item: TickerItem }) {
+  const content = (
+    <>
+      <span className="ohTickerLabel" data-tone={item.tone}>
+        {item.label}
+      </span>
+      <span className="ohTickerText" dir="auto">
+        <strong>{item.title}</strong>
+        {item.detail ? ` — ${item.detail}` : ""}
+      </span>
+    </>
+  );
+
+  if (item.url) {
+    return (
+      <a
+        className="ohTickerItem"
+        href={item.url}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {content}
+      </a>
+    );
+  }
+
+  if (item.question) {
+    const question = item.question;
+
+    return (
+      <button type="button" className="ohTickerItem" onClick={() => openHealthChat(question)}>
+        {content}
+      </button>
+    );
+  }
+
+  return <span className="ohTickerItem">{content}</span>;
 }
 
 export default function HealthTickerBar() {
@@ -65,8 +115,6 @@ export default function HealthTickerBar() {
   // browser storage in the initializers cannot cause a hydration mismatch.
   const [language, setLanguage] = useState<Language>(getStoredLanguage);
   const [items, setItems] = useState<TickerItem[]>([]);
-  const [index, setIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
   const [dismissed, setDismissed] = useState(readDismissed);
 
   const isArabic = language === "ar";
@@ -93,111 +141,75 @@ export default function HealthTickerBar() {
 
     const controller = new AbortController();
 
-    Promise.all([
-      loadJson<{
-        items?: { id: string; title: string; body: string; url: string | null; tone: string }[];
-      }>(`/api/health-announcements?lang=${language}`, controller.signal),
-      loadJson<{
-        items?: { title: string; url: string; source: string }[];
-      }>(`/api/health-updates?lang=${language}`, controller.signal),
-    ]).then(([notes, news]) => {
+    void loadNotes(language, controller.signal).then((notes) => {
       if (controller.signal.aborted) return;
 
-      const owned: TickerItem[] = (notes?.items ?? []).map((note) => ({
+      const owned: TickerItem[] = notes.map((note) => ({
         key: `note-${note.id}`,
         label: language === "ar" ? "من OrganHeal" : "OrganHeal",
         title: note.title,
         detail: note.body,
         url: note.url,
         tone: note.tone,
+        question: null,
       }));
 
-      const who: TickerItem[] = (news?.items ?? []).slice(0, 4).map((item) => ({
-        key: `who-${item.url}`,
-        label: item.source || "WHO",
-        title: item.title,
-        detail: "",
-        url: item.url,
-        tone: "news",
-      }));
+      const tips: TickerItem[] = getDailyTips(new Date()).map((tip) => {
+        const copy = language === "ar" ? tip.ar : tip.en;
 
-      setItems([...owned, ...who]);
-      setIndex(0);
+        return {
+          key: `tip-${tip.id}`,
+          label: TIP_CATEGORY_LABELS[tip.category][language],
+          title: copy.title,
+          detail: copy.body,
+          url: null,
+          tone: "tip",
+          question:
+            language === "ar"
+              ? `اشرح لي أكثر: ${copy.title}`
+              : `Tell me more about: ${copy.title}`,
+        };
+      });
+
+      setItems([...owned, ...tips]);
     });
 
     return () => controller.abort();
   }, [language, hidden, dismissed]);
 
-  useEffect(() => {
-    if (paused || items.length < 2) return;
-
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    if (reduceMotion) return;
-
-    const timer = window.setInterval(() => {
-      setIndex((current) => (current + 1) % items.length);
-    }, ROTATE_MS);
-
-    return () => window.clearInterval(timer);
-  }, [paused, items.length]);
-
   if (hidden || dismissed || items.length === 0) {
     return null;
   }
 
-  const item = items[index % items.length];
-
-  const body = (
-    <>
-      <span className="ohTickerLabel">{item.label}</span>
-      <span className="ohTickerText" dir="auto">
-        <strong>{item.title}</strong>
-        {item.detail ? ` — ${item.detail}` : ""}
-      </span>
-    </>
+  const group = (copy: number) => (
+    <div className="ohTickerGroup" key={copy} aria-hidden={copy === 1 ? true : undefined}>
+      {items.map((item) => (
+        <TickerEntry key={item.key} item={item} />
+      ))}
+    </div>
   );
 
   return (
     <div
       className="ohTicker"
-      data-tone={item.tone}
       dir={isArabic ? "rtl" : "ltr"}
       role="region"
-      aria-label={isArabic ? "آخر الأخبار الصحية" : "Latest health news"}
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onFocus={() => setPaused(true)}
-      onBlur={() => setPaused(false)}
+      aria-label={isArabic ? "أحدث المعلومات الصحية" : "Latest health information"}
     >
       <div className="ohTickerInner">
-        {item.url ? (
-          <a
-            className="ohTickerItem"
-            href={item.url}
-            target="_blank"
-            rel="noopener noreferrer"
+        <div className="ohTickerViewport">
+          <div
+            className="ohTickerTrack"
+            style={{ ["--ohTickerDuration" as string]: `${items.length * SECONDS_PER_ITEM}s` }}
           >
-            {body}
-          </a>
-        ) : (
-          <div className="ohTickerItem">{body}</div>
-        )}
-
-        {items.length > 1 && (
-          <button
-            type="button"
-            className="ohTickerBtn"
-            aria-label={isArabic ? "الخبر التالي" : "Next item"}
-            onClick={() => setIndex((current) => (current + 1) % items.length)}
-          >
-            {isArabic ? "‹" : "›"}
-          </button>
-        )}
+            {group(0)}
+            {group(1)}
+          </div>
+        </div>
 
         <button
           type="button"
-          className="ohTickerBtn"
+          className="ohTickerClose"
           aria-label={isArabic ? "إغلاق الشريط" : "Dismiss bar"}
           onClick={() => {
             try {
