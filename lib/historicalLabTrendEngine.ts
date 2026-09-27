@@ -103,6 +103,33 @@ export function buildHistoricalLabTrendSeries(
     });
 }
 
+// The full list of which direction is "good" for each marker, extracted so
+// it can be reused for a shorter, more recent window (see
+// lib/health-marker-trends.ts) without duplicating or drifting from the
+// classification buildHistoricalLabTrends has always used.
+export function classifyMarkerDirection(
+  marker: string,
+  changeAmount: number
+): "Improving" | "Stable" | "Worsening" {
+  if (Math.abs(changeAmount) < 5) {
+    return "Stable";
+  }
+
+  if (
+    ["LDL", "Triglycerides", "ALT", "AST", "Bilirubin", "Creatinine", "HbA1c", "Glucose"].includes(
+      marker
+    )
+  ) {
+    return changeAmount < 0 ? "Improving" : "Worsening";
+  }
+
+  if (["HDL", "Vitamin D", "eGFR", "Hemoglobin"].includes(marker)) {
+    return changeAmount > 0 ? "Improving" : "Worsening";
+  }
+
+  return "Stable";
+}
+
 export function buildHistoricalLabTrends(
   points: LabTrendPoint[]
 ): LabTrendResult[] {
@@ -195,53 +222,11 @@ export function buildHistoricalLabTrends(
             )
           );
 
-        let trendDirection:
-          | "Improving"
-          | "Stable"
-          | "Worsening" =
-          "Stable";
-
-        if (
-          Math.abs(
+        const trendDirection =
+          classifyMarkerDirection(
+            marker,
             changeAmount
-          ) >= 5
-        ) {
-          if (
-            [
-              "LDL",
-              "Triglycerides",
-              "ALT",
-              "AST",
-              "Bilirubin",
-              "Creatinine",
-              "HbA1c",
-              "Glucose",
-            ].includes(
-              marker
-            )
-          ) {
-            trendDirection =
-              changeAmount <
-              0
-                ? "Improving"
-                : "Worsening";
-          } else if (
-            [
-              "HDL",
-              "Vitamin D",
-              "eGFR",
-              "Hemoglobin",
-            ].includes(
-              marker
-            )
-          ) {
-            trendDirection =
-              changeAmount >
-              0
-                ? "Improving"
-                : "Worsening";
-          }
-        }
+          );
 
         const unit =
           sorted[0]

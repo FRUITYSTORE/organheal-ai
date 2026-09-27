@@ -179,11 +179,11 @@ export default function HomeMemberPulse({ isArabic }: { isArabic: boolean }) {
             </span>
             <span
               className="ohPulseTrendPill"
-              data-direction={headlineTrend.trend.trendDirection}
+              data-direction={headlineTrend.recentDirection}
             >
-              {headlineTrend.trend.trendDirection === "Improving"
+              {headlineTrend.recentDirection === "Improving"
                 ? text("Improved", "تحسّنت")
-                : headlineTrend.trend.trendDirection === "Worsening"
+                : headlineTrend.recentDirection === "Worsening"
                   ? text("Needs attention", "تحتاج انتباهاً")
                   : text("Stable", "مستقرة")}
             </span>

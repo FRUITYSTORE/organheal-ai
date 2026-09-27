@@ -110,6 +110,52 @@ describe("buildMarkerTrends", () => {
   });
 });
 
+describe("recentDirection", () => {
+  it("reports the recent improvement even when the marker is still Worsening overall", () => {
+    // Mirrors the AST case seen in production: a rise months ago, then a
+    // clear recent recovery. trend.trendDirection stays "Worsening"
+    // (earliest vs. latest across the whole history), but the badge should
+    // say "Improving" because the last few readings are trending down.
+    const rows = [
+      row({ marker_name: "AST", marker_value: 19, created_at: "2026-06-01T00:00:00Z" }),
+      row({ marker_name: "AST", marker_value: 65, created_at: "2026-07-15T00:00:00Z" }),
+      row({ marker_name: "AST", marker_value: 60, created_at: "2026-08-10T00:00:00Z" }),
+      row({ marker_name: "AST", marker_value: 45, created_at: "2026-08-25T00:00:00Z" }),
+      row({ marker_name: "AST", marker_value: 30, created_at: "2026-09-05T00:00:00Z" }),
+    ];
+
+    const [trend] = buildMarkerTrends(rows);
+
+    expect(trend.trend.trendDirection).toBe("Worsening");
+    expect(trend.recentDirection).toBe("Improving");
+  });
+
+  it("matches the overall direction when only two readings exist", () => {
+    const rows = [
+      row({ marker_name: "LDL", marker_value: 160, created_at: "2026-01-01T00:00:00Z" }),
+      row({ marker_name: "LDL", marker_value: 100, created_at: "2026-06-01T00:00:00Z" }),
+    ];
+
+    const [trend] = buildMarkerTrends(rows);
+
+    expect(trend.trend.trendDirection).toBe("Improving");
+    expect(trend.recentDirection).toBe("Improving");
+  });
+
+  it("stays Stable when the last few readings barely move", () => {
+    const rows = [
+      row({ marker_name: "AST", marker_value: 65, created_at: "2026-06-01T00:00:00Z" }),
+      row({ marker_name: "AST", marker_value: 20, created_at: "2026-07-01T00:00:00Z" }),
+      row({ marker_name: "AST", marker_value: 21, created_at: "2026-08-01T00:00:00Z" }),
+      row({ marker_name: "AST", marker_value: 19, created_at: "2026-09-01T00:00:00Z" }),
+    ];
+
+    const [trend] = buildMarkerTrends(rows);
+
+    expect(trend.recentDirection).toBe("Stable");
+  });
+});
+
 describe("pickHeadlineMarkerTrend", () => {
   it("returns null when there is nothing to show", () => {
     expect(pickHeadlineMarkerTrend([])).toBeNull();

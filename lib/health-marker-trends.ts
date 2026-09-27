@@ -1,11 +1,14 @@
 import {
   buildHistoricalLabTrends,
   buildHistoricalLabTrendSeries,
+  classifyMarkerDirection,
   type LabTrendPoint,
   type LabTrendResult,
   type LabTrendSeries,
 } from "@/lib/historicalLabTrendEngine";
 import type { ReportMedicalMarkerEvidence } from "@/lib/repositories/report-markers.repository";
+
+export type MarkerDirection = "Improving" | "Stable" | "Worsening";
 
 export type MarkerTrend = {
   trend: LabTrendResult;
@@ -13,7 +16,26 @@ export type MarkerTrend = {
   latestStatus: ReportMedicalMarkerEvidence["marker_status"] | null;
   referenceLow: number | null;
   referenceHigh: number | null;
+  // Direction over the last few readings only, for display badges. Kept
+  // separate from trend.trendDirection (earliest vs. latest across the whole
+  // history), which still drives which marker gets headlined — this only
+  // fixes what the badge itself says, e.g. a marker that spiked months ago
+  // and has been improving since no longer reads as "Worsening".
+  recentDirection: MarkerDirection;
 };
+
+// How many of the most recent readings define "recent" for the badge. 3
+// keeps a little noise tolerance; with only 2 readings it is simply those two.
+const RECENT_WINDOW = 3;
+
+function classifyRecentDirection(series: LabTrendSeries, marker: string): MarkerDirection {
+  const window = series.points.slice(-RECENT_WINDOW);
+  const changeAmount = Number(
+    (window[window.length - 1].value - window[0].value).toFixed(2)
+  );
+
+  return classifyMarkerDirection(marker, changeAmount);
+}
 
 function toTrendPoints(rows: ReportMedicalMarkerEvidence[]): LabTrendPoint[] {
   return rows.map((row) => ({
@@ -63,6 +85,7 @@ export function buildMarkerTrends(rows: ReportMedicalMarkerEvidence[]): MarkerTr
       latestStatus: latest?.marker_status ?? null,
       referenceLow: latest?.reference_low ?? null,
       referenceHigh: latest?.reference_high ?? null,
+      recentDirection: classifyRecentDirection(series, trend.marker),
     });
   }
 
