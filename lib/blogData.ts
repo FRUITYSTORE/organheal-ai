@@ -23,6 +23,10 @@ export type BlogPost = {
   reviewedBy?: string;
   reviewedAt?: string;
   sources?: string[];
+  // A picture for the card/hero, present only on articles that have one.
+  coverImageUrl?: string;
+  coverImageAlt?: string;
+  coverImageAltAr?: string;
 };
 
 export const blogPosts: BlogPost[] = [

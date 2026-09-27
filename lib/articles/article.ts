@@ -1,6 +1,7 @@
 import type { BlogPost } from "@/lib/blogData";
 
 export type ArticleStatus = "draft" | "published";
+export type ArticleSource = "staff" | "ai";
 
 export type ArticleRow = {
   id: string;
@@ -22,6 +23,13 @@ export type ArticleRow = {
   created_by: string | null;
   created_at: string;
   updated_at: string;
+  // Present once the source/cover-image migration has been applied; absent
+  // (undefined) on a database that has not run it yet.
+  source?: ArticleSource;
+  cover_image_url?: string | null;
+  cover_image_alt?: string | null;
+  cover_image_alt_ar?: string | null;
+  topic_key?: string | null;
 };
 
 export type ArticleInput = {
@@ -38,6 +46,11 @@ export type ArticleInput = {
   reviewedBy: string | null;
   reviewedAt: string | null;
   sources: string | null;
+  source: ArticleSource;
+  coverImageUrl: string | null;
+  coverImageAlt: string | null;
+  coverImageAltAr: string | null;
+  topicKey: string | null;
 };
 
 export const ARTICLE_LIMITS = {
@@ -49,6 +62,9 @@ export const ARTICLE_LIMITS = {
   labMarker: 40,
   reviewedBy: 120,
   sources: 2000,
+  coverImageUrl: 600,
+  coverImageAlt: 200,
+  topicKey: 80,
 } as const;
 
 function clean(value: unknown, max: number): string {
@@ -88,6 +104,22 @@ function validDate(value: unknown): string | null {
     !Number.isNaN(Date.parse(value))
     ? value
     : null;
+}
+
+// Only accept a plain https image URL — never javascript:, data:, or other
+// schemes a stored card could otherwise render.
+function validImageUrl(value: unknown): string | null {
+  const trimmed = clean(value, ARTICLE_LIMITS.coverImageUrl);
+
+  if (!trimmed) {
+    return null;
+  }
+
+  try {
+    return new URL(trimmed).protocol === "https:" ? trimmed : null;
+  } catch {
+    return null;
+  }
 }
 
 export function validateArticleInput(
@@ -137,6 +169,11 @@ export function validateArticleInput(
       reviewedBy: clean(raw.reviewedBy, ARTICLE_LIMITS.reviewedBy) || null,
       reviewedAt: validDate(raw.reviewedAt),
       sources: cleanSources(raw.sources),
+      source: raw.source === "ai" ? "ai" : "staff",
+      coverImageUrl: validImageUrl(raw.coverImageUrl),
+      coverImageAlt: clean(raw.coverImageAlt, ARTICLE_LIMITS.coverImageAlt) || null,
+      coverImageAltAr: clean(raw.coverImageAltAr, ARTICLE_LIMITS.coverImageAlt) || null,
+      topicKey: clean(raw.topicKey, ARTICLE_LIMITS.topicKey) || null,
     },
   };
 }
@@ -193,5 +230,8 @@ export function toBlogPost(row: ArticleRow): BlogPost {
     ...(row.reviewed_by ? { reviewedBy: row.reviewed_by } : {}),
     ...(row.reviewed_by && row.reviewed_at ? { reviewedAt: row.reviewed_at } : {}),
     ...(row.sources ? { sources: row.sources.split("\n").filter(Boolean) } : {}),
+    ...(row.cover_image_url ? { coverImageUrl: row.cover_image_url } : {}),
+    ...(row.cover_image_alt ? { coverImageAlt: row.cover_image_alt } : {}),
+    ...(row.cover_image_alt_ar ? { coverImageAltAr: row.cover_image_alt_ar } : {}),
   };
 }

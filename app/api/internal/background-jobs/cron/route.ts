@@ -22,8 +22,17 @@ import {
   getSupabaseAdminClient,
 } from "@/lib/supabase-admin";
 
+import {
+  runArticleGenerationOnce,
+} from "@/lib/content/article-generation.service";
+
 export const runtime =
   "nodejs";
+
+// A model call plus a database write comfortably fits in the default
+// function timeout on most plans, but this gives headroom on a slow day.
+export const maxDuration =
+  60;
 
 const CRON_BATCH_SIZE =
   10;
@@ -206,6 +215,81 @@ try {
   );
 }
 
+let articleGenerated = false;
+
+// Opt-out, not opt-in: set ARTICLE_AUTOPILOT_ENABLED=false in Vercel to pause
+// the AI knowledge-hub pipeline without a code change. A failure here never
+// fails the cron run — the job queue above already did its work.
+if (
+  process.env
+    .ARTICLE_AUTOPILOT_ENABLED !==
+    "false"
+) {
+  try {
+    const articleResult =
+      await runArticleGenerationOnce();
+
+    articleGenerated =
+      articleResult.generated;
+
+    if (
+      articleResult.generated
+    ) {
+      logApiInfo(
+        "background_jobs_cron.article_generated",
+        {
+          route:
+            "/api/internal/background-jobs/cron",
+
+          requestId,
+
+          articleId:
+            articleResult
+              .article
+              .id,
+
+          topicKey:
+            articleResult
+              .article
+              .topic_key ??
+            null,
+        }
+      );
+    } else {
+      logApiInfo(
+        "background_jobs_cron.article_generation_skipped",
+        {
+          route:
+            "/api/internal/background-jobs/cron",
+
+          requestId,
+
+          reason:
+            articleResult.reason,
+        }
+      );
+    }
+  } catch (
+    articleError
+  ) {
+    logApiWarning(
+      "background_jobs_cron.article_generation_failed",
+      {
+        route:
+          "/api/internal/background-jobs/cron",
+
+        requestId,
+
+        errorMessage:
+          articleError instanceof
+            Error
+            ? articleError.message
+            : "Unknown article generation error.",
+      }
+    );
+  }
+}
+
 return NextResponse.json(
       {
         success:
@@ -219,6 +303,8 @@ return NextResponse.json(
 
         queueWasEmpty:
           result.queueWasEmpty,
+
+        articleGenerated,
 
         requestId,
       },

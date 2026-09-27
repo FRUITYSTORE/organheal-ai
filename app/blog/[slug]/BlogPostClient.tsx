@@ -105,6 +105,7 @@ export default function BlogPostClient({ post }: { post: BlogPost }) {
       },
     },
     keywords: [post.category, post.organSystem, ...post.labMarkers].join(", "),
+    ...(post.coverImageUrl ? { image: post.coverImageUrl } : {}),
   };
 
   return (
@@ -178,6 +179,14 @@ export default function BlogPostClient({ post }: { post: BlogPost }) {
           grid-template-columns: minmax(0, 1fr) 300px;
           gap: 26px;
           align-items: start;
+        }
+
+        .articleReadingPage .articleHeroImage {
+          display: block;
+          width: 100%;
+          height: clamp(200px, 32vw, 380px);
+          border-radius: 20px;
+          object-fit: cover;
         }
 
         .articleReadingPage .articleTitle {
@@ -502,6 +511,15 @@ export default function BlogPostClient({ post }: { post: BlogPost }) {
             </aside>
           </div>
         </section>
+
+        {post.coverImageUrl && (
+          // eslint-disable-next-line @next/next/no-img-element -- external, per-article image; not worth Next's static image optimization for a one-off hero.
+          <img
+            className="articleHeroImage"
+            src={post.coverImageUrl}
+            alt={(isArabic ? post.coverImageAltAr : post.coverImageAlt) || title}
+          />
+        )}
 
         <section className="articleSafetyStrip">
           <span className="articleSafetyMark">OH</span>

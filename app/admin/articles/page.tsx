@@ -26,6 +26,9 @@ type FormState = {
   reviewedBy: string;
   reviewedAt: string;
   sources: string;
+  coverImageUrl: string;
+  coverImageAlt: string;
+  coverImageAltAr: string;
 };
 
 const EMPTY_FORM: FormState = {
@@ -43,6 +46,9 @@ const EMPTY_FORM: FormState = {
   reviewedBy: "",
   reviewedAt: "",
   sources: "",
+  coverImageUrl: "",
+  coverImageAlt: "",
+  coverImageAltAr: "",
 };
 
 // Existing categories, so new articles line up with the built-in ones.
@@ -66,6 +72,9 @@ function toForm(row: ArticleRow): FormState {
     reviewedBy: row.reviewed_by ?? "",
     reviewedAt: row.reviewed_at ?? "",
     sources: row.sources ?? "",
+    coverImageUrl: row.cover_image_url ?? "",
+    coverImageAlt: row.cover_image_alt ?? "",
+    coverImageAltAr: row.cover_image_alt_ar ?? "",
   };
 }
 
@@ -315,6 +324,41 @@ export default function AdminArticlesPage() {
         </label>
 
         <fieldset className="adminTeamAreas">
+          <legend>{text("Cover image (optional)", "صورة الغلاف (اختيارية)")}</legend>
+
+          <label>
+            {text("Image URL (https only)", "رابط الصورة (https فقط)")}
+            <input
+              type="url"
+              dir="ltr"
+              maxLength={ARTICLE_LIMITS.coverImageUrl}
+              value={form.coverImageUrl}
+              onChange={(event) => setForm({ ...form, coverImageUrl: event.target.value })}
+              placeholder="https://..."
+            />
+          </label>
+
+          <label>
+            {text("Image description (English, for accessibility)", "وصف الصورة (بالإنجليزية، لإمكانية الوصول)")}
+            <input
+              maxLength={ARTICLE_LIMITS.coverImageAlt}
+              value={form.coverImageAlt}
+              onChange={(event) => setForm({ ...form, coverImageAlt: event.target.value })}
+            />
+          </label>
+
+          <label>
+            {text("Image description (Arabic)", "وصف الصورة (بالعربية)")}
+            <input
+              dir="rtl"
+              maxLength={ARTICLE_LIMITS.coverImageAlt}
+              value={form.coverImageAltAr}
+              onChange={(event) => setForm({ ...form, coverImageAltAr: event.target.value })}
+            />
+          </label>
+        </fieldset>
+
+        <fieldset className="adminTeamAreas">
           <legend>{text("Trust details (optional, shown on the article)", "تفاصيل الثقة (اختيارية، تظهر في المقال)")}</legend>
 
           <label>
@@ -408,6 +452,22 @@ export default function AdminArticlesPage() {
                 <span>
                   {item.status === "published" ? text("Published", "منشور") : text("Draft", "مسودة")} ·{" "}
                   {isArabic && item.category_ar ? item.category_ar : item.category}
+                  {item.source === "ai" && (
+                    <>
+                      {" · "}
+                      <span
+                        style={{
+                          padding: "2px 8px",
+                          borderRadius: 999,
+                          background: "rgba(15, 118, 110, 0.12)",
+                          color: "#0f766e",
+                          fontWeight: 800,
+                        }}
+                      >
+                        {text("🤖 AI-written — needs your review", "🤖 كتبها الذكاء الاصطناعي — بانتظار مراجعتك")}
+                      </span>
+                    </>
+                  )}
                 </span>
               </div>
               <div className="adminVideosRowActions">
