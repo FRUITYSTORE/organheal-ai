@@ -313,6 +313,15 @@ export default function AboutPage() {
           max-width: 860px;
         }
 
+        .aboutFounder .panelTitle {
+          font-size: clamp(1.4rem, 2.4vw, 1.9rem);
+        }
+
+        .founderCredentials {
+          color: var(--oh-c-ink-teal-700, #0f766e);
+          font-weight: 850;
+        }
+
         .aboutGrid4 {
           display: grid;
           grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -702,6 +711,28 @@ export default function AboutPage() {
               ))}
             </div>
           </article>
+        </section>
+
+        <section className="aboutPanel aboutFounder">
+          <div className="panelLabel">
+            {text("Who's behind OrganHeal", "من يقف خلف OrganHeal")}
+          </div>
+
+          <h2 className="panelTitle">{text("Husam Khaled", "حسام خالد")}</h2>
+
+          <p className="panelText founderCredentials">
+            {text(
+              "Clinical background in cardiac surgery, intensive care, and cardiac perfusion nursing.",
+              "خبرة سريرية في تمريض جراحة القلب، والعناية المركزة، والتروية القلبية."
+            )}
+          </p>
+
+          <p className="panelText">
+            {text(
+              "OrganHeal AI was built from years at the bedside, seeing how much a person's understanding of their own results shapes their outcomes. Its purpose is to raise health awareness, improve health literacy, and make it easier for people to actually understand what they are being tested or screened for — so they arrive at every medical conversation better prepared, and leave it with a better quality of life.",
+              "بُني OrganHeal AI من سنوات عمل قريبة من سرير المريض، ومن رؤية كم يشكّل فهم الشخص لنتائجه في مآل حالته. غايته رفع الوعي الصحي، وتحسين الثقافة الصحية، وتسهيل فهم الناس لما يُفحص أو يُحلَّل لهم فعلاً؛ ليصل كل شخص إلى كل حديث طبي أكثر استعداداً، ويخرج منه بجودة حياة أفضل."
+            )}
+          </p>
         </section>
 
         <section className="aboutPanel">
