@@ -22,6 +22,11 @@ const googleAnalyticsId =
     ? process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
     : undefined;
 
+const clarityProjectId =
+  process.env.NODE_ENV === "production"
+    ? process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID
+    : undefined;
+
 const geistSans = Geist({
   subsets: ["latin"],
   variable: "--font-geist-sans",
@@ -103,11 +108,27 @@ export default function RootLayout({
       className={geistSans.variable}
       suppressHydrationWarning
     >
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
-        <JsonLd data={organizationJsonLd} />
-        <JsonLd data={websiteJsonLd} />
-      </head>
+  <head>
+     <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+
+    {clarityProjectId && (
+      <script
+        type="text/javascript"
+        dangerouslySetInnerHTML={{
+          __html: `
+            (function(c,l,a,r,i,t,y){
+             c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+             t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+             y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+            })(window, document, "clarity", "script", "${clarityProjectId}");
+          `,
+        }}
+      />
+    )}
+
+  <JsonLd data={organizationJsonLd} />
+  <JsonLd data={websiteJsonLd} />
+</head>
       <body>
         <Navbar />
         <HealthTickerBar />
