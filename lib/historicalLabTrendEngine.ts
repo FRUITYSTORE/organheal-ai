@@ -15,7 +15,10 @@ export type LabTrendResult = {
   trendSummary: string;
 };
 
-function normalizeUnit(
+// Exported so the chart-series builder below can reuse the exact same
+// "are these points even comparable" rule as buildHistoricalLabTrends,
+// without changing that function's behaviour.
+export function normalizeUnit(
   unit: string | null
 ): string | null {
   if (!unit) {
@@ -31,7 +34,7 @@ function normalizeUnit(
   return normalized || null;
 }
 
-function haveCompatibleUnits(
+export function haveCompatibleUnits(
   points: LabTrendPoint[]
 ): boolean {
   const normalizedUnits =
@@ -57,6 +60,47 @@ function haveCompatibleUnits(
       null
     )
   );
+}
+
+export type LabTrendSeriesPoint = {
+  date: string;
+  value: number;
+};
+
+export type LabTrendSeries = {
+  marker: string;
+  unit: string | null;
+  points: LabTrendSeriesPoint[];
+};
+
+// A chart-ready companion to buildHistoricalLabTrends: the same grouping and
+// "only compare compatible units" rule, but it keeps every point instead of
+// collapsing to earliest/latest. Nothing here changes what
+// buildHistoricalLabTrends returns or how it is computed.
+export function buildHistoricalLabTrendSeries(
+  points: LabTrendPoint[]
+): LabTrendSeries[] {
+  const grouped = points.reduce<Record<string, LabTrendPoint[]>>((acc, point) => {
+    (acc[point.marker] ??= []).push(point);
+
+    return acc;
+  }, {});
+
+  return Object.entries(grouped)
+    .filter(
+      ([, markerPoints]) => markerPoints.length >= 2 && haveCompatibleUnits(markerPoints)
+    )
+    .map(([marker, markerPoints]) => {
+      const sorted = [...markerPoints].sort(
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+      );
+
+      return {
+        marker,
+        unit: sorted[0].unit,
+        points: sorted.map((point) => ({ date: point.date, value: point.value })),
+      };
+    });
 }
 
 export function buildHistoricalLabTrends(

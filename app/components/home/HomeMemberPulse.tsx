@@ -5,8 +5,12 @@ import Link from "next/link";
 
 import { supabase } from "@/lib/supabase";
 import { computeHealthPulse, type HealthPulse } from "@/lib/health-pulse";
+import { buildMarkerTrends, pickHeadlineMarkerTrend, type MarkerTrend } from "@/lib/health-marker-trends";
+import { getMedicalReportMarkersForPatient } from "@/lib/repositories/report-markers.repository";
+import { presentLabMarkerName } from "@/lib/presentation/intelligence/lab-marker-presentation";
 
 import ChatVideos from "@/app/components/chat/ChatVideos";
+import MarkerTrendChart from "@/app/components/charts/MarkerTrendChart";
 
 import "./home-today.css";
 
@@ -15,6 +19,7 @@ import "./home-today.css";
 export default function HomeMemberPulse({ isArabic }: { isArabic: boolean }) {
   const [pulse, setPulse] = useState<HealthPulse | null>(null);
   const [reportText, setReportText] = useState("");
+  const [headlineTrend, setHeadlineTrend] = useState<MarkerTrend | null>(null);
   const text = (en: string, ar: string) => (isArabic ? ar : en);
 
   useEffect(() => {
@@ -60,6 +65,18 @@ export default function HomeMemberPulse({ isArabic }: { isArabic: boolean }) {
           (reports?.[0] as { created_at: string } | undefined)?.created_at ?? null
         )
       );
+
+      // A trend needs two or more comparable readings of the same marker, so
+      // most members simply won't have one yet — that's expected, not an error.
+      try {
+        const markerRows = await getMedicalReportMarkersForPatient(userId);
+
+        if (!cancelled) {
+          setHeadlineTrend(pickHeadlineMarkerTrend(buildMarkerTrends(markerRows)));
+        }
+      } catch {
+        // No chart shown; everything else on the card still works.
+      }
     }
 
     void load().catch(() => undefined);
@@ -152,6 +169,36 @@ export default function HomeMemberPulse({ isArabic }: { isArabic: boolean }) {
             : text("Check in today", "سجّل يومك")}
         </Link>
       </div>
+
+      {headlineTrend && (
+        <div className="ohPulseTrendCard">
+          <div className="ohPulseTrendHeader">
+            <span>
+              {text("Tracking over time", "التتبع عبر الزمن")}: {" "}
+              {presentLabMarkerName(headlineTrend.trend.marker, isArabic ? "ar" : "en")}
+            </span>
+            <span
+              className="ohPulseTrendPill"
+              data-direction={headlineTrend.trend.trendDirection}
+            >
+              {headlineTrend.trend.trendDirection === "Improving"
+                ? text("Improved", "تحسّنت")
+                : headlineTrend.trend.trendDirection === "Worsening"
+                  ? text("Needs attention", "تحتاج انتباهاً")
+                  : text("Stable", "مستقرة")}
+            </span>
+          </div>
+
+          <MarkerTrendChart trend={headlineTrend} isArabic={isArabic} height={100} />
+
+          <p className="ohPulseTrendNote">
+            {text(
+              "Educational only, based on your own uploaded reports — not a diagnosis.",
+              "للتثقيف فقط، ومبني على تقاريرك المرفوعة، وليس تشخيصاً."
+            )}
+          </p>
+        </div>
+      )}
 
       {reportText && (
         <div className="ohPulseVideos">

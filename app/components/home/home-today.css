@@ -419,3 +419,50 @@
   padding-top: 14px;
   border-top: 1px solid var(--oh-border);
 }
+
+.ohPulseTrendCard {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--oh-border);
+  border-radius: 16px;
+  background: var(--oh-surface-soft);
+}
+
+.ohPulseTrendHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--oh-text);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.ohPulseTrendPill {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--oh-muted) 18%, transparent);
+  color: var(--oh-muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.ohPulseTrendPill[data-direction="Improving"] {
+  background: color-mix(in srgb, #0f766e 16%, transparent);
+  color: #0f766e;
+}
+
+.ohPulseTrendPill[data-direction="Worsening"] {
+  background: color-mix(in srgb, #dc2626 14%, transparent);
+  color: #dc2626;
+}
+
+.ohPulseTrendNote {
+  margin: 0;
+  color: var(--oh-muted);
+  font-size: 0.76rem;
+  line-height: 1.5;
+}

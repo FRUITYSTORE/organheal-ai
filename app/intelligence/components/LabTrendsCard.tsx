@@ -1,3 +1,7 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
 import {
   createIntelligenceText,
 } from "@/lib/presentation/intelligence/intelligence-ui-text";
@@ -6,6 +10,11 @@ import {
   presentLabTrendDirection,
   presentLabTrendSummary,
 } from "@/lib/presentation/intelligence/lab-marker-presentation";
+import { supabase } from "@/lib/supabase";
+import { buildMarkerTrends, type MarkerTrend } from "@/lib/health-marker-trends";
+import { getMedicalReportMarkersForPatient } from "@/lib/repositories/report-markers.repository";
+
+import MarkerTrendChart from "@/app/components/charts/MarkerTrendChart";
 
 type LabTrendsCardProps = {
   labTrends: unknown;
@@ -145,6 +154,48 @@ export default function LabTrendsCard({
   const text = createIntelligenceText(
     isArabic ? "ar" : "en"
   );
+
+  // The stored analysis only carries earliest/latest per marker, not the
+  // full series a chart needs, so this fetches the member's own marker
+  // history live (same table, same RLS) purely to draw the lines below.
+  // If it fails, the existing text-only cards still render normally.
+  const [seriesByMarker, setSeriesByMarker] = useState<Map<string, MarkerTrend>>(
+    new Map()
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadSeries() {
+      const { data } = await supabase.auth.getUser();
+      const userId = data.user?.id;
+
+      if (!userId) return;
+
+      try {
+        const rows = await getMedicalReportMarkersForPatient(userId);
+
+        if (cancelled) return;
+
+        setSeriesByMarker(
+          new Map(
+            buildMarkerTrends(rows).map((entry) => [
+              entry.trend.marker.toLowerCase(),
+              entry,
+            ])
+          )
+        );
+      } catch {
+        // Text-only cards remain fully usable without the chart.
+      }
+    }
+
+    void loadSeries();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const trendItems =
     normalizeLabTrendItems(labTrends);
@@ -497,6 +548,14 @@ export default function LabTrendsCard({
                   <p className="labTrendSummary">
                     {presentedSummary}
                   </p>
+                )}
+
+                {seriesByMarker.has(rawName.toLowerCase()) && (
+                  <MarkerTrendChart
+                    trend={seriesByMarker.get(rawName.toLowerCase())!}
+                    isArabic={isArabic}
+                    height={90}
+                  />
                 )}
               </article>
             );
