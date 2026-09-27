@@ -17,6 +17,9 @@ function toPayload(input: ArticleInput) {
     content: input.content,
     content_ar: input.contentAr,
     status: input.status,
+    reviewed_by: input.reviewedBy,
+    reviewed_at: input.reviewedAt,
+    sources: input.sources,
   };
 }
 

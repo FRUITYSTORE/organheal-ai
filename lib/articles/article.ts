@@ -15,6 +15,9 @@ export type ArticleRow = {
   content: string;
   content_ar: string | null;
   status: ArticleStatus;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  sources: string | null;
   published_at: string | null;
   created_by: string | null;
   created_at: string;
@@ -32,6 +35,9 @@ export type ArticleInput = {
   content: string;
   contentAr: string | null;
   status: ArticleStatus;
+  reviewedBy: string | null;
+  reviewedAt: string | null;
+  sources: string | null;
 };
 
 export const ARTICLE_LIMITS = {
@@ -41,6 +47,8 @@ export const ARTICLE_LIMITS = {
   content: 20000,
   labMarkers: 12,
   labMarker: 40,
+  reviewedBy: 120,
+  sources: 2000,
 } as const;
 
 function clean(value: unknown, max: number): string {
@@ -58,6 +66,28 @@ function cleanBody(value: unknown): string {
         .trim()
         .slice(0, ARTICLE_LIMITS.content)
     : "";
+}
+
+// One source per line; blank lines dropped.
+function cleanSources(value: unknown): string | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const lines = value
+    .split(/\r?\n/)
+    .map((line) => line.replace(/\s+/g, " ").trim())
+    .filter(Boolean);
+
+  return lines.length > 0 ? lines.join("\n").slice(0, ARTICLE_LIMITS.sources) : null;
+}
+
+function validDate(value: unknown): string | null {
+  return typeof value === "string" &&
+    /^\d{4}-\d{2}-\d{2}$/.test(value) &&
+    !Number.isNaN(Date.parse(value))
+    ? value
+    : null;
 }
 
 export function validateArticleInput(
@@ -104,6 +134,9 @@ export function validateArticleInput(
       content,
       contentAr: cleanBody(raw.contentAr) || null,
       status: raw.status === "published" ? "published" : "draft",
+      reviewedBy: clean(raw.reviewedBy, ARTICLE_LIMITS.reviewedBy) || null,
+      reviewedAt: validDate(raw.reviewedAt),
+      sources: cleanSources(raw.sources),
     },
   };
 }
@@ -157,5 +190,8 @@ export function toBlogPost(row: ArticleRow): BlogPost {
     difficulty: "beginner",
     content: row.content,
     contentAr: row.content_ar || row.content,
+    ...(row.reviewed_by ? { reviewedBy: row.reviewed_by } : {}),
+    ...(row.reviewed_by && row.reviewed_at ? { reviewedAt: row.reviewed_at } : {}),
+    ...(row.sources ? { sources: row.sources.split("\n").filter(Boolean) } : {}),
   };
 }

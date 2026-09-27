@@ -19,6 +19,10 @@ export type BlogPost = {
   difficulty: BlogDifficulty;
   content: string;
   contentAr: string;
+  // Trust details, present only on articles whose editor filled them in.
+  reviewedBy?: string;
+  reviewedAt?: string;
+  sources?: string[];
 };
 
 export const blogPosts: BlogPost[] = [

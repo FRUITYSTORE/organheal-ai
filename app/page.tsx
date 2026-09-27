@@ -1741,7 +1741,7 @@ if (
               </div>
 
               {heroAnswer && (
-                <div className="homeAIAnswer">
+                <div className="homeAIAnswer" data-clarity-mask="True">
                   <div className="homeAIAnswerHeader">
                     <span aria-hidden="true">AI</span>
 

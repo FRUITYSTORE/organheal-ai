@@ -82,6 +82,9 @@ describe("article slugs and blog mapping", () => {
       content: BODY,
       content_ar: null,
       status: "published",
+      reviewed_by: null,
+      reviewed_at: null,
+      sources: null,
       published_at: "2026-09-27T10:00:00Z",
       created_by: null,
       created_at: "2026-09-20T10:00:00Z",
@@ -96,5 +99,62 @@ describe("article slugs and blog mapping", () => {
     expect(post.readTime).toBe("1 min read");
     expect(post.readTimeAr).toContain("1");
     expect(post.labMarkers).toEqual(["Ferritin"]);
+    expect(post.reviewedBy).toBeUndefined();
+    expect(post.sources).toBeUndefined();
+  });
+
+  it("carries the reviewer and sources only when they were filled in", () => {
+    const result = validateArticleInput({
+      ...valid,
+      reviewedBy: "  Jane Doe, RN  ",
+      reviewedAt: "2026-09-20",
+      sources: "WHO fact sheet\n\n  CDC guidance  \n",
+    });
+
+    expect(result.ok).toBe(true);
+
+    if (result.ok) {
+      expect(result.value.reviewedBy).toBe("Jane Doe, RN");
+      expect(result.value.reviewedAt).toBe("2026-09-20");
+      expect(result.value.sources).toBe("WHO fact sheet\nCDC guidance");
+
+      const post = toBlogPost({
+        id: "1",
+        slug: "understanding-iron",
+        title: "T",
+        title_ar: null,
+        excerpt: "E",
+        excerpt_ar: null,
+        category: "C",
+        category_ar: null,
+        lab_markers: [],
+        content: BODY,
+        content_ar: null,
+        status: "published",
+        reviewed_by: result.value.reviewedBy,
+        reviewed_at: result.value.reviewedAt,
+        sources: result.value.sources,
+        published_at: "2026-09-27T10:00:00Z",
+        created_by: null,
+        created_at: "2026-09-20T10:00:00Z",
+        updated_at: "2026-09-27T10:00:00Z",
+      });
+
+      expect(post.reviewedBy).toBe("Jane Doe, RN");
+      expect(post.reviewedAt).toBe("2026-09-20");
+      expect(post.sources).toEqual(["WHO fact sheet", "CDC guidance"]);
+    }
+  });
+
+  it("ignores a malformed review date and empty sources", () => {
+    const result = validateArticleInput({
+      ...valid,
+      reviewedBy: "Someone",
+      reviewedAt: "20/09/2026",
+      sources: " \n ",
+    });
+
+    expect(result.ok && result.value.reviewedAt).toBeNull();
+    expect(result.ok && result.value.sources).toBeNull();
   });
 });

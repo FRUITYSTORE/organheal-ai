@@ -23,6 +23,9 @@ type FormState = {
   content: string;
   contentAr: string;
   status: ArticleStatus;
+  reviewedBy: string;
+  reviewedAt: string;
+  sources: string;
 };
 
 const EMPTY_FORM: FormState = {
@@ -37,6 +40,9 @@ const EMPTY_FORM: FormState = {
   content: "",
   contentAr: "",
   status: "draft",
+  reviewedBy: "",
+  reviewedAt: "",
+  sources: "",
 };
 
 // Existing categories, so new articles line up with the built-in ones.
@@ -57,6 +63,9 @@ function toForm(row: ArticleRow): FormState {
     content: row.content,
     contentAr: row.content_ar ?? "",
     status: row.status,
+    reviewedBy: row.reviewed_by ?? "",
+    reviewedAt: row.reviewed_at ?? "",
+    sources: row.sources ?? "",
   };
 }
 
@@ -304,6 +313,39 @@ export default function AdminArticlesPage() {
             onChange={(event) => setForm({ ...form, contentAr: event.target.value })}
           />
         </label>
+
+        <fieldset className="adminTeamAreas">
+          <legend>{text("Trust details (optional, shown on the article)", "تفاصيل الثقة (اختيارية، تظهر في المقال)")}</legend>
+
+          <label>
+            {text("Medically reviewed by (name and title)", "روجع طبياً بواسطة (الاسم والصفة)")}
+            <input
+              maxLength={ARTICLE_LIMITS.reviewedBy}
+              value={form.reviewedBy}
+              onChange={(event) => setForm({ ...form, reviewedBy: event.target.value })}
+              placeholder={text("Only fill this in if a qualified person really reviewed it", "املأه فقط إن راجعه شخص مؤهل فعلاً")}
+            />
+          </label>
+
+          <label>
+            {text("Review date", "تاريخ المراجعة")}
+            <input
+              type="date"
+              value={form.reviewedAt}
+              onChange={(event) => setForm({ ...form, reviewedAt: event.target.value })}
+            />
+          </label>
+
+          <label>
+            {text("Sources (one per line, e.g. WHO fact sheet on diabetes)", "المصادر (مصدر في كل سطر، مثل: صحيفة وقائع منظمة الصحة العالمية عن السكري)")}
+            <textarea
+              rows={4}
+              maxLength={ARTICLE_LIMITS.sources}
+              value={form.sources}
+              onChange={(event) => setForm({ ...form, sources: event.target.value })}
+            />
+          </label>
+        </fieldset>
 
         <label>
           {text("Status", "الحالة")}

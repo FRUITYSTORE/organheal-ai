@@ -47,6 +47,18 @@ function isProtectedRoute(
   );
 }
 
+// Signed-in areas plus the assistant, doctor portal and settings.
+const extraSensitivePrefixes = ["/assistant", "/doctor-portal", "/settings"];
+
+function isSensitiveRoute(pathname: string) {
+  return (
+    isProtectedRoute(pathname) ||
+    extraSensitivePrefixes.some(
+      (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+    )
+  );
+}
+
 function getStoredLanguage(): Language {
   if (
     typeof window ===
@@ -487,6 +499,17 @@ export default function RouteAccessGuard({
           </section>
         </div>
       </main>
+    );
+  }
+
+  // Screens that show a member's health data are hidden from Clarity session
+  // recordings and heatmaps (the text is replaced by blocks), so replays of
+  // visits can never expose reports, results or conversations.
+  if (isSensitiveRoute(pathname)) {
+    return (
+      <div data-clarity-mask="True" style={{ display: "contents" }}>
+        {children}
+      </div>
     );
   }
 

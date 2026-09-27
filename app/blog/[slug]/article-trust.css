@@ -1,0 +1,25 @@
+.articleTrust {
+  display: grid;
+  gap: 8px;
+  margin-top: 28px;
+  padding-top: 18px;
+  border-top: 1px solid var(--oh-border);
+  color: var(--oh-muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.articleTrust p {
+  margin: 0;
+}
+
+.articleTrust strong {
+  color: var(--oh-text);
+}
+
+.articleTrust ul {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding-inline-start: 20px;
+}

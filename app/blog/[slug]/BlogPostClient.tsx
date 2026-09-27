@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { blogPosts } from "@/lib/blogData";
 
+import "./article-trust.css";
+
 type Language = "en" | "ar";
 type BlogPost = (typeof blogPosts)[number];
 
@@ -523,6 +525,29 @@ export default function BlogPostClient({ post }: { post: BlogPost }) {
                 <p key={`${post.slug}-paragraph-${index}`}>{paragraph}</p>
               ))}
             </div>
+
+            {(post.reviewedBy || (post.sources && post.sources.length > 0)) && (
+              <footer className="articleTrust">
+                {post.reviewedBy && (
+                  <p>
+                    <strong>{text("Medically reviewed by", "روجع طبياً بواسطة")}</strong>{" "}
+                    {post.reviewedBy}
+                    {post.reviewedAt ? ` · ${post.reviewedAt}` : ""}
+                  </p>
+                )}
+
+                {post.sources && post.sources.length > 0 && (
+                  <>
+                    <strong>{text("Sources", "المصادر")}</strong>
+                    <ul>
+                      {post.sources.map((source) => (
+                        <li key={source}>{source}</li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+              </footer>
+            )}
           </article>
 
           <aside className="articleSidePanel">

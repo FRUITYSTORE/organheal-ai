@@ -281,6 +281,7 @@ export default function HealthChatLauncher() {
       {open && (
         <section
           className="ohChatPanel"
+          data-clarity-mask="True"
           role="dialog"
           aria-label={text("OrganHeal health chat", "دردشة OrganHeal الصحية")}
         >
