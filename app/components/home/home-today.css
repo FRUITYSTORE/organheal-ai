@@ -413,3 +413,9 @@
   .ohPulseRing > span { width: 70px; height: 70px; }
   .ohPulseRing strong { font-size: 1.5rem; }
 }
+
+.ohPulseVideos {
+  grid-column: 1 / -1;
+  padding-top: 14px;
+  border-top: 1px solid var(--oh-border);
+}

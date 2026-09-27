@@ -8,6 +8,8 @@ import { supabase } from "@/lib/supabase";
 import { OPEN_HEALTH_CHAT_EVENT } from "@/lib/health-updates/chat-events";
 import { POPULAR_QUESTIONS } from "@/lib/health-updates/popular-questions";
 
+import ChatVideos from "./ChatVideos";
+
 import "./health-chat.css";
 
 type Language = "en" | "ar";
@@ -346,6 +348,14 @@ export default function HealthChatLauncher() {
                     <Link href={message.action.href} className="ohChatAction">
                       {message.action.label}
                     </Link>
+                  )}
+
+                  {message.role === "assistant" && index > 0 && (
+                    <ChatVideos
+                      question={messages[index - 1]?.content ?? ""}
+                      answer={message.content}
+                      isArabic={isArabic}
+                    />
                   )}
                 </div>
               ))

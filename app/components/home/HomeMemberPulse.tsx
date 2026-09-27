@@ -6,12 +6,15 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { computeHealthPulse, type HealthPulse } from "@/lib/health-pulse";
 
+import ChatVideos from "@/app/components/chat/ChatVideos";
+
 import "./home-today.css";
 
 // The member's week at a glance: a reason to come back every day, built only
 // from their own check-ins and the date of their latest report.
 export default function HomeMemberPulse({ isArabic }: { isArabic: boolean }) {
   const [pulse, setPulse] = useState<HealthPulse | null>(null);
+  const [reportText, setReportText] = useState("");
   const text = (en: string, ar: string) => (isArabic ? ar : en);
 
   useEffect(() => {
@@ -35,13 +38,21 @@ export default function HomeMemberPulse({ isArabic }: { isArabic: boolean }) {
           .limit(60),
         supabase
           .from("uploaded_lab_files")
-          .select("created_at")
+          .select("created_at, extracted_text")
           .eq("user_id", userId)
           .order("created_at", { ascending: false })
           .limit(1),
       ]);
 
       if (cancelled) return;
+
+      // Topics mentioned in the latest report, matched here in the browser
+      // (the text never leaves the device for this) to suggest videos.
+      setReportText(
+        typeof reports?.[0]?.extracted_text === "string"
+          ? reports[0].extracted_text.slice(0, 20000)
+          : ""
+      );
 
       setPulse(
         computeHealthPulse(
@@ -141,6 +152,20 @@ export default function HomeMemberPulse({ isArabic }: { isArabic: boolean }) {
             : text("Check in today", "سجّل يومك")}
         </Link>
       </div>
+
+      {reportText && (
+        <div className="ohPulseVideos">
+          <ChatVideos
+            question=""
+            answer={reportText}
+            isArabic={isArabic}
+            label={{
+              en: "Videos about topics in your latest report",
+              ar: "فيديوهات عن مواضيع في آخر تقرير لك",
+            }}
+          />
+        </div>
+      )}
     </section>
   );
 }

@@ -314,3 +314,61 @@
   font-weight: 800;
   text-decoration: none;
 }
+
+.ohChatVideos {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.ohChatVideos small {
+  color: var(--oh-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.ohChatVideoCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--oh-border);
+  border-radius: 12px;
+  background: var(--oh-surface);
+  color: var(--oh-text);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.ohChatVideoCard > span:first-child {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--oh-primary) 16%, transparent);
+  color: var(--oh-primary);
+  font-size: 0.7rem;
+}
+
+.ohChatVideoCard strong {
+  display: block;
+  font-size: 0.82rem;
+  line-height: 1.3;
+}
+
+.ohChatVideoCard em {
+  color: var(--oh-muted);
+  font-size: 0.7rem;
+  font-style: normal;
+}
+
+.ohChatVideoFrame {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 0;
+  border-radius: 12px;
+}

@@ -230,8 +230,11 @@ export const HEALTH_VIDEOS: HealthVideo[] = [
   },
 ];
 
-export function getVideosForTopic(topic: VideoTopicKey): HealthVideo[] {
-  return HEALTH_VIDEOS.filter((video) => video.topic === topic);
+export function getVideosForTopic(
+  topic: VideoTopicKey,
+  videos: HealthVideo[] = HEALTH_VIDEOS
+): HealthVideo[] {
+  return videos.filter((video) => video.topic === topic);
 }
 
 // Finds the topics a free-text question or lab-marker name is about, in the
@@ -245,9 +248,13 @@ export function matchVideoTopics(text: string): VideoTopicKey[] {
   ).map((topic) => topic.key);
 }
 
-export function getVideosForText(text: string, limit = 3): HealthVideo[] {
+export function getVideosForText(
+  text: string,
+  limit = 3,
+  videos: HealthVideo[] = HEALTH_VIDEOS
+): HealthVideo[] {
   return matchVideoTopics(text)
-    .flatMap((topic) => getVideosForTopic(topic))
+    .flatMap((topic) => getVideosForTopic(topic, videos))
     .slice(0, limit);
 }
 

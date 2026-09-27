@@ -10,7 +10,9 @@ import { guardUsage } from "@/lib/billing/usage-guard";
 import {
   EXPLAINER_JSON_SCHEMA,
   buildExplainerInstructions,
+  REPORT_TEXT_LIMIT,
   normalizeExplainerLanguage,
+  normalizeExplainerMode,
   parseExplainerScript,
   validateExplainerQuestion,
 } from "@/lib/health-videos/explainer";
@@ -62,14 +64,19 @@ export async function POST(request: Request) {
   const body = (await readJson(request)) as {
     question?: unknown;
     language?: unknown;
+    mode?: unknown;
   } | null;
 
   const language = normalizeExplainerLanguage(body?.language);
+  const mode = normalizeExplainerMode(body?.mode);
   const validation = validateExplainerQuestion(body?.question);
 
-  if (!validation.ok) {
+  // In report mode the question is only an optional focus.
+  if (!validation.ok && mode === "topic") {
     return NextResponse.json({ error: validation.error }, { status: 400, headers });
   }
+
+  const focus = validation.ok ? validation.question : "";
 
   const apiKey = process.env.OPENAI_API_KEY?.trim();
 
@@ -89,6 +96,47 @@ export async function POST(request: Request) {
   // address, so the daily allowance cannot be dodged by clearing cookies.
   const authentication = await authenticateApiRequest(request);
   const userId = authentication.success ? authentication.user.id : null;
+  let reportText = "";
+
+  if (mode === "report") {
+    // Personal videos need an account, and read only the caller's own latest
+    // report through their own (row-level-secured) session. Nothing is stored.
+    if (!authentication.success) {
+      return NextResponse.json(
+        {
+          error:
+            language === "ar"
+              ? "سجّل الدخول لصنع فيديو من تقريرك."
+              : "Sign in to make a video from your report.",
+        },
+        { status: 401, headers }
+      );
+    }
+
+    const { data: reports } = await authentication.client
+      .from("uploaded_lab_files")
+      .select("extracted_text")
+      .eq("user_id", authentication.user.id)
+      .not("extracted_text", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    const text = reports?.[0]?.extracted_text;
+
+    reportText = typeof text === "string" ? text.trim().slice(0, REPORT_TEXT_LIMIT) : "";
+
+    if (!reportText) {
+      return NextResponse.json(
+        {
+          error:
+            language === "ar"
+              ? "لا يوجد تقرير مقروء بعد. ارفع تقرير تحليل أولاً."
+              : "There is no readable report yet. Upload a lab report first.",
+        },
+        { status: 404, headers }
+      );
+    }
+  }
 
   const denied = await guardUsage({
     client: getSupabaseAdminClient(),
@@ -116,8 +164,17 @@ export async function POST(request: Request) {
       signal: abortController.signal,
       body: JSON.stringify({
         model: process.env.OPENAI_GENERAL_ASSISTANT_MODEL?.trim() || DEFAULT_MODEL,
-        instructions: buildExplainerInstructions(language),
-        input: `Health topic or question to explain: ${validation.question}`,
+        instructions: buildExplainerInstructions(language, mode),
+        input:
+          mode === "report"
+            ? [
+                `Viewer's focus (optional): ${focus || "(none)"}`,
+                "Lab report text:",
+                '"""',
+                reportText,
+                '"""',
+              ].join("\n")
+            : `Health topic or question to explain: ${focus}`,
         text: {
           format: {
             type: "json_schema",

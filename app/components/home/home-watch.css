@@ -391,3 +391,32 @@
     grid-template-columns: 1fr;
   }
 }
+
+.ohWatchMine {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+}
+
+.ohWatchMine button {
+  padding: 10px 18px;
+  border: 1px solid var(--oh-primary);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--oh-primary);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.ohWatchMine button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.ohWatchMine span {
+  color: var(--oh-muted);
+  font-size: 0.78rem;
+  line-height: 1.55;
+}

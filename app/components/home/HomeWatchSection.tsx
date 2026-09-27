@@ -3,7 +3,6 @@
 import { useState } from "react";
 
 import {
-  HEALTH_VIDEOS,
   VIDEO_TOPICS,
   buildEmbedUrl,
   getVideosForTopic,
@@ -15,6 +14,7 @@ import {
   EXPLAINER_LIMITS,
   type ExplainerScript,
 } from "@/lib/health-videos/explainer";
+import { useAllVideos } from "@/lib/health-videos/use-videos";
 import { supabase } from "@/lib/supabase";
 
 import ExplainerPlayer from "./ExplainerPlayer";
@@ -33,15 +33,21 @@ export default function HomeWatchSection({ isArabic }: { isArabic: boolean }) {
   const [script, setScript] = useState<ExplainerScript | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const videos = getVideosForTopic(topic);
+  const allVideos = useAllVideos();
+  const videos = getVideosForTopic(topic, allVideos);
   const active: HealthVideo | undefined =
     videos.find((video) => video.youtubeId === playingId) ?? undefined;
   const topicLabel = VIDEO_TOPICS.find((entry) => entry.key === topic)?.label;
 
-  async function createExplainer(rawQuestion: string) {
+  async function createExplainer(rawQuestion: string, mode: "topic" | "report" = "topic") {
     const topicText = rawQuestion.trim();
 
-    if (topicText.length < EXPLAINER_LIMITS.minQuestionLength || phase === "loading") {
+    if (phase === "loading") {
+      return;
+    }
+
+    // A topic video needs a question; a report video treats it as an optional focus.
+    if (mode === "topic" && topicText.length < EXPLAINER_LIMITS.minQuestionLength) {
       return;
     }
 
@@ -60,6 +66,7 @@ export default function HomeWatchSection({ isArabic }: { isArabic: boolean }) {
         body: JSON.stringify({
           question: topicText,
           language: isArabic ? "ar" : "en",
+          mode,
         }),
       });
       const payload = (await response.json().catch(() => null)) as {
@@ -106,8 +113,8 @@ export default function HomeWatchSection({ isArabic }: { isArabic: boolean }) {
           </h2>
           <p className="ohWatchSubtitle">
             {text(
-              `${HEALTH_VIDEOS.length} free videos on the topics people ask about most. Pick one, press play.`,
-              `${HEALTH_VIDEOS.length} فيديو مجاني عن أكثر المواضيع سؤالاً. اختر موضوعاً واضغط تشغيل.`
+              `${allVideos.length} free videos on the topics people ask about most. Pick one, press play.`,
+              `${allVideos.length} فيديو مجاني عن أكثر المواضيع سؤالاً. اختر موضوعاً واضغط تشغيل.`
             )}
           </p>
         </div>
@@ -228,6 +235,21 @@ export default function HomeWatchSection({ isArabic }: { isArabic: boolean }) {
               : text("Create video", "أنشئ الفيديو")}
           </button>
         </form>
+        <div className="ohWatchMine">
+          <button
+            type="button"
+            onClick={() => void createExplainer(question, "report")}
+            disabled={phase === "loading"}
+          >
+            {text("Explain my latest report as a video", "اشرح تقريري الأخير بالفيديو")}
+          </button>
+          <span>
+            {text(
+              "Members only. Uses the text of your own latest report (optionally focused on what you typed above) and is sent securely to our AI provider to build the video. Nothing is stored.",
+              "للأعضاء فقط. يستخدم نص آخر تقرير رفعته (ويركّز على ما كتبته أعلاه إن رغبت) ويُرسل بأمان إلى مزوّد الذكاء الاصطناعي لبناء الفيديو. لا يُحفظ أي شيء."
+            )}
+          </span>
+        </div>
         {phase === "error" && (
           <p className="ohWatchError" role="alert">
             {errorMessage}
