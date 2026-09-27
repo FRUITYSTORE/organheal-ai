@@ -89,6 +89,7 @@ export default function Navbar() {
   const pathname = usePathname();
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [language, setLanguage] = useState<Language>("en");
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -223,6 +224,17 @@ export default function Navbar() {
       subtitle: "",
       icon: "bell",
     },
+    // Only administrators (organheal_role = admin) ever see this entry.
+    ...(isAdmin
+      ? [
+          {
+            href: "/admin",
+            label: text("Site management", "إدارة الموقع"),
+            subtitle: "",
+            icon: "gear" as const,
+          },
+        ]
+      : []),
   ];
 
   // The desktop bar keeps the first three member items inline; Health Plan
@@ -233,6 +245,7 @@ export default function Navbar() {
   useEffect(() => {
     void supabase.auth.getUser().then(({ data }) => {
       setIsLoggedIn(Boolean(data.user));
+      setIsAdmin(data.user?.app_metadata?.organheal_role === "admin");
     });
 
     function syncLanguage() {
@@ -255,6 +268,7 @@ export default function Navbar() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsLoggedIn(Boolean(session?.user));
+      setIsAdmin(session?.user?.app_metadata?.organheal_role === "admin");
     });
 
     return () => {

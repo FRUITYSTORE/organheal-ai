@@ -1,0 +1,62 @@
+.adminHub {
+  display: grid;
+  gap: 24px;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: clamp(20px, 4vw, 44px) 20px 80px;
+}
+
+.adminHub header h1 {
+  margin: 4px 0 8px;
+  color: var(--oh-text);
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  font-weight: 900;
+}
+
+.adminHub header p {
+  margin: 0;
+  color: var(--oh-muted);
+  line-height: 1.6;
+}
+
+.adminHubNote {
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--oh-border);
+  border-radius: 16px;
+  background: var(--oh-surface);
+  color: var(--oh-text);
+}
+
+.adminHubGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.adminHubCard {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 22px;
+  border: 1px solid var(--oh-border);
+  border-radius: 22px;
+  background: var(--oh-surface);
+  color: var(--oh-text);
+  text-decoration: none;
+  box-shadow: var(--oh-shadow-sm);
+}
+
+.adminHubCard:hover {
+  border-color: var(--oh-primary);
+}
+
+.adminHubCard strong {
+  font-size: 1.1rem;
+}
+
+.adminHubCard span {
+  color: var(--oh-muted);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
