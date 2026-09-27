@@ -23,6 +23,25 @@ function toPayload(input: ArticleInput) {
   };
 }
 
+// The reviewer/sources columns arrived in a later migration. Until it is
+// applied, the database rejects those keys; saving then retries without them.
+function isMissingReviewColumn(error: { message?: string; code?: string }): boolean {
+  return (
+    (error.code === "PGRST204" || error.code === "42703") &&
+    /reviewed_|sources/.test(error.message ?? "")
+  );
+}
+
+function withoutReviewFields<T extends Record<string, unknown>>(payload: T) {
+  const { reviewed_by, reviewed_at, sources, ...rest } = payload;
+
+  void reviewed_by;
+  void reviewed_at;
+  void sources;
+
+  return rest;
+}
+
 export async function listAllArticles(): Promise<ArticleRow[]> {
   const { data, error } = await getSupabaseAdminClient()
     .from(TABLE)
@@ -98,16 +117,23 @@ export async function createArticle(
   reservedSlugs: Set<string>
 ): Promise<ArticleRow> {
   const slug = await pickSlug(input.title, reservedSlugs);
-  const { data, error } = await getSupabaseAdminClient()
-    .from(TABLE)
-    .insert({
-      ...toPayload(input),
-      slug,
-      created_by: createdBy,
-      published_at: input.status === "published" ? new Date().toISOString() : null,
-    })
-    .select("*")
-    .single();
+  const row = {
+    ...toPayload(input),
+    slug,
+    created_by: createdBy,
+    published_at: input.status === "published" ? new Date().toISOString() : null,
+  };
+  const client = getSupabaseAdminClient();
+  let { data, error } = await client.from(TABLE).insert(row).select("*").single();
+
+  // Saving keeps working before the review-fields migration has been applied.
+  if (error && isMissingReviewColumn(error)) {
+    ({ data, error } = await client
+      .from(TABLE)
+      .insert(withoutReviewFields(row))
+      .select("*")
+      .single());
+  }
 
   if (error || !data) {
     throw new Error("Unable to save the article.");
@@ -141,16 +167,26 @@ export async function updateArticle(
       ? (existing as { published_at: string | null }).published_at ?? new Date().toISOString()
       : (existing as { published_at: string | null }).published_at;
 
-  const { data, error } = await client
+  const changes = {
+    ...toPayload(input),
+    published_at: publishedAt,
+    updated_at: new Date().toISOString(),
+  };
+  let { data, error } = await client
     .from(TABLE)
-    .update({
-      ...toPayload(input),
-      published_at: publishedAt,
-      updated_at: new Date().toISOString(),
-    })
+    .update(changes)
     .eq("id", id)
     .select("*")
     .maybeSingle();
+
+  if (error && isMissingReviewColumn(error)) {
+    ({ data, error } = await client
+      .from(TABLE)
+      .update(withoutReviewFields(changes))
+      .eq("id", id)
+      .select("*")
+      .maybeSingle());
+  }
 
   if (error) {
     throw new Error("Unable to save the article.");

@@ -1,5 +1,10 @@
 .demoPage {
+  /* The shared page shell sets width: 100%, so padding must be counted inside it. */
+  box-sizing: border-box;
   display: grid;
+  /* minmax(0, 1fr) lets grid items shrink below their content width, which
+     otherwise made the page wider than a phone screen. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 28px;
   max-width: 1080px;
   margin: 0 auto;
@@ -159,6 +164,8 @@
   line-height: 1.6;
 }
 
+.demoColumns > * { min-width: 0; }
+
 @media (max-width: 860px) {
-  .demoColumns { grid-template-columns: 1fr; }
+  .demoColumns { grid-template-columns: minmax(0, 1fr); }
 }

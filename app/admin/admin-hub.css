@@ -1,4 +1,6 @@
 .adminHub {
+  /* The shared page shell sets width: 100%, so padding must be counted inside it. */
+  box-sizing: border-box;
   display: grid;
   gap: 24px;
   max-width: 900px;

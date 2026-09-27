@@ -1,0 +1,48 @@
+.editorialPolicy {
+  box-sizing: border-box;
+  display: grid;
+  gap: 20px;
+  max-width: 820px;
+  margin: 0 auto;
+  padding: clamp(20px, 4vw, 44px) 20px 80px;
+}
+
+.editorialPolicy header h1 {
+  margin: 4px 0 8px;
+  color: var(--oh-text);
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.editorialPolicy header p {
+  margin: 0;
+  color: var(--oh-muted);
+}
+
+.editorialPolicyBlock {
+  display: grid;
+  gap: 8px;
+  padding: 22px;
+  border: 1px solid var(--oh-border);
+  border-radius: 20px;
+  background: var(--oh-surface);
+}
+
+.editorialPolicyBlock h2 {
+  margin: 0;
+  color: var(--oh-text);
+  font-size: 1.2rem;
+}
+
+.editorialPolicyBlock p {
+  margin: 0;
+  color: var(--oh-muted);
+  line-height: 1.75;
+}
+
+.editorialPolicyLinks {
+  margin: 0;
+  color: var(--oh-muted);
+  font-size: 0.9rem;
+}

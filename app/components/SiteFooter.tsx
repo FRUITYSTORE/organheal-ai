@@ -108,12 +108,19 @@ export default function SiteFooter() {
             <Link href="/medical-disclaimer">
               {text("Medical Disclaimer", "إخلاء المسؤولية الطبية")}
             </Link>
+
+            <Link href="/editorial-policy">
+              {text("Editorial & Review Policy", "سياسة التحرير والمراجعة")}
+            </Link>
           </nav>
         </div>
       </div>
 
       <div className="siteFooterBottom">
-        <span>© {new Date().getFullYear()} OrganHeal AI. All rights reserved.</span>
+        <span>
+          © {new Date().getFullYear()} OrganHeal AI.{" "}
+          {text("All rights reserved.", "جميع الحقوق محفوظة.")}
+        </span>
         <span>
           {text(
             "Educational health analysis only. Not a diagnosis or emergency service.",
