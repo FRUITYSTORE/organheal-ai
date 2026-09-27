@@ -20,26 +20,65 @@ function toPayload(input: ArticleInput) {
     reviewed_by: input.reviewedBy,
     reviewed_at: input.reviewedAt,
     sources: input.sources,
+    source: input.source,
+    cover_image_url: input.coverImageUrl,
+    cover_image_alt: input.coverImageAlt,
+    cover_image_alt_ar: input.coverImageAltAr,
+    topic_key: input.topicKey,
   };
 }
 
-// The reviewer/sources columns arrived in a later migration. Until it is
-// applied, the database rejects those keys; saving then retries without them.
+// The reviewer/sources columns (and later, source/cover-image columns)
+// arrived in later migrations. Until one is applied, the database rejects
+// those keys; saving then retries without them.
 function isMissingReviewColumn(error: { message?: string; code?: string }): boolean {
   return (
     (error.code === "PGRST204" || error.code === "42703") &&
-    /reviewed_|sources/.test(error.message ?? "")
+    /reviewed_|sources|source|cover_image_|topic_key/.test(error.message ?? "")
   );
 }
 
 function withoutReviewFields<T extends Record<string, unknown>>(payload: T) {
-  const { reviewed_by, reviewed_at, sources, ...rest } = payload;
+  const {
+    reviewed_by,
+    reviewed_at,
+    sources,
+    source,
+    cover_image_url,
+    cover_image_alt,
+    cover_image_alt_ar,
+    topic_key,
+    ...rest
+  } = payload;
 
   void reviewed_by;
   void reviewed_at;
   void sources;
+  void source;
+  void cover_image_url;
+  void cover_image_alt;
+  void cover_image_alt_ar;
+  void topic_key;
 
   return rest;
+}
+
+// Which curated topics (lib/content/knowledge-topics.ts) the AI pipeline has
+// already generated an article for, so it never repeats one while others are
+// still untouched. Returns an empty set (rather than throwing) before the
+// topic_key migration has been applied.
+export async function listGeneratedTopicKeys(): Promise<Set<string>> {
+  const { data, error } = await getSupabaseAdminClient()
+    .from(TABLE)
+    .select("topic_key")
+    .eq("source", "ai")
+    .not("topic_key", "is", null);
+
+  if (error) {
+    return new Set();
+  }
+
+  return new Set((data ?? []).map((row) => (row as { topic_key: string }).topic_key));
 }
 
 export async function listAllArticles(): Promise<ArticleRow[]> {
@@ -113,7 +152,7 @@ async function pickSlug(title: string, reserved: Set<string>): Promise<string> {
 
 export async function createArticle(
   input: ArticleInput,
-  createdBy: string,
+  createdBy: string | null,
   reservedSlugs: Set<string>
 ): Promise<ArticleRow> {
   const slug = await pickSlug(input.title, reservedSlugs);

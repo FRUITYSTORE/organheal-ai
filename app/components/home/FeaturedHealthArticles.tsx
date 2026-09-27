@@ -8,8 +8,8 @@ import {
 } from "react";
 
 import {
-  blogPosts,
-} from "@/lib/blogData";
+  useAllPosts,
+} from "@/lib/articles/use-articles";
 
 type Language =
   | "en"
@@ -95,10 +95,13 @@ export default function FeaturedHealthArticles() {
     []
   );
 
+  const allPosts =
+    useAllPosts();
+
   const featuredPosts =
     useMemo(
       () =>
-        [...blogPosts]
+        [...allPosts]
           .sort(
             (
               first,
@@ -115,7 +118,7 @@ export default function FeaturedHealthArticles() {
             0,
             3
           ),
-      []
+      [allPosts]
     );
 
   return (
@@ -211,7 +214,7 @@ export default function FeaturedHealthArticles() {
           min-width: 0;
           min-height: 100%;
           flex-direction: column;
-          padding: 20px;
+          overflow: hidden;
           border: 1px solid rgba(148, 163, 184, 0.2);
           border-top: 4px solid #14b8a6;
           border-radius: 20px;
@@ -223,6 +226,22 @@ export default function FeaturedHealthArticles() {
           transition:
             transform 160ms ease,
             box-shadow 160ms ease;
+        }
+
+        .featuredHealthArticleCardBody {
+          display: flex;
+          min-height: 100%;
+          flex: 1;
+          flex-direction: column;
+          padding: 20px;
+        }
+
+        .featuredHealthArticleImage {
+          display: block;
+          width: 100%;
+          height: 148px;
+          border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+          object-fit: cover;
         }
 
         .featuredHealthArticleCard:hover {
@@ -391,6 +410,12 @@ export default function FeaturedHealthArticles() {
                 ? post.readTimeAr
                 : post.readTime;
 
+            const imageAlt =
+              (isArabic
+                ? post.coverImageAltAr
+                : post.coverImageAlt) ||
+              title;
+
             return (
               <Link
                 key={
@@ -399,60 +424,72 @@ export default function FeaturedHealthArticles() {
                 href={`/blog/${post.slug}`}
                 className="featuredHealthArticleCard"
               >
-                <div className="featuredHealthArticleMeta">
-                  <span className="featuredHealthArticleCategory">
-                    {
-                      category
-                    }
-                  </span>
+                {post.coverImageUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element -- external, per-article image; not worth Next's static image optimization for a homepage card.
+                  <img
+                    className="featuredHealthArticleImage"
+                    src={post.coverImageUrl}
+                    alt={imageAlt}
+                    loading="lazy"
+                  />
+                )}
 
-                  <span className="featuredHealthArticleReadTime">
-                    {
-                      readTime
-                    }
-                  </span>
-                </div>
+                <div className="featuredHealthArticleCardBody">
+                  <div className="featuredHealthArticleMeta">
+                    <span className="featuredHealthArticleCategory">
+                      {
+                        category
+                      }
+                    </span>
 
-                <h3 className="featuredHealthArticleTitle">
-                  {
-                    title
-                  }
-                </h3>
-
-                <p className="featuredHealthArticleExcerpt">
-                  {
-                    excerpt
-                  }
-                </p>
-
-                <div className="featuredHealthArticleFooter">
-                  <div className="featuredHealthArticleMarkers">
-                    {post.labMarkers
-                      .slice(
-                        0,
-                        3
-                      )
-                      .map(
-                        marker => (
-                          <span
-                            className="featuredHealthArticleMarker"
-                            key={
-                              marker
-                            }
-                          >
-                            {
-                              marker
-                            }
-                          </span>
-                        )
-                      )}
+                    <span className="featuredHealthArticleReadTime">
+                      {
+                        readTime
+                      }
+                    </span>
                   </div>
 
-                  <span className="featuredHealthArticleRead">
-                    {isArabic
-                      ? "اقرأ ←"
-                      : "Read →"}
-                  </span>
+                  <h3 className="featuredHealthArticleTitle">
+                    {
+                      title
+                    }
+                  </h3>
+
+                  <p className="featuredHealthArticleExcerpt">
+                    {
+                      excerpt
+                    }
+                  </p>
+
+                  <div className="featuredHealthArticleFooter">
+                    <div className="featuredHealthArticleMarkers">
+                      {post.labMarkers
+                        .slice(
+                          0,
+                          3
+                        )
+                        .map(
+                          marker => (
+                            <span
+                              className="featuredHealthArticleMarker"
+                              key={
+                                marker
+                              }
+                            >
+                              {
+                                marker
+                              }
+                            </span>
+                          )
+                        )}
+                    </div>
+
+                    <span className="featuredHealthArticleRead">
+                      {isArabic
+                        ? "اقرأ ←"
+                        : "Read →"}
+                    </span>
+                  </div>
                 </div>
               </Link>
             );

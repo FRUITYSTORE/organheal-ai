@@ -54,11 +54,13 @@ export async function generateMetadata({
       url: `${SITE_URL}/blog/${post.slug}`,
       type: "article",
       publishedTime: post.date,
+      ...(post.coverImageUrl ? { images: [post.coverImageUrl] } : {}),
     },
     twitter: {
-      card: "summary_large_image",
+      card: post.coverImageUrl ? "summary_large_image" : "summary",
       title: post.title,
       description: post.excerpt,
+      ...(post.coverImageUrl ? { images: [post.coverImageUrl] } : {}),
     },
   };
 }

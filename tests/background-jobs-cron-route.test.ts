@@ -275,6 +275,9 @@ describe(
           queueWasEmpty:
             true,
 
+          articleGenerated:
+            false,
+
           requestId:
             "req_cron_test",
         });

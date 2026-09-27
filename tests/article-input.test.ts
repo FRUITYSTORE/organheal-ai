@@ -158,3 +158,87 @@ describe("article slugs and blog mapping", () => {
     expect(result.ok && result.value.sources).toBeNull();
   });
 });
+
+describe("article source and cover image", () => {
+  it("defaults source to staff and cover image fields to null", () => {
+    const result = validateArticleInput(valid);
+
+    expect(result.ok && result.value.source).toBe("staff");
+    expect(result.ok && result.value.coverImageUrl).toBeNull();
+  });
+
+  it("accepts an ai source and a valid https cover image", () => {
+    const result = validateArticleInput({
+      ...valid,
+      source: "ai",
+      coverImageUrl: "https://images.example.com/iron.jpg",
+      coverImageAlt: "Illustration of red blood cells",
+    });
+
+    expect(result.ok && result.value.source).toBe("ai");
+    expect(result.ok && result.value.coverImageUrl).toBe("https://images.example.com/iron.jpg");
+    expect(result.ok && result.value.coverImageAlt).toBe("Illustration of red blood cells");
+  });
+
+  it("rejects a non-https cover image URL instead of storing something unsafe", () => {
+    const result = validateArticleInput({
+      ...valid,
+      coverImageUrl: "javascript:alert(1)",
+    });
+
+    expect(result.ok && result.value.coverImageUrl).toBeNull();
+  });
+
+  it("carries the cover image through toBlogPost only when present", () => {
+    const withImage = toBlogPost({
+      id: "1",
+      slug: "understanding-iron",
+      title: "T",
+      title_ar: null,
+      excerpt: "E",
+      excerpt_ar: null,
+      category: "C",
+      category_ar: null,
+      lab_markers: [],
+      content: BODY,
+      content_ar: null,
+      status: "published",
+      reviewed_by: null,
+      reviewed_at: null,
+      sources: null,
+      published_at: "2026-09-27T10:00:00Z",
+      created_by: null,
+      created_at: "2026-09-20T10:00:00Z",
+      updated_at: "2026-09-27T10:00:00Z",
+      cover_image_url: "https://images.example.com/iron.jpg",
+      cover_image_alt: "Iron-rich foods",
+    });
+
+    expect(withImage.coverImageUrl).toBe("https://images.example.com/iron.jpg");
+    expect(withImage.coverImageAlt).toBe("Iron-rich foods");
+
+    const withoutImage = toBlogPost({
+      id: "1",
+      slug: "understanding-iron",
+      title: "T",
+      title_ar: null,
+      excerpt: "E",
+      excerpt_ar: null,
+      category: "C",
+      category_ar: null,
+      lab_markers: [],
+      content: BODY,
+      content_ar: null,
+      status: "published",
+      reviewed_by: null,
+      reviewed_at: null,
+      sources: null,
+      published_at: "2026-09-27T10:00:00Z",
+      created_by: null,
+      created_at: "2026-09-20T10:00:00Z",
+      updated_at: "2026-09-27T10:00:00Z",
+    });
+
+    expect(withoutImage.coverImageUrl).toBeUndefined();
+  });
+});
