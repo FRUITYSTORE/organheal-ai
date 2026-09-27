@@ -146,8 +146,14 @@ export default function AdminArticlesPage() {
         kind: "ok",
         text:
           article.status === "published"
-            ? text("Saved and published.", "تم الحفظ والنشر.")
-            : text("Saved as a draft.", "تم الحفظ كمسودة."),
+            ? text(
+                "Saved and published. Find it in the blog and in the top bar within a minute.",
+                "تم الحفظ والنشر. ستجده في المدونة وفي الشريط العلوي خلال دقيقة."
+              )
+            : text(
+                "Saved as a DRAFT: nobody else can see it yet. Press Publish next to it in the list below to show it on the site.",
+                "تم الحفظ كمسودة: لا يراها أحد غيرك بعد. اضغط نشر بجانبها في القائمة أدناه لتظهر في الموقع."
+              ),
       });
       setForm(EMPTY_FORM);
       await load();

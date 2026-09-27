@@ -152,14 +152,19 @@ button.ohTickerItem:hover .ohTickerText {
   background: var(--oh-surface);
 }
 
+.ohTickerCollapsed {
+  padding: 6px 12px;
+}
+
 .ohTickerCollapsed button {
-  padding: 4px 16px;
-  border: 0;
-  background: transparent;
-  color: var(--oh-muted);
+  padding: 6px 18px;
+  border: 1px solid color-mix(in srgb, var(--oh-primary) 55%, var(--oh-border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--oh-primary) 10%, var(--oh-surface));
+  color: var(--oh-text);
   font: inherit;
-  font-size: 0.78rem;
-  font-weight: 700;
+  font-size: 0.8rem;
+  font-weight: 800;
   cursor: pointer;
 }
 

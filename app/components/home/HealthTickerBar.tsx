@@ -26,9 +26,10 @@ const HIDDEN_PREFIXES = [
   "/verify",
   "/onboarding",
   "/reset-password",
-  "/admin",
 ];
 
+// Collapsing lasts for this browser session only, so the bar is back on the
+// next visit instead of staying hidden forever.
 const COLLAPSE_KEY = "organheal-ticker-collapsed";
 const SECONDS_PER_ITEM = 14;
 
@@ -47,7 +48,7 @@ function getStoredLanguage(): Language {
 
 function readCollapsed(): boolean {
   try {
-    return localStorage.getItem(COLLAPSE_KEY) === "1";
+    return sessionStorage.getItem(COLLAPSE_KEY) === "1";
   } catch {
     return false;
   }
@@ -55,7 +56,7 @@ function readCollapsed(): boolean {
 
 function writeCollapsed(collapsed: boolean): void {
   try {
-    localStorage.setItem(COLLAPSE_KEY, collapsed ? "1" : "0");
+    sessionStorage.setItem(COLLAPSE_KEY, collapsed ? "1" : "0");
   } catch {
     // The choice simply won't be remembered.
   }
@@ -78,6 +79,28 @@ async function loadNotes(
   }
 }
 
+type BriefArticle = {
+  slug: string;
+  title: string;
+  titleAr: string;
+  excerpt: string;
+  excerptAr: string;
+};
+
+async function loadArticles(signal: AbortSignal): Promise<BriefArticle[]> {
+  try {
+    const response = await fetch("/api/articles?brief=1", { signal });
+
+    if (!response.ok) return [];
+
+    const data = (await response.json()) as { articles?: BriefArticle[] };
+
+    return data.articles ?? [];
+  } catch {
+    return [];
+  }
+}
+
 function TickerEntry({ item }: { item: TickerItem }) {
   const content = (
     <>
@@ -92,12 +115,14 @@ function TickerEntry({ item }: { item: TickerItem }) {
   );
 
   if (item.url) {
+    // Links to pages on this site open in the same tab; outside links in a new one.
+    const internal = item.url.startsWith("/");
+
     return (
       <a
         className="ohTickerItem"
         href={item.url}
-        target="_blank"
-        rel="noopener noreferrer"
+        {...(internal ? {} : { target: "_blank", rel: "noopener noreferrer" })}
       >
         {content}
       </a>
@@ -149,7 +174,10 @@ export default function HealthTickerBar() {
 
     const controller = new AbortController();
 
-    void loadNotes(language, controller.signal).then((notes) => {
+    void Promise.all([
+      loadNotes(language, controller.signal),
+      loadArticles(controller.signal),
+    ]).then(([notes, articles]) => {
       if (controller.signal.aborted) return;
 
       const owned: TickerItem[] = notes.map((note) => ({
@@ -159,6 +187,16 @@ export default function HealthTickerBar() {
         detail: note.body,
         url: note.url,
         tone: note.tone,
+        question: null,
+      }));
+
+      const written: TickerItem[] = articles.map((article) => ({
+        key: `article-${article.slug}`,
+        label: language === "ar" ? "مقال جديد" : "New article",
+        title: language === "ar" ? article.titleAr : article.title,
+        detail: language === "ar" ? article.excerptAr : article.excerpt,
+        url: `/blog/${article.slug}`,
+        tone: "teal",
         question: null,
       }));
 
@@ -179,7 +217,7 @@ export default function HealthTickerBar() {
         };
       });
 
-      setItems([...owned, ...tips]);
+      setItems([...owned, ...written, ...tips]);
     });
 
     return () => controller.abort();
@@ -199,7 +237,7 @@ export default function HealthTickerBar() {
             setCollapsed(false);
           }}
         >
-          {isArabic ? "إظهار شريط النصائح الصحية ▾" : "Show health tips ▾"}
+          {isArabic ? "إظهار شريط النصائح والمقالات ▾" : "Show the health tips bar ▾"}
         </button>
       </div>
     );
