@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { SITE_URL } from "@/lib/seo/organization";
-import { blogPosts } from "../../../lib/blogData";
+import { toBlogPost } from "@/lib/articles/article";
+import { getPublishedArticleBySlug } from "@/lib/repositories/article.repository";
+import { blogPosts, type BlogPost } from "../../../lib/blogData";
 import BlogPostClient from "./BlogPostClient";
 
 type Props = {
@@ -11,12 +13,30 @@ type Props = {
   }>;
 };
 
+// Built-in posts first, then articles published from the admin screen. A
+// database problem simply means the article is not found, never an error page.
+async function findPost(slug: string): Promise<BlogPost | null> {
+  const builtIn = blogPosts.find((item) => item.slug === slug);
+
+  if (builtIn) {
+    return builtIn;
+  }
+
+  try {
+    const row = await getPublishedArticleBySlug(slug);
+
+    return row ? toBlogPost(row) : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function generateMetadata({
   params,
 }: Props): Promise<Metadata> {
   const { slug } = await params;
 
-  const post = blogPosts.find((item) => item.slug === slug);
+  const post = await findPost(slug);
 
   if (!post) {
     return {
@@ -46,7 +66,7 @@ export async function generateMetadata({
 export default async function Page({ params }: Props) {
   const { slug } = await params;
 
-  const post = blogPosts.find((item) => item.slug === slug);
+  const post = await findPost(slug);
 
   if (!post) {
     notFound();

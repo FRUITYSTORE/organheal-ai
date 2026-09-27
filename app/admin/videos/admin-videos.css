@@ -125,3 +125,49 @@
   color: var(--oh-muted);
   font-size: 0.8rem;
 }
+
+.adminTeamAreas {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--oh-border);
+  border-radius: 14px;
+}
+
+.adminTeamAreas legend {
+  padding: 0 6px;
+  color: var(--oh-text);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.adminVideosForm textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid var(--oh-border);
+  border-radius: 12px;
+  background: var(--oh-surface-soft);
+  color: var(--oh-text);
+  font: inherit;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.adminArticleHint {
+  margin: 0;
+  color: var(--oh-muted);
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.adminVideosRowActions a {
+  padding: 9px 16px;
+  border: 1px solid var(--oh-border);
+  border-radius: 999px;
+  background: var(--oh-surface-soft);
+  color: var(--oh-text);
+  font-weight: 700;
+  text-decoration: none;
+}

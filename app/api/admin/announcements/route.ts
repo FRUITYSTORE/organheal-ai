@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { authorizeAdminApiRequest } from "@/lib/api/api-admin-auth";
+import { authorizeStaffApiRequest } from "@/lib/api/api-admin-auth";
 import { validateAnnouncementInput } from "@/lib/health-updates/announcement";
 import {
   createAnnouncement,
@@ -26,7 +26,7 @@ async function readJson(request: Request): Promise<unknown> {
 }
 
 export async function GET(request: Request) {
-  const authorization = await authorizeAdminApiRequest(request);
+  const authorization = await authorizeStaffApiRequest(request, "announcements");
 
   if (!authorization.success) {
     return fail(authorization.error, authorization.status);
@@ -43,7 +43,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const authorization = await authorizeAdminApiRequest(request);
+  const authorization = await authorizeStaffApiRequest(request, "announcements");
 
   if (!authorization.success) {
     return fail(authorization.error, authorization.status);
@@ -65,7 +65,7 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
-  const authorization = await authorizeAdminApiRequest(request);
+  const authorization = await authorizeStaffApiRequest(request, "announcements");
 
   if (!authorization.success) {
     return fail(authorization.error, authorization.status);
@@ -98,7 +98,7 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const authorization = await authorizeAdminApiRequest(request);
+  const authorization = await authorizeStaffApiRequest(request, "announcements");
 
   if (!authorization.success) {
     return fail(authorization.error, authorization.status);

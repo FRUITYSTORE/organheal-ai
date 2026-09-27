@@ -4,16 +4,23 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 import { supabase } from "@/lib/supabase";
+import {
+  getStaffPermissions,
+  isSiteAdmin,
+  type StaffPermission,
+} from "@/lib/staff-permissions";
 
 import { useAdminLanguage } from "./use-admin-language";
 
 import "./admin-hub.css";
 
-type Access = "checking" | "admin" | "member" | "visitor";
+type Access = "checking" | "staff" | "member" | "visitor";
 
 export default function AdminHubPage() {
   const { isArabic, language, text } = useAdminLanguage();
   const [access, setAccess] = useState<Access>("checking");
+  const [admin, setAdmin] = useState(false);
+  const [permissions, setPermissions] = useState<StaffPermission[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -21,13 +28,11 @@ export default function AdminHubPage() {
     void supabase.auth.getUser().then(({ data }) => {
       if (cancelled) return;
 
-      setAccess(
-        !data.user
-          ? "visitor"
-          : data.user.app_metadata?.organheal_role === "admin"
-            ? "admin"
-            : "member"
-      );
+      const granted = getStaffPermissions(data.user);
+
+      setAdmin(isSiteAdmin(data.user));
+      setPermissions(granted);
+      setAccess(!data.user ? "visitor" : granted.length > 0 ? "staff" : "member");
     });
 
     return () => {
@@ -38,6 +43,7 @@ export default function AdminHubPage() {
   const tools = [
     {
       href: "/admin/announcements",
+      permission: "announcements" as StaffPermission | null,
       title: text("Homepage health notes", "ملاحظات صحية للصفحة الرئيسية"),
       body: text(
         "Write your own health tips. They appear on the homepage and in the moving top bar.",
@@ -46,6 +52,7 @@ export default function AdminHubPage() {
     },
     {
       href: "/admin/videos",
+      permission: "videos" as StaffPermission | null,
       title: text("Health videos", "الفيديوهات الصحية"),
       body: text(
         "Add trusted videos to the Watch & understand section and to chat suggestions.",
@@ -53,7 +60,17 @@ export default function AdminHubPage() {
       ),
     },
     {
+      href: "/admin/articles",
+      permission: "articles" as StaffPermission | null,
+      title: text("Articles", "المقالات"),
+      body: text(
+        "Write and publish health articles in English and Arabic.",
+        "اكتب المقالات الصحية وانشرها بالعربية والإنجليزية."
+      ),
+    },
+    {
       href: "/admin/reports",
+      permission: null,
       title: text("Reports", "التقارير"),
       body: text(
         "Review uploaded lab reports and their processing status.",
@@ -62,6 +79,7 @@ export default function AdminHubPage() {
     },
     {
       href: "/admin/team",
+      permission: null,
       title: text("Team access", "صلاحيات الفريق"),
       body: text(
         "Give trusted colleagues administrator access, or remove it.",
@@ -69,6 +87,12 @@ export default function AdminHubPage() {
       ),
     },
   ];
+
+  // Reports and team access are administrator-only; the rest follow the
+  // areas an administrator has ticked for a moderator.
+  const visibleTools = tools.filter((tool) =>
+    tool.permission === null ? admin : permissions.includes(tool.permission)
+  );
 
   return (
     <main className="ohPageShell adminHub" dir={isArabic ? "rtl" : "ltr"} lang={language}>
@@ -101,9 +125,9 @@ export default function AdminHubPage() {
         </p>
       )}
 
-      {access === "admin" && (
+      {access === "staff" && (
         <div className="adminHubGrid">
-          {tools.map((tool) => (
+          {visibleTools.map((tool) => (
             <Link key={tool.href} href={tool.href} className="adminHubCard">
               <strong>{tool.title}</strong>
               <span>{tool.body}</span>

@@ -9,6 +9,11 @@ import {
   authenticateApiRequest,
 } from "@/lib/api/api-auth";
 
+import {
+  hasStaffPermission,
+  type StaffPermission,
+} from "@/lib/staff-permissions";
+
 export const ORGANHEAL_ADMIN_ROLE =
   "admin" as const;
 
@@ -75,6 +80,29 @@ export async function authorizeAdminApiRequest(
 
       error:
         "Administrator access is required.",
+    };
+  }
+
+  return authentication;
+}
+
+// Allows an administrator, or a moderator who has been given this specific
+// permission by an administrator.
+export async function authorizeStaffApiRequest(
+  request: Request,
+  permission: StaffPermission
+): Promise<AdminApiAuthorizationResult> {
+  const authentication = await authenticateApiRequest(request);
+
+  if (!authentication.success) {
+    return authentication;
+  }
+
+  if (!hasStaffPermission(authentication.user, permission)) {
+    return {
+      success: false,
+      status: 403,
+      error: "You do not have permission to manage this area.",
     };
   }
 

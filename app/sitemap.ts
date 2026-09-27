@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 
 import { blogPosts } from "../lib/blogData";
+import { listPublishedArticles } from "@/lib/repositories/article.repository";
 import {
   getPublishedRegisteredKnowledgeItems,
   getPublishedRegisteredKnowledgePacks,
@@ -12,7 +13,7 @@ import {
 // sitemap until the real body replaces it.
 const PLACEHOLDER_ITEM_BODY = "Coming soon.";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://www.organheal.com";
 
   // High-priority pages: the ones a new visitor or search engine should
@@ -69,6 +70,21 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
+  // Articles published from the admin screen. A database problem must never
+  // break the sitemap, so it simply lists the built-in content.
+  const publishedArticleRoutes = await listPublishedArticles()
+    .then((rows) =>
+      rows
+        .filter((row) => !blogPosts.some((post) => post.slug === row.slug))
+        .map((row) => ({
+          url: `${baseUrl}/blog/${row.slug}`,
+          lastModified: new Date(row.updated_at),
+          changeFrequency: "monthly" as const,
+          priority: 0.7,
+        }))
+    )
+    .catch(() => []);
+
   const knowledgePackRoutes = getPublishedRegisteredKnowledgePacks().map(
     (pack) => ({
       url: `${baseUrl}/knowledge/${pack.slug}`,
@@ -90,6 +106,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     ...staticRoutes,
     ...blogRoutes,
+    ...publishedArticleRoutes,
     ...knowledgePackRoutes,
     ...knowledgeItemRoutes,
   ];

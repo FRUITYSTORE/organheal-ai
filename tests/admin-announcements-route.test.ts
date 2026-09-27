@@ -15,7 +15,7 @@ const {
 }));
 
 vi.mock("@/lib/api/api-admin-auth", () => ({
-  authorizeAdminApiRequest: mockedAuthorize,
+  authorizeStaffApiRequest: mockedAuthorize,
 }));
 
 vi.mock("@/lib/repositories/health-announcement.repository", () => ({
@@ -49,6 +49,12 @@ describe("/api/admin/announcements", () => {
     mockedUpdate.mockReset();
     mockedDelete.mockReset();
     mockedAuthorize.mockResolvedValue({ success: true });
+  });
+
+  it("checks the announcements permission on every method", async () => {
+    mockedAuthorize.mockResolvedValue({ success: false, status: 403, error: "no" });
+    await GET(request("GET"));
+    expect(mockedAuthorize).toHaveBeenCalledWith(expect.anything(), "announcements");
   });
 
   it("blocks non-admins on every method", async () => {

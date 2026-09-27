@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 
 import { authorizeStaffApiRequest } from "@/lib/api/api-admin-auth";
-import { validateVideoInput } from "@/lib/health-videos/custom";
+import { validateArticleInput } from "@/lib/articles/article";
+import { blogPosts } from "@/lib/blogData";
 import {
-  createVideo,
-  deleteVideo,
-  listAllVideos,
-  updateVideo,
-} from "@/lib/repositories/health-video.repository";
+  createArticle,
+  deleteArticle,
+  listAllArticles,
+  updateArticle,
+} from "@/lib/repositories/article.repository";
 
 const NO_STORE = { "Cache-Control": "no-store" };
 const UUID_PATTERN =
@@ -25,51 +26,48 @@ async function readJson(request: Request): Promise<unknown> {
   }
 }
 
-function saveFailure(error: unknown) {
-  return error instanceof Error && error.message === "duplicate"
-    ? fail("This video has already been added.", 409)
-    : fail("Unable to save the video.", 500);
-}
-
 export async function GET(request: Request) {
-  const authorization = await authorizeStaffApiRequest(request, "videos");
+  const authorization = await authorizeStaffApiRequest(request, "articles");
 
   if (!authorization.success) {
     return fail(authorization.error, authorization.status);
   }
 
   try {
-    return NextResponse.json({ videos: await listAllVideos() }, { headers: NO_STORE });
+    return NextResponse.json({ articles: await listAllArticles() }, { headers: NO_STORE });
   } catch {
-    return fail("Unable to load videos. Has the health_videos migration been applied?", 500);
+    return fail("Unable to load articles. Has the articles migration been applied?", 500);
   }
 }
 
 export async function POST(request: Request) {
-  const authorization = await authorizeStaffApiRequest(request, "videos");
+  const authorization = await authorizeStaffApiRequest(request, "articles");
 
   if (!authorization.success) {
     return fail(authorization.error, authorization.status);
   }
 
-  const validation = validateVideoInput(await readJson(request));
+  const validation = validateArticleInput(await readJson(request));
 
   if (!validation.ok) {
     return fail(validation.error, 400);
   }
 
   try {
-    return NextResponse.json(
-      { video: await createVideo(validation.value) },
-      { status: 201, headers: NO_STORE }
+    const article = await createArticle(
+      validation.value,
+      authorization.user.id,
+      new Set(blogPosts.map((post) => post.slug))
     );
-  } catch (error) {
-    return saveFailure(error);
+
+    return NextResponse.json({ article }, { status: 201, headers: NO_STORE });
+  } catch {
+    return fail("Unable to save the article.", 500);
   }
 }
 
 export async function PUT(request: Request) {
-  const authorization = await authorizeStaffApiRequest(request, "videos");
+  const authorization = await authorizeStaffApiRequest(request, "articles");
 
   if (!authorization.success) {
     return fail(authorization.error, authorization.status);
@@ -79,28 +77,28 @@ export async function PUT(request: Request) {
   const id = (body as { id?: unknown } | null)?.id;
 
   if (typeof id !== "string" || !UUID_PATTERN.test(id)) {
-    return fail("A valid video id is required.", 400);
+    return fail("A valid article id is required.", 400);
   }
 
-  const validation = validateVideoInput(body);
+  const validation = validateArticleInput(body);
 
   if (!validation.ok) {
     return fail(validation.error, 400);
   }
 
   try {
-    const video = await updateVideo(id, validation.value);
+    const article = await updateArticle(id, validation.value);
 
-    return video
-      ? NextResponse.json({ video }, { headers: NO_STORE })
-      : fail("Video not found.", 404);
-  } catch (error) {
-    return saveFailure(error);
+    return article
+      ? NextResponse.json({ article }, { headers: NO_STORE })
+      : fail("Article not found.", 404);
+  } catch {
+    return fail("Unable to save the article.", 500);
   }
 }
 
 export async function DELETE(request: Request) {
-  const authorization = await authorizeStaffApiRequest(request, "videos");
+  const authorization = await authorizeStaffApiRequest(request, "articles");
 
   if (!authorization.success) {
     return fail(authorization.error, authorization.status);
@@ -109,14 +107,14 @@ export async function DELETE(request: Request) {
   const id = new URL(request.url).searchParams.get("id");
 
   if (!id || !UUID_PATTERN.test(id)) {
-    return fail("A valid video id is required.", 400);
+    return fail("A valid article id is required.", 400);
   }
 
   try {
-    await deleteVideo(id);
+    await deleteArticle(id);
 
     return NextResponse.json({ success: true }, { headers: NO_STORE });
   } catch {
-    return fail("Unable to delete the video.", 500);
+    return fail("Unable to delete the article.", 500);
   }
 }

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 
+import { isStaffMember } from "@/lib/staff-permissions";
 import { supabase } from "../../lib/supabase";
 import LanguageToggle from "./LanguageToggle";
 import NotificationBell from "./notifications/NotificationBell";
@@ -224,7 +225,7 @@ export default function Navbar() {
       subtitle: "",
       icon: "bell",
     },
-    // Only administrators (organheal_role = admin) ever see this entry.
+    // Only staff (administrators, or moderators with a permission) see this.
     ...(isAdmin
       ? [
           {
@@ -245,7 +246,7 @@ export default function Navbar() {
   useEffect(() => {
     void supabase.auth.getUser().then(({ data }) => {
       setIsLoggedIn(Boolean(data.user));
-      setIsAdmin(data.user?.app_metadata?.organheal_role === "admin");
+      setIsAdmin(isStaffMember(data.user));
     });
 
     function syncLanguage() {
@@ -268,7 +269,7 @@ export default function Navbar() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsLoggedIn(Boolean(session?.user));
-      setIsAdmin(session?.user?.app_metadata?.organheal_role === "admin");
+      setIsAdmin(isStaffMember(session?.user));
     });
 
     return () => {

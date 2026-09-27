@@ -4,13 +4,14 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import PageBackLink from "@/app/components/navigation/PageBackLink";
 import PageEmptyState from "@/app/components/navigation/PageEmptyState";
-import { blogPosts } from "@/lib/blogData";
+import { blogPosts as builtInPosts } from "@/lib/blogData";
+import { useAllPosts } from "@/lib/articles/use-articles";
 import HeroSummaryCard from "@/app/components/navigation/HeroSummaryCard";
 import StatCard from "@/app/components/ui/StatCard";
 import ArticleFilterPanel from "@/app/components/blog/ArticleFilterPanel";
 
 type Language = "en" | "ar";
-type BlogPost = (typeof blogPosts)[number];
+type BlogPost = (typeof builtInPosts)[number];
 
 function getStoredLanguage(): Language {
   if (typeof window === "undefined") return "en";
@@ -32,6 +33,8 @@ function getUniqueValues(values: string[]) {
 }
 
 export default function BlogPage() {
+  // Built-in posts plus articles published from the admin screen.
+  const blogPosts = useAllPosts();
   const [language, setLanguage] = useState<Language>("en");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -92,11 +95,11 @@ export default function BlogPage() {
     return getUniqueValues(
       blogPosts.map((post) => (isArabic ? post.categoryAr : post.category))
     );
-  }, [isArabic]);
+  }, [isArabic, blogPosts]);
 
   const markerOptions = useMemo(() => {
     return getUniqueValues(blogPosts.flatMap((post) => post.labMarkers));
-  }, []);
+  }, [blogPosts]);
 
   const filteredPosts = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
@@ -124,7 +127,7 @@ export default function BlogPage() {
 
       return matchesSearch && matchesCategory && matchesMarker;
     });
-  }, [searchTerm, selectedCategory, selectedMarker, isArabic]);
+  }, [searchTerm, selectedCategory, selectedMarker, isArabic, blogPosts]);
 
   function resetFilters() {
     setSearchTerm("");
