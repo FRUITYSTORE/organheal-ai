@@ -27,6 +27,8 @@ describe(
       "report.jpeg",
       "report.webp",
       "report.bmp",
+      "report.tif",
+      "report.tiff",
     ])(
       "accepts supported report format %s",
       (
@@ -46,7 +48,6 @@ describe(
       "legacy.doc",
       "legacy.xls",
       "scan.heic",
-      "scan.tiff",
       "study.dcm",
       "brain.nii",
       "brain.nii.gz",

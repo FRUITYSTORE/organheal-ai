@@ -39,11 +39,13 @@ export async function POST(request: Request) {
   }
 
   let topic = "";
+  let language: "en" | "ar" = "en";
 
   try {
-    const body = (await request.json()) as { topic?: unknown };
+    const body = (await request.json()) as { topic?: unknown; language?: unknown };
 
     topic = typeof body.topic === "string" ? body.topic.trim().slice(0, MAX_TOPIC_LENGTH) : "";
+    language = body.language === "ar" ? "ar" : "en";
   } catch {
     topic = "";
   }
@@ -53,7 +55,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const video = await startStudioVideoPilot(topic, authorization.user.id);
+    const video = await startStudioVideoPilot(topic, authorization.user.id, language);
 
     return NextResponse.json({ video }, { status: 201, headers: NO_STORE });
   } catch (error) {

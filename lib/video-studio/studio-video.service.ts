@@ -5,6 +5,7 @@ import {
   EXPLAINER_JSON_SCHEMA,
   buildExplainerInstructions,
   parseExplainerScript,
+  type ExplainerLanguage,
   type ExplainerScript,
 } from "@/lib/health-videos/explainer";
 import { synthesizeVoice } from "@/lib/voice/voice-synthesis.service";
@@ -48,7 +49,10 @@ function extractText(result: OpenAIResponsesResult): string | null {
 // for that feature is equally valid input for a real rendered video; only
 // what happens with it afterward (Shotstack render vs. browser slideshow)
 // differs.
-async function generateExplainerScript(topic: string): Promise<ExplainerScript> {
+async function generateExplainerScript(
+  topic: string,
+  language: ExplainerLanguage
+): Promise<ExplainerScript> {
   const apiKey = process.env.OPENAI_API_KEY?.trim();
 
   if (!apiKey) {
@@ -65,7 +69,7 @@ async function generateExplainerScript(topic: string): Promise<ExplainerScript> 
       signal: abortController.signal,
       body: JSON.stringify({
         model: SCRIPT_MODEL,
-        instructions: buildExplainerInstructions("en", "topic"),
+        instructions: buildExplainerInstructions(language, "topic"),
         input: `Health topic or question to explain: ${topic}`,
         text: {
           format: { type: "json_schema", name: "health_explainer", strict: true, schema: EXPLAINER_JSON_SCHEMA },
@@ -103,10 +107,14 @@ async function resolveScene(
   topic: string,
   heading: string,
   narration: string,
-  sceneIndex: number
+  sceneIndex: number,
+  language: ExplainerLanguage
 ): Promise<StudioScene> {
   const [audio, footage] = await Promise.all([
-    synthesizeVoice({ text: narration, language: "en" }).catch(() => null),
+    synthesizeVoice({ text: narration, language }).catch(() => null),
+    // Stock footage is searched in English regardless of narration language
+    // — visual content isn't language-dependent, and stock libraries are
+    // indexed in English, so translating the query would only hurt matches.
     findStockFootage(topic, sceneIndex).catch(() => null),
   ]);
 
@@ -128,18 +136,19 @@ async function resolveScene(
 // member-facing usage limits yet.
 export async function startStudioVideoPilot(
   topic: string,
-  createdBy: string
+  createdBy: string,
+  language: ExplainerLanguage = "en"
 ): Promise<StudioVideoRow> {
   const record = await createStudioVideo({ topic, createdBy });
 
   try {
-    const script = await generateExplainerScript(topic);
-    const disclaimer = EXPLAINER_DISCLAIMER.en;
+    const script = await generateExplainerScript(topic, language);
+    const disclaimer = EXPLAINER_DISCLAIMER[language];
     const slides = [...script.slides, disclaimer];
     const scenes = await Promise.all(
-      slides.map((slide, index) => resolveScene(topic, slide.heading, slide.narration, index))
+      slides.map((slide, index) => resolveScene(topic, slide.heading, slide.narration, index, language))
     );
-    const edit = buildStudioVideoEdit(script, scenes);
+    const edit = buildStudioVideoEdit(script, scenes, language);
     const renderId = await submitShotstackRender(edit);
 
     await updateStudioVideo(record.id, {

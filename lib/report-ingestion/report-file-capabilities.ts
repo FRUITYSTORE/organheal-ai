@@ -79,6 +79,8 @@ export const REPORT_FILE_CAPABILITIES:
       ".jpeg",
       ".webp",
       ".bmp",
+      ".tif",
+      ".tiff",
     ],
 
     mimeTypes: [
@@ -86,6 +88,7 @@ export const REPORT_FILE_CAPABILITIES:
       "image/jpeg",
       "image/webp",
       "image/bmp",
+      "image/tiff",
     ],
 
     uploadEnabled:
@@ -315,14 +318,11 @@ export const REPORT_FILE_CAPABILITIES:
     extensions: [
       ".heic",
       ".heif",
-      ".tif",
-      ".tiff",
     ],
 
     mimeTypes: [
       "image/heic",
       "image/heif",
-      "image/tiff",
     ],
 
     uploadEnabled:
@@ -331,8 +331,12 @@ export const REPORT_FILE_CAPABILITIES:
     analysisEnabled:
       false,
 
+    // TIFF moved to raster-image above: sharp reads it natively (no extra
+    // dependency). HEIC/HEIF stay planned — most prebuilt sharp binaries
+    // ship without libheif support because of its licensing, so decoding
+    // these reliably needs a dedicated conversion step first.
     plannedReason:
-      "Advanced image ingestion requires dedicated multi-frame and format validation.",
+      "HEIC/HEIF decoding needs a dedicated conversion step (most sharp builds omit HEIF support over licensing).",
   },
 
   {
