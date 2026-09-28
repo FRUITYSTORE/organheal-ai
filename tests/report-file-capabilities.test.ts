@@ -29,6 +29,10 @@ describe(
       "report.bmp",
       "report.tif",
       "report.tiff",
+      "legacy.doc",
+      "legacy.xls",
+      "scan.heic",
+      "scan.heif",
     ])(
       "accepts supported report format %s",
       (
@@ -45,9 +49,6 @@ describe(
     );
 
     it.each([
-      "legacy.doc",
-      "legacy.xls",
-      "scan.heic",
       "study.dcm",
       "brain.nii",
       "brain.nii.gz",

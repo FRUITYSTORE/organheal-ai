@@ -2,6 +2,9 @@ import PDFParser from "pdf2json";
 import mammoth from "mammoth";
 import ExcelJS from "exceljs";
 import sharp from "sharp";
+import WordExtractor from "word-extractor";
+import * as XLSX from "xlsx";
+import convertHeic from "heic-convert";
 
 import {
   parse as parseCsv,
@@ -970,6 +973,50 @@ await workbook.xlsx.load(
   );
 }
 
+// Legacy Office binary formats (.doc, .xls, .ppt) all share the same OLE
+// Compound File Binary container and its magic bytes — this is the older,
+// pre-2007 format, distinct from the ZIP-based DOCX/XLSX containers checked
+// above.
+const OLE_MAGIC_BYTES = [0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1];
+
+export function hasOleContainer(buffer: Buffer): boolean {
+  return (
+    buffer.length >= OLE_MAGIC_BYTES.length &&
+    OLE_MAGIC_BYTES.every((byte, index) => buffer[index] === byte)
+  );
+}
+
+export async function extractTextFromLegacyDocBuffer(buffer: Buffer): Promise<string> {
+  if (!hasOleContainer(buffer)) {
+    throw new Error("The uploaded file does not contain a valid DOC container.");
+  }
+
+  const extractor = new WordExtractor();
+  const document = await extractor.extract(buffer);
+
+  return document.getBody();
+}
+
+export async function extractTextFromLegacyXlsBuffer(buffer: Buffer): Promise<string> {
+  if (!hasOleContainer(buffer)) {
+    throw new Error("The uploaded file does not contain a valid XLS container.");
+  }
+
+  const workbook = XLSX.read(buffer, { type: "buffer" });
+  const sections: string[] = [];
+
+  for (const sheetName of workbook.SheetNames) {
+    const sheet = workbook.Sheets[sheetName];
+    const csv = XLSX.utils.sheet_to_csv(sheet, { blankrows: false }).trim();
+
+    if (csv) {
+      sections.push([`Sheet: ${sheetName}`, csv].join("\n"));
+    }
+  }
+
+  return sections.join("\n\n");
+}
+
 async function extractTextFromImageBuffer(
   buffer:
     Buffer
@@ -1078,6 +1125,23 @@ async function extractTextFromImageBuffer(
   );
 }
 
+// heic-convert is a WASM build of libheif (no native binary, no per-image
+// cost) — decodes straight to a JPEG buffer, which then goes through the
+// exact same OCR path as any other photo.
+export async function extractTextFromHeicBuffer(buffer: Buffer): Promise<string> {
+  let jpegBuffer: Buffer;
+
+  try {
+    jpegBuffer = Buffer.from(await convertHeic({ buffer, format: "JPEG", quality: 0.92 }));
+  } catch (error) {
+    throw new Error(
+      error instanceof Error ? `HEIC/HEIF decoding failed: ${error.message}` : "HEIC/HEIF decoding failed."
+    );
+  }
+
+  return extractTextFromImageBuffer(jpegBuffer);
+}
+
 export async function extractReportTextFromBuffer({
   buffer,
   fileName,
@@ -1174,6 +1238,18 @@ export async function extractReportTextFromBuffer({
         extractTextFromXmlBuffer(
           buffer
         );
+      break;
+
+    case "legacy-word":
+      rawText = await extractTextFromLegacyDocBuffer(buffer);
+      break;
+
+    case "legacy-excel":
+      rawText = await extractTextFromLegacyXlsBuffer(buffer);
+      break;
+
+    case "heic":
+      rawText = await extractTextFromHeicBuffer(buffer);
       break;
 
     default:
