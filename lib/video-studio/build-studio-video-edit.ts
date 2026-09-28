@@ -24,6 +24,16 @@ export function estimateSceneSeconds(narration: string): number {
   return Math.min(MAX_SCENE_SECONDS, Math.max(MIN_SCENE_SECONDS, Math.round(estimate)));
 }
 
+// Picks which of a member's own report markers a scene's footage should be
+// searched for, cycling through the distinct list so consecutive scenes
+// don't all reuse the same query. Falls back to a generic query when the
+// report had no structured markers at all (e.g. a radiology summary). Lives
+// in this side-effect-free module (rather than studio-video.service.ts,
+// which pulls in Supabase at import time) so it stays directly unit-testable.
+export function pickFootageQueryForScene(markerNames: string[], sceneIndex: number): string {
+  return markerNames.length > 0 ? markerNames[sceneIndex % markerNames.length] : "medical lab report";
+}
+
 export type StudioScene = {
   heading: string;
   narration: string;

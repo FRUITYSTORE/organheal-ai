@@ -55,6 +55,23 @@ export async function updateStudioVideo(
   }
 }
 
+// A member's own personal videos only — never another member's, and never
+// the admin pilot's topic-driven ones from someone else.
+export async function listStudioVideosForUser(userId: string, limit = 10): Promise<StudioVideoRow[]> {
+  const { data, error } = await getSupabaseAdminClient()
+    .from(TABLE)
+    .select("*")
+    .eq("created_by", userId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    throw new Error("Unable to load your videos.");
+  }
+
+  return (data ?? []) as StudioVideoRow[];
+}
+
 export async function listRecentStudioVideos(limit = 30): Promise<StudioVideoRow[]> {
   const { data, error } = await getSupabaseAdminClient()
     .from(TABLE)

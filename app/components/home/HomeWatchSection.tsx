@@ -32,6 +32,11 @@ export default function HomeWatchSection({ isArabic }: { isArabic: boolean }) {
   const [phase, setPhase] = useState<"idle" | "loading" | "ready" | "error">("idle");
   const [script, setScript] = useState<ExplainerScript | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const [realVideoPhase, setRealVideoPhase] = useState<
+    "idle" | "starting" | "checking" | "queued" | "done" | "error"
+  >("idle");
+  const [realVideoMessage, setRealVideoMessage] = useState("");
+  const [realVideoUrl, setRealVideoUrl] = useState<string | null>(null);
 
   const allVideos = useAllVideos();
   const videos = getVideosForTopic(topic, allVideos);
@@ -92,6 +97,100 @@ export default function HomeWatchSection({ isArabic }: { isArabic: boolean }) {
         text("Connection problem. Please try again.", "مشكلة في الاتصال. حاول مرة أخرى.")
       );
       setPhase("error");
+    }
+  }
+
+  async function startRealVideo() {
+    if (realVideoPhase === "starting" || realVideoPhase === "checking") {
+      return;
+    }
+
+    setRealVideoPhase("starting");
+    setRealVideoMessage("");
+    setRealVideoUrl(null);
+
+    try {
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+
+      if (!token) {
+        setRealVideoMessage(
+          text("Sign in to make a real video from your report.", "سجّل الدخول لصنع فيديو حقيقي من تقريرك.")
+        );
+        setRealVideoPhase("error");
+        return;
+      }
+
+      const response = await fetch("/api/studio-video/personal", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ language: isArabic ? "ar" : "en" }),
+      });
+      const body = (await response.json()) as { error?: string; response?: string };
+
+      if (!response.ok) {
+        setRealVideoMessage(
+          body.response ||
+            body.error ||
+            text("We couldn't start the video just now.", "تعذّر بدء الفيديو الآن.")
+        );
+        setRealVideoPhase("error");
+        return;
+      }
+
+      setRealVideoPhase("queued");
+      setRealVideoMessage(
+        text(
+          "Started — this takes a few minutes. Press \"Check status\" below to see when it's ready.",
+          "بدأ الإنشاء — يستغرق بضع دقائق. اضغط \"تحقق من الحالة\" أدناه لمعرفة متى يصبح جاهزًا."
+        )
+      );
+    } catch {
+      setRealVideoMessage(text("Connection problem. Please try again.", "مشكلة في الاتصال. حاول مرة أخرى."));
+      setRealVideoPhase("error");
+    }
+  }
+
+  async function checkRealVideoStatus() {
+    setRealVideoPhase("checking");
+
+    try {
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+
+      if (!token) {
+        return;
+      }
+
+      const response = await fetch("/api/studio-video/personal", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const body = (await response.json()) as {
+        videos?: Array<{ status: string; output_url: string | null; error_message: string | null }>;
+      };
+      const latest = body.videos?.[0];
+
+      if (!latest) {
+        setRealVideoPhase("idle");
+        return;
+      }
+
+      if (latest.status === "done" && latest.output_url) {
+        setRealVideoUrl(latest.output_url);
+        setRealVideoMessage(text("Your video is ready.", "فيديوك جاهز."));
+        setRealVideoPhase("done");
+      } else if (latest.status === "failed") {
+        setRealVideoMessage(
+          latest.error_message ||
+            text("The video failed to render.", "فشل إنشاء الفيديو.")
+        );
+        setRealVideoPhase("error");
+      } else {
+        setRealVideoMessage(text("Still rendering — check again shortly.", "لا يزال قيد الإنشاء — تحقق مرة أخرى بعد قليل."));
+        setRealVideoPhase("queued");
+      }
+    } catch {
+      setRealVideoPhase("queued");
     }
   }
 
@@ -249,6 +348,39 @@ export default function HomeWatchSection({ isArabic }: { isArabic: boolean }) {
               "للأعضاء فقط. يستخدم نص آخر تقرير رفعته (ويركّز على ما كتبته أعلاه إن رغبت) ويُرسل بأمان إلى مزوّد الذكاء الاصطناعي لبناء الفيديو. لا يُحفظ أي شيء."
             )}
           </span>
+        </div>
+
+        <div className="ohWatchMine">
+          <button
+            type="button"
+            onClick={() => void startRealVideo()}
+            disabled={realVideoPhase === "starting" || realVideoPhase === "checking"}
+          >
+            {realVideoPhase === "starting"
+              ? text("Starting…", "جارٍ البدء…")
+              : text("Make a real video from my report", "أنشئ فيديو حقيقيًا من تقريري")}
+          </button>
+          <span>
+            {text(
+              "Real footage, real narration and captions — not a slideshow. Limited per month (more on OrganHeal Plus).",
+              "لقطات وصوت وترجمة حقيقية — ليس عرض شرائح. محدود شهريًا (أكثر مع OrganHeal Plus)."
+            )}
+          </span>
+          {realVideoMessage && (
+            <p className="ohWatchError" role="status">
+              {realVideoMessage}
+            </p>
+          )}
+          {(realVideoPhase === "queued" || realVideoPhase === "checking") && (
+            <button type="button" onClick={() => void checkRealVideoStatus()} disabled={realVideoPhase === "checking"}>
+              {realVideoPhase === "checking" ? text("Checking…", "جارٍ التحقق…") : text("Check status", "تحقق من الحالة")}
+            </button>
+          )}
+          {realVideoPhase === "done" && realVideoUrl && (
+            <a href={realVideoUrl} target="_blank" rel="noreferrer">
+              {text("Watch my video", "شاهد فيديوي")}
+            </a>
+          )}
         </div>
         {phase === "error" && (
           <p className="ohWatchError" role="alert">

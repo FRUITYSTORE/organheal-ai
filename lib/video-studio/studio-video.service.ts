@@ -11,13 +11,18 @@ import {
 import { synthesizeVoice } from "@/lib/voice/voice-synthesis.service";
 import { findStockFootage } from "@/lib/video-studio/pexels-video.client";
 import { uploadNarrationAudio } from "@/lib/video-studio/audio-storage";
-import { buildStudioVideoEdit, type StudioScene } from "@/lib/video-studio/build-studio-video-edit";
+import {
+  buildStudioVideoEdit,
+  pickFootageQueryForScene,
+  type StudioScene,
+} from "@/lib/video-studio/build-studio-video-edit";
 import { submitShotstackRender, getShotstackRenderStatus } from "@/lib/video-studio/shotstack.client";
 import {
   createStudioVideo,
   updateStudioVideo,
   type StudioVideoRow,
 } from "@/lib/repositories/studio-video.repository";
+import { getMedicalReportMarkersForPatient } from "@/lib/repositories/report-markers.repository";
 
 const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
 const SCRIPT_MODEL = "gpt-5.6-luna";
@@ -94,17 +99,71 @@ async function generateExplainerScript(
   }
 }
 
+// Same model call as above, but using the free video-explainer's REPORT mode
+// instructions (lib/health-videos/explainer.ts's REPORT_MODE_RULES): the
+// script is grounded only in values/units/ranges actually printed in the
+// member's own report, never invented, never a diagnosis — same safety rule
+// the existing free slideshow already enforces for "explain my report".
+async function generatePersonalExplainerScript(
+  reportText: string,
+  language: ExplainerLanguage
+): Promise<ExplainerScript> {
+  const apiKey = process.env.OPENAI_API_KEY?.trim();
+
+  if (!apiKey) {
+    throw new Error("OPENAI_API_KEY is not configured.");
+  }
+
+  const abortController = new AbortController();
+  const timeoutId = setTimeout(() => abortController.abort(), SCRIPT_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(OPENAI_RESPONSES_URL, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      signal: abortController.signal,
+      body: JSON.stringify({
+        model: SCRIPT_MODEL,
+        instructions: buildExplainerInstructions(language, "report"),
+        input: ["Viewer's focus (optional): (none)", "Lab report text:", '"""', reportText, '"""'].join("\n"),
+        text: {
+          format: { type: "json_schema", name: "health_explainer", strict: true, schema: EXPLAINER_JSON_SCHEMA },
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Script provider returned status ${response.status}.`);
+    }
+
+    const text = extractText((await response.json()) as OpenAIResponsesResult);
+    const script = text ? parseExplainerScript(JSON.parse(text)) : null;
+
+    if (!script) {
+      throw new Error("Script provider returned an unusable script.");
+    }
+
+    return script;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 // Best-effort per scene: a failed TTS call or footage lookup should not sink
 // the whole render — the scene just plays with whatever it does have.
 //
-// Footage is searched by the video's own TOPIC, not the scene's generic
-// heading ("What it is", "Why it matters", ...) — searching by heading alone
-// pulled completely unrelated stock footage in the pilot's first real render
-// (a skincare clip for an LDL cholesterol video). `sceneIndex` picks a
-// different one of the topic's top matches per scene, for some visual
-// variety across an otherwise-identical query.
+// Footage is searched by an explicit query the caller picks — never the
+// scene's own generic heading ("What it is", "Why it matters", ...), which
+// pulled completely unrelated stock footage in the pilot's first real
+// render (a skincare clip for an LDL cholesterol video). For an admin
+// topic-driven video that query is the topic itself; for a member's
+// personal video (see startPersonalStudioVideo) it's one of their own
+// report's actual marker names instead, so the footage tracks whatever is
+// really in their report rather than a fixed topic or organ list.
+// `sceneIndex` picks a different one of that query's top matches per scene,
+// for some visual variety.
 async function resolveScene(
-  topic: string,
+  footageQuery: string,
   heading: string,
   narration: string,
   sceneIndex: number,
@@ -115,7 +174,7 @@ async function resolveScene(
     // Stock footage is searched in English regardless of narration language
     // — visual content isn't language-dependent, and stock libraries are
     // indexed in English, so translating the query would only hurt matches.
-    findStockFootage(topic, sceneIndex).catch(() => null),
+    findStockFootage(footageQuery, sceneIndex).catch(() => null),
   ]);
 
   const audioUrl = audio
@@ -147,6 +206,58 @@ export async function startStudioVideoPilot(
     const slides = [...script.slides, disclaimer];
     const scenes = await Promise.all(
       slides.map((slide, index) => resolveScene(topic, slide.heading, slide.narration, index, language))
+    );
+    const edit = buildStudioVideoEdit(script, scenes, language);
+    const renderId = await submitShotstackRender(edit);
+
+    await updateStudioVideo(record.id, {
+      title: script.title,
+      status: "queued",
+      shotstack_render_id: renderId,
+    });
+
+    return { ...record, title: script.title, shotstack_render_id: renderId };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error while starting the render.";
+
+    await updateStudioVideo(record.id, { status: "failed", error_message: message });
+
+    throw error;
+  }
+}
+
+// Starts a real rendered video for the SIGNED-IN MEMBER's own latest report
+// — the personalized counterpart to startStudioVideoPilot's admin-typed
+// topic. Callers must already have (a) confirmed the member is signed in,
+// (b) loaded their reportText, and (c) checked the studio_video usage limit
+// themselves (see app/api/studio-video/personal/route.ts for all three) —
+// this function only does the generation and render.
+export async function startPersonalStudioVideo(
+  userId: string,
+  reportText: string,
+  language: ExplainerLanguage = "en"
+): Promise<StudioVideoRow> {
+  // Topic is a generic label, not the member's actual results — nothing
+  // health-specific is ever stored outside the render itself, which only
+  // this member's own admin-visible row (created_by = userId) can be tied to.
+  const record = await createStudioVideo({ topic: "Personal report explainer", createdBy: userId });
+
+  try {
+    const [script, markerRows] = await Promise.all([
+      generatePersonalExplainerScript(reportText, language),
+      getMedicalReportMarkersForPatient(userId).catch(() => []),
+    ]);
+
+    // The member's own distinct marker names, most recent first — cycled
+    // per scene below (pickFootageQueryForScene) so footage tracks whatever
+    // is actually in their report, never a fixed organ list.
+    const markerNames = [...new Set(markerRows.map((row) => row.marker_name))];
+    const disclaimer = EXPLAINER_DISCLAIMER[language];
+    const slides = [...script.slides, disclaimer];
+    const scenes = await Promise.all(
+      slides.map((slide, index) =>
+        resolveScene(pickFootageQueryForScene(markerNames, index), slide.heading, slide.narration, index, language)
+      )
     );
     const edit = buildStudioVideoEdit(script, scenes, language);
     const renderId = await submitShotstackRender(edit);
