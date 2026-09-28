@@ -89,8 +89,12 @@ export function buildStudioVideoEdit(
   }
 
   const tracks = [
-    ...(videoClips.length > 0 ? [{ clips: videoClips }] : []),
+    // Shotstack stacks tracks with the FIRST entry on top, so captions must
+    // come before the video track or the footage draws over them and they
+    // never appear — confirmed by inspecting the pilot's first real render,
+    // where captions were completely invisible.
     { clips: captionClips },
+    ...(videoClips.length > 0 ? [{ clips: videoClips }] : []),
     ...(audioClips.length > 0 ? [{ clips: audioClips }] : []),
   ];
 

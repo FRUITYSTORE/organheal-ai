@@ -51,8 +51,14 @@ function pickBestFile(files: PexelsVideoFile[]): string | null {
 // Best-effort: a missing key, network failure, or no results all resolve to
 // null rather than throwing, so the caller can fall back to a plain
 // background instead of failing the whole render.
+const RESULTS_PER_QUERY = 6;
+
+// `resultIndex` (e.g. a scene's position in the video) picks a different one
+// of the top matches for the same query, so consecutive scenes about the
+// same topic do not all reuse the identical clip.
 export async function findStockFootage(
-  searchQuery: string
+  searchQuery: string,
+  resultIndex = 0
 ): Promise<StockFootageClip | null> {
   const apiKey = process.env.PEXELS_API_KEY?.trim();
 
@@ -64,7 +70,7 @@ export async function findStockFootage(
   const timeoutId = setTimeout(() => abortController.abort(), FOOTAGE_LOOKUP_TIMEOUT_MS);
 
   try {
-    const url = `${PEXELS_VIDEO_SEARCH_URL}?query=${encodeURIComponent(searchQuery)}&per_page=1&orientation=landscape`;
+    const url = `${PEXELS_VIDEO_SEARCH_URL}?query=${encodeURIComponent(searchQuery)}&per_page=${RESULTS_PER_QUERY}&orientation=landscape`;
     const response = await fetch(url, {
       headers: { Authorization: apiKey },
       signal: abortController.signal,
@@ -75,10 +81,16 @@ export async function findStockFootage(
     }
 
     const result = (await response.json()) as PexelsVideoSearchResult;
-    const video = result.videos?.[0];
-    const link = video ? pickBestFile(video.video_files ?? []) : null;
+    const videos = result.videos ?? [];
 
-    if (!video || !link) {
+    if (videos.length === 0) {
+      return null;
+    }
+
+    const video = videos[resultIndex % videos.length];
+    const link = pickBestFile(video.video_files ?? []);
+
+    if (!link) {
       return null;
     }
 
