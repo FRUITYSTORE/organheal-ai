@@ -35,12 +35,19 @@ export type StudioScene = {
   audioUrl: string | null;
 };
 
-function captionClip(text: string, start: number, length: number): ShotstackClip {
+// Montserrat has no Arabic glyphs — Arabic captions rendered in it would
+// come out as blank boxes, so the font swaps per language rather than
+// staying fixed.
+function captionFontFamily(language: "en" | "ar"): string {
+  return language === "ar" ? "Cairo" : "Montserrat";
+}
+
+function captionClip(text: string, start: number, length: number, language: "en" | "ar"): ShotstackClip {
   return {
     asset: {
       type: "text",
       text,
-      font: { family: "Montserrat", size: 40, color: "#ffffff", lineHeight: 1.2 },
+      font: { family: captionFontFamily(language), size: 40, color: "#ffffff", lineHeight: 1.2 },
       background: { color: "#0f172a", opacity: 0.55, padding: 24 },
     },
     start,
@@ -51,7 +58,8 @@ function captionClip(text: string, start: number, length: number): ShotstackClip
 
 export function buildStudioVideoEdit(
   script: ExplainerScript,
-  scenes: StudioScene[]
+  scenes: StudioScene[],
+  language: "en" | "ar" = "en"
 ): ShotstackEdit {
   const videoClips: ShotstackClip[] = [];
   const captionClips: ShotstackClip[] = [];
@@ -59,7 +67,7 @@ export function buildStudioVideoEdit(
 
   // Intro: brand name plus the video's own title, on the background colour —
   // no footage needed for these first few seconds.
-  captionClips.push(captionClip(`OrganHeal AI — ${script.title}`, 0, INTRO_SECONDS));
+  captionClips.push(captionClip(`OrganHeal AI — ${script.title}`, 0, INTRO_SECONDS, language));
 
   let cursor = INTRO_SECONDS;
 
@@ -75,7 +83,7 @@ export function buildStudioVideoEdit(
       });
     }
 
-    captionClips.push(captionClip(scene.heading, cursor, length));
+    captionClips.push(captionClip(scene.heading, cursor, length, language));
 
     if (scene.audioUrl) {
       audioClips.push({

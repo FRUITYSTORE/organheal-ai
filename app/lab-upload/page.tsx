@@ -38,6 +38,8 @@ export default function LabUploadPage() {
   const [uploadStep, setUploadStep] = useState<UploadStep>("idle");
   const [uploading, setUploading] = useState(false);
   const [reportType, setReportType] = useState<ReportType>("lab");
+  const [urlInput, setUrlInput] = useState("");
+  const [urlUploading, setUrlUploading] = useState(false);
 
   const isArabic = language === "ar";
 
@@ -442,6 +444,96 @@ if (databaseError || !insertedFile) {
     `تم حفظ ${uploadedNames.length} من التقارير بنجاح، وهي جاهزة للخطوة التالية.`
   )
 );
+  }
+
+  // Same destination as uploadFiles (uploaded_lab_files + health_insights),
+  // just fetched server-side from a pasted link instead of a local file —
+  // see app/api/lab-upload/from-url/route.ts.
+  async function uploadFromUrl() {
+    const trimmedUrl = urlInput.trim();
+
+    if (!trimmedUrl) {
+      return;
+    }
+
+    setUrlUploading(true);
+    setMessage("");
+
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+
+      if (!token) {
+        setMessage(
+          text(
+            "Please login or sign up to upload medical reports.",
+            "يرجى تسجيل الدخول أو إنشاء حساب لرفع التقارير الطبية."
+          )
+        );
+        setUploadStep("error");
+        return;
+      }
+
+      void sendProductAnalyticsEvent({
+        name: "report_upload_started",
+        language,
+        source: "lab-upload",
+      });
+
+      const response = await fetch("/api/lab-upload/from-url", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url: trimmedUrl, reportType }),
+      });
+      const body = (await response.json()) as {
+        reportId?: number;
+        fileName?: string;
+        error?: string;
+      };
+
+      if (!response.ok) {
+        setMessage(
+          body.error ||
+            text(
+              "The linked report could not be uploaded. Please try again.",
+              "تعذر رفع التقرير من الرابط. يرجى المحاولة مرة أخرى."
+            )
+        );
+        setUploadStep("error");
+        return;
+      }
+
+      void sendProductAnalyticsEvent({
+        name: "report_upload_completed",
+        language,
+        source: "lab-upload",
+      });
+
+      setUrlInput("");
+      setLatestUploadedReportId(body.reportId ?? null);
+      setLatestUploadedFileName(body.fileName ?? "");
+      setSavedFileNames([body.fileName ?? ""]);
+      setUploadStep("saved");
+      setMessage(
+        text(
+          "1 report(s) saved successfully and ready for the next step.",
+          "تم حفظ 1 من التقارير بنجاح، وهي جاهزة للخطوة التالية."
+        )
+      );
+    } catch {
+      setMessage(
+        text(
+          "The linked report could not be uploaded. Please try again.",
+          "تعذر رفع التقرير من الرابط. يرجى المحاولة مرة أخرى."
+        )
+      );
+      setUploadStep("error");
+    } finally {
+      setUrlUploading(false);
+    }
   }
 
   const journeyStep =
@@ -1336,6 +1428,42 @@ if (databaseError || !insertedFile) {
       : text("Save Reports", "حفظ التقارير")}
   </button>
 </div>
+
+              <div className="formGroup" style={{ marginTop: "16px" }}>
+                <label htmlFor="report-url">
+                  {text("Or paste a link to your result", "أو الصق رابط نتيجتك")}
+                </label>
+                <div className="ohButtonRow">
+                  <input
+                    id="report-url"
+                    type="url"
+                    inputMode="url"
+                    value={urlInput}
+                    onChange={(event) => setUrlInput(event.target.value)}
+                    disabled={urlUploading}
+                    placeholder={text(
+                      "https://your-lab-portal.com/results/12345.pdf",
+                      "https://بوابة-المختبر.com/results/12345.pdf"
+                    )}
+                  />
+                  <button
+                    type="button"
+                    className="primaryBtn"
+                    onClick={uploadFromUrl}
+                    disabled={urlUploading || !urlInput.trim()}
+                  >
+                    {urlUploading
+                      ? text("Fetching…", "جارٍ الجلب…")
+                      : text("Save from link", "احفظ من الرابط")}
+                  </button>
+                </div>
+                <span className="ohCardText">
+                  {text(
+                    "The link must point directly to your result file (PDF, image, etc.), not a page you have to log into.",
+                    "يجب أن يشير الرابط مباشرة إلى ملف نتيجتك (PDF أو صورة، إلخ)، وليس صفحة تتطلب تسجيل دخول."
+                  )}
+                </span>
+              </div>
 
               {message && (
                 <div

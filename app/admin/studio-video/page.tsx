@@ -26,6 +26,9 @@ const STATUS_LABELS: Record<StudioVideoRow["status"], { en: string; ar: string }
 export default function AdminStudioVideoPage() {
   const { isArabic, language, text } = useAdminLanguage();
   const [topic, setTopic] = useState("");
+  // The generated video's own narration/caption language — independent of
+  // this admin page's own display language above.
+  const [videoLanguage, setVideoLanguage] = useState<"en" | "ar">("en");
   const [videos, setVideos] = useState<StudioVideoRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
@@ -88,7 +91,7 @@ export default function AdminStudioVideoPage() {
     try {
       const response = await authorizedFetch("/api/admin/studio-video", {
         method: "POST",
-        body: JSON.stringify({ topic }),
+        body: JSON.stringify({ topic, language: videoLanguage }),
       });
       const body = await response.json();
 
@@ -142,6 +145,21 @@ export default function AdminStudioVideoPage() {
             placeholder={text("e.g. Understanding LDL cholesterol", "مثال: فهم الكوليسترول الضار LDL")}
           />
         </label>
+
+        <label>
+          {text("Video narration language", "لغة التعليق الصوتي في الفيديو")}
+          <select value={videoLanguage} onChange={(event) => setVideoLanguage(event.target.value === "ar" ? "ar" : "en")}>
+            <option value="en">{text("English", "الإنجليزية")}</option>
+            <option value="ar">{text("Arabic", "العربية")}</option>
+          </select>
+        </label>
+
+        <p className="adminArticleHint">
+          {text(
+            "Tip: keep the topic itself in English even for an Arabic video — stock footage search only understands English, so an English topic finds better matching footage regardless of narration language.",
+            "نصيحة: أبقِ الموضوع نفسه بالإنجليزية حتى للفيديو العربي — البحث عن اللقطات يفهم الإنجليزية فقط، فالموضوع الإنجليزي يعطي لقطات أنسب بغض النظر عن لغة التعليق الصوتي."
+          )}
+        </p>
 
         <div className="adminVideosActions">
           <button type="submit" disabled={starting}>
