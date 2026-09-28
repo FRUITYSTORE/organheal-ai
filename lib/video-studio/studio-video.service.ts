@@ -92,10 +92,22 @@ async function generateExplainerScript(topic: string): Promise<ExplainerScript> 
 
 // Best-effort per scene: a failed TTS call or footage lookup should not sink
 // the whole render — the scene just plays with whatever it does have.
-async function resolveScene(heading: string, narration: string): Promise<StudioScene> {
+//
+// Footage is searched by the video's own TOPIC, not the scene's generic
+// heading ("What it is", "Why it matters", ...) — searching by heading alone
+// pulled completely unrelated stock footage in the pilot's first real render
+// (a skincare clip for an LDL cholesterol video). `sceneIndex` picks a
+// different one of the topic's top matches per scene, for some visual
+// variety across an otherwise-identical query.
+async function resolveScene(
+  topic: string,
+  heading: string,
+  narration: string,
+  sceneIndex: number
+): Promise<StudioScene> {
   const [audio, footage] = await Promise.all([
     synthesizeVoice({ text: narration, language: "en" }).catch(() => null),
-    findStockFootage(heading).catch(() => null),
+    findStockFootage(topic, sceneIndex).catch(() => null),
   ]);
 
   const audioUrl = audio
@@ -125,7 +137,7 @@ export async function startStudioVideoPilot(
     const disclaimer = EXPLAINER_DISCLAIMER.en;
     const slides = [...script.slides, disclaimer];
     const scenes = await Promise.all(
-      slides.map((slide) => resolveScene(slide.heading, slide.narration))
+      slides.map((slide, index) => resolveScene(topic, slide.heading, slide.narration, index))
     );
     const edit = buildStudioVideoEdit(script, scenes);
     const renderId = await submitShotstackRender(edit);
