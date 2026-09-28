@@ -15,11 +15,13 @@ export type UsageFeature =
   | "voice_dictation"
   | "voice_speech"
   | "voice_realtime"
-  | "video_explainer";
+  | "video_explainer"
+  | "studio_video";
 
 export type UsageTier = "visitor" | "free" | "plus";
 
 export const DAY_MS = 24 * 60 * 60 * 1000;
+export const MONTH_MS = 30 * DAY_MS;
 
 export const USAGE_POLICIES: Record<
   UsageFeature,
@@ -49,5 +51,15 @@ export const USAGE_POLICIES: Record<
     visitor: { limit: 2, windowMs: DAY_MS },
     free: { limit: 6, windowMs: DAY_MS },
     plus: { limit: 40, windowMs: DAY_MS },
+  },
+  // Real rendered video (footage + real narration audio + burned captions via
+  // Shotstack) — unlike video_explainer's free slideshow, every one of these
+  // has a real per-render cost, so the allowance is monthly and small.
+  // Deliberately conservative for launch; raise once the real per-render cost
+  // from the first pilot renders is known.
+  studio_video: {
+    visitor: null,
+    free: { limit: 1, windowMs: MONTH_MS },
+    plus: { limit: 5, windowMs: MONTH_MS },
   },
 };

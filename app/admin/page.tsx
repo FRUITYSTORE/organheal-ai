@@ -78,6 +78,15 @@ export default function AdminHubPage() {
       ),
     },
     {
+      href: "/admin/studio-video",
+      permission: null,
+      title: text("Video studio (pilot)", "مصنع الفيديو (تجريبي)"),
+      body: text(
+        "Generate one real rendered video from a topic to judge quality and cost before it reaches members.",
+        "أنشئ فيديو حقيقيًا واحدًا من موضوع لتقييم الجودة والتكلفة قبل إتاحته للأعضاء."
+      ),
+    },
+    {
       href: "/admin/team",
       permission: null,
       title: text("Team access", "صلاحيات الفريق"),
