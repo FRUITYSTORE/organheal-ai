@@ -9,6 +9,7 @@ import { OPEN_HEALTH_CHAT_EVENT } from "@/lib/health-updates/chat-events";
 import { POPULAR_QUESTIONS } from "@/lib/health-updates/popular-questions";
 
 import ChatVideos from "./ChatVideos";
+import ChatPersonalVideoOffer from "./ChatPersonalVideoOffer";
 
 import "./health-chat.css";
 
@@ -352,11 +353,17 @@ export default function HealthChatLauncher() {
                   )}
 
                   {message.role === "assistant" && index > 0 && (
-                    <ChatVideos
-                      question={messages[index - 1]?.content ?? ""}
-                      answer={message.content}
-                      isArabic={isArabic}
-                    />
+                    <>
+                      <ChatVideos
+                        question={messages[index - 1]?.content ?? ""}
+                        answer={message.content}
+                        isArabic={isArabic}
+                      />
+                      <ChatPersonalVideoOffer
+                        question={messages[index - 1]?.content ?? ""}
+                        isArabic={isArabic}
+                      />
+                    </>
                   )}
                 </div>
               ))
