@@ -8,6 +8,9 @@ export type ReportIngestionKind =
   | "xlsx"
   | "json"
   | "xml"
+  | "legacy-word"
+  | "legacy-excel"
+  | "heic"
   | "medical-imaging"
   | "planned";
 
@@ -263,7 +266,7 @@ export const REPORT_FILE_CAPABILITIES:
       "legacy-word",
 
     kind:
-      "planned",
+      "legacy-word",
 
     extensions: [
       ".doc",
@@ -274,13 +277,10 @@ export const REPORT_FILE_CAPABILITIES:
     ],
 
     uploadEnabled:
-      false,
+      true,
 
     analysisEnabled:
-      false,
-
-    plannedReason:
-      "Legacy DOC ingestion requires a separate safe conversion pipeline.",
+      true,
   },
 
   {
@@ -288,7 +288,7 @@ export const REPORT_FILE_CAPABILITIES:
       "legacy-excel",
 
     kind:
-      "planned",
+      "legacy-excel",
 
     extensions: [
       ".xls",
@@ -299,21 +299,18 @@ export const REPORT_FILE_CAPABILITIES:
     ],
 
     uploadEnabled:
-      false,
+      true,
 
     analysisEnabled:
-      false,
-
-    plannedReason:
-      "Legacy XLS ingestion requires a separate safe conversion pipeline.",
+      true,
   },
 
   {
     id:
-      "advanced-image",
+      "heic-image",
 
     kind:
-      "planned",
+      "heic",
 
     extensions: [
       ".heic",
@@ -325,18 +322,14 @@ export const REPORT_FILE_CAPABILITIES:
       "image/heif",
     ],
 
+    // Decoded via heic-convert (a WASM build of libheif, no native binary,
+    // no per-conversion cost) into a JPEG before it reaches the same OCR
+    // path as any other image — see extractTextFromHeicBuffer.
     uploadEnabled:
-      false,
+      true,
 
     analysisEnabled:
-      false,
-
-    // TIFF moved to raster-image above: sharp reads it natively (no extra
-    // dependency). HEIC/HEIF stay planned — most prebuilt sharp binaries
-    // ship without libheif support because of its licensing, so decoding
-    // these reliably needs a dedicated conversion step first.
-    plannedReason:
-      "HEIC/HEIF decoding needs a dedicated conversion step (most sharp builds omit HEIF support over licensing).",
+      true,
   },
 
   {
