@@ -11,10 +11,12 @@ function getEnvironment(): ShotstackEnvironment {
   return process.env.SHOTSTACK_ENVIRONMENT?.trim() === "production" ? "production" : "sandbox";
 }
 
+// Shotstack's path is https://api.shotstack.io/edit/{v1|stage}/render — the
+// environment segment comes AFTER "edit", not before it.
 function getBaseUrl(): string {
   return getEnvironment() === "production"
-    ? "https://api.shotstack.io/v1"
-    : "https://api.shotstack.io/stage";
+    ? "https://api.shotstack.io/edit/v1"
+    : "https://api.shotstack.io/edit/stage";
 }
 
 function getApiKey(): string {
@@ -107,7 +109,7 @@ async function shotstackFetch(path: string, init: RequestInit, timeoutMs: number
 
 export async function submitShotstackRender(edit: ShotstackEdit): Promise<string> {
   const response = await shotstackFetch(
-    "/edit/render",
+    "/render",
     { method: "POST", body: JSON.stringify(edit) },
     RENDER_SUBMIT_TIMEOUT_MS
   );
@@ -121,7 +123,7 @@ export async function submitShotstackRender(edit: ShotstackEdit): Promise<string
 }
 
 export async function getShotstackRenderStatus(id: string): Promise<ShotstackRenderResult> {
-  const response = await shotstackFetch(`/edit/render/${encodeURIComponent(id)}`, { method: "GET" }, RENDER_STATUS_TIMEOUT_MS);
+  const response = await shotstackFetch(`/render/${encodeURIComponent(id)}`, { method: "GET" }, RENDER_STATUS_TIMEOUT_MS);
   const data = response as { id?: unknown; status?: unknown; url?: unknown; error?: unknown };
   const status: ShotstackRenderStatus =
     data.status === "done" ||
