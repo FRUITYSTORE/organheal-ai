@@ -1,9 +1,13 @@
 "use client";
 
 import PageBackActions from "../components/PageBackActions";
-import { type CSSProperties, useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { supabase } from "@/lib/supabase";
 import { saveAssessmentFlow } from "@/lib/services/organs/assessment-flow.service";
+import { calculateHeartAge, type HeartAgeInput } from "@/lib/heart-age/heart-age.engine";
+import { getLatestHeartMarkers } from "@/lib/heart-age/latest-heart-markers";
+import { useHeartStoryVideoRequest } from "@/lib/video-studio/use-heart-story-video-request";
 
 type Language = "en" | "ar";
 
@@ -11,6 +15,16 @@ type RiskResult = {
   score: number;
   level: string;
   message: string;
+  heartAge: number;
+  ageGapYears: number;
+  tenYearRiskPercent: number;
+  // The exact inputs used to compute this result, frozen at calculation
+  // time. Everything derived from this result (the share text, the
+  // downloadable image, the heart-story video request) must read from here
+  // instead of the live form fields — otherwise editing a field after
+  // pressing Calculate (without recalculating) would silently desync the
+  // displayed result from what gets shared or sent to the video.
+  input: HeartAgeInput;
 };
 
 export default function HeartPage() {
@@ -18,13 +32,70 @@ export default function HeartPage() {
   const isArabic = language === "ar";
 
   const [age, setAge] = useState("");
+  const [sex, setSex] = useState<"male" | "female">("male");
   const [bloodPressure, setBloodPressure] = useState("");
+  const [onBpMedication, setOnBpMedication] = useState("No");
   const [cholesterol, setCholesterol] = useState("");
+  const [hdl, setHdl] = useState("");
   const [diabetes, setDiabetes] = useState("No");
   const [smoking, setSmoking] = useState("No");
   const [saveMessage, setSaveMessage] = useState("");
+  const [shareStatus, setShareStatus] = useState("");
+  const [autoFilledCholesterol, setAutoFilledCholesterol] = useState(false);
+  const [autoFilledHdl, setAutoFilledHdl] = useState(false);
 
   const [result, setResult] = useState<null | RiskResult>(null);
+  const shareCardRef = useRef<HTMLDivElement>(null);
+
+  // Layer 3: a real rendered video telling the member's own personal heart
+  // story, once they've calculated a result.
+  const heartStoryVideo = useHeartStoryVideoRequest(isArabic);
+
+  // Layer 2: for a logged-in member, pre-fill Total Cholesterol / HDL from
+  // their own most recently uploaded report instead of asking them to type
+  // numbers they don't have memorized. Age, sex, smoking, diabetes, and blood
+  // pressure stay manual — those aren't lab values, or are a diagnosis
+  // decision the member should confirm, not something to infer silently.
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadLatestMarkers() {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+
+      if (!userId) return;
+
+      try {
+        const markers = await getLatestHeartMarkers(userId);
+
+        if (cancelled) return;
+
+        if (markers.totalCholesterol) {
+          setCholesterol((current) =>
+            current || String(Math.round(markers.totalCholesterol!.value))
+          );
+          setAutoFilledCholesterol(true);
+        }
+
+        if (markers.hdlCholesterol) {
+          setHdl((current) =>
+            current || String(Math.round(markers.hdlCholesterol!.value))
+          );
+          setAutoFilledHdl(true);
+        }
+      } catch {
+        // Auto-fill is a convenience, not a requirement — a member with no
+        // reports yet (or a transient read error) should just see the plain
+        // manual form, not an error.
+      }
+    }
+
+    loadLatestMarkers();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     function syncLanguage() {
@@ -61,28 +132,18 @@ export default function HeartPage() {
     return level;
   }
 
-  function localizeRiskMessage(level: string, fallback: string) {
-    if (!isArabic) return fallback;
-
-    if (level === "Low Risk") {
-      return "تشير المدخلات الحالية إلى نمط خطورة قلبية أقل. استمر بالعادات الصحية والفحوصات الوقائية الدورية.";
+  function describeHeartAge(chronologicalAge: number, heartAge: number, gap: number) {
+    if (gap <= 0) {
+      return text(
+        `Your heart age is ${heartAge} — the same as or younger than your actual age (${chronologicalAge}). Your inputs suggest a favorable cardiovascular pattern.`,
+        `عمر قلبك ${heartAge} سنة — أصغر من عمرك الفعلي (${chronologicalAge}) أو يساويه. تشير مدخلاتك إلى نمط قلبي جيد.`
+      );
     }
 
-    if (level === "Moderate Risk") {
-      return "تشير مدخلاتك إلى وجود بعض عوامل الخطورة القلبية. يُفضّل مناقشة هذه النتائج مع مختص صحي.";
-    }
-
-    if (level === "High Risk") {
-      return "تشير مدخلاتك إلى وجود عدة عوامل خطورة قلبية. هذا لا يعني تشخيص مرض، لكنه مؤشر مهم لطلب استشارة طبية متخصصة.";
-    }
-
-    return fallback;
-  }
-
-  function getToneFromScore(score: number) {
-    if (score >= 70) return "good";
-    if (score >= 40) return "moderate";
-    return "risk";
+    return text(
+      `Your heart age is ${heartAge} — about ${gap} year${gap === 1 ? "" : "s"} older than your actual age (${chronologicalAge}).`,
+      `عمر قلبك ${heartAge} سنة — أكبر بحوالي ${gap} سنة من عمرك الفعلي (${chronologicalAge}).`
+    );
   }
 
   function getToneFromLevel(level: string) {
@@ -132,8 +193,9 @@ if (result.status === "error") {
 
   async function calculateRisk() {
     setSaveMessage("");
+    setShareStatus("");
 
-    if (!age || !bloodPressure || !cholesterol) {
+    if (!age || !bloodPressure || !cholesterol || !hdl) {
       setSaveMessage(
         text(
           "Please complete all required fields.",
@@ -146,61 +208,123 @@ if (result.status === "error") {
     const ageNumber = Number(age);
     const bpNumber = Number(bloodPressure);
     const cholesterolNumber = Number(cholesterol);
+    const hdlNumber = Number(hdl);
 
-    if (ageNumber <= 0 || bpNumber <= 0 || cholesterolNumber <= 0) {
+    if (
+      ageNumber <= 0 ||
+      bpNumber <= 0 ||
+      cholesterolNumber <= 0 ||
+      hdlNumber <= 0
+    ) {
       setSaveMessage(
         text("Please enter valid numbers.", "يرجى إدخال أرقام صحيحة.")
       );
       return;
     }
 
-    let riskPoints = 0;
+    const heartAgeInput: HeartAgeInput = {
+      sex,
+      age: ageNumber,
+      totalCholesterol: cholesterolNumber,
+      hdlCholesterol: hdlNumber,
+      systolicBloodPressure: bpNumber,
+      onBloodPressureMedication: onBpMedication === "Yes",
+      isSmoker: smoking === "Yes",
+      hasDiabetes: diabetes === "Yes",
+    };
 
-    if (ageNumber >= 45) riskPoints += 15;
-    if (ageNumber >= 60) riskPoints += 15;
+    const engineResult = calculateHeartAge(heartAgeInput);
+    const { heartAge, ageGapYears, tenYearRiskPercent, riskLevel } =
+      engineResult;
 
-    if (bpNumber >= 130) riskPoints += 15;
-    if (bpNumber >= 140) riskPoints += 15;
+    const level = riskLevel;
+    const message = describeHeartAge(ageNumber, heartAge, ageGapYears);
 
-    if (cholesterolNumber >= 200) riskPoints += 15;
-    if (cholesterolNumber >= 240) riskPoints += 15;
-
-    if (diabetes === "Yes") riskPoints += 15;
-    if (smoking === "Yes") riskPoints += 15;
-
-    const score = Math.max(0, 100 - riskPoints);
-
-    let level = "Low Risk";
-    let message =
-      "Your current inputs suggest a lower cardiovascular risk pattern. Continue healthy habits and regular preventive checkups.";
-
-    if (score < 70 && score >= 40) {
-      level = "Moderate Risk";
-      message =
-        "Your inputs suggest some cardiovascular risk factors. Consider discussing these results with a healthcare professional.";
-    }
-
-    if (score < 40) {
-      level = "High Risk";
-      message =
-        "Your inputs suggest multiple cardiovascular risk factors. This does not diagnose disease, but it is important to seek professional medical advice.";
-    }
+    // Keep a simple 0-100 "score" for compatibility with the shared
+    // history/health-plan views, derived directly from the real 10-year risk.
+    const score = Math.max(0, Math.min(100, Math.round(100 - tenYearRiskPercent * 3)));
 
     setResult({
       score,
       level,
       message,
+      heartAge,
+      ageGapYears,
+      tenYearRiskPercent,
+      input: heartAgeInput,
     });
 
     localStorage.setItem("heartScore", String(score));
     localStorage.setItem("heartLevel", level);
+    localStorage.setItem("heartAge", String(heartAge));
 
-    await saveAssessment(score, level, message);
+    await saveAssessment(
+      score,
+      level,
+      `${message} (${text("10-year CVD risk", "خطورة القلب لعشر سنوات")}: ${tenYearRiskPercent}%)`
+    );
   }
 
-  const scoreRingStyle = {
-    "--score": result ? Math.max(0, Math.min(100, result.score)) : 0,
-  } as CSSProperties;
+  function shareResultText() {
+    if (!result) return "";
+
+    return text(
+      `My OrganHeal heart age is ${result.heartAge} (I'm ${result.input.age}). Check your own heart age free: https://www.organheal.com/heart`,
+      `عمر قلبي حسب OrganHeal هو ${result.heartAge} سنة (وعمري الحقيقي ${result.input.age}). احسب عمر قلبك أنت مجانًا: https://www.organheal.com/heart`
+    );
+  }
+
+  function shareOnWhatsApp() {
+    const message = shareResultText();
+    if (!message) return;
+
+    window.open(
+      `https://wa.me/?text=${encodeURIComponent(message)}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  }
+
+  async function copyShareLink() {
+    const message = shareResultText();
+    if (!message) return;
+
+    try {
+      await navigator.clipboard.writeText(message);
+      setShareStatus(text("Copied to clipboard.", "تم النسخ إلى الحافظة."));
+    } catch {
+      setShareStatus(
+        text("Could not copy automatically.", "تعذر النسخ التلقائي.")
+      );
+    }
+  }
+
+  async function downloadShareCard() {
+    if (!shareCardRef.current) return;
+
+    setShareStatus(text("Preparing image...", "جاري تحضير الصورة..."));
+
+    try {
+      const { default: html2canvas } = await import("html2canvas");
+      const canvas = await html2canvas(shareCardRef.current, {
+        scale: 2,
+        backgroundColor: "#061826",
+        useCORS: true,
+      });
+
+      const dataUrl = canvas.toDataURL("image/png");
+      const link = document.createElement("a");
+      link.href = dataUrl;
+      link.download = "organheal-heart-age.png";
+      link.click();
+
+      setShareStatus(text("Image downloaded.", "تم تحميل الصورة."));
+    } catch {
+      setShareStatus(
+        text("Could not generate the image.", "تعذر إنشاء الصورة.")
+      );
+    }
+  }
 
   const resultTone = result ? getToneFromLevel(result.level) : "neutral";
 
@@ -213,23 +337,23 @@ if (result.status === "error") {
           <div className="ohHeroGrid">
             <div>
               <p className="ohEyebrow">
-                {text("Heart Assessment Experience", "تجربة تقييم القلب")}
+                {text("Free Heart Age Calculator", "حاسبة عمر القلب المجانية")}
               </p>
 
               <h1 className="ohTitle">
-                {text("Heart Risk Assessment", "تقييم خطورة القلب")}
+                {text("How old is your heart, really?", "كم عمر قلبك حقًا؟")}
               </h1>
 
               <p className="ohLead">
                 {text(
-                  "Evaluate key cardiovascular risk factors including age, blood pressure, cholesterol, diabetes, and smoking exposure. The result is educational and helps guide your next step.",
-                  "قيّم عوامل خطورة القلب الأساسية مثل العمر، ضغط الدم، الكوليسترول، السكري، والتدخين. النتيجة تعليمية وتساعدك على تحديد الخطوة التالية."
+                  "Most adults' hearts are older than they are. Enter your numbers and find out your real heart age in seconds, based on the Framingham Heart Study's published cardiovascular risk equation — then share it.",
+                  "قلب أغلب البالغين أكبر من عمرهم الحقيقي. أدخل بياناتك واكتشف عمر قلبك الحقيقي في ثوانٍ، بناءً على معادلة الخطورة القلبية المنشورة من دراسة Framingham للقلب — وشاركها بعد ذلك."
                 )}
               </p>
 
               <div className="ohButtonRow" style={{ marginTop: "24px" }}>
                 <a href="#heart-assessment-form" className="primaryBtn">
-                  {text("Start Heart Assessment", "ابدأ تقييم القلب")}
+                  {text("Calculate My Heart Age", "احسب عمر قلبي")}
                 </a>
 
                 <Link href="/assessment" className="secondaryBtn">
@@ -249,7 +373,7 @@ if (result.status === "error") {
                     {text("Score Model", "نظام المؤشر")}
                   </p>
                   <h2 className="ohCardTitle" style={{ marginTop: "8px" }}>
-                    {text("Clear score from 0 to 100", "مؤشر واضح من 0 إلى 100")}
+                    {text("A real heart age, in years", "عمر حقيقي للقلب، بالسنوات")}
                   </h2>
                 </div>
 
@@ -263,9 +387,9 @@ if (result.status === "error") {
                   <span className="ohMetricLabel">
                     {text("Inputs", "المدخلات")}
                   </span>
-                  <span className="ohMetricValue">5</span>
+                  <span className="ohMetricValue">8</span>
                   <span className="ohMetricHint">
-                    {text("risk factors", "عوامل خطورة")}
+                    {text("clinical risk factors", "عوامل خطورة طبية")}
                   </span>
                 </article>
 
@@ -273,9 +397,9 @@ if (result.status === "error") {
                   <span className="ohMetricLabel">
                     {text("Result", "النتيجة")}
                   </span>
-                  <span className="ohMetricValue">/100</span>
+                  <span className="ohMetricValue">{text("Age", "العمر")}</span>
                   <span className="ohMetricHint">
-                    {text("saved to history", "تُحفظ في التاريخ")}
+                    {text("shareable & saved to history", "قابلة للمشاركة وتُحفظ في التاريخ")}
                   </span>
                 </article>
               </div>
@@ -343,6 +467,18 @@ if (result.status === "error") {
                     "استخدم أحدث القيم المتوفرة لديك. إذا لم تكن متأكدًا، أدخل آخر قيمة تعرفها."
                   )}
                 </p>
+
+                {(autoFilledCholesterol || autoFilledHdl) && (
+                  <div className="ohTrustNotice" style={{ marginTop: "10px" }}>
+                    <span aria-hidden="true">✅</span>
+                    <div>
+                      {text(
+                        "Cholesterol values below were filled in automatically from your latest uploaded report. You can edit them.",
+                        "تم تعبئة قيم الكوليسترول أدناه تلقائيًا من آخر تقرير رفعته. يمكنك تعديلها."
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -365,6 +501,19 @@ if (result.status === "error") {
                 </div>
 
                 <div className="formGroup">
+                  <label>{text("Sex", "الجنس")}</label>
+                  <select
+                    value={sex}
+                    onChange={(event) =>
+                      setSex(event.target.value as "male" | "female")
+                    }
+                  >
+                    <option value="male">{text("Male", "ذكر")}</option>
+                    <option value="female">{text("Female", "أنثى")}</option>
+                  </select>
+                </div>
+
+                <div className="formGroup">
                   <label>
                     {text("Systolic Blood Pressure", "ضغط الدم الانقباضي")}
                   </label>
@@ -377,12 +526,58 @@ if (result.status === "error") {
                 </div>
 
                 <div className="formGroup">
-                  <label>{text("Total Cholesterol", "الكوليسترول الكلي")}</label>
+                  <label>
+                    {text(
+                      "On blood pressure medication?",
+                      "هل تتناول علاجًا لضغط الدم؟"
+                    )}
+                  </label>
+                  <select
+                    value={onBpMedication}
+                    onChange={(event) => setOnBpMedication(event.target.value)}
+                  >
+                    <option value="No">{text("No", "لا")}</option>
+                    <option value="Yes">{text("Yes", "نعم")}</option>
+                  </select>
+                </div>
+
+                <div className="formGroup">
+                  <label>
+                    {text("Total Cholesterol (mg/dL)", "الكوليسترول الكلي (mg/dL)")}
+                    {autoFilledCholesterol && (
+                      <span className="ohStatusBadge good" style={{ marginLeft: "8px", fontSize: "0.7rem" }}>
+                        {text("from your report", "من تقريرك")}
+                      </span>
+                    )}
+                  </label>
                   <input
                     type="number"
                     placeholder={text("e.g. 180", "مثال: 180")}
                     value={cholesterol}
-                    onChange={(event) => setCholesterol(event.target.value)}
+                    onChange={(event) => {
+                      setCholesterol(event.target.value);
+                      setAutoFilledCholesterol(false);
+                    }}
+                  />
+                </div>
+
+                <div className="formGroup">
+                  <label>
+                    {text("HDL Cholesterol (mg/dL)", "الكوليسترول الجيد HDL (mg/dL)")}
+                    {autoFilledHdl && (
+                      <span className="ohStatusBadge good" style={{ marginLeft: "8px", fontSize: "0.7rem" }}>
+                        {text("from your report", "من تقريرك")}
+                      </span>
+                    )}
+                  </label>
+                  <input
+                    type="number"
+                    placeholder={text("e.g. 50", "مثال: 50")}
+                    value={hdl}
+                    onChange={(event) => {
+                      setHdl(event.target.value);
+                      setAutoFilledHdl(false);
+                    }}
                   />
                 </div>
 
@@ -434,7 +629,7 @@ if (result.status === "error") {
             <div className="ohCardHeader">
               <div>
                 <p className="ohMetricLabel">
-                  {text("Result Preview", "معاينة النتيجة")}
+                  {text("Your Heart Age", "عمر قلبك")}
                 </p>
 
                 <h2 className="ohCardTitle">
@@ -445,30 +640,153 @@ if (result.status === "error") {
               </div>
 
               <span className={`ohStatusBadge ${resultTone}`}>
-                {result ? `${result.score}/100` : text("Pending", "بانتظار")}
+                {result
+                  ? `${result.tenYearRiskPercent}% ${text("10y risk", "خطورة 10س")}`
+                  : text("Pending", "بانتظار")}
               </span>
             </div>
 
             <div
+              ref={shareCardRef}
               style={{
                 display: "grid",
                 placeItems: "center",
                 margin: "22px 0",
+                padding: "28px 16px",
+                borderRadius: "20px",
+                background: "linear-gradient(135deg, #061826 0%, #0f172a 42%, #0f766e 100%)",
               }}
             >
-              <div className="ohScoreRing" style={scoreRingStyle}>
-                <div>
-                  <strong>{result ? result.score : 0}</strong>
-                  <span>{text("heart", "القلب")}</span>
+              <div style={{ textAlign: "center" }}>
+                <div
+                  style={{
+                    fontSize: "0.85rem",
+                    letterSpacing: "0.06em",
+                    color: "#d1fae5",
+                    fontWeight: 800,
+                    marginBottom: "6px",
+                  }}
+                >
+                  {text("HEART AGE", "عمر القلب")}
                 </div>
+
+                <div
+                  style={{
+                    fontSize: "3.4rem",
+                    fontWeight: 950,
+                    color: "#ffffff",
+                    lineHeight: 1,
+                  }}
+                >
+                  {result ? result.heartAge : "—"}
+                </div>
+
+                <div
+                  style={{
+                    fontSize: "0.95rem",
+                    color: "#e2e8f0",
+                    fontWeight: 700,
+                    marginTop: "10px",
+                  }}
+                >
+                  {result
+                    ? result.message
+                    : text(
+                        "Your result will appear here.",
+                        "ستظهر نتيجتك هنا."
+                      )}
+                </div>
+
+                {result && (
+                  <div
+                    style={{
+                      fontSize: "0.8rem",
+                      color: "#94a3b8",
+                      fontWeight: 700,
+                      marginTop: "12px",
+                    }}
+                  >
+                    OrganHeal.com · {text("Framingham Heart Study methodology", "منهجية Framingham Heart Study")}
+                  </div>
+                )}
               </div>
             </div>
 
             {result ? (
               <div className="ohStack">
-                <p className="ohCardText">
-                  {localizeRiskMessage(result.level, result.message)}
-                </p>
+                <div className="ohButtonRow">
+                  <button className="primaryBtn" onClick={shareOnWhatsApp}>
+                    {text("Share on WhatsApp", "شارك على واتساب")}
+                  </button>
+
+                  <button className="secondaryBtn" onClick={downloadShareCard}>
+                    {text("Download image", "تحميل الصورة")}
+                  </button>
+
+                  <button className="secondaryBtn" onClick={copyShareLink}>
+                    {text("Copy result", "نسخ النتيجة")}
+                  </button>
+                </div>
+
+                {shareStatus && (
+                  <p className="ohCardText" style={{ fontSize: "0.85rem" }}>
+                    {shareStatus}
+                  </p>
+                )}
+
+                <div className="ohTrustNotice">
+                  <span aria-hidden="true">🎬</span>
+                  <div>
+                    <strong>
+                      {text("Go deeper: your personal heart video", "اذهب أعمق: فيديوك الشخصي عن القلب")}
+                    </strong>
+                    <br />
+                    {text(
+                      "A real narrated video explaining what this heart age and risk pattern mean for your heart specifically — signed-in members only, limited per month.",
+                      "فيديو حقيقي مع سرد صوتي يشرح ماذا يعني عمر القلب هذا ونمط الخطورة بالنسبة لقلبك تحديدًا — لأعضاء الحساب المسجلين فقط، محدود شهريًا."
+                    )}
+
+                    <div className="ohButtonRow" style={{ marginTop: "10px" }}>
+                      <button
+                        type="button"
+                        className="primaryBtn"
+                        disabled={heartStoryVideo.phase === "starting" || heartStoryVideo.phase === "checking"}
+                        onClick={() => {
+                          if (result) void heartStoryVideo.start(result.input);
+                        }}
+                      >
+                        {heartStoryVideo.phase === "starting"
+                          ? text("Starting…", "جارٍ البدء…")
+                          : text("Create my heart video", "أنشئ فيديو قلبي")}
+                      </button>
+
+                      {(heartStoryVideo.phase === "queued" || heartStoryVideo.phase === "checking") && (
+                        <button
+                          type="button"
+                          className="secondaryBtn"
+                          disabled={heartStoryVideo.phase === "checking"}
+                          onClick={() => void heartStoryVideo.checkStatus()}
+                        >
+                          {heartStoryVideo.phase === "checking"
+                            ? text("Checking…", "جارٍ التحقق…")
+                            : text("Check status", "تحقق من الحالة")}
+                        </button>
+                      )}
+
+                      {heartStoryVideo.phase === "done" && heartStoryVideo.videoUrl && (
+                        <a href={heartStoryVideo.videoUrl} target="_blank" rel="noreferrer" className="secondaryBtn">
+                          {text("Watch my heart video", "شاهد فيديو قلبي")}
+                        </a>
+                      )}
+                    </div>
+
+                    {heartStoryVideo.message && (
+                      <p className="ohCardText" style={{ fontSize: "0.85rem", marginTop: "8px" }}>
+                        {heartStoryVideo.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
 
                 <div className="ohButtonRow">
                   <Link href="/history" className="primaryBtn">
@@ -483,8 +801,8 @@ if (result.status === "error") {
             ) : (
               <p className="ohCardText">
                 {text(
-                  "Your result will appear here as a clear score, risk category, and educational next step.",
-                  "ستظهر نتيجتك هنا كمؤشر واضح، فئة خطورة، وخطوة تعليمية تالية."
+                  "Your result will appear here as a heart age, 10-year risk percentage, and educational next step — ready to share.",
+                  "ستظهر نتيجتك هنا كعمر للقلب، نسبة خطورة لعشر سنوات، وخطوة تعليمية تالية — جاهزة للمشاركة."
                 )}
               </p>
             )}
@@ -499,13 +817,16 @@ if (result.status === "error") {
               </p>
 
               <h2 className="ohCardTitle">
-                {text("Simple scoring, clear interpretation", "حساب بسيط وتفسير واضح")}
+                {text(
+                  "Based on the Framingham Heart Study, not a guess",
+                  "مبني على دراسة Framingham للقلب، وليس تخمينًا"
+                )}
               </h2>
 
               <p className="ohCardText">
                 {text(
-                  "The tool subtracts risk points based on age, blood pressure, cholesterol, diabetes, and smoking exposure. A higher score means a better educational pattern.",
-                  "تقوم الأداة بخصم نقاط خطورة بناءً على العمر، ضغط الدم، الكوليسترول، السكري، والتدخين. كلما كان المؤشر أعلى كان النمط التعليمي أفضل."
+                  'Heart age is calculated using the "General Cardiovascular Disease Risk" equation published by the Framingham Heart Study (D\'Agostino et al., Circulation 2008) — the same methodology behind heart-age tools used by the NHS and the Australian Heart Foundation. It finds the age of someone with the same sex and the same 10-year cardiovascular risk, but with every other factor (blood pressure, cholesterol, smoking, diabetes) at an optimal level.',
+                  "يُحسب عمر القلب باستخدام معادلة \"الخطورة القلبية العامة\" المنشورة من دراسة Framingham للقلب (D'Agostino وآخرون، مجلة Circulation، 2008) — وهي نفس المنهجية المستخدمة في أدوات عمر القلب لدى NHS ومؤسسة القلب الأسترالية. تحدد المعادلة عمر شخص من نفس الجنس يحمل نفس نسبة الخطورة القلبية لعشر سنوات، لكن مع بقاء كل العوامل الأخرى (الضغط، الكوليسترول، التدخين، السكري) عند مستوى مثالي."
                 )}
               </p>
             </div>
@@ -516,7 +837,7 @@ if (result.status === "error") {
               <span className="ohMetricLabel">
                 {text("Lower Risk Pattern", "نمط خطورة أقل")}
               </span>
-              <span className="ohMetricValue">70+</span>
+              <span className="ohMetricValue">&lt;10%</span>
               <span className="ohMetricHint">
                 {text("Continue prevention and checkups", "استمر بالوقاية والفحوصات")}
               </span>
@@ -526,7 +847,7 @@ if (result.status === "error") {
               <span className="ohMetricLabel">
                 {text("Moderate Risk Pattern", "نمط خطورة متوسطة")}
               </span>
-              <span className="ohMetricValue">40-69</span>
+              <span className="ohMetricValue">10-19%</span>
               <span className="ohMetricHint">
                 {text("Review risk factors", "راجع عوامل الخطورة")}
               </span>
@@ -536,12 +857,19 @@ if (result.status === "error") {
               <span className="ohMetricLabel">
                 {text("Higher Risk Pattern", "نمط خطورة أعلى")}
               </span>
-              <span className="ohMetricValue">&lt;40</span>
+              <span className="ohMetricValue">20%+</span>
               <span className="ohMetricHint">
                 {text("Seek professional advice", "اطلب نصيحة مختص")}
               </span>
             </div>
           </div>
+
+          <p className="ohCardText" style={{ marginTop: "16px", fontSize: "0.85rem" }}>
+            {text(
+              "Source: D'Agostino RB Sr, et al. \"General Cardiovascular Risk Profile for Use in Primary Care.\" Circulation. 2008;117(6):743-753 — framinghamheartstudy.org/fhs-risk-functions/cardiovascular-disease-10-year-risk/. Validated for adults roughly 30-79 years old.",
+              "المصدر: D'Agostino RB Sr وآخرون، مجلة Circulation، 2008؛ 117(6):743-753 — framinghamheartstudy.org/fhs-risk-functions/cardiovascular-disease-10-year-risk/. المعادلة معتمدة للبالغين تقريبًا بين 30 و79 سنة."
+            )}
+          </p>
         </section>
 
         <section className="ohTrustNotice">

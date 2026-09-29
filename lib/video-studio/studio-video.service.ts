@@ -149,6 +149,70 @@ async function generatePersonalExplainerScript(
   }
 }
 
+// Same model call as generatePersonalExplainerScript, but grounded in the
+// member's own already-computed heart age result (see
+// lib/heart-age/heart-story-context.ts) instead of raw report text — the
+// script for the Heart Age calculator's "Layer 3" personal video
+// (startHeartStoryVideo below).
+async function generateHeartStoryScript(
+  heartContext: string,
+  language: ExplainerLanguage
+): Promise<ExplainerScript> {
+  const apiKey = process.env.OPENAI_API_KEY?.trim();
+
+  if (!apiKey) {
+    throw new Error("OPENAI_API_KEY is not configured.");
+  }
+
+  const abortController = new AbortController();
+  const timeoutId = setTimeout(() => abortController.abort(), SCRIPT_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(OPENAI_RESPONSES_URL, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      signal: abortController.signal,
+      body: JSON.stringify({
+        model: SCRIPT_MODEL,
+        instructions: buildExplainerInstructions(language, "heart-story"),
+        input: heartContext,
+        text: {
+          format: { type: "json_schema", name: "health_explainer", strict: true, schema: EXPLAINER_JSON_SCHEMA },
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Script provider returned status ${response.status}.`);
+    }
+
+    const text = extractText((await response.json()) as OpenAIResponsesResult);
+    const script = text ? parseExplainerScript(JSON.parse(text)) : null;
+
+    if (!script) {
+      throw new Error("Script provider returned an unusable script.");
+    }
+
+    return script;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+// Fixed cardiac-themed footage queries for the heart-story video — unlike
+// startPersonalStudioVideo, there is no free-form report to pull marker
+// names from (a heart-story video can be requested from the free calculator
+// alone, with no report), so the queries are a small fixed set that stays
+// visually on-topic regardless of which risk factors the viewer has.
+const HEART_STORY_FOOTAGE_QUERIES = [
+  "human heart beating animation",
+  "cardiologist heart checkup",
+  "coronary artery blood flow",
+  "ECG heart monitor",
+  "healthy heart lifestyle exercise",
+  "blood pressure check",
+] as const;
+
 // Best-effort per scene: a failed TTS call or footage lookup should not sink
 // the whole render — the scene just plays with whatever it does have.
 //
@@ -257,6 +321,58 @@ export async function startPersonalStudioVideo(
     const scenes = await Promise.all(
       slides.map((slide, index) =>
         resolveScene(pickFootageQueryForScene(markerNames, index), slide.heading, slide.narration, index, language)
+      )
+    );
+    const edit = buildStudioVideoEdit(script, scenes, language);
+    const renderId = await submitShotstackRender(edit);
+
+    await updateStudioVideo(record.id, {
+      title: script.title,
+      status: "queued",
+      shotstack_render_id: renderId,
+    });
+
+    return { ...record, title: script.title, shotstack_render_id: renderId };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error while starting the render.";
+
+    await updateStudioVideo(record.id, { status: "failed", error_message: message });
+
+    throw error;
+  }
+}
+
+// Starts a real rendered video telling the SIGNED-IN MEMBER's own personal
+// heart story — "Layer 3" of the free Heart Age calculator (app/heart/
+// page.tsx): a short narrated video about what their own already-computed
+// heart age and risk factors mean, in plain language. Unlike
+// startPersonalStudioVideo, this never requires a report — a member can
+// request it right after using the free calculator alone. Callers must
+// already have (a) confirmed the member is signed in, (b) recomputed and
+// validated the heart age result themselves from the raw inputs (never
+// trust a client-supplied heartAge/risk number directly), and (c) checked
+// the shared studio_video usage limit (see
+// app/api/studio-video/heart-story/route.ts for all three).
+export async function startHeartStoryVideo(
+  userId: string,
+  heartContext: string,
+  language: ExplainerLanguage = "en"
+): Promise<StudioVideoRow> {
+  const record = await createStudioVideo({ topic: "Personal heart story", createdBy: userId });
+
+  try {
+    const script = await generateHeartStoryScript(heartContext, language);
+    const disclaimer = EXPLAINER_DISCLAIMER[language];
+    const slides = [...script.slides, disclaimer];
+    const scenes = await Promise.all(
+      slides.map((slide, index) =>
+        resolveScene(
+          HEART_STORY_FOOTAGE_QUERIES[index % HEART_STORY_FOOTAGE_QUERIES.length],
+          slide.heading,
+          slide.narration,
+          index,
+          language
+        )
       )
     );
     const edit = buildStudioVideoEdit(script, scenes, language);
