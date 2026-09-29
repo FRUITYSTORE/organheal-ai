@@ -30,8 +30,15 @@ export type VoiceSynthesisResult = {
 const DEFAULT_SYNTHESIS_MODEL =
   "gpt-4o-mini-tts";
 
+// "alloy" (the original default) reads flat and synthetic for a calm
+// healthcare narration — a real complaint from an actual generated video.
+// OpenAI's own docs now recommend "cedar" or "marin" for the best quality
+// voices on this model; "cedar" is used here as a deeper, steadier male
+// voice that fits the "calm, professional, reassuring" instruction already
+// given below better than alloy did. Override with OPENAI_TTS_VOICE if a
+// different voice is preferred after listening to a real render.
 const DEFAULT_SYNTHESIS_VOICE =
-  "alloy";
+  "cedar";
 
 const MAX_SYNTHESIS_TEXT_LENGTH =
   4000;

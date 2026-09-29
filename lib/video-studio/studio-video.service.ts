@@ -9,7 +9,8 @@ import {
   type ExplainerScript,
 } from "@/lib/health-videos/explainer";
 import { synthesizeVoice } from "@/lib/voice/voice-synthesis.service";
-import { findStockFootage } from "@/lib/video-studio/pexels-video.client";
+import { findStockFootage, getStockFootageById } from "@/lib/video-studio/pexels-video.client";
+import { pickCuratedHeartFootageId } from "@/lib/video-studio/curated-heart-footage";
 import { uploadNarrationAudio } from "@/lib/video-studio/audio-storage";
 import {
   buildStudioVideoEdit,
@@ -199,11 +200,14 @@ async function generateHeartStoryScript(
   }
 }
 
-// Fixed cardiac-themed footage queries for the heart-story video — unlike
+// Fallback-only cardiac-themed footage queries for the heart-story video —
+// primary footage comes from the hand-reviewed curated list
+// (curated-heart-footage.ts, see resolveHeartStoryScene below); these are
+// only used if a curated video id fails to resolve. Unlike
 // startPersonalStudioVideo, there is no free-form report to pull marker
 // names from (a heart-story video can be requested from the free calculator
-// alone, with no report), so the queries are a small fixed set that stays
-// visually on-topic regardless of which risk factors the viewer has.
+// alone, with no report), so this is a small fixed set that stays visually
+// on-topic regardless of which risk factors the viewer has.
 const HEART_STORY_FOOTAGE_QUERIES = [
   "human heart beating animation",
   "cardiologist heart checkup",
@@ -239,6 +243,39 @@ async function resolveScene(
     // — visual content isn't language-dependent, and stock libraries are
     // indexed in English, so translating the query would only hurt matches.
     findStockFootage(footageQuery, sceneIndex).catch(() => null),
+  ]);
+
+  const audioUrl = audio
+    ? await uploadNarrationAudio(audio.audio, `${Date.now()}.mp3`).catch(() => null)
+    : null;
+
+  return {
+    heading,
+    narration,
+    footageUrl: footage?.url ?? null,
+    audioUrl,
+  };
+}
+
+// Same as resolveScene, except footage comes from the hand-reviewed curated
+// list (curated-heart-footage.ts) instead of a live keyword search — a live
+// search has no human review and has previously returned a completely
+// unrelated clip for a health topic (see resolveScene's comment above). Only
+// falls back to a live search of `fallbackQuery` if the curated id itself
+// fails to resolve (e.g. Pexels removed it later), so the heart-story video
+// never goes fully without footage just because one curated id went stale.
+async function resolveHeartStoryScene(
+  fallbackQuery: string,
+  heading: string,
+  narration: string,
+  sceneIndex: number,
+  language: ExplainerLanguage
+): Promise<StudioScene> {
+  const [audio, footage] = await Promise.all([
+    synthesizeVoice({ text: narration, language }).catch(() => null),
+    getStockFootageById(pickCuratedHeartFootageId(sceneIndex))
+      .catch(() => null)
+      .then((curated) => curated ?? findStockFootage(fallbackQuery, sceneIndex).catch(() => null)),
   ]);
 
   const audioUrl = audio
@@ -366,7 +403,7 @@ export async function startHeartStoryVideo(
     const slides = [...script.slides, disclaimer];
     const scenes = await Promise.all(
       slides.map((slide, index) =>
-        resolveScene(
+        resolveHeartStoryScene(
           HEART_STORY_FOOTAGE_QUERIES[index % HEART_STORY_FOOTAGE_QUERIES.length],
           slide.heading,
           slide.narration,

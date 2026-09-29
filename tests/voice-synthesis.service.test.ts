@@ -183,7 +183,7 @@ describe(
             "gpt-4o-mini-tts",
 
           voice:
-            "alloy",
+            "cedar",
 
           input:
             "Your health summary is ready.",
@@ -211,7 +211,7 @@ describe(
             "gpt-4o-mini-tts",
 
           voice:
-            "alloy",
+            "cedar",
 
           contentType:
             "audio/mpeg",
