@@ -1,13 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { buildHeartHeroScene } from "../lib/video-studio/heart-hero-scene";
+import { buildHeartHeroScene, type HeartHeroSceneInput } from "../lib/video-studio/heart-hero-scene";
 
-const baseInput = {
+const baseInput: HeartHeroSceneInput = {
   chronologicalAge: 55,
   heartAge: 93,
   ageGapYears: 38,
   tenYearRiskPercent: 36.3,
-  riskLevel: "High Risk" as const,
+  riskLevel: "High Risk",
+  focus: { coronaryArteries: false, leftVentricleAndAorta: false },
 };
 
 describe("buildHeartHeroScene", () => {
@@ -47,10 +48,72 @@ describe("buildHeartHeroScene", () => {
     expect(scene.html).toContain("أكبر بـ 38 سنة من عمرك");
   });
 
-  it("always includes the CSS heartbeat keyframes and a full-frame scene size", () => {
+  it("always includes a real, labeled four-chamber diagram (not a generic icon)", () => {
     const scene = buildHeartHeroScene(baseInput, "en");
 
-    expect(scene.css).toContain("@keyframes heartbeat");
+    expect(scene.html).toContain('class="diagram"');
+    expect(scene.html).toContain(">RA<");
+    expect(scene.html).toContain(">RV<");
+    expect(scene.html).toContain(">LA<");
+    expect(scene.html).toContain(">LV<");
+    expect(scene.html).toContain("coronary");
+  });
+
+  it("shows the overview callout and a 5s length when neither focus flag is set", () => {
+    const scene = buildHeartHeroScene(baseInput, "en");
+
+    expect(scene.html).toContain("Your Whole Heart");
+    expect(scene.html).not.toContain("Coronary Arteries");
+    expect(scene.html).not.toContain("Left Ventricle");
+    expect(scene.lengthSeconds).toBe(5);
+  });
+
+  it("shows the coronary-arteries callout with a real, non-fabricated explanation when that focus is active", () => {
+    const scene = buildHeartHeroScene(
+      { ...baseInput, focus: { coronaryArteries: true, leftVentricleAndAorta: false } },
+      "en"
+    );
+
+    expect(scene.html).toContain("Coronary Arteries");
+    expect(scene.html).toContain("leading cause of heart attacks");
+    expect(scene.html).not.toContain("Your Whole Heart");
+    expect(scene.lengthSeconds).toBe(5);
+  });
+
+  it("shows the left-ventricle callout when that focus is active", () => {
+    const scene = buildHeartHeroScene(
+      { ...baseInput, focus: { coronaryArteries: false, leftVentricleAndAorta: true } },
+      "en"
+    );
+
+    expect(scene.html).toContain("Left Ventricle");
+    expect(scene.html).toContain("blood pressure");
+  });
+
+  it("shows both callouts and extends the scene length when both focuses are active", () => {
+    const scene = buildHeartHeroScene(
+      { ...baseInput, focus: { coronaryArteries: true, leftVentricleAndAorta: true } },
+      "en"
+    );
+
+    expect(scene.html).toContain("Coronary Arteries");
+    expect(scene.html).toContain("Left Ventricle");
+    expect(scene.lengthSeconds).toBeGreaterThan(5);
+  });
+
+  it("translates the Arabic callout copy for an active focus", () => {
+    const scene = buildHeartHeroScene(
+      { ...baseInput, focus: { coronaryArteries: true, leftVentricleAndAorta: false } },
+      "ar"
+    );
+
+    expect(scene.html).toContain("الشرايين التاجية");
+  });
+
+  it("always includes the CSS keyframes and a full-frame scene size", () => {
+    const scene = buildHeartHeroScene(baseInput, "en");
+
+    expect(scene.css).toContain("@keyframes plaquePulse");
     expect(scene.css).toContain("width: 1280px");
     expect(scene.css).toContain("height: 720px");
   });

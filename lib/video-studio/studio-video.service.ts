@@ -20,7 +20,8 @@ import {
 } from "@/lib/video-studio/build-studio-video-edit";
 import { submitShotstackRender, getShotstackRenderStatus, type ShotstackClip } from "@/lib/video-studio/shotstack.client";
 import { buildHeartHeroScene } from "@/lib/video-studio/heart-hero-scene";
-import type { HeartAgeResult } from "@/lib/heart-age/heart-age.engine";
+import { deriveHeartFocus } from "@/lib/heart-age/heart-focus";
+import type { HeartAgeInput, HeartAgeResult } from "@/lib/heart-age/heart-age.engine";
 import {
   createStudioVideo,
   updateStudioVideo,
@@ -382,8 +383,6 @@ export async function startPersonalStudioVideo(
   }
 }
 
-const HERO_SCENE_SECONDS = 5;
-
 // Starts a real rendered video telling the SIGNED-IN MEMBER's own personal
 // heart story — "Layer 3" of the free Heart Age calculator (app/heart/
 // page.tsx): a short narrated video about what their own already-computed
@@ -396,15 +395,16 @@ const HERO_SCENE_SECONDS = 5;
 // the shared studio_video usage limit (see
 // app/api/studio-video/heart-story/route.ts for all three).
 //
-// Opens on our own data-driven hero graphic (heart-hero-scene.ts) — the
-// viewer's real heart age animating in over a hand-built, owned CSS
-// animation, rendered by Shotstack's html5 asset — before the narrated
-// scenes. Not stock footage, not a purchased animation, not a third-party
-// avatar API: genuinely OrganHeal's own.
+// Opens on our own data-driven hero graphic (heart-hero-scene.ts) — a real
+// four-chamber heart diagram that highlights the specific structure THIS
+// member's own risk factors implicate (coronary arteries vs left
+// ventricle/aorta — see heart-focus.ts), rendered by Shotstack's html5
+// asset — before the narrated scenes. Not stock footage, not a purchased
+// animation, not a third-party avatar API: genuinely OrganHeal's own.
 export async function startHeartStoryVideo(
   userId: string,
   heartContext: string,
-  chronologicalAge: number,
+  heartAgeInput: HeartAgeInput,
   result: HeartAgeResult,
   language: ExplainerLanguage = "en"
 ): Promise<StudioVideoRow> {
@@ -429,20 +429,21 @@ export async function startHeartStoryVideo(
 
     const heroScene = buildHeartHeroScene(
       {
-        chronologicalAge,
+        chronologicalAge: heartAgeInput.age,
         heartAge: result.heartAge,
         ageGapYears: result.ageGapYears,
         tenYearRiskPercent: result.tenYearRiskPercent,
         riskLevel: result.riskLevel,
+        focus: deriveHeartFocus(heartAgeInput),
       },
       language
     );
     const heroClip: ShotstackClip = {
       asset: { type: "html5", html: heroScene.html, css: heroScene.css, width: 1280, height: 720 },
       start: 0,
-      length: HERO_SCENE_SECONDS,
+      length: heroScene.lengthSeconds,
     };
-    const edit = prependHeroScene(baseEdit, heroClip, HERO_SCENE_SECONDS);
+    const edit = prependHeroScene(baseEdit, heroClip, heroScene.lengthSeconds);
 
     const renderId = await submitShotstackRender(edit);
 

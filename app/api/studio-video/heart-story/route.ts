@@ -126,7 +126,7 @@ export async function POST(request: Request) {
 
   try {
     const heartContext = buildHeartStoryContext(heartAgeInput, heartAgeResult, reportText);
-    const video = await startHeartStoryVideo(user.id, heartContext, heartAgeInput.age, heartAgeResult, language);
+    const video = await startHeartStoryVideo(user.id, heartContext, heartAgeInput, heartAgeResult, language);
 
     logApiInfo("studio_video_heart_story.started", { requestId, userId: user.id, videoId: video.id });
 
