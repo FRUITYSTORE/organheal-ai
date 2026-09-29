@@ -242,6 +242,39 @@ export function HomeAccessOverview({ isArabic }: { isArabic: boolean }) {
   );
 }
 
+// The homepage promo card for the free Heart Age calculator (app/heart) —
+// shown to visitors AND members alike (unlike MemberLaunchGrid/VisitorFreeNote,
+// which split by login state). This is the site's main discovery path for
+// that page today: it has no nav or footer link, so without this card it is
+// only reachable via /assessment's generic organ grid, the heart library
+// article, or a link someone already shared.
+export function HomeHeartAgeCta({ isArabic }: { isArabic: boolean }) {
+  return (
+    <section className="homeFinalCta homeHeartAgeCta">
+      <div>
+        <p className="homeBlockEyebrow">
+          {isArabic ? "🔥 مجاني ولا يحتاج تسجيل" : "🔥 Free, no sign-up needed"}
+        </p>
+        <h2>{isArabic ? "كم عمر قلبك حقًا؟" : "How old is your heart, really?"}</h2>
+        <p>
+          {isArabic
+            ? "قلب أغلب البالغين أكبر من عمرهم الحقيقي. احسب عمر قلبك الحقيقي في ثوانٍ بناءً على معادلة Framingham المنشورة، وشاركه مع أصدقائك."
+            : "Most adults' hearts are older than they are. Calculate your real heart age in seconds, based on the published Framingham risk equation — then share it."}
+        </p>
+      </div>
+
+      <div className="homeFinalCtaActions">
+        <Link href="/heart" className="primaryBtn">
+          {isArabic ? "احسب عمر قلبي مجانًا" : "Calculate My Heart Age — Free"}
+        </Link>
+        <Link href="/library/organs/heart" className="secondaryBtn">
+          {isArabic ? "تعلّم عن صحة القلب" : "Learn about heart health"}
+        </Link>
+      </div>
+    </section>
+  );
+}
+
 export function HomeFinalCta({ isArabic }: { isArabic: boolean }) {
   return (
     <section className="homeFinalCta">
