@@ -3,8 +3,10 @@
 import PageBackActions from "../components/PageBackActions";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { supabase } from "@/lib/supabase";
 import { saveAssessmentFlow } from "@/lib/services/organs/assessment-flow.service";
 import { calculateHeartAge } from "@/lib/heart-age/heart-age.engine";
+import { getLatestHeartMarkers } from "@/lib/heart-age/latest-heart-markers";
 
 type Language = "en" | "ar";
 
@@ -31,9 +33,57 @@ export default function HeartPage() {
   const [smoking, setSmoking] = useState("No");
   const [saveMessage, setSaveMessage] = useState("");
   const [shareStatus, setShareStatus] = useState("");
+  const [autoFilledCholesterol, setAutoFilledCholesterol] = useState(false);
+  const [autoFilledHdl, setAutoFilledHdl] = useState(false);
 
   const [result, setResult] = useState<null | RiskResult>(null);
   const shareCardRef = useRef<HTMLDivElement>(null);
+
+  // Layer 2: for a logged-in member, pre-fill Total Cholesterol / HDL from
+  // their own most recently uploaded report instead of asking them to type
+  // numbers they don't have memorized. Age, sex, smoking, diabetes, and blood
+  // pressure stay manual — those aren't lab values, or are a diagnosis
+  // decision the member should confirm, not something to infer silently.
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadLatestMarkers() {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+
+      if (!userId) return;
+
+      try {
+        const markers = await getLatestHeartMarkers(userId);
+
+        if (cancelled) return;
+
+        if (markers.totalCholesterol) {
+          setCholesterol((current) =>
+            current || String(Math.round(markers.totalCholesterol!.value))
+          );
+          setAutoFilledCholesterol(true);
+        }
+
+        if (markers.hdlCholesterol) {
+          setHdl((current) =>
+            current || String(Math.round(markers.hdlCholesterol!.value))
+          );
+          setAutoFilledHdl(true);
+        }
+      } catch {
+        // Auto-fill is a convenience, not a requirement — a member with no
+        // reports yet (or a transient read error) should just see the plain
+        // manual form, not an error.
+      }
+    }
+
+    loadLatestMarkers();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     function syncLanguage() {
@@ -427,6 +477,18 @@ if (result.status === "error") {
                     "استخدم أحدث القيم المتوفرة لديك. إذا لم تكن متأكدًا، أدخل آخر قيمة تعرفها."
                   )}
                 </p>
+
+                {(autoFilledCholesterol || autoFilledHdl) && (
+                  <div className="ohTrustNotice" style={{ marginTop: "10px" }}>
+                    <span aria-hidden="true">✅</span>
+                    <div>
+                      {text(
+                        "Cholesterol values below were filled in automatically from your latest uploaded report. You can edit them.",
+                        "تم تعبئة قيم الكوليسترول أدناه تلقائيًا من آخر تقرير رفعته. يمكنك تعديلها."
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -490,22 +552,42 @@ if (result.status === "error") {
                 </div>
 
                 <div className="formGroup">
-                  <label>{text("Total Cholesterol (mg/dL)", "الكوليسترول الكلي (mg/dL)")}</label>
+                  <label>
+                    {text("Total Cholesterol (mg/dL)", "الكوليسترول الكلي (mg/dL)")}
+                    {autoFilledCholesterol && (
+                      <span className="ohStatusBadge good" style={{ marginLeft: "8px", fontSize: "0.7rem" }}>
+                        {text("from your report", "من تقريرك")}
+                      </span>
+                    )}
+                  </label>
                   <input
                     type="number"
                     placeholder={text("e.g. 180", "مثال: 180")}
                     value={cholesterol}
-                    onChange={(event) => setCholesterol(event.target.value)}
+                    onChange={(event) => {
+                      setCholesterol(event.target.value);
+                      setAutoFilledCholesterol(false);
+                    }}
                   />
                 </div>
 
                 <div className="formGroup">
-                  <label>{text("HDL Cholesterol (mg/dL)", "الكوليسترول الجيد HDL (mg/dL)")}</label>
+                  <label>
+                    {text("HDL Cholesterol (mg/dL)", "الكوليسترول الجيد HDL (mg/dL)")}
+                    {autoFilledHdl && (
+                      <span className="ohStatusBadge good" style={{ marginLeft: "8px", fontSize: "0.7rem" }}>
+                        {text("from your report", "من تقريرك")}
+                      </span>
+                    )}
+                  </label>
                   <input
                     type="number"
                     placeholder={text("e.g. 50", "مثال: 50")}
                     value={hdl}
-                    onChange={(event) => setHdl(event.target.value)}
+                    onChange={(event) => {
+                      setHdl(event.target.value);
+                      setAutoFilledHdl(false);
+                    }}
                   />
                 </div>
 
