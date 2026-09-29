@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { saveAssessmentFlow } from "@/lib/services/organs/assessment-flow.service";
-import { calculateHeartAge } from "@/lib/heart-age/heart-age.engine";
+import { calculateHeartAge, type HeartAgeInput } from "@/lib/heart-age/heart-age.engine";
 import { getLatestHeartMarkers } from "@/lib/heart-age/latest-heart-markers";
 import { useHeartStoryVideoRequest } from "@/lib/video-studio/use-heart-story-video-request";
 
@@ -18,6 +18,13 @@ type RiskResult = {
   heartAge: number;
   ageGapYears: number;
   tenYearRiskPercent: number;
+  // The exact inputs used to compute this result, frozen at calculation
+  // time. Everything derived from this result (the share text, the
+  // downloadable image, the heart-story video request) must read from here
+  // instead of the live form fields — otherwise editing a field after
+  // pressing Calculate (without recalculating) would silently desync the
+  // displayed result from what gets shared or sent to the video.
+  input: HeartAgeInput;
 };
 
 export default function HeartPage() {
@@ -215,7 +222,7 @@ if (result.status === "error") {
       return;
     }
 
-    const engineResult = calculateHeartAge({
+    const heartAgeInput: HeartAgeInput = {
       sex,
       age: ageNumber,
       totalCholesterol: cholesterolNumber,
@@ -224,8 +231,9 @@ if (result.status === "error") {
       onBloodPressureMedication: onBpMedication === "Yes",
       isSmoker: smoking === "Yes",
       hasDiabetes: diabetes === "Yes",
-    });
+    };
 
+    const engineResult = calculateHeartAge(heartAgeInput);
     const { heartAge, ageGapYears, tenYearRiskPercent, riskLevel } =
       engineResult;
 
@@ -243,6 +251,7 @@ if (result.status === "error") {
       heartAge,
       ageGapYears,
       tenYearRiskPercent,
+      input: heartAgeInput,
     });
 
     localStorage.setItem("heartScore", String(score));
@@ -260,8 +269,8 @@ if (result.status === "error") {
     if (!result) return "";
 
     return text(
-      `My OrganHeal heart age is ${result.heartAge} (I'm ${age}). Check your own heart age free: https://www.organheal.com/heart`,
-      `عمر قلبي حسب OrganHeal هو ${result.heartAge} سنة (وعمري الحقيقي ${age}). احسب عمر قلبك أنت مجانًا: https://www.organheal.com/heart`
+      `My OrganHeal heart age is ${result.heartAge} (I'm ${result.input.age}). Check your own heart age free: https://www.organheal.com/heart`,
+      `عمر قلبي حسب OrganHeal هو ${result.heartAge} سنة (وعمري الحقيقي ${result.input.age}). احسب عمر قلبك أنت مجانًا: https://www.organheal.com/heart`
     );
   }
 
@@ -681,7 +690,7 @@ if (result.status === "error") {
                   }}
                 >
                   {result
-                    ? describeHeartAge(Number(age), result.heartAge, result.ageGapYears)
+                    ? result.message
                     : text(
                         "Your result will appear here.",
                         "ستظهر نتيجتك هنا."
@@ -705,10 +714,6 @@ if (result.status === "error") {
 
             {result ? (
               <div className="ohStack">
-                <p className="ohCardText">
-                  {result.message} ({text("10-year cardiovascular risk", "خطورة القلب لعشر سنوات")}: {result.tenYearRiskPercent}%)
-                </p>
-
                 <div className="ohButtonRow">
                   <button className="primaryBtn" onClick={shareOnWhatsApp}>
                     {text("Share on WhatsApp", "شارك على واتساب")}
@@ -746,18 +751,9 @@ if (result.status === "error") {
                         type="button"
                         className="primaryBtn"
                         disabled={heartStoryVideo.phase === "starting" || heartStoryVideo.phase === "checking"}
-                        onClick={() =>
-                          void heartStoryVideo.start({
-                            sex,
-                            age: Number(age),
-                            totalCholesterol: Number(cholesterol),
-                            hdlCholesterol: Number(hdl),
-                            systolicBloodPressure: Number(bloodPressure),
-                            onBloodPressureMedication: onBpMedication === "Yes",
-                            isSmoker: smoking === "Yes",
-                            hasDiabetes: diabetes === "Yes",
-                          })
-                        }
+                        onClick={() => {
+                          if (result) void heartStoryVideo.start(result.input);
+                        }}
                       >
                         {heartStoryVideo.phase === "starting"
                           ? text("Starting…", "جارٍ البدء…")
