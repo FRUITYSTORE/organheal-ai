@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import { saveAssessmentFlow } from "@/lib/services/organs/assessment-flow.service";
 import { calculateHeartAge } from "@/lib/heart-age/heart-age.engine";
 import { getLatestHeartMarkers } from "@/lib/heart-age/latest-heart-markers";
+import { useHeartStoryVideoRequest } from "@/lib/video-studio/use-heart-story-video-request";
 
 type Language = "en" | "ar";
 
@@ -38,6 +39,10 @@ export default function HeartPage() {
 
   const [result, setResult] = useState<null | RiskResult>(null);
   const shareCardRef = useRef<HTMLDivElement>(null);
+
+  // Layer 3: a real rendered video telling the member's own personal heart
+  // story, once they've calculated a result.
+  const heartStoryVideo = useHeartStoryVideoRequest(isArabic);
 
   // Layer 2: for a logged-in member, pre-fill Total Cholesterol / HDL from
   // their own most recently uploaded report instead of asking them to type
@@ -120,24 +125,6 @@ export default function HeartPage() {
     return level;
   }
 
-  function localizeRiskMessage(level: string, fallback: string) {
-    if (!isArabic) return fallback;
-
-    if (level === "Low Risk") {
-      return "تشير المدخلات الحالية إلى نمط خطورة قلبية أقل. استمر بالعادات الصحية والفحوصات الوقائية الدورية.";
-    }
-
-    if (level === "Moderate Risk") {
-      return "تشير مدخلاتك إلى وجود بعض عوامل الخطورة القلبية. يُفضّل مناقشة هذه النتائج مع مختص صحي.";
-    }
-
-    if (level === "High Risk") {
-      return "تشير مدخلاتك إلى وجود عدة عوامل خطورة قلبية. هذا لا يعني تشخيص مرض، لكنه مؤشر مهم لطلب استشارة طبية متخصصة.";
-    }
-
-    return fallback;
-  }
-
   function describeHeartAge(chronologicalAge: number, heartAge: number, gap: number) {
     if (gap <= 0) {
       return text(
@@ -150,12 +137,6 @@ export default function HeartPage() {
       `Your heart age is ${heartAge} — about ${gap} year${gap === 1 ? "" : "s"} older than your actual age (${chronologicalAge}).`,
       `عمر قلبك ${heartAge} سنة — أكبر بحوالي ${gap} سنة من عمرك الفعلي (${chronologicalAge}).`
     );
-  }
-
-  function getToneFromScore(score: number) {
-    if (score >= 70) return "good";
-    if (score >= 40) return "moderate";
-    return "risk";
   }
 
   function getToneFromLevel(level: string) {
@@ -747,6 +728,69 @@ if (result.status === "error") {
                     {shareStatus}
                   </p>
                 )}
+
+                <div className="ohTrustNotice">
+                  <span aria-hidden="true">🎬</span>
+                  <div>
+                    <strong>
+                      {text("Go deeper: your personal heart video", "اذهب أعمق: فيديوك الشخصي عن القلب")}
+                    </strong>
+                    <br />
+                    {text(
+                      "A real narrated video explaining what this heart age and risk pattern mean for your heart specifically — signed-in members only, limited per month.",
+                      "فيديو حقيقي مع سرد صوتي يشرح ماذا يعني عمر القلب هذا ونمط الخطورة بالنسبة لقلبك تحديدًا — لأعضاء الحساب المسجلين فقط، محدود شهريًا."
+                    )}
+
+                    <div className="ohButtonRow" style={{ marginTop: "10px" }}>
+                      <button
+                        type="button"
+                        className="primaryBtn"
+                        disabled={heartStoryVideo.phase === "starting" || heartStoryVideo.phase === "checking"}
+                        onClick={() =>
+                          void heartStoryVideo.start({
+                            sex,
+                            age: Number(age),
+                            totalCholesterol: Number(cholesterol),
+                            hdlCholesterol: Number(hdl),
+                            systolicBloodPressure: Number(bloodPressure),
+                            onBloodPressureMedication: onBpMedication === "Yes",
+                            isSmoker: smoking === "Yes",
+                            hasDiabetes: diabetes === "Yes",
+                          })
+                        }
+                      >
+                        {heartStoryVideo.phase === "starting"
+                          ? text("Starting…", "جارٍ البدء…")
+                          : text("Create my heart video", "أنشئ فيديو قلبي")}
+                      </button>
+
+                      {(heartStoryVideo.phase === "queued" || heartStoryVideo.phase === "checking") && (
+                        <button
+                          type="button"
+                          className="secondaryBtn"
+                          disabled={heartStoryVideo.phase === "checking"}
+                          onClick={() => void heartStoryVideo.checkStatus()}
+                        >
+                          {heartStoryVideo.phase === "checking"
+                            ? text("Checking…", "جارٍ التحقق…")
+                            : text("Check status", "تحقق من الحالة")}
+                        </button>
+                      )}
+
+                      {heartStoryVideo.phase === "done" && heartStoryVideo.videoUrl && (
+                        <a href={heartStoryVideo.videoUrl} target="_blank" rel="noreferrer" className="secondaryBtn">
+                          {text("Watch my heart video", "شاهد فيديو قلبي")}
+                        </a>
+                      )}
+                    </div>
+
+                    {heartStoryVideo.message && (
+                      <p className="ohCardText" style={{ fontSize: "0.85rem", marginTop: "8px" }}>
+                        {heartStoryVideo.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
 
                 <div className="ohButtonRow">
                   <Link href="/history" className="primaryBtn">
