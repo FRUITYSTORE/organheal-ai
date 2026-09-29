@@ -3,10 +3,12 @@ import { describe, expect, it } from "vitest";
 import {
   buildStudioVideoEdit,
   estimateSceneSeconds,
+  prependHeroScene,
   OUTPUT_SIZE,
   type StudioScene,
 } from "../lib/video-studio/build-studio-video-edit";
 import type { ExplainerScript } from "../lib/health-videos/explainer";
+import type { ShotstackClip } from "../lib/video-studio/shotstack.client";
 
 const SCRIPT: ExplainerScript = {
   title: "Understanding LDL Cholesterol",
@@ -96,5 +98,47 @@ describe("buildStudioVideoEdit", () => {
 
     expect(edit.output.format).toBe("mp4");
     expect(edit.output.size).toEqual(OUTPUT_SIZE);
+  });
+});
+
+describe("prependHeroScene", () => {
+  const heroClip: ShotstackClip = {
+    asset: { type: "html5", html: "<div>93</div>", width: 1280, height: 720 },
+    start: 0,
+    length: 5,
+  };
+
+  it("places the hero clip in its own new track at the very start", () => {
+    const edit = buildStudioVideoEdit(SCRIPT, [scene()]);
+    const withHero = prependHeroScene(edit, heroClip, 5);
+
+    expect(withHero.timeline.tracks[0].clips).toEqual([heroClip]);
+  });
+
+  it("shifts every existing clip later by exactly the hero's length", () => {
+    const edit = buildStudioVideoEdit(SCRIPT, [scene()]);
+    const originalStarts = edit.timeline.tracks.map((track) => track.clips.map((clip) => clip.start));
+
+    const withHero = prependHeroScene(edit, heroClip, 5);
+    const shiftedStarts = withHero.timeline.tracks.slice(1).map((track) => track.clips.map((clip) => clip.start));
+
+    expect(shiftedStarts).toEqual(originalStarts.map((starts) => starts.map((start) => start + 5)));
+  });
+
+  it("does not mutate the original edit", () => {
+    const edit = buildStudioVideoEdit(SCRIPT, [scene()]);
+    const originalFirstStart = edit.timeline.tracks[0].clips[0].start;
+
+    prependHeroScene(edit, heroClip, 5);
+
+    expect(edit.timeline.tracks[0].clips[0].start).toBe(originalFirstStart);
+  });
+
+  it("preserves every other field on the edit (output format/size)", () => {
+    const edit = buildStudioVideoEdit(SCRIPT, [scene()]);
+    const withHero = prependHeroScene(edit, heroClip, 5);
+
+    expect(withHero.output).toEqual(edit.output);
+    expect(withHero.timeline.background).toBe(edit.timeline.background);
   });
 });

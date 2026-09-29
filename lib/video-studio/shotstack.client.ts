@@ -41,7 +41,13 @@ export type ShotstackClip = {
         text: string;
         font?: { family?: string; size?: number; color?: string; lineHeight?: number };
         background?: { color?: string; opacity?: number; padding?: number };
-      };
+      }
+    // Newer HTML asset (distinct from the older, HTML4/CSS2-only "html" type):
+    // supports real CSS @keyframes/transitions, so this is what we use to
+    // render our own owned, data-driven motion graphics (see
+    // heart-hero-scene.ts) server-side through Shotstack — no third-party
+    // avatar API, no separate rendering infrastructure of our own.
+    | { type: "html5"; html: string; css?: string; width: number; height: number; background?: string };
   start: number;
   length: number;
   fit?: "cover" | "contain" | "crop";

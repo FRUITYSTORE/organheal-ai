@@ -128,3 +128,28 @@ export function buildStudioVideoEdit(
     },
   };
 }
+
+// Inserts a standalone opening clip (e.g. the heart-story video's own
+// data-driven hero graphic, see heart-hero-scene.ts) before everything an
+// already-built edit contains, shifting every existing clip later by the
+// hero's own length. Kept generic and separate from buildStudioVideoEdit
+// itself (rather than heart-specific) so any future feature can reuse the
+// same "prepend an intro" logic; pure and side-effect-free like the rest of
+// this module.
+export function prependHeroScene(
+  edit: ShotstackEdit,
+  heroClip: ShotstackClip,
+  heroLengthSeconds: number
+): ShotstackEdit {
+  const shiftedTracks = edit.timeline.tracks.map((track) => ({
+    clips: track.clips.map((clip) => ({ ...clip, start: clip.start + heroLengthSeconds })),
+  }));
+
+  return {
+    ...edit,
+    timeline: {
+      ...edit.timeline,
+      tracks: [{ clips: [heroClip] }, ...shiftedTracks],
+    },
+  };
+}
