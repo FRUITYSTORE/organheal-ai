@@ -21,6 +21,7 @@ import HomeMemberPulse from "@/app/components/home/HomeMemberPulse";
 import {
   HomeAccessOverview,
   HomeFinalCta,
+  HomeHeartAgeCta,
   HomeHowItWorks,
   MemberLaunchGrid,
   VisitorFreeNote,
@@ -1778,6 +1779,8 @@ if (
         {isLoggedIn && <HomeMemberPulse isArabic={isArabic} />}
 
         <HomeTodaySection isArabic={isArabic} />
+
+        <HomeHeartAgeCta isArabic={isArabic} />
 
         <HomeWatchSection isArabic={isArabic} />
 

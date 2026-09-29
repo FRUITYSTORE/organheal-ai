@@ -205,6 +205,13 @@
   font-weight: 800;
 }
 
+.homeHeartAgeCta {
+  background:
+    radial-gradient(circle at 12% 0%, rgba(244, 63, 94, 0.16), transparent 45%),
+    var(--oh-surface);
+  border-color: rgba(244, 63, 94, 0.28);
+}
+
 .homeFinalCta {
   display: flex;
   flex-wrap: wrap;
