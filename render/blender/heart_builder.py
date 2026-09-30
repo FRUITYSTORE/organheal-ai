@@ -82,19 +82,38 @@ def _deform_vertex(x, y, z):
     """The shared icosphere -> heart-silhouette deformation, factored out so
     both the mesh builder and the cutaway plane math use the exact same
     formula (previously duplicated by hand across three places, a real
-    source of drift bugs earlier this session)."""
-    stretch = 1.45
+    source of drift bugs earlier this session).
+
+    Retuned against the owner's reference image directly: the earlier
+    numbers (stretch 1.45, taper coefficient 0.62) produced a tall,
+    narrow, sharply-pointed cone -- the reference heart is shorter and
+    rounder, closer to the familiar rounded silhouette, with a blunter
+    apex, not a spike."""
+    stretch = 1.18
     below = max(0.0, -z)
-    lean = 0.34 * below
-    taper = 1.0 - 0.62 * (below ** 1.3)
-    vx = x * 0.95 * taper + lean
-    vy = y * 0.85 * taper
+    lean = 0.3 * below
+    taper = 1.0 - 0.48 * (below ** 1.15)
+    vx = x * 1.05 * taper + lean
+    vy = y * 0.95 * taper
     vz = z * stretch
-    if z > 0.45:
+    if z > 0.4:
         side = 1 if x > 0 else -1
-        bump = max(0.0, (z - 0.45) * 2.0) * 0.18
+        bump = max(0.0, (z - 0.4) * 2.0) * 0.22
         vx += side * bump
     return vx, vy, vz
+
+
+def _direction_to_surface(x, y, z):
+    """Normalizes a direction onto the unit sphere and runs it through the
+    ONE shared deformation -- the single place that logic lives now, after
+    a real bug: _surface_point used to keep its own independent copy of
+    this formula, so retuning _deform_vertex's constants for a rounder
+    silhouette silently left every vessel/artery/chamber-anchor position
+    computed from the OLD shape. Anything that needs "a point in this
+    direction, on the real current surface" calls this, so there is
+    nothing left to drift out of sync."""
+    magnitude = math.sqrt(x * x + y * y + z * z) or 1.0
+    return _deform_vertex(x / magnitude, y / magnitude, z / magnitude)
 
 
 def build_myocardium(materials):
@@ -112,7 +131,10 @@ def build_myocardium(materials):
     material. The exterior stays a plain, uniform muscle color, which is
     what a real myocardium's outside actually looks like."""
     bm = bmesh.new()
-    bmesh.ops.create_icosphere(bm, subdivisions=3, radius=1.0)
+    # subdivisions=4 (was 3): the cut rim's boundary loop needs enough
+    # density of its own to smooth out cleanly -- at 3 it showed visible
+    # hard facets along the opening edge once actually rendered.
+    bmesh.ops.create_icosphere(bm, subdivisions=4, radius=1.0)
 
     for v in bm.verts:
         v.co = Vector(_deform_vertex(v.co.x, v.co.y, v.co.z))
@@ -156,7 +178,7 @@ def build_myocardium(materials):
 
     subsurf = obj.modifiers.new("Smooth", "SUBSURF")
     subsurf.levels = 2
-    subsurf.render_levels = 2
+    subsurf.render_levels = 3
 
     # Hollow the shell inward (real wall thickness, not a zero-thickness
     # surface) and cap the cut opening with connecting rim geometry, so the
@@ -194,14 +216,25 @@ def build_myocardium(materials):
 # blood-color convention (deoxygenated blue-toned right heart, oxygenated
 # red right heart) pushed harder here for legibility, same convention,
 # more contrast.
+# Colors pushed to match the owner's reference directly: deep navy right
+# ventricle, mid-blue right atrium, magenta-purple left atrium, deep
+# maroon-red left ventricle -- flatter and more saturated than the first
+# cutaway pass, whose pastel tones read as one soft wash once actually
+# compared against it.
+# Anchor positions are DIRECTIONS run through _direction_to_surface, not
+# raw hardcoded deformed-space coordinates -- the same bug class as
+# _surface_point's above: a hardcoded coordinate silently stops matching
+# the real surface the moment the deformation's constants change (exactly
+# what happened here when the silhouette was rounded off). Directions
+# self-correct automatically from now on.
 _CHAMBER_ANCHORS = {
-    "HEART_RIGHT_ATRIUM": ((-0.55, 0.35, 0.55), (0.22, 0.4, 0.78)),
-    "HEART_RIGHT_VENTRICLE": ((-0.45, 0.45, -0.45), (0.13, 0.26, 0.6)),
-    "HEART_LEFT_ATRIUM": ((0.55, 0.35, 0.55), (0.75, 0.2, 0.4)),
-    "HEART_LEFT_VENTRICLE": ((0.45, 0.45, -0.45), (0.6, 0.05, 0.14)),
+    "HEART_RIGHT_ATRIUM": (_direction_to_surface(-0.55, 0.35, 0.55), (0.2, 0.32, 0.72)),
+    "HEART_RIGHT_VENTRICLE": (_direction_to_surface(-0.45, 0.45, -0.45), (0.06, 0.12, 0.45)),
+    "HEART_LEFT_ATRIUM": (_direction_to_surface(0.55, 0.35, 0.55), (0.58, 0.18, 0.56)),
+    "HEART_LEFT_VENTRICLE": (_direction_to_surface(0.45, 0.45, -0.45), (0.62, 0.04, 0.16)),
 }
 _MYOCARDIUM_COLOR = (0.82, 0.45, 0.4)
-_CHAMBER_BLEND_RADIUS = 0.85
+_CHAMBER_BLEND_RADIUS = 1.4
 
 
 def _chamber_blend_color(vx, vy, vz):
@@ -222,7 +255,7 @@ def _chamber_blend_color(vx, vy, vz):
     colors = []
     for (center, color) in _CHAMBER_ANCHORS.values():
         dist = ((vx - center[0]) ** 2 + (vy - center[1]) ** 2 + (vz - center[2]) ** 2) ** 0.5
-        weight = max(0.0, 1.0 - dist / _CHAMBER_BLEND_RADIUS) ** 1.5
+        weight = max(0.0, 1.0 - dist / _CHAMBER_BLEND_RADIUS) ** 2.0
         weights.append(weight)
         colors.append(color)
 
@@ -248,7 +281,7 @@ def _lv_highlight_weight(vx, vy, vz):
     entirely rather than continuing to tune it."""
     center, _color = _CHAMBER_ANCHORS["HEART_LEFT_VENTRICLE"]
     dist = ((vx - center[0]) ** 2 + (vy - center[1]) ** 2 + (vz - center[2]) ** 2) ** 0.5
-    return max(0.0, 1.0 - dist / _CHAMBER_BLEND_RADIUS) ** 1.5
+    return max(0.0, 1.0 - dist / _CHAMBER_BLEND_RADIUS) ** 2.0
 
 
 def _paint_chamber_vertex_colors(mesh):
@@ -549,19 +582,18 @@ def _surface_point(x, y, z, standoff=0.0):
     real point on the mesh, and rendered as a tube floating past the actual
     silhouette (worst near the tapered apex). Normalizing to the unit sphere
     FIRST, before deforming, guarantees the result lands on the real surface
-    regardless of how far off-sphere the authored coordinate was."""
-    magnitude = math.sqrt(x * x + y * y + z * z) or 1.0
-    x, y, z = x / magnitude, y / magnitude, z / magnitude
+    regardless of how far off-sphere the authored coordinate was.
 
-    stretch = 1.45
-    below = max(0.0, -z)
-    lean = 0.34 * below
-    taper = 1.0 - 0.62 * (below ** 1.3)
-    return (
-        x * 0.95 * taper + lean,
-        y * 0.85 * taper - standoff,  # small negative-y nudge = toward camera, off the surface
-        z * stretch,
-    )
+    Calls the SAME _deform_vertex() the mesh itself is built from, instead
+    of an independent copy of the formula -- an independent copy is
+    exactly what caused a real, silent bug: when _deform_vertex's constants
+    were retuned for a rounder silhouette, this function's own hardcoded
+    copy of the OLD constants was never touched, so every vessel/artery
+    would have kept rendering against the shape the mesh USED to be,
+    quietly drifting off the real (now more compact) surface. One shared
+    function means retuning the silhouette can never do that again."""
+    dx, dy, dz = _direction_to_surface(x, y, z)
+    return (dx, dy - standoff, dz)  # small negative-y nudge = toward camera, off the surface
 
 
 def build_vessels(materials):
