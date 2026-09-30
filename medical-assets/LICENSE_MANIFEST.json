@@ -1,0 +1,31 @@
+{
+  "assets": [
+    {
+      "id": "heart-chambers-v1",
+      "file": "render/blender/assets/heart/chambers.obj",
+      "description": "Four heart chamber meshes (right atrium, right ventricle, left atrium, left ventricle) used as the anatomical foundation of the OrganHeal heart visualization.",
+      "derivationMethod": "retopology-shrinkwrap",
+      "derivationNote": "NOT a copy of the source asset's mesh data. New geometry (a fresh icosphere per chamber, our own vertex/face data) was conformed to the real chamber SURFACE POSITIONS of the source asset using Blender's Shrinkwrap modifier (NEAREST_SURFACEPOINT mode), then the modifier was applied and the dependency on the source object was severed. This is the same retopology technique used to build new topology over a CT/photogrammetry scan. No vertices, edges, faces, materials, textures, or other authored data from the source file are included in this asset.",
+      "source": {
+        "name": "Z-Anatomy",
+        "url": "https://github.com/Z-Anatomy/Models-of-human-anatomy",
+        "sourceFile": "Startup.blend (from Z-Anatomy.zip)",
+        "originalDataset": "BodyParts3D, Database Center for Life Science (DBCLS), Japan",
+        "license": "CC BY-SA 4.0 (Creative Commons Attribution-ShareAlike 4.0 International)",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "retrievedDate": "2026-09-30",
+        "sourceObjectNames": ["Right atrium", "Right ventricle", "Left atrium", "Left ventricle"],
+        "attributionRequired": true,
+        "shareAlikeRequired": true
+      },
+      "licenseRiskNote": "CC BY-SA 4.0's ShareAlike clause requires derivative works to carry the same license. Whether this retopologized asset (new geometry, sampling only real-world anatomical PROPORTIONS/POSITIONS from the source, containing none of the source's own authored mesh data) legally counts as a 'derivative work' under CC BY-SA is a genuine open question that has NOT been resolved by a lawyer. Per the owner's explicit instruction, this asset is being used as reference-informed original geometry, not as a redistributed derivative -- but this file exists specifically so that determination can be revisited before any commercial release. Do not treat this note as legal clearance.",
+      "attributionText": "Chamber proportions informed by Z-Anatomy (Kervyn, G., z-anatomy.com), based on BodyParts3D, © Database Center for Life Science, licensed under CC BY-SA 4.0.",
+      "modificationPermitted": true,
+      "commercialUsePermitted": "permitted by the license text, subject to the ShareAlike risk note above"
+    }
+  ],
+  "notes": [
+    "This manifest exists per the OrganHeal Anatomical Asset Reconstruction specification's requirement to document every external anatomical source before use.",
+    "No other external anatomical asset has been used anywhere in this project as of this entry."
+  ]
+}
