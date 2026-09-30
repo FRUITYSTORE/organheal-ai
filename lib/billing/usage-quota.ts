@@ -62,6 +62,19 @@ export async function resolveUserTier(
   }
 }
 
+/**
+ * Accounts that are never limited, e.g. the owner's own account while
+ * testing. Comma-separated Supabase user ids in the server-only
+ * USAGE_UNLIMITED_USER_IDS variable; empty or unset means nobody is exempt.
+ */
+export function isUsageExemptUser(userId: string): boolean {
+  return (process.env.USAGE_UNLIMITED_USER_IDS ?? "")
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean)
+    .includes(userId);
+}
+
 export async function consumeUsage({
   client,
   feature,
@@ -75,6 +88,10 @@ export async function consumeUsage({
     actor.type === "visitor"
       ? "visitor"
       : await resolveUserTier(client, actor.userId);
+
+  if (actor.type === "user" && isUsageExemptUser(actor.userId)) {
+    return { allowed: true, tier, remaining: Number.POSITIVE_INFINITY };
+  }
 
   const policy = USAGE_POLICIES[feature][tier];
 

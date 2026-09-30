@@ -68,6 +68,35 @@ describe("usage quota", () => {
     );
   });
 
+  it("never counts or limits an allowlisted account, and only that account", async () => {
+    vi.stubEnv("USAGE_UNLIMITED_USER_IDS", " owner-1 , owner-2 ");
+    const { client } = clientWithPlan({ data: { plan: "free" }, error: null });
+
+    const exempt = await consumeUsage({
+      client,
+      feature: "studio_video",
+      actor: { type: "user", userId: "owner-1" },
+    });
+
+    expect(exempt).toMatchObject({ allowed: true, tier: "free" });
+    expect(mockedConsumePersistentApiRateLimit).not.toHaveBeenCalled();
+
+    await consumeUsage({ client, feature: "studio_video", actor: { type: "user", userId: "member-9" } });
+    expect(mockedConsumePersistentApiRateLimit).toHaveBeenCalledTimes(1);
+
+    vi.unstubAllEnvs();
+  });
+
+  it("exempts nobody when the allowlist is unset", async () => {
+    vi.stubEnv("USAGE_UNLIMITED_USER_IDS", "");
+    const { client } = clientWithPlan({ data: { plan: "free" }, error: null });
+
+    await consumeUsage({ client, feature: "assistant", actor: { type: "user", userId: "owner-1" } });
+    expect(mockedConsumePersistentApiRateLimit).toHaveBeenCalledTimes(1);
+
+    vi.unstubAllEnvs();
+  });
+
   it("counts visitor questions per IP and stops at the daily limit", async () => {
     const { client } = clientWithPlan({ data: null, error: null });
 
