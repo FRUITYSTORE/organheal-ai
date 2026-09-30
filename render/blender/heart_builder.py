@@ -179,8 +179,9 @@ def _cutaway_chamber(obj):
     # uncapped cross-section would show the background through the chamber,
     # which no real cut tissue ever does.
     open_edges = [e for e in bm.edges if e.is_boundary]
+    cap_faces = []
     if open_edges:
-        bmesh.ops.holes_fill(bm, edges=open_edges)
+        cap_faces = bmesh.ops.holes_fill(bm, edges=open_edges)["faces"]
     # bisect + hole-fill doesn't guarantee every face ends up with a
     # consistent outward-facing normal -- found by actually rendering
     # this: a chamber with a stray inward-facing normal read as glassy/
@@ -189,10 +190,18 @@ def _cutaway_chamber(obj):
     # mesh's own enclosed-volume topology fixes it structurally rather
     # than papering over it with a material tweak.
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
+    # The wall is smooth tissue; the cap is a flat cut. Smooth-shading the
+    # cap too averaged its normals with the wall's around its rim, so a
+    # geometrically flat cross-section rendered as if creased into
+    # folds -- found by rendering the right ventricle cut with and without
+    # its cap side by side.
+    cap_set = set(cap_faces)
+    for face in bm.faces:
+        face.smooth = face not in cap_set
+        # Slot 1 is the chamber's cut-surface material (build_chambers).
+        face.material_index = 1 if face in cap_set else 0
     bm.to_mesh(obj.data)
     bm.free()
-    for poly in obj.data.polygons:
-        poly.use_smooth = True
 
 
 def build_chambers(materials):
@@ -201,10 +210,32 @@ def build_chambers(materials):
     {anatomy_key: object}."""
     chambers = _import_and_transform_chambers()
     for key, obj in chambers.items():
-        _cutaway_chamber(obj)
+        # Both slots must exist before the cutaway assigns the cap to slot
+        # 1: writing the bmesh back clamps material indices to the slots
+        # the mesh already has.
         obj.data.materials.clear()
         obj.data.materials.append(materials[key])
+        # Registered as "<key>_CUT" so a highlight of the chamber can light
+        # its cut face too (scene_presets.apply_highlight).
+        materials[f"{key}_CUT"] = _cut_surface_material(materials[key])
+        obj.data.materials.append(materials[f"{key}_CUT"])
+        _cutaway_chamber(obj)
     return chambers
+
+
+def _cut_surface_material(wall_material):
+    """The flat cut face of a chamber: same hue as its wall, darker and
+    matte. Found by rendering: with the wall's own material, a flat cap
+    faces the key light head-on and washes out to pastel, losing the
+    saturated chamber color; cutaway illustrations conventionally show the
+    cut surface a shade darker than the outer wall anyway."""
+    wall = wall_material.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value
+    return _make_organic_material(
+        f"{wall_material.name}_cut",
+        tuple(channel * 0.55 for channel in wall[:3]),
+        subsurface=0.0,
+        roughness=0.75,
+    )
 
 
 def _chamber_center(obj):
@@ -402,8 +433,10 @@ def build_flow_arrows(materials, chamber_centers):
 
 def build_heart():
     """Entry point: builds every heart object + material and returns a
-    dict keyed by anatomy-group name -> Blender object, matching
-    HEART_ORGAN_MODULE.anatomyGroups in the TypeScript contract exactly."""
+    dict keyed by anatomy-group name -> Blender object. The object names
+    created here are the `blenderObject` values in HEART_ORGAN_MODULE's
+    anatomyRegistry (lib/medical-motion/organs/heart/heart-organ-module.ts);
+    keep the two in step."""
     materials = build_materials()
     objects = {}
 
@@ -415,5 +448,12 @@ def build_heart():
     objects.update(build_valves(materials, chamber_centers))
     objects.update(build_flow_arrows(materials, chamber_centers))
     objects.update(build_vessels_and_coronaries(materials))
+
+    # Every mesh above was edited in place (real-world -> local transform,
+    # cutaway), and an object's bound_box only reflects that once the scene
+    # is re-evaluated -- until then it still describes the ORIGINAL
+    # real-world position. Found by actually rendering a camera framed from
+    # bound_box, which pointed at empty space.
+    bpy.context.view_layer.update()
 
     return objects, materials
