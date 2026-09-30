@@ -35,9 +35,14 @@ export type AnatomyRegistryEntry = {
 
 export type LandmarkId = `${OrganId}.${string}`;
 
+/** A named anatomical point measured on the organ's real asset, for
+ * cameras and animation to target instead of raw coordinates. */
 export type Landmark = {
   id: LandmarkId;
+  /** What the point is and how the build measures it. */
   description: string;
+  /** The empty object the build places at the point. Render layer only. */
+  blenderObject: string;
 };
 
 export type CameraTarget = {

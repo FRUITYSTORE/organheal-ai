@@ -1,0 +1,94 @@
+{
+  "generatedBy": "render/blender/export_landmarks.py",
+  "units": "scene units (real-world meters x 20, centered on the chambers)",
+  "landmarks": {
+    "heart.aorticRoot": {
+      "blenderObject": "LM_heart.aorticRoot",
+      "position": [
+        0.0469,
+        0.1975,
+        0.5124
+      ]
+    },
+    "heart.apex": {
+      "blenderObject": "LM_heart.apex",
+      "position": [
+        1.2539,
+        -0.0979,
+        -0.6222
+      ]
+    },
+    "heart.base": {
+      "blenderObject": "LM_heart.base",
+      "position": [
+        -0.2551,
+        0.2566,
+        0.1703
+      ]
+    },
+    "heart.coronary.ladOrigin": {
+      "blenderObject": "LM_heart.coronary.ladOrigin",
+      "position": [
+        0.3696,
+        0.093,
+        0.6578
+      ]
+    },
+    "heart.coronary.lcxOrigin": {
+      "blenderObject": "LM_heart.coronary.lcxOrigin",
+      "position": [
+        0.3696,
+        0.093,
+        0.6578
+      ]
+    },
+    "heart.coronary.rcaOrigin": {
+      "blenderObject": "LM_heart.coronary.rcaOrigin",
+      "position": [
+        -0.2529,
+        -0.2327,
+        0.8197
+      ]
+    },
+    "heart.laCenter": {
+      "blenderObject": "LM_heart.laCenter",
+      "position": [
+        0.1206,
+        0.4826,
+        0.2437
+      ]
+    },
+    "heart.lvCenter": {
+      "blenderObject": "LM_heart.lvCenter",
+      "position": [
+        0.5474,
+        0.0783,
+        -0.1921
+      ]
+    },
+    "heart.pulmonaryTrunk": {
+      "blenderObject": "LM_heart.pulmonaryTrunk",
+      "position": [
+        0.2982,
+        -0.629,
+        0.7854
+      ]
+    },
+    "heart.raCenter": {
+      "blenderObject": "LM_heart.raCenter",
+      "position": [
+        -0.6307,
+        0.0306,
+        0.0969
+      ]
+    },
+    "heart.rvCenter": {
+      "blenderObject": "LM_heart.rvCenter",
+      "position": [
+        0.0312,
+        -0.4072,
+        -0.1087
+      ]
+    }
+  }
+}

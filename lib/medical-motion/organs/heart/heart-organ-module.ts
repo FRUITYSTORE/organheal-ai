@@ -1,4 +1,9 @@
-import type { OrganModule } from "@/lib/medical-motion/contracts/organ-module";
+import type { Landmark, LandmarkId, OrganModule } from "@/lib/medical-motion/contracts/organ-module";
+
+// heart_builder.landmark_object_name(): the empty for landmark X is "LM_X".
+function landmark(id: LandmarkId, description: string): Landmark {
+  return { id, description, blenderObject: `LM_${id}` };
+}
 
 // Bumped whenever the heart's geometry or materials change, so a cached
 // render of the old look is never reused (see render-signature.ts). v2: flat
@@ -42,10 +47,23 @@ export const HEART_ORGAN_MODULE: OrganModule = {
     { id: "heart.valve.tricuspid", kind: "valve", blenderObject: "Valve_tricuspid", fidelity: "placeholder" },
     { id: "heart.valve.mitral", kind: "valve", blenderObject: "Valve_mitral", fidelity: "placeholder" },
   ],
-  // Added with real positions from the asset in the landmark phase. Naming
-  // landmarks here before the asset provides them would repeat the mistake of
-  // claiming what the asset does not have.
-  landmarks: [],
+  // Measured on the real asset by heart_builder.compute_landmarks(); the
+  // positions it produces are exported to render/blender/assets/heart/
+  // landmarks.json. Chamber-based points use the whole chambers, not the
+  // cut-open ones: the cutaway is a viewing choice, not anatomy.
+  landmarks: [
+    landmark("heart.base", "Centroid of both atria: the atrial end of the heart, opposite the apex."),
+    landmark("heart.apex", "Left-ventricle surface point farthest from the base."),
+    landmark("heart.raCenter", "Centroid of the right atrium's surface."),
+    landmark("heart.rvCenter", "Centroid of the right ventricle's surface."),
+    landmark("heart.laCenter", "Centroid of the left atrium's surface."),
+    landmark("heart.lvCenter", "Centroid of the left ventricle's surface."),
+    landmark("heart.aorticRoot", "First point of the aorta's sampled centerline."),
+    landmark("heart.pulmonaryTrunk", "First point of the pulmonary trunk's sampled centerline."),
+    landmark("heart.coronary.ladOrigin", "First point of the LAD centerline (the left main bifurcation)."),
+    landmark("heart.coronary.lcxOrigin", "First point of the circumflex centerline (the left main bifurcation)."),
+    landmark("heart.coronary.rcaOrigin", "First point of the right coronary centerline."),
+  ],
   cameraTargets: [
     { id: "CAM_HEART_OVERVIEW", frames: [] },
     { id: "CAM_HEART_HERO", frames: [] },

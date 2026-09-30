@@ -207,8 +207,11 @@ def _cutaway_chamber(obj):
 def build_chambers(materials):
     """Loads the real chamber asset, converts it to our scene's scale, cuts
     it open, and assigns each chamber its own real material. Returns
-    {anatomy_key: object}."""
+    ({anatomy_key: object}, {anatomy_key: [uncut vertex positions]}) -- the
+    whole chambers' geometry is what landmarks are measured on, since the
+    cutaway is a viewing choice, not anatomy."""
     chambers = _import_and_transform_chambers()
+    uncut = {key: [v.co.copy() for v in obj.data.vertices] for key, obj in chambers.items()}
     for key, obj in chambers.items():
         # Both slots must exist before the cutaway assigns the cap to slot
         # 1: writing the bmesh back clamps material indices to the slots
@@ -217,7 +220,7 @@ def build_chambers(materials):
         obj.data.materials.append(materials[key])
         obj.data.materials.append(_cut_surface_material(materials[key]))
         _cutaway_chamber(obj)
-    return chambers
+    return chambers, uncut
 
 
 def _cut_surface_material(wall_material):
@@ -430,17 +433,84 @@ def build_flow_arrows(materials, chamber_centers):
     return objects
 
 
+# ---------------------------------------------------------------------------
+# Landmarks — measured on the real geometry, never hand-placed
+# ---------------------------------------------------------------------------
+
+def _centroid(points):
+    total = Vector((0, 0, 0))
+    for p in points:
+        total += Vector(p)
+    return total / len(points)
+
+
+def compute_landmarks(uncut_chambers, vessel_points):
+    """Every landmark's position, derived from the asset itself:
+
+    - chamber centers: the centroid of that chamber's whole (uncut) surface;
+    - heart.base: the centroid of both atria's surfaces -- the base of the
+      heart is the atrial end, opposite the apex;
+    - heart.apex: the left-ventricle surface point farthest from the base,
+      which is how the apex is defined anatomically (the LV forms it);
+    - vessel origins: the first sampled point of each real centerline. The
+      coronaries start 1.8-3 cm from the aortic root and end 6-9 cm away,
+      and the LAD and circumflex share their first point (the left main
+      bifurcation), so the first point is the origin, as checked against
+      vessels.json rather than assumed.
+
+    Returns {landmark_id: Vector}. Ids match HEART_ORGAN_MODULE.landmarks
+    (lib/medical-motion/organs/heart/heart-organ-module.ts)."""
+    base = _centroid(uncut_chambers["HEART_RIGHT_ATRIUM"] + uncut_chambers["HEART_LEFT_ATRIUM"])
+    apex = max(uncut_chambers["HEART_LEFT_VENTRICLE"], key=lambda p: (p - base).length)
+
+    def origin(key):
+        return Vector(_real_to_local(vessel_points[key][0]["points"][0]))
+
+    return {
+        "heart.base": base,
+        "heart.apex": apex.copy(),
+        "heart.raCenter": _centroid(uncut_chambers["HEART_RIGHT_ATRIUM"]),
+        "heart.rvCenter": _centroid(uncut_chambers["HEART_RIGHT_VENTRICLE"]),
+        "heart.laCenter": _centroid(uncut_chambers["HEART_LEFT_ATRIUM"]),
+        "heart.lvCenter": _centroid(uncut_chambers["HEART_LEFT_VENTRICLE"]),
+        "heart.aorticRoot": origin("AORTA"),
+        "heart.pulmonaryTrunk": origin("PULMONARY_ARTERY"),
+        "heart.coronary.ladOrigin": origin("CORONARY_LAD"),
+        "heart.coronary.lcxOrigin": origin("CORONARY_LCX"),
+        "heart.coronary.rcaOrigin": origin("CORONARY_RCA"),
+    }
+
+
+def landmark_object_name(landmark_id):
+    return f"LM_{landmark_id}"
+
+
+def build_landmarks(uncut_chambers):
+    """One empty per landmark, named "LM_<id>", for cameras and animation to
+    target by name instead of by raw coordinates. Empties never render."""
+    empties = {}
+    for landmark_id, position in compute_landmarks(uncut_chambers, _load_vessel_points()).items():
+        empty = bpy.data.objects.new(landmark_object_name(landmark_id), None)
+        empty.empty_display_type = "SPHERE"
+        empty.empty_display_size = 0.05
+        empty.location = position
+        bpy.context.collection.objects.link(empty)
+        empties[landmark_id] = empty
+    return empties
+
+
 def build_heart():
     """Entry point: builds every heart object + material and returns a
     dict keyed by anatomy-group name -> Blender object. The object names
     created here are the `blenderObject` values in HEART_ORGAN_MODULE's
-    anatomyRegistry (lib/medical-motion/organs/heart/heart-organ-module.ts);
-    keep the two in step."""
+    anatomyRegistry and landmarks (lib/medical-motion/organs/heart/
+    heart-organ-module.ts); keep the two in step."""
     materials = build_materials()
     objects = {}
 
-    chambers = build_chambers(materials)
+    chambers, uncut_chambers = build_chambers(materials)
     objects.update(chambers)
+    objects.update(build_landmarks(uncut_chambers))
 
     chamber_centers = {key: _chamber_center(obj) for key, obj in chambers.items()}
 

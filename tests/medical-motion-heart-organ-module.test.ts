@@ -43,9 +43,44 @@ describe("HEART_ORGAN_MODULE", () => {
       expect(registryIds).not.toContain(absent);
     }
 
-    expect(HEART_ORGAN_MODULE.landmarks).toEqual([]);
     expect(HEART_ORGAN_MODULE.motionControllers).toEqual([]);
     expect(HEART_ORGAN_MODULE.renderStyles).toEqual(["cinematic"]);
+  });
+
+  it("lists exactly the landmarks the build measures, with the build's object names", () => {
+    const exported = JSON.parse(readFileSync(join(ASSET_DIR, "landmarks.json"), "utf-8")) as {
+      landmarks: Record<string, { blenderObject: string; position: number[] }>;
+    };
+    const landmarks = HEART_ORGAN_MODULE.landmarks;
+
+    expect(landmarks.map((l) => l.id).sort()).toEqual(Object.keys(exported.landmarks).sort());
+    for (const l of landmarks) {
+      expect(l.blenderObject).toBe(exported.landmarks[l.id].blenderObject);
+      expect(exported.landmarks[l.id].position).toHaveLength(3);
+      expect(l.description.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("measures landmarks that sit where anatomy puts them", () => {
+    const { landmarks } = JSON.parse(readFileSync(join(ASSET_DIR, "landmarks.json"), "utf-8")) as {
+      landmarks: Record<string, { position: [number, number, number] }>;
+    };
+    const at = (id: string) => landmarks[id].position;
+    // Scene axes: +x is the patient's left, -y is anterior (the camera
+    // side), +z is superior.
+    const [apexX, , apexZ] = at("heart.apex");
+    const [baseX, , baseZ] = at("heart.base");
+
+    // The apex points to the patient's left and down from the base.
+    expect(apexX).toBeGreaterThan(baseX);
+    expect(apexZ).toBeLessThan(baseZ);
+    // The right ventricle is the most anterior chamber, the left atrium the
+    // most posterior.
+    const chamberY = ["ra", "rv", "la", "lv"].map((c) => at(`heart.${c}Center`)[1]);
+    expect(Math.min(...chamberY)).toBe(at("heart.rvCenter")[1]);
+    expect(Math.max(...chamberY)).toBe(at("heart.laCenter")[1]);
+    // LAD and circumflex both leave the left main bifurcation.
+    expect(at("heart.coronary.ladOrigin")).toEqual(at("heart.coronary.lcxOrigin"));
   });
 
   it("marks the torus valves and constant-radius great vessels as placeholders", () => {
