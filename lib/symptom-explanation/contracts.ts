@@ -1,5 +1,8 @@
 import type { ClinicalUrgencyLevel } from "@/lib/health-intelligence/engines/clinical-urgency.engine";
+import type { AnatomyStructureId } from "@/lib/medical-motion/contracts/anatomy";
 import type { OrganId } from "@/lib/medical-motion/contracts/organ";
+
+export type { AnatomyStructureId };
 
 // Contracts for the Symptom Explanation Engine: a user's own words about a
 // health concern -> safety triage -> a POSSIBLE physiological mechanism ->
@@ -44,10 +47,6 @@ export type MechanismId = (typeof MECHANISM_IDS)[number];
 export const EVIDENCE_LEVELS = ["possible", "documented"] as const;
 
 export type EvidenceLevel = (typeof EVIDENCE_LEVELS)[number];
-
-/** Stable anatomy id, organ-prefixed: "heart.coronary.lad". A bare group
- * prefix ("heart.coronary") is also valid wherever a focus is expected. */
-export type AnatomyStructureId = `${OrganId}.${string}`;
 
 export type ClinicalExplanation = {
   organSystems: readonly OrganId[];
