@@ -15,8 +15,8 @@ CAMERA_PRESETS = {
     "CAM_HEART_HERO": {"location": (0.0, -7.5, -0.2), "target": (0.0, 0.0, -0.2)},
     "CAM_HEART_ORBIT": {"location": (4.0, -7.0, 0.2), "target": (0.0, 0.0, -0.1)},
     "CAM_CORONARY_APPROACH": {"location": (0.4, -4.6, -0.4), "target": (0.15, -0.7, -0.6)},
-    "CAM_LV_APPROACH": {"location": (1.8, -4.8, -0.3), "target": (0.9, -0.5, -0.4)},
-    "CAM_COMBINED": {"location": (1.2, -5.4, -0.3), "target": (0.5, -0.6, -0.5)},
+    "CAM_LV_APPROACH": {"location": (2.4, -6.2, 0.5), "target": (0.55, -0.35, 0.15)},
+    "CAM_COMBINED": {"location": (1.4, -6.8, 0.1), "target": (0.35, -0.45, -0.1)},
 }
 
 
@@ -47,4 +47,12 @@ def apply_highlight(materials, structures, intensity):
             continue
         bsdf = material.node_tree.nodes.get("Principled BSDF")
         if bsdf and "Emission Strength" in bsdf.inputs:
+            # A real, easy-to-miss bug: boosting Emission Strength alone
+            # emits nothing if Emission Color was never set (it defaults to
+            # pure black) -- this silently "worked" for the coronary
+            # arteries only because _make_emissive_material happened to set
+            # a color already. Any other material (the aorta, for example)
+            # highlighted with strength alone and stayed invisible.
+            if "Emission Color" in bsdf.inputs:
+                bsdf.inputs["Emission Color"].default_value = bsdf.inputs["Base Color"].default_value
             bsdf.inputs["Emission Strength"].default_value = intensity * 2.6

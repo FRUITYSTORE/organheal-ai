@@ -305,6 +305,40 @@ def build_coronary_arteries(materials):
     return arteries
 
 
+def build_highlight_markers(materials):
+    """A real, separate highlight target for the left ventricle -- unlike
+    the coronary arteries (their own tube objects, already independently
+    highlightable) the LV chamber only exists as a blended vertex-color
+    patch on the shared myocardium material, which apply_highlight() can't
+    target by name. This is a thin, surface-conforming glow disc sitting
+    right on the real LV region, colored to match its surroundings so it's
+    invisible until highlighted -- not a new visible shape, a dormant one."""
+    markers = {}
+
+    bm = bmesh.new()
+    bmesh.ops.create_circle(bm, cap_ends=True, radius=0.3, segments=24)
+    mesh = bpy.data.meshes.new("LVHighlightMarker")
+    bm.to_mesh(mesh)
+    bm.free()
+    for poly in mesh.polygons:
+        poly.use_smooth = True
+
+    obj = bpy.data.objects.new("LVHighlightMarker", mesh)
+    obj.location = _surface_point(0.55, -0.62, -0.15, standoff=-0.015)
+    # Orient the disc's normal outward along -Y (toward camera) to sit
+    # flush against the surface at this point.
+    obj.rotation_euler = (math.radians(90), 0, 0)
+    obj.scale = (1.0, 1.0, 0.6)
+    bpy.context.collection.objects.link(obj)
+
+    mat = _make_emissive_material("mat_lv_highlight", (0.58, 0.15, 0.28))
+    obj.data.materials.append(mat)
+    materials["HEART_LEFT_VENTRICLE"] = mat
+    markers["HEART_LEFT_VENTRICLE"] = obj
+
+    return markers
+
+
 def build_heart():
     """Entry point: builds every heart object + material and returns a
     dict keyed by anatomy-group name -> Blender object, matching
@@ -314,4 +348,5 @@ def build_heart():
     objects["MYOCARDIUM"] = build_myocardium(materials)
     objects.update(build_vessels(materials))
     objects.update(build_coronary_arteries(materials))
+    objects.update(build_highlight_markers(materials))
     return objects, materials
