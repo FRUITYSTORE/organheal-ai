@@ -1,5 +1,6 @@
 import type { ExplainerScript } from "@/lib/health-videos/explainer";
 import type { ShotstackClip, ShotstackEdit } from "@/lib/video-studio/shotstack.client";
+import { ARABIC_FONT_FAMILY, CAIRO_BOLD_URL } from "@/lib/video-studio/video-fonts";
 
 // Pure composition logic: turns an already-generated explainer script, plus
 // whatever footage/audio was resolved for each of its scenes, into a
@@ -24,16 +25,6 @@ export function estimateSceneSeconds(narration: string): number {
   return Math.min(MAX_SCENE_SECONDS, Math.max(MIN_SCENE_SECONDS, Math.round(estimate)));
 }
 
-// Picks which of a member's own report markers a scene's footage should be
-// searched for, cycling through the distinct list so consecutive scenes
-// don't all reuse the same query. Falls back to a generic query when the
-// report had no structured markers at all (e.g. a radiology summary). Lives
-// in this side-effect-free module (rather than studio-video.service.ts,
-// which pulls in Supabase at import time) so it stays directly unit-testable.
-export function pickFootageQueryForScene(markerNames: string[], sceneIndex: number): string {
-  return markerNames.length > 0 ? markerNames[sceneIndex % markerNames.length] : "medical lab report";
-}
-
 export type StudioScene = {
   heading: string;
   narration: string;
@@ -47,9 +38,10 @@ export type StudioScene = {
 
 // Montserrat has no Arabic glyphs — Arabic captions rendered in it would
 // come out as blank boxes, so the font swaps per language rather than
-// staying fixed.
+// staying fixed. Cairo is not built into Shotstack, so the edit also ships
+// the font file itself (see timeline.fonts below).
 function captionFontFamily(language: "en" | "ar"): string {
-  return language === "ar" ? "Cairo" : "Montserrat";
+  return language === "ar" ? ARABIC_FONT_FAMILY : "Montserrat";
 }
 
 function captionClip(text: string, start: number, length: number, language: "en" | "ar"): ShotstackClip {
@@ -119,12 +111,32 @@ export function buildStudioVideoEdit(
   return {
     timeline: {
       background: BRAND_BACKGROUND,
+      ...(language === "ar" ? { fonts: [{ src: CAIRO_BOLD_URL }] } : {}),
       tracks,
     },
     output: {
       format: "mp4",
       size: OUTPUT_SIZE,
       fps: 25,
+    },
+  };
+}
+
+/** Seconds from the first clip's start to the last clip's end. */
+export function editDurationSeconds(edit: ShotstackEdit): number {
+  return Math.max(0, ...edit.timeline.tracks.flatMap((track) => track.clips.map((clip) => clip.start + clip.length)));
+}
+
+// Adds a clip that sits UNDER everything else for the edit's whole length
+// (e.g. the personal report video's organ diagram, see organ-hero-scene.ts),
+// so captions and any footage still draw on top of it. Shotstack draws the
+// first track on top, so the backdrop goes last.
+export function addBackdropTrack(edit: ShotstackEdit, asset: ShotstackClip["asset"]): ShotstackEdit {
+  return {
+    ...edit,
+    timeline: {
+      ...edit.timeline,
+      tracks: [...edit.timeline.tracks, { clips: [{ asset, start: 0, length: editDurationSeconds(edit) }] }],
     },
   };
 }

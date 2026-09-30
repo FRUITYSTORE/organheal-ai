@@ -1,5 +1,6 @@
 import type { HeartRiskLevel } from "@/lib/heart-age/heart-age.engine";
 import type { HeartFocus } from "@/lib/heart-age/heart-focus";
+import { ARABIC_FONT_FACE_CSS } from "@/lib/video-studio/video-fonts";
 
 // Our own, owned motion graphic for the heart-story video's opening scene —
 // not stock footage, not a third-party avatar, not a licensed icon set.
@@ -112,7 +113,7 @@ function callout(kind: "coronary" | "leftVentricle" | "overview", language: "en"
  * the septum line for free (the clip boundary IS the septum), rather than
  * drawing chambers as four disconnected boxes.
  */
-function heartDiagramSvg(coronaryActive: boolean, leftVentricleActive: boolean): string {
+export function heartDiagramSvg(coronaryActive: boolean, leftVentricleActive: boolean): string {
   const coronaryOpacity = coronaryActive ? 1 : 0.32;
   const lvWallOpacity = leftVentricleActive ? 1 : 0.32;
   const aortaOpacity = leftVentricleActive ? 1 : 0.55;
@@ -227,6 +228,7 @@ export function buildHeartHeroScene(
   `.trim();
 
   const css = `
+    ${ARABIC_FONT_FACE_CSS}
     body { margin: 0; background: #061826; }
     .scene {
       width: 1280px;
@@ -235,7 +237,7 @@ export function buildHeartHeroScene(
       align-items: center;
       justify-content: center;
       gap: 64px;
-      font-family: 'Montserrat', Arial, sans-serif;
+      font-family: 'Montserrat', 'Cairo', Arial, sans-serif;
       background: radial-gradient(circle at 30% 40%, rgba(20,184,166,0.14), transparent 55%), #061826;
     }
     .diagram-panel {

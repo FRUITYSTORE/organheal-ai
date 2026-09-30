@@ -13,13 +13,17 @@ import { findStockFootage, getStockFootageById } from "@/lib/video-studio/pexels
 import { pickCuratedHeartFootageId } from "@/lib/video-studio/curated-heart-footage";
 import { uploadNarrationAudio } from "@/lib/video-studio/audio-storage";
 import {
+  addBackdropTrack,
   buildStudioVideoEdit,
-  pickFootageQueryForScene,
+  editDurationSeconds,
   prependHeroScene,
   type StudioScene,
 } from "@/lib/video-studio/build-studio-video-edit";
 import { submitShotstackRender, getShotstackRenderStatus, type ShotstackClip } from "@/lib/video-studio/shotstack.client";
 import { buildHeartHeroScene } from "@/lib/video-studio/heart-hero-scene";
+import { buildOrganBackdropScene, buildOrganHeroScene, type OrganScene } from "@/lib/video-studio/organ-hero-scene";
+import { deriveReportOrganFocus } from "@/lib/video-studio/report-organ-focus";
+import { detectLabMarkers } from "@/lib/labMarkerDetector";
 import { deriveHeartFocus } from "@/lib/heart-age/heart-focus";
 import type { HeartAgeInput, HeartAgeResult } from "@/lib/heart-age/heart-age.engine";
 import {
@@ -27,7 +31,10 @@ import {
   updateStudioVideo,
   type StudioVideoRow,
 } from "@/lib/repositories/studio-video.repository";
-import { getMedicalReportMarkersForPatient } from "@/lib/repositories/report-markers.repository";
+
+function html5Asset(scene: OrganScene): ShotstackClip["asset"] {
+  return { type: "html5", html: scene.html, css: scene.css, width: 1280, height: 720 };
+}
 
 const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
 const SCRIPT_MODEL = "gpt-5.6-luna";
@@ -228,14 +235,14 @@ const HEART_STORY_FOOTAGE_QUERIES = [
 // scene's own generic heading ("What it is", "Why it matters", ...), which
 // pulled completely unrelated stock footage in the pilot's first real
 // render (a skincare clip for an LDL cholesterol video). For an admin
-// topic-driven video that query is the topic itself; for a member's
-// personal video (see startPersonalStudioVideo) it's one of their own
-// report's actual marker names instead, so the footage tracks whatever is
-// really in their report rather than a fixed topic or organ list.
-// `sceneIndex` picks a different one of that query's top matches per scene,
-// for some visual variety.
+// topic-driven video that query is the topic itself. `sceneIndex` picks a
+// different one of that query's top matches per scene, for some visual
+// variety.
+//
+// A null query means the scene has no footage at all (the personal report
+// video shows its organ diagram behind the narration instead).
 async function resolveScene(
-  footageQuery: string,
+  footageQuery: string | null,
   heading: string,
   narration: string,
   sceneIndex: number,
@@ -246,7 +253,7 @@ async function resolveScene(
     // Stock footage is searched in English regardless of narration language
     // — visual content isn't language-dependent, and stock libraries are
     // indexed in English, so translating the query would only hurt matches.
-    findStockFootage(footageQuery, sceneIndex).catch(() => null),
+    footageQuery ? findStockFootage(footageQuery, sceneIndex).catch(() => null) : null,
   ]);
 
   const audioUrl = audio
@@ -348,23 +355,34 @@ export async function startPersonalStudioVideo(
   const record = await createStudioVideo({ topic: "Personal report explainer", createdBy: userId });
 
   try {
-    const [script, markerRows] = await Promise.all([
-      generatePersonalExplainerScript(reportText, language),
-      getMedicalReportMarkersForPatient(userId).catch(() => []),
-    ]);
+    const script = await generatePersonalExplainerScript(reportText, language);
 
-    // The member's own distinct marker names, most recent first — cycled
-    // per scene below (pickFootageQueryForScene) so footage tracks whatever
-    // is actually in their report, never a fixed organ list.
-    const markerNames = [...new Set(markerRows.map((row) => row.marker_name))];
+    // The organ(s) THIS report is about, read from the same report text the
+    // script was written from (see report-organ-focus.ts). The video shows
+    // that organ's diagram, never stock footage: a keyword search on marker
+    // names only ever returned generic doctors-and-clipboards clips.
+    const organs = deriveReportOrganFocus(detectLabMarkers(reportText));
     const disclaimer = EXPLAINER_DISCLAIMER[language];
     const slides = [...script.slides, disclaimer];
     const scenes = await Promise.all(
-      slides.map((slide, index) =>
-        resolveScene(pickFootageQueryForScene(markerNames, index), slide.heading, slide.narration, index, language)
-      )
+      slides.map((slide, index) => resolveScene(null, slide.heading, slide.narration, index, language))
     );
-    const edit = buildStudioVideoEdit(script, scenes, language);
+    let edit = buildStudioVideoEdit(script, scenes, language);
+
+    if (organs.length > 0) {
+      const backdrop = buildOrganBackdropScene(organs[0], language, editDurationSeconds(edit));
+
+      edit = addBackdropTrack(edit, html5Asset(backdrop));
+
+      // Last organ first, so after both are prepended the most relevant
+      // organ opens the video.
+      for (const focus of [...organs].reverse()) {
+        const hero = buildOrganHeroScene(focus, language);
+
+        edit = prependHeroScene(edit, { asset: html5Asset(hero), start: 0, length: hero.lengthSeconds }, hero.lengthSeconds);
+      }
+    }
+
     const renderId = await submitShotstackRender(edit);
 
     await updateStudioVideo(record.id, {

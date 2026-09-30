@@ -45,8 +45,7 @@ export const CURATED_HEART_FOOTAGE: CuratedFootageEntry[] = [
 ];
 
 /**
- * Cycles through the curated list by scene position, same pattern as
- * pickFootageQueryForScene in build-studio-video-edit.ts — pure and
+ * Cycles through the curated list by scene position — pure and
  * side-effect-free so it stays directly unit-testable.
  */
 export function pickCuratedHeartFootageId(sceneIndex: number): number {

@@ -59,6 +59,9 @@ export type ShotstackEdit = {
   timeline: {
     soundtrack?: { src: string; volume?: number };
     background?: string;
+    // Font files a text asset's font.family can then name — how a font that
+    // isn't built into Shotstack (e.g. Arabic Cairo) gets into a render.
+    fonts?: Array<{ src: string }>;
     tracks: Array<{ clips: ShotstackClip[] }>;
   };
   output: {

@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  addBackdropTrack,
   buildStudioVideoEdit,
+  editDurationSeconds,
   estimateSceneSeconds,
   prependHeroScene,
   OUTPUT_SIZE,
@@ -9,6 +11,7 @@ import {
 } from "../lib/video-studio/build-studio-video-edit";
 import type { ExplainerScript } from "../lib/health-videos/explainer";
 import type { ShotstackClip } from "../lib/video-studio/shotstack.client";
+import { ARABIC_FONT_FAMILY, CAIRO_BOLD_URL } from "../lib/video-studio/video-fonts";
 
 const SCRIPT: ExplainerScript = {
   title: "Understanding LDL Cholesterol",
@@ -98,6 +101,39 @@ describe("buildStudioVideoEdit", () => {
 
     expect(edit.output.format).toBe("mp4");
     expect(edit.output.size).toEqual(OUTPUT_SIZE);
+  });
+
+  it("ships the Arabic font file with Arabic videos and names it in every caption", () => {
+    const arabic = buildStudioVideoEdit(SCRIPT, [scene()], "ar");
+    const english = buildStudioVideoEdit(SCRIPT, [scene()], "en");
+
+    expect(arabic.timeline.fonts).toEqual([{ src: CAIRO_BOLD_URL }]);
+    expect(CAIRO_BOLD_URL).toMatch(/^https:\/\/.+\/fonts\/Cairo-Bold\.ttf$/);
+    for (const clip of arabic.timeline.tracks[0].clips) {
+      expect(clip.asset.type === "text" && clip.asset.font?.family).toBe(ARABIC_FONT_FAMILY);
+    }
+    expect(english.timeline.fonts).toBeUndefined();
+  });
+});
+
+describe("addBackdropTrack", () => {
+  const backdrop: ShotstackClip["asset"] = { type: "html5", html: "<svg></svg>", width: 1280, height: 720 };
+
+  it("puts the backdrop on the bottom track, spanning the whole edit", () => {
+    const edit = buildStudioVideoEdit(SCRIPT, [scene(), scene()]);
+    const withBackdrop = addBackdropTrack(edit, backdrop);
+    const bottom = withBackdrop.timeline.tracks.at(-1);
+
+    expect(withBackdrop.timeline.tracks).toHaveLength(edit.timeline.tracks.length + 1);
+    expect(bottom?.clips).toEqual([{ asset: backdrop, start: 0, length: editDurationSeconds(edit) }]);
+    expect(editDurationSeconds(withBackdrop)).toBe(editDurationSeconds(edit));
+  });
+
+  it("is shifted along with everything else when a hero is prepended", () => {
+    const edit = addBackdropTrack(buildStudioVideoEdit(SCRIPT, [scene()]), backdrop);
+    const hero: ShotstackClip = { asset: backdrop, start: 0, length: 6 };
+
+    expect(prependHeroScene(edit, hero, 6).timeline.tracks.at(-1)?.clips[0].start).toBe(6);
   });
 });
 
