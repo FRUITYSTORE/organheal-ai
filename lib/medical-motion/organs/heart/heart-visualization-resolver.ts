@@ -18,9 +18,11 @@ import type { SceneDefinition } from "@/lib/medical-motion/contracts/scene";
 
 export type HeartVisualizationFocus = "overview" | "coronary" | "lvAorta" | "combined";
 
-// Bumped to "2" when highlight structures changed from Blender object names
-// to anatomy registry ids.
-const SCENE_VERSION = "2";
+// "2": highlight structures became anatomy registry ids instead of Blender
+// object names. "3": scenes are videos with a camera move and heartbeat.
+const SCENE_VERSION = "3";
+
+const OVERVIEW_SHOT = "CAM_HEART_OVERVIEW";
 
 const BASE_DURATION_SECONDS = 5;
 const COMBINED_DURATION_SECONDS = 6.5; // extra time for two callouts, same reasoning as the old SVG scene
@@ -39,7 +41,7 @@ const HIGHLIGHT_GROUPS: Record<HeartVisualizationFocus, readonly AnatomyStructur
 };
 
 const CAMERA_PRESETS: Record<HeartVisualizationFocus, string> = {
-  overview: "CAM_HEART_OVERVIEW",
+  overview: OVERVIEW_SHOT,
   coronary: "CAM_CORONARY_APPROACH",
   lvAorta: "CAM_LV_APPROACH",
   combined: "CAM_COMBINED",
@@ -66,15 +68,18 @@ export function resolveHeartVisualizationFocus(focus: HeartFocus): HeartVisualiz
 export function buildHeartScene(focus: HeartFocus): SceneDefinition {
   const visualizationFocus = resolveHeartVisualizationFocus(focus);
   const structures = HIGHLIGHT_GROUPS[visualizationFocus];
+  const preset = CAMERA_PRESETS[visualizationFocus];
 
   return {
     organ: "heart",
     sceneVersion: SCENE_VERSION,
     durationSeconds: structures.length > 3 ? COMBINED_DURATION_SECONDS : BASE_DURATION_SECONDS,
     focus: visualizationFocus,
-    camera: { preset: CAMERA_PRESETS[visualizationFocus] },
+    // The whole heart first, then the camera moves in on what the focus is
+    // about; an overview has nowhere to move to.
+    camera: preset === OVERVIEW_SHOT ? { preset } : { preset, from: OVERVIEW_SHOT },
     motion: { preset: "clinical-heartbeat" },
     highlight: { structures, intensity: visualizationFocus === "overview" ? 0 : 0.8 },
-    output: { aspectRatio: "16:9", resolution: "1080p" },
+    output: { aspectRatio: "16:9", resolution: "1080p", media: "video" },
   };
 }

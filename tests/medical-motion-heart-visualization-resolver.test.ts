@@ -73,7 +73,16 @@ describe("buildHeartScene", () => {
     const scene = buildHeartScene(focus());
 
     expect(scene.organ).toBe("heart");
-    expect(scene.sceneVersion).toBe("2");
-    expect(scene.output).toEqual({ aspectRatio: "16:9", resolution: "1080p" });
+    expect(scene.sceneVersion).toBe("3");
+    expect(scene.output).toEqual({ aspectRatio: "16:9", resolution: "1080p", media: "video" });
+    expect(scene.motion.preset).toBe("clinical-heartbeat");
+  });
+
+  it("opens on the whole heart and moves in on the focus, but never moves for an overview", () => {
+    expect(buildHeartScene(focus()).camera).toEqual({ preset: "CAM_HEART_OVERVIEW" });
+    expect(buildHeartScene(focus({ coronaryArteries: true })).camera).toEqual({
+      preset: "CAM_CORONARY_APPROACH",
+      from: "CAM_HEART_OVERVIEW",
+    });
   });
 });

@@ -20,6 +20,8 @@ import { checkAssetReadiness, type RenderMode } from "@/lib/symptom-explanation/
 // worker can import it without pulling in any Next.js/Vercel code.
 
 const DEFAULT_RENDER_TIMEOUT_MS = 120_000;
+// A video renders every frame through Cycles: a 5-second clip is 120 frames.
+const DEFAULT_VIDEO_RENDER_TIMEOUT_MS = 20 * 60_000;
 
 function getBlenderExecutablePath(): string {
   return (
@@ -147,18 +149,30 @@ export function resolveCameraShot(organModule: OrganModule, preset: string): Ble
  * and the camera carries its resolved shot. This is the one place ids
  * become object names.
  */
-export function toBlenderSceneConfig(scene: SceneDefinition, blenderObjects: readonly string[], shot: BlenderCameraShot) {
+export function toBlenderSceneConfig(
+  scene: SceneDefinition,
+  blenderObjects: readonly string[],
+  shot: BlenderCameraShot,
+  fromShot: BlenderCameraShot | null = null
+) {
   return {
     ...scene,
-    camera: { ...scene.camera, shot },
+    camera: { ...scene.camera, shot, ...(fromShot ? { fromShot } : {}) },
     highlight: { ...scene.highlight, structures: blenderObjects },
   };
+}
+
+function invalidScene(message: string): RenderResult {
+  return { status: "failed", errorCode: RENDER_ERROR_CODE.INVALID_SCENE, message };
 }
 
 export async function renderHeartScene(
   scene: SceneDefinition,
   outputPath: string,
-  { mode, timeoutMs = DEFAULT_RENDER_TIMEOUT_MS }: RenderOptions
+  {
+    mode,
+    timeoutMs = scene.output.media === "video" ? DEFAULT_VIDEO_RENDER_TIMEOUT_MS : DEFAULT_RENDER_TIMEOUT_MS,
+  }: RenderOptions
 ): Promise<RenderResult> {
   if (scene.organ !== "heart") {
     return {
@@ -177,21 +191,35 @@ export async function renderHeartScene(
   }
 
   const organModule = getOrganModule(scene.organ);
-  const shot = organModule ? resolveCameraShot(organModule, scene.camera.preset) : null;
+
+  if (!organModule) {
+    return invalidScene(`No organ module exists for "${scene.organ}".`);
+  }
+
+  const shot = resolveCameraShot(organModule, scene.camera.preset);
+  const fromShot = scene.camera.from ? resolveCameraShot(organModule, scene.camera.from) : null;
 
   if (!shot) {
-    return {
-      status: "failed",
-      errorCode: RENDER_ERROR_CODE.INVALID_SCENE,
-      message: `The ${scene.organ} module has no usable camera shot "${scene.camera.preset}".`,
-    };
+    return invalidScene(`The ${scene.organ} module has no usable camera shot "${scene.camera.preset}".`);
+  }
+
+  if (scene.camera.from && !fromShot) {
+    return invalidScene(`The ${scene.organ} module has no usable camera shot "${scene.camera.from}".`);
+  }
+
+  if (scene.output.media === "video" && !organModule.motionControllers.includes(scene.motion.preset)) {
+    return invalidScene(`The ${scene.organ} module has no motion controller "${scene.motion.preset}".`);
   }
 
   const tempDir = await mkdtemp(path.join(tmpdir(), "medical-motion-"));
   const configPath = path.join(tempDir, "scene.json");
 
   try {
-    await writeFile(configPath, JSON.stringify(toBlenderSceneConfig(scene, readiness.blenderObjects, shot)), "utf-8");
+    await writeFile(
+      configPath,
+      JSON.stringify(toBlenderSceneConfig(scene, readiness.blenderObjects, shot, fromShot)),
+      "utf-8"
+    );
 
     const result = await runBlenderProcess(configPath, outputPath, timeoutMs);
 

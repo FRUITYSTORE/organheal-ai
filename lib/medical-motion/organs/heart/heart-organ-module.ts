@@ -99,8 +99,10 @@ export const HEART_ORGAN_MODULE: OrganModule = {
       distance: 3.045,
     },
   ],
-  // No heartbeat is implemented yet; every render is a still frame.
-  motionControllers: [],
+  // render/blender/heart_motion.py. "clinical-heartbeat" is an illustrative
+  // uniform contraction at a resting 72 bpm, not simulated chamber
+  // mechanics.
+  motionControllers: ["clinical-heartbeat"],
   // heart_builder.py always opens the front quadrant.
   cutawayStates: ["frontQuadrantOpen"],
   // Only the Cycles look exists today; the clinical-illustration style is

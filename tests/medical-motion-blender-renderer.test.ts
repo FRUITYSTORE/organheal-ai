@@ -192,7 +192,9 @@ describe("renderHeartScene", () => {
       highlight: { structures: ["CORONARY_LAD", "CORONARY_RCA", "CORONARY_LCX"] },
       camera: {
         preset: "CAM_CORONARY_APPROACH",
+        from: "CAM_HEART_OVERVIEW",
         shot: { lookAt: ["LM_heart.lvCenter", "LM_heart.rvCenter"], scaleReference: ["LM_heart.base", "LM_heart.apex"] },
+        fromShot: { lookAt: ["LM_heart.raCenter", "LM_heart.rvCenter", "LM_heart.laCenter", "LM_heart.lvCenter"] },
       },
     });
   });
@@ -247,6 +249,15 @@ describe("resolveCameraShot", () => {
       cameraTargets: [{ id: "CAM_X", frames: [], lookAt: ["heart.nowhere" as const], viewDirection: [0, -1, 0] as const, distance: 2 }],
     };
     expect(resolveCameraShot(broken, "CAM_X")).toBeNull();
+  });
+
+  it("stops an unknown starting shot or motion controller before Blender starts", async () => {
+    const fromNowhere = await renderHeartScene({ ...scene, camera: { preset: "CAM_CORONARY_APPROACH", from: "CAM_NOPE" } }, "out.mp4", DEV);
+    const noMotion = await renderHeartScene({ ...scene, motion: { preset: "cardiac-dance" } }, "out.mp4", DEV);
+
+    expect(fromNowhere.status === "failed" && fromNowhere.errorCode).toBe("INVALID_SCENE");
+    expect(noMotion.status === "failed" && noMotion.errorCode).toBe("INVALID_SCENE");
+    expect(spawnMock).not.toHaveBeenCalled();
   });
 
   it("stops an unknown shot before Blender starts", async () => {

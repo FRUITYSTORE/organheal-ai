@@ -1,14 +1,16 @@
 """Entry point Blender runs headlessly:
 
-    blender --background --python render_scene.py -- <scene_config.json> <output_path.png>
+    blender --background --python render_scene.py -- <scene_config.json> <output_path.png|.mp4>
 
-Proves the exact pipeline the architecture brief's Phase 4 asks for:
-config JSON in -> Blender headless -> real GPU-rendered output file out,
-with explicit error handling rather than a silent empty/corrupt file.
+Config JSON in (written by lib/medical-motion/render/blender-renderer.ts,
+with anatomy and landmark ids already resolved to object names) ->
+Blender headless -> real GPU-rendered output file out, with explicit error
+handling rather than a silent empty/corrupt file.
 
-This renders a single representative still frame for the given scene (the
-real camera + highlight selection this scene asks for). Heartbeat motion
-across a multi-second clip is a real next increment, not faked here.
+output.media "still" renders one PNG frame at the scene's shot. "video"
+renders an MP4 of durationSeconds: the camera glides from camera.fromShot
+to camera.shot, the motion controller runs (heart_motion.py), and the
+highlight fades in once the camera arrives.
 """
 
 import json
@@ -19,7 +21,12 @@ import bpy
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from heart_builder import build_heart  # noqa: E402
-from scene_presets import apply_camera_shot, apply_highlight, camera_shot_objects  # noqa: E402
+from heart_motion import MOTION_CONTROLLERS  # noqa: E402
+from scene_presets import apply_camera_move, apply_camera_shot, apply_highlight, camera_shot_objects  # noqa: E402
+
+_VIDEO_FPS = 24
+_CAMERA_ARRIVAL_FRACTION = 0.45
+_HIGHLIGHT_FADE_FRAMES = 12
 
 
 def _parse_args():
@@ -60,6 +67,10 @@ def _configure_gpu_cycles(resolution):
                     enabled = True
             if enabled:
                 scene.cycles.device = "GPU"
+                # The denoiser otherwise runs on the CPU while the GPU
+                # idles: measured on a 24-frame clip, 150-240 s with it on
+                # the CPU versus 43 s with it on the GPU.
+                scene.cycles.denoising_use_gpu = True
                 return backend
         except Exception:
             continue
@@ -91,17 +102,42 @@ def main():
     # module. A name the build didn't produce means the module promised
     # something the asset lacks: fail, rather than render without it and
     # "succeed".
-    shot = scene_config.get("camera", {}).get("shot")
+    camera = scene_config.get("camera", {})
+    shot = camera.get("shot")
+    from_shot = camera.get("fromShot")
     if not shot:
         raise SystemExit("INVALID_SCENE: the scene config has no resolved camera shot")
     highlight = scene_config.get("highlight", {})
     structures = highlight.get("structures", [])
-    missing = [name for name in structures + camera_shot_objects(shot) if name not in bpy.data.objects]
+    needed = structures + camera_shot_objects(shot) + (camera_shot_objects(from_shot) if from_shot else [])
+    missing = [name for name in needed if name not in bpy.data.objects]
     if missing:
         raise SystemExit(f"ANATOMY_STRUCTURE_NOT_FOUND: the built heart has no object named {missing}")
 
-    apply_camera_shot(shot)
-    apply_highlight(structures, highlight.get("intensity", 0))
+    output = scene_config.get("output", {})
+    is_video = output.get("media") == "video"
+    scene = bpy.context.scene
+
+    if is_video:
+        motion_name = scene_config.get("motion", {}).get("preset")
+        motion = MOTION_CONTROLLERS.get(motion_name)
+        if motion is None:
+            raise SystemExit(f"INVALID_SCENE: no motion controller named {motion_name!r}")
+        frame_count = max(1, round(float(scene_config.get("durationSeconds", 0)) * _VIDEO_FPS))
+        scene.frame_start, scene.frame_end = 1, frame_count
+        scene.render.fps = _VIDEO_FPS
+        # The camera arrives a little under halfway through, then the
+        # highlight fades in on the structures it arrived at.
+        arrive = max(2, round(frame_count * _CAMERA_ARRIVAL_FRACTION)) if from_shot else 1
+        if from_shot:
+            apply_camera_move(from_shot, shot, arrive)
+        else:
+            apply_camera_shot(shot)
+        motion(frame_count, _VIDEO_FPS)
+        apply_highlight(structures, highlight.get("intensity", 0), fade_frames=(arrive, arrive + _HIGHLIGHT_FADE_FRAMES))
+    else:
+        apply_camera_shot(shot)
+        apply_highlight(structures, highlight.get("intensity", 0))
 
     key_light_data = bpy.data.lights.new("KeyLight", type="AREA")
     key_light_data.energy = 400
@@ -119,12 +155,23 @@ def main():
 
     bpy.context.scene.world.node_tree.nodes["Background"].inputs[0].default_value = (0.02, 0.05, 0.08, 1.0)
 
-    backend = _configure_gpu_cycles(scene_config.get("output", {}).get("resolution", "1080p"))
-    bpy.context.scene.render.filepath = output_path
-    bpy.context.scene.render.image_settings.file_format = "PNG"
+    backend = _configure_gpu_cycles(output.get("resolution", "1080p"))
+    scene.render.filepath = output_path
 
     try:
-        bpy.ops.render.render(write_still=True)
+        if is_video:
+            image_settings = scene.render.image_settings
+            if hasattr(image_settings, "media_type"):
+                image_settings.media_type = "VIDEO"
+            image_settings.file_format = "FFMPEG"
+            scene.render.ffmpeg.format = "MPEG4"
+            scene.render.ffmpeg.codec = "H264"
+            scene.render.ffmpeg.constant_rate_factor = "HIGH"
+            scene.render.ffmpeg.audio_codec = "NONE"
+            bpy.ops.render.render(animation=True)
+        else:
+            scene.render.image_settings.file_format = "PNG"
+            bpy.ops.render.render(write_still=True)
     except Exception as error:
         raise SystemExit(f"BLENDER_FAILED: render.render() raised: {error}")
 

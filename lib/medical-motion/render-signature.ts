@@ -19,6 +19,7 @@ export function computeRenderSignature(scene: SceneDefinition, assetVersion: str
     sceneVersion: scene.sceneVersion,
     focus: scene.focus,
     camera: scene.camera.preset,
+    cameraFrom: scene.camera.from ?? null,
     motion: scene.motion.preset,
     highlight: {
       structures: [...scene.highlight.structures].sort(),

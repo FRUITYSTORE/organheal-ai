@@ -43,7 +43,7 @@ describe("HEART_ORGAN_MODULE", () => {
       expect(registryIds).not.toContain(absent);
     }
 
-    expect(HEART_ORGAN_MODULE.motionControllers).toEqual([]);
+    expect(HEART_ORGAN_MODULE.motionControllers).toEqual(["clinical-heartbeat"]);
     expect(HEART_ORGAN_MODULE.renderStyles).toEqual(["cinematic"]);
   });
 
