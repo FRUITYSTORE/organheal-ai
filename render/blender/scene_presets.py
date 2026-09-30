@@ -15,8 +15,17 @@ CAMERA_PRESETS = {
     "CAM_HEART_HERO": {"location": (0.0, -7.5, -0.2), "target": (0.0, 0.0, -0.2)},
     "CAM_HEART_ORBIT": {"location": (4.0, -7.0, 0.2), "target": (0.0, 0.0, -0.1)},
     "CAM_CORONARY_APPROACH": {"location": (0.4, -4.6, -0.4), "target": (0.15, -0.7, -0.6)},
-    "CAM_LV_APPROACH": {"location": (2.4, -6.2, 0.5), "target": (0.55, -0.35, 0.15)},
-    "CAM_COMBINED": {"location": (1.4, -6.8, 0.1), "target": (0.35, -0.45, -0.1)},
+    # Retargeted to the real HEART_LEFT_VENTRICLE anchor in heart_builder.py
+    # (0.45, -0.45, -0.45) -- a real bug found by actually rendering this:
+    # the previous target (0.55, -0.35, 0.15) was a hand-guessed point that
+    # sat well above where the LV highlight actually lives, so the one
+    # thing this camera exists to show was consistently out of frame.
+    "CAM_LV_APPROACH": {"location": (2.6, -8.0, -0.1), "target": (0.4, -0.3, -0.3)},
+    # Pulled back further than the single-structure approaches so both the
+    # LV highlight (low, around z=-0.45) and the aorta (high, around
+    # z=1.13) fit in frame together -- they sit almost 1.6 units apart on
+    # a ~2.9-unit-tall heart, too far apart for a close "approach" crop.
+    "CAM_COMBINED": {"location": (2.8, -8.5, 0.0), "target": (0.35, -0.3, -0.05)},
 }
 
 
@@ -45,7 +54,20 @@ def apply_highlight(materials, structures, intensity):
         material = materials.get(group_name)
         if material is None:
             continue
-        bsdf = material.node_tree.nodes.get("Principled BSDF")
+        nodes = material.node_tree.nodes
+
+        # HEART_LEFT_VENTRICLE has no material of its own -- it's a masked
+        # region of the shared MYOCARDIUM material (see heart_builder.py's
+        # _make_blended_chamber_material), whose Emission Strength socket is
+        # already driven by a node link (mask * this value node), not a free
+        # input. Setting .default_value on a linked socket is silently
+        # ignored, so this case is handled by driving that named node instead.
+        lv_intensity_node = nodes.get("LVHighlightIntensity")
+        if group_name == "HEART_LEFT_VENTRICLE" and lv_intensity_node is not None:
+            lv_intensity_node.outputs[0].default_value = intensity * 2.6
+            continue
+
+        bsdf = nodes.get("Principled BSDF")
         if bsdf and "Emission Strength" in bsdf.inputs:
             # A real, easy-to-miss bug: boosting Emission Strength alone
             # emits nothing if Emission Color was never set (it defaults to

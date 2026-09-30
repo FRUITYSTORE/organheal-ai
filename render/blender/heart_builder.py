@@ -173,25 +173,71 @@ def _chamber_blend_color(vx, vy, vz):
     return (r, g, b)
 
 
+def _lv_highlight_weight(vx, vy, vz):
+    """How strongly this vertex belongs to the left ventricle, 0..1 -- the
+    same distance-based weight _chamber_blend_color uses for HEART_LEFT_
+    VENTRICLE specifically, also faded out on the rear surface. Stored per-
+    vertex (see below) so the LV highlight can be a soft, seamless glow
+    baked into the real chamber-blend shader instead of a separate floating
+    decal object sitting proud of the curved surface -- a disc can never
+    truly sit flush on a curved mesh (it always shows a seam/shadow no
+    matter how well its color is matched), so this replaces that approach
+    entirely rather than continuing to tune it."""
+    front_visibility = max(0.0, min(1.0, (-vy - 0.15) / 0.5))
+    center, _color = _CHAMBER_ANCHORS["HEART_LEFT_VENTRICLE"]
+    dist = ((vx - center[0]) ** 2 + (vy - center[1]) ** 2 + (vz - center[2]) ** 2) ** 0.5
+    weight = max(0.0, 1.0 - dist / _CHAMBER_BLEND_RADIUS) ** 1.1
+    return weight * front_visibility
+
+
 def _paint_chamber_vertex_colors(mesh):
     attr = mesh.color_attributes.new(name="ChamberBlend", type="FLOAT_COLOR", domain="POINT")
     for i, vert in enumerate(mesh.vertices):
         r, g, b = _chamber_blend_color(*vert.co)
-        attr.data[i].color = (r, g, b, 1.0)
+        lv_weight = _lv_highlight_weight(*vert.co)
+        attr.data[i].color = (r, g, b, lv_weight)  # alpha channel = LV highlight mask, not real opacity
 
 
 def _make_blended_chamber_material(materials):
     mat = bpy.data.materials.new("mat_heart_blended")
     mat.use_nodes = True
     nodes = mat.node_tree.nodes
+    links = mat.node_tree.links
     bsdf = nodes["Principled BSDF"]
     color_attr = nodes.new("ShaderNodeVertexColor")
     color_attr.layer_name = "ChamberBlend"
-    mat.node_tree.links.new(color_attr.outputs["Color"], bsdf.inputs["Base Color"])
+    links.new(color_attr.outputs["Color"], bsdf.inputs["Base Color"])
     bsdf.inputs["Roughness"].default_value = 0.35
     if "Subsurface Weight" in bsdf.inputs:
         bsdf.inputs["Subsurface Weight"].default_value = 0.3
         bsdf.inputs["Subsurface Radius"].default_value = (0.3, 0.15, 0.1)
+
+    # LV highlight: glow only where the vertex-painted LV mask (the alpha
+    # channel above) is nonzero -- fades in smoothly at the chamber's real
+    # edges with no seam, instead of a separate object that can only ever
+    # approximate one.
+    #
+    # A real thing found by actually rendering this (not just reading the
+    # code): using the tissue's OWN blended color as the emission color, as
+    # a first pass did, was nearly invisible even at a strength that badly
+    # overexposed the surface -- adding brightness in the SAME hue as an
+    # already brightly-lit surface reads as almost nothing. The coronary/
+    # aorta highlights work because gold/white emission stands out in HUE
+    # against the pink/blue tissue, not just in brightness. So this uses a
+    # fixed warm highlight tone instead of the vertex-blended color -- it
+    # costs nothing at rest (Emission Strength is 0 there regardless of
+    # what color it's paired with) and reads as a clear, deliberate
+    # highlight once active, consistent with the other two structures.
+    bsdf.inputs["Emission Color"].default_value = (1.0, 0.38, 0.18, 1.0)
+    lv_intensity = nodes.new("ShaderNodeValue")
+    lv_intensity.name = lv_intensity.label = "LVHighlightIntensity"
+    lv_intensity.outputs[0].default_value = 0.0
+    lv_strength = nodes.new("ShaderNodeMath")
+    lv_strength.operation = "MULTIPLY"
+    links.new(color_attr.outputs["Alpha"], lv_strength.inputs[0])
+    links.new(lv_intensity.outputs[0], lv_strength.inputs[1])
+    links.new(lv_strength.outputs[0], bsdf.inputs["Emission Strength"])
+
     materials["MYOCARDIUM"] = mat  # replace the flat placeholder with the real blended one
     return mat
 
@@ -222,12 +268,22 @@ def _make_tube(name, points, bevel_radius, material):
 
 
 def _surface_point(x, y, z, standoff=0.0):
-    """Maps a point on the ORIGINAL unit-sphere surface through the exact
-    same deformation build_myocardium() applies, so vessels/arteries
-    authored here actually sit on the real deformed surface instead of
-    floating in space at their pre-deformation coordinates (a real bug in
-    an earlier pass of this file: the curves were positioned as if the
-    mesh were still a plain unit sphere)."""
+    """Maps a DIRECTION through the exact same deformation build_myocardium()
+    applies to the unit icosphere, so vessels/arteries authored here actually
+    sit on the real deformed surface instead of floating in space.
+
+    A real bug found by inspecting an actual render (not just reading the
+    code): every caller below was passing hand-picked (x, y, z) triples that
+    were never checked to actually lie ON the unit sphere the deformation
+    assumes -- e.g. the LAD's (0.1, -1.0, -0.95) has magnitude ~1.38, so it
+    got deformed as if it were 38% further from the heart's center than any
+    real point on the mesh, and rendered as a tube floating past the actual
+    silhouette (worst near the tapered apex). Normalizing to the unit sphere
+    FIRST, before deforming, guarantees the result lands on the real surface
+    regardless of how far off-sphere the authored coordinate was."""
+    magnitude = math.sqrt(x * x + y * y + z * z) or 1.0
+    x, y, z = x / magnitude, y / magnitude, z / magnitude
+
     stretch = 1.45
     below = max(0.0, -z)
     lean = 0.34 * below
@@ -267,10 +323,18 @@ def build_vessels(materials):
         [_surface_point(-0.55, -0.4, 0.6, 0.03), (-0.6, -0.25, 1.15)],
         0.08, materials["SVC"],
     )
+    # The IVC's exit point previously jumped sideways to a hand-picked
+    # second coordinate that didn't continue the vessel's own direction --
+    # it read as a stray disconnected blob near the apex rather than a
+    # vessel trailing off, once actually rendered. Extending further along
+    # the SAME direction the first point already sits in reads as what it
+    # is: one continuous tube leaving the heart, not two unrelated pieces.
+    ivc_start = _surface_point(-0.4, -0.5, -0.85, 0.03)
+    ivc_exit = tuple(c * 1.5 for c in ivc_start)
     vessels["IVC"] = _make_tube(
         "IVC",
-        [_surface_point(-0.4, -0.5, -0.85, 0.03), (-0.35, -0.35, -1.35)],
-        0.075, materials["IVC"],
+        [ivc_start, ivc_exit],
+        0.06, materials["IVC"],
     )
     return vessels
 
@@ -310,50 +374,22 @@ def build_coronary_arteries(materials):
     return arteries
 
 
-def build_highlight_markers(materials):
-    """A real, separate highlight target for the left ventricle -- unlike
-    the coronary arteries (their own tube objects, already independently
-    highlightable) the LV chamber only exists as a blended vertex-color
-    patch on the shared myocardium material, which apply_highlight() can't
-    target by name. This is a thin, surface-conforming glow disc sitting
-    right on the real LV region, colored to match its surroundings so it's
-    invisible until highlighted -- not a new visible shape, a dormant one."""
-    markers = {}
+def _register_lv_highlight_target(materials):
+    """The LV chamber has no separate object (it's a vertex-color region of
+    the shared myocardium material, see _lv_highlight_weight/_make_blended_
+    chamber_material above), so give apply_highlight() something to find by
+    the anatomy-group name it already looks up: the SAME MYOCARDIUM material.
+    apply_highlight() special-cases this key to drive the material's
+    "LVHighlightIntensity" shader node instead of the material's own (shared,
+    whole-heart) Emission Strength socket.
 
-    bm = bmesh.new()
-    bmesh.ops.create_circle(bm, cap_ends=True, radius=0.3, segments=24)
-    mesh = bpy.data.meshes.new("LVHighlightMarker")
-    bm.to_mesh(mesh)
-    bm.free()
-    for poly in mesh.polygons:
-        poly.use_smooth = True
-
-    marker_location = _surface_point(0.55, -0.62, -0.15, standoff=-0.015)
-    obj = bpy.data.objects.new("LVHighlightMarker", mesh)
-    obj.location = marker_location
-    # Orient the disc's normal outward along -Y (toward camera) to sit
-    # flush against the surface at this point.
-    obj.rotation_euler = (math.radians(90), 0, 0)
-    obj.scale = (1.0, 1.0, 0.6)
-    bpy.context.collection.objects.link(obj)
-
-    # Sample the exact same blend the vertex-painted myocardium uses right
-    # under this marker -- a hand-picked color here (an earlier pass used
-    # the raw LV anchor color) doesn't actually match the real blended
-    # surface tone at this specific spot, which is why the marker stayed
-    # faintly visible as a "sticker" even when not highlighted.
-    unlit_color = _chamber_blend_color(*marker_location)
-    mat = _make_emissive_material("mat_lv_highlight", unlit_color)
-    bsdf = mat.node_tree.nodes["Principled BSDF"]
-    bsdf.inputs["Roughness"].default_value = 0.35  # match the myocardium material exactly
-    if "Subsurface Weight" in bsdf.inputs:
-        bsdf.inputs["Subsurface Weight"].default_value = 0.3
-        bsdf.inputs["Subsurface Radius"].default_value = (0.3, 0.15, 0.1)
-    obj.data.materials.append(mat)
-    materials["HEART_LEFT_VENTRICLE"] = mat
-    markers["HEART_LEFT_VENTRICLE"] = obj
-
-    return markers
+    This replaces an earlier real attempt at this (a separate floating glow
+    disc, color-matched to its surroundings) that kept showing a visible
+    seam against the curved surface no matter how precisely its color or
+    orientation were tuned -- a flat decal proud of a curved mesh always
+    will. Baking the highlight into the per-vertex shader itself has no
+    seam to fix because there's no separate geometry at all."""
+    materials["HEART_LEFT_VENTRICLE"] = materials["MYOCARDIUM"]
 
 
 def build_heart():
@@ -365,5 +401,5 @@ def build_heart():
     objects["MYOCARDIUM"] = build_myocardium(materials)
     objects.update(build_vessels(materials))
     objects.update(build_coronary_arteries(materials))
-    objects.update(build_highlight_markers(materials))
+    _register_lv_highlight_target(materials)
     return objects, materials
