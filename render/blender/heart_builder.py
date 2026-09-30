@@ -142,36 +142,41 @@ _MYOCARDIUM_COLOR = (0.82, 0.45, 0.4)
 _CHAMBER_BLEND_RADIUS = 1.35
 
 
+def _chamber_blend_color(vx, vy, vz):
+    """The exact same weighted chamber-color blend the vertex painter uses,
+    factored out so anything else placed on the surface (like the LV
+    highlight marker below) can ask "what color is the muscle actually
+    painted at this exact point" instead of guessing a fixed color that
+    drifts out of sync whenever the blend weights change."""
+    front_visibility = max(0.0, min(1.0, (-vy - 0.15) / 0.5))
+
+    weights = []
+    colors = []
+    for (center, color) in _CHAMBER_ANCHORS.values():
+        dist = ((vx - center[0]) ** 2 + (vy - center[1]) ** 2 + (vz - center[2]) ** 2) ** 0.5
+        weight = max(0.0, 1.0 - dist / _CHAMBER_BLEND_RADIUS) ** 1.1
+        weights.append(weight)
+        colors.append(color)
+
+    total_chamber_weight = sum(weights)
+    myo_weight = max(0.0, 1.0 - total_chamber_weight) if total_chamber_weight < 1.0 else 0.0
+    norm = total_chamber_weight + myo_weight or 1.0
+
+    r = (sum(w * c[0] for w, c in zip(weights, colors)) + myo_weight * _MYOCARDIUM_COLOR[0]) / norm
+    g = (sum(w * c[1] for w, c in zip(weights, colors)) + myo_weight * _MYOCARDIUM_COLOR[1]) / norm
+    b = (sum(w * c[2] for w, c in zip(weights, colors)) + myo_weight * _MYOCARDIUM_COLOR[2]) / norm
+
+    # Blend back toward pure myocardium on the rear surface.
+    r = r * front_visibility + _MYOCARDIUM_COLOR[0] * (1 - front_visibility)
+    g = g * front_visibility + _MYOCARDIUM_COLOR[1] * (1 - front_visibility)
+    b = b * front_visibility + _MYOCARDIUM_COLOR[2] * (1 - front_visibility)
+    return (r, g, b)
+
+
 def _paint_chamber_vertex_colors(mesh):
     attr = mesh.color_attributes.new(name="ChamberBlend", type="FLOAT_COLOR", domain="POINT")
     for i, vert in enumerate(mesh.vertices):
-        vx, vy, vz = vert.co
-        # Chambers only show "through" the front-facing muscle -- the back
-        # of the heart stays pure myocardium color, same visual logic as
-        # the earlier SVG cutaway.
-        front_visibility = max(0.0, min(1.0, (-vy - 0.15) / 0.5))
-
-        weights = []
-        colors = []
-        for (center, color) in _CHAMBER_ANCHORS.values():
-            dist = ((vx - center[0]) ** 2 + (vy - center[1]) ** 2 + (vz - center[2]) ** 2) ** 0.5
-            weight = max(0.0, 1.0 - dist / _CHAMBER_BLEND_RADIUS) ** 1.1
-            weights.append(weight)
-            colors.append(color)
-
-        total_chamber_weight = sum(weights)
-        myo_weight = max(0.0, 1.0 - total_chamber_weight) if total_chamber_weight < 1.0 else 0.0
-        norm = total_chamber_weight + myo_weight or 1.0
-
-        r = (sum(w * c[0] for w, c in zip(weights, colors)) + myo_weight * _MYOCARDIUM_COLOR[0]) / norm
-        g = (sum(w * c[1] for w, c in zip(weights, colors)) + myo_weight * _MYOCARDIUM_COLOR[1]) / norm
-        b = (sum(w * c[2] for w, c in zip(weights, colors)) + myo_weight * _MYOCARDIUM_COLOR[2]) / norm
-
-        # Blend back toward pure myocardium on the rear surface.
-        r = r * front_visibility + _MYOCARDIUM_COLOR[0] * (1 - front_visibility)
-        g = g * front_visibility + _MYOCARDIUM_COLOR[1] * (1 - front_visibility)
-        b = b * front_visibility + _MYOCARDIUM_COLOR[2] * (1 - front_visibility)
-
+        r, g, b = _chamber_blend_color(*vert.co)
         attr.data[i].color = (r, g, b, 1.0)
 
 
@@ -323,15 +328,27 @@ def build_highlight_markers(materials):
     for poly in mesh.polygons:
         poly.use_smooth = True
 
+    marker_location = _surface_point(0.55, -0.62, -0.15, standoff=-0.015)
     obj = bpy.data.objects.new("LVHighlightMarker", mesh)
-    obj.location = _surface_point(0.55, -0.62, -0.15, standoff=-0.015)
+    obj.location = marker_location
     # Orient the disc's normal outward along -Y (toward camera) to sit
     # flush against the surface at this point.
     obj.rotation_euler = (math.radians(90), 0, 0)
     obj.scale = (1.0, 1.0, 0.6)
     bpy.context.collection.objects.link(obj)
 
-    mat = _make_emissive_material("mat_lv_highlight", (0.58, 0.15, 0.28))
+    # Sample the exact same blend the vertex-painted myocardium uses right
+    # under this marker -- a hand-picked color here (an earlier pass used
+    # the raw LV anchor color) doesn't actually match the real blended
+    # surface tone at this specific spot, which is why the marker stayed
+    # faintly visible as a "sticker" even when not highlighted.
+    unlit_color = _chamber_blend_color(*marker_location)
+    mat = _make_emissive_material("mat_lv_highlight", unlit_color)
+    bsdf = mat.node_tree.nodes["Principled BSDF"]
+    bsdf.inputs["Roughness"].default_value = 0.35  # match the myocardium material exactly
+    if "Subsurface Weight" in bsdf.inputs:
+        bsdf.inputs["Subsurface Weight"].default_value = 0.3
+        bsdf.inputs["Subsurface Radius"].default_value = (0.3, 0.15, 0.1)
     obj.data.materials.append(mat)
     materials["HEART_LEFT_VENTRICLE"] = mat
     markers["HEART_LEFT_VENTRICLE"] = obj
