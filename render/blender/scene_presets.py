@@ -15,17 +15,17 @@ CAMERA_PRESETS = {
     "CAM_HEART_HERO": {"location": (0.0, -7.5, -0.2), "target": (0.0, 0.0, -0.2)},
     "CAM_HEART_ORBIT": {"location": (4.0, -7.0, 0.2), "target": (0.0, 0.0, -0.1)},
     "CAM_CORONARY_APPROACH": {"location": (0.4, -4.6, -0.4), "target": (0.15, -0.7, -0.6)},
-    # Retargeted to the real HEART_LEFT_VENTRICLE anchor in heart_builder.py
-    # (0.45, -0.45, -0.45) -- a real bug found by actually rendering this:
-    # the previous target (0.55, -0.35, 0.15) was a hand-guessed point that
-    # sat well above where the LV highlight actually lives, so the one
-    # thing this camera exists to show was consistently out of frame.
-    "CAM_LV_APPROACH": {"location": (2.6, -8.0, -0.1), "target": (0.4, -0.3, -0.3)},
+    # Retargeted again after the cutaway rebuild moved the LV anchor from
+    # the old exterior-front position to the real interior back wall now
+    # exposed by the opening (0.45, 0.45, -0.45) -- same lesson as before,
+    # confirmed by actually rendering it: whichever point the highlight
+    # lives at, the camera has to be re-aimed there explicitly, it doesn't
+    # track automatically.
+    "CAM_LV_APPROACH": {"location": (2.1, -7.2, -0.2), "target": (0.45, 0.45, -0.45)},
     # Pulled back further than the single-structure approaches so both the
-    # LV highlight (low, around z=-0.45) and the aorta (high, around
-    # z=1.13) fit in frame together -- they sit almost 1.6 units apart on
-    # a ~2.9-unit-tall heart, too far apart for a close "approach" crop.
-    "CAM_COMBINED": {"location": (2.8, -8.5, 0.0), "target": (0.35, -0.3, -0.05)},
+    # LV highlight (interior back wall) and the aorta (high on the
+    # exterior rim) fit in frame together.
+    "CAM_COMBINED": {"location": (2.3, -8.0, 0.0), "target": (0.35, 0.25, -0.15)},
 }
 
 
@@ -62,9 +62,15 @@ def apply_highlight(materials, structures, intensity):
         # already driven by a node link (mask * this value node), not a free
         # input. Setting .default_value on a linked socket is silently
         # ignored, so this case is handled by driving that named node instead.
+        # A higher multiplier than the other structures' shared 2.6, found
+        # by actually rendering it at 2.6 after the cutaway rebuild: the
+        # interior cavity this highlight sits inside is now a much larger,
+        # already-lit visible surface than the old exterior patch was, so
+        # the same emission strength that reads clearly on a coronary tube
+        # was barely perceptible here.
         lv_intensity_node = nodes.get("LVHighlightIntensity")
         if group_name == "HEART_LEFT_VENTRICLE" and lv_intensity_node is not None:
-            lv_intensity_node.outputs[0].default_value = intensity * 2.6
+            lv_intensity_node.outputs[0].default_value = intensity * 6.0
             continue
 
         bsdf = nodes.get("Principled BSDF")

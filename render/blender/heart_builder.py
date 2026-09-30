@@ -4,13 +4,17 @@ friendly, versionable) rather than a stored .blend binary: running this
 function always reconstructs the exact same anatomy deterministically, so
 there is nothing large or opaque to commit.
 
-Visual language carried over (and improved on) from the earlier 2D SVG
-iterations validated this session: one real muscle-color exterior (not a
-flat two-tone split), four chambers visible as distinct material zones,
-real great-vessel tubes, coronary arteries running over the real surface.
-In 3D this reads far better than the SVG/Three.js attempts because Cycles
-computes real subsurface scattering and soft shadows instead of a flat
-gradient standing in for them.
+A real cutaway, not a solid exterior with painted-on chamber colors. An
+earlier version of this file simulated "chambers" by blending chamber
+colors onto the outside of a solid mass -- visually smoother than the flat
+SVG attempts, but anatomically dishonest at a conceptual level: a real
+heart's intact exterior never shows its internal cavities at all. Every
+real clinical heart illustration (the actual bar this is measured against)
+solves this the same way: cut the model open. This does that literally --
+the front quadrant is sliced away and the remaining shell is hollowed with
+real wall thickness, so the four chambers, the septum, and the great
+vessels' true connections are genuinely visible THROUGH the opening, the
+same way a real anatomy plate or a real cardiac surgeon's view works.
 
 Anatomy group names match lib/medical-motion/organs/heart/heart-organ-module.ts
 exactly, so the render script can look up "what did buildHeartScene ask us
@@ -74,33 +78,60 @@ def build_materials():
 # Myocardium (the exterior muscle mass) + chamber material zones
 # ---------------------------------------------------------------------------
 
+def _deform_vertex(x, y, z):
+    """The shared icosphere -> heart-silhouette deformation, factored out so
+    both the mesh builder and the cutaway plane math use the exact same
+    formula (previously duplicated by hand across three places, a real
+    source of drift bugs earlier this session)."""
+    stretch = 1.45
+    below = max(0.0, -z)
+    lean = 0.34 * below
+    taper = 1.0 - 0.62 * (below ** 1.3)
+    vx = x * 0.95 * taper + lean
+    vy = y * 0.85 * taper
+    vz = z * stretch
+    if z > 0.45:
+        side = 1 if x > 0 else -1
+        bump = max(0.0, (z - 0.45) * 2.0) * 0.18
+        vx += side * bump
+    return vx, vy, vz
+
+
 def build_myocardium(materials):
-    """A single organic, asymmetric mass — real heart apex is formed mostly
-    by the left ventricle, so it's blunt and leans right, not a symmetric
-    valentine shape. Built by deforming a subdivided icosphere with bmesh,
-    then a Subdivision Surface modifier smooths it into an organic form
-    (this smoothing step is what separates this from the flat-looking
-    Three.js primitive spheres attempted earlier)."""
+    """A real hollow, cut-open heart -- not a solid exterior blob with fake
+    chamber colors painted on its outside.
+
+    A real heart's intact exterior never shows its chambers at all; they're
+    internal cavities. An earlier version of this file simulated "chambers"
+    by blending chamber colors onto the OUTSIDE surface, which no amount of
+    shader polish can make anatomically honest -- it's not how a heart
+    looks, full stop. This builds an actual cutaway instead: the front
+    quadrant is sliced away (bmesh bisect), the remaining shell gets real
+    wall thickness (Solidify, hollowing inward), and the newly-exposed
+    INTERIOR surface -- and only the interior -- carries the chamber-blend
+    material. The exterior stays a plain, uniform muscle color, which is
+    what a real myocardium's outside actually looks like."""
     bm = bmesh.new()
     bmesh.ops.create_icosphere(bm, subdivisions=3, radius=1.0)
 
     for v in bm.verts:
-        x, y, z = v.co.x, v.co.y, v.co.z
-        # Stretch taller (apex to base), lean the lower half toward +x (the
-        # left-ventricle/apex side), and taper it narrower toward the apex
-        # -- a real heart comes to a distinct point, not an egg's gentle
-        # round-off.
-        stretch = 1.45
-        below = max(0.0, -z)
-        lean = 0.34 * below
-        taper = 1.0 - 0.62 * (below ** 1.3)
-        v.co = Vector((x * 0.95 * taper + lean, y * 0.85 * taper, z * stretch))
-        # Flare two small auricle-like bumps near the top (z > 0.5), one
-        # per side, for a less perfectly-round silhouette.
-        if z > 0.45:
-            side = 1 if x > 0 else -1
-            bump = max(0.0, (z - 0.45) * 2.0) * 0.18
-            v.co.x += side * bump
+        v.co = Vector(_deform_vertex(v.co.x, v.co.y, v.co.z))
+
+    # Slice away the front-facing quadrant (the side toward the camera,
+    # -Y) so the camera looks straight into a real hollow cavity instead
+    # of an intact shell -- the same technique every clinical heart
+    # illustration uses, not a stylistic choice unique to this build.
+    # clear_outer removes geometry on the positive-normal side of the
+    # plane; the exact side was confirmed empirically by rendering, not
+    # guessed from the sign convention alone.
+    bmesh.ops.bisect_plane(
+        bm,
+        geom=bm.verts[:] + bm.edges[:] + bm.faces[:],
+        plane_co=Vector((0.05, -0.05, 0.05)),
+        plane_no=Vector((0.2, -0.85, 0.3)).normalized(),
+        clear_outer=True,
+        clear_inner=False,
+    )
 
     mesh = bpy.data.meshes.new("Myocardium")
     bm.to_mesh(mesh)
@@ -116,12 +147,29 @@ def build_myocardium(materials):
     for poly in mesh.polygons:
         poly.use_smooth = True
 
+    _paint_chamber_vertex_colors(mesh)
+
+    exterior_mat = _make_organic_material("mat_myocardium_exterior", _MYOCARDIUM_COLOR, subsurface=0.35)
+    interior_mat = _make_blended_chamber_material(materials)
+    obj.data.materials.append(exterior_mat)  # index 0 -- the real, plain, uniform outside
+    obj.data.materials.append(interior_mat)  # index 1 -- chamber-blend, only reached through the cut
+
     subsurf = obj.modifiers.new("Smooth", "SUBSURF")
     subsurf.levels = 2
     subsurf.render_levels = 2
 
-    _paint_chamber_vertex_colors(mesh)
-    obj.data.materials.append(_make_blended_chamber_material(materials))
+    # Hollow the shell inward (real wall thickness, not a zero-thickness
+    # surface) and cap the cut opening with connecting rim geometry, so the
+    # cutaway reads as a real wall's cross-section rather than an
+    # infinitely-thin shell. material_offset/_rim route the NEW inward-
+    # facing and rim faces to slot 1 (the chamber-blend material) while the
+    # original outward faces stay on slot 0 (plain exterior).
+    solidify = obj.modifiers.new("Wall", "SOLIDIFY")
+    solidify.thickness = 0.22
+    solidify.offset = -1  # keep the original surface as the outer bound
+    solidify.use_rim = True
+    solidify.material_offset = 1
+    solidify.material_offset_rim = 1
 
     return obj
 
@@ -132,24 +180,38 @@ def build_myocardium(materials):
 # increment, not this pass's scope). Smoothly blended per-vertex (see
 # below) instead of a hard per-face material split, which read as a torn-
 # paper edge rather than living tissue.
+# Shifted from the OLD anchors (which sat near y=-0.55/-0.45, tuned for
+# the exterior FRONT surface a camera used to see directly) to the real
+# interior back wall now exposed by the cutaway -- a real bug found by
+# actually rendering the first cutaway pass: with the front quadrant
+# sliced away, those old anchors were sitting in the REMOVED geometry, so
+# their blend barely reached the wall that's actually still visible,
+# and the interior rendered as a near-uniform wash instead of four
+# distinct chamber regions.
 _CHAMBER_ANCHORS = {
-    "HEART_RIGHT_ATRIUM": ((-0.55, -0.55, 0.55), (0.45, 0.58, 0.82)),
-    "HEART_RIGHT_VENTRICLE": ((-0.45, -0.45, -0.45), (0.35, 0.48, 0.75)),
-    "HEART_LEFT_ATRIUM": ((0.55, -0.55, 0.55), (0.68, 0.32, 0.55)),
-    "HEART_LEFT_VENTRICLE": ((0.45, -0.45, -0.45), (0.58, 0.15, 0.28)),
+    "HEART_RIGHT_ATRIUM": ((-0.55, 0.35, 0.55), (0.45, 0.58, 0.82)),
+    "HEART_RIGHT_VENTRICLE": ((-0.45, 0.45, -0.45), (0.35, 0.48, 0.75)),
+    "HEART_LEFT_ATRIUM": ((0.55, 0.35, 0.55), (0.68, 0.32, 0.55)),
+    "HEART_LEFT_VENTRICLE": ((0.45, 0.45, -0.45), (0.58, 0.15, 0.28)),
 }
 _MYOCARDIUM_COLOR = (0.82, 0.45, 0.4)
-_CHAMBER_BLEND_RADIUS = 1.35
+_CHAMBER_BLEND_RADIUS = 1.1
 
 
 def _chamber_blend_color(vx, vy, vz):
     """The exact same weighted chamber-color blend the vertex painter uses,
-    factored out so anything else placed on the surface (like the LV
-    highlight marker below) can ask "what color is the muscle actually
-    painted at this exact point" instead of guessing a fixed color that
-    drifts out of sync whenever the blend weights change."""
-    front_visibility = max(0.0, min(1.0, (-vy - 0.15) / 0.5))
+    factored out so anything else (like the LV highlight weight below) can
+    ask "what color is the interior actually painted at this exact point"
+    instead of guessing a fixed color that drifts out of sync whenever the
+    blend weights change.
 
+    No longer fades toward plain myocardium based on which way the vertex
+    faces (an earlier version did, to hide the fact it was painting fake
+    chamber colors onto a solid EXTERIOR the camera wasn't quite looking
+    at). That fade is gone because the dishonesty it was covering for is
+    gone: this color is now only ever used on the real interior cavity
+    material (see build_myocardium's material_offset split), which the
+    camera only sees through the actual cutaway."""
     weights = []
     colors = []
     for (center, color) in _CHAMBER_ANCHORS.values():
@@ -165,11 +227,6 @@ def _chamber_blend_color(vx, vy, vz):
     r = (sum(w * c[0] for w, c in zip(weights, colors)) + myo_weight * _MYOCARDIUM_COLOR[0]) / norm
     g = (sum(w * c[1] for w, c in zip(weights, colors)) + myo_weight * _MYOCARDIUM_COLOR[1]) / norm
     b = (sum(w * c[2] for w, c in zip(weights, colors)) + myo_weight * _MYOCARDIUM_COLOR[2]) / norm
-
-    # Blend back toward pure myocardium on the rear surface.
-    r = r * front_visibility + _MYOCARDIUM_COLOR[0] * (1 - front_visibility)
-    g = g * front_visibility + _MYOCARDIUM_COLOR[1] * (1 - front_visibility)
-    b = b * front_visibility + _MYOCARDIUM_COLOR[2] * (1 - front_visibility)
     return (r, g, b)
 
 
@@ -183,11 +240,9 @@ def _lv_highlight_weight(vx, vy, vz):
     truly sit flush on a curved mesh (it always shows a seam/shadow no
     matter how well its color is matched), so this replaces that approach
     entirely rather than continuing to tune it."""
-    front_visibility = max(0.0, min(1.0, (-vy - 0.15) / 0.5))
     center, _color = _CHAMBER_ANCHORS["HEART_LEFT_VENTRICLE"]
     dist = ((vx - center[0]) ** 2 + (vy - center[1]) ** 2 + (vz - center[2]) ** 2) ** 0.5
-    weight = max(0.0, 1.0 - dist / _CHAMBER_BLEND_RADIUS) ** 1.1
-    return weight * front_visibility
+    return max(0.0, 1.0 - dist / _CHAMBER_BLEND_RADIUS) ** 1.1
 
 
 def _paint_chamber_vertex_colors(mesh):
@@ -240,6 +295,59 @@ def _make_blended_chamber_material(materials):
 
     materials["MYOCARDIUM"] = mat  # replace the flat placeholder with the real blended one
     return mat
+
+
+def build_septum(materials):
+    """The real dividing wall between the right (blue) and left (red) heart
+    -- without this, the interior the cutaway now exposes is one continuous
+    bowl with a color gradient across it, not two genuinely separate
+    chambers the way an actual heart (and every real clinical illustration
+    of one) has. A gradient implies "no wall here"; a real heart very much
+    has one. Built as its own thin curved surface running through the
+    cavity's real centerline (following the same lean-with-height the
+    myocardium mesh itself uses, not a flat x=0 guess), colored plain
+    muscle tone -- the septum is myocardium too, not chamber-colored."""
+    bm = bmesh.new()
+    rows = 14
+    cols = 6
+    verts_grid = []
+    for i in range(rows):
+        t = i / (rows - 1)  # 0 = base (top), 1 = apex (bottom)
+        z = 1.05 - t * 2.15
+        below = max(0.0, -z)
+        lean = 0.34 * below
+        taper = 1.0 - 0.62 * (below ** 1.3)
+        # Depth span of the cavity at this height: from just inside the cut
+        # opening (front) back to the far interior wall, both scaled by the
+        # same taper the myocardium shell uses so the septum's edge tracks
+        # the real cavity boundary instead of poking through it.
+        y_front = -0.08 * taper
+        y_back = 0.78 * taper
+        row = []
+        for j in range(cols):
+            s = j / (cols - 1)
+            y = y_front + s * (y_back - y_front)
+            row.append(bm.verts.new((lean, y, z)))
+        verts_grid.append(row)
+
+    for i in range(rows - 1):
+        for j in range(cols - 1):
+            bm.faces.new((
+                verts_grid[i][j], verts_grid[i][j + 1],
+                verts_grid[i + 1][j + 1], verts_grid[i + 1][j],
+            ))
+
+    mesh = bpy.data.meshes.new("Septum")
+    bm.to_mesh(mesh)
+    bm.free()
+    for poly in mesh.polygons:
+        poly.use_smooth = True
+
+    obj = bpy.data.objects.new("Septum", mesh)
+    bpy.context.collection.objects.link(obj)
+    septum_mat = _make_organic_material("mat_septum", _MYOCARDIUM_COLOR, subsurface=0.3)
+    obj.data.materials.append(septum_mat)
+    return obj
 
 
 # ---------------------------------------------------------------------------
@@ -399,6 +507,7 @@ def build_heart():
     materials = build_materials()
     objects = {}
     objects["MYOCARDIUM"] = build_myocardium(materials)
+    objects["SEPTUM"] = build_septum(materials)
     objects.update(build_vessels(materials))
     objects.update(build_coronary_arteries(materials))
     _register_lv_highlight_target(materials)
