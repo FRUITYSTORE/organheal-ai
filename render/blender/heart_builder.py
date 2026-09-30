@@ -188,14 +188,20 @@ def build_myocardium(materials):
 # their blend barely reached the wall that's actually still visible,
 # and the interior rendered as a near-uniform wash instead of four
 # distinct chamber regions.
+# Pushed more saturated than the first cutaway pass -- rendering that
+# first version next to the reference showed the four regions reading as
+# one soft wash rather than four distinct chambers. Real venous/arterial
+# blood-color convention (deoxygenated blue-toned right heart, oxygenated
+# red right heart) pushed harder here for legibility, same convention,
+# more contrast.
 _CHAMBER_ANCHORS = {
-    "HEART_RIGHT_ATRIUM": ((-0.55, 0.35, 0.55), (0.45, 0.58, 0.82)),
-    "HEART_RIGHT_VENTRICLE": ((-0.45, 0.45, -0.45), (0.35, 0.48, 0.75)),
-    "HEART_LEFT_ATRIUM": ((0.55, 0.35, 0.55), (0.68, 0.32, 0.55)),
-    "HEART_LEFT_VENTRICLE": ((0.45, 0.45, -0.45), (0.58, 0.15, 0.28)),
+    "HEART_RIGHT_ATRIUM": ((-0.55, 0.35, 0.55), (0.22, 0.4, 0.78)),
+    "HEART_RIGHT_VENTRICLE": ((-0.45, 0.45, -0.45), (0.13, 0.26, 0.6)),
+    "HEART_LEFT_ATRIUM": ((0.55, 0.35, 0.55), (0.75, 0.2, 0.4)),
+    "HEART_LEFT_VENTRICLE": ((0.45, 0.45, -0.45), (0.6, 0.05, 0.14)),
 }
 _MYOCARDIUM_COLOR = (0.82, 0.45, 0.4)
-_CHAMBER_BLEND_RADIUS = 1.1
+_CHAMBER_BLEND_RADIUS = 0.85
 
 
 def _chamber_blend_color(vx, vy, vz):
@@ -216,7 +222,7 @@ def _chamber_blend_color(vx, vy, vz):
     colors = []
     for (center, color) in _CHAMBER_ANCHORS.values():
         dist = ((vx - center[0]) ** 2 + (vy - center[1]) ** 2 + (vz - center[2]) ** 2) ** 0.5
-        weight = max(0.0, 1.0 - dist / _CHAMBER_BLEND_RADIUS) ** 1.1
+        weight = max(0.0, 1.0 - dist / _CHAMBER_BLEND_RADIUS) ** 1.5
         weights.append(weight)
         colors.append(color)
 
@@ -242,7 +248,7 @@ def _lv_highlight_weight(vx, vy, vz):
     entirely rather than continuing to tune it."""
     center, _color = _CHAMBER_ANCHORS["HEART_LEFT_VENTRICLE"]
     dist = ((vx - center[0]) ** 2 + (vy - center[1]) ** 2 + (vz - center[2]) ** 2) ** 0.5
-    return max(0.0, 1.0 - dist / _CHAMBER_BLEND_RADIUS) ** 1.1
+    return max(0.0, 1.0 - dist / _CHAMBER_BLEND_RADIUS) ** 1.5
 
 
 def _paint_chamber_vertex_colors(mesh):
@@ -348,6 +354,161 @@ def build_septum(materials):
     septum_mat = _make_organic_material("mat_septum", _MYOCARDIUM_COLOR, subsurface=0.3)
     obj.data.materials.append(septum_mat)
     return obj
+
+
+def _make_torus_bmesh(major_radius, minor_radius, major_segments=24, minor_segments=8):
+    """A real ring of geometry (not an emissive decal or a flat circle) --
+    Blender's bmesh has no built-in torus primitive, so this parametrizes
+    one directly. Lies flat in its own local XY plane with the tube's bump
+    along local Z; callers orient it to the real surface normal at its
+    valve position."""
+    bm = bmesh.new()
+    rings = []
+    for i in range(major_segments):
+        theta = 2 * math.pi * i / major_segments
+        ring = []
+        for j in range(minor_segments):
+            phi = 2 * math.pi * j / minor_segments
+            r = major_radius + minor_radius * math.cos(phi)
+            ring.append(bm.verts.new((r * math.cos(theta), r * math.sin(theta), minor_radius * math.sin(phi))))
+        rings.append(ring)
+    for i in range(major_segments):
+        i2 = (i + 1) % major_segments
+        for j in range(minor_segments):
+            j2 = (j + 1) % minor_segments
+            bm.faces.new((rings[i][j], rings[i2][j], rings[i2][j2], rings[i][j2]))
+    return bm
+
+
+def build_valves(materials):
+    """Real ring geometry at the four valve junctions -- without these, the
+    boundary between an atrium and its ventricle (or a ventricle and its
+    great vessel) is only ever a soft color gradient, which reads as "no
+    real structure here" the way the septum's absence used to. A real
+    heart has an actual fibrous ring at each of these four junctions; this
+    draws one, not just a color change.
+
+    Positions are the real anchor points already used for the chamber
+    color blend (build_septum's docstring / _CHAMBER_ANCHORS above) for
+    the two AV valves, and the great-vessel root directions already used
+    by build_vessels for the two semilunar valves -- reusing the SAME
+    coordinates the rest of the anatomy already commits to, not a new
+    hand-picked guess."""
+    valve_mat = _make_organic_material("mat_valve", (0.92, 0.86, 0.78), subsurface=0.1, roughness=0.25)
+
+    ra_center, _ = _CHAMBER_ANCHORS["HEART_RIGHT_ATRIUM"]
+    rv_center, _ = _CHAMBER_ANCHORS["HEART_RIGHT_VENTRICLE"]
+    la_center, _ = _CHAMBER_ANCHORS["HEART_LEFT_ATRIUM"]
+    lv_center, _ = _CHAMBER_ANCHORS["HEART_LEFT_VENTRICLE"]
+
+    specs = {
+        # Tricuspid: between right atrium and right ventricle.
+        "tricuspid": (tuple((a + b) / 2 for a, b in zip(ra_center, rv_center)), 0.16),
+        # Mitral: between left atrium and left ventricle.
+        "mitral": (tuple((a + b) / 2 for a, b in zip(la_center, lv_center)), 0.16),
+        # Pulmonic: right ventricle into the pulmonary artery root.
+        "pulmonic": (_surface_point(-0.3, -0.5, 0.75, standoff=-0.02), 0.12),
+        # Aortic: left ventricle into the aorta root.
+        "aortic": (_surface_point(0.25, -0.55, 0.75, standoff=-0.02), 0.12),
+    }
+
+    valves = {}
+    for name, (center, radius) in specs.items():
+        bm = _make_torus_bmesh(major_radius=radius, minor_radius=radius * 0.16)
+        mesh = bpy.data.meshes.new(f"Valve_{name}")
+        bm.to_mesh(mesh)
+        bm.free()
+        for poly in mesh.polygons:
+            poly.use_smooth = True
+        obj = bpy.data.objects.new(f"Valve_{name}", mesh)
+        # Lay the ring flush-ish against the local surface: its face normal
+        # (local Z) points along the approximate outward direction from
+        # the heart's own center, same approximation _surface_point's
+        # deformation already implies for nearby geometry. Found by
+        # actually rendering this: sitting exactly at the anchor point let
+        # part of each ring intersect the solid interior wall (rendering
+        # as a broken arc instead of a closed ring), so it's nudged out
+        # along that same outward direction to clear the surface.
+        outward = Vector(center).normalized() if Vector(center).length > 0 else Vector((0, -1, 0))
+        obj.location = Vector(center) + outward * (radius * 0.35)
+        obj.rotation_euler = outward.to_track_quat("Z", "Y").to_euler()
+        obj.data.materials.append(valve_mat)
+        bpy.context.collection.objects.link(obj)
+        valves[name] = obj
+
+    return valves
+
+
+def _make_flow_arrow(name, start, end, shaft_radius, head_radius, material):
+    """A real arrow -- a shaft tube plus a cone head oriented along the
+    real direction between two anatomy points -- not a label or an icon
+    pasted on top. Matches the reference image's black flow-direction
+    arrows at each valve: this is the one piece of this rebuild that's
+    purely informational rather than a physical structure, so it uses a
+    flat, unlit material (not organic/subsurface) to read as a diagram
+    annotation, distinct from the tissue it's drawn on."""
+    start_v, end_v = Vector(start), Vector(end)
+    direction = end_v - start_v
+    length = direction.length
+    if length < 1e-6:
+        direction = Vector((0, 0, -1))
+        length = 1e-6
+    direction = direction.normalized()
+    head_length = min(0.09, length * 0.4)
+    shaft_end = end_v - direction * head_length
+
+    shaft = _make_tube(f"{name}Shaft", [tuple(start_v), tuple(shaft_end)], shaft_radius, material)
+
+    bm = bmesh.new()
+    bmesh.ops.create_cone(bm, cap_ends=True, segments=12, radius1=head_radius, radius2=0.0, depth=head_length)
+    mesh = bpy.data.meshes.new(f"{name}Head")
+    bm.to_mesh(mesh)
+    bm.free()
+    for poly in mesh.polygons:
+        poly.use_smooth = True
+    head = bpy.data.objects.new(f"{name}Head", mesh)
+    head.location = shaft_end + direction * (head_length / 2)
+    head.rotation_euler = direction.to_track_quat("Z", "Y").to_euler()
+    head.data.materials.append(material)
+    bpy.context.collection.objects.link(head)
+
+    return shaft, head
+
+
+def build_flow_arrows(materials):
+    """Blood-flow direction through the two AV valves -- the reference
+    image's clearest legibility win beyond real chamber colors. Only the
+    two valves actually visible through the cutaway get one each (the
+    semilunar valves near the vessel roots are mostly hidden behind the
+    rim from the current camera angles); adding arrows nobody can see
+    would be worse than not drawing them."""
+    flow_mat = _make_organic_material("mat_flow_arrow", (0.08, 0.08, 0.1), subsurface=0.0, roughness=0.5)
+
+    ra_center, _ = _CHAMBER_ANCHORS["HEART_RIGHT_ATRIUM"]
+    rv_center, _ = _CHAMBER_ANCHORS["HEART_RIGHT_VENTRICLE"]
+    la_center, _ = _CHAMBER_ANCHORS["HEART_LEFT_ATRIUM"]
+    lv_center, _ = _CHAMBER_ANCHORS["HEART_LEFT_VENTRICLE"]
+
+    def _short_segment(a, b, span=0.42):
+        # A short arrow centered on the real valve junction, not spanning
+        # the full atrium-to-ventricle distance -- an arrow that long
+        # reads as a spear through the whole chamber, not a valve marker.
+        mid = tuple((x + y) / 2 for x, y in zip(a, b))
+        direction = Vector(b) - Vector(a)
+        direction = direction.normalized() if direction.length > 1e-6 else Vector((0, 0, -1))
+        half = direction * (span / 2)
+        return tuple(Vector(mid) - half), tuple(Vector(mid) + half)
+
+    objects = {}
+    tri_start, tri_end = _short_segment(ra_center, rv_center)
+    objects["FLOW_ARROW_TRICUSPID"], objects["FLOW_ARROW_TRICUSPID_HEAD"] = _make_flow_arrow(
+        "FlowTricuspid", tri_start, tri_end, 0.02, 0.045, flow_mat,
+    )
+    mit_start, mit_end = _short_segment(la_center, lv_center)
+    objects["FLOW_ARROW_MITRAL"], objects["FLOW_ARROW_MITRAL_HEAD"] = _make_flow_arrow(
+        "FlowMitral", mit_start, mit_end, 0.02, 0.045, flow_mat,
+    )
+    return objects
 
 
 # ---------------------------------------------------------------------------
@@ -508,6 +669,8 @@ def build_heart():
     objects = {}
     objects["MYOCARDIUM"] = build_myocardium(materials)
     objects["SEPTUM"] = build_septum(materials)
+    objects.update(build_valves(materials))
+    objects.update(build_flow_arrows(materials))
     objects.update(build_vessels(materials))
     objects.update(build_coronary_arteries(materials))
     _register_lv_highlight_target(materials)
