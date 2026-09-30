@@ -43,7 +43,7 @@ describe("buildHeartScene", () => {
   it("highlights only the real coronary vessels for the coronary focus", () => {
     const scene = buildHeartScene(focus({ coronaryArteries: true }));
 
-    expect(scene.highlight.structures).toEqual(["CORONARY_LAD", "CORONARY_RCA", "CORONARY_LCX"]);
+    expect(scene.highlight.structures).toEqual(["heart.coronary.lad", "heart.coronary.rca", "heart.coronary.lcx"]);
     expect(scene.camera.preset).toBe("CAM_CORONARY_APPROACH");
     expect(scene.durationSeconds).toBe(5);
   });
@@ -51,7 +51,7 @@ describe("buildHeartScene", () => {
   it("highlights only the real LV + aorta for the lvAorta focus", () => {
     const scene = buildHeartScene(focus({ leftVentricleAndAorta: true }));
 
-    expect(scene.highlight.structures).toEqual(["HEART_LEFT_VENTRICLE", "AORTA"]);
+    expect(scene.highlight.structures).toEqual(["heart.leftVentricle", "heart.aorta"]);
     expect(scene.camera.preset).toBe("CAM_LV_APPROACH");
   });
 
@@ -59,11 +59,11 @@ describe("buildHeartScene", () => {
     const scene = buildHeartScene(focus({ coronaryArteries: true, leftVentricleAndAorta: true }));
 
     expect(scene.highlight.structures).toEqual([
-      "CORONARY_LAD",
-      "CORONARY_RCA",
-      "CORONARY_LCX",
-      "HEART_LEFT_VENTRICLE",
-      "AORTA",
+      "heart.coronary.lad",
+      "heart.coronary.rca",
+      "heart.coronary.lcx",
+      "heart.leftVentricle",
+      "heart.aorta",
     ]);
     expect(scene.camera.preset).toBe("CAM_COMBINED");
     expect(scene.durationSeconds).toBe(6.5);
@@ -73,7 +73,7 @@ describe("buildHeartScene", () => {
     const scene = buildHeartScene(focus());
 
     expect(scene.organ).toBe("heart");
-    expect(scene.sceneVersion).toBe("1");
+    expect(scene.sceneVersion).toBe("2");
     expect(scene.output).toEqual({ aspectRatio: "16:9", resolution: "1080p" });
   });
 });

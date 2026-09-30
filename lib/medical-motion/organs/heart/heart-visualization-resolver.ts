@@ -1,4 +1,5 @@
 import type { HeartFocus } from "@/lib/heart-age/heart-focus";
+import type { AnatomyStructureId } from "@/lib/medical-motion/contracts/anatomy";
 import type { SceneDefinition } from "@/lib/medical-motion/contracts/scene";
 
 // The clinical → visualization boundary for the heart (architecture brief
@@ -17,18 +18,24 @@ import type { SceneDefinition } from "@/lib/medical-motion/contracts/scene";
 
 export type HeartVisualizationFocus = "overview" | "coronary" | "lvAorta" | "combined";
 
-const HEART_ASSET_VERSION = "heart-v1-development"; // placeholder asset — see organ-module.ts's anatomicallyValidated:false
-
-const SCENE_VERSION = "1";
+// Bumped to "2" when highlight structures changed from Blender object names
+// to anatomy registry ids.
+const SCENE_VERSION = "2";
 
 const BASE_DURATION_SECONDS = 5;
 const COMBINED_DURATION_SECONDS = 6.5; // extra time for two callouts, same reasoning as the old SVG scene
 
-const HIGHLIGHT_GROUPS: Record<HeartVisualizationFocus, readonly string[]> = {
+// Anatomy registry ids only (see heart-organ-module.ts). This used to list
+// Blender object names directly, which tied clinical logic to how one asset
+// happens to name its objects; the render layer now maps ids to objects.
+const CORONARIES: readonly AnatomyStructureId[] = ["heart.coronary.lad", "heart.coronary.rca", "heart.coronary.lcx"];
+const LV_AND_AORTA: readonly AnatomyStructureId[] = ["heart.leftVentricle", "heart.aorta"];
+
+const HIGHLIGHT_GROUPS: Record<HeartVisualizationFocus, readonly AnatomyStructureId[]> = {
   overview: [],
-  coronary: ["CORONARY_LAD", "CORONARY_RCA", "CORONARY_LCX"],
-  lvAorta: ["HEART_LEFT_VENTRICLE", "AORTA"],
-  combined: ["CORONARY_LAD", "CORONARY_RCA", "CORONARY_LCX", "HEART_LEFT_VENTRICLE", "AORTA"],
+  coronary: CORONARIES,
+  lvAorta: LV_AND_AORTA,
+  combined: [...CORONARIES, ...LV_AND_AORTA],
 };
 
 const CAMERA_PRESETS: Record<HeartVisualizationFocus, string> = {
@@ -71,5 +78,3 @@ export function buildHeartScene(focus: HeartFocus): SceneDefinition {
     output: { aspectRatio: "16:9", resolution: "1080p" },
   };
 }
-
-export { HEART_ASSET_VERSION };

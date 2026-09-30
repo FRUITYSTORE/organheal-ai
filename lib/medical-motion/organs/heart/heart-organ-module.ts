@@ -1,5 +1,9 @@
 import type { OrganModule } from "@/lib/medical-motion/contracts/organ-module";
-import { HEART_ASSET_VERSION } from "@/lib/medical-motion/organs/heart/heart-visualization-resolver";
+
+// Bumped whenever the heart's geometry or materials change, so a cached
+// render of the old look is never reused (see render-signature.ts). v2: flat
+// darker cut faces and the red/gold highlight glow.
+export const HEART_ASSET_VERSION = "heart-v2-development";
 
 // Organ module #1. Metadata only: the geometry itself is built by
 // render/blender/heart_builder.py from render/blender/assets/heart/. Every

@@ -7,6 +7,7 @@ import path from "node:path";
 
 import { RENDER_ERROR_CODE, type RenderErrorCode, type RenderResult } from "@/lib/medical-motion/contracts/render";
 import type { SceneDefinition } from "@/lib/medical-motion/contracts/scene";
+import { checkAssetReadiness, type RenderMode } from "@/lib/symptom-explanation/asset-readiness";
 
 // Invokes the real headless Blender pipeline (render/blender/render_scene.py)
 // as a child process -- this is the actual "Phase 4" wiring the architecture
@@ -94,10 +95,27 @@ function classifyError(combinedOutput: string): RenderErrorCode {
   return RENDER_ERROR_CODE.BLENDER_FAILED;
 }
 
+export type RenderOptions = {
+  /** Required, never defaulted: "production" refuses placeholder anatomy
+   * (REAL_ANATOMICAL_ASSET_REQUIRED), "development" allows it for internal
+   * review renders only. */
+  mode: RenderMode;
+  timeoutMs?: number;
+};
+
+/**
+ * The scene as the Blender script reads it: identical, except highlight
+ * structures are the registry's Blender object names instead of anatomy ids.
+ * This is the one place ids become object names.
+ */
+export function toBlenderSceneConfig(scene: SceneDefinition, blenderObjects: readonly string[]) {
+  return { ...scene, highlight: { ...scene.highlight, structures: blenderObjects } };
+}
+
 export async function renderHeartScene(
   scene: SceneDefinition,
   outputPath: string,
-  timeoutMs: number = DEFAULT_RENDER_TIMEOUT_MS
+  { mode, timeoutMs = DEFAULT_RENDER_TIMEOUT_MS }: RenderOptions
 ): Promise<RenderResult> {
   if (scene.organ !== "heart") {
     return {
@@ -107,11 +125,19 @@ export async function renderHeartScene(
     };
   }
 
+  // Checked here, right before Blender, even if the plan was checked when it
+  // was built: a stored plan can outlive the asset it was checked against.
+  const readiness = checkAssetReadiness(scene.organ, scene.highlight.structures, mode);
+
+  if (!readiness.ok) {
+    return { status: "failed", errorCode: readiness.errorCode, message: readiness.details.join(" ") };
+  }
+
   const tempDir = await mkdtemp(path.join(tmpdir(), "medical-motion-"));
   const configPath = path.join(tempDir, "scene.json");
 
   try {
-    await writeFile(configPath, JSON.stringify(scene), "utf-8");
+    await writeFile(configPath, JSON.stringify(toBlenderSceneConfig(scene, readiness.blenderObjects)), "utf-8");
 
     const result = await runBlenderProcess(configPath, outputPath, timeoutMs);
 

@@ -88,8 +88,16 @@ def main():
 
     apply_camera_preset(scene_config.get("camera", {}).get("preset", "CAM_HEART_OVERVIEW"))
 
+    # The render layer (lib/medical-motion/render/blender-renderer.ts) maps
+    # anatomy ids to these object names through the organ registry. A name
+    # the build didn't produce means the registry promised something the
+    # asset lacks: fail, rather than render without it and "succeed".
     highlight = scene_config.get("highlight", {})
-    apply_highlight(materials, highlight.get("structures", []), highlight.get("intensity", 0))
+    structures = highlight.get("structures", [])
+    missing = [name for name in structures if name not in bpy.data.objects]
+    if missing:
+        raise SystemExit(f"ANATOMY_STRUCTURE_NOT_FOUND: the built heart has no object named {missing}")
+    apply_highlight(structures, highlight.get("intensity", 0))
 
     key_light_data = bpy.data.lights.new("KeyLight", type="AREA")
     key_light_data.energy = 400

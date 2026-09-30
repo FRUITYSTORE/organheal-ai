@@ -215,10 +215,7 @@ def build_chambers(materials):
         # the mesh already has.
         obj.data.materials.clear()
         obj.data.materials.append(materials[key])
-        # Registered as "<key>_CUT" so a highlight of the chamber can light
-        # its cut face too (scene_presets.apply_highlight).
-        materials[f"{key}_CUT"] = _cut_surface_material(materials[key])
-        obj.data.materials.append(materials[f"{key}_CUT"])
+        obj.data.materials.append(_cut_surface_material(materials[key]))
         _cutaway_chamber(obj)
     return chambers
 
@@ -346,7 +343,6 @@ def build_valves(materials, chamber_centers):
     vessel roots, are deferred: placing them correctly needs the real
     vessel-root points threaded through too, a real next increment rather
     than a re-guessed position this pass.)"""
-    valve_mat = _make_organic_material("mat_valve", (0.92, 0.86, 0.78), subsurface=0.1, roughness=0.25)
     ra = chamber_centers["HEART_RIGHT_ATRIUM"]
     rv = chamber_centers["HEART_RIGHT_VENTRICLE"]
     la = chamber_centers["HEART_LEFT_ATRIUM"]
@@ -369,7 +365,10 @@ def build_valves(materials, chamber_centers):
         outward = Vector(center).normalized() if Vector(center).length > 0 else Vector((0, -1, 0))
         obj.location = Vector(center) + outward * (radius * 0.35)
         obj.rotation_euler = outward.to_track_quat("Z", "Y").to_euler()
-        obj.data.materials.append(valve_mat)
+        # One material per valve, so highlighting one never lights the other.
+        obj.data.materials.append(
+            _make_organic_material(f"mat_valve_{name}", (0.92, 0.86, 0.78), subsurface=0.1, roughness=0.25)
+        )
         bpy.context.collection.objects.link(obj)
         valves[name] = obj
     return valves

@@ -90,12 +90,15 @@ describe("HEART_ORGAN_MODULE", () => {
       buildHeartScene({ coronaryArteries: true, leftVentricleAndAorta: true }),
     ];
     const cameraIds = HEART_ORGAN_MODULE.cameraTargets.map((target) => target.id);
+    const registryIds = HEART_ORGAN_MODULE.anatomyRegistry.map((entry) => entry.id);
 
     for (const scene of scenes) {
       expect(cameraIds).toContain(scene.camera.preset);
 
+      // Scenes speak in registry ids; only the render layer maps them to
+      // Blender objects.
       for (const structure of scene.highlight.structures) {
-        expect(blenderObjects).toContain(structure);
+        expect(registryIds).toContain(structure);
       }
     }
   });

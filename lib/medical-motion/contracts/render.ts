@@ -20,6 +20,13 @@ export type RenderStatus = (typeof RENDER_STATUS)[keyof typeof RENDER_STATUS];
 // it exhaustively.
 export const RENDER_ERROR_CODE = {
   ASSET_NOT_FOUND: "ASSET_NOT_FOUND",
+  // The asset-readiness gate's own codes (lib/symptom-explanation/
+  // asset-readiness.ts), refused before Blender starts; the render script
+  // also raises ANATOMY_STRUCTURE_NOT_FOUND if the built scene lacks an
+  // object the registry promised.
+  ORGAN_MODULE_NOT_FOUND: "ORGAN_MODULE_NOT_FOUND",
+  ANATOMY_STRUCTURE_NOT_FOUND: "ANATOMY_STRUCTURE_NOT_FOUND",
+  REAL_ANATOMICAL_ASSET_REQUIRED: "REAL_ANATOMICAL_ASSET_REQUIRED",
   INVALID_SCENE: "INVALID_SCENE",
   INVALID_ORGAN: "INVALID_ORGAN",
   BLENDER_FAILED: "BLENDER_FAILED",

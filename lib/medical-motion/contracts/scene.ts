@@ -1,3 +1,4 @@
+import type { AnatomyStructureId } from "@/lib/medical-motion/contracts/anatomy";
 import type { OrganId } from "@/lib/medical-motion/contracts/organ";
 
 // A fully-resolved, organ-agnostic instruction set for the render layer.
@@ -19,6 +20,9 @@ export type SceneDefinition = {
   focus: string;
   camera: { preset: string };
   motion: { preset: string };
-  highlight: { structures: readonly string[]; intensity: number };
+  /** Anatomy registry ids (e.g. "heart.coronary.lad"), never Blender object
+   * names: only the render layer maps ids to objects, through the organ
+   * module's registry (see render/blender-renderer.ts). */
+  highlight: { structures: readonly AnatomyStructureId[]; intensity: number };
   output: { aspectRatio: AspectRatio; resolution: RenderResolution };
 };
