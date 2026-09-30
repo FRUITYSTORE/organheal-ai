@@ -8,7 +8,8 @@ vi.mock("server-only", () => ({}));
 const { spawnMock } = vi.hoisted(() => ({ spawnMock: vi.fn() }));
 vi.mock("node:child_process", () => ({ spawn: spawnMock }));
 
-import { renderHeartScene, toBlenderSceneConfig } from "../lib/medical-motion/render/blender-renderer";
+import { renderHeartScene, resolveCameraShot, toBlenderSceneConfig } from "../lib/medical-motion/render/blender-renderer";
+import { HEART_ORGAN_MODULE } from "../lib/medical-motion/organs/heart/heart-organ-module";
 import { buildHeartScene } from "../lib/medical-motion/organs/heart/heart-visualization-resolver";
 
 // A fake child process good enough to drive the renderer's event handling
@@ -187,7 +188,13 @@ describe("renderHeartScene", () => {
 
     await renderHeartScene(scene, "out.png", DEV);
 
-    expect(written).toMatchObject({ highlight: { structures: ["CORONARY_LAD", "CORONARY_RCA", "CORONARY_LCX"] } });
+    expect(written).toMatchObject({
+      highlight: { structures: ["CORONARY_LAD", "CORONARY_RCA", "CORONARY_LCX"] },
+      camera: {
+        preset: "CAM_CORONARY_APPROACH",
+        shot: { lookAt: ["LM_heart.lvCenter", "LM_heart.rvCenter"], scaleReference: ["LM_heart.base", "LM_heart.apex"] },
+      },
+    });
   });
 
   it("classifies the script's own ANATOMY_STRUCTURE_NOT_FOUND when the built heart lacks an object", async () => {
@@ -205,9 +212,47 @@ describe("renderHeartScene", () => {
 });
 
 describe("toBlenderSceneConfig", () => {
-  it("swaps only the highlight structures", () => {
-    const config = toBlenderSceneConfig(scene, ["CORONARY_LAD"]);
+  it("swaps only the highlight structures and adds the resolved shot", () => {
+    const shot = resolveCameraShot(HEART_ORGAN_MODULE, scene.camera.preset);
+    if (!shot) throw new Error("expected a shot");
+    const config = toBlenderSceneConfig(scene, ["CORONARY_LAD"], shot);
 
-    expect(config).toEqual({ ...scene, highlight: { ...scene.highlight, structures: ["CORONARY_LAD"] } });
+    expect(config).toEqual({
+      ...scene,
+      camera: { ...scene.camera, shot },
+      highlight: { ...scene.highlight, structures: ["CORONARY_LAD"] },
+    });
+  });
+});
+
+describe("resolveCameraShot", () => {
+  it("resolves every heart shot to landmark empties the build creates", () => {
+    const landmarkObjects = HEART_ORGAN_MODULE.landmarks.map((landmark) => landmark.blenderObject);
+
+    for (const target of HEART_ORGAN_MODULE.cameraTargets) {
+      const shot = resolveCameraShot(HEART_ORGAN_MODULE, target.id);
+
+      expect(shot, target.id).not.toBeNull();
+      for (const name of [...(shot?.lookAt ?? []), ...(shot?.scaleReference ?? [])]) {
+        expect(landmarkObjects).toContain(name);
+      }
+    }
+  });
+
+  it("refuses an unknown shot, or one naming a landmark the module lacks", () => {
+    expect(resolveCameraShot(HEART_ORGAN_MODULE, "CAM_NOPE")).toBeNull();
+
+    const broken = {
+      ...HEART_ORGAN_MODULE,
+      cameraTargets: [{ id: "CAM_X", frames: [], lookAt: ["heart.nowhere" as const], viewDirection: [0, -1, 0] as const, distance: 2 }],
+    };
+    expect(resolveCameraShot(broken, "CAM_X")).toBeNull();
+  });
+
+  it("stops an unknown shot before Blender starts", async () => {
+    const result = await renderHeartScene({ ...scene, camera: { preset: "CAM_NOPE" } }, "out.png", DEV);
+
+    expect(result.status === "failed" && result.errorCode).toBe("INVALID_SCENE");
+    expect(spawnMock).not.toHaveBeenCalled();
   });
 });

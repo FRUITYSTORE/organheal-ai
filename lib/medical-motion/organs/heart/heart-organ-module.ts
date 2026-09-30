@@ -5,6 +5,9 @@ function landmark(id: LandmarkId, description: string): Landmark {
   return { id, description, blenderObject: `LM_${id}` };
 }
 
+const CHAMBER_CENTERS: readonly LandmarkId[] = ["heart.raCenter", "heart.rvCenter", "heart.laCenter", "heart.lvCenter"];
+const VENTRICLE_CENTERS: readonly LandmarkId[] = ["heart.lvCenter", "heart.rvCenter"];
+
 // Bumped whenever the heart's geometry or materials change, so a cached
 // render of the old look is never reused (see render-signature.ts). v2: flat
 // darker cut faces and the red/gold highlight glow.
@@ -64,13 +67,37 @@ export const HEART_ORGAN_MODULE: OrganModule = {
     landmark("heart.coronary.lcxOrigin", "First point of the circumflex centerline (the left main bifurcation)."),
     landmark("heart.coronary.rcaOrigin", "First point of the right coronary centerline."),
   ],
+  scaleReference: ["heart.base", "heart.apex"],
+  // Each shot keeps the exact camera position of the coordinate preset it
+  // replaced; only the aim point moved onto real landmarks (a 1-3 degree
+  // change), so existing renders look the same while the shots now follow
+  // the asset. Whole-heart shots aim at the centroid of the four chambers;
+  // coronary shots at the ventricles the coronaries run over.
   cameraTargets: [
-    { id: "CAM_HEART_OVERVIEW", frames: [] },
-    { id: "CAM_HEART_HERO", frames: [] },
-    { id: "CAM_HEART_ORBIT", frames: [] },
-    { id: "CAM_CORONARY_APPROACH", frames: ["heart.coronary"] },
-    { id: "CAM_LV_APPROACH", frames: ["heart.leftVentricle", "heart.aorta"] },
-    { id: "CAM_COMBINED", frames: ["heart.coronary", "heart.leftVentricle", "heart.aorta"] },
+    { id: "CAM_HEART_OVERVIEW", frames: [], lookAt: CHAMBER_CENTERS, viewDirection: [0.013, -1, -0.017], distance: 3.646 },
+    { id: "CAM_HEART_HERO", frames: [], lookAt: CHAMBER_CENTERS, viewDirection: [0.048, -0.998, -0.036], distance: 3.364 },
+    { id: "CAM_HEART_ORBIT", frames: [], lookAt: CHAMBER_CENTERS, viewDirection: [0.519, -0.855, 0.015], distance: 3.525 },
+    {
+      id: "CAM_CORONARY_APPROACH",
+      frames: ["heart.coronary"],
+      lookAt: VENTRICLE_CENTERS,
+      viewDirection: [0.095, -0.992, -0.077],
+      distance: 1.873,
+    },
+    {
+      id: "CAM_LV_APPROACH",
+      frames: ["heart.leftVentricle", "heart.aorta"],
+      lookAt: ["heart.lvCenter"],
+      viewDirection: [0.322, -0.946, -0.028],
+      distance: 2.233,
+    },
+    {
+      id: "CAM_COMBINED",
+      frames: ["heart.coronary", "heart.leftVentricle", "heart.aorta"],
+      lookAt: VENTRICLE_CENTERS,
+      viewDirection: [0.247, -0.969, 0.01],
+      distance: 3.045,
+    },
   ],
   // No heartbeat is implemented yet; every render is a still frame.
   motionControllers: [],

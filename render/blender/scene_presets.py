@@ -1,30 +1,10 @@
-"""Camera presets and the highlight system — both programmable, per the
-architecture brief sections 11-12: no single hard-coded camera animation,
-and anatomical structures are selectable by name, not baked into one shot.
+"""The camera and highlight systems -- both programmable, per the
+architecture brief sections 11-12: no hard-coded camera coordinates, and
+anatomical structures are selectable by name, not baked into one shot.
 """
 
 import bpy
-import math
 from mathutils import Vector
-
-# Each preset: (location, look_at_target). Rotation is computed from the
-# look-at vector rather than hand-tuned Euler angles, so presets stay
-# correct if the anatomy build script's proportions change slightly.
-
-# Retuned entirely after the real-anatomy rewrite (heart_builder.py no
-# longer deforms a sphere; it loads real chamber geometry at a different
-# scale/position). All previous coordinates here were tuned against the
-# OLD procedural shape and no longer mean anything -- these were computed
-# from the real combined chamber bounding box (center roughly (0.1, 0.43,
-# -0.03), size roughly (2.4, 1.45, 2.0)), then confirmed by rendering.
-CAMERA_PRESETS = {
-    "CAM_HEART_OVERVIEW": {"location": (0.1, -6.3, -0.1), "target": (0.1, 0.4, -0.1)},
-    "CAM_HEART_HERO": {"location": (0.3, -5.8, -0.2), "target": (0.15, 0.35, -0.2)},
-    "CAM_HEART_ORBIT": {"location": (3.2, -5.2, 0.1), "target": (0.1, 0.4, -0.1)},
-    "CAM_CORONARY_APPROACH": {"location": (0.6, -3.4, -0.4), "target": (0.2, 0.2, -0.3)},
-    "CAM_LV_APPROACH": {"location": (1.8, -3.6, -0.3), "target": (0.45, 0.32, -0.3)},
-    "CAM_COMBINED": {"location": (1.6, -5.3, -0.1), "target": (0.25, 0.35, -0.2)},
-}
 
 
 def _look_at(obj, target):
@@ -32,13 +12,34 @@ def _look_at(obj, target):
     obj.rotation_euler = direction.to_track_quat("-Z", "Y").to_euler()
 
 
-def apply_camera_preset(preset_name):
-    preset = CAMERA_PRESETS.get(preset_name, CAMERA_PRESETS["CAM_HEART_OVERVIEW"])
+def camera_shot_objects(shot):
+    """Every object a shot depends on, for the caller to validate."""
+    return list(shot["lookAt"]) + list(shot["scaleReference"])
+
+
+def apply_camera_shot(shot):
+    """Places the camera from a shot defined by anatomy (see CameraTarget in
+    lib/medical-motion/contracts/organ-module.ts, resolved by the render
+    layer): it aims at the centroid of the `lookAt` landmark empties, from
+    `viewDirection`, `distance` organ lengths away -- the organ length
+    being the distance between the two `scaleReference` landmarks. There
+    are no coordinates here, so a shot follows the asset: these replaced
+    six hand-tuned coordinate presets that only fit one build."""
+    objects = bpy.data.objects
+    target = Vector((0.0, 0.0, 0.0))
+    for name in shot["lookAt"]:
+        target += objects[name].location
+    target /= len(shot["lookAt"])
+
+    start, end = (objects[name].location for name in shot["scaleReference"])
+    organ_length = (end - start).length
+    direction = Vector(shot["viewDirection"]).normalized()
+
     camera_data = bpy.data.cameras.new("SceneCamera")
     camera_obj = bpy.data.objects.new("SceneCamera", camera_data)
     bpy.context.collection.objects.link(camera_obj)
-    camera_obj.location = Vector(preset["location"])
-    _look_at(camera_obj, preset["target"])
+    camera_obj.location = target + direction * shot["distance"] * organ_length
+    _look_at(camera_obj, target)
     bpy.context.scene.camera = camera_obj
     return camera_obj
 

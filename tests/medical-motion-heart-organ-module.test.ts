@@ -61,6 +61,22 @@ describe("HEART_ORGAN_MODULE", () => {
     }
   });
 
+  it("defines every camera shot by landmarks, not coordinates", () => {
+    const landmarkIds = HEART_ORGAN_MODULE.landmarks.map((l) => l.id);
+
+    expect(HEART_ORGAN_MODULE.scaleReference).toEqual(["heart.base", "heart.apex"]);
+    for (const target of HEART_ORGAN_MODULE.cameraTargets) {
+      expect(target.lookAt.length, target.id).toBeGreaterThan(0);
+      for (const id of target.lookAt) {
+        expect(landmarkIds, target.id).toContain(id);
+      }
+      expect(Math.hypot(...target.viewDirection), target.id).toBeGreaterThan(0.9);
+      expect(target.distance, target.id).toBeGreaterThan(0);
+      // Every heart shot looks at the front, where the cutaway opens.
+      expect(target.viewDirection[1], target.id).toBeLessThan(0);
+    }
+  });
+
   it("measures landmarks that sit where anatomy puts them", () => {
     const { landmarks } = JSON.parse(readFileSync(join(ASSET_DIR, "landmarks.json"), "utf-8")) as {
       landmarks: Record<string, { position: [number, number, number] }>;

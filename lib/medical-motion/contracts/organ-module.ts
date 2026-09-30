@@ -45,11 +45,22 @@ export type Landmark = {
   blenderObject: string;
 };
 
+/** A direction in the organ's anatomical axes: +x toward the patient's
+ * left, -y anterior (toward the viewer of a standard front view), +z
+ * superior. Need not be normalized. */
+export type AnatomicalDirection = readonly [number, number, number];
+
+/** A camera shot defined by anatomy, not coordinates: the camera aims at
+ * the centroid of `lookAt` from `viewDirection`, `distance` organ lengths
+ * away (see OrganModule.scaleReference), so the shot follows the asset. */
 export type CameraTarget = {
-  /** Shot name implemented by the render layer's camera presets. */
+  /** Shot name, referenced by SceneDefinition.camera.preset. */
   id: string;
   /** Structures or groups this shot is framed on; empty = the whole organ. */
   frames: readonly AnatomyStructureId[];
+  lookAt: readonly LandmarkId[];
+  viewDirection: AnatomicalDirection;
+  distance: number;
 };
 
 /** "clinicalIllustration": flat, clean educational look (EEVEE/NPR).
@@ -72,6 +83,9 @@ export type OrganModule = {
   anatomicallyValidated: boolean;
   anatomyRegistry: readonly AnatomyRegistryEntry[];
   landmarks: readonly Landmark[];
+  /** Two landmarks whose distance is the organ's unit length for camera
+   * distances (the heart uses base to apex). */
+  scaleReference: readonly [LandmarkId, LandmarkId];
   cameraTargets: readonly CameraTarget[];
   motionControllers: readonly string[];
   cutawayStates: readonly string[];

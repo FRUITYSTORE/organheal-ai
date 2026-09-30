@@ -18,6 +18,7 @@ function reviewedModule(overrides: Partial<OrganModule> = {}): OrganModule {
       { id: "heart.aorta", kind: "greatVessel", blenderObject: "AO", fidelity: "reference-derived" },
     ],
     landmarks: [],
+    scaleReference: ["heart.base", "heart.apex"],
     cameraTargets: [],
     motionControllers: [],
     cutawayStates: [],

@@ -6,7 +6,9 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 
 import { RENDER_ERROR_CODE, type RenderErrorCode, type RenderResult } from "@/lib/medical-motion/contracts/render";
+import type { AnatomicalDirection, LandmarkId, OrganModule } from "@/lib/medical-motion/contracts/organ-module";
 import type { SceneDefinition } from "@/lib/medical-motion/contracts/scene";
+import { getOrganModule } from "@/lib/medical-motion/organ-modules";
 import { checkAssetReadiness, type RenderMode } from "@/lib/symptom-explanation/asset-readiness";
 
 // Invokes the real headless Blender pipeline (render/blender/render_scene.py)
@@ -103,13 +105,54 @@ export type RenderOptions = {
   timeoutMs?: number;
 };
 
+/** A camera shot resolved to the objects the Blender build creates. */
+export type BlenderCameraShot = {
+  lookAt: readonly string[];
+  scaleReference: readonly [string, string];
+  viewDirection: AnatomicalDirection;
+  distance: number;
+};
+
+/**
+ * Resolves a camera preset through the organ module: its landmarks become
+ * the empties the build places at them. Null when the module has no such
+ * shot, or the shot names a landmark the module doesn't have.
+ */
+export function resolveCameraShot(organModule: OrganModule, preset: string): BlenderCameraShot | null {
+  const target = organModule.cameraTargets.find((candidate) => candidate.id === preset);
+  const objectFor = (id: LandmarkId) => organModule.landmarks.find((landmark) => landmark.id === id)?.blenderObject;
+
+  if (!target) {
+    return null;
+  }
+
+  const lookAt = target.lookAt.map(objectFor);
+  const [from, to] = organModule.scaleReference.map(objectFor);
+
+  if (lookAt.length === 0 || lookAt.some((name) => !name) || !from || !to) {
+    return null;
+  }
+
+  return {
+    lookAt: lookAt as string[],
+    scaleReference: [from, to],
+    viewDirection: target.viewDirection,
+    distance: target.distance,
+  };
+}
+
 /**
  * The scene as the Blender script reads it: identical, except highlight
- * structures are the registry's Blender object names instead of anatomy ids.
- * This is the one place ids become object names.
+ * structures are the registry's Blender object names instead of anatomy ids,
+ * and the camera carries its resolved shot. This is the one place ids
+ * become object names.
  */
-export function toBlenderSceneConfig(scene: SceneDefinition, blenderObjects: readonly string[]) {
-  return { ...scene, highlight: { ...scene.highlight, structures: blenderObjects } };
+export function toBlenderSceneConfig(scene: SceneDefinition, blenderObjects: readonly string[], shot: BlenderCameraShot) {
+  return {
+    ...scene,
+    camera: { ...scene.camera, shot },
+    highlight: { ...scene.highlight, structures: blenderObjects },
+  };
 }
 
 export async function renderHeartScene(
@@ -133,11 +176,22 @@ export async function renderHeartScene(
     return { status: "failed", errorCode: readiness.errorCode, message: readiness.details.join(" ") };
   }
 
+  const organModule = getOrganModule(scene.organ);
+  const shot = organModule ? resolveCameraShot(organModule, scene.camera.preset) : null;
+
+  if (!shot) {
+    return {
+      status: "failed",
+      errorCode: RENDER_ERROR_CODE.INVALID_SCENE,
+      message: `The ${scene.organ} module has no usable camera shot "${scene.camera.preset}".`,
+    };
+  }
+
   const tempDir = await mkdtemp(path.join(tmpdir(), "medical-motion-"));
   const configPath = path.join(tempDir, "scene.json");
 
   try {
-    await writeFile(configPath, JSON.stringify(toBlenderSceneConfig(scene, readiness.blenderObjects)), "utf-8");
+    await writeFile(configPath, JSON.stringify(toBlenderSceneConfig(scene, readiness.blenderObjects, shot)), "utf-8");
 
     const result = await runBlenderProcess(configPath, outputPath, timeoutMs);
 

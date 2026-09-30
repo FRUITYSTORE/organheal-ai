@@ -19,7 +19,7 @@ import bpy
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from heart_builder import build_heart  # noqa: E402
-from scene_presets import apply_camera_preset, apply_highlight  # noqa: E402
+from scene_presets import apply_camera_shot, apply_highlight, camera_shot_objects  # noqa: E402
 
 
 def _parse_args():
@@ -82,21 +82,25 @@ def main():
     _clear_scene()
 
     try:
-        objects, materials = build_heart()
+        build_heart()
     except Exception as error:
         raise SystemExit(f"ASSET_NOT_FOUND: heart_builder.build_heart() failed: {error}")
 
-    apply_camera_preset(scene_config.get("camera", {}).get("preset", "CAM_HEART_OVERVIEW"))
-
     # The render layer (lib/medical-motion/render/blender-renderer.ts) maps
-    # anatomy ids to these object names through the organ registry. A name
-    # the build didn't produce means the registry promised something the
-    # asset lacks: fail, rather than render without it and "succeed".
+    # anatomy and landmark ids to these object names through the organ
+    # module. A name the build didn't produce means the module promised
+    # something the asset lacks: fail, rather than render without it and
+    # "succeed".
+    shot = scene_config.get("camera", {}).get("shot")
+    if not shot:
+        raise SystemExit("INVALID_SCENE: the scene config has no resolved camera shot")
     highlight = scene_config.get("highlight", {})
     structures = highlight.get("structures", [])
-    missing = [name for name in structures if name not in bpy.data.objects]
+    missing = [name for name in structures + camera_shot_objects(shot) if name not in bpy.data.objects]
     if missing:
         raise SystemExit(f"ANATOMY_STRUCTURE_NOT_FOUND: the built heart has no object named {missing}")
+
+    apply_camera_shot(shot)
     apply_highlight(structures, highlight.get("intensity", 0))
 
     key_light_data = bpy.data.lights.new("KeyLight", type="AREA")
