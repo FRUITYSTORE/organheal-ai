@@ -42,3 +42,7 @@ next-env.d.ts
 
 .vercel
 .env*
+
+# Python bytecode from the Blender render pipeline
+__pycache__/
+*.pyc
