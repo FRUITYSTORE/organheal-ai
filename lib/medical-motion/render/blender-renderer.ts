@@ -3,7 +3,7 @@ import { validateRenderDuration } from "./duration-policy";
 import { resolveOutputDimensions } from "./dimension-policy";
 import { createArtifactOwnership, discardArtifact, validArtifactName, validateArtifact, type ArtifactOwnership } from "./artifact-output";
 
-import { spawn } from "node:child_process";
+import { runBlenderProcess } from "./blender-process";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -42,64 +42,6 @@ function getBlenderExecutablePath(): string {
 
 function getRenderScriptPath(): string {
   return process.env.MEDICAL_MOTION_RENDER_SCRIPT?.trim() || path.join(process.cwd(), "render", "blender", "render_scene.py");
-}
-
-type BlenderProcessResult = {
-  exitCode: number | null;
-  stdout: string;
-  stderr: string;
-  timedOut: boolean;
-  durationSeconds: number;
-};
-
-function runBlenderProcess(configPath: string, outputPath: string, timeoutMs: number): Promise<BlenderProcessResult> {
-  return new Promise((resolve) => {
-    const startedAt = Date.now();
-    let child: ReturnType<typeof spawn>;
-    try { child = spawn(getBlenderExecutablePath(), [
-      "--background",
-      "--python",
-      getRenderScriptPath(),
-      "--",
-      configPath,
-      outputPath,
-    ]); } catch {
-      resolve({ exitCode: null, stdout: "", stderr: "Blender process could not start.", timedOut: false, durationSeconds: (Date.now() - startedAt) / 1000 });
-      return;
-    }
-
-    let stdout = "";
-    let stderr = "";
-    let timedOut = false;
-
-    const timer = setTimeout(() => {
-      timedOut = true;
-      child.kill();
-    }, timeoutMs);
-
-    child.stdout?.on("data", (chunk: Buffer) => {
-      stdout += chunk.toString();
-    });
-    child.stderr?.on("data", (chunk: Buffer) => {
-      stderr += chunk.toString();
-    });
-
-    child.on("error", () => {
-      clearTimeout(timer);
-      resolve({
-        exitCode: null,
-        stdout,
-        stderr: stderr || "Blender process could not start.",
-        timedOut: false,
-        durationSeconds: (Date.now() - startedAt) / 1000,
-      });
-    });
-
-    child.on("close", (exitCode) => {
-      clearTimeout(timer);
-      resolve({ exitCode, stdout, stderr, timedOut, durationSeconds: (Date.now() - startedAt) / 1000 });
-    });
-  });
 }
 
 // render_scene.py raises SystemExit with a message prefixed by one of these
@@ -281,9 +223,13 @@ export async function renderHeartScene(
   const dimensions = resolveOutputDimensions(scene.output.aspectRatio, scene.output.resolution);
   if (!dimensions.ok) return invalidScene(dimensions.message);
   if (!validArtifactName(outputPath, scene.output.media)) return invalidScene("Output must be a safe filename with the expected media extension.");
+  if (!Number.isInteger(timeoutMs) || timeoutMs <= 0 || timeoutMs > 2_147_483_647) {
+    return invalidScene("timeoutMs must be a positive integer within Node's timer range.");
+  }
   let ownership: ArtifactOwnership | undefined;
   let tempDir: string | undefined;
   let completed = false;
+  let safeToClean = true;
 
   try {
     ownership = await createArtifactOwnership(outputPath, scene.output.media);
@@ -295,14 +241,26 @@ export async function renderHeartScene(
       "utf-8"
     );
 
-    const result = await runBlenderProcess(configPath, ownership.outputPath, timeoutMs);
+    safeToClean = false;
+    const result = await runBlenderProcess(getBlenderExecutablePath(), [
+      "--background", "--python", getRenderScriptPath(), "--", configPath, ownership.outputPath,
+    ], timeoutMs);
+    safeToClean = result.terminationConfirmed;
 
-    if (result.timedOut) {
+    if (result.outcome === "timeout") {
       return {
         status: "failed",
         errorCode: RENDER_ERROR_CODE.RENDER_TIMEOUT,
-        message: `Render exceeded ${timeoutMs}ms and was killed.`,
+        message: result.terminationConfirmed
+          ? `Render exceeded ${timeoutMs}ms; Blender termination was confirmed.`
+          : `Render exceeded ${timeoutMs}ms; Blender termination could not be confirmed. Invocation files were retained; operator intervention is required.`,
       };
+    }
+
+    if (result.outcome === "process-error") {
+      return { status: "failed", errorCode: RENDER_ERROR_CODE.BLENDER_FAILED,
+        message: result.terminationConfirmed ? "Blender process failed or did not complete its lifecycle."
+          : "Blender process failed; termination could not be confirmed. Invocation files were retained; operator intervention is required." };
     }
 
     const combinedOutput = `${result.stdout}\n${result.stderr}`;
@@ -317,7 +275,7 @@ export async function renderHeartScene(
       };
     }
 
-    if (!combinedOutput.includes("RENDER_OK")) {
+    if (!result.reportedRenderOk) {
       return {
         status: "failed",
         errorCode: RENDER_ERROR_CODE.OUTPUT_VALIDATION_FAILED,
@@ -332,9 +290,9 @@ export async function renderHeartScene(
   } catch {
     return { status: "failed", errorCode: RENDER_ERROR_CODE.OUTPUT_VALIDATION_FAILED, message: "Render output could not be prepared or validated." };
   } finally {
-    // Never leave temp render-config files behind, success or failure —
-    // architecture brief section 23 ("temporary frames must be deleted").
-    if (tempDir) await rm(tempDir, { recursive: true, force: true }).catch(() => {});
-    if (ownership && !completed) await discardArtifact(ownership);
+    // Clean configs and failed artifacts after confirmed direct-child exit.
+    // Unconfirmed termination is quarantined, never deleted beneath a writer.
+    if (tempDir && safeToClean) await rm(tempDir, { recursive: true, force: true }).catch(() => {});
+    if (ownership && !completed && safeToClean) await discardArtifact(ownership);
   }
 }

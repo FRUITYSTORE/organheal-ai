@@ -5,6 +5,8 @@ import path from "node:path";
 import { tmpdir } from "node:os";
 import { mp4Fixture } from "./fixtures/medical-motion-artifact";
 import { validateRenderDuration } from "../lib/medical-motion/render/duration-policy";
+import { PROCESS_GRACE_MS, PROCESS_CONFIRMATION_MS } from "../lib/medical-motion/render/blender-process";
+import * as artifactOutput from "../lib/medical-motion/render/artifact-output";
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -44,6 +46,13 @@ class FakeChildProcess extends EventEmitter {
   }
   stdout = new EventEmitter();
   stderr = new EventEmitter();
+  constructor() {
+    super();
+    Object.assign(this.stdout, { destroy: vi.fn() });
+    Object.assign(this.stderr, { destroy: vi.fn() });
+  }
+  pid: number | undefined = 123;
+  unref = vi.fn();
   // A real killed process still eventually emits "close" (with a null exit
   // code) -- simulate that instead of leaving kill() a no-op, or the
   // renderer's promise (which only resolves via "close"/"error") never
@@ -79,6 +88,8 @@ beforeEach(async () => {
   process.env.MEDICAL_MOTION_OUTPUT_ROOT = outputRoot;
 });
 afterEach(async () => {
+  vi.useRealTimers();
+  vi.restoreAllMocks();
   if (previousOutputRoot === undefined) delete process.env.MEDICAL_MOTION_OUTPUT_ROOT;
   else process.env.MEDICAL_MOTION_OUTPUT_ROOT = previousOutputRoot;
   await rm(outputRoot, { recursive: true, force: true });
@@ -91,6 +102,18 @@ function coronaryExplanation() {
     anatomy: { primaryFocus: "heart.coronary", structures: ["heart.myocardium", ...scene.highlight.structures] },
     documentedFindings: [], scenes: [{ type: "mechanismExplanation" }, { type: "limitationsAndNextSteps" }],
   };
+}
+
+async function startClockedRender(timeoutMs = 10_000) {
+  const child = new FakeChildProcess();
+  child.kill.mockImplementation(() => true);
+  let spawned!: () => void;
+  const spawnReady = new Promise<void>((resolve) => { spawned = resolve; });
+  spawnMock.mockImplementationOnce(() => { vi.useFakeTimers(); spawned(); return child; });
+  const promise = renderHeartScene(scene, "out.mp4", { mode: "development", timeoutMs });
+  await spawnReady;
+  const args = spawnMock.mock.calls[0][1] as string[];
+  return { child, promise, ownedPath: args.at(-1)!, configPath: args[args.indexOf("--") + 1] };
 }
 
 describe("renderHeartScene", () => {
@@ -134,6 +157,7 @@ describe("renderHeartScene", () => {
     await waitForSpawn();
     const ownedPath = (spawnMock.mock.calls[0][1] as string[]).at(-1)!;
     writeFileSync(ownedPath, "partial");
+    child.pid = undefined;
     child.emit("error", new Error("spawn failed"));
     expect(await promise).toMatchObject({ status: "failed", errorCode: "BLENDER_FAILED" });
     expect(existsSync(path.dirname(ownedPath))).toBe(false);
@@ -318,21 +342,88 @@ describe("renderHeartScene", () => {
   it("reports RENDER_TIMEOUT and kills the process when it runs past the timeout", async () => {
     const child = queueFakeProcess();
 
-    // A real (short) timeout rather than faked timers: the timer that
-    // matters here races against a real mkdtemp/writeFile, and never
-    // emitting "close" on the fake child is exactly what "the process
-    // hung" looks like -- letting the real 30ms elapse is simpler and no
-    // less reliable than juggling fake-timer/real-fs interaction.
-    const result = await renderHeartScene(scene, "out.mp4", { mode: "development", timeoutMs: 30 });
+    // Enable the fake clock at spawn, after the asynchronous filesystem work.
+    spawnMock.mockReset();
+    let spawned!: () => void;
+    const spawnReady = new Promise<void>((resolve) => { spawned = resolve; });
+    spawnMock.mockImplementationOnce(() => { vi.useFakeTimers(); spawned(); return child; });
+    const promise = renderHeartScene(scene, "out.mp4", { mode: "development", timeoutMs: 30 });
+    await spawnReady;
+    await vi.advanceTimersByTimeAsync(30);
+    const result = await promise;
 
     expect(result).toEqual({
       status: "failed",
       errorCode: "RENDER_TIMEOUT",
-      message: "Render exceeded 30ms and was killed.",
+      message: "Render exceeded 30ms; Blender termination was confirmed.",
     });
     expect(child.kill).toHaveBeenCalledOnce();
     const ownedPath = (spawnMock.mock.calls[0][1] as string[]).at(-1)!;
     expect(existsSync(path.dirname(ownedPath))).toBe(false);
+  });
+
+  it.each([0, 1])("timeout cannot validate late close %s and cleans only after termination", async (code) => {
+    const validate = vi.spyOn(artifactOutput, "validateArtifact");
+    const { child, promise, ownedPath, configPath } = await startClockedRender();
+    let returned = false; void promise.then(() => { returned = true; });
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(returned).toBe(false);
+    expect(existsSync(path.dirname(ownedPath))).toBe(true);
+    expect(existsSync(configPath)).toBe(true);
+    // A still-running writer may produce data here; do not clean beneath it.
+    writeFileSync(ownedPath, "still writing");
+    child.stdout.emit("data", Buffer.from("RENDER_OK")); child.emit("close", code);
+    expect(await promise).toMatchObject({ errorCode: "RENDER_TIMEOUT" });
+    expect(validate).not.toHaveBeenCalled();
+    expect(existsSync(path.dirname(ownedPath))).toBe(false);
+    expect(existsSync(configPath)).toBe(false);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("process error waits for close, cannot validate success and cleans after termination", async () => {
+    const validate = vi.spyOn(artifactOutput, "validateArtifact");
+    const { child, promise, ownedPath, configPath } = await startClockedRender();
+    let returned = false; void promise.then(() => { returned = true; });
+    child.emit("error", new Error("EIO")); await Promise.resolve();
+    expect(returned).toBe(false); expect(existsSync(configPath)).toBe(true);
+    expect(existsSync(path.dirname(ownedPath))).toBe(true);
+    child.stdout.emit("data", Buffer.from("RENDER_OK")); child.emit("close", 0);
+    expect(await promise).toMatchObject({ errorCode: "BLENDER_FAILED" });
+    expect(validate).not.toHaveBeenCalled(); expect(existsSync(configPath)).toBe(false);
+    expect(existsSync(path.dirname(ownedPath))).toBe(false);
+  });
+
+  it.each(["timeout", "process-error"])("unconfirmed %s returns a bounded explicit failure and retains invocation files", async (reason) => {
+    const validate = vi.spyOn(artifactOutput, "validateArtifact");
+    const { child, promise, ownedPath, configPath } = await startClockedRender();
+    child.kill.mockImplementation(() => false);
+    if (reason === "process-error") child.emit("error", new Error("EIO"));
+    await vi.advanceTimersByTimeAsync((reason === "timeout" ? 10_000 : 0) + PROCESS_GRACE_MS + PROCESS_CONFIRMATION_MS);
+    expect(await promise).toMatchObject({ errorCode: reason === "timeout" ? "RENDER_TIMEOUT" : "BLENDER_FAILED",
+      message: expect.stringContaining("operator intervention") });
+    expect(child.kill.mock.calls).toEqual([["SIGTERM"], ["SIGKILL"]]);
+    expect(validate).not.toHaveBeenCalled(); expect(existsSync(configPath)).toBe(true);
+    expect(existsSync(path.dirname(ownedPath))).toBe(true);
+    child.produceArtifact = false; child.emit("close", 0);
+    expect(existsSync(configPath)).toBe(true); // Late callbacks cannot delete it.
+    const configDirectory = path.dirname(configPath);
+    expect(path.dirname(configDirectory)).toBe(tmpdir());
+    expect(path.basename(configDirectory).startsWith("medical-motion-")).toBe(true);
+    await rm(configDirectory, { recursive: true, force: true }); // This test's owned config only.
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("reports bounded trailing failure diagnostics with truncation", async () => {
+    const { child, promise } = await startClockedRender();
+    child.stderr.emit("data", Buffer.alloc(1024 * 1024, "x"));
+    child.stderr.emit("data", Buffer.from("BLENDER_FAILED: trailing diagnostic")); child.emit("close", 1);
+    expect(await promise).toMatchObject({ errorCode: "BLENDER_FAILED", message: expect.stringContaining("[earlier process output truncated]") });
+    expect(await promise).toMatchObject({ message: expect.stringContaining("trailing diagnostic") });
+  });
+
+  it.each([0, -1, NaN, Infinity, 0.5, 2_147_483_648])("rejects invalid process timeout %s before spawn", async (timeoutMs) => {
+    expect(await renderHeartScene(scene, "out.mp4", { ...DEV, timeoutMs })).toMatchObject({ errorCode: "INVALID_SCENE" });
+    expect(spawnMock).not.toHaveBeenCalled();
   });
 
   it("never invokes Blender directly for anything other than the heart organ", async () => {
