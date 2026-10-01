@@ -14,7 +14,8 @@ type TracedResult = (RenderResult | Failure) & { requestId?: string; planSignatu
 /** Mandatory-context clinical boundary. Generic rendering remains for internal review.
  * No triage orchestration, queue, narration, or clinical inference occurs here. */
 export async function renderExplanationRequest(
-  value: unknown, outputPath: string, options: { mode: RenderMode; timeoutMs?: number }
+  value: unknown, outputPath: string, options: { mode: RenderMode; timeoutMs?: number },
+  control: Parameters<typeof renderHeartScene>[3] = {},
 ): Promise<TracedResult> {
   const authorized = readExplanationAuthorization(value);
   if (!authorized || outputPath !== authorized.options.outputPath || options?.mode !== authorized.options.mode ||
@@ -52,6 +53,9 @@ export async function renderExplanationRequest(
       options.mode, getOrganModule, requirements);
     if (!sceneReady.ok) return { status: "failed", errorCode: sceneReady.errorCode, message: sceneReady.details.join(" "), ...trace };
   }
-  const result = await renderHeartScene(request.scene, outputPath, { ...options, explanationPlan: request.explanationPlan, clinicalAuthorization: value });
+  const result = await renderHeartScene(request.scene, outputPath, { ...options, explanationPlan: request.explanationPlan, clinicalAuthorization: value }, control);
+  if (result.status === "completed" && control?.signal?.aborted) {
+    return { status: "failed", errorCode: "RENDER_CANCELLED", message: "Render execution was cancelled.", ...trace };
+  }
   return { ...result, ...trace };
 }

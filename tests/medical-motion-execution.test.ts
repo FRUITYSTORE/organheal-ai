@@ -27,6 +27,56 @@ describe("untrusted serializable Medical Motion execution", () => {
   beforeEach(() => {
     vi.mocked(blender.renderHeartScene).mockResolvedValue({ status: "completed", outputPath: "owned/medical-motion.mp4", durationSeconds: 1 });
   });
+  it("passes the exact trusted signal separately without snapshotting, serialization or identity changes", async () => {
+    const first = await executeMedicalMotionRequest(request(), options);
+    const controller = new AbortController();
+    const serialize = vi.fn(() => { throw new Error("Signal must not be serialized"); });
+    Object.defineProperty(controller.signal, "toJSON", { value: serialize });
+    const second = await executeMedicalMotionRequest(request(), options, { signal: controller.signal });
+    expect(first).toEqual(second); expect(serialize).not.toHaveBeenCalled();
+    const call = vi.mocked(blender.renderHeartScene).mock.calls.at(-1)!;
+    expect(call[3]?.signal).toBe(controller.signal);
+    const authority = readExplanationAuthorization(call[2].clinicalAuthorization)!;
+    expect(authority.options).not.toHaveProperty("signal"); expect(authority.request).not.toHaveProperty("signal");
+    expect(call[2]).not.toHaveProperty("signal"); expect(second).not.toHaveProperty("signal");
+  });
+  it("rejects a late completed renderer result after trusted abort", async () => {
+    const controller = new AbortController();
+    vi.mocked(blender.renderHeartScene).mockImplementationOnce(async (_scene, _path, _options, control) => {
+      expect(control?.signal).toBe(controller.signal); controller.abort();
+      return { status: "completed", outputPath: "private-late-artifact", durationSeconds: 1 };
+    });
+    const result = await executeMedicalMotionRequest(request(), options, { signal: controller.signal });
+    expect(result).toMatchObject({ status: "failed", errorCode: "RENDER_CANCELLED" }); expect(result).not.toHaveProperty("outputPath");
+    expect(JSON.stringify(result)).not.toContain("private-late-artifact");
+  });
+  it.each(["signal", "cancelled", "executionControl", "ownership", "attemptToken", "authorization"])("untrusted root %s cannot supply trusted control", async key => {
+    const controller = new AbortController();
+    expect(await executeMedicalMotionRequest({ ...request(), [key]: { aborted: true } }, options, { signal: controller.signal }))
+      .toMatchObject({ errorCode: "INVALID_EXECUTION_REQUEST" }); expect(controller.signal.aborted).toBe(false); noRender();
+  });
+  it.each(["signal", "cancelled", "ownership", "authorization"])("untrusted clinical %s remains rejected", async key => {
+    const input = request();
+    expect(await executeMedicalMotionRequest({ ...input, clinical: { ...input.clinical, [key]: true } }, options))
+      .toMatchObject({ errorCode: "INVALID_EXECUTION_REQUEST" }); noRender();
+  });
+  it.each(["signal", "cancelled", "executionControl", "ownership", "authorization"])("untrusted plan %s remains rejected by plan validation", async key => {
+    const input = request();
+    expect(await executeMedicalMotionRequest({ ...input, plan: { ...input.plan, [key]: { aborted: true } } }, options))
+      .toMatchObject({ errorCode: "INVALID_SCENE_PLAN" }); noRender();
+  });
+  it("pre-abort preserves urgency before plan validation", async () => {
+    const controller = new AbortController(); controller.abort(); const input = request(); input.clinical.message = "I have chest pain.";
+    const validate = vi.spyOn(validator, "validateVideoExplanationPlan");
+    expect(await executeMedicalMotionRequest(input, options, { signal: controller.signal })).toMatchObject({ errorCode: "UNSAFE_FOR_VIDEO_FIRST" });
+    expect(validate).not.toHaveBeenCalled(); noRender();
+  });
+  it("pre-abort does not hide invalid plans or unavailable myocardium", async () => {
+    const controller = new AbortController(); controller.abort(); const bad = request(); bad.plan.anatomy.requirements = {};
+    expect(await executeMedicalMotionRequest(bad, options, { signal: controller.signal })).toMatchObject({ errorCode: "INVALID_SCENE_PLAN" });
+    expect(await executeMedicalMotionRequest(request("myocardialOxygenDemandSupply"), options, { signal: controller.signal }))
+      .toMatchObject({ errorCode: "ANATOMY_STRUCTURE_NOT_FOUND" }); noRender();
+  });
   it("round-tripped v1 data reconstructs real runtime authority and renders in development", async () => {
     expect(await executeMedicalMotionRequest(JSON.parse(JSON.stringify(request())), options)).toMatchObject({ status: "completed" });
     const authorization = vi.mocked(blender.renderHeartScene).mock.calls[0][2]?.clinicalAuthorization;

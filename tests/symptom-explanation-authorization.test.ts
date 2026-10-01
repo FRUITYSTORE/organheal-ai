@@ -26,6 +26,21 @@ function issued() {
 }
 describe("server-owned clinical render authorization", () => {
   beforeEach(() => { vi.mocked(renderHeartScene).mockReset(); vi.mocked(renderHeartScene).mockResolvedValue({ status: "completed", outputPath: "out.mp4", durationSeconds: 1 }); });
+  it("trusted cancellation cannot mint or replace clinical authorization", async () => {
+    const controller = new AbortController(); controller.abort();
+    expect(await renderExplanationRequest({}, options.outputPath, { mode: options.mode }, { signal: controller.signal }))
+      .toMatchObject({ errorCode: "UNSAFE_FOR_VIDEO_FIRST" }); expect(renderHeartScene).not.toHaveBeenCalled();
+  });
+  it("passes trusted control separately and rejects late renderer success after abort", async () => {
+    const controller = new AbortController(), capability = issued(); const snapshot = readExplanationAuthorization(capability);
+    vi.mocked(renderHeartScene).mockImplementationOnce(async (_scene, _path, _options, control) => {
+      expect(control?.signal).toBe(controller.signal); controller.abort();
+      return { status: "completed", outputPath: "late-private-file", durationSeconds: 1 };
+    });
+    const result = await renderExplanationRequest(capability, options.outputPath, { mode: options.mode }, { signal: controller.signal });
+    expect(result).toMatchObject({ status: "failed", errorCode: "RENDER_CANCELLED" }); expect(result).not.toHaveProperty("outputPath");
+    expect(readExplanationAuthorization(capability)).toEqual(snapshot);
+  });
   it.each([undefined, null, {}, { safety: { level: "none" } }, { triagePassed: true }, { safeToRender: true },
     { planSignature: "hash", requestId: "hash", renderSignature: "hash" }])("plain public data cannot authorize %#", async (value) => {
     expect(await renderExplanationRequest(value, options.outputPath, { mode: options.mode })).toMatchObject({ status: "failed", errorCode: "UNSAFE_FOR_VIDEO_FIRST" });

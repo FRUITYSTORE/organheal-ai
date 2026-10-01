@@ -43,6 +43,17 @@ describe("clinical triage to explanation rendering", () => {
     vi.restoreAllMocks(); vi.mocked(renderHeartScene).mockReset(); vi.mocked(spawn).mockClear();
     vi.mocked(renderHeartScene).mockResolvedValue({ status: "completed", outputPath: "test.mp4", durationSeconds: 1 });
   });
+  it("propagates trusted control without changing clinical/render identity", async () => {
+    const first = await orchestrateExplanationRender(input(), options); const controller = new AbortController();
+    const second = await orchestrateExplanationRender(input(), options, { signal: controller.signal });
+    expect(second).toEqual(first); expect(vi.mocked(renderHeartScene).mock.calls.at(-1)?.[3]?.signal).toBe(controller.signal);
+  });
+  it("trusted pre-abort cannot bypass triage or plan validation", async () => {
+    const controller = new AbortController(); controller.abort();
+    expect(await orchestrateExplanationRender(input("I have chest pain."), options, { signal: controller.signal })).toMatchObject({ errorCode: "UNSAFE_FOR_VIDEO_FIRST" });
+    const bad = plan(); bad.anatomy.requirements = {};
+    expect(await orchestrateExplanationRender(input("I feel tired.", bad), options, { signal: controller.signal })).toMatchObject({ errorCode: "INVALID_SCENE_PLAN" }); noRendering();
+  });
   it("safe supported flow reaches renderer when all production dependencies are reviewed", async () => {
     vi.spyOn(modules, "getOrganModule").mockReturnValue(reviewed());
     expect(await orchestrateExplanationRender(input(), { ...options, mode: "production" })).toMatchObject({ status: "completed", safety: { allowVideo: true } });

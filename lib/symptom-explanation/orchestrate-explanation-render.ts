@@ -5,11 +5,12 @@ export type { ExplanationOrchestrationInput, ExplanationOrchestrationOptions } f
 
 /** The clinical application entry point; preparation issues an opaque capability
  * only after existing triage, plan validation and deterministic compilation. */
-export async function orchestrateExplanationRender(value: unknown, options: ExplanationOrchestrationOptions) {
+export async function orchestrateExplanationRender(value: unknown, options: ExplanationOrchestrationOptions,
+  control: Parameters<typeof renderExplanationRequest>[3] = {}) {
   const prepared = prepareExplanationAuthorization(value, options);
   if (!("ok" in prepared)) return prepared;
   const result = await renderExplanationRequest(prepared.authorization, options.outputPath, {
     mode: options.mode, ...(options.timeoutMs === undefined ? {} : { timeoutMs: options.timeoutMs }),
-  });
+  }, control);
   return { ...result, ...prepared.trace, safety: prepared.safety, mechanism: prepared.mechanism };
 }

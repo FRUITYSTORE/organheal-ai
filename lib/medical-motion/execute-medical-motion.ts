@@ -67,12 +67,15 @@ function jsonSnapshot(value: unknown): MedicalMotionJson {
 /** Internal decoded-JSON entry for future durable callers. The second argument
  * must come from server policy, never a job payload: context, asset version,
  * mode, safe filename and timeout. Registry/executable/root stay downstream.
+ * Optional third-argument control is trusted and never part of clinical JSON,
+ * authorization snapshots or signatures; it reuses the renderer's contract.
  * Reuses existing triage -> validation -> compiler -> runtime capability ->
  * renderer readiness/recompilation. Readiness still precedes Blender execution.
  * This does not prove clinical appropriateness of a structurally valid plan.
  */
 export async function executeMedicalMotionRequest(
   value: unknown, serverOptions: ExplanationOrchestrationOptions,
+  control: Parameters<typeof orchestrateExplanationRender>[2] = {},
 ): Promise<MedicalMotionExecutionResult> {
   let input: MedicalMotionExecutionInput;
   try {
@@ -91,7 +94,13 @@ export async function executeMedicalMotionRequest(
     return { status: "failed", errorCode: "INVALID_EXECUTION_REQUEST", message: "Invalid version 1 JSON execution request." };
   }
   try {
-    const result = await orchestrateExplanationRender({ clinical: input.clinical, plan: input.plan, sceneIndex: input.sceneIndex }, { ...serverOptions });
+    const result = await orchestrateExplanationRender({ clinical: input.clinical, plan: input.plan, sceneIndex: input.sceneIndex }, { ...serverOptions }, control);
+    // Operational control stays outside the JSON snapshot and clinical identity.
+    // Do not return a completed local artifact after trusted cancellation.
+    if (result.status === "completed" && control?.signal?.aborted) {
+      const { outputPath: _artifact, durationSeconds: _duration, ...trace } = result;
+      return { ...trace, status: "failed", errorCode: "RENDER_CANCELLED", message: "Render execution was cancelled." };
+    }
     if (result.status !== "failed") return result;
     // Local validators retain their diagnostics. Durable callers receive only
     // trusted codes/static messages, never candidate-plan values or process text.

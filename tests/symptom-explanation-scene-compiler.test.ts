@@ -99,7 +99,7 @@ describe("validated explanation compiler and clinical render boundary", () => {
   it("renders valid LV development request with mandatory context and trace", async () => {
     const r = request(); const result = await renderAfterTriage(r, "test.mp4", { mode: "development" });
     expect(result).toMatchObject({ status: "completed", requestId: r.requestId, planSignature: r.planSignature });
-    expect(renderHeartScene).toHaveBeenCalledWith(r.scene, "test.mp4", { mode: "development", explanationPlan: r.explanationPlan, clinicalAuthorization: expect.any(Object) });
+    expect(renderHeartScene).toHaveBeenCalledWith(r.scene, "test.mp4", { mode: "development", explanationPlan: r.explanationPlan, clinicalAuthorization: expect.any(Object) }, {});
   });
   it("blocks development assets in production before renderer", async () => {
     expect(await renderAfterTriage(request(), "test.mp4", { mode: "production" })).toMatchObject({ status: "failed", errorCode: "REAL_ANATOMICAL_ASSET_REQUIRED" });

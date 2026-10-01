@@ -21,6 +21,18 @@ import { HEART_ORGAN_MODULE } from "../lib/medical-motion/organs/heart/heart-org
 import { ExecutionOwnership, OWNERSHIP_POLICY } from "../lib/jobs/execution-ownership";
 import { buildHeartScene } from "../lib/medical-motion/organs/heart/heart-visualization-resolver";
 import { prepareExplanationAuthorization, readExplanationAuthorization } from "../lib/symptom-explanation/explanation-authorization";
+import { executeMedicalMotionRequest } from "../lib/medical-motion/execute-medical-motion";
+import { getMechanismAnatomy } from "../lib/symptom-explanation/anatomy-resolver";
+
+function executeClinical(signal?: AbortSignal, timeoutMs = 10_000) {
+  const { organ, primaryFocus, structures, requirements } = getMechanismAnatomy("leftVentricularPressureLoad");
+  return executeMedicalMotionRequest({ schemaVersion: "1", clinical: { message: "I feel tired.", language: "en" }, sceneIndex: 0,
+    plan: { planVersion: "1", organ, topic: "normal physiology", safety: { level: "none" },
+      mechanism: { id: "leftVentricularPressureLoad", evidence: "possible" }, anatomy: { primaryFocus, structures, requirements },
+      documentedFindings: [], scenes: [{ type: "mechanismExplanation" }, { type: "limitationsAndNextSteps" }] } },
+  { clinicalContextId: "server-test", assetVersion: HEART_ORGAN_MODULE.assetVersion, mode: "development", outputPath: "out.mp4", timeoutMs },
+  signal ? { signal } : undefined);
+}
 
 function renderClinical(plan: unknown) {
   const prepared = prepareExplanationAuthorization({ clinical: { message: "I feel tired.", language: "en" }, plan, sceneIndex: 0 },
@@ -119,6 +131,36 @@ async function startClockedRender(timeoutMs = 10_000, signal?: AbortSignal) {
 }
 
 describe("renderHeartScene", () => {
+  it("full trusted entry without cancellation still validates and returns its owned artifact", async () => {
+    const child = queueFakeProcess(); const promise = executeClinical(); await waitForSpawn();
+    child.stdout.emit("data", Buffer.from("RENDER_OK")); child.emit("close", 0);
+    const result = await promise; expect(result).toMatchObject({ status: "completed" });
+    if (result.status !== "completed") throw new Error("Expected completed render");
+    expect(existsSync(result.outputPath)).toBe(true);
+  });
+  it("full trusted entry with pre-abort passes validation and readiness but never spawns", async () => {
+    const controller = new AbortController(); controller.abort();
+    const result = await executeClinical(controller.signal);
+    expect(result).toMatchObject({ status: "failed", errorCode: "RENDER_CANCELLED", safety: { allowVideo: true }, planSignature: expect.any(String) });
+    expect(result).not.toHaveProperty("outputPath"); expect(spawnMock).not.toHaveBeenCalled();
+  });
+  it("full trusted entry abort reaches the process and rejects late successful close/artifact", async () => {
+    const controller = new AbortController(), child = queueFakeProcess(); child.kill.mockImplementation(() => true);
+    const promise = executeClinical(controller.signal); await waitForSpawn();
+    const ownedPath = (spawnMock.mock.calls[0][1] as string[]).at(-1)!;
+    controller.abort(); expect(child.kill).toHaveBeenCalledWith("SIGTERM");
+    child.stdout.emit("data", Buffer.from("RENDER_OK")); child.emit("close", 0);
+    const result = await promise; expect(result).toMatchObject({ status: "failed", errorCode: "RENDER_CANCELLED" });
+    expect(result).not.toHaveProperty("outputPath"); expect(existsSync(ownedPath)).toBe(false);
+  });
+  it("full trusted entry preserves renderer timeout with a supplied signal", async () => {
+    const controller = new AbortController(), child = queueFakeProcess();
+    let spawned!: () => void; const ready = new Promise<void>(resolve => { spawned = resolve; });
+    spawnMock.mockReset(); spawnMock.mockImplementationOnce(() => { vi.useFakeTimers(); spawned(); return child; });
+    const promise = executeClinical(controller.signal, 100); await ready; await vi.advanceTimersByTimeAsync(100);
+    expect(await promise).toMatchObject({ status: "failed", errorCode: "RENDER_TIMEOUT" }); expect(controller.signal.aborted).toBe(false);
+    expect(vi.getTimerCount()).toBe(0);
+  });
   it("ownership loss above the renderer cancels Blender and prevents publication", async () => {
     const child = queueFakeProcess();
     const renewLease = vi.fn().mockResolvedValueOnce({ outcome: "applied", status: "running", leaseExpiresAt: "2026-10-02T12:30:00Z" })
