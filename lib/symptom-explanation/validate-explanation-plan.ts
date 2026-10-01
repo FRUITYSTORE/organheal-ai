@@ -195,7 +195,11 @@ export function validateVideoExplanationPlan(value: unknown): PlanValidationResu
     } else {
       for (const structure of anatomy.structures) {
         if (!isStructureOf(organ, structure)) {
-          issues.push(`anatomy.structures: "${String(structure)}" is not a ${organ} structure id.`);
+          // Untrusted JSON objects may shadow toString/valueOf with data.
+          // Never coerce them while reporting a structural validation failure.
+          issues.push(typeof structure === "string"
+            ? `anatomy.structures: "${structure}" is not a ${organ} structure id.`
+            : `anatomy.structures: must contain ${organ} structure ids as strings.`);
         } else if (structures.includes(structure)) {
           issues.push(`anatomy.structures: "${structure}" is listed twice.`);
         } else {
