@@ -1,5 +1,6 @@
 import type { AnatomyStructureId } from "@/lib/medical-motion/contracts/anatomy";
 import type { OrganId } from "@/lib/medical-motion/contracts/organ";
+import type { AnatomyRequirements } from "@/lib/medical-motion/contracts/organ-module";
 
 // A fully-resolved, organ-agnostic instruction set for the render layer.
 // Nothing in this type knows about clinical data (age, risk, cholesterol) —
@@ -30,5 +31,8 @@ export type SceneDefinition = {
    * names: only the render layer maps ids to objects, through the organ
    * module's registry (see render/blender-renderer.ts). */
   highlight: { structures: readonly AnatomyStructureId[]; intensity: number };
+  /** Anatomical dependencies, not highlight selections. Legacy non-explanation
+   * scenes may omit this; explanation plans are checked separately at render. */
+  anatomyRequirements?: AnatomyRequirements;
   output: { aspectRatio: AspectRatio; resolution: RenderResolution; media: RenderMedia };
 };

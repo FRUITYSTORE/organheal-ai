@@ -9,7 +9,10 @@ import { RENDER_ERROR_CODE, type RenderErrorCode, type RenderResult } from "@/li
 import type { AnatomicalDirection, LandmarkId, OrganModule } from "@/lib/medical-motion/contracts/organ-module";
 import type { SceneDefinition } from "@/lib/medical-motion/contracts/scene";
 import { getOrganModule } from "@/lib/medical-motion/organ-modules";
-import { checkAssetReadiness, type RenderMode } from "@/lib/symptom-explanation/asset-readiness";
+import { checkAssetReadiness, checkExplanationPlanReadiness, type RenderMode } from "@/lib/symptom-explanation/asset-readiness";
+import { readExplanationAuthorization } from "@/lib/symptom-explanation/explanation-authorization";
+import { canonicalExplanationJson } from "@/lib/symptom-explanation/compile-explanation-scene";
+import { buildHeartVisualizationScene, type HeartVisualizationFocus } from "@/lib/medical-motion/organs/heart/heart-visualization-resolver";
 
 // Invokes the real headless Blender pipeline (render/blender/render_scene.py)
 // as a child process -- this is the actual "Phase 4" wiring the architecture
@@ -105,6 +108,11 @@ export type RenderOptions = {
    * review renders only. */
   mode: RenderMode;
   timeoutMs?: number;
+  /** Required context for a symptom explanation render. Untrusted/stored
+   * plans are validated again here, before readiness and any Blender I/O. */
+  explanationPlan?: unknown;
+  /** Clinical context requires server runtime authorization, never plain metadata. */
+  clinicalAuthorization?: unknown;
 };
 
 /** A camera shot resolved to the objects the Blender build creates. */
@@ -169,11 +177,31 @@ function invalidScene(message: string): RenderResult {
 export async function renderHeartScene(
   scene: SceneDefinition,
   outputPath: string,
-  {
-    mode,
-    timeoutMs = scene.output.media === "video" ? DEFAULT_VIDEO_RENDER_TIMEOUT_MS : DEFAULT_RENDER_TIMEOUT_MS,
-  }: RenderOptions
+  options: RenderOptions
 ): Promise<RenderResult> {
+  const {
+    mode,
+    explanationPlan,
+    clinicalAuthorization,
+    timeoutMs = scene.output.media === "video" ? DEFAULT_VIDEO_RENDER_TIMEOUT_MS : DEFAULT_RENDER_TIMEOUT_MS,
+  } = options;
+  // Generic scenes are internal non-clinical review. Clinical metadata cannot
+  // select that path or supply its own authorization.
+  if (Object.keys(options).some((key) => !["mode", "timeoutMs", "explanationPlan", "clinicalAuthorization"].includes(key)) ||
+      Object.keys(scene).some((key) => !["organ", "sceneVersion", "durationSeconds", "focus", "camera", "motion", "highlight", "anatomyRequirements", "output"].includes(key))) {
+    return invalidScene("Unsupported render metadata; clinical requests must use the authorized boundary.");
+  }
+  if ("explanationPlan" in options || "clinicalAuthorization" in options) {
+    const authorized = readExplanationAuthorization(clinicalAuthorization);
+    if (!authorized) return invalidScene("UNSAFE_FOR_VIDEO_FIRST: server-issued clinical authorization is required.");
+    try {
+      if (canonicalExplanationJson(scene) !== canonicalExplanationJson(authorized.request.scene) ||
+          canonicalExplanationJson(explanationPlan) !== canonicalExplanationJson(authorized.request.explanationPlan) ||
+          mode !== authorized.options.mode || outputPath !== authorized.options.outputPath || options.timeoutMs !== authorized.options.timeoutMs) {
+        return invalidScene("Clinical authorization does not match this render request.");
+      }
+    } catch { return invalidScene("Invalid clinical render metadata."); }
+  }
   if (scene.organ !== "heart") {
     return {
       status: "failed",
@@ -184,7 +212,24 @@ export async function renderHeartScene(
 
   // Checked here, right before Blender, even if the plan was checked when it
   // was built: a stored plan can outlive the asset it was checked against.
-  const readiness = checkAssetReadiness(scene.organ, scene.highlight.structures, mode);
+  if (explanationPlan !== undefined) {
+    const planReadiness = checkExplanationPlanReadiness(explanationPlan, mode);
+    if (!planReadiness.ok) {
+      if ("issues" in planReadiness) {
+        return invalidScene(`${planReadiness.errorCode}: ${planReadiness.issues.join(" ")}`);
+      }
+      return { status: "failed", errorCode: planReadiness.errorCode, message: planReadiness.details.join(" ") };
+    }
+    if (planReadiness.plan.organ !== scene.organ || scene.highlight.structures.some((id) => !planReadiness.plan.anatomy.structures.includes(id))) {
+      return invalidScene("The scene organ and highlights must belong to the validated explanation plan.");
+    }
+    // A valid capability may be used at this lower boundary too. Retain the
+    // same independent presentation requirements checked by the clinical gateway.
+    const preset = buildHeartVisualizationScene(scene.focus as HeartVisualizationFocus);
+    const presetReadiness = checkAssetReadiness(scene.organ, scene.highlight.structures, mode, undefined, preset.anatomyRequirements);
+    if (!presetReadiness.ok) return { status: "failed", errorCode: presetReadiness.errorCode, message: presetReadiness.details.join(" ") };
+  }
+  const readiness = checkAssetReadiness(scene.organ, scene.highlight.structures, mode, undefined, scene.anatomyRequirements);
 
   if (!readiness.ok) {
     return { status: "failed", errorCode: readiness.errorCode, message: readiness.details.join(" ") };

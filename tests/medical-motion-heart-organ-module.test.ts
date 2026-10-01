@@ -9,10 +9,11 @@ import { buildHeartScene } from "../lib/medical-motion/organs/heart/heart-visual
 const ASSET_DIR = join(process.cwd(), "render", "blender", "assets", "heart");
 const registry = HEART_ORGAN_MODULE.anatomyRegistry;
 const registryIds = registry.map((entry) => entry.id);
-const blenderObjects = registry.map((entry) => entry.blenderObject);
+const blenderObjects = registry.filter((entry) => entry.availability !== "missing").map((entry) => entry.blenderObject);
 
 function coversRegistry(target: string): boolean {
-  return registryIds.some((id) => id === target || id.startsWith(`${target}.`));
+  return registry.some((entry) => entry.availability !== "missing" &&
+    (entry.id === target || entry.id.startsWith(`${target}.`)));
 }
 
 describe("HEART_ORGAN_MODULE", () => {
@@ -40,7 +41,9 @@ describe("HEART_ORGAN_MODULE", () => {
       "heart.pulmonaryVeins",
       "heart.coronary.leftMain",
     ]) {
-      expect(registryIds).not.toContain(absent);
+      expect(registry.find((entry) => entry.id === absent)).toMatchObject({
+        availability: "missing", blenderObject: null, representation: "unknown", verification: "unverified",
+      });
     }
 
     expect(HEART_ORGAN_MODULE.motionControllers).toEqual(["clinical-heartbeat"]);
@@ -101,7 +104,7 @@ describe("HEART_ORGAN_MODULE", () => {
 
   it("marks the torus valves and constant-radius great vessels as placeholders", () => {
     for (const entry of registry) {
-      if (entry.kind === "valve" || entry.kind === "greatVessel") {
+      if (entry.availability !== "missing" && (entry.kind === "valve" || entry.kind === "greatVessel")) {
         expect(entry.fidelity, entry.id).toBe("placeholder");
       }
     }
@@ -111,7 +114,7 @@ describe("HEART_ORGAN_MODULE", () => {
     const vesselData = JSON.parse(readFileSync(join(ASSET_DIR, "vessels.json"), "utf-8")) as Record<string, unknown>;
 
     for (const entry of registry) {
-      if (entry.kind === "greatVessel" || entry.kind === "coronaryArtery") {
+      if (entry.availability !== "missing" && (entry.kind === "greatVessel" || entry.kind === "coronaryArtery")) {
         expect(Object.keys(vesselData), entry.id).toContain(entry.blenderObject);
       }
     }
@@ -141,7 +144,7 @@ describe("HEART_ORGAN_MODULE", () => {
       buildHeartScene({ coronaryArteries: true, leftVentricleAndAorta: true }),
     ];
     const cameraIds = HEART_ORGAN_MODULE.cameraTargets.map((target) => target.id);
-    const registryIds = HEART_ORGAN_MODULE.anatomyRegistry.map((entry) => entry.id);
+    const registryIds = HEART_ORGAN_MODULE.anatomyRegistry.filter((entry) => entry.availability !== "missing").map((entry) => entry.id);
 
     for (const scene of scenes) {
       expect(cameraIds).toContain(scene.camera.preset);

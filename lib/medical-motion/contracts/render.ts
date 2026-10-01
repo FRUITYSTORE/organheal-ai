@@ -1,4 +1,16 @@
 import type { SceneDefinition } from "@/lib/medical-motion/contracts/scene";
+import type { PlanScene, VideoExplanationPlan } from "@/lib/symptom-explanation/contracts";
+
+/** Clinical requests always retain the complete validated explanation context. */
+export type ExplanationRenderRequest = RenderRequest & {
+  compilerVersion: "1";
+  assetVersion: string;
+  sceneIndex: number;
+  sceneIntent: PlanScene;
+  explanationPlan: VideoExplanationPlan;
+  planSignature: string;
+  requestId: string;
+};
 
 // Explicit output states (architecture brief section 26) — the UI/API
 // should only ever see one of these, never an internal implementation

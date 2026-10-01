@@ -66,7 +66,11 @@ export function resolveHeartVisualizationFocus(focus: HeartFocus): HeartVisualiz
  * this function returns does anything render-related get involved.
  */
 export function buildHeartScene(focus: HeartFocus): SceneDefinition {
-  const visualizationFocus = resolveHeartVisualizationFocus(focus);
+  return buildHeartVisualizationScene(resolveHeartVisualizationFocus(focus));
+}
+
+/** Presentation presets shared by risk focus and validated explanation plans. */
+export function buildHeartVisualizationScene(visualizationFocus: HeartVisualizationFocus): SceneDefinition {
   const structures = HIGHLIGHT_GROUPS[visualizationFocus];
   const preset = CAMERA_PRESETS[visualizationFocus];
 
@@ -80,6 +84,13 @@ export function buildHeartScene(focus: HeartFocus): SceneDefinition {
     camera: preset === OVERVIEW_SHOT ? { preset } : { preset, from: OVERVIEW_SHOT },
     motion: { preset: "clinical-heartbeat" },
     highlight: { structures, intensity: visualizationFocus === "overview" ? 0 : 0.8 },
+    // The overview and camera/heartbeat depend on the chambers even when
+    // no chamber is highlighted. This is visual review, not a symptom plan.
+    anatomyRequirements: Object.fromEntries([
+      ...["heart.rightAtrium", "heart.rightVentricle", "heart.leftAtrium", "heart.leftVentricle"].map((id) =>
+        [id, { representations: ["surface", "tissue"] }]),
+      ...structures.filter((id) => id !== "heart.leftVentricle").map((id) => [id, {}]),
+    ]),
     output: { aspectRatio: "16:9", resolution: "1080p", media: "video" },
   };
 }

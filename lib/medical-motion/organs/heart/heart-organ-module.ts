@@ -1,4 +1,26 @@
-import type { Landmark, LandmarkId, OrganModule } from "@/lib/medical-motion/contracts/organ-module";
+import type { AnatomyStructureId } from "@/lib/medical-motion/contracts/anatomy";
+import type { AnatomyRegistryEntry, AnatomyStructureKind, Landmark, LandmarkId, OrganModule, StructureRepresentation } from "@/lib/medical-motion/contracts/organ-module";
+
+// Metadata records geometry availability, never medical approval. No current
+// asset has reviewed anatomical coverage. Unknown regions stay explicit.
+function available(
+  id: AnatomyStructureId, kind: AnatomyStructureKind, blenderObject: string,
+  fidelity: "reference-derived" | "placeholder", representation: StructureRepresentation
+): AnatomyRegistryEntry {
+  return {
+    id, kind, blenderObject, fidelity, representation, availability: "present",
+    verification: "unverified",
+    coverage: { verifiedRegions: [], unknownRegions: [id], excludedRegions: [], evidenceRefs: [] },
+  };
+}
+
+function missing(id: AnatomyStructureId, kind: AnatomyStructureKind): AnatomyRegistryEntry {
+  return {
+    id, kind, blenderObject: null, fidelity: null,
+    availability: "missing", representation: "unknown", verification: "unverified",
+    coverage: { verifiedRegions: [], unknownRegions: [id], excludedRegions: [], evidenceRefs: [] },
+  };
+}
 
 // heart_builder.landmark_object_name(): the empty for landmark X is "LM_X".
 function landmark(id: LandmarkId, description: string): Landmark {
@@ -14,12 +36,9 @@ const VENTRICLE_CENTERS: readonly LandmarkId[] = ["heart.lvCenter", "heart.rvCen
 export const HEART_ASSET_VERSION = "heart-v2-development";
 
 // Organ module #1. Metadata only: the geometry itself is built by
-// render/blender/heart_builder.py from render/blender/assets/heart/. Every
-// registry entry below is an object that script really creates; structures
-// it does not build (myocardium, septa, aortic and pulmonary valves,
-// pulmonary veins, left main coronary, pulmonary artery branches) are left
-// out rather than claimed, so asking for one fails with
-// ANATOMY_STRUCTURE_NOT_FOUND instead of rendering without it.
+// render/blender/heart_builder.py from render/blender/assets/heart/. The
+// registry records either an available object or an explicit missing structure.
+// Missing entries never enter the available-structure lookup or Blender mapping.
 //
 // The whole asset is a development placeholder: the chambers' outer surfaces
 // are retopologized from a real anatomical reference, but they are solid,
@@ -31,24 +50,33 @@ export const HEART_ORGAN_MODULE: OrganModule = {
   assetStatus: "development-placeholder",
   anatomicallyValidated: false,
   anatomyRegistry: [
-    { id: "heart.rightAtrium", kind: "chamber", blenderObject: "HEART_RIGHT_ATRIUM", fidelity: "reference-derived" },
-    { id: "heart.rightVentricle", kind: "chamber", blenderObject: "HEART_RIGHT_VENTRICLE", fidelity: "reference-derived" },
-    { id: "heart.leftAtrium", kind: "chamber", blenderObject: "HEART_LEFT_ATRIUM", fidelity: "reference-derived" },
-    { id: "heart.leftVentricle", kind: "chamber", blenderObject: "HEART_LEFT_VENTRICLE", fidelity: "reference-derived" },
+    missing("heart.myocardium", "myocardium"),
+    missing("heart.septum.interatrial", "septum"),
+    missing("heart.septum.interventricular", "septum"),
+    missing("heart.valve.aortic", "valve"),
+    missing("heart.valve.pulmonary", "valve"),
+    missing("heart.pulmonaryVeins", "greatVessel"),
+    missing("heart.rightPulmonaryArtery", "greatVessel"),
+    missing("heart.leftPulmonaryArtery", "greatVessel"),
+    missing("heart.coronary.leftMain", "coronaryArtery"),
+    available("heart.rightAtrium", "chamber", "HEART_RIGHT_ATRIUM", "reference-derived", "surface"),
+    available("heart.rightVentricle", "chamber", "HEART_RIGHT_VENTRICLE", "reference-derived", "surface"),
+    available("heart.leftAtrium", "chamber", "HEART_LEFT_ATRIUM", "reference-derived", "surface"),
+    available("heart.leftVentricle", "chamber", "HEART_LEFT_VENTRICLE", "reference-derived", "surface"),
     // Coronary arteries: real centerlines sampled from the reference's own
     // coronary curves, which the reference itself also models as curves.
-    { id: "heart.coronary.lad", kind: "coronaryArtery", blenderObject: "CORONARY_LAD", fidelity: "reference-derived" },
-    { id: "heart.coronary.rca", kind: "coronaryArtery", blenderObject: "CORONARY_RCA", fidelity: "reference-derived" },
-    { id: "heart.coronary.lcx", kind: "coronaryArtery", blenderObject: "CORONARY_LCX", fidelity: "reference-derived" },
+    available("heart.coronary.lad", "coronaryArtery", "CORONARY_LAD", "reference-derived", "centerline"),
+    available("heart.coronary.rca", "coronaryArtery", "CORONARY_RCA", "reference-derived", "centerline"),
+    available("heart.coronary.lcx", "coronaryArtery", "CORONARY_LCX", "reference-derived", "centerline"),
     // Great vessels: real centerlines, but hand-chosen constant diameters and
     // no modeled junction with the heart, so they are placeholders.
-    { id: "heart.aorta", kind: "greatVessel", blenderObject: "AORTA", fidelity: "placeholder" },
-    { id: "heart.pulmonaryTrunk", kind: "greatVessel", blenderObject: "PULMONARY_ARTERY", fidelity: "placeholder" },
-    { id: "heart.superiorVenaCava", kind: "greatVessel", blenderObject: "SVC", fidelity: "placeholder" },
-    { id: "heart.inferiorVenaCava", kind: "greatVessel", blenderObject: "IVC", fidelity: "placeholder" },
+    available("heart.aorta", "greatVessel", "AORTA", "placeholder", "placeholder"),
+    available("heart.pulmonaryTrunk", "greatVessel", "PULMONARY_ARTERY", "placeholder", "placeholder"),
+    available("heart.superiorVenaCava", "greatVessel", "SVC", "placeholder", "placeholder"),
+    available("heart.inferiorVenaCava", "greatVessel", "IVC", "placeholder", "placeholder"),
     // Valves are plain tori marking the annulus position only.
-    { id: "heart.valve.tricuspid", kind: "valve", blenderObject: "Valve_tricuspid", fidelity: "placeholder" },
-    { id: "heart.valve.mitral", kind: "valve", blenderObject: "Valve_mitral", fidelity: "placeholder" },
+    available("heart.valve.tricuspid", "valve", "Valve_tricuspid", "placeholder", "placeholder"),
+    available("heart.valve.mitral", "valve", "Valve_mitral", "placeholder", "placeholder"),
   ],
   // Measured on the real asset by heart_builder.compute_landmarks(); the
   // positions it produces are exported to render/blender/assets/heart/

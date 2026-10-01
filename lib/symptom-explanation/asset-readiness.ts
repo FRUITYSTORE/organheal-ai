@@ -1,5 +1,6 @@
 import type { OrganId } from "@/lib/medical-motion/contracts/organ";
-import type { AnatomyRegistryEntry, OrganModule } from "@/lib/medical-motion/contracts/organ-module";
+import type { AnatomyRegistryEntry, AnatomyRequirements, OrganModule } from "@/lib/medical-motion/contracts/organ-module";
+import { validateVideoExplanationPlan } from "@/lib/symptom-explanation/validate-explanation-plan";
 import { getOrganModule } from "@/lib/medical-motion/organ-modules";
 import type { OrganStructureLookup } from "@/lib/symptom-explanation/anatomy-resolver";
 import {
@@ -13,13 +14,15 @@ export type RenderMode = "production" | "development";
 
 type ModuleSource = (organ: OrganId) => OrganModule | null;
 
-/** Structure availability for resolveAnatomy(), backed by the real organ
- * modules: an organ's structures are exactly its registry, nothing more. */
+/** Known inventory includes missing structures; availability lookup does not.
+ * This lookup is not a claim of medical verification or production readiness. */
 export function createOrganStructureLookup(getModule: ModuleSource = getOrganModule): OrganStructureLookup {
   return (organ) => {
     const organModule = getModule(organ);
 
-    return organModule ? organModule.anatomyRegistry.map((entry) => entry.id) : null;
+    return organModule ? organModule.anatomyRegistry
+      .filter((entry) => entry.availability !== "missing" && entry.blenderObject?.trim() && entry.verification !== "rejected")
+      .map((entry) => entry.id) : null;
   };
 }
 
@@ -47,7 +50,8 @@ export function checkAssetReadiness(
   organ: OrganId,
   structures: readonly AnatomyStructureId[],
   mode: RenderMode,
-  getModule: ModuleSource = getOrganModule
+  getModule: ModuleSource = getOrganModule,
+  requirements: AnatomyRequirements = {}
 ): AssetReadinessResult {
   const organModule = getModule(organ);
 
@@ -59,13 +63,16 @@ export function checkAssetReadiness(
     };
   }
 
-  const resolved: AnatomyRegistryEntry[] = [];
+  const resolved: (AnatomyRegistryEntry & { blenderObject: string })[] = [];
   const missing: AnatomyStructureId[] = [];
 
-  for (const id of structures) {
+  // Requirements are dependencies in their own right, even when the caller
+  // passes only highlight selections (or no highlights at all).
+  const dependencies = [...new Set([...structures, ...Object.keys(requirements) as AnatomyStructureId[]])];
+  for (const id of dependencies) {
     const entry = organModule.anatomyRegistry.find((item) => item.id === id);
 
-    if (entry) {
+    if (entry && entry.availability !== "missing" && entry.blenderObject?.trim()) {
       resolved.push(entry);
     } else {
       missing.push(id);
@@ -80,9 +87,9 @@ export function checkAssetReadiness(
     };
   }
 
-  if (mode === "production") {
-    const reasons: string[] = [];
+  const reasons: string[] = [];
 
+  if (mode === "production") {
     if (organModule.assetStatus !== "production") {
       reasons.push(`The ${organ} asset is a ${organModule.assetStatus}.`);
     }
@@ -90,21 +97,65 @@ export function checkAssetReadiness(
     if (!organModule.anatomicallyValidated) {
       reasons.push(`The ${organ} asset has not been anatomically validated.`);
     }
+  }
 
-    for (const entry of resolved) {
-      if (entry.fidelity === "placeholder") {
-        reasons.push(`${entry.id} is placeholder geometry.`);
+  for (const entry of resolved) {
+    const requirement = requirements[entry.id];
+    const verifiedRequired = mode === "production" || requirement?.requireVerified === true ||
+      requirement?.completeCoverage === true || (requirement?.requiredRegions?.length ?? 0) > 0;
+    const completeRequired = mode === "production" || requirement?.completeCoverage === true;
+    const placeholder = entry.fidelity === "placeholder" || entry.representation === "placeholder";
+
+    if (entry.verification === "rejected") {
+      reasons.push(`${entry.id} has rejected anatomy.`);
+    }
+    if (verifiedRequired) {
+      if (placeholder) reasons.push(`${entry.id} is placeholder geometry.`);
+      if (entry.verification !== "verified") reasons.push(`${entry.id} anatomy is ${entry.verification}.`);
+      if (!entry.coverage.evidenceRefs.some((ref) => ref.trim()) || !entry.coverage.verifiedRegions.some((region) => region.trim())) {
+        reasons.push(`${entry.id} has no evidenced verified anatomical coverage.`);
+      }
+      // Myocardium and septa must be actual tissue, not chamber cavities or
+      // surfaces. Other educational uses can explicitly restrict representation.
+      if (entry.representation === "unknown" ||
+          ((entry.kind === "myocardium" || entry.kind === "septum" || entry.kind === "valve") && entry.representation !== "tissue")) {
+        reasons.push(`${entry.id} has unsuitable ${entry.representation} representation for ${entry.kind}.`);
       }
     }
-
-    if (reasons.length > 0) {
-      return {
-        ok: false,
-        errorCode: SYMPTOM_EXPLANATION_ERROR_CODE.REAL_ANATOMICAL_ASSET_REQUIRED,
-        details: reasons,
-      };
+    if (requirement?.representations && !requirement.representations.includes(entry.representation)) {
+      reasons.push(`${entry.id} has unsuitable ${entry.representation} representation for the requested use.`);
+    }
+    if (completeRequired && (entry.availability !== "present" || entry.coverage.unknownRegions.length > 0 || entry.coverage.excludedRegions.length > 0)) {
+      reasons.push(`${entry.id} does not provide complete anatomical coverage.`);
+    }
+    for (const region of requirement?.requiredRegions ?? []) {
+      if (!entry.coverage.verifiedRegions.includes(region) || entry.coverage.unknownRegions.includes(region) ||
+          entry.coverage.excludedRegions.includes(region) || entry.verification !== "verified" || !entry.coverage.evidenceRefs.some((ref) => ref.trim())) {
+        reasons.push(`${entry.id} lacks verified coverage of ${region}.`);
+      }
     }
   }
 
-  return { ok: true, blenderObjects: resolved.map((entry) => entry.blenderObject) };
+  if (reasons.length > 0) {
+    return {
+      ok: false,
+      errorCode: SYMPTOM_EXPLANATION_ERROR_CODE.REAL_ANATOMICAL_ASSET_REQUIRED,
+      details: reasons,
+    };
+  }
+
+  // Map only the caller's selections. Dependencies must never become highlights.
+  return { ok: true, blenderObjects: structures.map((id) => resolved.find((entry) => entry.id === id)!.blenderObject) };
+}
+
+/** Untrusted plans are safety/shape/minimum-requirement checked before any
+ * asset lookup. Clinical text never authorizes a readiness override. */
+export function checkExplanationPlanReadiness(
+  value: unknown, mode: RenderMode, getModule: ModuleSource = getOrganModule
+) {
+  const validation = validateVideoExplanationPlan(value);
+  if (!validation.ok) return validation;
+  const { plan } = validation;
+  const readiness = checkAssetReadiness(plan.organ, plan.anatomy.structures, mode, getModule, plan.anatomy.requirements);
+  return readiness.ok ? { ...readiness, plan } : readiness;
 }

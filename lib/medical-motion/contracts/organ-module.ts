@@ -6,7 +6,8 @@ import type { OrganId } from "@/lib/medical-motion/contracts/organ";
 // organ-specific branching. Adding an organ means adding one of these,
 // not modifying the engine.
 //
-// A module describes what its REAL asset actually contains, nothing more.
+// A module distinguishes what its REAL asset contains from known missing
+// structures. Missing inventory entries never promise renderable anatomy.
 // An earlier version of this contract listed structures the asset never
 // built (aortic/pulmonary valves, pulmonary veins), which meant a render
 // could "succeed" while silently dropping what it was asked to show.
@@ -24,14 +25,43 @@ export type AnatomyStructureKind =
  * great vessel) and must never be shown as production anatomy. */
 export type StructureFidelity = "reference-derived" | "placeholder";
 
+export type StructureAvailability = "missing" | "present" | "partial";
+export type StructureVerification = "unverified" | "anatomy-conditional" | "verified" | "rejected";
+export type StructureRepresentation = "tissue" | "surface" | "cavity" | "centerline" | "placeholder" | "unknown";
+
+/** Regions are explicit anatomical labels, not inferred from object names.
+ * Evidence references document anatomical review, not merely provenance. */
+export type AnatomicalCoverage = {
+  verifiedRegions: readonly string[];
+  unknownRegions: readonly string[];
+  excludedRegions: readonly string[];
+  evidenceRefs: readonly string[];
+};
+
 export type AnatomyRegistryEntry = {
   id: AnatomyStructureId;
   kind: AnatomyStructureKind;
-  /** The object's name in the organ's Blender scene. Only the render layer
-   * uses this; everything else speaks in `id`. */
-  blenderObject: string;
-  fidelity: StructureFidelity;
+  representation: StructureRepresentation;
+  verification: StructureVerification;
+  coverage: AnatomicalCoverage;
+} & (
+  // Object names remain renderer-only. Missing inventory promises no geometry.
+  | { availability: "missing"; blenderObject: null; fidelity: null }
+  | { availability: "present" | "partial"; blenderObject: string; fidelity: StructureFidelity }
+);
+
+/** Requested use, checked independently of whether geometry is available.
+ * Production always requires verification and complete recorded coverage;
+ * development can request verification, completeness or specific regions too. */
+export type AnatomyRequirement = {
+  representations?: readonly StructureRepresentation[];
+  requireVerified?: boolean;
+  completeCoverage?: boolean;
+  requiredRegions?: readonly string[];
 };
+
+/** Keys are required dependencies, independently of visual highlighting. */
+export type AnatomyRequirements = Partial<Record<AnatomyStructureId, AnatomyRequirement>>;
 
 export type LandmarkId = `${OrganId}.${string}`;
 

@@ -1,4 +1,5 @@
 import type { OrganId } from "@/lib/medical-motion/contracts/organ";
+import type { AnatomyRequirements } from "@/lib/medical-motion/contracts/organ-module";
 import {
   SYMPTOM_EXPLANATION_ERROR_CODE,
   type AnatomyStructureId,
@@ -22,7 +23,7 @@ export type AnatomyResolution = {
 type AnatomyEntry = {
   organ: OrganId;
   primaryFocus: AnatomyStructureId;
-  structures: readonly AnatomyStructureId[];
+  requirements: AnatomyRequirements;
   /** Why these structures, in plain terms. */
   rationale: string;
 };
@@ -31,7 +32,15 @@ const MECHANISM_ANATOMY = {
   myocardialOxygenDemandSupply: {
     organ: "heart",
     primaryFocus: "heart.coronary",
-    structures: ["heart.myocardium", "heart.coronary.lad", "heart.coronary.rca", "heart.coronary.lcx"],
+    requirements: {
+      // This is a required scope, not a claim that any candidate dataset
+      // supplies it. TotalSegmentator V1 class 44 remains conditional.
+      "heart.myocardium": { representations: ["tissue"], requireVerified: true, completeCoverage: true,
+        requiredRegions: ["LV", "RV", "septum", "LA", "RA"] },
+      "heart.coronary.lad": { representations: ["centerline", "surface", "tissue"], requireVerified: false },
+      "heart.coronary.rca": { representations: ["centerline", "surface", "tissue"], requireVerified: false },
+      "heart.coronary.lcx": { representations: ["centerline", "surface", "tissue"], requireVerified: false },
+    },
     rationale:
       "The heart muscle's oxygen demand rises with effort, and the three main coronary arteries are what supply it.",
   },
@@ -43,11 +52,33 @@ const MECHANISM_ANATOMY = {
   leftVentricularPressureLoad: {
     organ: "heart",
     primaryFocus: "heart.leftVentricle",
-    structures: ["heart.leftVentricle", "heart.aorta"],
+    requirements: {
+      // Educational focus, not a wall-thickening/pathology simulation.
+      // Placeholders remain internal-development only: production always
+      // imposes organ approval, verification and complete coverage.
+      "heart.leftVentricle": { representations: ["surface", "tissue"], requireVerified: false },
+      "heart.aorta": { representations: ["surface", "tissue", "centerline", "placeholder"], requireVerified: false },
+    },
     rationale:
       "Higher arterial pressure means the left ventricle has to push harder to eject blood into the aorta.",
   },
 } as const satisfies Record<MechanismId, AnatomyEntry>;
+
+/** The existing mechanism table is the authoritative minimum. Fresh copies
+ * prevent a generated/stored plan from mutating or weakening another plan. */
+export function getMechanismAnatomy(mechanism: MechanismId) {
+  const entry: AnatomyEntry = MECHANISM_ANATOMY[mechanism];
+  const requirements: AnatomyRequirements = {};
+  for (const [id, requirement] of Object.entries(entry.requirements)) {
+    if (!requirement) throw new Error(`Mechanism ${mechanism} has no requirement for ${id}.`);
+    requirements[id as AnatomyStructureId] = {
+      ...requirement,
+      ...(requirement.representations ? { representations: [...requirement.representations] } : {}),
+      ...(requirement.requiredRegions ? { requiredRegions: [...requirement.requiredRegions] } : {}),
+    };
+  }
+  return { ...entry, requirements, structures: Object.keys(requirements) as AnatomyStructureId[] };
+}
 
 /** Which structure ids an organ's real anatomical asset actually provides,
  * or null when that organ has no module at all. Supplied by the caller (the
@@ -74,7 +105,7 @@ export function resolveAnatomy(
   mechanism: MechanismId,
   availableStructures: OrganStructureLookup
 ): AnatomyResolutionResult {
-  const entry: AnatomyEntry = MECHANISM_ANATOMY[mechanism];
+  const entry = getMechanismAnatomy(mechanism);
   const available = availableStructures(entry.organ);
 
   if (available === null) {
@@ -103,6 +134,7 @@ export function resolveAnatomy(
       organ: entry.organ,
       primaryFocus: entry.primaryFocus,
       structures: [...entry.structures],
+      requirements: entry.requirements,
     },
     rationale: entry.rationale,
   };

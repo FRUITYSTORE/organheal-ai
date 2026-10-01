@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { resolveAnatomy, type OrganStructureLookup } from "../lib/symptom-explanation/anatomy-resolver";
+import { getMechanismAnatomy, resolveAnatomy, type OrganStructureLookup } from "../lib/symptom-explanation/anatomy-resolver";
 import { MECHANISM_IDS, type AnatomyStructureId } from "../lib/symptom-explanation/contracts";
 import { validateVideoExplanationPlan } from "../lib/symptom-explanation/validate-explanation-plan";
 
@@ -27,6 +27,7 @@ describe("resolveAnatomy", () => {
       organ: "heart",
       primaryFocus: "heart.coronary",
       structures: ["heart.myocardium", "heart.coronary.lad", "heart.coronary.rca", "heart.coronary.lcx"],
+      requirements: getMechanismAnatomy("myocardialOxygenDemandSupply").requirements,
     });
   });
 
@@ -41,6 +42,7 @@ describe("resolveAnatomy", () => {
       organ: "heart",
       primaryFocus: "heart.leftVentricle",
       structures: ["heart.leftVentricle", "heart.aorta"],
+      requirements: getMechanismAnatomy("leftVentricularPressureLoad").requirements,
     });
   });
 

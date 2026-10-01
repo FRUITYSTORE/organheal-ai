@@ -38,6 +38,9 @@ describe("buildHeartScene", () => {
     expect(scene.highlight.structures).toEqual([]);
     expect(scene.highlight.intensity).toBe(0);
     expect(scene.camera.preset).toBe("CAM_HEART_OVERVIEW");
+    expect(Object.keys(scene.anatomyRequirements ?? {})).toEqual([
+      "heart.rightAtrium", "heart.rightVentricle", "heart.leftAtrium", "heart.leftVentricle",
+    ]);
   });
 
   it("highlights only the real coronary vessels for the coronary focus", () => {

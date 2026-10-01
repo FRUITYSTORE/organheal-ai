@@ -11,6 +11,16 @@ vi.mock("node:child_process", () => ({ spawn: spawnMock }));
 import { renderHeartScene, resolveCameraShot, toBlenderSceneConfig } from "../lib/medical-motion/render/blender-renderer";
 import { HEART_ORGAN_MODULE } from "../lib/medical-motion/organs/heart/heart-organ-module";
 import { buildHeartScene } from "../lib/medical-motion/organs/heart/heart-visualization-resolver";
+import { prepareExplanationAuthorization, readExplanationAuthorization } from "../lib/symptom-explanation/explanation-authorization";
+
+function renderClinical(plan: unknown) {
+  const prepared = prepareExplanationAuthorization({ clinical: { message: "I feel tired.", language: "en" }, plan, sceneIndex: 0 },
+    { clinicalContextId: "server-test", assetVersion: HEART_ORGAN_MODULE.assetVersion, mode: "development", outputPath: "out.mp4" });
+  if (!("ok" in prepared)) throw new Error(prepared.message);
+  const authorized = readExplanationAuthorization(prepared.authorization)!;
+  return renderHeartScene(authorized.request.scene, "out.mp4", { mode: "development",
+    explanationPlan: authorized.request.explanationPlan, clinicalAuthorization: prepared.authorization });
+}
 
 // A fake child process good enough to drive the renderer's event handling
 // (stdout/stderr/close) without ever spawning a real Blender binary — a
@@ -46,7 +56,38 @@ async function waitForSpawn(): Promise<void> {
 const scene = buildHeartScene({ coronaryArteries: true, leftVentricleAndAorta: false });
 const DEV = { mode: "development" } as const;
 
+function coronaryExplanation() {
+  return {
+    planVersion: "1", organ: "heart", topic: "oxygen demand", safety: { level: "none" },
+    mechanism: { id: "myocardialOxygenDemandSupply", evidence: "possible" },
+    anatomy: { primaryFocus: "heart.coronary", structures: ["heart.myocardium", ...scene.highlight.structures] },
+    documentedFindings: [], scenes: [{ type: "mechanismExplanation" }, { type: "limitationsAndNextSteps" }],
+  };
+}
+
 describe("renderHeartScene", () => {
+  it("rejects plain clinical context without runtime authorization before Blender", async () => {
+    const result = await renderHeartScene(scene, "out.mp4", { ...DEV, explanationPlan: coronaryExplanation() });
+    expect(result).toMatchObject({ errorCode: "INVALID_SCENE", message: expect.stringContaining("UNSAFE_FOR_VIDEO_FIRST") });
+    expect(spawnMock).not.toHaveBeenCalled();
+  });
+
+  it.each(["triagePassed", "safeToRender", "explanationPlan", "requestId"])("generic review rejects clinical metadata %s", async (key) => {
+    const result = await renderHeartScene({ ...scene, [key]: true }, "out.mp4", DEV);
+    expect(result).toMatchObject({ errorCode: "INVALID_SCENE" }); expect(spawnMock).not.toHaveBeenCalled();
+  });
+
+  it("generic renderer rejects a changed scene despite a valid capability", async () => {
+    const prepared = prepareExplanationAuthorization({ clinical: { message: "I feel tired.", language: "en" }, sceneIndex: 0,
+      plan: { ...coronaryExplanation(), mechanism: { id: "leftVentricularPressureLoad", evidence: "possible" },
+        anatomy: { primaryFocus: "heart.leftVentricle", structures: ["heart.leftVentricle", "heart.aorta"] } } },
+      { clinicalContextId: "server-test", assetVersion: HEART_ORGAN_MODULE.assetVersion, mode: "development", outputPath: "out.mp4" });
+    if (!("ok" in prepared)) throw new Error(prepared.message);
+    const authorized = readExplanationAuthorization(prepared.authorization)!;
+    const result = await renderHeartScene({ ...authorized.request.scene, highlight: { structures: ["heart.rightAtrium"], intensity: 0.8 } },
+      "out.mp4", { ...DEV, explanationPlan: authorized.request.explanationPlan, clinicalAuthorization: prepared.authorization });
+    expect(result).toMatchObject({ errorCode: "INVALID_SCENE" }); expect(spawnMock).not.toHaveBeenCalled();
+  });
   beforeEach(() => {
     spawnMock.mockReset();
   });
@@ -160,6 +201,61 @@ describe("renderHeartScene", () => {
     if (result.status === "failed") {
       expect(result.errorCode).toBe("REAL_ANATOMICAL_ASSET_REQUIRED");
     }
+    expect(spawnMock).not.toHaveBeenCalled();
+  });
+
+  it("refuses missing non-highlighted scene dependencies before Blender starts", async () => {
+    const result = await renderHeartScene({ ...scene, anatomyRequirements: {
+      ...scene.anatomyRequirements, "heart.myocardium": { representations: ["tissue"], requireVerified: true },
+    } }, "out.mp4", DEV);
+    expect(result).toEqual({ status: "failed", errorCode: "ANATOMY_STRUCTURE_NOT_FOUND", message: "heart.myocardium" });
+    expect(spawnMock).not.toHaveBeenCalled();
+  });
+
+  it("propagates all explanation dependencies while leaving coronary highlights unchanged", async () => {
+    const result = await renderClinical(coronaryExplanation());
+    expect(result).toEqual({ status: "failed", errorCode: "ANATOMY_STRUCTURE_NOT_FOUND", message: "heart.myocardium" });
+    expect(scene.highlight.structures).not.toContain("heart.myocardium");
+    expect(spawnMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects unsafe explanation plans before missing-anatomy errors", async () => {
+    const result = await renderHeartScene(scene, "out.mp4", { ...DEV, explanationPlan: {
+      ...coronaryExplanation(), safety: { level: "emergency" },
+    } });
+    expect(result).toMatchObject({ status: "failed", errorCode: "INVALID_SCENE", message: expect.stringContaining("UNSAFE_FOR_VIDEO_FIRST") });
+    expect(spawnMock).not.toHaveBeenCalled();
+  });
+
+  it("refuses an unsuitable non-highlighted chamber representation", async () => {
+    const result = await renderHeartScene({ ...scene, anatomyRequirements: {
+      ...scene.anatomyRequirements, "heart.rightAtrium": { representations: ["tissue"] },
+    } }, "out.mp4", DEV);
+    expect(result).toMatchObject({ status: "failed", errorCode: "REAL_ANATOMICAL_ASSET_REQUIRED" });
+    expect(spawnMock).not.toHaveBeenCalled();
+  });
+
+  it("renders a valid LV educational plan without highlighting its required aorta", async () => {
+    const child = queueFakeProcess();
+    const promise = renderClinical({
+        ...coronaryExplanation(), mechanism: { id: "leftVentricularPressureLoad", evidence: "possible" },
+        anatomy: { primaryFocus: "heart.leftVentricle", structures: ["heart.leftVentricle", "heart.aorta"] },
+    });
+    await waitForSpawn();
+    const args = spawnMock.mock.calls[0][1] as string[];
+    const written = JSON.parse(readFileSync(args[args.indexOf("--") + 1], "utf-8"));
+    child.stdout.emit("data", Buffer.from("RENDER_OK\n"));
+    child.emit("close", 0);
+    expect((await promise).status).toBe("completed");
+    expect(written.highlight.structures).toEqual(["HEART_LEFT_VENTRICLE"]);
+  });
+
+  it("refuses a scene highlighting anatomy outside its explanation plan", async () => {
+    const result = await renderHeartScene(scene, "out.mp4", { ...DEV, explanationPlan: {
+      ...coronaryExplanation(), mechanism: { id: "leftVentricularPressureLoad", evidence: "possible" },
+      anatomy: { primaryFocus: "heart.leftVentricle", structures: ["heart.leftVentricle", "heart.aorta"] },
+    } });
+    expect(result).toMatchObject({ status: "failed", errorCode: "INVALID_SCENE" });
     expect(spawnMock).not.toHaveBeenCalled();
   });
 

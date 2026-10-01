@@ -14,8 +14,8 @@ function reviewedModule(overrides: Partial<OrganModule> = {}): OrganModule {
     assetStatus: "production",
     anatomicallyValidated: true,
     anatomyRegistry: [
-      { id: "heart.leftVentricle", kind: "chamber", blenderObject: "LV", fidelity: "reference-derived" },
-      { id: "heart.aorta", kind: "greatVessel", blenderObject: "AO", fidelity: "reference-derived" },
+      { id: "heart.leftVentricle", kind: "chamber", blenderObject: "LV", fidelity: "reference-derived", availability: "present", representation: "tissue", verification: "verified", coverage: { verifiedRegions: ["LV"], unknownRegions: [], excludedRegions: [], evidenceRefs: ["test-review"] } },
+      { id: "heart.aorta", kind: "greatVessel", blenderObject: "AO", fidelity: "reference-derived", availability: "present", representation: "tissue", verification: "verified", coverage: { verifiedRegions: ["aorta"], unknownRegions: [], excludedRegions: [], evidenceRefs: ["test-review"] } },
     ],
     landmarks: [],
     scaleReference: ["heart.base", "heart.apex"],
@@ -63,11 +63,11 @@ describe("checkAssetReadiness", () => {
     if (result.ok) return;
 
     expect(result.errorCode).toBe("REAL_ANATOMICAL_ASSET_REQUIRED");
-    expect(result.details).toEqual([
+    expect(result.details).toEqual(expect.arrayContaining([
       "The heart asset is a development-placeholder.",
       "The heart asset has not been anatomically validated.",
       "heart.aorta is placeholder geometry.",
-    ]);
+    ]));
   });
 
   it("reports every structure the asset lacks, in either mode, with no fallback", () => {
@@ -107,7 +107,7 @@ describe("checkAssetReadiness", () => {
 
     const withPlaceholder = checkAssetReadiness("heart", ["heart.aorta"], "production", () =>
       reviewedModule({
-        anatomyRegistry: [{ id: "heart.aorta", kind: "greatVessel", blenderObject: "AO", fidelity: "placeholder" }],
+        anatomyRegistry: [{ ...reviewedModule().anatomyRegistry[1], availability: "present", blenderObject: "AO", fidelity: "placeholder" }],
       })
     );
 

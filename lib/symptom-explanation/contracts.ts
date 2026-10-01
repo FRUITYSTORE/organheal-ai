@@ -1,6 +1,7 @@
 import type { ClinicalUrgencyLevel } from "@/lib/health-intelligence/engines/clinical-urgency.engine";
 import type { AnatomyStructureId } from "@/lib/medical-motion/contracts/anatomy";
 import type { OrganId } from "@/lib/medical-motion/contracts/organ";
+import type { AnatomyRequirements } from "@/lib/medical-motion/contracts/organ-module";
 
 export type { AnatomyStructureId };
 
@@ -96,6 +97,8 @@ export type VideoExplanationPlan = {
   anatomy: {
     primaryFocus: AnatomyStructureId;
     structures: readonly AnatomyStructureId[];
+    /** Required anatomical uses; these need not be visually highlighted. */
+    requirements: AnatomyRequirements;
   };
   documentedFindings: readonly DocumentedFinding[];
   scenes: readonly PlanScene[];

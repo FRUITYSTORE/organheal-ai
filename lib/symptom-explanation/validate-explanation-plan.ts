@@ -1,4 +1,6 @@
 import { ORGAN_IDS, type OrganId } from "@/lib/medical-motion/contracts/organ";
+import type { AnatomyRequirement, AnatomyRequirements, StructureRepresentation } from "@/lib/medical-motion/contracts/organ-module";
+import { getMechanismAnatomy } from "@/lib/symptom-explanation/anatomy-resolver";
 import {
   EVIDENCE_LEVELS,
   MECHANISM_IDS,
@@ -79,6 +81,52 @@ function invalid(issues: string[]): PlanValidationResult {
   return { ok: false, errorCode: SYMPTOM_EXPLANATION_ERROR_CODE.INVALID_SCENE_PLAN, issues };
 }
 
+function readRequirements(value: unknown, organ: OrganId, structures: readonly AnatomyStructureId[], issues: string[]): AnatomyRequirements {
+  const requirements: AnatomyRequirements = {};
+  if (!isRecord(value)) {
+    issues.push("anatomy.requirements: must be an object keyed by anatomy ids.");
+    return requirements;
+  }
+  for (const [id, input] of Object.entries(value)) {
+    const path = `anatomy.requirements.${id}`;
+    if (!isStructureOf(organ, id) || !structures.includes(id)) {
+      issues.push(`${path}: must name a structure in anatomy.structures for this organ.`);
+      continue;
+    }
+    if (!isRecord(input)) {
+      issues.push(`${path}: must be a requirement object.`);
+      continue;
+    }
+    checkKeys(input, ["representations", "requireVerified", "completeCoverage", "requiredRegions"], path, issues);
+    const requirement: AnatomyRequirement = {};
+    for (const key of ["requireVerified", "completeCoverage"] as const) {
+      if (key in input) {
+        if (typeof input[key] !== "boolean") issues.push(`${path}.${key}: must be boolean.`);
+        else requirement[key] = input[key];
+      }
+    }
+    if ("representations" in input) {
+      const representations = input.representations;
+      const allowed: readonly StructureRepresentation[] = ["tissue", "surface", "cavity", "centerline", "placeholder", "unknown"];
+      if (!Array.isArray(representations) || representations.length === 0 ||
+          !representations.every((item) => isOneOf(allowed, item)) || new Set(representations).size !== representations.length) {
+        issues.push(`${path}.representations: must be a nonempty list of unique known representations.`);
+      } else requirement.representations = [...representations];
+    }
+    if ("requiredRegions" in input) {
+      const regions = input.requiredRegions;
+      if (!Array.isArray(regions) || !regions.every(isNonEmptyString) || new Set(regions).size !== regions.length) {
+        issues.push(`${path}.requiredRegions: must be a list of unique nonempty region labels.`);
+      } else requirement.requiredRegions = [...regions];
+    }
+    requirements[id] = requirement;
+  }
+  for (const id of structures) {
+    if (!Object.hasOwn(requirements, id)) issues.push(`anatomy.requirements: missing dependency ${id}.`);
+  }
+  return requirements;
+}
+
 export function validateVideoExplanationPlan(value: unknown): PlanValidationResult {
   if (!isRecord(value)) {
     return invalid(["plan: must be an object."]);
@@ -134,12 +182,13 @@ export function validateVideoExplanationPlan(value: unknown): PlanValidationResu
   }
 
   const structures: AnatomyStructureId[] = [];
+  let requirements: AnatomyRequirements = {};
   const anatomy = value.anatomy;
 
   if (!isRecord(anatomy)) {
     issues.push("anatomy: required.");
   } else {
-    checkKeys(anatomy, ["primaryFocus", "structures"], "anatomy", issues);
+    checkKeys(anatomy, ["primaryFocus", "structures", "requirements"], "anatomy", issues);
 
     if (!Array.isArray(anatomy.structures) || anatomy.structures.length === 0) {
       issues.push("anatomy.structures: at least one structure is required.");
@@ -159,6 +208,32 @@ export function validateVideoExplanationPlan(value: unknown): PlanValidationResu
       issues.push(`anatomy.primaryFocus: must be a ${organ} structure id.`);
     } else if (!covers(anatomy.primaryFocus, structures)) {
       issues.push("anatomy.primaryFocus: does not match any listed structure.");
+    }
+
+    if (isRecord(mechanism) && isOneOf(MECHANISM_IDS, mechanism.id)) {
+      const minimum = getMechanismAnatomy(mechanism.id);
+      if (minimum.organ !== organ) issues.push("mechanism: does not belong to the plan's organ.");
+      for (const id of minimum.structures) {
+        if (!structures.includes(id)) issues.push(`anatomy.structures: mechanism requires ${id}; no substitution is allowed.`);
+      }
+      // Stored v1 plans without requirements are rehydrated from the server's
+      // authoritative mechanism definition, never from highlights or AI text.
+      requirements = anatomy.requirements === undefined
+        ? Object.fromEntries(structures.map((id) => [id, minimum.requirements[id] ?? {}]))
+        : readRequirements(anatomy.requirements, organ, structures, issues);
+      for (const id of minimum.structures) {
+        const base = minimum.requirements[id]!;
+        const supplied = requirements[id];
+        if (!supplied) continue; // Missing dependencies already have explicit issues.
+        if (base.requireVerified && supplied.requireVerified !== true) issues.push(`anatomy.requirements.${id}: mechanism requires verified anatomy.`);
+        if (base.completeCoverage && supplied.completeCoverage !== true) issues.push(`anatomy.requirements.${id}: mechanism requires complete coverage.`);
+        if (base.representations && (!supplied.representations || supplied.representations.some((item) => !base.representations!.includes(item)))) {
+          issues.push(`anatomy.requirements.${id}: representations cannot weaken the mechanism requirement.`);
+        }
+        for (const region of base.requiredRegions ?? []) {
+          if (!supplied.requiredRegions?.includes(region)) issues.push(`anatomy.requirements.${id}: mechanism requires region ${region}.`);
+        }
+      }
     }
   }
 
@@ -236,7 +311,7 @@ export function validateVideoExplanationPlan(value: unknown): PlanValidationResu
     return invalid(issues);
   }
 
-  // Every field has been checked and no unexpected field exists, so the
-  // untrusted input now matches the contract exactly.
-  return { ok: true, plan: value as unknown as VideoExplanationPlan };
+  // Return a normalized copy with explicit dependencies even for stored v1
+  // plans. The original input and authoritative mechanism table stay untouched.
+  return { ok: true, plan: { ...value, anatomy: { ...anatomy as UnknownRecord, requirements } } as unknown as VideoExplanationPlan };
 }
