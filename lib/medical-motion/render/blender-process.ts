@@ -32,7 +32,7 @@ class DiagnosticTail {
   }
 }
 
-type Outcome = "closed" | "timeout" | "process-error";
+type Outcome = "closed" | "timeout" | "process-error" | "cancelled";
 export type BlenderProcessResult = {
   outcome: Outcome;
   exitCode: number | null;
@@ -47,7 +47,7 @@ export type BlenderProcessResult = {
 // to consume late OS kill errors; it cannot change results or retain diagnostics.
 const ignoreLateError = () => {};
 
-export function runBlenderProcess(executable: string, args: string[], timeoutMs: number): Promise<BlenderProcessResult> {
+export function runBlenderProcess(executable: string, args: string[], timeoutMs: number, signal?: AbortSignal): Promise<BlenderProcessResult> {
   return new Promise((resolve) => {
     const startedAt = Date.now(); // Immediately before spawn; excludes config I/O.
     const stdout = new DiagnosticTail(), stderr = new DiagnosticTail();
@@ -66,6 +66,7 @@ export function runBlenderProcess(executable: string, args: string[], timeoutMs:
       settled = true;
       phase = terminationConfirmed ? "terminated" : "unconfirmed";
       clearTimeout(deadline); clearTimeout(grace); clearTimeout(confirmation);
+      signal?.removeEventListener("abort", onAbort);
       child?.stdout?.off("data", onStdout);
       child?.stderr?.off("data", onStderr);
       child?.off("error", onError);
@@ -105,7 +106,7 @@ export function runBlenderProcess(executable: string, args: string[], timeoutMs:
         finish(exited);
       }, PROCESS_CONFIRMATION_MS);
     };
-    const terminate = (reason: "timeout" | "process-error") => {
+    const terminate = (reason: "timeout" | "process-error" | "cancelled") => {
       if (settled || outcome) return;
       outcome = reason; // Irreversible; subsequent errors/close cannot replace it.
       clearTimeout(deadline);
@@ -119,6 +120,7 @@ export function runBlenderProcess(executable: string, args: string[], timeoutMs:
       }, PROCESS_GRACE_MS);
       requestSignal("SIGTERM");
     };
+    const onAbort = () => terminate("cancelled");
     const onError = () => {
       if (settled || outcome) return;
       // No PID means spawn failed; no Blender can be writing. Runtime errors
@@ -144,11 +146,14 @@ export function runBlenderProcess(executable: string, args: string[], timeoutMs:
     if (!Number.isInteger(timeoutMs) || timeoutMs <= 0 || timeoutMs > 2_147_483_647) {
       outcome = "process-error"; finish(true); return;
     }
+    if (signal?.aborted) { outcome = "cancelled"; finish(true); return; }
     try { child = spawn(executable, args, { shell: false, windowsHide: true }); }
     catch { outcome = "process-error"; finish(true); return; }
     child.stdout?.on("data", onStdout);
     child.stderr?.on("data", onStderr);
     child.on("error", onError); child.on("exit", onExit); child.on("close", onClose);
     deadline = setTimeout(() => { if (phase === "running") terminate("timeout"); }, timeoutMs);
+    signal?.addEventListener("abort", onAbort, { once: true });
+    if (signal?.aborted) onAbort();
   });
 }

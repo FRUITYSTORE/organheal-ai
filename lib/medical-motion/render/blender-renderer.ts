@@ -137,7 +137,8 @@ function invalidScene(message: string): RenderResult {
 export async function renderHeartScene(
   scene: SceneDefinition,
   outputPath: string, // Safe filename; the server allocates the actual destination.
-  options: RenderOptions
+  options: RenderOptions,
+  control: { signal?: AbortSignal } = {},
 ): Promise<RenderResult> {
   const {
     mode,
@@ -226,6 +227,12 @@ export async function renderHeartScene(
   if (!Number.isInteger(timeoutMs) || timeoutMs <= 0 || timeoutMs > 2_147_483_647) {
     return invalidScene("timeoutMs must be a positive integer within Node's timer range.");
   }
+  const cancelled = (terminationConfirmed = true): RenderResult => ({
+    status: "failed", errorCode: RENDER_ERROR_CODE.RENDER_CANCELLED,
+    message: terminationConfirmed ? "Render execution was cancelled."
+      : "Render execution was cancelled; termination could not be confirmed. Invocation files were retained; operator intervention is required.",
+  });
+  if (control.signal?.aborted) return cancelled();
   let ownership: ArtifactOwnership | undefined;
   let tempDir: string | undefined;
   let completed = false;
@@ -244,8 +251,9 @@ export async function renderHeartScene(
     safeToClean = false;
     const result = await runBlenderProcess(getBlenderExecutablePath(), [
       "--background", "--python", getRenderScriptPath(), "--", configPath, ownership.outputPath,
-    ], timeoutMs);
+    ], timeoutMs, control.signal);
     safeToClean = result.terminationConfirmed;
+    if (result.outcome === "cancelled") return cancelled(result.terminationConfirmed);
 
     if (result.outcome === "timeout") {
       return {
@@ -263,6 +271,7 @@ export async function renderHeartScene(
           : "Blender process failed; termination could not be confirmed. Invocation files were retained; operator intervention is required." };
     }
 
+    if (control.signal?.aborted) return cancelled(result.terminationConfirmed);
     const combinedOutput = `${result.stdout}\n${result.stderr}`;
 
     if (result.exitCode !== 0) {
@@ -284,6 +293,7 @@ export async function renderHeartScene(
     }
 
     const artifact = await validateArtifact(ownership, dimensions.dimensions);
+    if (control.signal?.aborted) return cancelled();
     if (!artifact.ok) return { status: "failed", errorCode: RENDER_ERROR_CODE.OUTPUT_VALIDATION_FAILED, message: artifact.message };
     completed = true;
     return { status: "completed", outputPath: ownership.outputPath, durationSeconds: result.durationSeconds };

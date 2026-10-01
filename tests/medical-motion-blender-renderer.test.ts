@@ -3,6 +3,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { mkdtemp, rm } from "node:fs/promises";
 import path from "node:path";
 import { tmpdir } from "node:os";
+import { setTimeout as realDelay } from "node:timers/promises";
 import { mp4Fixture } from "./fixtures/medical-motion-artifact";
 import { validateRenderDuration } from "../lib/medical-motion/render/duration-policy";
 import { PROCESS_GRACE_MS, PROCESS_CONFIRMATION_MS } from "../lib/medical-motion/render/blender-process";
@@ -17,6 +18,7 @@ vi.mock("node:child_process", () => ({ spawn: spawnMock }));
 
 import { renderHeartScene, resolveCameraShot, toBlenderSceneConfig } from "../lib/medical-motion/render/blender-renderer";
 import { HEART_ORGAN_MODULE } from "../lib/medical-motion/organs/heart/heart-organ-module";
+import { ExecutionOwnership, OWNERSHIP_POLICY } from "../lib/jobs/execution-ownership";
 import { buildHeartScene } from "../lib/medical-motion/organs/heart/heart-visualization-resolver";
 import { prepareExplanationAuthorization, readExplanationAuthorization } from "../lib/symptom-explanation/explanation-authorization";
 
@@ -104,19 +106,75 @@ function coronaryExplanation() {
   };
 }
 
-async function startClockedRender(timeoutMs = 10_000) {
+async function startClockedRender(timeoutMs = 10_000, signal?: AbortSignal) {
   const child = new FakeChildProcess();
   child.kill.mockImplementation(() => true);
   let spawned!: () => void;
   const spawnReady = new Promise<void>((resolve) => { spawned = resolve; });
   spawnMock.mockImplementationOnce(() => { vi.useFakeTimers(); spawned(); return child; });
-  const promise = renderHeartScene(scene, "out.mp4", { mode: "development", timeoutMs });
+  const promise = renderHeartScene(scene, "out.mp4", { mode: "development", timeoutMs }, { signal });
   await spawnReady;
   const args = spawnMock.mock.calls[0][1] as string[];
   return { child, promise, ownedPath: args.at(-1)!, configPath: args[args.indexOf("--") + 1] };
 }
 
 describe("renderHeartScene", () => {
+  it("ownership loss above the renderer cancels Blender and prevents publication", async () => {
+    const child = queueFakeProcess();
+    const renewLease = vi.fn().mockResolvedValueOnce({ outcome: "applied", status: "running", leaseExpiresAt: "2026-10-02T12:30:00Z" })
+      .mockResolvedValueOnce({ outcome: "ownership-lost", status: null, leaseExpiresAt: null });
+    const publish = vi.fn();
+    const boundary = new ExecutionOwnership({ jobId: "11111111-1111-4111-8111-111111111111", attemptToken: "22222222-2222-4222-8222-222222222222" }, { renewLease, publish });
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "Date"] });
+    const task = boundary.run(async signal => {
+      const result = await renderHeartScene(scene, "out.mp4", { ...DEV, timeoutMs: 1_200_000 }, { signal });
+      return result.status === "completed" ? { status: "succeeded", value: result } : { status: "failed" };
+    });
+    // Real config I/O is independent of the ownership timers.
+    for (let i = 0; i < 200 && !spawnMock.mock.calls.length; i++) await realDelay(5);
+    expect(spawnMock).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(OWNERSHIP_POLICY.intervalMs);
+    expect(await task).toMatchObject({ execution: "cancelled", publicationAllowed: false });
+    expect(child.kill).toHaveBeenCalledWith("SIGTERM"); expect(publish).not.toHaveBeenCalled(); expect(vi.getTimerCount()).toBe(0);
+  });
+  it("timeout remains terminal when cancellation follows it", async () => {
+    const controller = new AbortController(); const { child, promise } = await startClockedRender(100, controller.signal);
+    await vi.advanceTimersByTimeAsync(100); controller.abort(); child.emit("close", 0);
+    expect(await promise).toMatchObject({ errorCode: "RENDER_TIMEOUT" }); expect(vi.getTimerCount()).toBe(0);
+  });
+  it("unconfirmed cancellation retains invocation files and requires operator intervention", async () => {
+    const controller = new AbortController(); const { child, promise, ownedPath, configPath } = await startClockedRender(10_000, controller.signal);
+    controller.abort(); await vi.advanceTimersByTimeAsync(PROCESS_GRACE_MS + PROCESS_CONFIRMATION_MS);
+    expect(await promise).toMatchObject({ errorCode: "RENDER_CANCELLED", message: expect.stringContaining("operator intervention") });
+    expect(existsSync(configPath)).toBe(true); expect(existsSync(path.dirname(ownedPath))).toBe(true);
+    child.produceArtifact = false; child.emit("close", 0); expect(existsSync(configPath)).toBe(true);
+    const configDirectory = path.dirname(configPath);
+    expect(path.dirname(configDirectory)).toBe(tmpdir()); expect(path.basename(configDirectory).startsWith("medical-motion-")).toBe(true);
+    await rm(configDirectory, { recursive: true, force: true }); expect(vi.getTimerCount()).toBe(0);
+  });
+  it("pre-cancelled render does not spawn", async () => {
+    const controller = new AbortController(); controller.abort();
+    expect(await renderHeartScene(scene, "out.mp4", DEV, { signal: controller.signal })).toMatchObject({ status: "failed", errorCode: "RENDER_CANCELLED" });
+    expect(spawnMock).not.toHaveBeenCalled();
+  });
+  it("active cancellation terminates the child and cleans its confirmed owned artifact", async () => {
+    const controller = new AbortController(), child = queueFakeProcess();
+    const promise = renderHeartScene(scene, "out.mp4", DEV, { signal: controller.signal }); await waitForSpawn();
+    const ownedPath = (spawnMock.mock.calls[0][1] as string[]).at(-1)!; controller.abort();
+    expect(await promise).toMatchObject({ status: "failed", errorCode: "RENDER_CANCELLED" });
+    expect(child.kill).toHaveBeenCalledWith("SIGTERM"); expect(existsSync(ownedPath)).toBe(false);
+  });
+  it("cancellation during artifact validation prevents a late validated success", async () => {
+    const controller = new AbortController(), child = queueFakeProcess();
+    const original = artifactOutput.validateArtifact;
+    vi.spyOn(artifactOutput, "validateArtifact").mockImplementation(async (...args) => {
+      const result = await original(...args); controller.abort(); return result;
+    });
+    const promise = renderHeartScene(scene, "out.mp4", DEV, { signal: controller.signal }); await waitForSpawn();
+    child.stdout.emit("data", Buffer.from("RENDER_OK")); child.emit("close", 0);
+    const ownedPath = (spawnMock.mock.calls[0][1] as string[]).at(-1)!;
+    expect(await promise).toMatchObject({ status: "failed", errorCode: "RENDER_CANCELLED" }); expect(existsSync(ownedPath)).toBe(false);
+  });
   it.each(["../escape.mp4", "C:/out/out.mp4", "out.png", "out.mp4:stream"])("rejects destination escape/wrong extension %s before spawn", async (name) => {
     expect(await renderHeartScene(scene, name, DEV)).toMatchObject({ errorCode: "INVALID_SCENE" });
     expect(spawnMock).not.toHaveBeenCalled();

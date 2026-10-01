@@ -30,6 +30,41 @@ beforeEach(() => {
 afterEach(() => { vi.useRealTimers(); });
 
 describe("Blender process lifecycle", () => {
+  it("pre-cancelled invocation never spawns", async () => {
+    const controller = new AbortController(); controller.abort();
+    expect(await runBlenderProcess("blender.exe", [], 100, controller.signal)).toMatchObject({ outcome: "cancelled", terminationConfirmed: true });
+    expect(spawnMock).not.toHaveBeenCalled(); expect(vi.getTimerCount()).toBe(0);
+  });
+  it("cancellation escalates once and late successful close cannot earn success", async () => {
+    const controller = new AbortController(), remove = vi.spyOn(controller.signal, "removeEventListener");
+    const promise = runBlenderProcess("blender.exe", [], 100, controller.signal); controller.abort(); controller.abort();
+    expect(child.kill.mock.calls).toEqual([["SIGTERM"]]);
+    await vi.advanceTimersByTimeAsync(PROCESS_GRACE_MS); expect(child.kill.mock.calls).toEqual([["SIGTERM"], ["SIGKILL"]]);
+    child.emit("close", 0); expect(await promise).toMatchObject({ outcome: "cancelled", terminationConfirmed: true });
+    expect(remove).toHaveBeenCalledWith("abort", expect.any(Function)); noActiveLifecycle();
+  });
+  it.each(["cancel-first", "timeout-first"])("one terminal outcome in %s race", async order => {
+    const controller = new AbortController(), promise = runBlenderProcess("blender.exe", [], 100, controller.signal);
+    if (order === "cancel-first") controller.abort();
+    await vi.advanceTimersByTimeAsync(100); controller.abort(); child.emit("close", 0);
+    expect(await promise).toMatchObject({ outcome: order === "cancel-first" ? "cancelled" : "timeout" }); noActiveLifecycle();
+  });
+  it.each(["cancel-first", "close-first"])("one terminal outcome in %s close race", async order => {
+    const controller = new AbortController(), promise = runBlenderProcess("blender.exe", [], 100, controller.signal);
+    if (order === "cancel-first") controller.abort(); child.emit("close", 0); controller.abort();
+    expect(await promise).toMatchObject({ outcome: order === "cancel-first" ? "cancelled" : "closed" }); noActiveLifecycle();
+  });
+  it("cancel after exit while pipes drain remains cancelled without killing an exited child", async () => {
+    const controller = new AbortController(), promise = runBlenderProcess("blender.exe", [], 100, controller.signal);
+    child.emit("exit", 0); controller.abort(); await vi.advanceTimersByTimeAsync(PROCESS_CONFIRMATION_MS);
+    expect(await promise).toMatchObject({ outcome: "cancelled", terminationConfirmed: true }); expect(child.kill).not.toHaveBeenCalled(); noActiveLifecycle();
+  });
+  it("unconfirmed cancellation releases lifecycle without falsely confirming termination", async () => {
+    const controller = new AbortController(), promise = runBlenderProcess("blender.exe", [], 100, controller.signal); controller.abort();
+    await vi.advanceTimersByTimeAsync(PROCESS_GRACE_MS + PROCESS_CONFIRMATION_MS);
+    expect(await promise).toMatchObject({ outcome: "cancelled", terminationConfirmed: false }); noActiveLifecycle();
+    child.emit("close", 0); expect(await promise).toMatchObject({ outcome: "cancelled", terminationConfirmed: false });
+  });
   it.each([0, 1])("accepts normal close %s and releases lifecycle resources", async (code) => {
     const promise = start(); child.emit("exit", code); child.emit("close", code);
     expect(await promise).toMatchObject({ outcome: "closed", exitCode: code, terminationConfirmed: true });
