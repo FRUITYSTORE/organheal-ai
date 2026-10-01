@@ -59,6 +59,8 @@ export type RenderRequest = {
 };
 
 export type RenderResult =
+  // outputPath is the invocation-owned validated artifact, not the input filename.
+  // durationSeconds remains process execution time, not encoded media duration.
   | { status: "completed"; outputPath: string; durationSeconds: number }
   | { status: "failed"; errorCode: RenderErrorCode; message: string }
   | { status: Exclude<RenderStatus, "completed" | "failed"> };

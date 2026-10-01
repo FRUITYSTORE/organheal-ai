@@ -39,6 +39,30 @@ def _parse_args():
     return after[0], after[1]
 
 
+def _configure_video_timing(scene, timing):
+    """Consume TS duration-policy output; never independently round duration.
+
+    Validate the transport and runtime ceiling to prevent Blender clamping.
+    Inclusive start/end and step 1 yield exactly frameCount encoded frames.
+    """
+    if not isinstance(timing, dict):
+        raise SystemExit("INVALID_SCENE: missing videoTiming")
+    keys = ("fps", "fpsBase", "frameStep", "frameStart", "frameEnd", "frameCount")
+    if any(type(timing.get(key)) is not int for key in keys):
+        raise SystemExit("INVALID_SCENE: invalid videoTiming numbers")
+    count = timing["frameCount"]
+    if (timing["fps"] != _VIDEO_FPS or timing["fpsBase"] != 1 or
+            timing["frameStep"] != 1 or timing["frameStart"] != 1 or
+            timing["frameEnd"] != count or count < 1 or
+            count > scene.bl_rna.properties["frame_end"].hard_max):
+        raise SystemExit("INVALID_SCENE: unsupported videoTiming")
+    scene.render.fps = timing["fps"]
+    scene.render.fps_base = timing["fpsBase"]
+    scene.frame_step = timing["frameStep"]
+    scene.frame_start, scene.frame_end = timing["frameStart"], timing["frameEnd"]
+    return count
+
+
 def _clear_scene():
     bpy.ops.object.select_all(action="SELECT")
     bpy.ops.object.delete(use_global=False)
@@ -48,12 +72,74 @@ def _clear_scene():
                 block_collection.remove(block)
 
 
-def _configure_gpu_cycles(resolution):
+def _configure_output_dimensions(scene, dimensions):
+    """Apply TS-resolved pixel dimensions without a competing ratio matrix."""
+    if not isinstance(dimensions, dict):
+        raise SystemExit("INVALID_SCENE: missing outputDimensions")
+    render = scene.render
+    for key, setting in (("width", "resolution_x"), ("height", "resolution_y")):
+        value = dimensions.get(key)
+        prop = render.bl_rna.properties[setting]
+        if type(value) is not int or not prop.hard_min <= value <= prop.hard_max:
+            raise SystemExit(f"INVALID_SCENE: invalid outputDimensions.{key}")
+    render.resolution_x = dimensions["width"]
+    render.resolution_y = dimensions["height"]
+    render.resolution_percentage = 100
+    render.pixel_aspect_x = 1
+    render.pixel_aspect_y = 1
+    render.use_border = False
+    render.use_crop_to_border = False
+
+
+def _configure_render_state(scene, output, output_path):
+    """Backend encoding policy for the existing PNG / MP4-H264 contract.
+
+    Preserve factory encoding channel/depth behavior explicitly. Scene color
+    transform, samples, denoising and encoder speed remain visual/performance
+    policy. No startup compositor or sequencer may replace the anatomy render.
+    """
+    if not isinstance(output, dict) or output.get("media") not in ("still", "video"):
+        raise SystemExit("INVALID_SCENE: unsupported output.media")
+    if not isinstance(output_path, str) or not output_path.strip():
+        raise SystemExit("INVALID_SCENE: missing output filepath")
+    render = scene.render
+    render.engine = "CYCLES"  # Existing engine-specific Cycles pipeline.
+    render.filepath = output_path
+    render.use_file_extension = False  # Write to the exact caller-provided path.
+    render.use_overwrite = True
+    render.use_placeholder = False
+    render.use_sequencer = False
+    render.use_compositing = False
+    render.use_multiview = False
+    render.frame_map_old = 100
+    render.frame_map_new = 100
+    scene.frame_set(1)
+    image = render.image_settings
+    # Keep the background the script explicitly lights; no inherited alpha film.
+    render.film_transparent = False
+    image.color_management = "FOLLOW_SCENE"
+    if output["media"] == "video":
+        image.media_type = "VIDEO"
+        image.file_format = "FFMPEG"
+        image.color_mode = "RGB"
+        image.color_depth = "8"
+        render.ffmpeg.format = "MPEG4"
+        render.ffmpeg.codec = "H264"
+        render.ffmpeg.constant_rate_factor = "HIGH"
+        render.ffmpeg.audio_codec = "NONE"
+        render.ffmpeg.use_autosplit = False
+        render.ffmpeg.use_lossless_output = False
+    else:
+        image.media_type = "IMAGE"
+        image.file_format = "PNG"
+        image.color_mode = "RGBA"
+        image.color_depth = "8"
+
+
+def _configure_gpu_cycles():
     scene = bpy.context.scene
     scene.render.engine = "CYCLES"
     scene.cycles.samples = 64
-    sizes = {"720p": (1280, 720), "1080p": (1920, 1080)}
-    scene.render.resolution_x, scene.render.resolution_y = sizes.get(resolution, sizes["1080p"])
 
     prefs = bpy.context.preferences.addons["cycles"].preferences
     for backend in ("OPTIX", "CUDA"):
@@ -90,6 +176,8 @@ def main():
     if scene_config.get("organ") != "heart":
         raise SystemExit(f"INVALID_ORGAN: render_scene.py only builds 'heart', got {scene_config.get('organ')!r}")
 
+    _configure_output_dimensions(bpy.context.scene, scene_config.get("outputDimensions"))
+    _configure_render_state(bpy.context.scene, scene_config.get("output"), output_path)
     _clear_scene()
 
     try:
@@ -123,9 +211,7 @@ def main():
         motion = MOTION_CONTROLLERS.get(motion_name)
         if motion is None:
             raise SystemExit(f"INVALID_SCENE: no motion controller named {motion_name!r}")
-        frame_count = max(1, round(float(scene_config.get("durationSeconds", 0)) * _VIDEO_FPS))
-        scene.frame_start, scene.frame_end = 1, frame_count
-        scene.render.fps = _VIDEO_FPS
+        frame_count = _configure_video_timing(scene, scene_config.get("videoTiming"))
         # The camera arrives a little under halfway through, then the
         # highlight fades in on the structures it arrived at.
         arrive = max(2, round(frame_count * _CAMERA_ARRIVAL_FRACTION)) if from_shot else 1
@@ -155,22 +241,12 @@ def main():
 
     bpy.context.scene.world.node_tree.nodes["Background"].inputs[0].default_value = (0.02, 0.05, 0.08, 1.0)
 
-    backend = _configure_gpu_cycles(output.get("resolution", "1080p"))
-    scene.render.filepath = output_path
+    backend = _configure_gpu_cycles()
 
     try:
         if is_video:
-            image_settings = scene.render.image_settings
-            if hasattr(image_settings, "media_type"):
-                image_settings.media_type = "VIDEO"
-            image_settings.file_format = "FFMPEG"
-            scene.render.ffmpeg.format = "MPEG4"
-            scene.render.ffmpeg.codec = "H264"
-            scene.render.ffmpeg.constant_rate_factor = "HIGH"
-            scene.render.ffmpeg.audio_codec = "NONE"
             bpy.ops.render.render(animation=True)
         else:
-            scene.render.image_settings.file_format = "PNG"
             bpy.ops.render.render(write_still=True)
     except Exception as error:
         raise SystemExit(f"BLENDER_FAILED: render.render() raised: {error}")

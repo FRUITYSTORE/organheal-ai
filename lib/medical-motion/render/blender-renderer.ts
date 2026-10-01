@@ -1,4 +1,7 @@
 import "server-only";
+import { validateRenderDuration } from "./duration-policy";
+import { resolveOutputDimensions } from "./dimension-policy";
+import { createArtifactOwnership, discardArtifact, validArtifactName, validateArtifact, type ArtifactOwnership } from "./artifact-output";
 
 import { spawn } from "node:child_process";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
@@ -7,7 +10,7 @@ import path from "node:path";
 
 import { RENDER_ERROR_CODE, type RenderErrorCode, type RenderResult } from "@/lib/medical-motion/contracts/render";
 import type { AnatomicalDirection, LandmarkId, OrganModule } from "@/lib/medical-motion/contracts/organ-module";
-import type { SceneDefinition } from "@/lib/medical-motion/contracts/scene";
+import type { RenderMedia, SceneDefinition } from "@/lib/medical-motion/contracts/scene";
 import { getOrganModule } from "@/lib/medical-motion/organ-modules";
 import { checkAssetReadiness, checkExplanationPlanReadiness, type RenderMode } from "@/lib/symptom-explanation/asset-readiness";
 import { readExplanationAuthorization } from "@/lib/symptom-explanation/explanation-authorization";
@@ -25,6 +28,10 @@ import { buildHeartVisualizationScene, type HeartVisualizationFocus } from "@/li
 const DEFAULT_RENDER_TIMEOUT_MS = 120_000;
 // A video renders every frame through Cycles: a 5-second clip is 120 frames.
 const DEFAULT_VIDEO_RENDER_TIMEOUT_MS = 20 * 60_000;
+
+function isSupportedOutputMedia(media: unknown): media is RenderMedia {
+  return media === "still" || media === "video";
+}
 
 function getBlenderExecutablePath(): string {
   return (
@@ -48,14 +55,18 @@ type BlenderProcessResult = {
 function runBlenderProcess(configPath: string, outputPath: string, timeoutMs: number): Promise<BlenderProcessResult> {
   return new Promise((resolve) => {
     const startedAt = Date.now();
-    const child = spawn(getBlenderExecutablePath(), [
+    let child: ReturnType<typeof spawn>;
+    try { child = spawn(getBlenderExecutablePath(), [
       "--background",
       "--python",
       getRenderScriptPath(),
       "--",
       configPath,
       outputPath,
-    ]);
+    ]); } catch {
+      resolve({ exitCode: null, stdout: "", stderr: "Blender process could not start.", timedOut: false, durationSeconds: (Date.now() - startedAt) / 1000 });
+      return;
+    }
 
     let stdout = "";
     let stderr = "";
@@ -73,12 +84,12 @@ function runBlenderProcess(configPath: string, outputPath: string, timeoutMs: nu
       stderr += chunk.toString();
     });
 
-    child.on("error", (error) => {
+    child.on("error", () => {
       clearTimeout(timer);
       resolve({
         exitCode: null,
         stdout,
-        stderr: stderr || error.message,
+        stderr: stderr || "Blender process could not start.",
         timedOut: false,
         durationSeconds: (Date.now() - startedAt) / 1000,
       });
@@ -163,8 +174,15 @@ export function toBlenderSceneConfig(
   shot: BlenderCameraShot,
   fromShot: BlenderCameraShot | null = null
 ) {
+  if (!isSupportedOutputMedia(scene.output.media)) throw new Error("Unsupported output.media.");
+  const duration = validateRenderDuration(scene.durationSeconds, scene.output.media);
+  if (!duration.ok) throw new Error(duration.message);
+  const dimensions = resolveOutputDimensions(scene.output.aspectRatio, scene.output.resolution);
+  if (!dimensions.ok) throw new Error(dimensions.message);
   return {
     ...scene,
+    outputDimensions: dimensions.dimensions,
+    ...(duration.videoTiming ? { videoTiming: duration.videoTiming } : {}),
     camera: { ...scene.camera, shot, ...(fromShot ? { fromShot } : {}) },
     highlight: { ...scene.highlight, structures: blenderObjects },
   };
@@ -176,7 +194,7 @@ function invalidScene(message: string): RenderResult {
 
 export async function renderHeartScene(
   scene: SceneDefinition,
-  outputPath: string,
+  outputPath: string, // Safe filename; the server allocates the actual destination.
   options: RenderOptions
 ): Promise<RenderResult> {
   const {
@@ -256,17 +274,28 @@ export async function renderHeartScene(
     return invalidScene(`The ${scene.organ} module has no motion controller "${scene.motion.preset}".`);
   }
 
-  const tempDir = await mkdtemp(path.join(tmpdir(), "medical-motion-"));
-  const configPath = path.join(tempDir, "scene.json");
+  // Keep clinical/anatomy gates first; reject duration before config I/O/spawn.
+  if (!isSupportedOutputMedia(scene.output.media)) return invalidScene("Unsupported output.media.");
+  const duration = validateRenderDuration(scene.durationSeconds, scene.output.media);
+  if (!duration.ok) return invalidScene(duration.message);
+  const dimensions = resolveOutputDimensions(scene.output.aspectRatio, scene.output.resolution);
+  if (!dimensions.ok) return invalidScene(dimensions.message);
+  if (!validArtifactName(outputPath, scene.output.media)) return invalidScene("Output must be a safe filename with the expected media extension.");
+  let ownership: ArtifactOwnership | undefined;
+  let tempDir: string | undefined;
+  let completed = false;
 
   try {
+    ownership = await createArtifactOwnership(outputPath, scene.output.media);
+    tempDir = await mkdtemp(path.join(tmpdir(), "medical-motion-"));
+    const configPath = path.join(tempDir, "scene.json");
     await writeFile(
       configPath,
       JSON.stringify(toBlenderSceneConfig(scene, readiness.blenderObjects, shot, fromShot)),
       "utf-8"
     );
 
-    const result = await runBlenderProcess(configPath, outputPath, timeoutMs);
+    const result = await runBlenderProcess(configPath, ownership.outputPath, timeoutMs);
 
     if (result.timedOut) {
       return {
@@ -282,7 +311,9 @@ export async function renderHeartScene(
       return {
         status: "failed",
         errorCode: classifyError(combinedOutput),
-        message: result.stderr.trim() || result.stdout.trim() || "Blender exited with a non-zero status.",
+        message: (result.stderr.trim() || result.stdout.trim() || "Blender exited with a non-zero status.")
+          .replaceAll(ownership.outputPath, "[render output]").replaceAll(configPath, "[render config]")
+          .replaceAll(ownership.directory, "[artifact location]").replaceAll(tempDir, "[render workspace]"),
       };
     }
 
@@ -294,10 +325,16 @@ export async function renderHeartScene(
       };
     }
 
-    return { status: "completed", outputPath, durationSeconds: result.durationSeconds };
+    const artifact = await validateArtifact(ownership, dimensions.dimensions);
+    if (!artifact.ok) return { status: "failed", errorCode: RENDER_ERROR_CODE.OUTPUT_VALIDATION_FAILED, message: artifact.message };
+    completed = true;
+    return { status: "completed", outputPath: ownership.outputPath, durationSeconds: result.durationSeconds };
+  } catch {
+    return { status: "failed", errorCode: RENDER_ERROR_CODE.OUTPUT_VALIDATION_FAILED, message: "Render output could not be prepared or validated." };
   } finally {
     // Never leave temp render-config files behind, success or failure —
     // architecture brief section 23 ("temporary frames must be deleted").
-    await rm(tempDir, { recursive: true, force: true }).catch(() => {});
+    if (tempDir) await rm(tempDir, { recursive: true, force: true }).catch(() => {});
+    if (ownership && !completed) await discardArtifact(ownership);
   }
 }

@@ -1,7 +1,12 @@
 import { EventEmitter } from "node:events";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdtemp, rm } from "node:fs/promises";
+import path from "node:path";
+import { tmpdir } from "node:os";
+import { mp4Fixture } from "./fixtures/medical-motion-artifact";
+import { validateRenderDuration } from "../lib/medical-motion/render/duration-policy";
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
@@ -27,6 +32,16 @@ function renderClinical(plan: unknown) {
 // real render takes real minutes and needs a real GPU/install, neither of
 // which any CI box or contributor's machine is guaranteed to have.
 class FakeChildProcess extends EventEmitter {
+  produceArtifact = true;
+  artifactData = mp4Fixture();
+  override emit(event: string | symbol, ...args: unknown[]): boolean {
+    if (event === "close" && this.produceArtifact) {
+      const index = spawnMock.mock.results.findIndex((result) => result.value === this);
+      const invocationArgs = spawnMock.mock.calls[index]?.[1] as string[] | undefined;
+      if (invocationArgs) writeFileSync(invocationArgs.at(-1)!, this.artifactData);
+    }
+    return super.emit(event, ...args);
+  }
   stdout = new EventEmitter();
   stderr = new EventEmitter();
   // A real killed process still eventually emits "close" (with a null exit
@@ -55,6 +70,19 @@ async function waitForSpawn(): Promise<void> {
 
 const scene = buildHeartScene({ coronaryArteries: true, leftVentricleAndAorta: false });
 const DEV = { mode: "development" } as const;
+let outputRoot: string;
+let previousOutputRoot: string | undefined;
+beforeEach(async () => {
+  spawnMock.mockReset();
+  previousOutputRoot = process.env.MEDICAL_MOTION_OUTPUT_ROOT;
+  outputRoot = await mkdtemp(path.join(tmpdir(), "organheal-renderer-test-"));
+  process.env.MEDICAL_MOTION_OUTPUT_ROOT = outputRoot;
+});
+afterEach(async () => {
+  if (previousOutputRoot === undefined) delete process.env.MEDICAL_MOTION_OUTPUT_ROOT;
+  else process.env.MEDICAL_MOTION_OUTPUT_ROOT = previousOutputRoot;
+  await rm(outputRoot, { recursive: true, force: true });
+});
 
 function coronaryExplanation() {
   return {
@@ -66,6 +94,121 @@ function coronaryExplanation() {
 }
 
 describe("renderHeartScene", () => {
+  it.each(["../escape.mp4", "C:/out/out.mp4", "out.png", "out.mp4:stream"])("rejects destination escape/wrong extension %s before spawn", async (name) => {
+    expect(await renderHeartScene(scene, name, DEV)).toMatchObject({ errorCode: "INVALID_SCENE" });
+    expect(spawnMock).not.toHaveBeenCalled();
+  });
+  it.each(["missing", "empty", "wrong-media", "truncated"])("RENDER_OK cannot hide %s artifact and cleanup removes only this invocation", async (kind) => {
+    const child = queueFakeProcess();
+    child.produceArtifact = kind !== "missing";
+    child.artifactData = kind === "empty" ? Buffer.alloc(0) : kind === "truncated" ? mp4Fixture().subarray(0, 30) : Buffer.from("not mp4");
+    const promise = renderHeartScene(scene, "out.mp4", DEV);
+    await waitForSpawn();
+    const ownedPath = (spawnMock.mock.calls[0][1] as string[]).at(-1)!;
+    child.stdout.emit("data", Buffer.from("RENDER_OK\n")); child.emit("close", 0);
+    expect(await promise).toMatchObject({ status: "failed", errorCode: "OUTPUT_VALIDATION_FAILED" });
+    expect(existsSync(path.dirname(ownedPath))).toBe(false);
+  });
+  it("isolates simultaneous identical scenes and preserves the successful invocation when another fails", async () => {
+    const first = queueFakeProcess(), second = queueFakeProcess();
+    const a = renderHeartScene(scene, "same.mp4", DEV), b = renderHeartScene(scene, "same.mp4", DEV);
+    await vi.waitFor(() => expect(spawnMock).toHaveBeenCalledTimes(2));
+    const paths = spawnMock.mock.calls.map((call) => (call[1] as string[]).at(-1)!);
+    expect(paths[0]).not.toBe(paths[1]);
+    first.stdout.emit("data", Buffer.from("RENDER_OK\n")); first.emit("close", 0);
+    second.stderr.emit("data", Buffer.from("BLENDER_FAILED: test failure")); second.emit("close", 1);
+    const results = await Promise.all([a, b]);
+    expect(results.filter((result) => result.status === "completed")).toHaveLength(1);
+    expect(existsSync(paths[0])).toBe(true);
+    expect(existsSync(path.dirname(paths[1]))).toBe(false);
+  });
+  it("rejects synchronous spawn failure and cleans its ownership", async () => {
+    let ownedPath = "";
+    spawnMock.mockImplementationOnce((_exe, args: string[]) => { ownedPath = args.at(-1)!; throw new Error("spawn failed"); });
+    expect(await renderHeartScene(scene, "out.mp4", DEV)).toMatchObject({ status: "failed", errorCode: "BLENDER_FAILED" });
+    expect(existsSync(path.dirname(ownedPath))).toBe(false);
+  });
+  it("rejects asynchronous spawn failure and cleans a partial artifact", async () => {
+    const child = queueFakeProcess();
+    const promise = renderHeartScene(scene, "out.mp4", DEV);
+    await waitForSpawn();
+    const ownedPath = (spawnMock.mock.calls[0][1] as string[]).at(-1)!;
+    writeFileSync(ownedPath, "partial");
+    child.emit("error", new Error("spawn failed"));
+    expect(await promise).toMatchObject({ status: "failed", errorCode: "BLENDER_FAILED" });
+    expect(existsSync(path.dirname(ownedPath))).toBe(false);
+  });
+  it.each(["jpeg", "animation", "", undefined, null, 1])("rejects output mode %s before spawning", async (media) => {
+    const result = await renderHeartScene({ ...scene, output: { ...scene.output, media: media as typeof scene.output.media } }, "out.mp4", DEV);
+    expect(result).toMatchObject({ errorCode: "INVALID_SCENE", message: "Unsupported output.media." });
+    expect(spawnMock).not.toHaveBeenCalled();
+  });
+  it.each([
+    ["aspectRatio", "4:3"], ["aspectRatio", undefined], ["aspectRatio", null],
+    ["resolution", "4k"], ["resolution", undefined], ["resolution", null],
+  ])("rejects invalid %s=%s before spawn", async (key, value) => {
+    for (const media of ["still", "video"] as const) {
+      const result = await renderHeartScene({ ...scene, output: { ...scene.output, media, [key as string]: value } }, "out.mp4", DEV);
+      expect(result).toMatchObject({ status: "failed", errorCode: "INVALID_SCENE", message: expect.stringContaining(`output.${key}`) });
+    }
+    expect(spawnMock).not.toHaveBeenCalled();
+  });
+  it.each([
+    ["16:9", "720p", 1280, 720], ["9:16", "720p", 720, 1280], ["1:1", "720p", 720, 720],
+    ["16:9", "1080p", 1920, 1080], ["9:16", "1080p", 1080, 1920], ["1:1", "1080p", 1080, 1080],
+  ] as const)("transports %s %s as exact dimensions", async (aspectRatio, resolution, width, height) => {
+    const child = queueFakeProcess();
+    const promise = renderHeartScene({ ...scene, output: { ...scene.output, aspectRatio, resolution } }, "out.mp4", DEV);
+    await waitForSpawn();
+    const args = spawnMock.mock.calls[0][1] as string[];
+    const written = JSON.parse(readFileSync(args[args.indexOf("--") + 1], "utf-8"));
+    child.stdout.emit("data", Buffer.from("RENDER_OK\n"));
+    child.emit("close", 0);
+    expect((await promise).status).toBe("completed");
+    expect(written.outputDimensions).toEqual({ width, height });
+    expect(written.output).toEqual({ ...scene.output, aspectRatio, resolution });
+  });
+  it("refuses caller-supplied dimensions instead of accepting an override", async () => {
+    expect(await renderHeartScene({ ...scene, outputDimensions: { width: 0, height: 0 } } as typeof scene, "out.mp4", DEV))
+      .toMatchObject({ errorCode: "INVALID_SCENE" });
+    expect(spawnMock).not.toHaveBeenCalled();
+  });
+  it.each([0, -1, NaN, Infinity, -Infinity, "5", null, undefined])("rejects duration %s before spawning", async (duration) => {
+    for (const media of ["still", "video"] as const) {
+      const result = await renderHeartScene({ ...scene, durationSeconds: duration as number, output: { ...scene.output, media } }, "out.mp4", DEV);
+      expect(result).toMatchObject({ status: "failed", errorCode: "INVALID_SCENE", message: expect.stringContaining("durationSeconds") });
+    }
+    expect(spawnMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects unrepresentable video frame counts before spawning", async () => {
+    expect(await renderHeartScene({ ...scene, durationSeconds: Number.MAX_VALUE }, "out.mp4", DEV))
+      .toMatchObject({ status: "failed", errorCode: "INVALID_SCENE", message: expect.stringContaining("frame limit") });
+    expect(spawnMock).not.toHaveBeenCalled();
+  });
+
+  it.each([5, 6.5, 5.001])("preserves requested %s seconds and transports explicit timing", async (durationSeconds) => {
+    const child = queueFakeProcess();
+    const promise = renderHeartScene({ ...scene, durationSeconds }, "out.mp4", DEV);
+    await waitForSpawn();
+    const args = spawnMock.mock.calls[0][1] as string[];
+    const written = JSON.parse(readFileSync(args[args.indexOf("--") + 1], "utf-8"));
+    child.stdout.emit("data", Buffer.from("RENDER_OK\n"));
+    child.emit("close", 0);
+    expect((await promise).status).toBe("completed");
+    expect(written.durationSeconds).toBe(durationSeconds);
+    const policy = validateRenderDuration(durationSeconds, "video");
+    expect(written.videoTiming).toEqual(policy.ok ? policy.videoTiming : null);
+  });
+
+  it("preserves clinical and anatomy rejection ordering ahead of invalid duration", async () => {
+    const invalid = { ...scene, durationSeconds: NaN };
+    expect(await renderHeartScene(invalid, "out.mp4", { ...DEV, explanationPlan: coronaryExplanation() }))
+      .toMatchObject({ errorCode: "INVALID_SCENE", message: expect.stringContaining("UNSAFE_FOR_VIDEO_FIRST") });
+    expect(await renderHeartScene(invalid, "out.mp4", { mode: "production" }))
+      .toMatchObject({ errorCode: "REAL_ANATOMICAL_ASSET_REQUIRED" });
+    expect(spawnMock).not.toHaveBeenCalled();
+  });
   it("rejects plain clinical context without runtime authorization before Blender", async () => {
     const result = await renderHeartScene(scene, "out.mp4", { ...DEV, explanationPlan: coronaryExplanation() });
     expect(result).toMatchObject({ errorCode: "INVALID_SCENE", message: expect.stringContaining("UNSAFE_FOR_VIDEO_FIRST") });
@@ -93,7 +236,7 @@ describe("renderHeartScene", () => {
   });
 
   it("rejects a non-heart scene before ever touching Blender", async () => {
-    const result = await renderHeartScene({ ...scene, organ: "lungs" }, "out.png", DEV);
+    const result = await renderHeartScene({ ...scene, organ: "lungs" }, "out.mp4", DEV);
 
     expect(result).toEqual({
       status: "failed",
@@ -105,7 +248,7 @@ describe("renderHeartScene", () => {
 
   it("reports completed with the output path once Blender prints RENDER_OK and exits 0", async () => {
     const child = queueFakeProcess();
-    const promise = renderHeartScene(scene, "C:/out/heart.png", DEV);
+    const promise = renderHeartScene(scene, "heart.mp4", DEV);
 
     await waitForSpawn();
     child.stdout.emit("data", Buffer.from("RENDER_OK backend=OPTIX output=C:/out/heart.png\n"));
@@ -115,14 +258,17 @@ describe("renderHeartScene", () => {
 
     expect(result.status).toBe("completed");
     if (result.status === "completed") {
-      expect(result.outputPath).toBe("C:/out/heart.png");
+      const args = spawnMock.mock.calls[0][1] as string[];
+      expect(result.outputPath).toBe(args.at(-1));
+      expect(result.outputPath).not.toBe("heart.mp4");
+      expect(existsSync(result.outputPath)).toBe(true);
       expect(result.durationSeconds).toBeGreaterThanOrEqual(0);
     }
   });
 
   it("classifies a real BLENDER_FAILED error from the script's own SystemExit message", async () => {
     const child = queueFakeProcess();
-    const promise = renderHeartScene(scene, "out.png", DEV);
+    const promise = renderHeartScene(scene, "out.mp4", DEV);
 
     await waitForSpawn();
     child.stderr.emit("data", Buffer.from("SystemExit: BLENDER_FAILED: render.render() raised: out of memory\n"));
@@ -139,7 +285,7 @@ describe("renderHeartScene", () => {
 
   it("classifies ASSET_NOT_FOUND when the heart builder itself throws", async () => {
     const child = queueFakeProcess();
-    const promise = renderHeartScene(scene, "out.png", DEV);
+    const promise = renderHeartScene(scene, "out.mp4", DEV);
 
     await waitForSpawn();
     child.stderr.emit("data", Buffer.from("SystemExit: ASSET_NOT_FOUND: heart_builder.build_heart() failed: boom\n"));
@@ -155,7 +301,7 @@ describe("renderHeartScene", () => {
 
   it("reports OUTPUT_VALIDATION_FAILED when Blender exits 0 but never prints RENDER_OK", async () => {
     const child = queueFakeProcess();
-    const promise = renderHeartScene(scene, "out.png", DEV);
+    const promise = renderHeartScene(scene, "out.mp4", DEV);
 
     await waitForSpawn();
     child.stdout.emit("data", Buffer.from("Blender quit\n"));
@@ -177,7 +323,7 @@ describe("renderHeartScene", () => {
     // emitting "close" on the fake child is exactly what "the process
     // hung" looks like -- letting the real 30ms elapse is simpler and no
     // less reliable than juggling fake-timer/real-fs interaction.
-    const result = await renderHeartScene(scene, "out.png", { mode: "development", timeoutMs: 30 });
+    const result = await renderHeartScene(scene, "out.mp4", { mode: "development", timeoutMs: 30 });
 
     expect(result).toEqual({
       status: "failed",
@@ -185,17 +331,19 @@ describe("renderHeartScene", () => {
       message: "Render exceeded 30ms and was killed.",
     });
     expect(child.kill).toHaveBeenCalledOnce();
+    const ownedPath = (spawnMock.mock.calls[0][1] as string[]).at(-1)!;
+    expect(existsSync(path.dirname(ownedPath))).toBe(false);
   });
 
   it("never invokes Blender directly for anything other than the heart organ", async () => {
-    await renderHeartScene({ ...scene, organ: "kidneys" }, "out.png", DEV);
-    await renderHeartScene({ ...scene, organ: "liver" }, "out.png", DEV);
+    await renderHeartScene({ ...scene, organ: "kidneys" }, "out.mp4", DEV);
+    await renderHeartScene({ ...scene, organ: "liver" }, "out.mp4", DEV);
 
     expect(spawnMock).not.toHaveBeenCalled();
   });
 
   it("refuses the placeholder heart in production before Blender starts", async () => {
-    const result = await renderHeartScene(scene, "out.png", { mode: "production" });
+    const result = await renderHeartScene(scene, "out.mp4", { mode: "production" });
 
     expect(result.status).toBe("failed");
     if (result.status === "failed") {
@@ -264,7 +412,7 @@ describe("renderHeartScene", () => {
       ...scene,
       highlight: { ...scene.highlight, structures: [...scene.highlight.structures, "heart.valve.aortic" as const] },
     };
-    const result = await renderHeartScene(withValve, "out.png", DEV);
+    const result = await renderHeartScene(withValve, "out.mp4", DEV);
 
     expect(result).toEqual({ status: "failed", errorCode: "ANATOMY_STRUCTURE_NOT_FOUND", message: "heart.valve.aortic" });
     expect(spawnMock).not.toHaveBeenCalled();
@@ -282,7 +430,7 @@ describe("renderHeartScene", () => {
       return child;
     });
 
-    await renderHeartScene(scene, "out.png", DEV);
+    await renderHeartScene(scene, "out.mp4", DEV);
 
     expect(written).toMatchObject({
       highlight: { structures: ["CORONARY_LAD", "CORONARY_RCA", "CORONARY_LCX"] },
@@ -297,7 +445,7 @@ describe("renderHeartScene", () => {
 
   it("classifies the script's own ANATOMY_STRUCTURE_NOT_FOUND when the built heart lacks an object", async () => {
     const child = queueFakeProcess();
-    const promise = renderHeartScene(scene, "out.png", DEV);
+    const promise = renderHeartScene(scene, "out.mp4", DEV);
 
     await waitForSpawn();
     child.stderr.emit("data", Buffer.from("SystemExit: ANATOMY_STRUCTURE_NOT_FOUND: the built heart has no object named ['X']\n"));
@@ -310,13 +458,20 @@ describe("renderHeartScene", () => {
 });
 
 describe("toBlenderSceneConfig", () => {
-  it("swaps only the highlight structures and adds the resolved shot", () => {
+  it("leaves still configs without video timing", () => {
+    const shot = resolveCameraShot(HEART_ORGAN_MODULE, scene.camera.preset)!;
+    expect(toBlenderSceneConfig({ ...scene, output: { ...scene.output, media: "still" } }, [], shot))
+      .not.toHaveProperty("videoTiming");
+  });
+  it("resolves highlights and shot and adds explicit video timing", () => {
     const shot = resolveCameraShot(HEART_ORGAN_MODULE, scene.camera.preset);
     if (!shot) throw new Error("expected a shot");
     const config = toBlenderSceneConfig(scene, ["CORONARY_LAD"], shot);
 
     expect(config).toEqual({
       ...scene,
+      outputDimensions: { width: 1920, height: 1080 },
+      videoTiming: { fps: 24, fpsBase: 1, frameStep: 1, frameStart: 1, frameEnd: 120, frameCount: 120 },
       camera: { ...scene.camera, shot },
       highlight: { ...scene.highlight, structures: ["CORONARY_LAD"] },
     });
@@ -357,7 +512,7 @@ describe("resolveCameraShot", () => {
   });
 
   it("stops an unknown shot before Blender starts", async () => {
-    const result = await renderHeartScene({ ...scene, camera: { preset: "CAM_NOPE" } }, "out.png", DEV);
+    const result = await renderHeartScene({ ...scene, camera: { preset: "CAM_NOPE" } }, "out.mp4", DEV);
 
     expect(result.status === "failed" && result.errorCode).toBe("INVALID_SCENE");
     expect(spawnMock).not.toHaveBeenCalled();
