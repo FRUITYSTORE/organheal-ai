@@ -37,6 +37,8 @@ function createFollowUpJob(
     Partial<DurableBackgroundJob> = {}
 ): DurableBackgroundJob {
   return {
+    attemptToken: "33333333-3333-4333-8333-333333333333",
+    leaseExpiresAt: "2026-08-09T18:30:00.000Z",
     id:
       "job-follow-up-e2e",
 
@@ -157,13 +159,13 @@ function createRepositoryMock() {
       vi.fn(),
 
     markCompleted:
-      vi.fn(),
+      vi.fn().mockResolvedValue({ outcome: "applied", status: "completed", leaseExpiresAt: null }),
 
     scheduleRetry:
-      vi.fn(),
+      vi.fn().mockResolvedValue({ outcome: "applied", status: "retrying", leaseExpiresAt: null }),
 
     markFailed:
-      vi.fn(),
+      vi.fn().mockResolvedValue({ outcome: "applied", status: "failed", leaseExpiresAt: null }),
   };
 }
 
@@ -247,7 +249,7 @@ describe(
         expect(
           repository.markCompleted
         ).toHaveBeenCalledWith(
-          job.id
+          { jobId: job.id, attemptToken: job.attemptToken }
         );
 
         expect(
@@ -325,13 +327,8 @@ describe(
             jobId:
               job.id,
 
-            attempts:
-              1,
-
-            availableAt:
-              expect.any(
-                String
-              ),
+            attemptToken: job.attemptToken,
+            retryDelayMs: 30_000,
 
             errorMessage:
               "Temporary delivery failure",
@@ -412,8 +409,7 @@ describe(
           jobId:
             job.id,
 
-          attempts:
-            3,
+          attemptToken: job.attemptToken,
 
           errorMessage:
             "Permanent delivery failure",

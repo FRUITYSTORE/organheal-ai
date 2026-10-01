@@ -92,15 +92,11 @@ export class DurableBackgroundJobWorker {
     job:
       DurableBackgroundJob
   ): Promise<void> {
+    const ownership = { jobId: job.id, attemptToken: job.attemptToken };
     try {
       await this.dispatcher.dispatch(
         job
       );
-
-      await this.repository
-        .markCompleted(
-          job.id
-        );
     } catch (error) {
       const nextAttempts =
         job.attempts + 1;
@@ -143,22 +139,10 @@ export class DurableBackgroundJobWorker {
             nextAttempts
           );
 
-        const availableAt =
-          new Date(
-            Date.now() +
-              retryDelayMs
-          ).toISOString();
-
         await this.repository
           .scheduleRetry({
-            jobId:
-              job.id,
-
-            attempts:
-              nextAttempts,
-
-            availableAt,
-
+            ...ownership,
+            retryDelayMs,
             errorMessage,
           });
 
@@ -167,14 +151,17 @@ export class DurableBackgroundJobWorker {
 
       await this.repository
         .markFailed({
-          jobId:
-            job.id,
-
-          attempts:
-            nextAttempts,
-
+          ...ownership,
           errorMessage,
         });
+      return;
+    }
+    // Completion transport errors are not handler failures. Replay only the
+    // same fenced operation once: the database recognizes finalized ownership.
+    try {
+      await this.repository.markCompleted(ownership);
+    } catch {
+      await this.repository.markCompleted(ownership);
     }
   }
 }

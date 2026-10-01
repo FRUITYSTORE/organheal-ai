@@ -43,6 +43,8 @@ function createJob(
     number
 ): DurableBackgroundJob {
   return {
+    attemptToken: "33333333-3333-4333-8333-333333333333",
+    leaseExpiresAt: "2026-08-24T00:30:00.000Z",
     id:
       `throughput-job-${index}`,
 
@@ -140,12 +142,12 @@ describe(
           markCompleted:
             vi.fn(
               async (
-                jobId:
-                  string
+                ownership: { jobId: string; attemptToken: string }
               ) => {
                 completedIds.push(
-                  jobId
+                  ownership.jobId
                 );
+                return { outcome: "applied", status: "completed", leaseExpiresAt: null };
               }
             ),
 
@@ -402,12 +404,12 @@ describe(
           markCompleted:
             vi.fn(
               async (
-                jobId:
-                  string
+                ownership: { jobId: string; attemptToken: string }
               ) => {
                 completedIds.add(
-                  jobId
+                  ownership.jobId
                 );
+                return { outcome: "applied", status: "completed", leaseExpiresAt: null };
               }
             ),
 

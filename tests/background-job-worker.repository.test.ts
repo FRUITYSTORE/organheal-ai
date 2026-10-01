@@ -59,6 +59,8 @@ describe(
 
                 status:
                   "running",
+                attempt_token: "33333333-3333-4333-8333-333333333333",
+                lease_expires_at: "2026-09-05T00:30:01.000Z",
 
                 payload: {
                   reportId:
@@ -154,6 +156,8 @@ describe(
 
             maxAttempts:
               3,
+            attemptToken: "33333333-3333-4333-8333-333333333333",
+            leaseExpiresAt: "2026-09-05T00:30:01.000Z",
           })
         );
       }

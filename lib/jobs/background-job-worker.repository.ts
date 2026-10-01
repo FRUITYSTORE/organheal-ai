@@ -26,6 +26,16 @@ export type DurableBackgroundJob<
 
   updatedAt:
     string;
+
+  attemptToken: string;
+  leaseExpiresAt: string;
+};
+
+export type BackgroundJobAttempt = { jobId: string; attemptToken: string };
+export type AttemptMutationResult = {
+  outcome: "applied" | "ownership-lost" | "already-finalized";
+  status: JobStatus | null;
+  leaseExpiresAt: string | null;
 };
 
 export type BackgroundJobRecoveryResult = {
@@ -86,6 +96,9 @@ type BackgroundJobRow = {
 
   updated_at:
     string;
+
+  attempt_token: string;
+  lease_expires_at: string;
 };
 
 function mapBackgroundJobRow<
@@ -94,6 +107,11 @@ function mapBackgroundJobRow<
   row:
     BackgroundJobRow
 ): DurableBackgroundJob<TPayload> {
+  if (row.status !== "running" || typeof row.attempt_token !== "string" ||
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(row.attempt_token) ||
+    typeof row.lease_expires_at !== "string" || !Number.isFinite(Date.parse(row.lease_expires_at))) {
+    throw new Error("Background job claim did not return valid attempt ownership.");
+  }
   return {
     id:
       row.id,
@@ -136,6 +154,9 @@ function mapBackgroundJobRow<
 
     lastError:
       row.last_error,
+
+    attemptToken: row.attempt_token,
+    leaseExpiresAt: row.lease_expires_at,
   };
 }
 
@@ -285,148 +306,38 @@ export class BackgroundJobWorkerRepository {
       : null;
   }
 
-  async markCompleted(
-    jobId:
-      string
-  ): Promise<void> {
-    const now =
-      new Date().toISOString();
-
-    const {
-      error,
-    } =
-      await this.client
-        .from(
-          "background_jobs"
-        )
-        .update({
-          status:
-            "completed",
-
-          finished_at:
-            now,
-
-          last_error:
-            null,
-
-          updated_at:
-            now,
-        })
-        .eq(
-          "id",
-          jobId
-        );
-
-    if (error) {
-      throw error;
+  private async mutateAttempt(
+    attempt: BackgroundJobAttempt, action: "renew" | "complete" | "retry" | "fail",
+    options: { retryDelayMs?: number; errorMessage?: string } = {},
+  ): Promise<AttemptMutationResult> {
+    const { data, error } = await this.client.rpc("mutate_background_job_attempt", {
+      p_job_id: attempt.jobId, p_attempt_token: attempt.attemptToken, p_action: action,
+      p_retry_delay_ms: options.retryDelayMs ?? 0, p_error_message: options.errorMessage ?? null,
+    });
+    if (error) throw error;
+    const row = Array.isArray(data) && data.length === 1 ? data[0] : null;
+    if (!row || !["applied", "ownership-lost", "already-finalized"].includes(row.outcome) ||
+      !(row.job_status === null || ["pending", "running", "completed", "failed", "retrying", "cancelled"].includes(row.job_status)) ||
+      !(row.lease_expires_at === null || (typeof row.lease_expires_at === "string" && Number.isFinite(Date.parse(row.lease_expires_at))))) {
+      // Empty/zero-row RPC responses are protocol failures, never success.
+      throw new Error("Background job ownership mutation returned an invalid result.");
     }
+    return { outcome: row.outcome, status: row.job_status, leaseExpiresAt: row.lease_expires_at };
   }
 
-  async scheduleRetry({
-    jobId,
-    attempts,
-    availableAt,
-    errorMessage,
-  }: {
-    jobId:
-      string;
-
-    attempts:
-      number;
-
-    availableAt:
-      string;
-
-    errorMessage:
-      string;
-  }): Promise<void> {
-    const now =
-      new Date().toISOString();
-
-    const {
-      error,
-    } =
-      await this.client
-        .from(
-          "background_jobs"
-        )
-        .update({
-          status:
-            "retrying",
-
-          attempts,
-
-          available_at:
-            availableAt,
-
-          started_at:
-            null,
-
-          finished_at:
-            null,
-
-          last_error:
-            errorMessage,
-
-          updated_at:
-            now,
-        })
-        .eq(
-          "id",
-          jobId
-        );
-
-    if (error) {
-      throw error;
-    }
+  renewLease(attempt: BackgroundJobAttempt) {
+    return this.mutateAttempt(attempt, "renew");
   }
 
-  async markFailed({
-    jobId,
-    attempts,
-    errorMessage,
-  }: {
-    jobId:
-      string;
+  markCompleted(attempt: BackgroundJobAttempt) {
+    return this.mutateAttempt(attempt, "complete");
+  }
 
-    attempts:
-      number;
+  scheduleRetry(input: BackgroundJobAttempt & { retryDelayMs: number; errorMessage: string }) {
+    return this.mutateAttempt(input, "retry", input);
+  }
 
-    errorMessage:
-      string;
-  }): Promise<void> {
-    const now =
-      new Date().toISOString();
-
-    const {
-      error,
-    } =
-      await this.client
-        .from(
-          "background_jobs"
-        )
-        .update({
-          status:
-            "failed",
-
-          attempts,
-
-          finished_at:
-            now,
-
-          last_error:
-            errorMessage,
-
-          updated_at:
-            now,
-        })
-        .eq(
-          "id",
-          jobId
-        );
-
-    if (error) {
-      throw error;
-    }
+  markFailed(input: BackgroundJobAttempt & { errorMessage: string }) {
+    return this.mutateAttempt(input, "fail", input);
   }
 }
