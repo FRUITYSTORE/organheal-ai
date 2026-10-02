@@ -43,7 +43,8 @@ describe("mechanism-specific anatomy dependencies", () => {
     const requirements = plan().anatomy.requirements;
     const result = checkAssetReadiness("heart", scene.highlight.structures, "production", reviewedModule, requirements);
     expect(result).toEqual({ ok: true, blenderObjects: scene.highlight.structures.map((id) => `TEST_${id}`) });
-    expect(checkExplanationPlanReadiness(plan(), "production", reviewedModule).ok).toBe(true);
+    expect(checkExplanationPlanReadiness(plan(), "development", reviewedModule).ok).toBe(true);
+    expect(checkExplanationPlanReadiness(plan(), "production", reviewedModule)).toMatchObject({ ok: false, details: ["Mechanism requires independent medical review and patient approval."] });
   });
 
   it("checks requirements even with an empty highlight list", () => {

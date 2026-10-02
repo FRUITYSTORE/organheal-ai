@@ -55,10 +55,10 @@ describe("clinical triage to explanation rendering", () => {
     const bad = plan(); bad.anatomy.requirements = {};
     expect(await orchestrateExplanationRender(input("I feel tired.", bad), options, { signal: controller.signal })).toMatchObject({ errorCode: "INVALID_SCENE_PLAN" }); noRendering();
   });
-  it("safe supported flow reaches renderer when all production dependencies are reviewed", async () => {
+  it("anatomy approval alone cannot promote an unreviewed mechanism to patient use", async () => {
     vi.spyOn(modules, "getOrganModule").mockReturnValue(reviewed());
-    expect(await orchestrateExplanationRender(input(), { ...options, mode: "production" })).toMatchObject({ status: "completed", safety: { allowVideo: true } });
-    expect(renderHeartScene).toHaveBeenCalledOnce();
+    expect(await orchestrateExplanationRender(input(), { ...options, mode: "production" })).toMatchObject({ status: "failed", errorCode: "REAL_ANATOMICAL_ASSET_REQUIRED", safety: { allowVideo: true } });
+    noRendering();
   });
   it.each(["I have chest pain.", "My abdominal pain is getting worse.", "لا أستطيع التنفس"])("blocks escalation before validation or compilation: %s", async (message) => {
     const compile = vi.spyOn(compiler, "compileExplanationScene"); const validate = vi.spyOn(validator, "validateVideoExplanationPlan");

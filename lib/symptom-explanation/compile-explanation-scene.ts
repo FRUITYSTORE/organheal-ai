@@ -3,6 +3,8 @@ import type { ExplanationRenderRequest } from "@/lib/medical-motion/contracts/re
 import { buildHeartVisualizationScene, type HeartVisualizationFocus } from "@/lib/medical-motion/organs/heart/heart-visualization-resolver";
 import { computeRenderSignature } from "@/lib/medical-motion/render-signature";
 import { validateVideoExplanationPlan } from "@/lib/symptom-explanation/validate-explanation-plan";
+import { MEDICAL_MECHANISMS, LEGACY_MECHANISM_BINDINGS } from "@/lib/medical-motion/mechanism-definitions";
+import { checkVisualizationOperation } from "@/lib/medical-motion/mechanism-registry";
 
 /** Object key order is irrelevant; array order (including scene order) is meaningful. */
 export function canonicalExplanationJson(value: unknown): string {
@@ -42,9 +44,12 @@ export function compileExplanationScene(value: unknown, config: { sceneIndex: nu
     else return invalid(`No supported camera/highlight preset for ${target}.`);
   }
   const scene = structuredClone(buildHeartVisualizationScene(focus));
+  const mechanism = MEDICAL_MECHANISMS.get(plan.mechanism.id, plan.mechanism.version ?? LEGACY_MECHANISM_BINDINGS[plan.mechanism.id].version);
+  if (!mechanism || !checkVisualizationOperation(mechanism, "highlight", []) || !checkVisualizationOperation(mechanism, "camera-focus", [])) return invalid("Mechanism visualization is not permitted.");
+  scene.mechanismIdentity = { mechanismId: mechanism.mechanismId, mechanismVersion: mechanism.version };
   // Intent controls highlights. Required dependencies never become selections.
   scene.highlight.structures = target === null ? [] : plan.anatomy.structures.filter((id) =>
-    id === target || id.startsWith(`${target}.`));
+    (id === target || id.startsWith(`${target}.`)) && mechanism.highlightedAnatomy.includes(id));
   if (target !== null && scene.highlight.structures.length === 0) return invalid("The intent has no authorized highlight.");
   // Retain visual camera/motion dependencies and all explanation requirements.
   // Both sets are also checked independently by the clinical render boundary.

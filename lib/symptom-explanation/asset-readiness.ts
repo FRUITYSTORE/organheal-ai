@@ -5,6 +5,8 @@ import { getOrganModule } from "@/lib/medical-motion/organ-modules";
 import { anatomyAssessmentIssues } from "@/lib/medical-motion/anatomy-foundation";
 import { WHOLE_BODY_ANATOMY } from "@/lib/medical-motion/whole-body-anatomy";
 import type { WholeBodyAnatomyCatalog } from "@/lib/medical-motion/contracts/anatomy-foundation";
+import { MEDICAL_MECHANISMS, LEGACY_MECHANISM_BINDINGS } from "@/lib/medical-motion/mechanism-definitions";
+import { patientMechanismApproved } from "@/lib/medical-motion/mechanism-registry";
 import type { OrganStructureLookup } from "@/lib/symptom-explanation/anatomy-resolver";
 import {
   SYMPTOM_EXPLANATION_ERROR_CODE,
@@ -169,5 +171,9 @@ export function checkExplanationPlanReadiness(
   if (!validation.ok) return validation;
   const { plan } = validation;
   const readiness = checkAssetReadiness(plan.organ, plan.anatomy.structures, mode, getModule, plan.anatomy.requirements);
+  if (readiness.ok && mode === "production") {
+    const m = MEDICAL_MECHANISMS.get(plan.mechanism.id, plan.mechanism.version ?? LEGACY_MECHANISM_BINDINGS[plan.mechanism.id].version);
+    if (!m || !patientMechanismApproved(m)) return { ok: false as const, errorCode: SYMPTOM_EXPLANATION_ERROR_CODE.REAL_ANATOMICAL_ASSET_REQUIRED, details: ["Mechanism requires independent medical review and patient approval."] };
+  }
   return readiness.ok ? { ...readiness, plan } : readiness;
 }

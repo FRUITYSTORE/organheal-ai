@@ -51,7 +51,7 @@ export type EvidenceLevel = (typeof EVIDENCE_LEVELS)[number];
 
 export type ClinicalExplanation = {
   organSystems: readonly OrganId[];
-  mechanism: { id: MechanismId; evidence: EvidenceLevel };
+  mechanism: { id: MechanismId; evidence: EvidenceLevel; version?: string };
   /** Clinically relevant details the user has not given yet. */
   missingInformation: readonly string[];
   /** Statements the narration must not make for this case, e.g. naming a
@@ -93,7 +93,7 @@ export type VideoExplanationPlan = {
   topic: string;
   /** A plan can only exist for input the safety gate did not block. */
   safety: { level: "none" };
-  mechanism: { id: MechanismId; evidence: EvidenceLevel };
+  mechanism: { id: MechanismId; evidence: EvidenceLevel; version?: string };
   anatomy: {
     primaryFocus: AnatomyStructureId;
     structures: readonly AnatomyStructureId[];

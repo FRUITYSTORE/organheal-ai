@@ -2,6 +2,7 @@ import { ORGAN_IDS, type OrganId } from "@/lib/medical-motion/contracts/organ";
 import { STRUCTURE_REPRESENTATIONS } from "@/lib/medical-motion/contracts/organ-module";
 import type { AnatomyRequirement, AnatomyRequirements, StructureRepresentation } from "@/lib/medical-motion/contracts/organ-module";
 import { getMechanismAnatomy } from "@/lib/symptom-explanation/anatomy-resolver";
+import { MEDICAL_MECHANISMS, LEGACY_MECHANISM_BINDINGS } from "@/lib/medical-motion/mechanism-definitions";
 import {
   EVIDENCE_LEVELS,
   MECHANISM_IDS,
@@ -171,7 +172,11 @@ export function validateVideoExplanationPlan(value: unknown): PlanValidationResu
   if (!isRecord(mechanism)) {
     issues.push("mechanism: required.");
   } else {
-    checkKeys(mechanism, ["id", "evidence"], "mechanism", issues);
+    checkKeys(mechanism, ["id", "evidence", "version"], "mechanism", issues);
+    if (isOneOf(MECHANISM_IDS, mechanism.id)) {
+      const version = mechanism.version === undefined ? LEGACY_MECHANISM_BINDINGS[mechanism.id].version : mechanism.version;
+      if (typeof version !== "string" || !MEDICAL_MECHANISMS.get(mechanism.id, version)) issues.push("mechanism.version: unknown registry version.");
+    }
 
     if (!isOneOf(MECHANISM_IDS, mechanism.id)) {
       issues.push("mechanism.id: unknown mechanism.");
@@ -215,8 +220,9 @@ export function validateVideoExplanationPlan(value: unknown): PlanValidationResu
       issues.push("anatomy.primaryFocus: does not match any listed structure.");
     }
 
-    if (isRecord(mechanism) && isOneOf(MECHANISM_IDS, mechanism.id)) {
-      const minimum = getMechanismAnatomy(mechanism.id);
+    if (isRecord(mechanism) && isOneOf(MECHANISM_IDS, mechanism.id) &&
+        (mechanism.version === undefined || (typeof mechanism.version === "string" && MEDICAL_MECHANISMS.get(mechanism.id, mechanism.version)))) {
+      const minimum = getMechanismAnatomy(mechanism.id, mechanism.version as string | undefined);
       if (minimum.organ !== organ) issues.push("mechanism: does not belong to the plan's organ.");
       for (const id of minimum.structures) {
         if (!structures.includes(id)) issues.push(`anatomy.structures: mechanism requires ${id}; no substitution is allowed.`);

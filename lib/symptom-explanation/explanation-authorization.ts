@@ -6,6 +6,8 @@ import { canonicalExplanationJson, compileExplanationScene } from "@/lib/symptom
 import type { ExplanationRenderRequest } from "@/lib/medical-motion/contracts/render";
 import type { RenderMode } from "@/lib/symptom-explanation/asset-readiness";
 import type { SafetyTriageResult, SymptomExplanationErrorCode } from "@/lib/symptom-explanation/contracts";
+import { MEDICAL_MECHANISMS, LEGACY_MECHANISM_BINDINGS } from "@/lib/medical-motion/mechanism-definitions";
+import { evaluateMechanismCandidate } from "@/lib/medical-motion/mechanism-registry";
 
 export type ExplanationOrchestrationInput = {
   clinical: { message: string; language: "en" | "ar" };
@@ -58,6 +60,14 @@ export function prepareExplanationAuthorization(value: unknown, options: Explana
   }
   const validation = validateVideoExplanationPlan(value.plan);
   if (!validation.ok) return fail(validation.errorCode, validation.issues.join(" "), trace, safety);
+  // Only the server intake is evidence here. Plan findings/AI confidence are
+  // not verified records. Production approval is enforced with anatomy readiness.
+  const mechanism = validation.plan.mechanism;
+  const eligible = evaluateMechanismCandidate(MEDICAL_MECHANISMS,
+    { mechanismId: mechanism.id, mechanismVersion: mechanism.version ?? LEGACY_MECHANISM_BINDINGS[mechanism.id].version },
+    { safety, mode: "development", claim: mechanism.evidence === "documented" ? "documented-mechanism" : "possible-mechanism",
+      evidence: [{ kind: "assessment-response", code: "clinical-message-provided", origin: "server-intake", assertion: "present", evidenceRef: "server-clinical-input" }] });
+  if (eligible.status !== "eligible") return fail("CLINICAL_EXPLANATION_FAILED", eligible.reasons.join(" "), trace, safety);
   const compiled = compileExplanationScene(validation.plan, {
     sceneIndex: value.sceneIndex as number, assetVersion: options.assetVersion,
   });

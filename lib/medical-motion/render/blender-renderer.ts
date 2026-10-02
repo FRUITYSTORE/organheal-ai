@@ -151,7 +151,7 @@ export async function renderHeartScene(
   // Generic scenes are internal non-clinical review. Clinical metadata cannot
   // select that path or supply its own authorization.
   if (Object.keys(options).some((key) => !["mode", "timeoutMs", "explanationPlan", "clinicalAuthorization"].includes(key)) ||
-      Object.keys(scene).some((key) => !["organ", "sceneVersion", "durationSeconds", "focus", "camera", "motion", "highlight", "anatomyRequirements", "anatomyIdentity", "output"].includes(key))) {
+      Object.keys(scene).some((key) => !["organ", "sceneVersion", "durationSeconds", "focus", "camera", "motion", "highlight", "anatomyRequirements", "anatomyIdentity", "mechanismIdentity", "output"].includes(key))) {
     return invalidScene("Unsupported render metadata; clinical requests must use the authorized boundary.");
   }
   if ("explanationPlan" in options || "clinicalAuthorization" in options) {
@@ -164,6 +164,8 @@ export async function renderHeartScene(
         return invalidScene("Clinical authorization does not match this render request.");
       }
     } catch { return invalidScene("Invalid clinical render metadata."); }
+  } else if (scene.mechanismIdentity) {
+    return invalidScene("Mechanism scenes require server-issued clinical authorization.");
   }
   if (scene.organ !== "heart") {
     return {
