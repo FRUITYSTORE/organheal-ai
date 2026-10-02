@@ -4,18 +4,16 @@ import { buildHeartVisualizationScene, type HeartVisualizationFocus } from "@/li
 import { computeRenderSignature } from "@/lib/medical-motion/render-signature";
 import { validateVideoExplanationPlan } from "@/lib/symptom-explanation/validate-explanation-plan";
 import { MEDICAL_MECHANISMS, LEGACY_MECHANISM_BINDINGS } from "@/lib/medical-motion/mechanism-definitions";
-import { checkVisualizationOperation } from "@/lib/medical-motion/mechanism-registry";
+import { checkVisualizationOperation, evaluateMechanismCandidate } from "@/lib/medical-motion/mechanism-registry";
+import { canonicalSceneJson, compileMedicalScene, DEFAULT_SCENE_PRESENTATION, validateCompiledMedicalScene } from "@/lib/medical-motion/scene-compiler";
+import { checkAssetReadiness } from "./asset-readiness";
+import type { MechanismEvaluationContext } from "@/lib/medical-motion/contracts/mechanism";
+import { getOrganModule } from "@/lib/medical-motion/organ-modules";
+import { WHOLE_BODY_ANATOMY } from "@/lib/medical-motion/whole-body-anatomy";
 
 /** Object key order is irrelevant; array order (including scene order) is meaningful. */
 export function canonicalExplanationJson(value: unknown): string {
-  if (Array.isArray(value)) return `[${value.map(canonicalExplanationJson).join(",")}]`;
-  if (value !== null && typeof value === "object") {
-    return `{${Object.keys(value).sort().map((key) =>
-      `${JSON.stringify(key)}:${canonicalExplanationJson((value as Record<string, unknown>)[key])}`).join(",")}}`;
-  }
-  const json = JSON.stringify(value);
-  if (json === undefined) throw new Error("Explanation requests must contain JSON values.");
-  return json;
+  return canonicalSceneJson(value);
 }
 
 const signature = (value: unknown) => createHash("sha256").update(canonicalExplanationJson(value)).digest("hex");
@@ -23,7 +21,8 @@ const invalid = (issue: string) => ({ ok: false as const, errorCode: "INVALID_SC
 
 /** Compiles exactly one indexed shot, not a narrated video or clinical decision.
  * Always revalidate unknown input; a TypeScript annotation is not authorization. */
-export function compileExplanationScene(value: unknown, config: { sceneIndex: number; assetVersion: string }) {
+export function compileExplanationScene(value: unknown, config: { sceneIndex: number; assetVersion: string }, gate?: MechanismEvaluationContext) {
+  if (gate && (gate.safety?.allowVideo !== true || gate.safety.level !== "none")) return { ...invalid("Safety Gate blocks visualization."), errorCode: "UNSAFE_FOR_VIDEO_FIRST" as const };
   const validation = validateVideoExplanationPlan(value);
   if (!validation.ok) return validation;
   if (!config || !Number.isInteger(config.sceneIndex) || config.sceneIndex < 0 ||
@@ -54,10 +53,26 @@ export function compileExplanationScene(value: unknown, config: { sceneIndex: nu
   // Retain visual camera/motion dependencies and all explanation requirements.
   // Both sets are also checked independently by the clinical render boundary.
   scene.anatomyRequirements = { ...scene.anatomyRequirements, ...plan.anatomy.requirements };
+  let medicalScene;
+  if (gate) {
+    const eligible = evaluateMechanismCandidate(MEDICAL_MECHANISMS, scene.mechanismIdentity, { ...gate, mode: "development" });
+    if (eligible.status !== "eligible") return invalid(eligible.reasons.join(" "));
+    const module = getOrganModule(scene.organ);
+    if (!module || module.assetVersion !== config.assetVersion) return invalid("Asset version does not match the registered module.");
+    const presetReady = checkAssetReadiness(scene.organ, scene.highlight.structures, gate.mode, getOrganModule, buildHeartVisualizationScene(focus).anatomyRequirements);
+    if (!presetReady.ok) return { ...invalid(presetReady.details.join(" ")), errorCode: presetReady.errorCode };
+    const result = compileMedicalScene(scene.mechanismIdentity, { ...gate, registry: MEDICAL_MECHANISMS, getModule: getOrganModule, catalog: WHOLE_BODY_ANATOMY,
+      selections: scene.highlight.structures, additionalRequirements: scene.anatomyRequirements, overview: target === null },
+      { ...DEFAULT_SCENE_PRESENTATION, durationHint: scene.durationSeconds, outputProfile: { aspectRatio: scene.output.aspectRatio, resolution: scene.output.resolution, lod: "asset-native" } });
+    if (!result.ok) return { ...invalid(result.reasons.join(" ")), ...("errorCode" in result ? { errorCode: result.errorCode } : {}) };
+    medicalScene = result.compiled;
+    if (!validateCompiledMedicalScene(medicalScene)) return invalid("Compiled DSL validation failed.");
+  }
   const core = {
     compilerVersion: "1" as const, assetVersion: config.assetVersion, sceneIndex: config.sceneIndex,
     sceneIntent: intent, explanationPlan: plan, scene,
-    renderSignature: computeRenderSignature(scene, config.assetVersion), planSignature: signature(plan),
+    renderSignature: computeRenderSignature(scene, config.assetVersion, medicalScene), planSignature: signature(plan),
+    ...(medicalScene ? { medicalScene } : {}),
   };
   const request: ExplanationRenderRequest = { ...core, requestId: signature(core) };
   return { ok: true as const, request };

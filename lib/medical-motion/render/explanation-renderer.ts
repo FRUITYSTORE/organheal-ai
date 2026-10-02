@@ -25,7 +25,7 @@ export function validateExplanationRenderRequest(
   const raw = authorized.request;
   const compiled = compileExplanationScene(raw?.explanationPlan, {
     sceneIndex: raw?.sceneIndex as number, assetVersion: raw?.assetVersion as string,
-  });
+  }, authorized.compilationContext);
   if (!compiled.ok) return { status: "failed", errorCode: compiled.errorCode, message: compiled.issues.join(" ") };
   if (!options || (options.mode !== "development" && options.mode !== "production")) {
     return { status: "failed", errorCode: "INVALID_SCENE_PLAN", message: "An explicit supported render mode is required." };

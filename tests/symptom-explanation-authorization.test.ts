@@ -102,10 +102,10 @@ describe("server-owned clinical render authorization", () => {
       { mode: kind === "mode" ? "production" : "development", ...(kind === "timeout" ? { timeoutMs: 1 } : {}) })).toMatchObject({ errorCode: "UNSAFE_FOR_VIDEO_FIRST" });
     expect(renderHeartScene).not.toHaveBeenCalled();
   });
-  it("authorization does not grant anatomical readiness for unavailable myocardium", async () => {
+  it("unavailable myocardium blocks authorization before rendering", () => {
     const prepared = prepareExplanationAuthorization(input("myocardialOxygenDemandSupply"), options);
-    if (!("ok" in prepared)) throw new Error(prepared.message);
-    expect(await renderExplanationRequest(prepared.authorization, options.outputPath, { mode: options.mode })).toMatchObject({ errorCode: "ANATOMY_STRUCTURE_NOT_FOUND" });
+    expect(prepared).toMatchObject({ errorCode: "ANATOMY_STRUCTURE_NOT_FOUND" });
+    expect(prepared).not.toHaveProperty("authorization");
     expect(renderHeartScene).not.toHaveBeenCalled();
   });
 });

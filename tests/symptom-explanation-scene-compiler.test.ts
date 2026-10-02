@@ -99,7 +99,8 @@ describe("validated explanation compiler and clinical render boundary", () => {
   });
   it("renders valid LV development request with mandatory context and trace", async () => {
     const r = request(); const result = await renderAfterTriage(r, "test.mp4", { mode: "development" });
-    expect(result).toMatchObject({ status: "completed", requestId: r.requestId, planSignature: r.planSignature });
+    expect(result).toMatchObject({ status: "completed", requestId: expect.stringMatching(/^[a-f0-9]{64}$/), planSignature: r.planSignature });
+    expect("requestId" in result && result.requestId).not.toBe(r.requestId); // Gated DSL is part of authorization identity; preview is not.
     expect(renderHeartScene).toHaveBeenCalledWith(r.scene, "test.mp4", { mode: "development", explanationPlan: r.explanationPlan, clinicalAuthorization: expect.any(Object) }, {});
   });
   it("blocks development assets in production before renderer", async () => {

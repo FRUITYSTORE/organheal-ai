@@ -3,6 +3,8 @@ import type { PlanScene, VideoExplanationPlan } from "@/lib/symptom-explanation/
 
 /** Clinical requests always retain the complete validated explanation context. */
 export type ExplanationRenderRequest = RenderRequest & {
+  /** Only the gated server path produces this; legacy compiler calls are previews. */
+  medicalScene?: import("./medical-scene").CompiledMedicalScene;
   compilerVersion: "1";
   assetVersion: string;
   sceneIndex: number;

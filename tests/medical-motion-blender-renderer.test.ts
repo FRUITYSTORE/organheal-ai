@@ -38,7 +38,7 @@ function executeClinical(signal?: AbortSignal, timeoutMs = 10_000) {
 function renderClinical(plan: unknown) {
   const prepared = prepareExplanationAuthorization({ clinical: { message: "I feel tired.", language: "en" }, plan, sceneIndex: 0 },
     { clinicalContextId: "server-test", assetVersion: HEART_ORGAN_MODULE.assetVersion, mode: "development", outputPath: "out.mp4" });
-  if (!("ok" in prepared)) throw new Error(prepared.message);
+  if (!("ok" in prepared)) return prepared;
   const authorized = readExplanationAuthorization(prepared.authorization)!;
   return renderHeartScene(authorized.request.scene, "out.mp4", { mode: "development",
     explanationPlan: authorized.request.explanationPlan, clinicalAuthorization: prepared.authorization });
@@ -577,7 +577,8 @@ describe("renderHeartScene", () => {
 
   it("propagates all explanation dependencies while leaving coronary highlights unchanged", async () => {
     const result = await renderClinical(coronaryExplanation());
-    expect(result).toEqual({ status: "failed", errorCode: "ANATOMY_STRUCTURE_NOT_FOUND", message: "heart.myocardium" });
+    expect(result).toMatchObject({ status: "failed", errorCode: "ANATOMY_STRUCTURE_NOT_FOUND", message: "heart.myocardium" });
+    expect(result).not.toHaveProperty("authorization");
     expect(scene.highlight.structures).not.toContain("heart.myocardium");
     expect(spawnMock).not.toHaveBeenCalled();
   });

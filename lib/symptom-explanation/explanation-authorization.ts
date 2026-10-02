@@ -8,6 +8,7 @@ import type { RenderMode } from "@/lib/symptom-explanation/asset-readiness";
 import type { SafetyTriageResult, SymptomExplanationErrorCode } from "@/lib/symptom-explanation/contracts";
 import { MEDICAL_MECHANISMS, LEGACY_MECHANISM_BINDINGS } from "@/lib/medical-motion/mechanism-definitions";
 import { evaluateMechanismCandidate } from "@/lib/medical-motion/mechanism-registry";
+import type { MechanismEvaluationContext } from "@/lib/medical-motion/contracts/mechanism";
 
 export type ExplanationOrchestrationInput = {
   clinical: { message: string; language: "en" | "ar" };
@@ -68,19 +69,22 @@ export function prepareExplanationAuthorization(value: unknown, options: Explana
     { safety, mode: "development", claim: mechanism.evidence === "documented" ? "documented-mechanism" : "possible-mechanism",
       evidence: [{ kind: "assessment-response", code: "clinical-message-provided", origin: "server-intake", assertion: "present", evidenceRef: "server-clinical-input" }] });
   if (eligible.status !== "eligible") return fail("CLINICAL_EXPLANATION_FAILED", eligible.reasons.join(" "), trace, safety);
+  const compilationContext: MechanismEvaluationContext = { safety, mode: options.mode,
+    claim: mechanism.evidence === "documented" ? "documented-mechanism" : "possible-mechanism",
+    evidence: [{ kind: "assessment-response", code: "clinical-message-provided", origin: "server-intake", assertion: "present", evidenceRef: "server-clinical-input" }] };
   const compiled = compileExplanationScene(validation.plan, {
     sceneIndex: value.sceneIndex as number, assetVersion: options.assetVersion,
-  });
+  }, compilationContext);
   if (!compiled.ok) return fail(compiled.errorCode, compiled.issues.join(" "), trace, safety);
   trace.orchestrationId = hash({ clinicalContextId: trace.clinicalContextId,
     safetySignature: trace.safetySignature, requestId: compiled.request.requestId });
   const authorization = Object.freeze(Object.create(null)) as object;
-  authorizations.set(authorization, { request: structuredClone(compiled.request), options: { ...options } });
+  authorizations.set(authorization, { request: structuredClone(compiled.request), options: { ...options }, compilationContext: structuredClone(compilationContext) });
   return { ok: true as const, authorization, trace, safety, mechanism: compiled.request.explanationPlan.mechanism };
 }
 
 // Only runtime identity authorizes. Copies, JSON, signatures and type assertions cannot mint it.
-const authorizations = new WeakMap<object, { request: ExplanationRenderRequest; options: ExplanationOrchestrationOptions }>();
+const authorizations = new WeakMap<object, { request: ExplanationRenderRequest; options: ExplanationOrchestrationOptions; compilationContext: MechanismEvaluationContext }>();
 export function readExplanationAuthorization(value: unknown) {
   if (value === null || typeof value !== "object") return null;
   const authorized = authorizations.get(value);
