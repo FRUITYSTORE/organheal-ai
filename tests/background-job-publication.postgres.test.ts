@@ -1,36 +1,8 @@
-import { spawn } from "node:child_process";
+import { sql as sql } from "./helpers/medical-motion-postgres";
 import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
 
 const databaseUrl = process.env.ORGANHEAL_OWNERSHIP_TEST_DATABASE_URL;
-function sql(input: string, onLocked?: () => void): Promise<string> {
-  let url: URL;
-  try { url = new URL(databaseUrl!); } catch { throw new Error("Invalid local test database configuration."); }
-  if (!["localhost", "127.0.0.1"].includes(url.hostname) ||
-    url.pathname !== "/organheal_ownership_test_step3c" ||
-    !["postgres:", "postgresql:"].includes(url.protocol)) throw new Error("Publication database guard failed.");
-  return new Promise((resolve, reject) => {
-    const child = spawn(process.env.ORGANHEAL_TEST_PSQL ?? "psql", [
-      "-X", "-w", "-q", "-A", "-t", "-v", "ON_ERROR_STOP=1", "-h", url.hostname,
-      "-p", url.port || "5432", "-U", decodeURIComponent(url.username), "-d", url.pathname.slice(1),
-    ], { env: { ...process.env, PGPASSWORD: decodeURIComponent(url.password),
-      PGOPTIONS: "-c statement_timeout=7000", PGCONNECT_TIMEOUT: "5" }, windowsHide: true });
-    let output = "", diagnostics = "", notified = false;
-    child.stdout.on("data", chunk => {
-      output += String(chunk);
-      if (onLocked && !notified && output.includes("PUBLICATION_LOCKED")) { notified = true; onLocked(); }
-    });
-    child.stderr.on("data", chunk => { diagnostics += String(chunk); });
-    child.on("error", () => reject(new Error("Local PostgreSQL client unavailable.")));
-    child.on("close", code => {
-      // Never echo credentials or arbitrary PostgreSQL diagnostics.
-      if (code !== 0) reject(new Error("PostgreSQL publication assertion failed" +
-        (diagnostics.includes("ERROR") ? " (SQL error)." : ".")));
-      else resolve(output.trim());
-    });
-    child.stdin.end(input);
-  });
-}
 const fixture = `
 do $$ begin if exists(select 1 from public.background_jobs)
  or exists(select 1 from public.background_job_results) then raise exception 'Dedicated database must be empty'; end if; end $$;
@@ -153,7 +125,7 @@ insert into public.background_jobs(id,user_id,job_type) values('${job}','${user}
       let signal!: () => void;
       const locked = new Promise<void>(resolve => { signal = resolve; });
       first = sql(`begin; select outcome||'|'||result_id from public.publish_background_job_result('${job}','${token}','artifact','${ref}');
-\\echo PUBLICATION_LOCKED
+select 'PUBLICATION_LOCKED';
 select pg_sleep(2); commit;`, signal);
       await Promise.race([locked, first.then(() => { throw new Error("Lock marker missing."); })]);
       // A separate connection sees neither uncommitted result nor completion.
@@ -186,7 +158,7 @@ insert into public.background_jobs(id,user_id,job_type) values('${job}','${user}
       let signal!: () => void;
       const locked = new Promise<void>(resolve => { signal = resolve; });
       holder = sql(`begin; update public.background_jobs set lease_expires_at=clock_timestamp()+interval '0.2 seconds' where id='${job}';
-\\echo PUBLICATION_LOCKED
+select 'PUBLICATION_LOCKED';
 select pg_sleep(1); commit;`, signal);
       await Promise.race([locked, holder.then(() => { throw new Error("Lock marker missing."); })]);
       expect(await sql(`select outcome from public.publish_background_job_result('${job}','${token}','artifact','${ref}');`)).toBe("ownership-lost");

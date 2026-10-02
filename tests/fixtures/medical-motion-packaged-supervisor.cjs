@@ -20,7 +20,7 @@ entry.runIsolatedWorker=async(env=process.env)=>{
   if(!process.env.ORGANHEAL_WORKER_TEST_STAGE)return runIsolatedWorker(env);
   const database=createIsolatedMotionDatabase(env),storage=new SupabasePrivateArtifactStorage(isolatedStorageClient(env));
   const put=storage.put.bind(storage);storage.put=async(...args)=>{await put(...args);await pause('after-upload');};
-  const client={rpc:async(name,p)=>{const r=await database.client.rpc(name,p);if(!r.error){
+  const client={rpc:async(name,p)=>{if(name==='publish_background_job_result')await pause('before-publication');const r=await database.client.rpc(name,p);if(!r.error){
     if(name==='claim_next_background_job'&&r.data?.length)await pause('claim');
     if(name==='motion_artifact_operation'&&p.p_action==='persist')await pause('registry');
     if(name==='publish_background_job_result')await pause('published');

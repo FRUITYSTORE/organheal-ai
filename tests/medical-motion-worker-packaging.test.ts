@@ -39,7 +39,7 @@ describe("supervised worker packaging",()=>{
     expect(spawnSync(process.execPath,[build],{windowsHide:true}).status).toBe(0);
     expect(readFileSync("dist/medical-motion-worker/manifest.json","utf8")).toBe(manifest);
     const code=`const M=require('module'),r=M._resolveFilename;M._resolveFilename=function(s,...a){if(s==='typescript'||s.endsWith('.ts'))throw Error();return r.call(this,s,...a)};const p=require(${JSON.stringify(launcher)}).load();if(typeof p.runIsolatedWorker!=='function')process.exit(1);`;
-    expect(spawnSync(process.execPath,["-e",code],{cwd:tmpdir(),windowsHide:true,encoding:"utf8"}).status).toBe(0);
+    expect(spawnSync(process.execPath,["-e",code],{cwd:tmpdir(),windowsHide:true,encoding:"utf8",env:{...process.env,PATH:"",NODE_PATH:"",ORGANHEAL_TEST_PSQL:undefined}}).status).toBe(0);
   },20000);
   it.each([64,69,75,76,78])("preserves sanitized startup exit category %s before claims",async workerExitCode=>{
     let claims=0;const host=new MedicalMotionWorkerHost(readWorkerConfig({}),{preflight:async()=>{throw Object.assign(Error("secret"),{workerExitCode});},recover:async()=>{},processNext:async()=>{claims++;return false;}});

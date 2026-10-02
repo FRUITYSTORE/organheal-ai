@@ -21,6 +21,7 @@ try {
     }
   }
   emit(path.join(root,'lib','medical-motion','worker','entry.ts'));
+  emit(path.join(root,'lib','medical-motion','worker','operations.ts'));
   manifest.sort((a,b)=>a.file.localeCompare(b.file));fs.writeFileSync(path.join(staging,'manifest.json'),JSON.stringify({schemaVersion:1,nodeMajor:24,files:manifest},null,2)+'\n');
   if(fs.existsSync(output))safeRemove(output);fs.renameSync(staging,output);
   console.log(JSON.stringify({event:'WORKER_PACKAGE_BUILT',moduleCount:manifest.length}));

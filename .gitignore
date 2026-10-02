@@ -20,6 +20,7 @@
 # production
 /build
 /dist/medical-motion-worker/
+/dist/medical-motion-service/
 /dist/motion-build-*/
 
 # misc

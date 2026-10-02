@@ -1,39 +1,11 @@
-import { spawn } from "node:child_process";
+import { sql as runSql } from "./helpers/medical-motion-postgres";
 import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
 
 // Opt in only against a dedicated, empty LOCAL database with the existing
 // schema and the ownership migration already applied. Never auto-deploy.
-// Set ORGANHEAL_OWNERSHIP_TEST_DATABASE_URL and optionally ORGANHEAL_TEST_PSQL.
+// Set ORGANHEAL_OWNERSHIP_TEST_DATABASE_URL; no PostgreSQL executable is used.
 const databaseUrl = process.env.ORGANHEAL_OWNERSHIP_TEST_DATABASE_URL;
-function runSql(sql: string, onLocked?: () => void): Promise<string> {
-  const url = new URL(databaseUrl!);
-  if (!["localhost", "127.0.0.1", "[::1]"].includes(url.hostname) ||
-      !/^\/organheal_ownership_test[a-z0-9_]*$/.test(url.pathname)) {
-    throw new Error("Ownership integration tests require a dedicated local test database.");
-  }
-  return new Promise((resolve, reject) => {
-    const child = spawn(process.env.ORGANHEAL_TEST_PSQL ?? "psql", [
-      "-X", "-q", "-A", "-t", "-v", "ON_ERROR_STOP=1",
-      "-h", url.hostname, "-p", url.port || "5432",
-      "-U", decodeURIComponent(url.username), "-d", url.pathname.slice(1),
-    ], { env: { ...process.env, PGPASSWORD: decodeURIComponent(url.password), PGOPTIONS: "-c statement_timeout=5000" }, windowsHide: true });
-    let output = "";
-    let diagnostics = "";
-    let notified = false;
-    child.stdout.on("data", chunk => {
-      output += String(chunk);
-      if (onLocked && !notified && output.includes("OWNERSHIP_LOCK_HELD")) {
-        notified = true;
-        onLocked();
-      }
-    });
-    child.stderr.on("data", chunk => { diagnostics += String(chunk); });
-    child.on("error", () => reject(new Error("Cannot start local PostgreSQL test client.")));
-    child.on("close", code => code === 0 ? resolve(output) : reject(new Error("PostgreSQL ownership assertion failed: " + diagnostics)));
-    child.stdin.end(sql);
-  });
-}
 describe.skipIf(!databaseUrl)("PostgreSQL ownership integration (requires isolated local database)", () => {
   it("proves database claim/recovery/fencing, lease and attempt invariants", async () => {
     const output = await runSql(`
@@ -132,7 +104,7 @@ insert into public.background_jobs(id,user_id,job_type,payload) values('${jobId}
       const locked = new Promise<void>(resolve => { resolveLocked = resolve; });
       const first = runSql(`begin;
 select attempt_token from public.claim_background_job_by_id('${jobId}');
-\\echo OWNERSHIP_LOCK_HELD
+select 'OWNERSHIP_LOCK_HELD';
 select pg_sleep(2);
 commit;`, resolveLocked);
       await Promise.race([locked, first.then(() => { throw new Error("Lock marker missing"); })]);

@@ -12,7 +12,7 @@ describe("isolated host connection gates", () => {
   it.each([undefined, "postgres://user:password@production.example/organheal_ownership_test_step3c", "postgres://user:password@localhost/production", "https://localhost/organheal_ownership_test_step3c"])("rejects unsafe database configuration", url => {
     expect(() => createIsolatedMotionDatabase({ ...process.env, ORGANHEAL_OWNERSHIP_TEST_DATABASE_URL: url })).toThrow("INVALID_ISOLATED_DATABASE");
   });
-  it("rejects missing explicit PostgreSQL client", () => {
-    expect(() => createIsolatedMotionDatabase({ ...process.env, ORGANHEAL_TEST_PSQL: undefined })).toThrow();
+  it("does not require a PostgreSQL executable", () => {
+    expect(() => createIsolatedMotionDatabase({ ...process.env, ORGANHEAL_TEST_PSQL: undefined, ORGANHEAL_OWNERSHIP_TEST_DATABASE_URL: "postgres://test:test@localhost/organheal_ownership_test_step3c" })).not.toThrow();
   });
 });

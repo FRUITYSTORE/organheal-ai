@@ -161,7 +161,7 @@ describe("mandatory real PostgreSQL Medical Motion durable job foundation",()=>{
   it("two connections enqueue one logical revision/work while uncommitted rows remain invisible",async()=>{
     let signal!:()=>void;const locked=new Promise<void>(resolve=>{signal=resolve;});
     const first=sql(`begin; select row_to_json(r)::text from ${call(owner,request)} r;
-\\echo JOB_LOCKED
+select 'JOB_LOCKED';
 select pg_sleep(1); commit;`,signal);
     await Promise.race([locked,first.then(()=>{throw new Error("Missing fixture lock marker.");})]);
     expect(await sql(`select count(*) from public.medical_motion_execution_contexts where user_id='${owner}';`)).toBe("0");

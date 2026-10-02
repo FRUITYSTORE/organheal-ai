@@ -6,7 +6,7 @@ export function createCall(owner: string, input = contextContent()) {
   return `public.create_medical_motion_execution_context(${literal(owner)}::uuid,${literal(input.schemaVersion)},${literal(input.executionVersion)},
     ${literal(input.assetVersion)},${literal(input.clinical.message)},${literal(input.clinical.language)},${literal(JSON.stringify(input.candidatePlan))}::jsonb)`;
 }
-/** Existing psql approach with a Supabase RPC-shaped seam: the real repository
+/** Direct local PostgreSQL transport with a Supabase RPC-shaped seam: the real repository
  * validates on both sides, while privileges and storage execute in PostgreSQL.
  * No HTTP or production Supabase connection is used. */
 export const client = { rpc: async (name: string, p: Record<string, unknown>) => {

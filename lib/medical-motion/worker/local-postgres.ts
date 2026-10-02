@@ -1,28 +1,12 @@
 import "server-only";
-import { spawn } from "node:child_process";
-import { existsSync } from "node:fs";
+import { isolatedPostgresTarget, isolatedPostgresQuery } from "./postgres-transport";
 import type { SupabaseClient } from "@supabase/supabase-js";
 const literal=(value:unknown)=>"'"+String(value).replaceAll("'","''")+"'";
 /** Isolated workstation transport only. No HTTP DB client or production fallback.
  * Implements the existing RPC contract, not a queue/ownership abstraction. */
 export function createIsolatedMotionDatabase(env:NodeJS.ProcessEnv){
-  let url:URL;try{url=new URL(env.ORGANHEAL_OWNERSHIP_TEST_DATABASE_URL!);}catch{throw Error("INVALID_ISOLATED_DATABASE");}
-  const executable=env.ORGANHEAL_TEST_PSQL;
-  if(!["postgres:","postgresql:"].includes(url.protocol)||!["localhost","127.0.0.1"].includes(url.hostname)||
-    url.pathname!=="/organheal_ownership_test_step3c"||!executable||!existsSync(executable))throw Error("INVALID_ISOLATED_DATABASE");
-  async function query(input:string):Promise<string>{
-    return new Promise((resolve,reject)=>{
-      const child=spawn(executable!,["-X","-w","-q","-A","-t","-v","ON_ERROR_STOP=1","-v","VERBOSITY=sqlstate","-h",url.hostname,
-        "-p",url.port||"5432","-U",decodeURIComponent(url.username),"-d",url.pathname.slice(1)],
-        {windowsHide:true,env:{...env,PGPASSWORD:decodeURIComponent(url.password),PGOPTIONS:"-c statement_timeout=7000",PGCONNECT_TIMEOUT:"5"}});
-      let output="",code:string|undefined;const deadline=setTimeout(()=>{child.kill();reject(Error("ISOLATED_DATABASE_TIMEOUT"));},10000);
-      child.stdout.on("data",chunk=>{output+=String(chunk);if(output.length>2*1024*1024){child.kill();reject(Error("ISOLATED_DATABASE_RESPONSE_INVALID"));}});
-      child.stderr.on("data",chunk=>{code=String(chunk).match(/ERROR:\s+([0-9A-Z]{5})\b/)?.[1]??code;});
-      child.on("error",()=>{clearTimeout(deadline);reject(Error("ISOLATED_DATABASE_UNAVAILABLE"));});
-      child.on("close",status=>{clearTimeout(deadline);status===0?resolve(output.trim()):reject(Object.assign(Error("ISOLATED_DATABASE_RPC_FAILED"),{code}));});
-      child.stdin.on("error",()=>{});child.stdin.end("set standard_conforming_strings=on;\n"+input);
-    });
-  }
+  isolatedPostgresTarget(env);
+  const query=(input:string)=>isolatedPostgresQuery(env,input);
   const client={rpc:async(name:string,p:Record<string,unknown>)=>{
     try{
       let call:string;
@@ -42,7 +26,11 @@ export function createIsolatedMotionDatabase(env:NodeJS.ProcessEnv){
       return {data:JSON.parse(await query(`set role service_role;select coalesce(json_agg(row_to_json(c)),'[]'::json)::text from (select * from ${call}) c;`)),error:null};
     }catch(error){const code=(error as {code?:string}).code;return {data:null,error:{code:code&&/^[0-9A-Z]{5}$/.test(code)?code:undefined,message:"Isolated worker RPC unavailable."}};}
   }} as unknown as SupabaseClient;
-  return {client,readiness:async()=>{
+  return {client,operationalQueueHealth:async()=>{
+    const value=JSON.parse(await query("begin read only;set local role service_role;select json_build_object('waitingCount',count(*),'oldestWaitingMs',coalesce(greatest(0,extract(epoch from (clock_timestamp()-min(created_at)))*1000),0))::text from public.background_jobs where job_type='medical-motion-render' and status in ('pending','retrying') and available_at<=clock_timestamp();commit;"));
+    if(!Number.isSafeInteger(value.waitingCount)||value.waitingCount<0||!Number.isFinite(value.oldestWaitingMs)||value.oldestWaitingMs<0)throw Error("INVALID_QUEUE_HEALTH");
+    return {waitingCount:value.waitingCount,oldestWaitingMs:value.oldestWaitingMs};
+  },readiness:async()=>{
     const version=await query("show server_version;");if(!version.startsWith("17.11"))throw Error("ISOLATED_DATABASE_VERSION_REQUIRED");
     const schema=await query("select to_regclass('public.medical_motion_artifacts') is not null and to_regprocedure('public.resume_motion_worker_pending(integer)') is not null;");
     if(schema!=="t")throw Error("WORKER_SCHEMA_UNAVAILABLE");return true;
