@@ -20,6 +20,9 @@ export class MedicalMotionArtifactService {
   constructor(readonly repository:MedicalMotionArtifactRepository,private readonly storage:PrivateArtifactStorage) {}
   private async read(key:string,signal?:AbortSignal) {
     try {return await this.storage.read(key,signal);} catch(error) {
+      // A provider download abort is a trusted ownership cancellation, not a
+      // transient storage fault. Late upload success cannot regain eligibility.
+      if(signal?.aborted) throw new ArtifactError("ARTIFACT_OWNERSHIP_LOST");
       throw error instanceof ArtifactError?error:new ArtifactError("ARTIFACT_STORAGE_UNAVAILABLE");
     }
   }

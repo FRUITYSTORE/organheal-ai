@@ -1,5 +1,9 @@
 # Durable artifact handoff and fenced publication
 
+The original provider limitation below is a historical acceptance boundary.
+See [isolated real Storage acceptance](medical-motion-real-storage-acceptance.md)
+for the subsequent real-provider evidence and narrow cancellation correction.
+
 This milestone supersedes the local-candidate-only limitation in
 `medical-motion-safe-handler.md`. It supplies an explicitly composed server
 runtime, not a deployed worker host, public API, download endpoint or UI.
