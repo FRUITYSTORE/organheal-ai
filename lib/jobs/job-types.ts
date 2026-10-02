@@ -31,6 +31,7 @@ export const REQUEST_WORKER_JOB_TYPES: readonly JobType[] = Object.freeze([
 ]);
 
 export const JOB_STATUS = {
+  AWAITING_ARTIFACT_PUBLICATION: "awaiting-artifact-publication",
   PENDING:
     "pending",
 

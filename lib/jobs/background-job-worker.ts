@@ -10,6 +10,7 @@ import {
   BackgroundJobWorkerRepository,
   type DurableBackgroundJob,
 } from "./background-job-worker.repository";
+import type { JobHandlerResult } from "./job-handler";
 
 const BASE_RETRY_DELAY_MS =
   30_000;
@@ -93,8 +94,9 @@ export class DurableBackgroundJobWorker {
       DurableBackgroundJob
   ): Promise<void> {
     const ownership = { jobId: job.id, attemptToken: job.attemptToken };
+    let result: void | JobHandlerResult;
     try {
-      await this.dispatcher.dispatch(
+      result = await this.dispatcher.dispatch(
         job
       );
     } catch (error) {
@@ -154,6 +156,33 @@ export class DurableBackgroundJobWorker {
           ...ownership,
           errorMessage,
         });
+      return;
+    }
+    if (result?.disposition === "ownership-lost") return;
+    if (result?.disposition === "defer-completion") {
+      // Reconcile only the identical fenced transition. Never retry rendering
+      // after a lost transition response or a handoff/cleanup failure.
+      let accepted = false;
+      try {
+        let transition;
+        try { transition = await this.repository.deferCompletion(ownership); }
+        catch { transition = await this.repository.deferCompletion(ownership); }
+        accepted = transition.outcome !== "ownership-lost";
+      } finally { await result.settle(accepted); }
+      return;
+    }
+    if (result?.disposition === "fail" || result?.disposition === "retry") {
+      // Disposition diagnostics have a bounded code-only grammar; raw messages
+      // are retained only for the unchanged legacy void-handler path above.
+      const errorMessage = /^[A-Z][A-Z0-9_]{0,79}$/.test(result.errorCode)
+        ? result.errorCode : "INVALID_HANDLER_ERROR_CODE";
+      if (result.disposition === "retry" && job.attempts + 1 < job.maxAttempts) {
+        await this.repository.scheduleRetry({ ...ownership, errorMessage, retryDelayMs: calculateRetryDelayMs(job.attempts + 1) });
+      } else await this.repository.markFailed({ ...ownership, errorMessage });
+      return;
+    }
+    if (result && result.disposition !== "complete") {
+      await this.repository.markFailed({ ...ownership, errorMessage: "INVALID_HANDLER_RESULT" });
       return;
     }
     // Completion transport errors are not handler failures. Replay only the

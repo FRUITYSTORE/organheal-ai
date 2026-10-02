@@ -42,11 +42,12 @@ async function assertOwnership(owner: ArtifactOwnership) {
 }
 
 /** Only invocation-owned partial files are removed; cleanup cannot replace a failure. */
-export async function discardArtifact(owner: ArtifactOwnership): Promise<void> {
+export async function discardArtifact(owner: ArtifactOwnership): Promise<boolean> {
   try {
     await assertOwnership(owner);
     await rm(owner.directory, { recursive: true, force: true });
-  } catch { /* Preserve the original error; operational cleanup failures remain deferred observability. */ }
+    return true;
+  } catch { return false; }
 }
 
 export async function validateArtifact(owner: ArtifactOwnership, dimensions: OutputDimensions):

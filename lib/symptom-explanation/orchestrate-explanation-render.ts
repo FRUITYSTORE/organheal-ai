@@ -1,3 +1,4 @@
+import { transferExecutionResources } from "@/lib/medical-motion/render/execution-resources";
 import "server-only";
 import { prepareExplanationAuthorization, type ExplanationOrchestrationOptions } from "@/lib/symptom-explanation/explanation-authorization";
 import { renderExplanationRequest } from "@/lib/medical-motion/render/explanation-renderer";
@@ -12,5 +13,5 @@ export async function orchestrateExplanationRender(value: unknown, options: Expl
   const result = await renderExplanationRequest(prepared.authorization, options.outputPath, {
     mode: options.mode, ...(options.timeoutMs === undefined ? {} : { timeoutMs: options.timeoutMs }),
   }, control);
-  return { ...result, ...prepared.trace, safety: prepared.safety, mechanism: prepared.mechanism };
+  return transferExecutionResources(result, { ...result, ...prepared.trace, safety: prepared.safety, mechanism: prepared.mechanism });
 }

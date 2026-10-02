@@ -6,6 +6,7 @@ import type {
 import type {
   JobHandler,
   JobHandlerRegistry,
+  JobHandlerResult,
 } from "./job-handler";
 
 export class JobDispatcher {
@@ -25,7 +26,7 @@ export class JobDispatcher {
 
   async dispatch(
     job: BackgroundJob
-  ): Promise<void> {
+  ): Promise<void | JobHandlerResult> {
     const handler =
       this.registry.get(
         job.type
@@ -37,7 +38,7 @@ export class JobDispatcher {
       );
     }
 
-    await handler(
+    return handler(
       job
     );
   }

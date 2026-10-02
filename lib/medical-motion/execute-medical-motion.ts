@@ -1,3 +1,4 @@
+import { transferExecutionResources } from "./render/execution-resources";
 import "server-only";
 import { orchestrateExplanationRender, type ExplanationOrchestrationOptions } from "@/lib/symptom-explanation/orchestrate-explanation-render";
 import type { MedicalMotionExecutionInput } from "@/lib/medical-motion/contracts/execution";
@@ -42,7 +43,7 @@ export async function executeMedicalMotionRequest(
     // Do not return a completed local artifact after trusted cancellation.
     if (result.status === "completed" && control?.signal?.aborted) {
       const { outputPath: _artifact, durationSeconds: _duration, ...trace } = result;
-      return { ...trace, status: "failed", errorCode: "RENDER_CANCELLED", message: "Render execution was cancelled." };
+      return transferExecutionResources(result, { ...trace, status: "failed", errorCode: "RENDER_CANCELLED", message: "Render execution was cancelled." });
     }
     if (result.status !== "failed") return result;
     // Local validators retain their diagnostics. Durable callers receive only
@@ -50,7 +51,7 @@ export async function executeMedicalMotionRequest(
     // Safety Gate guidance is server-authored and intentionally user-facing.
     const guidance = "safety" in result && result.safety && !result.safety.allowVideo
       ? result.safety.response : null;
-    return { ...result, message: guidance || `Medical Motion execution failed (${result.errorCode}).` };
+    return transferExecutionResources(result, { ...result, message: guidance || `Medical Motion execution failed (${result.errorCode}).` });
   } catch {
     // Not a malformed-request classification: unexpected defects remain
     // distinguishable for operators, without echoing exception text/PHI.

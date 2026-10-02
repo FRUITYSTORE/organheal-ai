@@ -332,7 +332,7 @@ export class BackgroundJobWorkerRepository {
     if (error) throw error;
     const row = Array.isArray(data) && data.length === 1 ? data[0] : null;
     if (!row || !["applied", "ownership-lost", "already-finalized"].includes(row.outcome) ||
-      !(row.job_status === null || ["pending", "running", "completed", "failed", "retrying", "cancelled"].includes(row.job_status)) ||
+      !(row.job_status === null || ["pending", "running", "completed", "failed", "retrying", "cancelled", "awaiting-artifact-publication"].includes(row.job_status)) ||
       !(row.lease_expires_at === null || (typeof row.lease_expires_at === "string" && Number.isFinite(Date.parse(row.lease_expires_at))))) {
       // Empty/zero-row RPC responses are protocol failures, never success.
       throw new Error("Background job ownership mutation returned an invalid result.");
@@ -342,6 +342,24 @@ export class BackgroundJobWorkerRepository {
 
   renewLease(attempt: BackgroundJobAttempt) {
     return this.mutateAttempt(attempt, "renew");
+  }
+
+  async deferCompletion(attempt: BackgroundJobAttempt): Promise<AttemptMutationResult> {
+    let response;
+    try {
+      response = await this.client.rpc("defer_background_job_completion", {
+        p_job_id: attempt.jobId, p_attempt_token: attempt.attemptToken,
+      });
+      if (response.error) throw new Error();
+    } catch { throw new Error("Deferred completion state is unknown."); }
+    const row = Array.isArray(response.data) && response.data.length === 1 ? response.data[0] : null;
+    if (row?.outcome === "ownership-lost" && row.job_status === null && row.lease_expires_at === null) {
+      return { outcome: "ownership-lost", status: null, leaseExpiresAt: null };
+    }
+    if (["applied", "already-finalized"].includes(row?.outcome) && row.job_status === "awaiting-artifact-publication" && row.lease_expires_at === null) {
+      return { outcome: row.outcome, status: row.job_status, leaseExpiresAt: null };
+    }
+    throw new Error("Deferred completion state is unknown.");
   }
 
   markCompleted(attempt: BackgroundJobAttempt) {

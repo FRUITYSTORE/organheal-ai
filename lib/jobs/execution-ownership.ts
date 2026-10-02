@@ -166,6 +166,12 @@ export class ExecutionOwnership {
       return result; // RPC submission may commit before a concurrent shutdown.
     } finally { this.publishing = false; this.publication = undefined; }
   }
+  /** Fresh advisory confirmation before an internal handoff. Durable state
+   * changes still require their own fenced RPC; this never publishes. */
+  async confirmHandoff(): Promise<boolean> {
+    if (this.phase !== "succeeded" || this.signal.aborted) return false;
+    return await this.confirm() && this.publicationAllowed;
+  }
   async shutdown(): Promise<{ settled: boolean }> {
     this.cancel();
     let timeout: ReturnType<typeof setTimeout> | undefined;

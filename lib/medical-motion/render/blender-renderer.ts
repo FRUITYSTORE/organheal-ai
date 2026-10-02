@@ -1,3 +1,4 @@
+import { recordExecutionResources } from "./execution-resources";
 import "server-only";
 import { validateRenderDuration } from "./duration-policy";
 import { resolveOutputDimensions } from "./dimension-policy";
@@ -237,6 +238,8 @@ export async function renderHeartScene(
   let tempDir: string | undefined;
   let completed = false;
   let safeToClean = true;
+  let finalResult: RenderResult | undefined;
+  const tracked = (result: RenderResult) => { finalResult = result; return result; };
 
   try {
     ownership = await createArtifactOwnership(outputPath, scene.output.media);
@@ -253,56 +256,63 @@ export async function renderHeartScene(
       "--background", "--python", getRenderScriptPath(), "--", configPath, ownership.outputPath,
     ], timeoutMs, control.signal);
     safeToClean = result.terminationConfirmed;
-    if (result.outcome === "cancelled") return cancelled(result.terminationConfirmed);
+    if (result.outcome === "cancelled") return tracked(cancelled(result.terminationConfirmed));
 
     if (result.outcome === "timeout") {
-      return {
+      return tracked({
         status: "failed",
         errorCode: RENDER_ERROR_CODE.RENDER_TIMEOUT,
         message: result.terminationConfirmed
           ? `Render exceeded ${timeoutMs}ms; Blender termination was confirmed.`
           : `Render exceeded ${timeoutMs}ms; Blender termination could not be confirmed. Invocation files were retained; operator intervention is required.`,
-      };
+      });
     }
 
     if (result.outcome === "process-error") {
-      return { status: "failed", errorCode: RENDER_ERROR_CODE.BLENDER_FAILED,
+      return tracked({ status: "failed", errorCode: RENDER_ERROR_CODE.BLENDER_FAILED,
         message: result.terminationConfirmed ? "Blender process failed or did not complete its lifecycle."
-          : "Blender process failed; termination could not be confirmed. Invocation files were retained; operator intervention is required." };
+          : "Blender process failed; termination could not be confirmed. Invocation files were retained; operator intervention is required." });
     }
 
-    if (control.signal?.aborted) return cancelled(result.terminationConfirmed);
+    if (control.signal?.aborted) return tracked(cancelled(result.terminationConfirmed));
     const combinedOutput = `${result.stdout}\n${result.stderr}`;
 
     if (result.exitCode !== 0) {
-      return {
+      return tracked({
         status: "failed",
         errorCode: classifyError(combinedOutput),
         message: (result.stderr.trim() || result.stdout.trim() || "Blender exited with a non-zero status.")
           .replaceAll(ownership.outputPath, "[render output]").replaceAll(configPath, "[render config]")
           .replaceAll(ownership.directory, "[artifact location]").replaceAll(tempDir, "[render workspace]"),
-      };
+      });
     }
 
     if (!result.reportedRenderOk) {
-      return {
+      return tracked({
         status: "failed",
         errorCode: RENDER_ERROR_CODE.OUTPUT_VALIDATION_FAILED,
         message: "Blender exited successfully but never reported RENDER_OK.",
-      };
+      });
     }
 
     const artifact = await validateArtifact(ownership, dimensions.dimensions);
-    if (control.signal?.aborted) return cancelled();
-    if (!artifact.ok) return { status: "failed", errorCode: RENDER_ERROR_CODE.OUTPUT_VALIDATION_FAILED, message: artifact.message };
+    if (control.signal?.aborted) return tracked(cancelled());
+    if (!artifact.ok) return tracked({ status: "failed", errorCode: RENDER_ERROR_CODE.OUTPUT_VALIDATION_FAILED, message: artifact.message });
     completed = true;
-    return { status: "completed", outputPath: ownership.outputPath, durationSeconds: result.durationSeconds };
+    return tracked({ status: "completed", outputPath: ownership.outputPath, durationSeconds: result.durationSeconds });
   } catch {
-    return { status: "failed", errorCode: RENDER_ERROR_CODE.OUTPUT_VALIDATION_FAILED, message: "Render output could not be prepared or validated." };
+    return tracked({ status: "failed", errorCode: RENDER_ERROR_CODE.OUTPUT_VALIDATION_FAILED, message: "Render output could not be prepared or validated." });
   } finally {
     // Clean configs and failed artifacts after confirmed direct-child exit.
     // Unconfirmed termination is quarantined, never deleted beneath a writer.
-    if (tempDir && safeToClean) await rm(tempDir, { recursive: true, force: true }).catch(() => {});
-    if (ownership && !completed && safeToClean) await discardArtifact(ownership);
+    let cleanupConfirmed = safeToClean;
+    if (tempDir && safeToClean) {
+      try { await rm(tempDir, { recursive: true, force: true }); } catch { cleanupConfirmed = false; }
+    }
+    if (ownership && !completed && safeToClean) cleanupConfirmed = await discardArtifact(ownership) && cleanupConfirmed;
+    if (finalResult) recordExecutionResources(finalResult, {
+      cleanupConfirmed: completed ? false : cleanupConfirmed,
+      ...(completed && ownership ? { artifact: ownership } : {}),
+    });
   }
 }

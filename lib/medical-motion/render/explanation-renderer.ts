@@ -1,3 +1,4 @@
+import { transferExecutionResources } from "./execution-resources";
 import "server-only";
 import type { RenderResult } from "@/lib/medical-motion/contracts/render";
 import { getOrganModule } from "@/lib/medical-motion/organ-modules";
@@ -55,7 +56,7 @@ export async function renderExplanationRequest(
   }
   const result = await renderHeartScene(request.scene, outputPath, { ...options, explanationPlan: request.explanationPlan, clinicalAuthorization: value }, control);
   if (result.status === "completed" && control?.signal?.aborted) {
-    return { status: "failed", errorCode: "RENDER_CANCELLED", message: "Render execution was cancelled.", ...trace };
+    return transferExecutionResources(result, { status: "failed", errorCode: "RENDER_CANCELLED", message: "Render execution was cancelled.", ...trace });
   }
-  return { ...result, ...trace };
+  return transferExecutionResources(result, { ...result, ...trace });
 }

@@ -8,6 +8,7 @@ import { mp4Fixture } from "./fixtures/medical-motion-artifact";
 import { validateRenderDuration } from "../lib/medical-motion/render/duration-policy";
 import { PROCESS_GRACE_MS, PROCESS_CONFIRMATION_MS } from "../lib/medical-motion/render/blender-process";
 import * as artifactOutput from "../lib/medical-motion/render/artifact-output";
+import { readExecutionResources } from "../lib/medical-motion/render/execution-resources";
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -131,12 +132,24 @@ async function startClockedRender(timeoutMs = 10_000, signal?: AbortSignal) {
 }
 
 describe("renderHeartScene", () => {
+  it("failed cleanup never supplies retry authority through the trusted entry", async () => {
+    const child = queueFakeProcess();
+    vi.spyOn(artifactOutput, "discardArtifact").mockResolvedValue(false);
+    const promise = executeClinical(); await waitForSpawn();
+    child.stderr.emit("data", Buffer.from("BLENDER_FAILED")); child.emit("close", 1);
+    const result = await promise;
+    expect(result).toMatchObject({ status: "failed", errorCode: "BLENDER_FAILED" });
+    expect(readExecutionResources(result)?.cleanupConfirmed).toBe(false);
+    expect(result).not.toHaveProperty("cleanupConfirmed");
+  });
   it("full trusted entry without cancellation still validates and returns its owned artifact", async () => {
     const child = queueFakeProcess(); const promise = executeClinical(); await waitForSpawn();
     child.stdout.emit("data", Buffer.from("RENDER_OK")); child.emit("close", 0);
     const result = await promise; expect(result).toMatchObject({ status: "completed" });
     if (result.status !== "completed") throw new Error("Expected completed render");
     expect(existsSync(result.outputPath)).toBe(true);
+    expect(readExecutionResources(result)?.artifact?.outputPath).toBe(result.outputPath);
+    expect(readExecutionResources({ ...result })).toBeUndefined();
   });
   it("full trusted entry with pre-abort passes validation and readiness but never spawns", async () => {
     const controller = new AbortController(); controller.abort();
@@ -158,7 +171,9 @@ describe("renderHeartScene", () => {
     let spawned!: () => void; const ready = new Promise<void>(resolve => { spawned = resolve; });
     spawnMock.mockReset(); spawnMock.mockImplementationOnce(() => { vi.useFakeTimers(); spawned(); return child; });
     const promise = executeClinical(controller.signal, 100); await ready; await vi.advanceTimersByTimeAsync(100);
-    expect(await promise).toMatchObject({ status: "failed", errorCode: "RENDER_TIMEOUT" }); expect(controller.signal.aborted).toBe(false);
+    const result = await promise;
+    expect(result).toMatchObject({ status: "failed", errorCode: "RENDER_TIMEOUT" }); expect(controller.signal.aborted).toBe(false);
+    expect(readExecutionResources(result)?.cleanupConfirmed).toBe(true);
     expect(vi.getTimerCount()).toBe(0);
   });
   it("ownership loss above the renderer cancels Blender and prevents publication", async () => {
@@ -187,7 +202,9 @@ describe("renderHeartScene", () => {
   it("unconfirmed cancellation retains invocation files and requires operator intervention", async () => {
     const controller = new AbortController(); const { child, promise, ownedPath, configPath } = await startClockedRender(10_000, controller.signal);
     controller.abort(); await vi.advanceTimersByTimeAsync(PROCESS_GRACE_MS + PROCESS_CONFIRMATION_MS);
-    expect(await promise).toMatchObject({ errorCode: "RENDER_CANCELLED", message: expect.stringContaining("operator intervention") });
+    const result = await promise;
+    expect(result).toMatchObject({ errorCode: "RENDER_CANCELLED", message: expect.stringContaining("operator intervention") });
+    expect(readExecutionResources(result)?.cleanupConfirmed).toBe(false);
     expect(existsSync(configPath)).toBe(true); expect(existsSync(path.dirname(ownedPath))).toBe(true);
     child.produceArtifact = false; child.emit("close", 0); expect(existsSync(configPath)).toBe(true);
     const configDirectory = path.dirname(configPath);

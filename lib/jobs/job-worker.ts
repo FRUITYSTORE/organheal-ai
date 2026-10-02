@@ -47,9 +47,22 @@ export class JobWorker {
       new Date().toISOString();
 
     try {
-      await this.dispatcher.dispatch(
+      const result = await this.dispatcher.dispatch(
         job
       );
+
+      // This legacy in-memory worker has no fenced persistence. Never turn a
+      // durable disposition into completion or an unfenced retry loop.
+      if (result && result.disposition !== "complete") {
+        if (result.disposition === "defer-completion") {
+          try { await result.settle(false); } catch { /* No unfenced retry on cleanup failure. */ }
+        }
+        if (result.disposition === "ownership-lost") return true;
+        job.status = JOB_STATUS.FAILED;
+        job.finishedAt = new Date().toISOString();
+        job.lastError = "DURABLE_HANDLER_REQUIRES_FENCED_WORKER";
+        return true;
+      }
 
       job.status =
         JOB_STATUS.COMPLETED;
