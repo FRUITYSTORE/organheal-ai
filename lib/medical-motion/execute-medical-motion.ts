@@ -1,68 +1,11 @@
 import "server-only";
 import { orchestrateExplanationRender, type ExplanationOrchestrationOptions } from "@/lib/symptom-explanation/orchestrate-explanation-render";
-import type { MedicalMotionExecutionInput, MedicalMotionJson } from "@/lib/medical-motion/contracts/execution";
+import type { MedicalMotionExecutionInput } from "@/lib/medical-motion/contracts/execution";
+import { jsonSnapshot } from "@/lib/medical-motion/validation/json-snapshot";
+export { EXECUTION_INPUT_LIMITS } from "@/lib/medical-motion/validation/json-snapshot";
 
 export type MedicalMotionExecutionResult = Awaited<ReturnType<typeof orchestrateExplanationRender>> |
   { status: "failed"; errorCode: "INVALID_EXECUTION_REQUEST" | "INTERNAL_EXECUTION_FAILED"; message: string };
-
-/** Technical decoded-input limits, not clinical/product message limits.
- * UTF-16 units include keys and values. Pre-parse byte enforcement is deferred.
- * Generous text budgets permit normal bilingual clinical input while bounding
- * repeated normalization/validation/hashing work inside one execution. */
-export const EXECUTION_INPUT_LIMITS = Object.freeze({
-  depth: 64, nodes: 10000, width: 1024,
-  stringLength: 65536, keyLength: 1024, totalStringLength: 262144,
-});
-
-// Small defensive JSON snapshot: never invoke getters, toJSON or prototype methods.
-// Limits apply to the entire decoded request, before clinical/plan execution.
-function jsonSnapshot(value: unknown): MedicalMotionJson {
-  const ancestors = new Set<object>();
-  let nodes = 0;
-  let stringUnits = 0;
-  function textBudget(text: string, key = false) {
-    stringUnits += text.length;
-    if (text.length > (key ? EXECUTION_INPUT_LIMITS.keyLength : EXECUTION_INPUT_LIMITS.stringLength) ||
-      stringUnits > EXECUTION_INPUT_LIMITS.totalStringLength) throw new Error("Text budget");
-  }
-  function visit(current: unknown, depth: number): MedicalMotionJson {
-    if (++nodes > EXECUTION_INPUT_LIMITS.nodes || depth > EXECUTION_INPUT_LIMITS.depth) throw new Error("JSON bounds");
-    if (typeof current === "string") { textBudget(current); return current; }
-    if (current === null || typeof current === "boolean") return current;
-    if (typeof current === "number" && Number.isFinite(current)) return current;
-    if (typeof current !== "object" || current === null || ancestors.has(current)) throw new Error("Non JSON data");
-    const array = Array.isArray(current);
-    if (!array && ![Object.prototype, null].includes(Object.getPrototypeOf(current))) throw new Error("Prototype");
-    if (array && Object.getPrototypeOf(current) !== Array.prototype) throw new Error("Array prototype");
-    const length = array ? Object.getOwnPropertyDescriptor(current, "length")!.value as number : 0;
-    if (array && length > EXECUTION_INPUT_LIMITS.width) throw new Error("Array width");
-    // Stop ordinary decoded wide objects before descriptor maps/key copies.
-    // JS engines may allocate enumeration state; already-decoded input is not
-    // a streaming parser. Reflect.ownKeys remains necessary to reject hidden
-    // and symbol properties on runtime objects after enumerable preflight.
-    const keys: string[] = [];
-    for (const key in current) {
-      if (!Object.hasOwn(current, key)) continue;
-      if (keys.length >= EXECUTION_INPUT_LIMITS.width) throw new Error("Object width");
-      textBudget(key, true); keys.push(key);
-    }
-    const ownKeys = Reflect.ownKeys(current);
-    if (ownKeys.length !== keys.length + (array ? 1 : 0) || ownKeys.some((key) => typeof key !== "string")) throw new Error("Hidden property");
-    if (array && (keys.length !== length || keys.some((key, i) => key !== String(i)))) throw new Error("Sparse/extended array");
-    ancestors.add(current);
-    const result: MedicalMotionJson[] | { [key: string]: MedicalMotionJson } = array ? [] : {};
-    for (const key of keys) {
-      const descriptor = Object.getOwnPropertyDescriptor(current, key)!;
-      if (!("value" in descriptor) || !descriptor.enumerable) throw new Error("Descriptor");
-      const child = visit(descriptor.value, depth + 1);
-      // Define own data properties; __proto__ must never invoke a setter.
-      Object.defineProperty(result, key, { value: child, enumerable: true, writable: true, configurable: true });
-    }
-    ancestors.delete(current);
-    return result;
-  }
-  return visit(value, 0);
-}
 
 /** Internal decoded-JSON entry for future durable callers. The second argument
  * must come from server policy, never a job payload: context, asset version,

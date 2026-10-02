@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 import type { BackgroundJobAttempt } from "./background-job-worker.repository";
+import { isUuid as uuid } from "@/lib/validation/uuid";
 
 /** Server-generated opaque reference only. No location, clinical data or JSON. */
 export type PublicationManifest = { kind: "artifact"; referenceId: string };
@@ -9,10 +10,6 @@ export type PublicationResult =
   | { outcome: "applied" | "already-finalized"; resultId: string }
   | { outcome: "ownership-lost" | "conflict"; resultId: null };
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-function uuid(value: unknown): value is string {
-  return typeof value === "string" && UUID.test(value);
-}
 function fields(value: unknown, names: string[]): value is Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value) ||
       ![Object.prototype, null].includes(Object.getPrototypeOf(value))) return false;
