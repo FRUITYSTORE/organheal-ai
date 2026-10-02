@@ -7,6 +7,7 @@ import { contextContent } from "./helpers/medical-motion-context";
 import { MedicalMotionJobRepository } from "@/lib/medical-motion/job.repository";
 import { MedicalMotionExecutionContextRepository } from "@/lib/medical-motion/execution-context.repository";
 import type { MedicalMotionContextContent } from "@/lib/medical-motion/contracts/execution-context";
+import { artifactSchema } from "./helpers/medical-motion-artifacts";
 
 function call(owner:string,request:string,scene=0,c:MedicalMotionContextContent=contextContent()) {
   return `public.enqueue_medical_motion_job('${owner}','${request}',${literal(c.schemaVersion)},${literal(c.executionVersion)},
@@ -21,6 +22,7 @@ describe("mandatory real PostgreSQL Medical Motion durable job foundation",()=>{
     if(await sql("select to_regclass('public.medical_motion_requests') is null;")==="t") {
       await sql(readFileSync("supabase/migrations/20261002004551_medical_motion_durable_jobs.sql","utf8"));
     }
+    await artifactSchema();
   });
   beforeEach(async()=>{
     owner=randomUUID();other=randomUUID();request=randomUUID();
@@ -74,7 +76,7 @@ describe("mandatory real PostgreSQL Medical Motion durable job foundation",()=>{
     const a=await repo.enqueue(owner,request,contextContent(),0),b=await repo.enqueue(owner,request,contextContent(),0);
     expect(a.jobId===b.jobId && a.executionContextId===b.executionContextId && b.created===false).toBe(true);
     await sql(`select * from public.claim_background_job_by_id('${a.jobId}',array['medical-motion-render']);
-      select * from public.mutate_background_job_attempt('${a.jobId}',(select attempt_token from public.background_jobs where id='${a.jobId}'),'complete');`);
+      select * from public.mutate_background_job_attempt('${a.jobId}',(select attempt_token from public.background_jobs where id='${a.jobId}'),'fail');`);
     const c=await repo.enqueue(owner,request,contextContent(),0); expect(c.jobId===a.jobId && !c.created).toBe(true);
   });
   it.each(["message","plan","asset"])("conflicting %s replay is rejected without replacing snapshot",async field=>{
@@ -185,9 +187,11 @@ select pg_sleep(1); commit;`,signal);
   });
   it("Step 4 fenced publication still applies atomically to explicitly claimed work",async()=>{
     const r=await repo.enqueue(owner,request,contextContent(),0);
-    expect(await sql(`begin; do $$ declare token uuid; result record; begin
+    expect(await sql(`begin; do $$ declare token uuid; result record; item public.medical_motion_artifacts%rowtype; begin
       select attempt_token into token from public.claim_background_job_by_id('${r.jobId}',array['medical-motion-render']);
-      select * into result from public.publish_background_job_result('${r.jobId}',token,'artifact',gen_random_uuid());
+      select * into item from public.motion_artifact_operation('${r.jobId}','${owner}',token,'reserve',null,'video',100,repeat('a',64));
+      perform public.motion_artifact_operation('${r.jobId}','${owner}',token,'persist',item.id);
+      select * into result from public.publish_background_job_result('${r.jobId}',token,'artifact',item.id);
       if result.outcome<>'applied' or not exists(select 1 from public.background_jobs where id='${r.jobId}' and status='completed') then raise exception 'Publication regression'; end if;
       end $$; select 'PASSED'; rollback;`)).toBe("PASSED");
   });

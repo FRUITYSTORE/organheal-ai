@@ -25,6 +25,15 @@ export const client = { rpc: async (name: string, p: Record<string, unknown>) =>
     else if (name === "defer_background_job_completion") call = `public.defer_background_job_completion(${literal(p.p_job_id)}::uuid,${literal(p.p_attempt_token)}::uuid)`;
     else if (name === "claim_background_job_by_id") call = `public.claim_background_job_by_id(${literal(p.p_job_id)}::uuid,
       array[${(p.p_allowed_job_types as string[]).map(literal).join(",")}])`;
+    else if (name === "motion_artifact_operation") call = `public.motion_artifact_operation(${literal(p.p_job_id)}::uuid,${literal(p.p_user_id)}::uuid,
+      ${literal(p.p_attempt_token)}::uuid,${literal(p.p_action)},${p.p_artifact_id?literal(p.p_artifact_id)+"::uuid":"null"},
+      ${p.p_media?literal(p.p_media):"null"},${p.p_byte_size?Number(p.p_byte_size):"null"},${p.p_sha256?literal(p.p_sha256):"null"})`;
+    else if (name === "publish_background_job_result") call = `public.publish_background_job_result(${literal(p.p_job_id)}::uuid,${literal(p.p_attempt_token)}::uuid,${literal(p.p_result_kind)},${literal(p.p_reference_id)}::uuid)`;
+    else if (name === "read_published_motion_artifact") call = `public.read_published_motion_artifact(${literal(p.p_job_id)}::uuid,${literal(p.p_user_id)}::uuid)`;
+    else if (name === "resume_motion_artifact_job") {
+      const output=await sql(`set role service_role; select public.resume_motion_artifact_job(${literal(p.p_job_id)}::uuid,${literal(p.p_user_id)}::uuid);`);
+      return {data:output==="t",error:null};
+    }
     else throw new Error();
     const output = await sql(`set role service_role; select coalesce(json_agg(row_to_json(c)), '[]'::json)::text from ${call} c;`);
     return { data: JSON.parse(output), error: null };

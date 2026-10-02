@@ -1,0 +1,65 @@
+import { randomUUID } from "node:crypto";
+import { mkdtemp,writeFile,rm,unlink,readdir } from "node:fs/promises";
+import { existsSync } from "node:fs";
+import path from "node:path";
+import { tmpdir } from "node:os";
+import sharp from "sharp";
+import { beforeAll,beforeEach,afterEach,describe,it,expect,vi } from "vitest";
+import { artifactSchema,cleanupArtifactOwner } from "./helpers/medical-motion-artifacts";
+import { client } from "./helpers/medical-motion-rpc";
+import { sql } from "./helpers/medical-motion-postgres";
+import { FileArtifactStorage } from "./helpers/private-artifact-storage";
+import { contextContent } from "./helpers/medical-motion-context";
+import { MedicalMotionJobRepository } from "@/lib/medical-motion/job.repository";
+import { BackgroundJobWorkerRepository,type DurableBackgroundJob } from "@/lib/jobs/background-job-worker.repository";
+import { MedicalMotionArtifactRepository,ArtifactError } from "@/lib/medical-motion/artifacts/repository";
+import { MedicalMotionArtifactService } from "@/lib/medical-motion/artifacts/service";
+import { createArtifactOwnership,discardArtifact,type ArtifactOwnership } from "@/lib/medical-motion/render/artifact-output";
+import { recordCandidateOwnership } from "@/lib/medical-motion/render/execution-resources";
+import type { LocalArtifactCandidate } from "@/lib/jobs/handlers/medical-motion-render.handler";
+import { BackgroundJobResultRepository } from "@/lib/jobs/background-job-result.repository";
+import { mp4Fixture } from "./fixtures/medical-motion-artifact";
+
+describe("private storage adapter contract with real PostgreSQL registry",()=>{
+  let root:string,owner:string,job:DurableBackgroundJob,storage:FileArtifactStorage,repo:MedicalMotionArtifactRepository,service:MedicalMotionArtifactService;
+  let owned:ArtifactOwnership[]=[];
+  const signal=()=>new AbortController().signal;
+  const dimensions={width:8,height:8};
+  beforeAll(artifactSchema);
+  beforeEach(async()=>{root=await mkdtemp(path.join(tmpdir(),"organheal-artifact-store-test-"));owner=randomUUID();
+    await sql(`insert into auth.users(id) values('${owner}');`);
+    const q=await new MedicalMotionJobRepository(client).enqueue(owner,randomUUID(),contextContent(),0);
+    job=(await new BackgroundJobWorkerRepository(client,["medical-motion-render"]).claimById(q.jobId))!;
+    storage=new FileArtifactStorage(root);repo=new MedicalMotionArtifactRepository(client);service=new MedicalMotionArtifactService(repo,storage);});
+  afterEach(async()=>{vi.restoreAllMocks();for(const item of owned) await discardArtifact(item);owned=[];await cleanupArtifactOwner(owner);await rm(root,{recursive:true,force:true});});
+  async function candidate(media:"still"|"video"="still",color="red"):Promise<LocalArtifactCandidate> {
+    const item=await createArtifactOwnership(media==="still"?"fixture.png":"fixture.mp4",media);owned.push(item);
+    const bytes=media==="still"?await sharp({create:{width:8,height:8,channels:3,background:color}}).png().toBuffer():mp4Fixture();
+    await writeFile(item.outputPath,bytes);
+    const candidate=Object.freeze({localPath:item.outputPath,media,executionSeconds:1,discard:()=>discardArtifact(item)});
+    recordCandidateOwnership(candidate,item,dimensions,{jobId:job.id,userId:job.userId,attemptToken:job.attemptToken});return candidate;
+  }
+  async function publish(id:string) {return new BackgroundJobResultRepository(client).publish({jobId:job.id,attemptToken:job.attemptToken,manifest:{kind:"artifact",referenceId:id}});}
+  it("initial upload is private/opaque and not a completed result",async()=>{const c=await candidate(),a=await service.handoff(job,c,signal());expect(storage.writes).toBe(1);expect((await readdir(root))).toEqual([a.id]);expect(a.persisted).toBe(true);expect(await service.retrieval(job.id,owner)).toBeUndefined();expect(existsSync(c.localPath)).toBe(true);});
+  it("duplicate handoff creates one object and artifact",async()=>{const c=await candidate(),a=await service.handoff(job,c,signal()),b=await service.handoff(job,c,signal());expect(a.id).toBe(b.id);expect(storage.writes).toBe(1);});
+  it("committed upload with lost response reconciles by readback",async()=>{storage.lostResponse=true;const a=await service.handoff(job,await candidate(),signal());expect(a.persisted).toBe(true);expect(storage.writes).toBe(1);});
+  it("same attempt and different bytes conflict without overwrite",async()=>{const a=await service.handoff(job,await candidate(),signal());await expect(service.handoff(job,await candidate("still","blue"),signal())).rejects.toThrow("ARTIFACT_CONFLICT");expect(storage.writes).toBe(1);expect((await storage.read(a.id))?.contentType).toBe("image/png");});
+  it("failed upload cannot register persisted state or publish",async()=>{storage.failWrite=true;await expect(service.handoff(job,await candidate(),signal())).rejects.toThrow("ARTIFACT_STORAGE_UNAVAILABLE");const a=(await repo.list(job))[0];expect(a.persisted).toBe(false);await expect(publish(a.id)).rejects.toThrow();});
+  it("registry commit response loss resumes from durable bytes",async()=>{const persist=repo.persist.bind(repo);vi.spyOn(repo,"persist").mockImplementationOnce(async(j,id)=>{await persist(j,id);throw new ArtifactError("ARTIFACT_STATE_UNKNOWN");});const c=await candidate();await expect(service.handoff(job,c,signal())).rejects.toThrow("ARTIFACT_STATE_UNKNOWN");expect(existsSync(c.localPath)).toBe(true);await unlink(c.localPath);const recovered=await new MedicalMotionArtifactService(repo,new FileArtifactStorage(root)).reconcile(job,signal());expect(recovered?.persisted).toBe(true);expect(storage.writes).toBe(1);});
+  it("upload survives failed registry registration and process-service restart",async()=>{vi.spyOn(repo,"persist").mockRejectedValueOnce(new ArtifactError("ARTIFACT_STATE_UNKNOWN"));await expect(service.handoff(job,await candidate(),signal())).rejects.toThrow();const a=await new MedicalMotionArtifactService(repo,new FileArtifactStorage(root)).reconcile(job,signal());expect(a?.persisted).toBe(true);});
+  it("missing reserved object permits new valid render attempt",async()=>{storage.failWrite=true;await expect(service.handoff(job,await candidate(),signal())).rejects.toThrow();expect(await service.reconcile(job,signal())).toBeUndefined();});
+  it("corrupted stored bytes fail closed",async()=>{const a=await service.handoff(job,await candidate(),signal());await writeFile(path.join(root,a.id),Buffer.from([1,2,3]));await expect(service.reconcile(job,signal())).rejects.toThrow("ARTIFACT_CONFLICT");});
+  it("persisted object disappearance fails closed",async()=>{const a=await service.handoff(job,await candidate(),signal());await unlink(path.join(root,a.id));await expect(service.reconcile(job,signal())).rejects.toThrow("ARTIFACT_CONFLICT");});
+  it("missing local candidate fails before reservation/upload",async()=>{const c=await candidate();await unlink(c.localPath);await expect(service.handoff(job,c,signal())).rejects.toThrow("ARTIFACT_INVALID");expect(await repo.list(job)).toEqual([]);});
+  it("PNG extension with invalid contents is rejected",async()=>{const c=await candidate();await writeFile(c.localPath,"not PNG");await expect(service.handoff(job,c,signal())).rejects.toThrow("ARTIFACT_INVALID");expect(storage.writes).toBe(0);});
+  it("candidate copy cannot mint local ownership",async()=>{const c=await candidate();await expect(service.handoff(job,{...c},signal())).rejects.toThrow("ARTIFACT_INVALID");});
+  it.each(["id","userId","attemptToken"] as const)("candidate authority is bound to %s",async field=>{const c=await candidate();await expect(service.handoff({...job,[field]:randomUUID()},c,signal())).rejects.toThrow("ARTIFACT_INVALID");expect(storage.writes).toBe(0);});
+  it("wrong media metadata is rejected",async()=>{const c=await candidate();const wrong={...c,media:"video" as const};recordCandidateOwnership(wrong,owned[0],dimensions);await expect(service.handoff(job,wrong,signal())).rejects.toThrow("ARTIFACT_INVALID");});
+  it.each(["still","video"] as const)("%s retains correct content type",async media=>{const a=await service.handoff(job,await candidate(media),signal());expect((await storage.read(a.id))?.contentType).toBe(media==="still"?"image/png":"video/mp4");});
+  it("stored content-type disagreement conflicts",async()=>{const a=await service.handoff(job,await candidate(),signal());const stored=(await storage.read(a.id))!;await writeFile(path.join(root,a.id),Buffer.concat([Buffer.from([2]),stored.bytes]));await expect(service.reconcile(job,signal())).rejects.toThrow("ARTIFACT_CONFLICT");});
+  it("late upload after shutdown never registers/publishes",async()=>{const controller=new AbortController(),put=storage.put.bind(storage),c=await candidate();vi.spyOn(storage,"put").mockImplementation(async(...args)=>{await put(...args);controller.abort();});await expect(service.handoff(job,c,controller.signal)).rejects.toThrow("ARTIFACT_OWNERSHIP_LOST");const a=(await repo.list(job))[0];expect(a.persisted).toBe(false);await expect(publish(a.id)).rejects.toThrow();expect(existsSync(c.localPath)).toBe(true);});
+  it("already cancelled handoff performs no storage work",async()=>{const controller=new AbortController();controller.abort();await expect(service.handoff(job,await candidate(),controller.signal)).rejects.toThrow("ARTIFACT_OWNERSHIP_LOST");expect(storage.writes).toBe(0);});
+  it("orphan upload intent is invisible and recoverable by same job only",async()=>{vi.spyOn(repo,"persist").mockRejectedValueOnce(new ArtifactError("ARTIFACT_STATE_UNKNOWN"));await expect(service.handoff(job,await candidate(),signal())).rejects.toThrow();expect(await service.retrieval(job.id,owner)).toBeUndefined();expect(await service.retrieval(job.id,randomUUID())).toBeUndefined();const a=await service.reconcile(job,signal());await publish(a!.id);expect((await service.retrieval(job.id,owner))?.id).toBe(a!.id);});
+  it("cross-user retrieval never reads an object",async()=>{const a=await service.handoff(job,await candidate(),signal());await publish(a.id);const read=vi.spyOn(storage,"read");expect(await service.retrieval(job.id,randomUUID())).toBeUndefined();expect(read).not.toHaveBeenCalled();});
+  it("reader failure is sanitized to a fixed code",async()=>{vi.spyOn(storage,"read").mockRejectedValue(new Error("PRIVATE CLINICAL /path token"));await expect(service.handoff(job,await candidate(),signal())).rejects.toThrow(/^ARTIFACT_STORAGE_UNAVAILABLE$/);});
+});

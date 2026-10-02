@@ -12,6 +12,11 @@ import { BackgroundJobWorkerRepository } from "@/lib/jobs/background-job-worker.
 import { JobDispatcher } from "@/lib/jobs/job-dispatcher";
 import { DurableBackgroundJobWorker } from "@/lib/jobs/background-job-worker";
 import { OWNERSHIP_POLICY } from "@/lib/jobs/execution-ownership";
+import { artifactSchema,cleanupArtifactOwner } from "../helpers/medical-motion-artifacts";
+import { FileArtifactStorage } from "../helpers/private-artifact-storage";
+import { createMedicalMotionArtifactRuntime } from "@/lib/medical-motion/artifacts/runtime";
+import { mkdtemp,rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 
 vi.mock("node:child_process", async importOriginal => {
   const actual = await importOriginal<typeof childProcess>();
@@ -21,26 +26,18 @@ vi.mock("node:child_process", async importOriginal => {
 /** Run explicitly on the guarded local PostgreSQL/Blender workstation.
  * No HTTP, output publication, production-quality video or new clinical asset. */
 describe("real local PostgreSQL context to handler to Blender smoke",()=>{
-  let owner:string,jobId:string;
-  beforeAll(()=>{configuration();expect(existsSync(process.env.BLENDER_EXECUTABLE_PATH||"C:\\Program Files\\Blender Foundation\\Blender 5.2\\blender.exe")).toBe(true);});
+  let owner:string,jobId:string,storageRoot:string;
+  beforeAll(async()=>{configuration();await artifactSchema();expect(existsSync(process.env.BLENDER_EXECUTABLE_PATH||"C:\\Program Files\\Blender Foundation\\Blender 5.2\\blender.exe")).toBe(true);});
   beforeEach(async()=>{
     owner=randomUUID(); await sql(`insert into auth.users(id) values('${owner}');`);
+    storageRoot=await mkdtemp(path.join(tmpdir(),"organheal-blender-artifact-test-"));
     const queued=await new MedicalMotionJobRepository(client).enqueue(owner,randomUUID(),contextContent(),0);jobId=queued.jobId;
     vi.stubEnv("MEDICAL_MOTION_RENDER_SCRIPT",path.resolve("tests/fixtures/medical-motion-handler-smoke.py"));
   });
   afterEach(async()=>{
     vi.useRealTimers();vi.unstubAllEnvs();
-    await sql(`begin;
-      alter table public.background_jobs disable trigger background_jobs_medical_motion_link;
-      delete from public.background_jobs where user_id='${owner}';
-      alter table public.background_jobs enable trigger background_jobs_medical_motion_link;
-      alter table public.medical_motion_requests disable trigger medical_motion_requests_immutable;
-      delete from public.medical_motion_requests where user_id='${owner}';
-      alter table public.medical_motion_requests enable trigger medical_motion_requests_immutable;
-      alter table public.medical_motion_execution_contexts disable trigger medical_motion_execution_contexts_immutable;
-      delete from public.medical_motion_execution_contexts where user_id='${owner}';
-      alter table public.medical_motion_execution_contexts enable trigger medical_motion_execution_contexts_immutable;
-      delete from auth.users where id='${owner}'; commit;`);
+    await cleanupArtifactOwner(owner);
+    await rm(storageRoot,{recursive:true,force:true});
   });
   it("real render yields owned candidate and fenced pending status without durable result",async()=>{
     let accepted=false,disposed=false;
@@ -51,6 +48,28 @@ describe("real local PostgreSQL context to handler to Blender smoke",()=>{
     expect(accepted).toBe(true);expect(disposed).toBe(true);
     expect(await sql(`select status from public.background_jobs where id='${jobId}';`)).toBe("awaiting-artifact-publication");
     expect(await sql(`select count(*) from public.background_job_results where job_id='${jobId}';`)).toBe("0");
+  },120000);
+  it.each(["normal","lost-publication-response"])("real durable e2e: %s",async scenario=>{
+    let lost=false;
+    const originalRpc=client.rpc.bind(client);
+    const wrapped={rpc:async(name:string,args:Record<string,unknown>)=>{
+      const response=await originalRpc(name,args);
+      if(name==="publish_background_job_result"&&scenario==="lost-publication-response"&&!lost){lost=true;throw new Error("Test response lost.");}
+      return response;
+    }} as unknown as typeof client;
+    const storage=new FileArtifactStorage(storageRoot),runtime=createMedicalMotionArtifactRuntime(wrapped,{mode:"development"},storage);
+    const {spawn}=await vi.importActual<typeof childProcess>("node:child_process");let localPath="";
+    vi.mocked(childProcess.spawn).mockImplementation((...args:Parameters<typeof childProcess.spawn>)=>{
+      if(String(args[0]).toLowerCase().includes("blender"))localPath=(args[1] as string[]).at(-1)!;
+      return spawn(...args);
+    });
+    await runtime.worker.processById(jobId);
+    expect(await sql(`select status from public.background_jobs where id='${jobId}';`)).toBe("completed");
+    const artifact=await runtime.artifacts.retrieval(jobId,owner);
+    expect(artifact?.persisted).toBe(true);expect(artifact?.media).toBe("video");expect(storage.writes).toBe(1);
+    expect(await sql(`select reference_id=medical_motion_artifact_id from public.background_job_results where job_id='${jobId}';`)).toBe("t");
+    expect(existsSync(path.dirname(localPath))).toBe(false);
+    if(scenario==="lost-publication-response")expect(lost).toBe(true);
   },120000);
   it.each(["shutdown","lease-loss"])("%s through handler aborts real Blender and refuses handoff",async cause=>{
     vi.stubEnv("ORGANHEAL_HANDLER_SMOKE_CANCEL","1");

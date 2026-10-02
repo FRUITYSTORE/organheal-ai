@@ -10,6 +10,7 @@ export type JobHandlerResult =
   | { disposition: "complete" }
   | { disposition: "fail" | "retry"; errorCode: string }
   | { disposition: "ownership-lost" }
+  | { disposition: "already-finalized" }
   | { disposition: "defer-completion"; settle(accepted: boolean): Promise<void> };
 
 export type JobHandler<

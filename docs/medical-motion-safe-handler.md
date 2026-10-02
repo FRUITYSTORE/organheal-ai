@@ -1,5 +1,11 @@
 # Safe render handler foundation
 
+Historical milestone record. Its local-only durability limitation and stranded
+awaiting state are superseded by [durable artifact handoff](medical-motion-durable-artifacts.md).
+The development smoke consumer remains; production now requires durable storage
+and fenced artifact publication. The statements below describe the accepted
+foundation before that extension.
+
 `createMedicalMotionRenderHandler` is an internal, explicitly render-capable
 factory. It is not registered by `createBackgroundJobRuntime`. There is no
 worker host, route, storage uploader or artifact publication in this milestone.

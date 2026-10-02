@@ -1,6 +1,6 @@
 import { transferExecutionResources } from "./execution-resources";
 import "server-only";
-import type { RenderResult } from "@/lib/medical-motion/contracts/render";
+import type { RenderResult, ExplanationRenderRequest } from "@/lib/medical-motion/contracts/render";
 import { getOrganModule } from "@/lib/medical-motion/organ-modules";
 import { buildHeartVisualizationScene } from "@/lib/medical-motion/organs/heart/heart-visualization-resolver";
 import { renderHeartScene } from "@/lib/medical-motion/render/blender-renderer";
@@ -14,10 +14,9 @@ type TracedResult = (RenderResult | Failure) & { requestId?: string; planSignatu
 
 /** Mandatory-context clinical boundary. Generic rendering remains for internal review.
  * No triage orchestration, queue, narration, or clinical inference occurs here. */
-export async function renderExplanationRequest(
+export function validateExplanationRenderRequest(
   value: unknown, outputPath: string, options: { mode: RenderMode; timeoutMs?: number },
-  control: Parameters<typeof renderHeartScene>[3] = {},
-): Promise<TracedResult> {
+): Extract<TracedResult, {status:"failed"}> | {ok:true;request:ExplanationRenderRequest;trace:{requestId:string;planSignature:string}} {
   const authorized = readExplanationAuthorization(value);
   if (!authorized || outputPath !== authorized.options.outputPath || options?.mode !== authorized.options.mode ||
       options?.timeoutMs !== authorized.options.timeoutMs) {
@@ -54,6 +53,16 @@ export async function renderExplanationRequest(
       options.mode, getOrganModule, requirements);
     if (!sceneReady.ok) return { status: "failed", errorCode: sceneReady.errorCode, message: sceneReady.details.join(" "), ...trace };
   }
+  return { ok: true as const, request, trace };
+}
+
+export async function renderExplanationRequest(
+  value: unknown, outputPath: string, options: { mode: RenderMode; timeoutMs?: number },
+  control: Parameters<typeof renderHeartScene>[3] = {},
+): Promise<TracedResult> {
+  const checked = validateExplanationRenderRequest(value, outputPath, options);
+  if (!("ok" in checked)) return checked;
+  const { request, trace } = checked;
   const result = await renderHeartScene(request.scene, outputPath, { ...options, explanationPlan: request.explanationPlan, clinicalAuthorization: value }, control);
   if (result.status === "completed" && control?.signal?.aborted) {
     return transferExecutionResources(result, { status: "failed", errorCode: "RENDER_CANCELLED", message: "Render execution was cancelled.", ...trace });

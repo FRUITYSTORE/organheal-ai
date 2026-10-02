@@ -158,7 +158,7 @@ export class DurableBackgroundJobWorker {
         });
       return;
     }
-    if (result?.disposition === "ownership-lost") return;
+    if (result?.disposition === "ownership-lost" || result?.disposition === "already-finalized") return;
     if (result?.disposition === "defer-completion") {
       // Reconcile only the identical fenced transition. Never retry rendering
       // after a lost transition response or a handoff/cleanup failure.

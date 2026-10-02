@@ -14,6 +14,7 @@ async function run(result: void | JobHandlerResult, exhausted=false, defer?:Retu
   await new DurableBackgroundJobWorker(repository as unknown as BackgroundJobWorkerRepository,dispatcher).processNext();return repository;
 }
 describe("generic handler dispositions preserve fenced worker semantics",()=>{
+  it("already finalized publication performs no second worker mutation",async()=>{const r=await run({disposition:"already-finalized"});expect(r.markCompleted).not.toHaveBeenCalled();expect(r.markFailed).not.toHaveBeenCalled();expect(r.scheduleRetry).not.toHaveBeenCalled();expect(r.deferCompletion).not.toHaveBeenCalled();});
   it("legacy void success completes",async()=>{expect((await run(undefined)).markCompleted).toHaveBeenCalledWith({jobId:"job",attemptToken:"token"});});
   it("explicit complete retains old completion",async()=>{expect((await run({disposition:"complete"})).markCompleted).toHaveBeenCalledOnce();});
   it("permanent failure never retries",async()=>{const r=await run({disposition:"fail",errorCode:"INVALID_CONTEXT"});expect(r.markFailed).toHaveBeenCalledWith({jobId:"job",attemptToken:"token",errorMessage:"INVALID_CONTEXT"});expect(r.scheduleRetry).not.toHaveBeenCalled();expect(r.markCompleted).not.toHaveBeenCalled();});

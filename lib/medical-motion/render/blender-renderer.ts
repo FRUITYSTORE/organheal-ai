@@ -312,7 +312,7 @@ export async function renderHeartScene(
     if (ownership && !completed && safeToClean) cleanupConfirmed = await discardArtifact(ownership) && cleanupConfirmed;
     if (finalResult) recordExecutionResources(finalResult, {
       cleanupConfirmed: completed ? false : cleanupConfirmed,
-      ...(completed && ownership ? { artifact: ownership } : {}),
+      ...(completed && ownership ? { artifact: ownership, dimensions: dimensions.dimensions } : {}),
     });
   }
 }
