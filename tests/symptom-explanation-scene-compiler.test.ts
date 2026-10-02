@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { withTestAnatomyReview } from "./helpers/anatomy-review-fixture";
 import { getMechanismAnatomy } from "../lib/symptom-explanation/anatomy-resolver";
 import { compileExplanationScene } from "../lib/symptom-explanation/compile-explanation-scene";
 import type { MechanismId, VideoExplanationPlan } from "../lib/symptom-explanation/contracts";
@@ -30,12 +31,12 @@ function request(p = plan(), sceneIndex = 0) {
 }
 // Test metadata only; these fixtures make no claim about available real geometry.
 function reviewed(): OrganModule {
-  return { ...HEART_ORGAN_MODULE, anatomyRegistry: HEART_ORGAN_MODULE.anatomyRegistry.map((entry): AnatomyRegistryEntry =>
+  return withTestAnatomyReview({ ...HEART_ORGAN_MODULE, anatomyRegistry: HEART_ORGAN_MODULE.anatomyRegistry.map((entry): AnatomyRegistryEntry =>
     entry.id === "heart.myocardium" ? {
       ...entry, availability: "present", blenderObject: "TEST_MYOCARDIUM", fidelity: "reference-derived",
       representation: "tissue", verification: "verified",
       coverage: { verifiedRegions: ["LV", "RV", "septum", "LA", "RA"], unknownRegions: [], excludedRegions: [], evidenceRefs: ["test-review"] },
-    } : entry) };
+    } : entry) });
 }
 
 describe("validated explanation compiler and clinical render boundary", () => {

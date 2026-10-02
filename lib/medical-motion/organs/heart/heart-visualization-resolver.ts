@@ -1,6 +1,8 @@
 import type { HeartFocus } from "@/lib/heart-age/heart-focus";
 import type { AnatomyStructureId } from "@/lib/medical-motion/contracts/anatomy";
 import type { SceneDefinition } from "@/lib/medical-motion/contracts/scene";
+import { anatomyRenderIdentity } from "../../anatomy-foundation";
+import { HEART_ORGAN_MODULE } from "./heart-organ-module";
 
 // The clinical → visualization boundary for the heart (architecture brief
 // sections 4-6). Reuses the ALREADY-VALIDATED lib/heart-age/heart-focus.ts
@@ -78,6 +80,7 @@ export function buildHeartVisualizationScene(visualizationFocus: HeartVisualizat
     organ: "heart",
     sceneVersion: SCENE_VERSION,
     durationSeconds: structures.length > 3 ? COMBINED_DURATION_SECONDS : BASE_DURATION_SECONDS,
+    anatomyIdentity: anatomyRenderIdentity(HEART_ORGAN_MODULE),
     focus: visualizationFocus,
     // The whole heart first, then the camera moves in on what the focus is
     // about; an overview has nowhere to move to.

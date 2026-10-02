@@ -21,7 +21,10 @@
       "licenseRiskNote": "CC BY-SA 4.0's ShareAlike clause requires derivative works to carry the same license. Whether this retopologized asset (new geometry, sampling only real-world anatomical PROPORTIONS/POSITIONS from the source, containing none of the source's own authored mesh data) legally counts as a 'derivative work' under CC BY-SA is a genuine open question that has NOT been resolved by a lawyer. Per the owner's explicit instruction, this asset is being used as reference-informed original geometry, not as a redistributed derivative -- but this file exists specifically so that determination can be revisited before any commercial release. Do not treat this note as legal clearance.",
       "attributionText": "Chamber proportions informed by Z-Anatomy (Kervyn, G., z-anatomy.com), based on BodyParts3D, © Database Center for Life Science, licensed under CC BY-SA 4.0.",
       "modificationPermitted": true,
-      "commercialUsePermitted": "permitted by the license text, subject to the ShareAlike risk note above"
+      "commercialUsePermitted": "UNRESOLVED for this asset: component provenance, applicable source version and derivative obligations require review",
+      "sourceVersion": "local-reference-revision-unpinned",
+      "anatomicalVerification": "unverified surface semantics; no chamber wall/cavity or clinical approval claim",
+      "auditNote": "2026-10-03: Z-Anatomy README lists mixed upstream terms, including NC references for some components. This does not establish that those components are in this heart asset. BodyParts3D legacy site declares BY-SA 2.1 JP while the current archive declares BY 4.0 (2025-02-27); the later archive does not automatically relicense this local derivative. See docs/whole-body-anatomy-foundation.md."
     }
   ],
   "notes": [

@@ -1,8 +1,6 @@
-// The full set of organs the Medical Motion Engine knows about. Heart is
-// organ module #1 (see lib/medical-motion/organs/heart); lungs, liver and
-// kidneys are documented here as the known future set so every contract
-// below can reference them without a breaking type change later, per the
-// architecture brief's "adding an organ should not touch the engine" goal.
-export type OrganId = "heart" | "lungs" | "liver" | "kidneys";
+// Open canonical identifiers: taxonomy registration, not a type-union edit,
+// introduces an organ. This legacy list is the current explanation vocabulary,
+// not a promise of geometry, clinical approval or whole-body renderer coverage.
+export type OrganId = string;
 
 export const ORGAN_IDS: readonly OrganId[] = ["heart", "lungs", "liver", "kidneys"];

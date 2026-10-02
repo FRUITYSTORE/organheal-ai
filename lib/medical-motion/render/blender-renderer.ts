@@ -13,6 +13,7 @@ import { RENDER_ERROR_CODE, type RenderErrorCode, type RenderResult } from "@/li
 import type { AnatomicalDirection, LandmarkId, OrganModule } from "@/lib/medical-motion/contracts/organ-module";
 import type { RenderMedia, SceneDefinition } from "@/lib/medical-motion/contracts/scene";
 import { getOrganModule } from "@/lib/medical-motion/organ-modules";
+import { anatomyRenderIdentity } from "@/lib/medical-motion/anatomy-foundation";
 import { checkAssetReadiness, checkExplanationPlanReadiness, type RenderMode } from "@/lib/symptom-explanation/asset-readiness";
 import { readExplanationAuthorization } from "@/lib/symptom-explanation/explanation-authorization";
 import { canonicalExplanationJson } from "@/lib/symptom-explanation/compile-explanation-scene";
@@ -150,7 +151,7 @@ export async function renderHeartScene(
   // Generic scenes are internal non-clinical review. Clinical metadata cannot
   // select that path or supply its own authorization.
   if (Object.keys(options).some((key) => !["mode", "timeoutMs", "explanationPlan", "clinicalAuthorization"].includes(key)) ||
-      Object.keys(scene).some((key) => !["organ", "sceneVersion", "durationSeconds", "focus", "camera", "motion", "highlight", "anatomyRequirements", "output"].includes(key))) {
+      Object.keys(scene).some((key) => !["organ", "sceneVersion", "durationSeconds", "focus", "camera", "motion", "highlight", "anatomyRequirements", "anatomyIdentity", "output"].includes(key))) {
     return invalidScene("Unsupported render metadata; clinical requests must use the authorized boundary.");
   }
   if ("explanationPlan" in options || "clinicalAuthorization" in options) {
@@ -202,6 +203,15 @@ export async function renderHeartScene(
   if (!organModule) {
     return invalidScene(`No organ module exists for "${scene.organ}".`);
   }
+
+  // Source/semantic revisions must match the asset actually about to render.
+  // Legacy internal scenes may omit identity; patient-facing scenes may not.
+  try {
+    if ((mode === "production" && !scene.anatomyIdentity) ||
+        (scene.anatomyIdentity && canonicalExplanationJson(scene.anatomyIdentity) !== canonicalExplanationJson(anatomyRenderIdentity(organModule)))) {
+      return invalidScene("Anatomy identity is missing or does not match the current organ asset.");
+    }
+  } catch { return invalidScene("Invalid anatomy identity."); }
 
   const shot = resolveCameraShot(organModule, scene.camera.preset);
   const fromShot = scene.camera.from ? resolveCameraShot(organModule, scene.camera.from) : null;

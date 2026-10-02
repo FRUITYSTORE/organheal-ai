@@ -35,8 +35,9 @@ describe("computeRenderSignature", () => {
     expect(computeRenderSignature(reordered, "heart-v1")).toBe(computeRenderSignature(scene, "heart-v1"));
   });
 
-  it("includes the exact requested duration once in the existing canonical payload", () => {
+  it("preserves the legacy canonical payload when anatomy identity is absent", () => {
     const scene = buildHeartScene({ coronaryArteries: true, leftVentricleAndAorta: false });
+    delete scene.anatomyIdentity;
     scene.durationSeconds = 5.001;
     const canonical = '{"organ":"heart","assetVersion":"heart-v1","sceneVersion":"3","durationSeconds":5.001,"focus":"coronary","camera":"CAM_CORONARY_APPROACH","cameraFrom":"CAM_HEART_OVERVIEW","motion":"clinical-heartbeat","highlight":{"structures":["heart.coronary.lad","heart.coronary.lcx","heart.coronary.rca"],"intensity":0.8},"output":{"aspectRatio":"16:9","resolution":"1080p","media":"video"}}';
     expect(computeRenderSignature(scene, "heart-v1")).toBe(createHash("sha256").update(canonical).digest("hex"));

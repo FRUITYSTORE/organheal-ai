@@ -10,5 +10,5 @@ const ORGAN_MODULES: Partial<Record<OrganId, OrganModule>> = {
 };
 
 export function getOrganModule(organ: OrganId): OrganModule | null {
-  return ORGAN_MODULES[organ] ?? null;
+  return Object.hasOwn(ORGAN_MODULES, organ) ? ORGAN_MODULES[organ] ?? null : null;
 }

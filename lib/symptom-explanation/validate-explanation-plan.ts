@@ -1,4 +1,5 @@
 import { ORGAN_IDS, type OrganId } from "@/lib/medical-motion/contracts/organ";
+import { STRUCTURE_REPRESENTATIONS } from "@/lib/medical-motion/contracts/organ-module";
 import type { AnatomyRequirement, AnatomyRequirements, StructureRepresentation } from "@/lib/medical-motion/contracts/organ-module";
 import { getMechanismAnatomy } from "@/lib/symptom-explanation/anatomy-resolver";
 import {
@@ -97,9 +98,9 @@ function readRequirements(value: unknown, organ: OrganId, structures: readonly A
       issues.push(`${path}: must be a requirement object.`);
       continue;
     }
-    checkKeys(input, ["representations", "requireVerified", "completeCoverage", "requiredRegions"], path, issues);
+    checkKeys(input, ["representations", "requireVerified", "completeCoverage", "requiredRegions", "requireClinicalApproval"], path, issues);
     const requirement: AnatomyRequirement = {};
-    for (const key of ["requireVerified", "completeCoverage"] as const) {
+    for (const key of ["requireVerified", "completeCoverage", "requireClinicalApproval"] as const) {
       if (key in input) {
         if (typeof input[key] !== "boolean") issues.push(`${path}.${key}: must be boolean.`);
         else requirement[key] = input[key];
@@ -107,7 +108,7 @@ function readRequirements(value: unknown, organ: OrganId, structures: readonly A
     }
     if ("representations" in input) {
       const representations = input.representations;
-      const allowed: readonly StructureRepresentation[] = ["tissue", "surface", "cavity", "centerline", "placeholder", "unknown"];
+      const allowed: readonly StructureRepresentation[] = STRUCTURE_REPRESENTATIONS;
       if (!Array.isArray(representations) || representations.length === 0 ||
           !representations.every((item) => isOneOf(allowed, item)) || new Set(representations).size !== representations.length) {
         issues.push(`${path}.representations: must be a nonempty list of unique known representations.`);
@@ -231,6 +232,7 @@ export function validateVideoExplanationPlan(value: unknown): PlanValidationResu
         if (!supplied) continue; // Missing dependencies already have explicit issues.
         if (base.requireVerified && supplied.requireVerified !== true) issues.push(`anatomy.requirements.${id}: mechanism requires verified anatomy.`);
         if (base.completeCoverage && supplied.completeCoverage !== true) issues.push(`anatomy.requirements.${id}: mechanism requires complete coverage.`);
+        if (base.requireClinicalApproval && supplied.requireClinicalApproval !== true) issues.push(`anatomy.requirements.${id}: mechanism requires clinical approval.`);
         if (base.representations && (!supplied.representations || supplied.representations.some((item) => !base.representations!.includes(item)))) {
           issues.push(`anatomy.requirements.${id}: representations cannot weaken the mechanism requirement.`);
         }

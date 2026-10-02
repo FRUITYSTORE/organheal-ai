@@ -1,3 +1,4 @@
+import { withTestAnatomyReview } from "./helpers/anatomy-review-fixture";
 import { describe, expect, it } from "vitest";
 import type { AnatomyRegistryEntry, AnatomyRequirement, OrganModule } from "../lib/medical-motion/contracts/organ-module";
 import { HEART_ORGAN_MODULE } from "../lib/medical-motion/organs/heart/heart-organ-module";
@@ -14,7 +15,7 @@ function structure(overrides: Partial<AnatomyRegistryEntry> = {}): AnatomyRegist
 }
 
 function moduleWith(entry: AnatomyRegistryEntry): OrganModule {
-  return { ...HEART_ORGAN_MODULE, assetStatus: "production", anatomicallyValidated: true, anatomyRegistry: [entry] };
+  return withTestAnatomyReview({ ...HEART_ORGAN_MODULE, assetStatus: "production", anatomicallyValidated: true, anatomyRegistry: [entry] });
 }
 
 function readiness(entry: AnatomyRegistryEntry, mode: RenderMode = "production", requirement: AnatomyRequirement = {}) {

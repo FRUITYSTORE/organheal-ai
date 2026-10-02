@@ -1,3 +1,4 @@
+import { withTestAnatomyReview } from "./helpers/anatomy-review-fixture";
 import { describe, expect, it } from "vitest";
 
 import type { OrganModule } from "../lib/medical-motion/contracts/organ-module";
@@ -8,7 +9,7 @@ import { checkAssetReadiness, createOrganStructureLookup } from "../lib/symptom-
 const lookup = createOrganStructureLookup();
 
 function reviewedModule(overrides: Partial<OrganModule> = {}): OrganModule {
-  return {
+  return withTestAnatomyReview({
     id: "heart",
     assetVersion: "test",
     assetStatus: "production",
@@ -24,7 +25,7 @@ function reviewedModule(overrides: Partial<OrganModule> = {}): OrganModule {
     cutawayStates: [],
     renderStyles: ["clinicalIllustration"],
     ...overrides,
-  };
+  });
 }
 
 describe("organ module structure lookup", () => {

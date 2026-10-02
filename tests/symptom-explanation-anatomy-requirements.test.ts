@@ -1,3 +1,4 @@
+import { withTestAnatomyReview } from "./helpers/anatomy-review-fixture";
 import { describe, expect, it, vi } from "vitest";
 import type { AnatomyRegistryEntry, OrganModule } from "../lib/medical-motion/contracts/organ-module";
 import { HEART_ORGAN_MODULE } from "../lib/medical-motion/organs/heart/heart-organ-module";
@@ -26,7 +27,7 @@ function reviewedModule(): OrganModule {
     coverage: { verifiedRegions: id === "heart.myocardium" ? ["LV", "RV", "septum", "LA", "RA"] : [id],
       unknownRegions: [], excludedRegions: [], evidenceRefs: ["test-review"] },
   }));
-  return { ...HEART_ORGAN_MODULE, assetStatus: "production", anatomicallyValidated: true, anatomyRegistry };
+  return withTestAnatomyReview({ ...HEART_ORGAN_MODULE, assetStatus: "production", anatomicallyValidated: true, anatomyRegistry });
 }
 
 function changeMyocardium(overrides: Partial<AnatomyRegistryEntry>): OrganModule {

@@ -1,4 +1,5 @@
 import type { AnatomyStructureId } from "@/lib/medical-motion/contracts/anatomy";
+import { developmentAnatomyMetadata } from "../../anatomy-sources";
 import type { AnatomyRegistryEntry, AnatomyStructureKind, Landmark, LandmarkId, OrganModule, StructureRepresentation } from "@/lib/medical-motion/contracts/organ-module";
 
 // Metadata records geometry availability, never medical approval. No current
@@ -10,6 +11,7 @@ function available(
   return {
     id, kind, blenderObject, fidelity, representation, availability: "present",
     verification: "unverified",
+    ...developmentAnatomyMetadata(fidelity === "placeholder"),
     coverage: { verifiedRegions: [], unknownRegions: [id], excludedRegions: [], evidenceRefs: [] },
   };
 }
@@ -47,6 +49,7 @@ export const HEART_ASSET_VERSION = "heart-v2-development";
 export const HEART_ORGAN_MODULE: OrganModule = {
   id: "heart",
   assetVersion: HEART_ASSET_VERSION,
+  anatomyVersion: "heart-anatomy-v1-development",
   assetStatus: "development-placeholder",
   anatomicallyValidated: false,
   anatomyRegistry: [

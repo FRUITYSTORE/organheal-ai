@@ -2,6 +2,9 @@ import type { OrganId } from "@/lib/medical-motion/contracts/organ";
 import type { AnatomyRegistryEntry, AnatomyRequirements, OrganModule } from "@/lib/medical-motion/contracts/organ-module";
 import { validateVideoExplanationPlan } from "@/lib/symptom-explanation/validate-explanation-plan";
 import { getOrganModule } from "@/lib/medical-motion/organ-modules";
+import { anatomyAssessmentIssues } from "@/lib/medical-motion/anatomy-foundation";
+import { WHOLE_BODY_ANATOMY } from "@/lib/medical-motion/whole-body-anatomy";
+import type { WholeBodyAnatomyCatalog } from "@/lib/medical-motion/contracts/anatomy-foundation";
 import type { OrganStructureLookup } from "@/lib/symptom-explanation/anatomy-resolver";
 import {
   SYMPTOM_EXPLANATION_ERROR_CODE,
@@ -51,7 +54,8 @@ export function checkAssetReadiness(
   structures: readonly AnatomyStructureId[],
   mode: RenderMode,
   getModule: ModuleSource = getOrganModule,
-  requirements: AnatomyRequirements = {}
+  requirements: AnatomyRequirements = {},
+  catalog: WholeBodyAnatomyCatalog = WHOLE_BODY_ANATOMY
 ): AssetReadinessResult {
   const organModule = getModule(organ);
 
@@ -88,8 +92,11 @@ export function checkAssetReadiness(
   }
 
   const reasons: string[] = [];
+  if (organModule.id !== organ) reasons.push("The requested organ does not match the organ module.");
 
   if (mode === "production") {
+    if (!organModule.anatomyVersion?.trim()) reasons.push("Production anatomy must have an explicit anatomy version.");
+    if (dependencies.length === 0) reasons.push("Production rendering requires explicit anatomical dependencies.");
     if (organModule.assetStatus !== "production") {
       reasons.push(`The ${organ} asset is a ${organModule.assetStatus}.`);
     }
@@ -102,14 +109,19 @@ export function checkAssetReadiness(
   for (const entry of resolved) {
     const requirement = requirements[entry.id];
     const verifiedRequired = mode === "production" || requirement?.requireVerified === true ||
-      requirement?.completeCoverage === true || (requirement?.requiredRegions?.length ?? 0) > 0;
+      requirement?.completeCoverage === true || requirement?.requireClinicalApproval === true || (requirement?.requiredRegions?.length ?? 0) > 0;
     const completeRequired = mode === "production" || requirement?.completeCoverage === true;
     const placeholder = entry.fidelity === "placeholder" || entry.representation === "placeholder";
 
     if (entry.verification === "rejected") {
       reasons.push(`${entry.id} has rejected anatomy.`);
     }
+    if (entry.assessment?.geometryStatus === "rejected" || entry.assessment?.semanticStatus === "rejected" || entry.assessment?.clinicalApprovalStatus === "rejected") {
+      reasons.push(`${entry.id} has an explicitly rejected review.`);
+    }
     if (verifiedRequired) {
+      reasons.push(...anatomyAssessmentIssues(entry, organModule, catalog,
+        mode === "production" || requirement?.requireClinicalApproval === true, mode === "production"));
       if (placeholder) reasons.push(`${entry.id} is placeholder geometry.`);
       if (entry.verification !== "verified") reasons.push(`${entry.id} anatomy is ${entry.verification}.`);
       if (!entry.coverage.evidenceRefs.some((ref) => ref.trim()) || !entry.coverage.verifiedRegions.some((region) => region.trim())) {

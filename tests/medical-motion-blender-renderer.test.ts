@@ -132,6 +132,13 @@ async function startClockedRender(timeoutMs = 10_000, signal?: AbortSignal) {
 }
 
 describe("renderHeartScene", () => {
+  it.each(["anatomy", "source"])("rejects stale %s identity before spawning Blender", async axis => {
+    const stale = structuredClone(scene);
+    if (axis === "anatomy") stale.anatomyIdentity!.anatomyVersion += "-stale";
+    else stale.anatomyIdentity!.sources[0].sourceVersion += "-stale";
+    expect(await renderHeartScene(stale, "out.mp4", DEV)).toMatchObject({ status: "failed", errorCode: "INVALID_SCENE" });
+    expect(spawnMock).not.toHaveBeenCalled();
+  });
   it("failed cleanup never supplies retry authority through the trusted entry", async () => {
     const child = queueFakeProcess();
     vi.spyOn(artifactOutput, "discardArtifact").mockResolvedValue(false);

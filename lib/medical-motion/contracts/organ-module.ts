@@ -1,5 +1,6 @@
 import type { AnatomyStructureId } from "@/lib/medical-motion/contracts/anatomy";
 import type { OrganId } from "@/lib/medical-motion/contracts/organ";
+import type { AnatomyAssessment, AnatomyProvenance } from "./anatomy-foundation";
 
 // The shared shape every organ (heart, then lungs/liver/kidneys) must
 // conform to, so the engine, render worker and composer never need
@@ -18,7 +19,7 @@ export type AnatomyStructureKind =
   | "septum"
   | "valve"
   | "greatVessel"
-  | "coronaryArtery";
+  | "coronaryArtery" | "organ" | "bone" | "muscle" | "nerve" | "gland" | "airway" | "skin" | "region" | "composite";
 
 /** Where a structure's geometry came from. "placeholder" is a primitive or
  * hand-shaped stand-in (a torus for a valve, a constant-radius tube for a
@@ -27,7 +28,8 @@ export type StructureFidelity = "reference-derived" | "placeholder";
 
 export type StructureAvailability = "missing" | "present" | "partial";
 export type StructureVerification = "unverified" | "anatomy-conditional" | "verified" | "rejected";
-export type StructureRepresentation = "tissue" | "surface" | "cavity" | "centerline" | "placeholder" | "unknown";
+export const STRUCTURE_REPRESENTATIONS = ["tissue", "wall", "cavity", "lumen", "vessel", "surface", "bone", "organ-volume", "region", "composite", "centerline", "placeholder", "unknown"] as const;
+export type StructureRepresentation = (typeof STRUCTURE_REPRESENTATIONS)[number];
 
 /** Regions are explicit anatomical labels, not inferred from object names.
  * Evidence references document anatomical review, not merely provenance. */
@@ -44,6 +46,8 @@ export type AnatomyRegistryEntry = {
   representation: StructureRepresentation;
   verification: StructureVerification;
   coverage: AnatomicalCoverage;
+  provenance?: AnatomyProvenance;
+  assessment?: AnatomyAssessment;
 } & (
   // Object names remain renderer-only. Missing inventory promises no geometry.
   | { availability: "missing"; blenderObject: null; fidelity: null }
@@ -58,6 +62,7 @@ export type AnatomyRequirement = {
   requireVerified?: boolean;
   completeCoverage?: boolean;
   requiredRegions?: readonly string[];
+  requireClinicalApproval?: boolean;
 };
 
 /** Keys are required dependencies, independently of visual highlighting. */
@@ -107,6 +112,8 @@ export type OrganModule = {
   id: OrganId;
   /** Bumped when the underlying anatomy geometry/materials change. */
   assetVersion: string;
+  /** Independent semantic/provenance revision, included in new scene identity. */
+  anatomyVersion?: string;
   assetStatus: AssetStatus;
   /** True only once a real anatomical reviewer has signed off. Building the
    * geometry does not, by itself, earn this flag. */

@@ -14,6 +14,10 @@ import type { SceneDefinition } from "@/lib/medical-motion/contracts/scene";
 // cache, tag a storage path, etc.).
 export function computeRenderSignature(scene: SceneDefinition, assetVersion: string): string {
   const canonical = JSON.stringify({
+    ...(scene.anatomyIdentity ? { anatomyIdentity: {
+      anatomyVersion: scene.anatomyIdentity.anatomyVersion,
+      sources: [...scene.anatomyIdentity.sources].sort((a, b) => a.sourceId.localeCompare(b.sourceId) || a.sourceVersion.localeCompare(b.sourceVersion)),
+    } } : {}),
     organ: scene.organ,
     assetVersion,
     sceneVersion: scene.sceneVersion,

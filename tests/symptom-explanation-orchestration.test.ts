@@ -1,3 +1,4 @@
+import { withTestAnatomyReview } from "./helpers/anatomy-review-fixture";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { spawn } from "node:child_process";
 import { orchestrateExplanationRender } from "../lib/symptom-explanation/orchestrate-explanation-render";
@@ -26,7 +27,7 @@ function input(message = "I have been feeling tired lately.", p = plan()) {
 }
 // Reviewed metadata fixtures only, not new geometry or a claim of real asset approval.
 function reviewed(): OrganModule {
-  return { ...HEART_ORGAN_MODULE, assetStatus: "production", anatomicallyValidated: true,
+  return withTestAnatomyReview({ ...HEART_ORGAN_MODULE, assetStatus: "production", anatomicallyValidated: true,
     anatomyRegistry: HEART_ORGAN_MODULE.anatomyRegistry.map((entry): AnatomyRegistryEntry => {
       if (entry.id === "heart.myocardium") return { ...entry, availability: "present", blenderObject: "TEST_MYOCARDIUM",
         fidelity: "reference-derived", representation: "tissue", verification: "verified",
@@ -35,7 +36,7 @@ function reviewed(): OrganModule {
       return { ...entry, availability: "present", fidelity: "reference-derived", verification: "verified",
         representation: entry.representation === "placeholder" ? "surface" : entry.representation,
         coverage: { verifiedRegions: [entry.id], unknownRegions: [], excludedRegions: [], evidenceRefs: ["test-review"] } };
-    }) };
+    }) });
 }
 function noRendering() { expect(renderHeartScene).not.toHaveBeenCalled(); expect(spawn).not.toHaveBeenCalled(); }
 describe("clinical triage to explanation rendering", () => {
