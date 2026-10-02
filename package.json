@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "worker:medical-motion": "node scripts/medical-motion-worker.cjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
