@@ -1,6 +1,7 @@
 import { fork, spawn, type ChildProcess } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import path from "node:path";
+import { tmpdir } from "node:os";
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { configuration, sql } from "../helpers/medical-motion-postgres";
 import { cleanupArtifactOwner } from "../helpers/medical-motion-artifacts";
@@ -14,7 +15,7 @@ const env = { ...process.env, MEDICAL_MOTION_WORKER_ENVIRONMENT: "isolated-test"
   MEDICAL_MOTION_RENDER_SCRIPT: path.resolve("tests/fixtures/medical-motion-handler-smoke.py"),
   MEDICAL_MOTION_WORKER_IDLE_MS: "100", MEDICAL_MOTION_WORKER_RECOVERY_MS: "1000" };
 const cloud = isolatedStorageClient(env), storage = new SupabasePrivateArtifactStorage(cloud);
-type Running = { child: ChildProcess; messages: { type: string; stage?: string; pid?: number; state?: { activeJobCount: number } }[]; logs: string; exited: Promise<number | null> };
+type Running = { child: ChildProcess; messages: { type: string; stage?: string; pid?: number; resources?:{rssBytes:number;activeResources:number};state?: { activeJobCount: number;phase?:string;ready?:boolean;lastSuccessfulPoll?:string;recoveryComplete?:boolean } }[]; logs: string; exited: Promise<number | null> };
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 async function until(check: () => Promise<boolean> | boolean, timeout = 90000) {
   const end = Date.now() + timeout; while (Date.now() < end) { if (await check()) return; await delay(100); }
@@ -27,14 +28,18 @@ describe("real isolated worker process acceptance", () => {
     const bucket = await cloud.storage.getBucket(MEDICAL_MOTION_BUCKET); expect(!!bucket.data && !bucket.error && !bucket.data.public).toBe(true);
   });
   beforeEach(async () => { owner = randomUUID(); await sql(`insert into auth.users(id) values('${owner}');`); });
-  function start(stage?: string, extra: Record<string, string | undefined> = {}, standalone = false) {
+  function start(stage?: string, extra: Record<string, string | undefined> = {}, standalone = false, supervised=false) {
+    const explicit:NodeJS.ProcessEnv={NODE_ENV:"test"};
+    for(const name of ["SystemRoot","WINDIR","PATH","TEMP","TMP","USERPROFILE","ORGANHEAL_OWNERSHIP_TEST_DATABASE_URL","ORGANHEAL_TEST_PSQL","NEXT_PUBLIC_SUPABASE_URL","SUPABASE_SERVICE_ROLE_KEY",
+      "MEDICAL_MOTION_WORKER_ENVIRONMENT","BLENDER_EXECUTABLE_PATH","MEDICAL_MOTION_RENDER_SCRIPT","MEDICAL_MOTION_WORKER_IDLE_MS","MEDICAL_MOTION_WORKER_RECOVERY_MS"])explicit[name]=env[name as keyof typeof env];
     const child = fork(path.resolve(standalone ? "scripts/medical-motion-worker.cjs" : "tests/fixtures/medical-motion-worker-process.cjs"), [], {
-      env: { ...env, ...extra, ...(stage ? { ORGANHEAL_WORKER_TEST_STAGE: stage } : {}) }, silent: true });
+      env: { ...(supervised?explicit:env), ...extra, ...(stage ? { ORGANHEAL_WORKER_TEST_STAGE: stage } : {}) },
+      ...(supervised?{cwd:tmpdir(),execArgv:["--require",path.resolve("tests/fixtures/medical-motion-packaged-supervisor.cjs")]}:{}),silent: true,...{windowsHide:true} });
     const item: Running = { child, messages: [], logs: "", exited: new Promise(resolve => child.once("exit", resolve)) };
     child.on("message", message => { item.messages.push(message as Running["messages"][number]); });
-    child.stdout!.on("data", chunk => { item.logs += String(chunk); });
+    child.stdout!.on("data", chunk => { item.logs = (item.logs+String(chunk)).slice(-262144); });
     // Inspect both streams privately for safe logging; never print diagnostics.
-    child.stderr!.on("data", chunk => { item.logs += String(chunk); }); children.push(item); return item;
+    child.stderr!.on("data", chunk => { item.logs = (item.logs+String(chunk)).slice(-262144); }); children.push(item); return item;
   }
   async function kill(item: Running) {
     if (item.child.exitCode !== null) return;
@@ -64,6 +69,7 @@ describe("real isolated worker process acceptance", () => {
     await cleanupArtifactOwner(owner);
   }, 120000);
   async function enqueue() { return (await new MedicalMotionJobRepository(client).enqueue(owner, randomUUID(), contextContent(), 0)).jobId; }
+  async function ready(worker:Running){await until(()=>worker.logs.includes('"event":"READY"'));worker.child.send("health");await until(()=>worker.messages.some(m=>m.state?.phase==="ready"));}
   const state = (id: string) => sql(`select status from public.background_jobs where id='${id}';`);
   async function complete(id: string) {
     try { await until(async () => {
@@ -80,6 +86,64 @@ describe("real isolated worker process acceptance", () => {
     }
     expect(await sql(`select count(*) from public.background_job_results where job_id='${id}';`)).toBe("1");
     expect(await sql(`select count(*) from public.medical_motion_artifacts where job_id='${id}' and persisted_at is not null;`)).toBe("1"); }
+  it.each([
+    {name:"workspace",extra:{MEDICAL_MOTION_OUTPUT_ROOT:path.resolve("package.json")},code:78},
+    {name:"database",extra:{ORGANHEAL_OWNERSHIP_TEST_DATABASE_URL:(()=>{const target=new URL(process.env.ORGANHEAL_OWNERSHIP_TEST_DATABASE_URL!);target.port="1";return target.href;})()},code:75},
+    {name:"storage",extra:{},stage:"startup-storage-outage",code:76},
+  ])("packaged startup $name failure is fatal before readiness or claims",async test=>{
+    const id=await enqueue(),worker=start(test.stage,test.extra,true,true);
+    await until(()=>worker.child.exitCode!==null,35000);expect(await worker.exited).toBe(test.code);
+    expect(worker.logs).not.toContain('"event":"READY"');expect(worker.logs).not.toContain('"event":"CLAIM"');expect(await state(id)).toBe("pending");
+  },60000);
+  it("external supervisor gracefully deploys/restarts the packaged command",async()=>{
+    const worker=start(undefined,{ORGANHEAL_HANDLER_SMOKE_CANCEL:"1"},true,true);await ready(worker);const id=await enqueue();
+    await until(()=>worker.messages.some(m=>m.stage==="render"));await stop(worker);expect(await worker.exited).toBe(0);
+    expect(await sql(`select count(*) from public.background_job_results where job_id='${id}';`)).toBe("0");
+    await sql(`update public.background_jobs set available_at=clock_timestamp(),lease_expires_at=clock_timestamp()-interval '1 second' where id='${id}' and status in ('running','retrying');`);
+    await delay(500);const restarted=start(undefined,{},true,true);await ready(restarted);await complete(id);await stop(restarted);expect(await restarted.exited).toBe(0);
+  },240000);
+  it.each(["render","after-upload","registry","published"])("external supervisor recovers packaged abrupt death at %s without duplicate publication",async point=>{
+    const worker=start(point,point==="render"?{ORGANHEAL_HANDLER_SMOKE_CANCEL:"1"}:{},true,true);await ready(worker);const id=await enqueue();
+    await until(()=>worker.messages.some(m=>m.stage===point));const token=await sql(`select attempt_token::text from public.background_jobs where id='${id}';`);await kill(worker);
+    if(point!=="published")await sql(`update public.background_jobs set lease_expires_at=clock_timestamp()-interval '1 second' where id='${id}' and status='running';`);
+    await delay(500);const restarted=start(undefined,{},true,true);await ready(restarted);await complete(id);await stop(restarted);
+    if(point!=="published")expect(await sql(`set role service_role;select outcome from public.publish_background_job_result('${id}','${token}','artifact',(select medical_motion_artifact_id from public.background_job_results where job_id='${id}'));`)).toBe("ownership-lost");
+    expect(restarted.messages.filter(m=>m.type==="blender")).toHaveLength(point==="render"?1:0);expect(await restarted.exited).toBe(0);
+  },240000);
+  it.each(["claim","after-upload"])("packaged restart recovers awaiting publication at %s",async point=>{
+    const worker=start(point,{},true,true);await ready(worker);const id=await enqueue();await until(()=>worker.messages.some(m=>m.stage===point));
+    const token=await sql(`select attempt_token::text from public.background_jobs where id='${id}';`);await kill(worker);
+    await sql(`set role service_role;select * from public.defer_background_job_completion('${id}','${token}');`);
+    await delay(500);const restarted=start(undefined,{},true,true);await ready(restarted);await complete(id);await stop(restarted);
+    expect(restarted.messages.filter(m=>m.type==="blender")).toHaveLength(point==="claim"?1:0);expect(await restarted.exited).toBe(0);
+  },240000);
+  it("packaged neutral-cwd explicit-environment worker remains bounded for a 180-second three-job soak",async()=>{
+    const worker=start(undefined,{MEDICAL_MOTION_WORKER_IDLE_MS:"1000",MEDICAL_MOTION_WORKER_RECOVERY_MS:"5000"},true,true);await ready(worker);
+    const started=Date.now(),ids:string[]=[];const completions:number[]=[];
+    for(let i=0;i<3;i++){const before=Date.now(),id=await enqueue();ids.push(id);await complete(id);completions.push(Date.now()-before);worker.child.send("health");}
+    const baseline=worker.messages.length;
+    while(Date.now()-started<180000){expect(worker.child.exitCode).toBeNull();worker.child.send("health");await delay(5000);}
+    worker.child.send("health");await until(()=>worker.messages.length>baseline);await delay(300);
+    const samples=worker.messages.slice(baseline).filter(m=>m.type==="health"&&m.state?.activeJobCount===0);
+    expect(samples.length).toBeGreaterThan(3);expect(samples.every(m=>m.state?.ready&&m.state.recoveryComplete&&m.state.lastSuccessfulPoll)).toBe(true);
+    const rss=samples.map(m=>m.resources!.rssBytes),resources=samples.map(m=>m.resources!.activeResources);
+    expect(Math.max(...rss)-Math.min(...rss)).toBeLessThan(64*1024*1024);
+    const median=(values:number[])=>[...values].sort((a,b)=>a-b)[Math.floor(values.length/2)];
+    const middle=Math.floor(resources.length/2);
+    // SQL process/pipe and provider sockets are transient. Compare steady-state
+    // medians as well as bounding the observed range; peaks alone are not leaks.
+    expect(median(resources.slice(middle))-median(resources.slice(0,middle))).toBeLessThanOrEqual(2);
+    expect(Math.max(...resources)-Math.min(...resources)).toBeLessThanOrEqual(8);
+    const events=worker.logs.trim().split(/\r?\n/).map(line=>JSON.parse(line));
+    expect(events.filter(e=>e.event==="CLAIM")).toHaveLength(3);expect(events.filter(e=>e.event==="JOB_STARTED")).toHaveLength(3);
+    expect(events.filter(e=>e.event==="PUBLICATION_RECONCILED")).toHaveLength(3);expect(Math.max(...events.map(e=>e.activeJobCount??0))).toBe(1);
+    expect(events.length).toBeLessThan(120);expect(worker.messages.filter(m=>m.type==="blender")).toHaveLength(3);
+    await stop(worker);expect(await worker.exited).toBe(0);
+    // Restart completed work: startup recovery must not start another Blender.
+    const restarted=start(undefined,{},true,true);await ready(restarted);await delay(2500);await stop(restarted);
+    expect(restarted.messages.filter(m=>m.type==="blender")).toHaveLength(0);for(const id of ids)await complete(id);
+    console.log(JSON.stringify({event:"SUPERVISOR_SOAK_ACCEPTED",durationMs:Date.now()-started,jobs:3,completionMs:completions,rssSpreadBytes:Math.max(...rss)-Math.min(...rss),resourceSpread:Math.max(...resources)-Math.min(...resources),events:events.length}));
+  },360000);
   it("multiple real Blender jobs complete through the polling loop with one active job", async () => {
     const a = await enqueue(), b = await enqueue(), worker = start();
     await until(() => worker.messages.some(message => message.type === "blender"));
@@ -103,7 +167,7 @@ describe("real isolated worker process acceptance", () => {
     { MEDICAL_MOTION_WORKER_CONCURRENCY: "99" },
   ])("standalone startup fails before claiming with invalid dependency configuration", async invalid => {
     const id = await enqueue(), worker = start(undefined, invalid, true);
-    await until(() => worker.child.exitCode !== null, 35000); expect(await worker.exited).toBe(1);
+    await until(() => worker.child.exitCode !== null, 35000); expect(await worker.exited).toBe(invalid.BLENDER_EXECUTABLE_PATH?69:64);
     expect(await state(id)).toBe("pending"); expect(worker.logs).toContain("STARTUP_FAILED");
   }, 60000);
   it.each(["claim", "context", "render", "before-upload", "after-upload", "registry", "published"])("process interruption at %s recovers once under fenced ownership", async point => {

@@ -17,7 +17,7 @@ describe("isolated worker lifecycle", () => {
   it.each(["blenderAvailable", "dbReachable", "storageConfigured"] as const)("does not claim when %s unavailable", async field => {
     const processNext = vi.fn(); const recover = vi.fn();
     const host = new MedicalMotionWorkerHost(config(), { preflight: async () => ({ ...flags, [field]: false }), recover, processNext });
-    expect(await host.run()).toEqual({ settled: true, startupFailed: true });
+    expect(await host.run()).toMatchObject({ settled: true, startupFailed: true, exitCode:70 });
     expect(processNext).not.toHaveBeenCalled(); expect(recover).not.toHaveBeenCalled(); expect(host.snapshot().ready).toBe(false);
   });
   it("recovers before the first poll, periodically, and sleeps between empty polls", async () => {

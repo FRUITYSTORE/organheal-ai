@@ -7,6 +7,7 @@ import { MEDICAL_MOTION_BUCKET, SupabasePrivateArtifactStorage, type PrivateArti
 import { readWorkerConfig } from "./config";
 import { MedicalMotionWorkerHost, type WorkerEvent } from "./host";
 import { createIsolatedMotionDatabase } from "./local-postgres";
+import { verifyWorkerWorkspace } from "./workspace";
 
 const TEST_HOST = "pmjuyyqofkdbgqmrdbuh.supabase.co";
 export function isolatedStorageClient(env: NodeJS.ProcessEnv) {
@@ -43,20 +44,25 @@ async function blenderReady(executable: string | undefined): Promise<boolean> {
 /** Trusted composition seams for process acceptance; never populated from a job payload. */
 export type WorkerOverrides = { client?: SupabaseClient; storage?: PrivateArtifactStorage; log?: (event: WorkerEvent) => void };
 export async function runIsolatedWorker(env: NodeJS.ProcessEnv = process.env, overrides: WorkerOverrides = {}) {
-  const config = readWorkerConfig(env);
-  const database = createIsolatedMotionDatabase(env);
-  const cloud = isolatedStorageClient(env);
+  let config: ReturnType<typeof readWorkerConfig>, database: ReturnType<typeof createIsolatedMotionDatabase>, cloud: SupabaseClient;
+  try { config = readWorkerConfig(env); database = createIsolatedMotionDatabase(env); cloud = isolatedStorageClient(env); }
+  catch { throw Object.assign(Error("INVALID_WORKER_CONFIGURATION"), {workerExitCode:64}); }
   const original = overrides.client ?? database.client;
   let claimTail = Promise.resolve();
   let host: MedicalMotionWorkerHost;
   // Serialize only claim RPCs; rendering/renewal retain their existing contracts.
   const client = { rpc: async (name: string, parameters: Record<string, unknown>) => {
-    if (!name.startsWith("claim_")) return original.rpc(name, parameters);
+    if (!name.startsWith("claim_")) {
+      const response=await original.rpc(name, parameters);
+      if(name==="publish_background_job_result"&&!response.error&&Array.isArray(response.data)&&response.data.some(row=>["applied","already-finalized"].includes(row.outcome)))host.log("PUBLICATION_RECONCILED",String(parameters.p_job_id));
+      return response;
+    }
     const previous = claimTail;
     let unlock!: () => void;
     claimTail = new Promise<void>(resolve => { unlock = resolve; });
     await previous;
-    try { return host.signal.aborted ? { data: [], error: null } : await original.rpc(name, parameters); }
+    try { const response=host.signal.aborted ? { data: [], error: null } : await original.rpc(name, parameters);
+      if(!response.error&&Array.isArray(response.data))for(const row of response.data)host.log("CLAIM",String(row.id));return response; }
     finally { unlock(); }
   } } as unknown as SupabaseClient;
   const storage = overrides.storage ?? new SupabasePrivateArtifactStorage(cloud);
@@ -64,8 +70,15 @@ export async function runIsolatedWorker(env: NodeJS.ProcessEnv = process.env, ov
   host = new MedicalMotionWorkerHost(config, {
     preflight: async () => {
       const blenderAvailable = await blenderReady(env.BLENDER_EXECUTABLE_PATH);
+      host.dependenciesReady({blenderAvailable});
+      if(!blenderAvailable)throw Object.assign(Error("BLENDER_UNAVAILABLE"),{workerExitCode:69});
+      try { await verifyWorkerWorkspace(env,config.concurrency); } catch { throw Object.assign(Error("WORKSPACE_UNAVAILABLE"),{workerExitCode:78}); }
       const dbReachable = await database.readiness().catch(() => false);
+      host.dependenciesReady({dbReachable});
+      if(!dbReachable)throw Object.assign(Error("DATABASE_UNAVAILABLE"),{workerExitCode:75});
       const bucket = await cloud.storage.getBucket(MEDICAL_MOTION_BUCKET).catch(() => null);
+      host.dependenciesReady({storageConfigured:!!bucket?.data&&!bucket.error&&bucket.data.public===false});
+      if(!bucket?.data||bucket.error||bucket.data.public!==false)throw Object.assign(Error("STORAGE_UNAVAILABLE"),{workerExitCode:76});
       return { blenderAvailable, dbReachable, storageConfigured: !!bucket?.data && !bucket.error && bucket.data.public === false };
     },
     recover: async () => {
@@ -82,7 +95,7 @@ export async function runIsolatedWorker(env: NodeJS.ProcessEnv = process.env, ov
   const message = (value: unknown) => {
     if (value === "shutdown") stop();
     if (value === "health" && process.connected && process.send) {
-      try { process.send({ type: "health", state: host.snapshot() }, () => {}); }
+      try { process.send({ type: "health", state: host.health(),resources:{rssBytes:process.memoryUsage().rss,activeResources:process.getActiveResourcesInfo().length} }, () => {}); }
       catch { /* A diagnostic channel failure cannot alter execution ownership. */ }
     }
   };

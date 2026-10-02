@@ -19,6 +19,8 @@
 
 # production
 /build
+/dist/medical-motion-worker/
+/dist/motion-build-*/
 
 # misc
 .DS_Store
