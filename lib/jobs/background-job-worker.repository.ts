@@ -11,6 +11,7 @@ import type {
   JobStatus,
   JobType,
 } from "./job-types";
+import { JOB_TYPES, REQUEST_WORKER_JOB_TYPES } from "./job-types";
 
 export type DurableBackgroundJob<
   TPayload = unknown,
@@ -161,11 +162,19 @@ function mapBackgroundJobRow<
 }
 
 export class BackgroundJobWorkerRepository {
+  private readonly allowedTypes: readonly JobType[];
   constructor(
     private readonly client:
       SupabaseClient =
-        getSupabaseAdminClient()
-  ) {}
+        getSupabaseAdminClient(),
+    allowedTypes: readonly JobType[] = REQUEST_WORKER_JOB_TYPES,
+  ) {
+    if (!Array.isArray(allowedTypes) || allowedTypes.length === 0 || allowedTypes.length > Object.keys(JOB_TYPES).length ||
+      !allowedTypes.every(type => Object.values(JOB_TYPES).includes(type)) || new Set(allowedTypes).size !== allowedTypes.length) {
+      throw new Error("Invalid server worker capabilities.");
+    }
+    this.allowedTypes = Object.freeze([...allowedTypes]);
+  }
 
     async recoverStaleJobs({
     staleAfterSeconds = 1800,
@@ -241,7 +250,8 @@ export class BackgroundJobWorkerRepository {
       error,
     } =
       await this.client.rpc(
-        "claim_next_background_job"
+        "claim_next_background_job",
+        { p_allowed_job_types: [...this.allowedTypes] }
       );
 
     if (error) {
@@ -257,6 +267,8 @@ export class BackgroundJobWorkerRepository {
       rows[0] as
         | BackgroundJobRow
         | undefined;
+
+    if (row && !this.allowedTypes.includes(row.job_type)) throw new Error("Background job claim exceeded server capabilities.");
 
     return row
       ? mapBackgroundJobRow<TPayload>(
@@ -282,6 +294,7 @@ export class BackgroundJobWorkerRepository {
         {
           p_job_id:
             jobId,
+          p_allowed_job_types: [...this.allowedTypes],
         }
       );
 
@@ -298,6 +311,8 @@ export class BackgroundJobWorkerRepository {
       rows[0] as
         | BackgroundJobRow
         | undefined;
+
+    if (row && !this.allowedTypes.includes(row.job_type)) throw new Error("Background job claim exceeded server capabilities.");
 
     return row
       ? mapBackgroundJobRow<TPayload>(

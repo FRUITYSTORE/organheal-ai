@@ -1,4 +1,5 @@
 export const JOB_TYPES = {
+  MEDICAL_MOTION_RENDER: "medical-motion-render",
   PDF_EXTRACTION:
     "pdf-extraction",
 
@@ -23,6 +24,11 @@ export const JOB_TYPES = {
 
 export type JobType =
   (typeof JOB_TYPES)[keyof typeof JOB_TYPES];
+
+/** Matches the actual handlers registered by the request/cron runtime. */
+export const REQUEST_WORKER_JOB_TYPES: readonly JobType[] = Object.freeze([
+  JOB_TYPES.PDF_EXTRACTION, JOB_TYPES.FOLLOW_UP_DELIVERY,
+]);
 
 export const JOB_STATUS = {
   PENDING:

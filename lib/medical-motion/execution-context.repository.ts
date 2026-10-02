@@ -29,7 +29,7 @@ export class ExecutionContextError extends Error {
   }
 }
 function invalid(): never { throw new ExecutionContextError("INVALID_CONTEXT"); }
-function content(value: unknown): MedicalMotionContextContent {
+export function validateMedicalMotionContextContent(value: unknown): MedicalMotionContextContent {
   let snapshot: MedicalMotionJson;
   try { snapshot = jsonSnapshot(value, CONTEXT_LIMITS); } catch { return invalid(); }
   if (!fields(snapshot, CONTENT_KEYS) || snapshot.schemaVersion !== "1" || snapshot.executionVersion !== "1" ||
@@ -43,6 +43,7 @@ function content(value: unknown): MedicalMotionContextContent {
   catch { return invalid(); }
   return snapshot as MedicalMotionContextContent;
 }
+const content = validateMedicalMotionContextContent;
 function identity(value: unknown): string {
   if (!isUuid(value)) return invalid();
   return value.toLowerCase();

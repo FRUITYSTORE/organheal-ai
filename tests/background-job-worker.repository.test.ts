@@ -122,6 +122,7 @@ describe(
         ).toHaveBeenCalledWith(
           "claim_background_job_by_id",
           {
+            p_allowed_job_types: ["pdf-extraction", "follow-up-delivery"],
             p_job_id:
               jobId,
           }
@@ -195,6 +196,7 @@ describe(
         ).toHaveBeenCalledWith(
           "claim_background_job_by_id",
           {
+            p_allowed_job_types: ["pdf-extraction", "follow-up-delivery"],
             p_job_id:
               "22222222-2222-4222-8222-222222222222",
           }

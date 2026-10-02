@@ -1,7 +1,7 @@
-import { spawn } from "node:child_process";
+import { literal, createCall, client } from "./helpers/medical-motion-rpc";
+import { configuration, sql } from "./helpers/medical-motion-postgres";
 import { randomUUID } from "node:crypto";
-import { existsSync, readFileSync } from "node:fs";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { readFileSync } from "node:fs";
 import { beforeAll, beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import { MedicalMotionExecutionContextRepository as Repository } from "@/lib/medical-motion/execution-context.repository";
 import { contextContent } from "./helpers/medical-motion-context";
@@ -14,51 +14,6 @@ import { canonicalExplanationJson } from "@/lib/symptom-explanation/compile-expl
 vi.mock("@/lib/medical-motion/render/blender-renderer", async original => ({
   ...await original<typeof blender>(), renderHeartScene: vi.fn(),
 }));
-
-function configuration() {
-  let url: URL;
-  const executable = process.env.ORGANHEAL_TEST_PSQL;
-  try { url = new URL(process.env.ORGANHEAL_OWNERSHIP_TEST_DATABASE_URL!); } catch { throw new Error("Local context test configuration unavailable."); }
-  if (!["postgres:", "postgresql:"].includes(url.protocol) || !["localhost", "127.0.0.1"].includes(url.hostname) ||
-    url.pathname !== "/organheal_ownership_test_step3c" || !executable || !existsSync(executable)) {
-    throw new Error("Local context database safety guard failed.");
-  }
-  return { url, executable };
-}
-function sql(input: string): Promise<string> {
-  const { url, executable } = configuration();
-  return new Promise((resolve, reject) => {
-    const child = spawn(executable, ["-X", "-w", "-q", "-A", "-t", "-v", "ON_ERROR_STOP=1", "-h", url.hostname,
-      "-p", url.port || "5432", "-U", decodeURIComponent(url.username), "-d", url.pathname.slice(1)],
-    { env: { ...process.env, PGPASSWORD: decodeURIComponent(url.password), PGOPTIONS: "-c statement_timeout=7000", PGCONNECT_TIMEOUT: "5" }, windowsHide: true });
-    let output = "";
-    child.stdout.on("data", chunk => { output += String(chunk); });
-    child.stderr.on("data", () => {}); // Never echo SQL/clinical/provider diagnostics.
-    child.on("error", () => reject(new Error("Local PostgreSQL client unavailable.")));
-    child.on("close", code => code === 0 ? resolve(output.trim()) : reject(new Error("Local context PostgreSQL assertion failed.")));
-    child.stdin.end(input);
-  });
-}
-const literal = (value: unknown) => "'" + String(value).replaceAll("'", "''") + "'";
-function createCall(owner: string, input = contextContent()) {
-  return `public.create_medical_motion_execution_context(${literal(owner)}::uuid,${literal(input.schemaVersion)},${literal(input.executionVersion)},
-    ${literal(input.assetVersion)},${literal(input.clinical.message)},${literal(input.clinical.language)},${literal(JSON.stringify(input.candidatePlan))}::jsonb)`;
-}
-/** Existing psql approach with a Supabase RPC-shaped seam: the real repository
- * validates on both sides, while privileges and storage execute in PostgreSQL.
- * No HTTP or production Supabase connection is used. */
-const client = { rpc: async (name: string, p: Record<string, unknown>) => {
-  try {
-    let call: string;
-    if (name === "create_medical_motion_execution_context") call = `public.create_medical_motion_execution_context(
-      ${literal(p.p_user_id)}::uuid,${literal(p.p_schema_version)},${literal(p.p_execution_version)},${literal(p.p_asset_version)},
-      ${literal(p.p_clinical_message)},${literal(p.p_clinical_language)},${literal(JSON.stringify(p.p_candidate_plan))}::jsonb)`;
-    else if (name === "read_medical_motion_execution_context") call = `public.read_medical_motion_execution_context(${literal(p.p_context_id)}::uuid,${literal(p.p_user_id)}::uuid)`;
-    else throw new Error();
-    const output = await sql(`set role service_role; select coalesce(json_agg(row_to_json(c)), '[]'::json)::text from ${call} c;`);
-    return { data: JSON.parse(output), error: null };
-  } catch { return { data: null, error: { message: "Local context RPC failed." } }; }
-} } as unknown as SupabaseClient;
 
 describe("real PostgreSQL durable execution context (mandatory, no skips)", () => {
   let owner: string;
