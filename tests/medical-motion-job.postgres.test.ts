@@ -36,6 +36,7 @@ describe("mandatory real PostgreSQL Medical Motion durable job foundation",()=>{
       alter table public.background_job_results enable trigger background_job_results_immutable;
       alter table public.background_jobs disable trigger background_jobs_medical_motion_link;
       delete from public.background_jobs where user_id in('${owner}','${other}');
+      set constraints all immediate;
       alter table public.background_jobs enable trigger background_jobs_medical_motion_link;
       alter table public.medical_motion_requests disable trigger medical_motion_requests_immutable;
       delete from public.medical_motion_requests where user_id in('${owner}','${other}');

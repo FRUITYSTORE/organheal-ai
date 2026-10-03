@@ -9,7 +9,7 @@ import { ArtifactError } from "../artifacts/repository";
 /** Trusted opt-in operation. No registration in the installed worker/service, no public endpoint. */
 export async function executeOwnedComposition(client: SupabaseClient, service: MedicalMotionCompositionService,
   job: DurableBackgroundJob, baseJobId: string, specification: unknown, externalSignal: AbortSignal) {
-  const attempts = new BackgroundJobWorkerRepository(client, ["medical-motion-render"]);
+  const attempts = new BackgroundJobWorkerRepository(client, [job.type === "medical-motion-compose" ? "medical-motion-compose" : "medical-motion-render"]);
   const results = new BackgroundJobResultRepository(client);
   const ownership = new ExecutionOwnership({ jobId: job.id, attemptToken: job.attemptToken }, {
     renewLease: attempt => attempts.renewLease(attempt), publish: request => results.publish(request),

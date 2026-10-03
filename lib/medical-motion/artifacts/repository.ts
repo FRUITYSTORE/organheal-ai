@@ -29,7 +29,7 @@ export class MedicalMotionArtifactRepository {
     return response.data.map(row);
   }
   private args(job:DurableBackgroundJob) {
-    if(job.type!=="medical-motion-render" || !isUuid(job.id) || !isUuid(job.userId) || !isUuid(job.attemptToken)) throw new ArtifactError("ARTIFACT_INVALID");
+    if(!["medical-motion-render","medical-motion-compose"].includes(job.type) || !isUuid(job.id) || !isUuid(job.userId) || !isUuid(job.attemptToken)) throw new ArtifactError("ARTIFACT_INVALID");
     return {p_job_id:job.id,p_user_id:job.userId,p_attempt_token:job.attemptToken};
   }
   async list(job:DurableBackgroundJob) { return this.call("motion_artifact_operation",{...this.args(job),p_action:"list"}); }

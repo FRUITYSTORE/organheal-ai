@@ -1,4 +1,5 @@
 export const JOB_TYPES = {
+  MEDICAL_MOTION_COMPOSE: "medical-motion-compose",
   MEDICAL_MOTION_RENDER: "medical-motion-render",
   PDF_EXTRACTION:
     "pdf-extraction",

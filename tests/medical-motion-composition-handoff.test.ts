@@ -65,4 +65,13 @@ describe("existing artifact handoff for private composition recovery", () => {
     expect(metrics.snapshot["composition-complete"]).toBe(1); expect(Object.isFrozen(metrics.snapshot)).toBe(true);
     expect(JSON.stringify(metrics.snapshot)).not.toContain(record.id);
   });
+  it("aggregates bounded media measurements without accepting malformed telemetry", () => {
+    const metrics = new CompositionMetrics();
+    metrics.reuse({ event: "MEDICAL_MOTION_CACHE", disposition: "RENDER_CREATED" });
+    metrics.composition("composition-complete", { ffmpegMilliseconds: 12, outputBytes: 100 });
+    metrics.composition("composition-complete", { ffmpegMilliseconds: NaN, outputBytes: 100 });
+    metrics.composition("composition-start", { ffmpegMilliseconds: 99, outputBytes: 100 });
+    metrics.composition("composition-complete", { ffmpegMilliseconds: 12, outputBytes: 67108865 });
+    expect(metrics.snapshot).toMatchObject({ "base-render-created": 1, ffmpegMilliseconds: 12, outputBytes: 100 });
+  });
 });

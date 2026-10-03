@@ -12,7 +12,12 @@ export function createCall(owner: string, input = contextContent()) {
 export const client = { rpc: async (name: string, p: Record<string, unknown>) => {
   try {
     let call: string;
-    if (name === "create_medical_motion_execution_context") call = `public.create_medical_motion_execution_context(
+    if (name === "approve_motion_personalization") call = `public.approve_motion_personalization(${literal(p.p_user_id)}::uuid,${literal(JSON.stringify(p.p_content))}::jsonb)`;
+    else if(name==='motion_composition_attempt_current'){const r=await sql(`set role service_role;select public.motion_composition_attempt_current(${literal(p.p_spec_id)}::uuid,${literal(p.p_user_id)}::uuid,${literal(p.p_attempt_token)}::uuid);`);return {data:r==='t',error:null};}
+    else if(name==='cancel_motion_personalization'){const r=await sql(`set role service_role;select public.cancel_motion_personalization(${literal(p.p_spec_id)}::uuid,${literal(p.p_user_id)}::uuid);`);return {data:r==='t',error:null};}
+    else if (name === "read_approved_motion_personalization") call = `public.read_approved_motion_personalization(${literal(p.p_spec_id)}::uuid,${literal(p.p_user_id)}::uuid)`;
+    else if (name === "claim_next_background_job") call = `public.claim_next_background_job(array[${(p.p_allowed_job_types as string[]).map(literal).join(",")}])`;
+    else if (name === "create_medical_motion_execution_context") call = `public.create_medical_motion_execution_context(
       ${literal(p.p_user_id)}::uuid,${literal(p.p_schema_version)},${literal(p.p_execution_version)},${literal(p.p_asset_version)},
       ${literal(p.p_clinical_message)},${literal(p.p_clinical_language)},${literal(JSON.stringify(p.p_candidate_plan))}::jsonb)`;
     else if (name === "read_medical_motion_execution_context") call = `public.read_medical_motion_execution_context(${literal(p.p_context_id)}::uuid,${literal(p.p_user_id)}::uuid)`;

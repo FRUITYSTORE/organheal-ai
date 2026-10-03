@@ -16,6 +16,7 @@ import type { NarrationSegment } from "../contracts/personalization";
 import sharp from "sharp";
 
 export type CompositionEvent = "composition-start" | "composition-complete" | "composition-failure" | "reusable-audio-hit";
+export type CompositionMeasurement = Readonly<{ ffmpegMilliseconds: number; outputBytes: number }>;
 export type CompositionBase = { record: ArtifactRecord; bytes: Buffer };
 /** Audio resolution is trusted server code; no input paths/URLs accepted. */
 export type AudioResolver = (id: string, scope: "reusable-no-phi" | "private-context", userId: string,
@@ -24,8 +25,8 @@ const digest = (b: Buffer) => createHash("sha256").update(b).digest("hex");
 
 export async function composePersonalizedMedia(runtime: FfmpegRuntime, capability: ValidatedComposition,
   base: CompositionBase, identity: { jobId: string; userId: string; attemptToken: string }, signal: AbortSignal,
-  audioResolver?: AudioResolver, observe: (event: CompositionEvent) => void = () => {}): Promise<LocalArtifactCandidate> {
-  const event = (value: CompositionEvent) => { try { observe(value); } catch { /* no telemetry authority */ } };
+  audioResolver?: AudioResolver, observe: (event: CompositionEvent, measurement?: CompositionMeasurement) => void = () => {}): Promise<LocalArtifactCandidate> {
+  const event = (value: CompositionEvent, measurement?: CompositionMeasurement) => { try { observe(value, measurement); } catch { /* no telemetry authority */ } };
   if (!isValidatedComposition(capability) || identity.userId !== capability.userId ||
     base.record.id !== capability.specification.baseArtifactId || !base.record.persisted || !["still", "video"].includes(base.record.media) ||
     base.record.media !== capability.baseMedia ||
@@ -107,7 +108,9 @@ export async function composePersonalizedMedia(runtime: FfmpegRuntime, capabilit
     if (audioLabels.length) args.push("-map", "[audio]", "-c:a", "aac"); else args.push("-an");
     args.push("-filter_complex_threads", "1", "-c:v", "libx264", "-preset", "ultrafast", "-crf", "23", "-pix_fmt", "yuv420p", "-threads", "1",
       "-t", String(inspected.duration), "-movflags", "+faststart", "-fs", String(ARTIFACT_MAX_BYTES), "personalized.mp4");
+    const ffmpegStarted = performance.now();
     await executeMediaProcess(runtime, "ffmpeg", args, owner.directory, signal);
+    const ffmpegMilliseconds = Math.round(performance.now() - ffmpegStarted);
     if (audioLabels.length) registerComposedAudio(owner);
     const info = await lstat(owner.outputPath);
     if (info.size < 1 || info.size > ARTIFACT_MAX_BYTES || !(await validateArtifact(owner, resolved.dimensions)).ok)
@@ -120,7 +123,8 @@ export async function composePersonalizedMedia(runtime: FfmpegRuntime, capabilit
     if (signal.aborted) throw new CompositionError("COMPOSITION_CANCELLED");
     const candidate: LocalArtifactCandidate = Object.freeze({ localPath: owner.outputPath, media: "video",
       executionSeconds: (performance.now() - start) / 1000, discard: () => discardArtifact(owner) });
-    recordCandidateOwnership(candidate, owner, resolved.dimensions, identity); event("composition-complete"); return candidate;
+    recordCandidateOwnership(candidate, owner, resolved.dimensions, identity);
+    event("composition-complete", Object.freeze({ ffmpegMilliseconds, outputBytes: info.size })); return candidate;
   } catch (error) {
     if (!(error instanceof CompositionError && error.code === "COMPOSITION_CLEANUP_UNKNOWN")) await discardArtifact(owner);
     event("composition-failure");
