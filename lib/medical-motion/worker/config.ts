@@ -1,4 +1,11 @@
 import "server-only";
+/** Only the isolated server entrypoint consumes this opt-in. Missing means off. */
+export function readIsolatedReuseConfig(env:Readonly<Record<string,string|undefined>>):boolean {
+  const value=env.MEDICAL_MOTION_WORKER_REUSE;
+  if(value===undefined||value==="disabled")return false;
+  if(value!=="enabled"||env.MEDICAL_MOTION_WORKER_ENVIRONMENT!=="isolated-test")throw Error("INVALID_WORKER_CONFIGURATION");
+  return true;
+}
 export type WorkerConfig=Readonly<{concurrency:number;pollBatch:number;idleMs:number;errorMaxMs:number;recoveryMs:number;shutdownMs:number}>;
 export function readWorkerConfig(env:Readonly<Record<string,string|undefined>>):WorkerConfig {
   const number=(name:string,fallback:number,min:number,max:number)=>{

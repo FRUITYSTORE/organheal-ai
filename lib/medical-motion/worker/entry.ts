@@ -4,7 +4,7 @@ import { existsSync } from "node:fs";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { createMedicalMotionArtifactRuntime } from "../artifacts/runtime";
 import { MEDICAL_MOTION_BUCKET, SupabasePrivateArtifactStorage, type PrivateArtifactStorage } from "../artifacts/storage";
-import { readWorkerConfig } from "./config";
+import { readWorkerConfig,readIsolatedReuseConfig } from "./config";
 import { MedicalMotionWorkerHost, type WorkerEvent } from "./host";
 import { createIsolatedMotionDatabase } from "./local-postgres";
 import { verifyWorkerWorkspace } from "./workspace";
@@ -45,7 +45,8 @@ async function blenderReady(executable: string | undefined): Promise<boolean> {
 export type WorkerOverrides = { client?: SupabaseClient; storage?: PrivateArtifactStorage; log?: (event: WorkerEvent) => void };
 export async function runIsolatedWorker(env: NodeJS.ProcessEnv = process.env, overrides: WorkerOverrides = {}) {
   let config: ReturnType<typeof readWorkerConfig>, database: ReturnType<typeof createIsolatedMotionDatabase>, cloud: SupabaseClient;
-  try { config = readWorkerConfig(env); database = createIsolatedMotionDatabase(env); cloud = isolatedStorageClient(env); }
+  let reuse:boolean;
+  try { config = readWorkerConfig(env); reuse=readIsolatedReuseConfig(env); database = createIsolatedMotionDatabase(env); cloud = isolatedStorageClient(env); }
   catch { throw Object.assign(Error("INVALID_WORKER_CONFIGURATION"), {workerExitCode:64}); }
   const original = overrides.client ?? database.client;
   let claimTail = Promise.resolve();
@@ -73,7 +74,7 @@ export async function runIsolatedWorker(env: NodeJS.ProcessEnv = process.env, ov
       host.dependenciesReady({blenderAvailable});
       if(!blenderAvailable)throw Object.assign(Error("BLENDER_UNAVAILABLE"),{workerExitCode:69});
       try { await verifyWorkerWorkspace(env,config.concurrency); } catch { throw Object.assign(Error("WORKSPACE_UNAVAILABLE"),{workerExitCode:78}); }
-      const dbReachable = await database.readiness().catch(() => false);
+      const dbReachable = await database.readiness(reuse).catch(() => false);
       host.dependenciesReady({dbReachable});
       if(!dbReachable)throw Object.assign(Error("DATABASE_UNAVAILABLE"),{workerExitCode:75});
       const bucket = await cloud.storage.getBucket(MEDICAL_MOTION_BUCKET).catch(() => null);
@@ -90,7 +91,8 @@ export async function runIsolatedWorker(env: NodeJS.ProcessEnv = process.env, ov
     processNext: () => runtime.worker.processNext(),
     log: overrides.log ?? (event => { process.stdout.write(JSON.stringify(event) + "\n"); }),
   });
-  runtime = createMedicalMotionArtifactRuntime(client, { mode: "development", signal: host.signal }, storage, id => host.beginJob(id));
+  runtime = createMedicalMotionArtifactRuntime(client, { mode: "development", signal: host.signal,reuse,
+    observeReuse:event=>{process.stdout.write(JSON.stringify(event)+"\n");} }, storage, id => host.beginJob(id));
   const stop = () => host.stop();
   const message = (value: unknown) => {
     if (value === "shutdown") stop();

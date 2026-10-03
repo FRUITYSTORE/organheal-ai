@@ -86,6 +86,14 @@ describe("real isolated Storage + local PostgreSQL acceptance",()=>{
     const {c,bytes}=await candidate(),a=await service.handoff(job,c,signal()),r=await storage.read(a.id);
     expect(a.id).toMatch(/^[0-9a-f-]{36}$/);expect(r?.contentType).toBe("image/png");expect(r?.bytes.equals(bytes)).toBe(true);expect(a.sha256).toBe(sha(bytes));expect(a.byteSize).toBe(bytes.length);
   },30000);
+  it("real info returns custom SHA, MIME and size; missing object and private metadata are explicit",async()=>{
+    const {c,bytes}=await candidate(),a=await service.handoff(job,c,signal());
+    expect(await storage.inspect(a.id)).toEqual({byteSize:bytes.length,contentType:"image/png",sha256:sha(bytes)});
+    expect(await storage.inspect(randomUUID())).toBeUndefined();
+    const denied=await anon.storage.from(MEDICAL_MOTION_BUCKET).info(a.id);expect(!!denied.error&&!denied.data).toBe(true);
+    vi.spyOn(admin.storage,"from").mockImplementationOnce(()=>{throw Error("TEST PRIVATE PROVIDER DIAGNOSTIC");});
+    await expect(storage.inspect(a.id)).rejects.toThrow(/^ARTIFACT_STORAGE_UNAVAILABLE$/);
+  },30000);
   it("public and anonymous fetch cannot read an existing UUID",async()=>{
     const a=await service.handoff(job,(await candidate()).c,signal());
     const publicRead=await safeFetch(new URL(`/storage/v1/object/public/${MEDICAL_MOTION_BUCKET}/${a.id}`,target));expect(publicRead.ok).toBe(false);

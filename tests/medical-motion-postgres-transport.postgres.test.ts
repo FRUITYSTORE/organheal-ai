@@ -33,3 +33,10 @@ it("classifies statement timeout with its SQLSTATE", async () => {
 it("performs real version/schema readiness without psql", async () => {
   expect(await createIsolatedMotionDatabase({ ...process.env, ORGANHEAL_TEST_PSQL: undefined }).readiness()).toBe(true);
 });
+it("checks reusable schema readiness and reaches the real fenced cache RPC",async()=>{
+  const database=createIsolatedMotionDatabase({...process.env,ORGANHEAL_TEST_PSQL:undefined});
+  expect(await database.readiness(true)).toBe(true);
+  const uuid="00000000-0000-4000-8000-000000000001";
+  const r=await database.client.rpc("motion_reuse_operation",{p_job_id:uuid,p_user_id:uuid,p_attempt_token:uuid,p_action:"reserve",p_identity:{},p_epoch:null,p_artifact_id:null});
+  expect(r.error?.code).toBe("OM403");expect(r.data).toBeNull();
+});

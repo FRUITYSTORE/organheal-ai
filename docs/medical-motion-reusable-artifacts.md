@@ -2,11 +2,13 @@
 
 Reuse is an explicit trusted composition option:
 `createMedicalMotionArtifactRuntime(client, { mode, reuse: true }, storage)`.
-The existing renderer/worker/publication pipeline is reused. Existing Windows
-worker/service configuration remains unchanged and cache-disabled; no automatic
-deployment, SCM installation, reboot or production migration occurs here. A
-future service activation needs migration/provider readiness and operational
-acceptance. The cache is not a public API and cannot be enabled by queued AI data.
+The existing renderer/worker/publication pipeline is reused. The isolated
+standalone worker now supports an explicit server environment opt-in described
+in [isolated cache acceptance](medical-motion-isolated-cache-acceptance.md).
+The installed Windows service configuration remains cache-disabled; no automatic
+SCM installation, reboot or production migration occurs. Future service
+activation needs reviewed configuration and operational acceptance. The cache
+is not a public API and cannot be enabled by queued AI data.
 
 ## Identity and privacy
 

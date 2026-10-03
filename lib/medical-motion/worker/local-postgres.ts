@@ -17,6 +17,7 @@ export function createIsolatedMotionDatabase(env:NodeJS.ProcessEnv){
       else if(name==="mutate_background_job_attempt")call=`public.mutate_background_job_attempt(${literal(p.p_job_id)}::uuid,${literal(p.p_attempt_token)}::uuid,${literal(p.p_action)},${Number(p.p_retry_delay_ms??0)},${p.p_error_message?literal(p.p_error_message):"null"})`;
       else if(name==="defer_background_job_completion")call=`public.defer_background_job_completion(${literal(p.p_job_id)}::uuid,${literal(p.p_attempt_token)}::uuid)`;
       else if(name==="motion_artifact_operation")call=`public.motion_artifact_operation(${literal(p.p_job_id)}::uuid,${literal(p.p_user_id)}::uuid,${literal(p.p_attempt_token)}::uuid,${literal(p.p_action)},${p.p_artifact_id?literal(p.p_artifact_id)+"::uuid":"null"},${p.p_media?literal(p.p_media):"null"},${p.p_byte_size?Number(p.p_byte_size):"null"},${p.p_sha256?literal(p.p_sha256):"null"})`;
+      else if(name==="motion_reuse_operation")call=`public.motion_reuse_operation(${literal(p.p_job_id)}::uuid,${literal(p.p_user_id)}::uuid,${literal(p.p_attempt_token)}::uuid,${literal(p.p_action)},${literal(JSON.stringify(p.p_identity))}::jsonb,${p.p_epoch===null?"null":Number(p.p_epoch)},${p.p_artifact_id?literal(p.p_artifact_id)+"::uuid":"null"})`;
       else if(name==="publish_background_job_result")call=`public.publish_background_job_result(${literal(p.p_job_id)}::uuid,${literal(p.p_attempt_token)}::uuid,${literal(p.p_result_kind)},${literal(p.p_reference_id)}::uuid)`;
       else if(name==="read_published_motion_artifact")call=`public.read_published_motion_artifact(${literal(p.p_job_id)}::uuid,${literal(p.p_user_id)}::uuid)`;
       else if(name==="recover_stale_background_jobs")call=`public.recover_stale_background_jobs(1800,${Number(p.p_maximum_jobs)})`;
@@ -30,9 +31,11 @@ export function createIsolatedMotionDatabase(env:NodeJS.ProcessEnv){
     const value=JSON.parse(await query("begin read only;set local role service_role;select json_build_object('waitingCount',count(*),'oldestWaitingMs',coalesce(greatest(0,extract(epoch from (clock_timestamp()-min(created_at)))*1000),0))::text from public.background_jobs where job_type='medical-motion-render' and status in ('pending','retrying') and available_at<=clock_timestamp();commit;"));
     if(!Number.isSafeInteger(value.waitingCount)||value.waitingCount<0||!Number.isFinite(value.oldestWaitingMs)||value.oldestWaitingMs<0)throw Error("INVALID_QUEUE_HEALTH");
     return {waitingCount:value.waitingCount,oldestWaitingMs:value.oldestWaitingMs};
-  },readiness:async()=>{
+  },readiness:async(reuse=false)=>{
     const version=await query("show server_version;");if(!version.startsWith("17.11"))throw Error("ISOLATED_DATABASE_VERSION_REQUIRED");
     const schema=await query("select to_regclass('public.medical_motion_artifacts') is not null and to_regprocedure('public.resume_motion_worker_pending(integer)') is not null;");
-    if(schema!=="t")throw Error("WORKER_SCHEMA_UNAVAILABLE");return true;
+    if(schema!=="t")throw Error("WORKER_SCHEMA_UNAVAILABLE");
+    if(reuse&&await query("select to_regclass('public.medical_motion_reuse_keys') is not null and to_regclass('public.medical_motion_reuse_links') is not null and to_regprocedure('public.motion_reuse_operation(uuid,uuid,uuid,text,jsonb,bigint,uuid)') is not null;")!=="t")throw Error("WORKER_CACHE_SCHEMA_UNAVAILABLE");
+    return true;
   }};
 }
