@@ -7,6 +7,7 @@ import { readCandidateOwnership } from "../render/execution-resources";
 import { validateArtifact } from "../render/artifact-output";
 import { ArtifactError, ARTIFACT_MAX_BYTES, MedicalMotionArtifactRepository, type ArtifactRecord } from "./repository";
 import { contentTypeFor, type PrivateArtifactStorage, type StoredBytes } from "./storage";
+import { isUuid } from "@/lib/validation/uuid";
 
 const digest=(bytes:Buffer)=>createHash("sha256").update(bytes).digest("hex");
 const active=(signal:AbortSignal)=>{if(signal.aborted) throw new ArtifactError("ARTIFACT_OWNERSHIP_LOST");};
@@ -37,7 +38,8 @@ export class MedicalMotionArtifactService {
     }
     return undefined;
   }
-  async handoff(job:DurableBackgroundJob,candidate:LocalArtifactCandidate,signal:AbortSignal):Promise<ArtifactRecord> {
+  async handoff(job:DurableBackgroundJob,candidate:LocalArtifactCandidate,signal:AbortSignal,reservedId?:string):Promise<ArtifactRecord> {
+    if(reservedId!==undefined&&!isUuid(reservedId)) throw new ArtifactError("ARTIFACT_INVALID");
     active(signal);const proof=readCandidateOwnership(candidate);
     if(!proof || proof.owner.outputPath!==candidate.localPath || proof.owner.media!==candidate.media ||
       proof.identity?.jobId!==job.id || proof.identity?.userId!==job.userId || proof.identity?.attemptToken!==job.attemptToken) throw new ArtifactError("ARTIFACT_INVALID");
@@ -63,7 +65,13 @@ export class MedicalMotionArtifactService {
       } finally {await file.close();}
     } catch(error) {throw error instanceof ArtifactError?error:new ArtifactError("ARTIFACT_INVALID");}
     active(signal);
-    const record=await this.repository.reserve(job,{media:candidate.media,byteSize:bytes.length,sha256:digest(bytes)});
+    // Composition recovery can reproduce an existing immutable intent after a
+    // new attempt. The current fenced list, owner, media and exact bytes must
+    // all match; a supplied UUID alone never grants upload authority.
+    const content={media:candidate.media,byteSize:bytes.length,sha256:digest(bytes)};
+    const record=reservedId!==undefined ? (await this.repository.list(job)).find(r=>r.id===reservedId) : await this.repository.reserve(job,content);
+    if(!record||record.jobId!==job.id||record.userId!==job.userId||record.media!==content.media||
+      record.byteSize!==content.byteSize||record.sha256!==content.sha256) throw new ArtifactError("ARTIFACT_CONFLICT");
     active(signal);
     let stored=await this.read(record.id,signal);active(signal);
     if(!stored) {

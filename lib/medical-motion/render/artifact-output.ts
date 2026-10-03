@@ -6,6 +6,13 @@ import type { RenderMedia } from "../contracts/scene";
 import type { OutputDimensions } from "./dimension-policy";
 
 export type ArtifactOwnership = Readonly<{ root: string; directory: string; outputPath: string; media: RenderMedia }>;
+const composedAudio = new WeakSet<object>();
+const allocatedOwners = new WeakSet<object>();
+/** Internal composition capability; JSON/path copies do not enable audio acceptance. */
+export function registerComposedAudio(owner: ArtifactOwnership): void {
+  if (!allocatedOwners.has(owner) || owner.media !== "video") throw new Error("Invalid composition ownership.");
+  composedAudio.add(owner);
+}
 
 /** The legacy outputPath argument is now a filename, never a destination.
  * Capability matching still uses the original argument; only server code allocates paths. */
@@ -29,7 +36,8 @@ export async function createArtifactOwnership(name: string, media: RenderMedia):
   // simultaneous requests with the same scene/signature/filename.
   const directory = await mkdtemp(path.join(root, "invocation-"), { encoding: "utf8" });
   const outputPath = path.join(directory, name);
-  return Object.freeze({ root, directory, outputPath, media });
+  const owner = Object.freeze({ root, directory, outputPath, media });
+  allocatedOwners.add(owner); return owner;
 }
 
 async function assertOwnership(owner: ArtifactOwnership) {
@@ -133,13 +141,18 @@ export async function validateArtifact(owner: ArtifactOwnership, dimensions: Out
             const entries = await children(position + headerSize, position + size);
             const header = entries.find((entry) => entry.type === "mvhd");
             const tracks = entries.filter((entry) => entry.type === "trak");
-            if (!header || header.end - header.start < 20 || tracks.length !== 1) throw new Error("Missing movie/video track.");
-            const media = (await children(tracks[0].start, tracks[0].end)).find((entry) => entry.type === "mdia");
-            if (!media) throw new Error("Missing track metadata.");
-            const handler = (await children(media.start, media.end)).find((entry) => entry.type === "hdlr");
-            if (!handler || handler.end - handler.start < 12 || (await read(handler.start + 8, 4)).toString("ascii") !== "vide") {
-              throw new Error("Not a video-only MP4.");
+            const audioAllowed = composedAudio.has(owner);
+            if (!header || header.end - header.start < 20 || tracks.length !== (audioAllowed ? 2 : 1)) throw new Error("Missing movie/video track.");
+            const handlers: string[] = [];
+            for (const track of tracks) {
+              const media = (await children(track.start, track.end)).find((entry) => entry.type === "mdia");
+              if (!media) throw new Error("Missing track metadata.");
+              const handler = (await children(media.start, media.end)).find((entry) => entry.type === "hdlr");
+              if (!handler || handler.end - handler.start < 12) throw new Error("Missing track handler.");
+              handlers.push((await read(handler.start + 8, 4)).toString("ascii"));
             }
+            if (handlers.filter(v => v === "vide").length !== 1 || (audioAllowed && handlers.filter(v => v === "soun").length !== 1))
+              throw new Error("Unexpected tracks.");
             foundMovie = true;
           }
           if (type === "mdat") foundData ||= size > headerSize;

@@ -32,6 +32,19 @@ export const client = { rpc: async (name: string, p: Record<string, unknown>) =>
       ${literal(p.p_action)},${literal(JSON.stringify(p.p_identity))}::jsonb,${p.p_epoch===null?"null":Number(p.p_epoch)},${p.p_artifact_id?literal(p.p_artifact_id)+"::uuid":"null"})`;
     else if (name === "publish_background_job_result") call = `public.publish_background_job_result(${literal(p.p_job_id)}::uuid,${literal(p.p_attempt_token)}::uuid,${literal(p.p_result_kind)},${literal(p.p_reference_id)}::uuid)`;
     else if (name === "read_published_motion_artifact") call = `public.read_published_motion_artifact(${literal(p.p_job_id)}::uuid,${literal(p.p_user_id)}::uuid)`;
+    else if (name === "read_motion_composition_intent") {
+      const output = await sql(`set role service_role; select public.read_motion_composition_intent(${literal(p.p_job_id)}::uuid,
+        ${literal(p.p_user_id)}::uuid,${literal(p.p_attempt_token)}::uuid,${literal(p.p_fingerprint)});`);
+      return { data: output || null, error: null };
+    }
+    else if (name === "check_motion_composition_base" || name === "motion_composition_provenance") {
+      const parameters = name === "check_motion_composition_base" ?
+        ["p_job_id", "p_user_id", "p_attempt_token", "p_base_job_id", "p_base_artifact_id", "p_base_fingerprint", "p_output_fingerprint", "p_render_signature"] :
+        ["p_job_id", "p_user_id", "p_attempt_token", "p_artifact_id", "p_base_job_id", "p_base_artifact_id", "p_context_id", "p_provenance"];
+      const args = parameters.map(key => key === "p_provenance" ? `${literal(JSON.stringify(p[key]))}::jsonb` :
+        ["p_base_fingerprint", "p_output_fingerprint", "p_render_signature"].includes(key) ? literal(p[key]) : `${literal(p[key])}::uuid`).join(",");
+      return { data: await sql(`set role service_role; select public.${name}(${args});`) === "t", error: null };
+    }
     else if (name === "resume_motion_artifact_job") {
       const output=await sql(`set role service_role; select public.resume_motion_artifact_job(${literal(p.p_job_id)}::uuid,${literal(p.p_user_id)}::uuid);`);
       return {data:output==="t",error:null};
