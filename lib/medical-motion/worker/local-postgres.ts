@@ -11,7 +11,8 @@ export function createIsolatedMotionDatabase(env:NodeJS.ProcessEnv){
     try{
       let call:string;
       const motionTypes=()=>{const types=p.p_allowed_job_types;if(!Array.isArray(types)||!types.length||types.length>2||new Set(types).size!==types.length||types.some(t=>!['medical-motion-render','medical-motion-compose'].includes(t)))throw Error();return 'array['+types.map(literal).join(',')+']';};
-      if(name==='approve_motion_personalization')call=`public.approve_motion_personalization(${literal(p.p_user_id)}::uuid,${literal(JSON.stringify(p.p_content))}::jsonb)`;
+      if(name==='motion_delivery_operation'){const r=await query(`set role service_role;select public.motion_delivery_operation(${p.p_user_id?literal(p.p_user_id)+'::uuid':'null'},${literal(p.p_action)},${p.p_request_id?literal(p.p_request_id)+'::uuid':'null'},${p.p_input===null?'null':literal(JSON.stringify(p.p_input))+'::jsonb'});`);return {data:JSON.parse(r||'null'),error:null};}
+      else if(name==='approve_motion_personalization')call=`public.approve_motion_personalization(${literal(p.p_user_id)}::uuid,${literal(JSON.stringify(p.p_content))}::jsonb)`;
     else if(name==='motion_composition_attempt_current'){const r=await query(`set role service_role;select public.motion_composition_attempt_current(${literal(p.p_spec_id)}::uuid,${literal(p.p_user_id)}::uuid,${literal(p.p_attempt_token)}::uuid);`);return {data:r==='t',error:null};}
     else if(name==='cancel_motion_personalization'){const r=await query(`set role service_role;select public.cancel_motion_personalization(${literal(p.p_spec_id)}::uuid,${literal(p.p_user_id)}::uuid);`);return {data:r==='t',error:null};}
       else if(name==='read_approved_motion_personalization')call=`public.read_approved_motion_personalization(${literal(p.p_spec_id)}::uuid,${literal(p.p_user_id)}::uuid)`;
