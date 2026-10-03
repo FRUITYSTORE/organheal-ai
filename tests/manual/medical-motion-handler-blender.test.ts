@@ -15,6 +15,8 @@ import { OWNERSHIP_POLICY } from "@/lib/jobs/execution-ownership";
 import { artifactSchema,cleanupArtifactOwner } from "../helpers/medical-motion-artifacts";
 import { FileArtifactStorage } from "../helpers/private-artifact-storage";
 import { createMedicalMotionArtifactRuntime } from "@/lib/medical-motion/artifacts/runtime";
+import * as organModules from "@/lib/medical-motion/organ-modules";
+import { withTestCacheAnatomy } from "../helpers/cache-anatomy-fixture";
 import { mkdtemp,rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 
@@ -48,6 +50,25 @@ describe("real local PostgreSQL context to handler to Blender smoke",()=>{
     expect(accepted).toBe(true);expect(disposed).toBe(true);
     expect(await sql(`select status from public.background_jobs where id='${jobId}';`)).toBe("awaiting-artifact-publication");
     expect(await sql(`select count(*) from public.background_job_results where job_id='${jobId}';`)).toBe("0");
+  },120000);
+  it("real Blender first render then durable cache hit keeps render count one",async()=>{
+    // Pure encoded-media/ownership/cache acceptance. This hypothetical TEST
+    // metadata does not medically verify the smoke geometry or current heart.
+    const moduleSpy=vi.spyOn(organModules,"getOrganModule").mockReturnValue(withTestCacheAnatomy());
+    try {
+    const before=vi.mocked(childProcess.spawn).mock.calls.filter(args=>String(args[0]).toLowerCase().includes("blender")).length;
+    const storage=new FileArtifactStorage(storageRoot),runtime=createMedicalMotionArtifactRuntime(client,{mode:"development",reuse:true},storage);
+    await runtime.worker.processById(jobId);
+    const first=await runtime.artifacts.retrieval(jobId,owner);
+    expect(first?.persisted).toBe(true);
+    const next=await new MedicalMotionJobRepository(client).enqueue(owner,randomUUID(),contextContent(),0);
+    await runtime.worker.processById(next.jobId);
+    const second=await runtime.artifacts.retrieval(next.jobId,owner);
+    expect(second?.id).toBe(first?.id);expect(second?.jobId).toBe(next.jobId);expect(storage.writes).toBe(1);
+    const after=vi.mocked(childProcess.spawn).mock.calls.filter(args=>String(args[0]).toLowerCase().includes("blender")).length;
+    expect(after-before).toBe(1);expect(runtime.reuse?.metrics.CACHE_HIT).toBe(1);expect(runtime.reuse?.metrics.RENDER_CREATED).toBe(1);
+    expect(await sql(`select count(*) from public.background_job_results where job_id in('${jobId}','${next.jobId}');`)).toBe("2");
+    } finally {moduleSpy.mockRestore();}
   },120000);
   it.each(["normal","lost-publication-response"])("real durable e2e: %s",async scenario=>{
     let lost=false;

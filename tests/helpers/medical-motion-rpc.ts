@@ -28,6 +28,8 @@ export const client = { rpc: async (name: string, p: Record<string, unknown>) =>
     else if (name === "motion_artifact_operation") call = `public.motion_artifact_operation(${literal(p.p_job_id)}::uuid,${literal(p.p_user_id)}::uuid,
       ${literal(p.p_attempt_token)}::uuid,${literal(p.p_action)},${p.p_artifact_id?literal(p.p_artifact_id)+"::uuid":"null"},
       ${p.p_media?literal(p.p_media):"null"},${p.p_byte_size?Number(p.p_byte_size):"null"},${p.p_sha256?literal(p.p_sha256):"null"})`;
+    else if(name==="motion_reuse_operation") call=`public.motion_reuse_operation(${literal(p.p_job_id)}::uuid,${literal(p.p_user_id)}::uuid,${literal(p.p_attempt_token)}::uuid,
+      ${literal(p.p_action)},${literal(JSON.stringify(p.p_identity))}::jsonb,${p.p_epoch===null?"null":Number(p.p_epoch)},${p.p_artifact_id?literal(p.p_artifact_id)+"::uuid":"null"})`;
     else if (name === "publish_background_job_result") call = `public.publish_background_job_result(${literal(p.p_job_id)}::uuid,${literal(p.p_attempt_token)}::uuid,${literal(p.p_result_kind)},${literal(p.p_reference_id)}::uuid)`;
     else if (name === "read_published_motion_artifact") call = `public.read_published_motion_artifact(${literal(p.p_job_id)}::uuid,${literal(p.p_user_id)}::uuid)`;
     else if (name === "resume_motion_artifact_job") {

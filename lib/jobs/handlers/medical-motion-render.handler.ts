@@ -18,6 +18,7 @@ import type { MedicalMotionArtifactService } from "@/lib/medical-motion/artifact
 import { BackgroundJobResultRepository } from "../background-job-result.repository";
 import { prepareExplanationAuthorization } from "@/lib/symptom-explanation/explanation-authorization";
 import { validateExplanationRenderRequest } from "@/lib/medical-motion/render/explanation-renderer";
+import type { ReusableArtifactCache } from "@/lib/medical-motion/artifacts/reuse";
 
 export type LocalArtifactCandidate = Readonly<{
   /** Internal invocation-owned location. Never serialize, persist or expose. */
@@ -37,6 +38,7 @@ type Policy = Readonly<{
   acceptCandidate(candidate: LocalArtifactCandidate): Promise<void>;
   signal?: AbortSignal;
   artifacts?: MedicalMotionArtifactService;
+  reuse?: ReusableArtifactCache;
 }>;
 type Dependencies = {
   contexts: Pick<MedicalMotionExecutionContextRepository, "read" | "reconstruct">;
@@ -78,7 +80,8 @@ export function createMedicalMotionRenderHandler(client: SupabaseClient, policy:
     externalSignal?.addEventListener("abort", cancel, { once: true });
     if (externalSignal?.aborted) cancel();
     let candidate: LocalArtifactCandidate | undefined;
-    let durable: ArtifactRecord | undefined;
+    let durable: Pick<ArtifactRecord,"id"> | undefined;
+    let cacheAuthorization:object|undefined,cacheReservation:object|undefined;
     let ambiguous = false;
     try {
       const owned = await ownership.run<MedicalMotionHandlerOutcome>(async signal => {
@@ -95,7 +98,19 @@ export function createMedicalMotionRenderHandler(client: SupabaseClient, policy:
             if (!("ok" in prepared)) return {status:"succeeded",value:permanent(prepared.errorCode)};
             const checked=validateExplanationRenderRequest(prepared.authorization,serverOptions.outputPath,{mode});
             if (!("ok" in checked)) return {status:"succeeded",value:permanent(checked.errorCode)};
-            durable = await artifacts.reconcile(job, signal);
+            if(policy.reuse) {
+              const lookup=await policy.reuse.lookup(job,prepared.authorization,signal);
+              if(lookup.disposition==="CACHE_HIT") {
+                cacheAuthorization=prepared.authorization;
+                durable=lookup.artifact;
+                return {status:"succeeded",value:{disposition:"ownership-lost",outcome:"EXECUTION_SUCCEEDED_AWAITING_ARTIFACT_PUBLICATION"}};
+              }
+              if(lookup.disposition==="CACHE_MISS") {cacheAuthorization=prepared.authorization;cacheReservation=lookup.reservation;}
+              else if(lookup.disposition!=="CACHE_INELIGIBLE") return {status:"succeeded",value:lookup.disposition==="CACHE_STALE" ? permanent(lookup.disposition) : retryable(lookup.disposition)};
+            }
+            // Cache-managed recovery is performed only by the fenced cache ledger.
+            // Never promote legacy or invalidated cache bytes via own-job recovery.
+            durable = cacheAuthorization ? undefined : await artifacts.reconcile(job, signal);
             if (durable) return { status: "succeeded", value: { disposition: "ownership-lost", outcome: "EXECUTION_SUCCEEDED_AWAITING_ARTIFACT_PUBLICATION" } };
           }
           const result = await deps.execute(input, serverOptions, { signal });
@@ -114,7 +129,9 @@ export function createMedicalMotionRenderHandler(client: SupabaseClient, policy:
           if (signal.aborted) outcome = lost();
           else if (result.status === "completed") {
             if (artifacts && candidate) {
-              durable = await artifacts.handoff(job, candidate, signal);
+              const created = await artifacts.handoff(job, candidate, signal);
+              if(policy.reuse&&cacheReservation) await policy.reuse.created(job,cacheReservation,created,signal);
+              durable=created;
               return { status: "succeeded", value: { disposition: "ownership-lost", outcome: "EXECUTION_SUCCEEDED_AWAITING_ARTIFACT_PUBLICATION" } };
             }
             let settled = false;
@@ -152,6 +169,9 @@ export function createMedicalMotionRenderHandler(client: SupabaseClient, policy:
         return lost();
       }
       if (durable) {
+        if(policy.reuse&&cacheAuthorization) {
+          try {policy.reuse.assertCurrent(job,cacheAuthorization);} catch {if(candidate)await candidate.discard();return permanent("CACHE_STALE");}
+        }
         const manifest = { kind: "artifact" as const, referenceId: durable.id };
         let publication;
         try { publication = await ownership.publish(manifest); }
