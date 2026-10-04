@@ -10,23 +10,26 @@ import { resolveOutputDimensions } from "../render/dimension-policy";
 import { CompositionError } from "../composition/specification";
 import { MEDICAL_MOTION_BUCKET } from "../artifacts/storage";
 import { ExecutionContextError } from "../execution-context.repository";
+import { ProductAuthorizationService } from "@/lib/billing/product-authorization";
 const medicallyUnavailable = (e: unknown) => e instanceof CompositionError && e.code === "COMPOSITION_INVALID" ||
   e instanceof ExecutionContextError && e.code === "CONTEXT_VERSION_UNAVAILABLE";
 export type ProductUseAuthorization = (owner: string, input: DeliveryInput) => Promise<boolean>;
 /** Single server eligibility hook. Entitlements/credits can replace this policy later. */
-export const authorizeProductUse: ProductUseAuthorization = async () => true;
+export async function authorizeProductUse(client: SupabaseClient, owner: string, input: DeliveryInput) {
+  return (await new ProductAuthorizationService(client).authorizeMotion(owner,input)).allowed;
+}
 export type DeliveryUsage = Readonly<{ outputProfile: DeliveryInput["aspectRatio"]; durationBand: "short" | "medium" | "long" | "unknown";
   baseRenderNeeded: boolean | null; baseCacheHit: boolean | null; compositionNeeded: boolean; compositionReused: boolean }>;
 export class MedicalMotionDeliveryService {
   readonly repository: DeliveryRepository;
   constructor(private readonly client: SupabaseClient, private readonly artifacts: MedicalMotionArtifactService,
     private readonly mode: "production" | "development", private readonly producer?: TrustedPersonalizationProducer,
-    private readonly eligibility: ProductUseAuthorization = authorizeProductUse,
+    private readonly eligibility?: ProductUseAuthorization,
     private readonly usage: (v: DeliveryUsage) => void = () => {}) { this.repository = new DeliveryRepository(client); }
   private async gate(owner: string, context: string, scene: number) { await prepareCompositionScene(this.client,owner,context,scene,this.mode); }
   async create(owner: string, value: unknown): Promise<ProductDeliveryRequest> {
     const input = deliveryInput(value);
-    if (!await this.eligibility(owner,input)) throw new DeliveryError("product-use-not-allowed");
+    if (!await (this.eligibility ? this.eligibility(owner,input) : authorizeProductUse(this.client,owner,input))) throw new DeliveryError("product-use-not-allowed");
     const source = await this.repository.source(owner,input); let eligible = true;
     try { await this.gate(owner,source.contextId,input.sceneIndex); }
     catch (e) { if (medicallyUnavailable(e)) eligible = false; else throw new DeliveryError("temporarily-unavailable"); }

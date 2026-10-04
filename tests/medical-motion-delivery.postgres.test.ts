@@ -18,14 +18,17 @@ import { ReusableArtifactRepository,reusableArtifactIdentity } from "../lib/medi
 import { compositionScene,compositionSpecification } from "./helpers/composition-scene";
 import { validatePersonalization } from "../lib/medical-motion/composition/specification";
 import { issueApprovedSpec,privateHash } from "../lib/medical-motion/composition/approved-spec";
+import { productSchema,grantTestMotion } from "./helpers/product-entitlements";
+import { ApprovedPersonalizationRepository } from "../lib/medical-motion/composition/approved-spec.repository";
 vi.mock("../lib/medical-motion/composition/authorization",()=>({prepareCompositionScene:vi.fn()}));
 describe("isolated local PostgreSQL delivery product lifecycle",()=>{
  let owner:string,other:string,revision:string,base:string;
  const repo=new DeliveryRepository(client), jobs=new BackgroundJobWorkerRepository(client,["medical-motion-render"]);
  const service=new MedicalMotionDeliveryService(client,{} as MedicalMotionArtifactService,"development");
  const input=()=>({sourceRef:revision,sceneIndex:0,language:"en" as const,aspectRatio:"16:9" as const});
- beforeAll(deliverySchema);
+ beforeAll(productSchema);
  beforeEach(async()=>{owner=randomUUID();other=randomUUID();revision=randomUUID();await sql(`insert into auth.users(id) values('${owner}'),('${other}');`);
+  await grantTestMotion(owner);
   base=(await new MedicalMotionJobRepository(client).enqueue(owner,revision,contextContent(),0)).jobId;vi.mocked(gate.prepareCompositionScene).mockResolvedValue(undefined as never);});
  afterEach(async()=>{await cleanupArtifactOwner(other);await cleanupArtifactOwner(owner);vi.restoreAllMocks();});
  async function approved(language:"en"|"ar"="en") {
@@ -43,7 +46,7 @@ describe("isolated local PostgreSQL delivery product lifecycle",()=>{
  it("request ID differs from context/base job and public projection hides all internals",async()=>{const r=await service.create(owner,input());const raw=await repo.read(owner,r.requestId);expect(r.requestId).not.toBe(base);expect(r.requestId).not.toBe(raw.contextId);
   expect(Object.keys(r).sort()).toEqual(["requestId","status","stage","createdAt","updatedAt","retryable","pollAfterSeconds","failureCode"].sort());});
  it.each(["read","cancel"] as const)("other owner cannot %s known UUID",async action=>{const r=await service.create(owner,input());await expect(repo[action](other,r.requestId)).rejects.toThrow("not-found");});
- it("other owner cannot resolve source reference or create its request",async()=>{await expect(service.create(other,input())).rejects.toThrow("not-found");});
+ it("other owner cannot resolve source reference or create its request",async()=>{await grantTestMotion(other);await expect(service.create(other,input())).rejects.toThrow("not-found");});
  it("history is owner-only and bounded",async()=>{await service.create(owner,input());expect((await service.history(other)).requests).toHaveLength(0);expect((await service.history(owner)).requests).toHaveLength(1);await expect(service.history(owner,1001)).rejects.toThrow();});
  it("queued cancellation is idempotent and does not mutate shared base infrastructure",async()=>{const r=await service.create(owner,input());expect((await service.cancel(owner,r.requestId)).status).toBe("cancelled");expect((await service.cancel(owner,r.requestId)).status).toBe("cancelled");expect(await sql(`select status from public.background_jobs where id='${base}';`)).toBe("pending");expect(await repo.pending()).toEqual([]);});
  it("running base maps rendering, cancellation preserves the current base lease",async()=>{const r=await service.create(owner,input()),job=(await jobs.claimById(base))!;expect((await service.status(owner,r.requestId)).status).toBe("rendering");await service.cancel(owner,r.requestId);expect((await jobs.renewLease({jobId:base,attemptToken:job.attemptToken})).outcome).toBe("applied");});
@@ -70,4 +73,27 @@ describe("isolated local PostgreSQL delivery product lifecycle",()=>{
  it("usage dimensions are bounded and contain no clinical/private identity values",async()=>{const events:unknown[]=[],tracked=new MedicalMotionDeliveryService(client,{} as MedicalMotionArtifactService,"development",undefined,async()=>true,v=>events.push(v));await tracked.create(owner,input());expect(events).toEqual([{outputProfile:"16:9",durationBand:"unknown",baseRenderNeeded:null,baseCacheHit:null,compositionNeeded:true,compositionReused:false}]);expect(JSON.stringify(events)).not.toContain(owner);expect(JSON.stringify(events)).not.toContain(revision);});
  it("publication-pending base has truthful finalizing stage without a ready descriptor",async()=>{const r=await service.create(owner,input()),job=(await jobs.claimById(base))!;await sql(`select * from public.defer_background_job_completion('${job.id}','${job.attemptToken}');`);expect(await service.status(owner,r.requestId)).toMatchObject({status:"preparing",stage:"finalizing"});expect((await service.status(owner,r.requestId)).artifact).toBeUndefined();});
  it("terminal backend failure stays failed when cancellation is requested",async()=>{const r=await service.create(owner,input()),job=(await jobs.claimById(base))!;await jobs.markFailed({jobId:base,attemptToken:job.attemptToken,errorMessage:"PRIVATE_RENDER_FAILURE"});const before=await service.status(owner,r.requestId),after=await service.cancel(owner,r.requestId);expect(before.status).toBe("failed");expect(after.status).toBe("failed");expect(after.failureCode).toBe("unable-to-create-video");expect(JSON.stringify(after)).not.toContain("PRIVATE");});
+ it("fenced private publication consumes automatically once and records safe successful-result units",async()=>{
+  const r=await service.create(owner,input()),cap=await approved(),linked=await repo.approve(owner,r.requestId,cap);
+  const spec=await new ApprovedPersonalizationRepository(client).read(linked.specId!,owner),job=(await new BackgroundJobWorkerRepository(client,["medical-motion-compose"]).claimById(spec.jobId))!;
+  const artifacts=new MedicalMotionArtifactRepository(client),artifact=await artifacts.reserve(job,{media:"video",byteSize:123,sha256:"d".repeat(64)});
+  const recorded=await client.rpc("motion_composition_provenance",{p_job_id:job.id,p_user_id:owner,p_attempt_token:job.attemptToken,p_artifact_id:artifact.id,
+    p_base_job_id:cap.baseJobId,p_base_artifact_id:cap.baseArtifactId,p_context_id:cap.contextId,p_provenance:{compositionVersion:"1",fingerprint:cap.fingerprint,
+    overlaySpecFingerprint:cap.fingerprint,baseSha256:cap.baseSha256,baseFingerprint:cap.baseFingerprint,baseOutputFingerprint:cap.baseOutputFingerprint,
+    baseRenderSignature:cap.renderSignature,outputProfile:"16:9",language:"en",audioComponents:[],disposition:"private-composed"}});
+  expect(recorded.error).toBeNull();await artifacts.persist(job,artifact.id);const results=new BackgroundJobResultRepository(client),publication={jobId:job.id,attemptToken:job.attemptToken,manifest:{kind:"artifact" as const,referenceId:artifact.id}};
+  await results.publish(publication);await results.publish(publication);
+  expect(await sql(`select state from public.product_usage_reservations where product_request_id='${r.requestId}';`)).toBe("consumed");
+  expect(await sql(`select count(*) from public.product_usage_events where owner_id='${owner}' and action_ref='${r.requestId}';`)).toBe("1");
+  expect((await repo.cancel(owner,r.requestId)).status).toBe("ready");
+  expect(await sql(`select units->>'artifactBytes' from public.product_usage_events where owner_id='${owner}';`)).toBe("123");
+ });
+ it("cancel winning fenced publication releases allowance and never consumes",async()=>{
+  const r=await service.create(owner,input()),cap=await approved(),linked=await repo.approve(owner,r.requestId,cap);
+  const spec=await new ApprovedPersonalizationRepository(client).read(linked.specId!,owner),job=(await new BackgroundJobWorkerRepository(client,["medical-motion-compose"]).claimById(spec.jobId))!;
+  const artifacts=new MedicalMotionArtifactRepository(client),artifact=await artifacts.reserve(job,{media:"video",byteSize:123,sha256:"d".repeat(64)});await artifacts.persist(job,artifact.id);
+  await service.cancel(owner,r.requestId);await new BackgroundJobResultRepository(client).publish({jobId:job.id,attemptToken:job.attemptToken,manifest:{kind:"artifact",referenceId:artifact.id}});
+  expect(await sql(`select count(*) from public.background_job_results where job_id='${job.id}';`)).toBe("0");
+  expect(await sql(`select state from public.product_usage_reservations where product_request_id='${r.requestId}';`)).toBe("released");
+ });
 });

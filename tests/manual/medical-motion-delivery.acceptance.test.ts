@@ -27,6 +27,7 @@ import { handleDeliveryApi } from "../../lib/medical-motion/delivery/api";
 import { authenticateApiRequest } from "../../lib/api/api-auth";
 import { createCompositionJobRuntime } from "../../lib/medical-motion/composition/job-runtime";
 import { MedicalMotionCompositionService } from "../../lib/medical-motion/composition/service";
+import { productSchema,grantTestMotion } from "../helpers/product-entitlements";
 vi.mock("node:child_process",async original=>{const actual=await original<typeof children>();return {...actual,spawn:vi.fn(actual.spawn)};});
 const nativeFetch=globalThis.fetch.bind(globalThis), target=new URL(process.env.NEXT_PUBLIC_SUPABASE_URL!);
 const prodLine=readFileSync(".env.local","utf8").split(/\r?\n/).find(v=>v.startsWith("NEXT_PUBLIC_SUPABASE_URL="));
@@ -39,11 +40,11 @@ const make=(key:string)=>createClient(target.href,key,{auth:{persistSession:fals
 const admin=make(process.env.SUPABASE_SERVICE_ROLE_KEY!);
 describe("real isolated authenticated patient delivery / durable media",()=>{
  const users:{id:string;token:string;session:SupabaseClient}[]=[],objects=new Set<string>(),pending=new Set<string>();let root:string;
- beforeAll(async()=>{await deliverySchema();const bucket=await admin.storage.getBucket(MEDICAL_MOTION_BUCKET);expect(!bucket.error&&bucket.data?.public===false).toBe(true);
+ beforeAll(async()=>{await productSchema();const bucket=await admin.storage.getBucket(MEDICAL_MOTION_BUCKET);expect(!bucket.error&&bucket.data?.public===false).toBe(true);
   for(let i=0;i<2;i++){const email=`delivery-${randomUUID()}@example.test`,password=randomUUID()+randomUUID();const r=await admin.auth.admin.createUser({email,password,email_confirm:true});if(r.error||!r.data.user)throw Error("SYNTHETIC_AUTH_CREATE_FAILED");
    const session=make(process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!);users.push({id:r.data.user.id,token:"",session});const login=await session.auth.signInWithPassword({email,password});if(login.error||!login.data.session)throw Error("SYNTHETIC_AUTH_LOGIN_FAILED");users.at(-1)!.token=login.data.session.access_token;}
  },60000);
- beforeEach(async()=>{if(pending.size)throw Error("AMBIGUOUS_TEST_RESOURCE_PRESERVED");vi.stubGlobal("fetch",safeFetch);for(const u of users)await sql(`insert into auth.users(id) values('${u.id}');`);
+ beforeEach(async()=>{if(pending.size)throw Error("AMBIGUOUS_TEST_RESOURCE_PRESERVED");vi.stubGlobal("fetch",safeFetch);for(const u of users){await sql(`insert into auth.users(id) values('${u.id}');`);await grantTestMotion(u.id);}
   root=await mkdtemp(path.join(tmpdir(),"organheal-delivery-test-"));vi.stubEnv("MEDICAL_MOTION_OUTPUT_ROOT",path.join(root,"render-output"));vi.stubEnv("MEDICAL_MOTION_RENDER_SCRIPT",path.resolve("tests/fixtures/medical-motion-handler-smoke.py"));vi.spyOn(organs,"getOrganModule").mockReturnValue(withTestCacheAnatomy());});
  afterEach(async()=>{if(pending.size)throw Error("AMBIGUOUS_TEST_RESOURCE_PRESERVED");for(const id of objects){const r=await admin.storage.from(MEDICAL_MOTION_BUCKET).remove([id]);if(r.error||await new SupabasePrivateArtifactStorage(admin).read(id))throw Error("EXACT_TEST_STORAGE_CLEANUP_FAILED");}objects.clear();
   vi.restoreAllMocks();vi.unstubAllGlobals();vi.unstubAllEnvs();for(const u of [...users].reverse())await cleanupArtifactOwner(u.id);

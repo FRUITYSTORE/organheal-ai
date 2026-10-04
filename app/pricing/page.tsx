@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { planningAmount, planningAnnualSavingsPercent } from "@/lib/billing/product-catalog";
 
 type Language = "en" | "ar";
 
@@ -58,10 +59,10 @@ const plans: Plan[] = [
   {
     name: "Plus",
     nameAr: "بلس",
-    price: "$9.99 / month",
-    priceAr: "9.99$ / شهريًا",
-    priceAlt: "or $99 / year — about 17% less",
-    priceAltAr: "أو 99$ / سنويًا — أقل بحوالي 17%",
+    price: `$${planningAmount("plus-monthly")} / month`,
+    priceAr: `${planningAmount("plus-monthly")}$ / شهريًا`,
+    priceAlt: `or $${planningAmount("plus-annual")} / year — about ${planningAnnualSavingsPercent()}% less`,
+    priceAltAr: `أو ${planningAmount("plus-annual")}$ / سنويًا — أقل بحوالي ${planningAnnualSavingsPercent()}%`,
     note: "Go deeper over time",
     noteAr: "فهم أعمق مع مرور الوقت",
     description:

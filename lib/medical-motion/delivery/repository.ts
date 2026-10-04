@@ -9,8 +9,8 @@ export class DeliveryRepository {
   private async rpc(owner: string | null, action: string, id: string | null = null, input: unknown = null) {
     if (owner !== null && !isUuid(owner) || id !== null && !isUuid(id)) throw new DeliveryError("invalid-request");
     try { const r = await this.client.rpc("motion_delivery_operation", { p_user_id: owner, p_action: action, p_request_id: id, p_input: input });
-      if (r.error) throw Error(); return jsonSnapshot(r.data);
-    } catch { throw new DeliveryError("temporarily-unavailable"); }
+      if (r.error) { if(r.error.code==="OB403")throw new DeliveryError("product-use-not-allowed");throw Error(); } return jsonSnapshot(r.data);
+    } catch(e) { if(e instanceof DeliveryError)throw e;throw new DeliveryError("temporarily-unavailable"); }
   }
   private row(value: unknown, owner?: string): DeliverySnapshot {
     const v = value as DeliverySnapshot;
