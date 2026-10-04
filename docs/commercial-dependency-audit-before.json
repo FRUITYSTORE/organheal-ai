@@ -1,0 +1,548 @@
+{
+  "date": "2026-10-04",
+  "counts": {
+    "info": 0,
+    "low": 1,
+    "moderate": 7,
+    "high": 10,
+    "critical": 1,
+    "total": 19
+  },
+  "packages": [
+    {
+      "name": "@next/eslint-plugin-next",
+      "severity": "high",
+      "direct": false,
+      "range": ">=14.3.0-canary.0",
+      "npmSuggestedFix": {
+        "name": "eslint-config-next",
+        "version": "14.2.35",
+        "isSemVerMajor": true
+      },
+      "nodes": [
+        {
+          "path": "node_modules/@next/eslint-plugin-next",
+          "version": "16.3.2",
+          "devOnly": true
+        }
+      ],
+      "via": [
+        "fast-glob"
+      ]
+    },
+    {
+      "name": "@vitest/mocker",
+      "severity": "moderate",
+      "direct": false,
+      "range": "2.1.0 - 4.1.10",
+      "npmSuggestedFix": true,
+      "nodes": [
+        {
+          "path": "node_modules/@vitest/mocker",
+          "version": "4.1.10",
+          "devOnly": true
+        }
+      ],
+      "via": [
+        {
+          "title": "Vitest: Path Traversal / Arbitrary File Read via @vitest/mocker Redirect Mock",
+          "url": "https://github.com/advisories/GHSA-82fw-gwwq-j7x9",
+          "severity": "moderate",
+          "range": ">=2.1.0 <4.1.11"
+        }
+      ]
+    },
+    {
+      "name": "autocannon",
+      "severity": "moderate",
+      "direct": true,
+      "range": ">=2.1.0",
+      "npmSuggestedFix": {
+        "name": "autocannon",
+        "version": "2.0.1",
+        "isSemVerMajor": true
+      },
+      "nodes": [
+        {
+          "path": "node_modules/autocannon",
+          "version": "8.0.0",
+          "devOnly": true
+        }
+      ],
+      "via": [
+        "hyperid"
+      ]
+    },
+    {
+      "name": "baseline-browser-mapping",
+      "severity": "moderate",
+      "direct": false,
+      "range": ">=2.0.0 <2.11.0",
+      "npmSuggestedFix": true,
+      "nodes": [
+        {
+          "path": "node_modules/baseline-browser-mapping",
+          "version": "2.10.33",
+          "devOnly": false
+        }
+      ],
+      "via": [
+        {
+          "title": "baseline-browser-mapping process termination on invalid input causes denial of service",
+          "url": "https://github.com/advisories/GHSA-w5vr-8v7q-w6rv",
+          "severity": "moderate",
+          "range": ">=2.0.0 <2.11.0"
+        }
+      ]
+    },
+    {
+      "name": "brace-expansion",
+      "severity": "high",
+      "direct": false,
+      "range": "<=1.1.20 || 2.0.0 - 2.1.6 || 4.0.0 - 5.0.11",
+      "npmSuggestedFix": true,
+      "nodes": [
+        {
+          "path": "node_modules/@typescript-eslint/typescript-estree/node_modules/brace-expansion",
+          "version": "5.0.9",
+          "devOnly": true
+        },
+        {
+          "path": "node_modules/brace-expansion",
+          "version": "1.1.18",
+          "devOnly": false
+        },
+        {
+          "path": "node_modules/glob/node_modules/brace-expansion",
+          "version": "5.0.9",
+          "devOnly": false
+        },
+        {
+          "path": "node_modules/readdir-glob/node_modules/brace-expansion",
+          "version": "2.1.4",
+          "devOnly": false
+        }
+      ],
+      "via": [
+        {
+          "title": "brace-expansion: Quadratic-time expansion of the `{a},b}` rewrite causes CPU denial of service",
+          "url": "https://github.com/advisories/GHSA-q2hr-2g5m-vwhr",
+          "severity": "moderate",
+          "range": "<1.1.21"
+        },
+        {
+          "title": "brace-expansion: Quadratic-time expansion of the `{a},b}` rewrite causes CPU denial of service",
+          "url": "https://github.com/advisories/GHSA-q2hr-2g5m-vwhr",
+          "severity": "moderate",
+          "range": ">=2.0.0 <2.1.7"
+        },
+        {
+          "title": "brace-expansion: Quadratic-time expansion of the `{a},b}` rewrite causes CPU denial of service",
+          "url": "https://github.com/advisories/GHSA-q2hr-2g5m-vwhr",
+          "severity": "moderate",
+          "range": ">=4.0.0 <5.0.12"
+        },
+        {
+          "title": "brace-expansion: DoS via uncontrolled recursion on nested brace groups causing stack exhaustion",
+          "url": "https://github.com/advisories/GHSA-qhr7-859c-m2p7",
+          "severity": "high",
+          "range": "<1.1.20"
+        },
+        {
+          "title": "brace-expansion: DoS via uncontrolled recursion on nested brace groups causing stack exhaustion",
+          "url": "https://github.com/advisories/GHSA-qhr7-859c-m2p7",
+          "severity": "high",
+          "range": ">=2.0.0 <2.1.6"
+        },
+        {
+          "title": "brace-expansion: DoS via uncontrolled recursion on nested brace groups causing stack exhaustion",
+          "url": "https://github.com/advisories/GHSA-qhr7-859c-m2p7",
+          "severity": "high",
+          "range": ">=4.0.0 <5.0.11"
+        },
+        {
+          "title": "brace-expansion: DoS via uncontrolled recursion in parseCommaParts causing stack exhaustion",
+          "url": "https://github.com/advisories/GHSA-6j4f-fj2g-mc7p",
+          "severity": "high",
+          "range": "<1.1.19"
+        },
+        {
+          "title": "brace-expansion: DoS via uncontrolled recursion in parseCommaParts causing stack exhaustion",
+          "url": "https://github.com/advisories/GHSA-6j4f-fj2g-mc7p",
+          "severity": "high",
+          "range": ">=2.0.0 <2.1.5"
+        },
+        {
+          "title": "brace-expansion: DoS via uncontrolled recursion in parseCommaParts causing stack exhaustion",
+          "url": "https://github.com/advisories/GHSA-6j4f-fj2g-mc7p",
+          "severity": "high",
+          "range": ">=4.0.0 <5.0.10"
+        }
+      ]
+    },
+    {
+      "name": "braces",
+      "severity": "high",
+      "direct": false,
+      "range": "*",
+      "npmSuggestedFix": {
+        "name": "eslint-config-next",
+        "version": "14.2.35",
+        "isSemVerMajor": true
+      },
+      "nodes": [
+        {
+          "path": "node_modules/braces",
+          "version": "3.0.3",
+          "devOnly": true
+        }
+      ],
+      "via": [
+        {
+          "title": "braces vulnerable to stack-exhaustion denial of service through deeply nested patterns",
+          "url": "https://github.com/advisories/GHSA-vfj7-8cjw-p6xm",
+          "severity": "high",
+          "range": "<=3.0.3"
+        }
+      ]
+    },
+    {
+      "name": "browserslist",
+      "severity": "high",
+      "direct": false,
+      "range": "<=4.28.6",
+      "npmSuggestedFix": true,
+      "nodes": [
+        {
+          "path": "node_modules/browserslist",
+          "version": "4.28.2",
+          "devOnly": false
+        }
+      ],
+      "via": [
+        {
+          "title": "Browserslist: Unbounded memory growth (no cache eviction) via distinct query results, leading to eventual OOM",
+          "url": "https://github.com/advisories/GHSA-c83g-rgw3-j3cx",
+          "severity": "high",
+          "range": "<=4.28.6"
+        },
+        {
+          "title": "Browserslist: Uncaught crash / prototype write via untrusted browserslist-stats.json custom stats (normalizeStats)",
+          "url": "https://github.com/advisories/GHSA-73wf-gq98-2v4g",
+          "severity": "high",
+          "range": "<=4.28.6"
+        }
+      ]
+    },
+    {
+      "name": "dompurify",
+      "severity": "low",
+      "direct": false,
+      "range": "3.4.13 - 3.4.15",
+      "npmSuggestedFix": true,
+      "nodes": [
+        {
+          "path": "node_modules/dompurify",
+          "version": "3.4.14",
+          "devOnly": false
+        }
+      ],
+      "via": [
+        {
+          "title": "DOMPurify: IN_PLACE: node-removing afterSanitize hook leaves detached subtree event handlers armed, causing DOM XSS",
+          "url": "https://github.com/advisories/GHSA-p98j-92pf-mc4p",
+          "severity": "low",
+          "range": ">=3.4.13 <=3.4.15"
+        }
+      ]
+    },
+    {
+      "name": "eslint-config-next",
+      "severity": "high",
+      "direct": true,
+      "range": ">=14.3.0-canary.0",
+      "npmSuggestedFix": {
+        "name": "eslint-config-next",
+        "version": "14.2.35",
+        "isSemVerMajor": true
+      },
+      "nodes": [
+        {
+          "path": "node_modules/eslint-config-next",
+          "version": "16.3.2",
+          "devOnly": true
+        }
+      ],
+      "via": [
+        "@next/eslint-plugin-next"
+      ]
+    },
+    {
+      "name": "exceljs",
+      "severity": "moderate",
+      "direct": true,
+      "range": ">=3.5.0",
+      "npmSuggestedFix": {
+        "name": "exceljs",
+        "version": "3.4.0",
+        "isSemVerMajor": true
+      },
+      "nodes": [
+        {
+          "path": "node_modules/exceljs",
+          "version": "4.4.0",
+          "devOnly": false
+        }
+      ],
+      "via": [
+        "uuid"
+      ]
+    },
+    {
+      "name": "fast-glob",
+      "severity": "high",
+      "direct": false,
+      "range": "*",
+      "npmSuggestedFix": {
+        "name": "eslint-config-next",
+        "version": "14.2.35",
+        "isSemVerMajor": true
+      },
+      "nodes": [
+        {
+          "path": "node_modules/fast-glob",
+          "version": "3.3.1",
+          "devOnly": true
+        }
+      ],
+      "via": [
+        "micromatch"
+      ]
+    },
+    {
+      "name": "fast-uri",
+      "severity": "high",
+      "direct": false,
+      "range": "3.0.0 - 3.1.7",
+      "npmSuggestedFix": true,
+      "nodes": [
+        {
+          "path": "node_modules/fast-uri",
+          "version": "3.1.5",
+          "devOnly": false
+        }
+      ],
+      "via": [
+        {
+          "title": "fast-uri vulnerable to host confusion via skipped IDN canonicalization on scheme-relative references",
+          "url": "https://github.com/advisories/GHSA-5jgf-p345-68v8",
+          "severity": "high",
+          "range": ">=3.1.3 <3.1.6"
+        },
+        {
+          "title": "fast-uri vulnerable to server-side request forgery via malformed IPv6 normalization",
+          "url": "https://github.com/advisories/GHSA-f65p-4m7j-42xc",
+          "severity": "high",
+          "range": ">=3.0.0 <3.1.6"
+        },
+        {
+          "title": "fast-uri vulnerable to server-side request forgery via repeated hostname percent-decoding",
+          "url": "https://github.com/advisories/GHSA-fph4-wmhf-6fwf",
+          "severity": "high",
+          "range": ">=3.1.2 <3.1.6"
+        },
+        {
+          "title": "fast-uri vulnerable to host confusion via percent-encoded scheme normalization",
+          "url": "https://github.com/advisories/GHSA-jqff-g426-hqxp",
+          "severity": "high",
+          "range": ">=3.0.0 <3.1.6"
+        },
+        {
+          "title": "fast-uri vulnerable to authority injection via an unvalidated port in serialize",
+          "url": "https://github.com/advisories/GHSA-qw65-cvwx-89v3",
+          "severity": "high",
+          "range": ">=3.0.0 <3.1.7"
+        },
+        {
+          "title": "fast-uri vulnerable to inconsistent host case normalization via percent-encoded octets",
+          "url": "https://github.com/advisories/GHSA-hrr3-gc8f-f4qj",
+          "severity": "moderate",
+          "range": ">=3.0.0 <3.1.8"
+        }
+      ]
+    },
+    {
+      "name": "hyperid",
+      "severity": "moderate",
+      "direct": false,
+      "range": "<=1.2.0 || 1.3.1 - 3.3.0",
+      "npmSuggestedFix": {
+        "name": "autocannon",
+        "version": "2.0.1",
+        "isSemVerMajor": true
+      },
+      "nodes": [
+        {
+          "path": "node_modules/hyperid",
+          "version": "3.3.0",
+          "devOnly": true
+        }
+      ],
+      "via": [
+        "uuid"
+      ]
+    },
+    {
+      "name": "js-yaml",
+      "severity": "high",
+      "direct": false,
+      "range": "4.0.0 - 4.3.1",
+      "npmSuggestedFix": true,
+      "nodes": [
+        {
+          "path": "node_modules/js-yaml",
+          "version": "4.3.1",
+          "devOnly": true
+        }
+      ],
+      "via": [
+        {
+          "title": "js-yaml: maxTotalMergeKeys does not limit CPU use for empty merge sources",
+          "url": "https://github.com/advisories/GHSA-2883-xcg3-v3hh",
+          "severity": "high",
+          "range": ">=4.0.0 <4.3.2"
+        }
+      ]
+    },
+    {
+      "name": "micromatch",
+      "severity": "high",
+      "direct": false,
+      "range": ">=0.2.0",
+      "npmSuggestedFix": {
+        "name": "eslint-config-next",
+        "version": "14.2.35",
+        "isSemVerMajor": true
+      },
+      "nodes": [
+        {
+          "path": "node_modules/micromatch",
+          "version": "4.0.8",
+          "devOnly": true
+        }
+      ],
+      "via": [
+        "braces"
+      ]
+    },
+    {
+      "name": "next",
+      "severity": "critical",
+      "direct": true,
+      "range": "16.0.0 - 16.3.5",
+      "npmSuggestedFix": {
+        "name": "next",
+        "version": "16.3.8",
+        "isSemVerMajor": false
+      },
+      "nodes": [
+        {
+          "path": "node_modules/next",
+          "version": "16.3.2",
+          "devOnly": false
+        }
+      ],
+      "via": [
+        {
+          "title": "Next.js: Unauthenticated Remote Code Execution on windows-hosted servers",
+          "url": "https://github.com/advisories/GHSA-p293-qw3h-jr36",
+          "severity": "critical",
+          "range": ">=16.0.0 <16.3.3"
+        },
+        {
+          "title": "Next.js: Unauthenticated Remote Code Execution in Image Optimization API when AVIF files are used",
+          "url": "https://github.com/advisories/GHSA-2xp9-vwfh-vxw4",
+          "severity": "critical",
+          "range": ">=16.0.0 <16.3.3"
+        },
+        {
+          "title": "Next.js: Remote Code Execution in next/og ImageResponse",
+          "url": "https://github.com/advisories/GHSA-vcvr-r3jv-pc5j",
+          "severity": "critical",
+          "range": ">=16.2.0 <16.3.6"
+        }
+      ]
+    },
+    {
+      "name": "sharp",
+      "severity": "high",
+      "direct": true,
+      "range": "<0.35.4",
+      "npmSuggestedFix": true,
+      "nodes": [
+        {
+          "path": "node_modules/sharp",
+          "version": "0.35.3",
+          "devOnly": false
+        }
+      ],
+      "via": [
+        {
+          "title": "sharp: Vulnerabilities in libheif: GHSA-g89c-p67h-r497 and GHSA-2jg2-4ch7-h545",
+          "url": "https://github.com/advisories/GHSA-rgj7-g3m4-5g8c",
+          "severity": "high",
+          "range": "<0.35.4"
+        }
+      ]
+    },
+    {
+      "name": "uuid",
+      "severity": "moderate",
+      "direct": false,
+      "range": "<11.1.1",
+      "npmSuggestedFix": {
+        "name": "exceljs",
+        "version": "3.4.0",
+        "isSemVerMajor": true
+      },
+      "nodes": [
+        {
+          "path": "node_modules/uuid",
+          "version": "8.3.2",
+          "devOnly": false
+        }
+      ],
+      "via": [
+        {
+          "title": "uuid: Missing buffer bounds check in v3/v5/v6 when buf is provided",
+          "url": "https://github.com/advisories/GHSA-w5hq-g745-h8pq",
+          "severity": "moderate",
+          "range": "<11.1.1"
+        }
+      ]
+    },
+    {
+      "name": "vitest",
+      "severity": "moderate",
+      "direct": true,
+      "range": "2.1.0-beta.1 - 4.1.10",
+      "npmSuggestedFix": true,
+      "nodes": [
+        {
+          "path": "node_modules/vitest",
+          "version": "4.1.10",
+          "devOnly": true
+        }
+      ],
+      "via": [
+        "@vitest/mocker",
+        {
+          "title": "Vitest: Path Traversal / Arbitrary File Read via @vitest/mocker Redirect Mock",
+          "url": "https://github.com/advisories/GHSA-82fw-gwwq-j7x9",
+          "severity": "moderate",
+          "range": ">=2.1.0 <4.1.11"
+        }
+      ]
+    }
+  ]
+}
