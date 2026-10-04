@@ -1,133 +1,21 @@
-import { NextResponse } from "next/server";
-
 import { authenticateApiRequest } from "@/lib/api/api-auth";
-import {
-  createApiRequestId,
-  logApiError,
-  logApiInfo,
-  startApiTimer,
-} from "@/lib/api/api-logger";
-import { resolveRequestOrigin } from "@/lib/api/request-origin";
-import {
-  createCheckoutSession,
-  createStripeCustomer,
-  getStripePriceId,
-  isBillingConfigured,
-  type PlanInterval,
-} from "@/lib/billing/stripe.service";
-import {
-  getBillingProfileByUserId,
-  setStripeCustomerId,
-} from "@/lib/repositories/billing.repository";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
-
-function parseInterval(value: unknown): PlanInterval | null {
-  if (value === "month" || value === "year") {
-    return value;
-  }
-
-  return null;
-}
-
-export async function POST(request: Request) {
-  const requestId = createApiRequestId();
-  const timer = startApiTimer();
-
-  try {
-    if (!isBillingConfigured()) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Payments are not yet configured.",
-          requestId,
-        },
-        { status: 503, headers: { "x-request-id": requestId } }
-      );
-    }
-
-    const authentication = await authenticateApiRequest(request);
-
-    if (!authentication.success) {
-      return NextResponse.json(
-        { success: false, error: authentication.error, requestId },
-        {
-          status: authentication.status,
-          headers: { "x-request-id": requestId },
-        }
-      );
-    }
-
-    let rawBody: unknown = {};
-
-    try {
-      rawBody = await request.json();
-    } catch {
-      // No body is fine; interval defaults to monthly below.
-    }
-
-    const interval =
-      parseInterval((rawBody as { interval?: unknown })?.interval) ??
-      "month";
-
-    const priceId = getStripePriceId(interval);
-    const adminClient = getSupabaseAdminClient();
-
-    const billingProfile = await getBillingProfileByUserId(
-      authentication.user.id,
-      authentication.client
-    );
-
-    let stripeCustomerId = billingProfile?.stripe_customer_id ?? null;
-
-    if (!stripeCustomerId) {
-      stripeCustomerId = await createStripeCustomer({
-        userId: authentication.user.id,
-        email: authentication.user.email ?? null,
-      });
-
-      await setStripeCustomerId(
-        authentication.user.id,
-        stripeCustomerId,
-        adminClient
-      );
-    }
-
-    const origin = resolveRequestOrigin(request);
-
-    const session = await createCheckoutSession({
-      userId: authentication.user.id,
-      customerId: stripeCustomerId,
-      priceId,
-      successUrl: `${origin}/pricing?checkout=success`,
-      cancelUrl: `${origin}/pricing?checkout=canceled`,
-    });
-
-    logApiInfo("billing.checkout_session_created", {
-      route: "/api/billing/checkout",
-      requestId,
-      userId: authentication.user.id,
-      interval,
-      durationMs: timer.elapsedMs(),
-    });
-
-    return NextResponse.json(
-      { success: true, url: session.url, requestId },
-      { headers: { "x-request-id": requestId } }
-    );
-  } catch (error) {
-    logApiError("billing.checkout_session_failed", error, {
-      route: "/api/billing/checkout",
-      requestId,
-      durationMs: timer.elapsedMs(),
-    });
-
-    return NextResponse.json(
-      {
-        success: false,
-        error: "Could not start checkout.",
-        requestId,
-      },
-      { status: 500, headers: { "x-request-id": requestId } }
-    );
-  }
+import { PaymentCheckoutService } from "@/lib/billing/payment-checkout";
+import { PaymentError, requirePaymentTestMode, requirePaymentTestDatabase } from "@/lib/billing/payment-config";
+import { logApiInfo } from "@/lib/api/api-logger";
+export const runtime='nodejs';
+export async function POST(request:Request) {
+ const headers={'Cache-Control':'private, no-store'};
+ try {
+  requirePaymentTestMode(); requirePaymentTestDatabase();
+  const auth=await authenticateApiRequest(request);
+  if(!auth.success||auth.user.is_anonymous)return Response.json({success:false,error:'authentication-required'},{status:401,headers});
+  let body:unknown;try{body=await request.json()}catch{return Response.json({success:false,error:'invalid-offer'},{status:400,headers})}
+  const result=await new PaymentCheckoutService(getSupabaseAdminClient()).create(auth.user.id,body);
+  logApiInfo('billing.test_checkout_created',{route:'/api/billing/checkout'});
+  return Response.json({success:true,...result},{headers});
+ } catch(e) {
+  const status=e instanceof PaymentError&&e.code==='PAYMENT_INPUT_INVALID'?400:503;
+  return Response.json({success:false,error:status===400?'invalid-offer':'test-payment-unavailable'},{status,headers});
+ }
 }

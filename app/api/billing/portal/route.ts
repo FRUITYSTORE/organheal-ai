@@ -1,95 +1,19 @@
-import { NextResponse } from "next/server";
-
-import { authenticateApiRequest } from "@/lib/api/api-auth";
-import {
-  createApiRequestId,
-  logApiError,
-  logApiInfo,
-  startApiTimer,
-} from "@/lib/api/api-logger";
-import { resolveRequestOrigin } from "@/lib/api/request-origin";
-import {
-  createBillingPortalSession,
-  isBillingConfigured,
-} from "@/lib/billing/stripe.service";
-import { getBillingProfileByUserId } from "@/lib/repositories/billing.repository";
-
-export async function POST(request: Request) {
-  const requestId = createApiRequestId();
-  const timer = startApiTimer();
-
-  try {
-    if (!isBillingConfigured()) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Payments are not yet configured.",
-          requestId,
-        },
-        { status: 503, headers: { "x-request-id": requestId } }
-      );
-    }
-
-    const authentication = await authenticateApiRequest(request);
-
-    if (!authentication.success) {
-      return NextResponse.json(
-        { success: false, error: authentication.error, requestId },
-        {
-          status: authentication.status,
-          headers: { "x-request-id": requestId },
-        }
-      );
-    }
-
-    const billingProfile = await getBillingProfileByUserId(
-      authentication.user.id,
-      authentication.client
-    );
-
-    if (!billingProfile?.stripe_customer_id) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "No billing account found for this user.",
-          requestId,
-        },
-        { status: 404, headers: { "x-request-id": requestId } }
-      );
-    }
-
-    const origin = resolveRequestOrigin(request);
-
-    const session = await createBillingPortalSession({
-      customerId: billingProfile.stripe_customer_id,
-      returnUrl: `${origin}/profile`,
-    });
-
-    logApiInfo("billing.portal_session_created", {
-      route: "/api/billing/portal",
-      requestId,
-      userId: authentication.user.id,
-      durationMs: timer.elapsedMs(),
-    });
-
-    return NextResponse.json(
-      { success: true, url: session.url, requestId },
-      { headers: { "x-request-id": requestId } }
-    );
-  } catch (error) {
-    logApiError("billing.portal_session_failed", error, {
-      route: "/api/billing/portal",
-      requestId,
-      durationMs: timer.elapsedMs(),
-    });
-
-    return NextResponse.json(
-      {
-        success: false,
-        error: "Could not open the billing portal.",
-        requestId,
-      },
-      { status: 500, headers: { "x-request-id": requestId } }
-    );
-  }
+import { authenticateApiRequest } from '@/lib/api/api-auth';
+import { getSupabaseAdminClient } from '@/lib/supabase-admin';
+import { requirePaymentTestMode,requirePaymentTestDatabase } from '@/lib/billing/payment-config';
+import { PaymentRepository } from '@/lib/billing/payment-repository';
+import { createBillingPortalSession } from '@/lib/billing/stripe.service';
+export const runtime='nodejs';
+export async function POST(request:Request) {
+ try {
+  requirePaymentTestMode();requirePaymentTestDatabase();
+  const auth=await authenticateApiRequest(request);
+  if(!auth.success||auth.user.is_anonymous)return Response.json({error:'authentication-required'},{status:401});
+  const customerId=await new PaymentRepository(getSupabaseAdminClient()).call('customer',auth.user.id,null,null);
+  if(!customerId)return Response.json({error:'test-billing-account-unavailable'},{status:404});
+  const origin=new URL(process.env.ORGANHEAL_BILLING_TEST_RETURN_ORIGIN??'http://localhost:3000');
+  if(!['http:','https:'].includes(origin.protocol)||origin.username||origin.password||origin.pathname!=='/'||origin.search||origin.hash)throw Error();
+  const result=await createBillingPortalSession({customerId,returnUrl:origin.origin+'/profile'});
+  return Response.json({url:result.url},{headers:{'Cache-Control':'private, no-store'}});
+ }catch{return Response.json({error:'test-payment-unavailable'},{status:503})}
 }
