@@ -10,6 +10,10 @@ export async function artifactSchema() {
 /** Exact synthetic owner cleanup, only after the dedicated local DB guard. */
 export async function cleanupArtifactOwner(owner:string) {
   configuration();
+  if(await sql("select to_regclass('public.medical_motion_orchestrations') is not null;")==="t")
+    await sql(`begin;alter table public.medical_motion_orchestrations disable trigger motion_orchestration_identity;
+      delete from public.medical_motion_orchestrations where user_id='${owner}';
+      alter table public.medical_motion_orchestrations enable trigger motion_orchestration_identity;commit;`);
   if(await sql("select to_regclass('public.product_entitlements') is not null;")==="t")
     await sql(`begin;
       alter table public.product_credit_ledger disable trigger product_immutable;
