@@ -1,3 +1,4 @@
+import {installTestOrganModuleResolution} from "../helpers/organ-module-resolution";
 import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { mkdtemp,rm } from "node:fs/promises";
@@ -45,7 +46,7 @@ describe("real isolated authenticated patient delivery / durable media",()=>{
    const session=make(process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!);users.push({id:r.data.user.id,token:"",session});const login=await session.auth.signInWithPassword({email,password});if(login.error||!login.data.session)throw Error("SYNTHETIC_AUTH_LOGIN_FAILED");users.at(-1)!.token=login.data.session.access_token;}
  },60000);
  beforeEach(async()=>{if(pending.size)throw Error("AMBIGUOUS_TEST_RESOURCE_PRESERVED");vi.stubGlobal("fetch",safeFetch);for(const u of users){await sql(`insert into auth.users(id) values('${u.id}');`);await grantTestMotion(u.id);}
-  root=await mkdtemp(path.join(tmpdir(),"organheal-delivery-test-"));vi.stubEnv("MEDICAL_MOTION_OUTPUT_ROOT",path.join(root,"render-output"));vi.stubEnv("MEDICAL_MOTION_RENDER_SCRIPT",path.resolve("tests/fixtures/medical-motion-handler-smoke.py"));vi.spyOn(organs,"getOrganModule").mockReturnValue(withTestCacheAnatomy());});
+  root=await mkdtemp(path.join(tmpdir(),"organheal-delivery-test-"));vi.stubEnv("MEDICAL_MOTION_OUTPUT_ROOT",path.join(root,"render-output"));vi.stubEnv("MEDICAL_MOTION_RENDER_SCRIPT",path.resolve("tests/fixtures/medical-motion-handler-smoke.py"));installTestOrganModuleResolution(withTestCacheAnatomy()).legacy;});
  afterEach(async()=>{if(pending.size)throw Error("AMBIGUOUS_TEST_RESOURCE_PRESERVED");for(const id of objects){const r=await admin.storage.from(MEDICAL_MOTION_BUCKET).remove([id]);if(r.error||await new SupabasePrivateArtifactStorage(admin).read(id))throw Error("EXACT_TEST_STORAGE_CLEANUP_FAILED");}objects.clear();
   vi.restoreAllMocks();vi.unstubAllGlobals();vi.unstubAllEnvs();for(const u of [...users].reverse())await cleanupArtifactOwner(u.id);
   if(path.dirname(root)===tmpdir()&&path.basename(root).startsWith("organheal-delivery-test-"))await rm(root,{recursive:true,force:true});});

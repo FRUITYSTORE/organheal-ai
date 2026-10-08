@@ -1,3 +1,4 @@
+import {installTestOrganModuleResolution} from "./helpers/organ-module-resolution";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { executeMedicalMotionRequest, EXECUTION_INPUT_LIMITS as limits } from "../lib/medical-motion/execute-medical-motion";
 import { getMechanismAnatomy } from "../lib/symptom-explanation/anatomy-resolver";
@@ -124,8 +125,8 @@ describe("untrusted serializable Medical Motion execution", () => {
     expect(validate).not.toHaveBeenCalled(); noRender();
   });
   it("missing anatomy blocks the render invocation", async () => {
-    vi.spyOn(modules, "getOrganModule").mockReturnValue({ ...HEART_ORGAN_MODULE,
-      anatomyRegistry: HEART_ORGAN_MODULE.anatomyRegistry.filter((entry) => entry.id !== "heart.leftVentricle") });
+    installTestOrganModuleResolution({ ...HEART_ORGAN_MODULE,
+      anatomyRegistry: HEART_ORGAN_MODULE.anatomyRegistry.filter((entry) => entry.id !== "heart.leftVentricle") }).legacy;
     expect(await executeMedicalMotionRequest(request(), options)).toMatchObject({ errorCode: "ANATOMY_STRUCTURE_NOT_FOUND" }); noRender();
   });
   it("current unavailable myocardium remains blocked", async () => {

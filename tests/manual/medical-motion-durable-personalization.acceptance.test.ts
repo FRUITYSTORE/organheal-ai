@@ -1,3 +1,4 @@
+import {installTestOrganModuleResolution} from "../helpers/organ-module-resolution";
 import { randomUUID } from "node:crypto";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -39,7 +40,7 @@ describe("real durable approved-spec worker / Blender / FFmpeg / PostgreSQL", ()
     root = await mkdtemp(path.join(tmpdir(), "organheal-approved-jobs-"));
     vi.stubEnv("MEDICAL_MOTION_OUTPUT_ROOT", path.join(root, "render-output"));
     vi.stubEnv("MEDICAL_MOTION_RENDER_SCRIPT", path.resolve("tests/fixtures/medical-motion-handler-smoke.py"));
-    vi.spyOn(modules, "getOrganModule").mockReturnValue(withTestCacheAnatomy());
+    installTestOrganModuleResolution(withTestCacheAnatomy()).legacy;
   });
   afterEach(async () => {
     if (pending.size) throw Error("AMBIGUOUS_TEST_OBJECT_PRESERVED");

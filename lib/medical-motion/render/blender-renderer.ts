@@ -12,7 +12,7 @@ import path from "node:path";
 import { RENDER_ERROR_CODE, type RenderErrorCode, type RenderResult } from "@/lib/medical-motion/contracts/render";
 import type { AnatomicalDirection, LandmarkId, OrganModule } from "@/lib/medical-motion/contracts/organ-module";
 import type { RenderMedia, SceneDefinition } from "@/lib/medical-motion/contracts/scene";
-import { getOrganModule } from "@/lib/medical-motion/organ-modules";
+import { getOrganModule, getOrganModuleForAsset } from "@/lib/medical-motion/organ-modules";
 import { anatomyRenderIdentity } from "@/lib/medical-motion/anatomy-foundation";
 import { checkSourceProfileCohesion } from "../source-profiles";
 import { WHOLE_BODY_ANATOMY } from "../whole-body-anatomy";
@@ -64,6 +64,8 @@ export type RenderOptions = {
    * (REAL_ANATOMICAL_ASSET_REQUIRED), "development" allows it for internal
    * review renders only. */
   mode: RenderMode;
+  /** Trusted server review option; clinical authority comes from authorization. */
+  assetVersion?: string;
   timeoutMs?: number;
   /** Required context for a symptom explanation render. Untrusted/stored
    * plans are validated again here, before readiness and any Blender I/O. */
@@ -146,13 +148,14 @@ export async function renderHeartScene(
 ): Promise<RenderResult> {
   const {
     mode,
+    assetVersion,
     explanationPlan,
     clinicalAuthorization,
     timeoutMs = scene.output.media === "video" ? DEFAULT_VIDEO_RENDER_TIMEOUT_MS : DEFAULT_RENDER_TIMEOUT_MS,
   } = options;
   // Generic scenes are internal non-clinical review. Clinical metadata cannot
   // select that path or supply its own authorization.
-  if (Object.keys(options).some((key) => !["mode", "timeoutMs", "explanationPlan", "clinicalAuthorization"].includes(key)) ||
+  if (Object.keys(options).some((key) => !["mode", "assetVersion", "timeoutMs", "explanationPlan", "clinicalAuthorization"].includes(key)) ||
       Object.keys(scene).some((key) => !["sourceProfile", "organ", "sceneVersion", "durationSeconds", "focus", "camera", "motion", "highlight", "anatomyRequirements", "anatomyIdentity", "mechanismIdentity", "output"].includes(key))) {
     return invalidScene("Unsupported render metadata; clinical requests must use the authorized boundary.");
   }
@@ -162,6 +165,7 @@ export async function renderHeartScene(
     try {
       if (canonicalExplanationJson(scene) !== canonicalExplanationJson(authorized.request.scene) ||
           canonicalExplanationJson(explanationPlan) !== canonicalExplanationJson(authorized.request.explanationPlan) ||
+          (assetVersion !== undefined && assetVersion !== authorized.request.assetVersion) ||
           mode !== authorized.options.mode || outputPath !== authorized.options.outputPath || options.timeoutMs !== authorized.options.timeoutMs) {
         return invalidScene("Clinical authorization does not match this render request.");
       }
@@ -177,10 +181,16 @@ export async function renderHeartScene(
     };
   }
 
+  const authorizedAsset = readExplanationAuthorization(clinicalAuthorization)?.request.assetVersion;
+  const selectedVersion = authorizedAsset ?? assetVersion ?? getOrganModule(scene.organ)?.assetVersion;
+  const organModule = selectedVersion === undefined ? null : getOrganModuleForAsset(scene.organ, selectedVersion);
+  if (!organModule) return invalidScene("Exact asset version is unavailable.");
+  const getSelectedModule = (organ: string) => organ === organModule.id ? organModule : null;
+
   // Checked here, right before Blender, even if the plan was checked when it
   // was built: a stored plan can outlive the asset it was checked against.
   if (explanationPlan !== undefined) {
-    const planReadiness = checkExplanationPlanReadiness(explanationPlan, mode);
+    const planReadiness = checkExplanationPlanReadiness(explanationPlan, mode, getSelectedModule);
     if (!planReadiness.ok) {
       if ("issues" in planReadiness) {
         return invalidScene(`${planReadiness.errorCode}: ${planReadiness.issues.join(" ")}`);
@@ -193,16 +203,15 @@ export async function renderHeartScene(
     // A valid capability may be used at this lower boundary too. Retain the
     // same independent presentation requirements checked by the clinical gateway.
     const preset = buildHeartVisualizationScene(scene.focus as HeartVisualizationFocus);
-    const presetReadiness = checkAssetReadiness(scene.organ, scene.highlight.structures, mode, undefined, preset.anatomyRequirements);
+    const presetReadiness = checkAssetReadiness(scene.organ, scene.highlight.structures, mode, getSelectedModule, preset.anatomyRequirements);
     if (!presetReadiness.ok) return { status: "failed", errorCode: presetReadiness.errorCode, message: presetReadiness.details.join(" ") };
   }
-  const readiness = checkAssetReadiness(scene.organ, scene.highlight.structures, mode, undefined, scene.anatomyRequirements);
+  const readiness = checkAssetReadiness(scene.organ, scene.highlight.structures, mode, getSelectedModule, scene.anatomyRequirements);
 
   if (!readiness.ok) {
     return { status: "failed", errorCode: readiness.errorCode, message: readiness.details.join(" ") };
   }
 
-  const organModule = getOrganModule(scene.organ);
 
   if (!organModule) {
     return invalidScene(`No organ module exists for "${scene.organ}".`);
@@ -274,7 +283,7 @@ export async function renderHeartScene(
     const configPath = path.join(tempDir, "scene.json");
     await writeFile(
       configPath,
-      JSON.stringify(toBlenderSceneConfig(scene, readiness.blenderObjects, shot, fromShot)),
+      JSON.stringify({ ...toBlenderSceneConfig(scene, readiness.blenderObjects, shot, fromShot), assetVersion: organModule.assetVersion }),
       "utf-8"
     );
 

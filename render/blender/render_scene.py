@@ -164,6 +164,20 @@ def _configure_gpu_cycles():
     return "CPU"
 
 
+_ASSET_BUILDERS = {("heart", "heart-v2-development"): build_heart}
+
+
+def resolve_asset_builder(organ, asset_version):
+    if organ != "heart":
+        raise SystemExit("INVALID_ORGAN: unsupported organ")
+    if not isinstance(asset_version, str):
+        raise SystemExit("ASSET_NOT_FOUND: exact asset version required")
+    builder = _ASSET_BUILDERS.get((organ, asset_version))
+    if builder is None:
+        raise SystemExit("ASSET_NOT_FOUND: unknown asset version")
+    return builder
+
+
 def main():
     config_path, output_path = _parse_args()
 
@@ -176,12 +190,13 @@ def main():
     if scene_config.get("organ") != "heart":
         raise SystemExit(f"INVALID_ORGAN: render_scene.py only builds 'heart', got {scene_config.get('organ')!r}")
 
+    builder = resolve_asset_builder(scene_config.get("organ"), scene_config.get("assetVersion"))
     _configure_output_dimensions(bpy.context.scene, scene_config.get("outputDimensions"))
     _configure_render_state(bpy.context.scene, scene_config.get("output"), output_path)
     _clear_scene()
 
     try:
-        build_heart()
+        builder()
     except Exception as error:
         raise SystemExit(f"ASSET_NOT_FOUND: heart_builder.build_heart() failed: {error}")
 

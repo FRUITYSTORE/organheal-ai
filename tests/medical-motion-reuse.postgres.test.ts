@@ -1,3 +1,4 @@
+import {installTestOrganModuleResolution} from "./helpers/organ-module-resolution";
 import { randomUUID,createHash } from "node:crypto";
 import { mkdtemp,rm,writeFile,unlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -38,7 +39,7 @@ describe("real isolated PostgreSQL reusable artifact coordination",()=>{
   const execute=vi.fn<typeof executeMedicalMotionRequest>();
   beforeAll(artifactSchema);
   beforeEach(async()=>{
-    vi.spyOn(organModules,"getOrganModule").mockReturnValue(withTestCacheAnatomy());
+    installTestOrganModuleResolution(withTestCacheAnatomy()).legacy;
     owner=randomUUID();root=await mkdtemp(path.join(tmpdir(),"organheal-cache-test-"));execute.mockReset();
     await sql(`insert into auth.users(id) values('${owner}');`);
     attempts=new BackgroundJobWorkerRepository(client,["medical-motion-render"]);

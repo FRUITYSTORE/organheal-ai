@@ -8,7 +8,7 @@ import { checkVisualizationOperation, evaluateMechanismCandidate } from "@/lib/m
 import { canonicalSceneJson, compileMedicalScene, DEFAULT_SCENE_PRESENTATION, validateCompiledMedicalScene } from "@/lib/medical-motion/scene-compiler";
 import { checkAssetReadiness } from "./asset-readiness";
 import type { MechanismEvaluationContext } from "@/lib/medical-motion/contracts/mechanism";
-import { getOrganModule } from "@/lib/medical-motion/organ-modules";
+import { getOrganModuleForAsset } from "@/lib/medical-motion/organ-modules";
 import { WHOLE_BODY_ANATOMY } from "@/lib/medical-motion/whole-body-anatomy";
 
 /** Object key order is irrelevant; array order (including scene order) is meaningful. */
@@ -30,6 +30,9 @@ export function compileExplanationScene(value: unknown, config: { sceneIndex: nu
       config.sceneIndex >= validation.plan.scenes.length || typeof config.assetVersion !== "string" || !config.assetVersion.trim()) {
     return invalid("A valid scene index and explicit asset version are required.");
   }
+  const module = getOrganModuleForAsset(validation.plan.organ, config.assetVersion);
+  if (!module) return invalid("Asset version does not match the registered module.");
+  const getSelectedModule = (organ: string) => organ === module.id ? module : null;
   const plan = structuredClone(validation.plan);
   const intent = plan.scenes[config.sceneIndex];
   if (plan.organ !== "heart" || intent.type === "findingVisualization") {
@@ -58,11 +61,9 @@ export function compileExplanationScene(value: unknown, config: { sceneIndex: nu
   if (gate) {
     const eligible = evaluateMechanismCandidate(MEDICAL_MECHANISMS, scene.mechanismIdentity, { ...gate, mode: "development" });
     if (eligible.status !== "eligible") return invalid(eligible.reasons.join(" "));
-    const module = getOrganModule(scene.organ);
-    if (!module || module.assetVersion !== config.assetVersion) return invalid("Asset version does not match the registered module.");
-    const presetReady = checkAssetReadiness(scene.organ, scene.highlight.structures, gate.mode, getOrganModule, buildHeartVisualizationScene(focus).anatomyRequirements);
+    const presetReady = checkAssetReadiness(scene.organ, scene.highlight.structures, gate.mode, getSelectedModule, buildHeartVisualizationScene(focus).anatomyRequirements);
     if (!presetReady.ok) return { ...invalid(presetReady.details.join(" ")), errorCode: presetReady.errorCode };
-    const result = compileMedicalScene(scene.mechanismIdentity, { ...gate, registry: MEDICAL_MECHANISMS, getModule: getOrganModule, catalog: WHOLE_BODY_ANATOMY,
+    const result = compileMedicalScene(scene.mechanismIdentity, { ...gate, registry: MEDICAL_MECHANISMS, getModule: getSelectedModule, catalog: WHOLE_BODY_ANATOMY,
       ...(gate.sourceProfile ? { cameraTargets: [scene.camera.preset, ...(scene.camera.from ? [scene.camera.from] : [])] } : {}),
       selections: scene.highlight.structures, additionalRequirements: scene.anatomyRequirements, overview: target === null },
       { ...DEFAULT_SCENE_PRESENTATION, durationHint: scene.durationSeconds, outputProfile: { aspectRatio: scene.output.aspectRatio, resolution: scene.output.resolution, lod: "asset-native" } });

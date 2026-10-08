@@ -1,3 +1,4 @@
+import {installTestOrganModuleResolution} from "./helpers/organ-module-resolution";
 import {describe,it,expect,vi} from "vitest";
 import {profileFixture} from "./helpers/source-profile-fixture";
 import {contextContent} from "./helpers/medical-motion-context";
@@ -7,7 +8,7 @@ import * as authority from "../lib/symptom-explanation/explanation-authorization
 import {validateExplanationRenderRequest} from "../lib/medical-motion/render/explanation-renderer";
 import {computeRenderSignature} from "../lib/medical-motion/render-signature";
 import {reusableArtifactIdentity} from "../lib/medical-motion/artifacts/reuse";
-function issued(){const {module,profile}=profileFixture();vi.spyOn(modules,"getOrganModule").mockReturnValue(module);
+function issued(){const {module,profile}=profileFixture();installTestOrganModuleResolution(module);
   const registry=createSourceProfileRegistry([profile]),selected=registry.resolve({profileId:profile.profileId,profileVersion:profile.profileVersion}),c=contextContent();
   const options={clinicalContextId:"TEST-ONLY-CONTEXT",assetVersion:c.assetVersion,mode:"development" as const,outputPath:"test.mp4",sourceProfile:selected};
   const input={clinical:c.clinical,plan:c.candidatePlan,sceneIndex:0};

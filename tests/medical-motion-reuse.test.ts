@@ -1,3 +1,4 @@
+import {installTestOrganModuleResolution} from "./helpers/organ-module-resolution";
 import { randomUUID,createHash } from "node:crypto";
 import { afterEach,describe,expect,it,vi } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -90,7 +91,7 @@ describe("generic cache identity and current safety",()=>{
     if(kind==="representation")module.anatomyRegistry.find(e=>e.id==="heart.leftVentricle")!.representation="cavity";
     if(kind==="anatomyVersion")module.anatomyVersion="new";
     if(kind==="license")module.anatomyRegistry.find(e=>e.id==="heart.leftVentricle")!.provenance!.licenseReview.status="rejected";
-    vi.spyOn(modules,"getOrganModule").mockReturnValue(module);
+    installTestOrganModuleResolution(module).legacy;
     const cache=new ReusableArtifactCache(new ReusableArtifactRepository({rpc} as unknown as SupabaseClient),{read:vi.fn(),put:vi.fn()});
     expect(await cache.lookup(job,authorization,signal())).toMatchObject({disposition:"CACHE_STALE"});expect(rpc).not.toHaveBeenCalled();
   });

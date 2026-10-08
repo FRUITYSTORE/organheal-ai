@@ -1,3 +1,4 @@
+import {installTestOrganModuleResolution} from "../helpers/organ-module-resolution";
 import { randomUUID } from "node:crypto";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -37,7 +38,7 @@ describe("real Blender + FFmpeg + isolated PostgreSQL durable personalization", 
     owner = randomUUID(); await sql(`insert into auth.users(id) values('${owner}');`);
     root = await mkdtemp(path.join(tmpdir(), "organheal-composition-pipeline-"));
     vi.stubEnv("MEDICAL_MOTION_OUTPUT_ROOT", path.join(root, "render-output"));
-    vi.spyOn(modules, "getOrganModule").mockReturnValue(withTestCacheAnatomy());
+    installTestOrganModuleResolution(withTestCacheAnatomy()).legacy;
     vi.stubEnv("MEDICAL_MOTION_RENDER_SCRIPT", path.resolve("tests/fixtures/medical-motion-handler-smoke.py"));
   });
   afterEach(async () => {

@@ -197,10 +197,10 @@ describe("anatomy dependencies and compatible explanation integration", () => {
     const plan = { planVersion: "1", organ: anatomy.organ, topic: "physiology", safety: { level: "none" }, mechanism: { id: "leftVentricularPressureLoad", evidence: "possible" },
       anatomy, documentedFindings: [], scenes: [{ type: "mechanismExplanation" }, { type: "limitationsAndNextSteps" }] };
     delete (plan.anatomy as Partial<typeof anatomy>).organ; delete (plan.anatomy as Partial<typeof anatomy>).rationale;
-    const compiled = compileExplanationScene(plan, { sceneIndex: 0, assetVersion: "test" });
+    const compiled = compileExplanationScene(plan, { sceneIndex: 0, assetVersion: HEART_ORGAN_MODULE.assetVersion });
     expect(compiled.ok && compiled.request.scene.mechanismIdentity).toEqual(candidate());
     expect(compileExplanationScene({ ...plan, mechanism: { ...plan.mechanism, version: "99" } }, { sceneIndex: 0, assetVersion: "test" }).ok).toBe(false);
-    const options = { clinicalContextId: "test", assetVersion: "test", mode: "development" as const, outputPath: "test.mp4" };
+    const options = { clinicalContextId: "test", assetVersion: HEART_ORGAN_MODULE.assetVersion, mode: "development" as const, outputPath: "test.mp4" };
     expect(prepareExplanationAuthorization({ clinical: { message: "I feel tired.", language: "en" }, plan: { ...plan, mechanism: { ...plan.mechanism, evidence: "documented" } }, sceneIndex: 0 }, options)).toMatchObject({ status: "failed", errorCode: "CLINICAL_EXPLANATION_FAILED" });
     expect(prepareExplanationAuthorization({ clinical: { message: "I have chest pain.", language: "en" }, plan: {}, sceneIndex: 0 }, options)).toMatchObject({ errorCode: "UNSAFE_FOR_VIDEO_FIRST" });
   });

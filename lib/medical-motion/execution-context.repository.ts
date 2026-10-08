@@ -6,7 +6,7 @@ import { jsonSnapshot, EXECUTION_INPUT_LIMITS } from "./validation/json-snapshot
 import type { MedicalMotionExecutionInput, MedicalMotionJson } from "./contracts/execution";
 import type { MedicalMotionContextContent, MedicalMotionExecutionContext } from "./contracts/execution-context";
 import { validateVideoExplanationPlan } from "@/lib/symptom-explanation/validate-explanation-plan";
-import { getOrganModule } from "./organ-modules";
+import { getOrganModuleForAsset } from "./organ-modules";
 import { canonicalExplanationJson } from "@/lib/symptom-explanation/compile-explanation-scene";
 import { SOURCE_PROFILES, trustedSourceProfileBindings, validateSourceProfileBindings, resolveStoredSourceProfile, type SourceProfileRegistry } from "./source-profiles";
 import type { SourceProfileSelection, TrustedSceneProfile, SourceProfileBindings } from "./contracts/source-profile";
@@ -151,7 +151,7 @@ export class MedicalMotionExecutionContextRepository {
     if (!plan.ok) return invalid();
     // The recorded version must still be available. No substitution with the
     // newest asset; no assertion of suitability or medically verified anatomy.
-    if (getOrganModule(plan.plan.organ)?.assetVersion !== context.assetVersion) {
+    if (!getOrganModuleForAsset(plan.plan.organ, context.assetVersion)) {
       throw new ExecutionContextError("CONTEXT_VERSION_UNAVAILABLE");
     }
     const input: MedicalMotionExecutionInput = { schemaVersion: context.schemaVersion, clinical: context.clinical, plan: context.candidatePlan, sceneIndex };

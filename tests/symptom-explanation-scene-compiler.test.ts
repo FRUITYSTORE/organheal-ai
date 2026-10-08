@@ -1,3 +1,4 @@
+import {installTestOrganModuleResolution} from "./helpers/organ-module-resolution";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { withTestAnatomyReview } from "./helpers/anatomy-review-fixture";
 import { getMechanismAnatomy } from "../lib/symptom-explanation/anatomy-resolver";
@@ -120,12 +121,12 @@ describe("validated explanation compiler and clinical render boundary", () => {
       return { ...entry, coverage: { ...entry.coverage,
         unknownRegions: kind === "coverage" ? ["RV"] : [], evidenceRefs: kind === "regionEvidence" ? [] : ["test-review"] } };
     });
-    vi.spyOn(modules, "getOrganModule").mockReturnValue(module);
+    installTestOrganModuleResolution(module).legacy;
     expect(await renderAfterTriage(request(plan("myocardialOxygenDemandSupply")), "test.mp4", { mode: "development" })).toMatchObject({ status: "failed", errorCode: "REAL_ANATOMICAL_ASSET_REQUIRED" });
     expect(renderHeartScene).not.toHaveBeenCalled();
   });
   it("accepts valid reviewed mechanism requirements", async () => {
-    vi.spyOn(modules, "getOrganModule").mockReturnValue(reviewed());
+    installTestOrganModuleResolution(reviewed()).legacy;
     expect(await renderAfterTriage(request(plan("myocardialOxygenDemandSupply")), "test.mp4", { mode: "development" })).toMatchObject({ status: "completed" });
   });
   it.each(["highlight", "dependencies", "duration", "identity", "intent", "context"])("rejects tampered %s before renderer", async (kind) => {
@@ -147,8 +148,7 @@ describe("validated explanation compiler and clinical render boundary", () => {
   });
   it("rejects stale asset identity", async () => {
     const result = compileExplanationScene(plan(), { ...config, assetVersion: "stale" });
-    expect(result.ok).toBe(true);
-    if (result.ok) expect(await renderAfterTriage(result.request, "test.mp4", { mode: "development" })).toMatchObject({ errorCode: "INVALID_SCENE_PLAN" });
+    expect(result).toMatchObject({ok:false,errorCode:"INVALID_SCENE_PLAN"});
     expect(renderHeartScene).not.toHaveBeenCalled();
   });
 });

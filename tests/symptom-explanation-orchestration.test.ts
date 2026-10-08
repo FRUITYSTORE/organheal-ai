@@ -1,3 +1,4 @@
+import {installTestOrganModuleResolution} from "./helpers/organ-module-resolution";
 import { withTestAnatomyReview } from "./helpers/anatomy-review-fixture";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { spawn } from "node:child_process";
@@ -56,7 +57,7 @@ describe("clinical triage to explanation rendering", () => {
     expect(await orchestrateExplanationRender(input("I feel tired.", bad), options, { signal: controller.signal })).toMatchObject({ errorCode: "INVALID_SCENE_PLAN" }); noRendering();
   });
   it("anatomy approval alone cannot promote an unreviewed mechanism to patient use", async () => {
-    vi.spyOn(modules, "getOrganModule").mockReturnValue(reviewed());
+    installTestOrganModuleResolution(reviewed()).legacy;
     expect(await orchestrateExplanationRender(input(), { ...options, mode: "production" })).toMatchObject({ status: "failed", errorCode: "REAL_ANATOMICAL_ASSET_REQUIRED", safety: { allowVideo: true } });
     noRendering();
   });
@@ -107,11 +108,11 @@ describe("clinical triage to explanation rendering", () => {
       verification: kind === "verification" ? "anatomy-conditional" : entry.verification,
       coverage: { ...entry.coverage, unknownRegions: kind === "coverage" ? ["RV"] : [], evidenceRefs: kind === "evidence" ? [] : entry.coverage.evidenceRefs },
     });
-    vi.spyOn(modules, "getOrganModule").mockReturnValue(module);
+    installTestOrganModuleResolution(module).legacy;
     expect(await orchestrateExplanationRender(input(undefined, plan("myocardialOxygenDemandSupply")), options)).toMatchObject({ errorCode: "REAL_ANATOMICAL_ASSET_REQUIRED" }); noRendering();
   });
   it("anatomy-ready state cannot override clinical block", async () => {
-    vi.spyOn(modules, "getOrganModule").mockReturnValue(reviewed());
+    installTestOrganModuleResolution(reviewed()).legacy;
     expect(await orchestrateExplanationRender(input("I have chest pain.", plan("myocardialOxygenDemandSupply")), { ...options, mode: "production" })).toMatchObject({ errorCode: "UNSAFE_FOR_VIDEO_FIRST" }); noRendering();
   });
   it("compiler rejection prevents renderer invocation", async () => {
@@ -122,11 +123,11 @@ describe("clinical triage to explanation rendering", () => {
   });
   it("enforces deterministic triage, validation, compiler, readiness ordering", async () => {
     const events: string[] = [];
-    const originalGate = gate.evaluateSafetyGate, originalValidate = validator.validateVideoExplanationPlan, originalCompile = compiler.compileExplanationScene, originalModule = modules.getOrganModule;
+    const originalGate = gate.evaluateSafetyGate, originalValidate = validator.validateVideoExplanationPlan, originalCompile = compiler.compileExplanationScene, originalModule = modules.getOrganModuleForAsset;
     vi.spyOn(gate, "evaluateSafetyGate").mockImplementation((...args) => { events.push("triage"); return originalGate(...args); });
     vi.spyOn(validator, "validateVideoExplanationPlan").mockImplementation((...args) => { events.push("validation"); return originalValidate(...args); });
     vi.spyOn(compiler, "compileExplanationScene").mockImplementation((...args) => { events.push("compiler"); return originalCompile(...args); });
-    vi.spyOn(modules, "getOrganModule").mockImplementation((...args) => { events.push("readiness"); return originalModule(...args); });
+    vi.spyOn(modules, "getOrganModuleForAsset").mockImplementation((...args) => { events.push("readiness"); return originalModule(...args); });
     vi.mocked(renderHeartScene).mockImplementation(async () => { events.push("renderer"); return { status: "completed", outputPath: "test.mp4", durationSeconds: 1 }; });
     await orchestrateExplanationRender(input(), options);
     expect(events.slice(0, 3)).toEqual(["triage", "validation", "compiler"]);

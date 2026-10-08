@@ -1,3 +1,4 @@
+import {installTestOrganModuleResolution} from "./helpers/organ-module-resolution";
 import {describe,it,expect,vi} from "vitest";
 import {profileFixture} from "./helpers/source-profile-fixture";
 import {contextContent} from "./helpers/medical-motion-context";
@@ -7,7 +8,7 @@ import {prepareExplanationAuthorization,readExplanationAuthorization} from "../l
 import {renderHeartScene} from "../lib/medical-motion/render/blender-renderer";
 import * as processBoundary from "../lib/medical-motion/render/blender-process";
 describe("renderer source profile invariants before process/file work",()=>{
-  function prepare(){const {module,profile}=profileFixture();vi.spyOn(modules,"getOrganModule").mockReturnValue(module);
+  function prepare(){const {module,profile}=profileFixture();installTestOrganModuleResolution(module);
     const selected=createSourceProfileRegistry([profile]).resolve({profileId:profile.profileId,profileVersion:profile.profileVersion}),c=contextContent();
     const prepared=prepareExplanationAuthorization({clinical:c.clinical,plan:c.candidatePlan,sceneIndex:0},{sourceProfile:selected,clinicalContextId:"TEST-CONTEXT",assetVersion:c.assetVersion,mode:"development",outputPath:"test.mp4"});
     if(!("ok" in prepared))throw Error(prepared.message);

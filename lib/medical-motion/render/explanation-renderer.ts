@@ -1,7 +1,7 @@
 import { transferExecutionResources } from "./execution-resources";
 import "server-only";
 import type { RenderResult, ExplanationRenderRequest } from "@/lib/medical-motion/contracts/render";
-import { getOrganModule } from "@/lib/medical-motion/organ-modules";
+import { getOrganModuleForAsset } from "@/lib/medical-motion/organ-modules";
 import { buildHeartVisualizationScene } from "@/lib/medical-motion/organs/heart/heart-visualization-resolver";
 import { renderHeartScene } from "@/lib/medical-motion/render/blender-renderer";
 import { checkAssetReadiness, checkExplanationPlanReadiness, type RenderMode } from "@/lib/symptom-explanation/asset-readiness";
@@ -39,10 +39,12 @@ export function validateExplanationRenderRequest(
   } catch {
     return { status: "failed", errorCode: "INVALID_SCENE_PLAN", message: "Request must be serializable JSON.", ...trace };
   }
-  const ready = checkExplanationPlanReadiness(request.explanationPlan, options.mode);
+  const module = getOrganModuleForAsset(request.scene.organ, request.assetVersion);
+  if (!module) return { status: "failed", errorCode: "INVALID_SCENE_PLAN", message: "Asset version unavailable.", ...trace };
+  const getSelectedModule = (organ: string) => organ === module.id ? module : null;
+  const ready = checkExplanationPlanReadiness(request.explanationPlan, options.mode, getSelectedModule);
   if (!ready.ok) return { status: "failed", errorCode: ready.errorCode,
     message: ("issues" in ready ? ready.issues : ready.details).join(" "), ...trace };
-  const module = getOrganModule(request.scene.organ);
   if (!module || module.assetVersion !== request.assetVersion) {
     return { status: "failed", errorCode: "INVALID_SCENE_PLAN", message: "Asset version no longer matches the compiled request.", ...trace };
   }
@@ -50,7 +52,7 @@ export function validateExplanationRenderRequest(
   const preset = buildHeartVisualizationScene(request.scene.focus as "overview" | "coronary" | "lvAorta" | "combined");
   for (const requirements of [preset.anatomyRequirements, request.scene.anatomyRequirements]) {
     const sceneReady = checkAssetReadiness(request.scene.organ, request.scene.highlight.structures,
-      options.mode, getOrganModule, requirements);
+      options.mode, getSelectedModule, requirements);
     if (!sceneReady.ok) return { status: "failed", errorCode: sceneReady.errorCode, message: sceneReady.details.join(" "), ...trace };
   }
   return { ok: true as const, request, trace };

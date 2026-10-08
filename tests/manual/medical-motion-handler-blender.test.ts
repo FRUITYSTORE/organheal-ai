@@ -1,3 +1,4 @@
+import {installTestOrganModuleResolution} from "../helpers/organ-module-resolution";
 import { randomUUID } from "node:crypto";
 import { existsSync } from "node:fs";
 import path from "node:path";
@@ -54,7 +55,7 @@ describe("real local PostgreSQL context to handler to Blender smoke",()=>{
   it("real Blender first render then durable cache hit keeps render count one",async()=>{
     // Pure encoded-media/ownership/cache acceptance. This hypothetical TEST
     // metadata does not medically verify the smoke geometry or current heart.
-    const moduleSpy=vi.spyOn(organModules,"getOrganModule").mockReturnValue(withTestCacheAnatomy());
+    const moduleSpy=installTestOrganModuleResolution(withTestCacheAnatomy()).legacy;
     try {
     const before=vi.mocked(childProcess.spawn).mock.calls.filter(args=>String(args[0]).toLowerCase().includes("blender")).length;
     const storage=new FileArtifactStorage(storageRoot),runtime=createMedicalMotionArtifactRuntime(client,{mode:"development",reuse:true},storage);
