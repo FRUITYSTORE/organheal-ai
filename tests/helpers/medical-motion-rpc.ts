@@ -19,13 +19,13 @@ export const client = { rpc: async (name: string, p: Record<string, unknown>) =>
     else if(name==='cancel_motion_personalization'){const r=await sql(`set role service_role;select public.cancel_motion_personalization(${literal(p.p_spec_id)}::uuid,${literal(p.p_user_id)}::uuid);`);return {data:r==='t',error:null};}
     else if (name === "read_approved_motion_personalization") call = `public.read_approved_motion_personalization(${literal(p.p_spec_id)}::uuid,${literal(p.p_user_id)}::uuid)`;
     else if (name === "claim_next_background_job") call = `public.claim_next_background_job(array[${(p.p_allowed_job_types as string[]).map(literal).join(",")}])`;
-    else if (name === "create_medical_motion_execution_context") call = `public.create_medical_motion_execution_context(
+    else if (name === "create_medical_motion_execution_context" || name === "create_medical_motion_profile_context_v1") call = `public.${name}(
       ${literal(p.p_user_id)}::uuid,${literal(p.p_schema_version)},${literal(p.p_execution_version)},${literal(p.p_asset_version)},
-      ${literal(p.p_clinical_message)},${literal(p.p_clinical_language)},${literal(JSON.stringify(p.p_candidate_plan))}::jsonb)`;
+      ${literal(p.p_clinical_message)},${literal(p.p_clinical_language)},${literal(JSON.stringify(p.p_candidate_plan))}::jsonb${name === "create_medical_motion_profile_context_v1" ? `,${literal(JSON.stringify(p.p_source_profile_bindings))}::jsonb` : ""})`;
     else if (name === "read_medical_motion_execution_context") call = `public.read_medical_motion_execution_context(${literal(p.p_context_id)}::uuid,${literal(p.p_user_id)}::uuid)`;
-    else if (name === "enqueue_medical_motion_job") call = `public.enqueue_medical_motion_job(
+    else if (name === "enqueue_medical_motion_job" || name === "enqueue_medical_motion_profile_job_v1") call = `public.${name}(
       ${literal(p.p_user_id)}::uuid,${literal(p.p_request_id)}::uuid,${literal(p.p_schema_version)},${literal(p.p_execution_version)},
-      ${literal(p.p_asset_version)},${literal(p.p_clinical_message)},${literal(p.p_clinical_language)},${literal(JSON.stringify(p.p_candidate_plan))}::jsonb,${Number(p.p_scene_index)})`;
+      ${literal(p.p_asset_version)},${literal(p.p_clinical_message)},${literal(p.p_clinical_language)},${literal(JSON.stringify(p.p_candidate_plan))}::jsonb,${Number(p.p_scene_index)}${name === "enqueue_medical_motion_profile_job_v1" ? `,${literal(JSON.stringify(p.p_source_profile_bindings))}::jsonb` : ""})`;
     else if (name === "mutate_background_job_attempt") call = `public.mutate_background_job_attempt(
       ${literal(p.p_job_id)}::uuid,${literal(p.p_attempt_token)}::uuid,${literal(p.p_action)},${Number(p.p_retry_delay_ms ?? 0)},
       ${p.p_error_message === null || p.p_error_message === undefined ? "null" : literal(p.p_error_message)})`;

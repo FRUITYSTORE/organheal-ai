@@ -4,8 +4,11 @@ import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 import { isUuid } from "@/lib/validation/uuid";
 import { jsonSnapshot } from "./validation/json-snapshot";
 import { MAX_MEDICAL_MOTION_SCENE_INDEX, type MedicalMotionJobPayload } from "./contracts/job";
-import { MedicalMotionExecutionContextRepository, validateMedicalMotionContextContent } from "./execution-context.repository";
+import { MedicalMotionExecutionContextRepository, validateMedicalMotionContextContent, validateContextProfileBudget } from "./execution-context.repository";
 import { JOB_TYPES, type JobType } from "@/lib/jobs/job-types";
+import { SOURCE_PROFILES, trustedSourceProfileBindings, type SourceProfileRegistry } from "./source-profiles";
+import type { TrustedSceneProfile } from "./contracts/source-profile";
+import { validateVideoExplanationPlan } from "@/lib/symptom-explanation/validate-explanation-plan";
 
 export class MedicalMotionJobError extends Error {
   constructor(readonly code: "INVALID_MOTION_JOB" | "MOTION_JOB_CONFLICT" | "MOTION_JOB_ENQUEUE_FAILED" | "INVALID_MOTION_JOB_RESULT") {
@@ -27,24 +30,35 @@ export function validateMedicalMotionJobPayload(value: unknown): MedicalMotionJo
 export type EnqueuedMedicalMotionJob = { jobId: string; executionContextId: string; created: boolean };
 
 export class MedicalMotionJobRepository {
-  constructor(private readonly client: SupabaseClient = getSupabaseAdminClient()) {}
+  constructor(private readonly client: SupabaseClient = getSupabaseAdminClient(), private readonly profiles: SourceProfileRegistry = SOURCE_PROFILES) {}
 
   /** Server-issued stable UUID identifies a revision; retain it after a lost
    * response. Same revision/new scene reuses context. Changed content needs a
    * new UUID; conflicting reuse never overwrites or automatically retries. */
-  async enqueue(trustedUserId: string, serverRequestId: string, value: unknown, sceneIndex: number): Promise<EnqueuedMedicalMotionJob> {
+  async enqueue(trustedUserId: string, serverRequestId: string, value: unknown, sceneIndex: number, trustedProfiles?: readonly TrustedSceneProfile[]): Promise<EnqueuedMedicalMotionJob> {
     if (!isUuid(trustedUserId) || !isUuid(serverRequestId)) return invalid();
     const content = validateMedicalMotionContextContent(value);
+    let bindings;
+    if (trustedProfiles !== undefined) {
+      try {
+        const plan = validateVideoExplanationPlan(content.candidatePlan);
+        if (!plan.ok) return invalid();
+        bindings = trustedSourceProfileBindings(trustedProfiles,content.assetVersion,plan.plan.organ,plan.plan.scenes.length,this.profiles);
+        validateContextProfileBudget(content,bindings);
+        if (!bindings.scenes.some(s=>s.sceneIndex===sceneIndex)) return invalid();
+      } catch { return invalid(); }
+    }
     validateMedicalMotionJobPayload({ schemaVersion: "1", executionVersion: content.executionVersion,
       executionContextId: serverRequestId, sceneIndex });
     let response;
     let conflict = false;
     try {
-      response = await this.client.rpc("enqueue_medical_motion_job", { p_user_id: trustedUserId.toLowerCase(),
+      response = await this.client.rpc(bindings ? "enqueue_medical_motion_profile_job_v1" : "enqueue_medical_motion_job", { p_user_id: trustedUserId.toLowerCase(),
         p_request_id: serverRequestId.toLowerCase(), p_schema_version: content.schemaVersion,
         p_execution_version: content.executionVersion, p_asset_version: content.assetVersion,
         p_clinical_message: content.clinical.message, p_clinical_language: content.clinical.language,
-        p_candidate_plan: content.candidatePlan, p_scene_index: sceneIndex });
+        p_candidate_plan: content.candidatePlan, p_scene_index: sceneIndex,
+        ...(bindings ? {p_source_profile_bindings:bindings} : {}) });
       if (response.error) {
         conflict = response.error.code === "OM409";
         throw new Error();
@@ -68,6 +82,6 @@ export class MedicalMotionJobRepository {
   async reconstruct(job: { type: JobType; userId: string; payload: unknown }) {
     if (job.type !== JOB_TYPES.MEDICAL_MOTION_RENDER || !isUuid(job.userId)) return invalid();
     const payload = validateMedicalMotionJobPayload(job.payload);
-    return new MedicalMotionExecutionContextRepository(this.client).reconstruct(payload.executionContextId, job.userId, payload.sceneIndex);
+    return new MedicalMotionExecutionContextRepository(this.client,this.profiles).reconstruct(payload.executionContextId, job.userId, payload.sceneIndex);
   }
 }

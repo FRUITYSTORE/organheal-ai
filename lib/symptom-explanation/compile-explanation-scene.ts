@@ -21,7 +21,8 @@ const invalid = (issue: string) => ({ ok: false as const, errorCode: "INVALID_SC
 
 /** Compiles exactly one indexed shot, not a narrated video or clinical decision.
  * Always revalidate unknown input; a TypeScript annotation is not authorization. */
-export function compileExplanationScene(value: unknown, config: { sceneIndex: number; assetVersion: string }, gate?: MechanismEvaluationContext) {
+export type ExplanationCompilationContext = MechanismEvaluationContext & { sourceProfile?: import("@/lib/medical-motion/contracts/source-profile").SourceProfileSelection };
+export function compileExplanationScene(value: unknown, config: { sceneIndex: number; assetVersion: string }, gate?: ExplanationCompilationContext) {
   if (gate && (gate.safety?.allowVideo !== true || gate.safety.level !== "none")) return { ...invalid("Safety Gate blocks visualization."), errorCode: "UNSAFE_FOR_VIDEO_FIRST" as const };
   const validation = validateVideoExplanationPlan(value);
   if (!validation.ok) return validation;
@@ -62,10 +63,15 @@ export function compileExplanationScene(value: unknown, config: { sceneIndex: nu
     const presetReady = checkAssetReadiness(scene.organ, scene.highlight.structures, gate.mode, getOrganModule, buildHeartVisualizationScene(focus).anatomyRequirements);
     if (!presetReady.ok) return { ...invalid(presetReady.details.join(" ")), errorCode: presetReady.errorCode };
     const result = compileMedicalScene(scene.mechanismIdentity, { ...gate, registry: MEDICAL_MECHANISMS, getModule: getOrganModule, catalog: WHOLE_BODY_ANATOMY,
+      ...(gate.sourceProfile ? { cameraTargets: [scene.camera.preset, ...(scene.camera.from ? [scene.camera.from] : [])] } : {}),
       selections: scene.highlight.structures, additionalRequirements: scene.anatomyRequirements, overview: target === null },
       { ...DEFAULT_SCENE_PRESENTATION, durationHint: scene.durationSeconds, outputProfile: { aspectRatio: scene.output.aspectRatio, resolution: scene.output.resolution, lod: "asset-native" } });
     if (!result.ok) return { ...invalid(result.reasons.join(" ")), ...("errorCode" in result ? { errorCode: result.errorCode } : {}) };
     medicalScene = result.compiled;
+    if (medicalScene.scene.sourceProfile) {
+      scene.sourceProfile = medicalScene.scene.sourceProfile;
+      scene.anatomyIdentity = medicalScene.scene.profileAnatomyIdentity;
+    }
     if (!validateCompiledMedicalScene(medicalScene)) return invalid("Compiled DSL validation failed.");
   }
   const core = {

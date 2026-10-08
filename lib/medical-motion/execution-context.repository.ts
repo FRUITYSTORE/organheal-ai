@@ -8,6 +8,14 @@ import type { MedicalMotionContextContent, MedicalMotionExecutionContext } from 
 import { validateVideoExplanationPlan } from "@/lib/symptom-explanation/validate-explanation-plan";
 import { getOrganModule } from "./organ-modules";
 import { canonicalExplanationJson } from "@/lib/symptom-explanation/compile-explanation-scene";
+import { SOURCE_PROFILES, trustedSourceProfileBindings, validateSourceProfileBindings, resolveStoredSourceProfile, type SourceProfileRegistry } from "./source-profiles";
+import type { SourceProfileSelection, TrustedSceneProfile, SourceProfileBindings } from "./contracts/source-profile";
+
+const reconstructedProfiles = new WeakMap<object, SourceProfileSelection>();
+/** Out-of-band server authority; never a field in decoded clinical JSON. */
+export function readReconstructedSourceProfile(input: MedicalMotionExecutionInput): SourceProfileSelection | undefined {
+  return reconstructedProfiles.get(input);
+}
 
 type RecordJson = { [key: string]: MedicalMotionJson };
 const CONTENT_KEYS = ["schemaVersion", "executionVersion", "assetVersion", "clinical", "candidatePlan"];
@@ -44,6 +52,9 @@ export function validateMedicalMotionContextContent(value: unknown): MedicalMoti
   return snapshot as MedicalMotionContextContent;
 }
 const content = validateMedicalMotionContextContent;
+export function validateContextProfileBudget(input: MedicalMotionContextContent, bindings: SourceProfileBindings): void {
+  try { jsonSnapshot({...input,sourceProfileBindings:bindings},CONTEXT_LIMITS); } catch { return invalid(); }
+}
 function identity(value: unknown): string {
   if (!isUuid(value)) return invalid();
   return value.toLowerCase();
@@ -66,8 +77,9 @@ function singleRow(data: unknown): unknown {
 function row(value: unknown, owner: string, expectedId?: string): MedicalMotionExecutionContext {
   try {
     const snapshot = jsonSnapshot(value);
-    if (!fields(snapshot, ["id", "user_id", "schema_version", "execution_version", "asset_version",
-      "clinical_message", "clinical_language", "candidate_plan", "created_at"]) ||
+    const keys = ["id", "user_id", "schema_version", "execution_version", "asset_version",
+      "clinical_message", "clinical_language", "candidate_plan", "created_at"];
+    if ((!fields(snapshot, keys) && !fields(snapshot, [...keys,"source_profile_bindings"])) ||
       !isUuid(snapshot.id) || !isUuid(snapshot.user_id) || snapshot.user_id.toLowerCase() !== owner ||
       (expectedId && snapshot.id.toLowerCase() !== expectedId) || typeof snapshot.created_at !== "string" ||
       !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/.test(snapshot.created_at) ||
@@ -75,7 +87,12 @@ function row(value: unknown, owner: string, expectedId?: string): MedicalMotionE
     const validated = content({ schemaVersion: snapshot.schema_version, executionVersion: snapshot.execution_version,
       assetVersion: snapshot.asset_version, clinical: { message: snapshot.clinical_message, language: snapshot.clinical_language },
       candidatePlan: snapshot.candidate_plan });
-    return { ...validated, id: snapshot.id.toLowerCase(), userId: owner, createdAt: snapshot.created_at };
+    const plan = validateVideoExplanationPlan(validated.candidatePlan);
+    if (!plan.ok) throw new Error();
+    const bindings = snapshot.source_profile_bindings == null ? undefined :
+      validateSourceProfileBindings(snapshot.source_profile_bindings, validated.assetVersion, plan.plan.organ, plan.plan.scenes.length);
+    return { ...validated, id: snapshot.id.toLowerCase(), userId: owner, createdAt: snapshot.created_at,
+      ...(bindings ? {sourceProfileBindings:bindings} : {}) };
   } catch { throw new ExecutionContextError("INVALID_CONTEXT_RESULT"); }
 }
 
@@ -83,16 +100,26 @@ function row(value: unknown, owner: string, expectedId?: string): MedicalMotionE
  * authority. No client API, logging, retries, latest-source loads or queue wiring.
  * A lost create response has unknown commit state; do not automatically retry. */
 export class MedicalMotionExecutionContextRepository {
-  constructor(private readonly client: SupabaseClient = getSupabaseAdminClient()) {}
+  constructor(private readonly client: SupabaseClient = getSupabaseAdminClient(), private readonly profiles: SourceProfileRegistry = SOURCE_PROFILES) {}
 
-  async create(trustedUserId: string, value: unknown): Promise<MedicalMotionExecutionContext> {
+  async create(trustedUserId: string, value: unknown, trustedProfiles?: readonly TrustedSceneProfile[]): Promise<MedicalMotionExecutionContext> {
     const owner = identity(trustedUserId), input = content(value);
+    let bindings: SourceProfileBindings | undefined;
+    if (trustedProfiles !== undefined) {
+      try {
+        const plan = validateVideoExplanationPlan(input.candidatePlan);
+        if (!plan.ok || !Array.isArray(trustedProfiles) || trustedProfiles.length > 128) return invalid();
+        bindings = trustedSourceProfileBindings(trustedProfiles,input.assetVersion,plan.plan.organ,plan.plan.scenes.length,this.profiles);
+        validateContextProfileBudget(input,bindings);
+      } catch { return invalid(); }
+    }
     let data: unknown;
     try {
-      const response = await this.client.rpc("create_medical_motion_execution_context", {
+      const response = await this.client.rpc(bindings ? "create_medical_motion_profile_context_v1" : "create_medical_motion_execution_context", {
         p_user_id: owner, p_schema_version: input.schemaVersion, p_execution_version: input.executionVersion,
         p_asset_version: input.assetVersion, p_clinical_message: input.clinical.message,
         p_clinical_language: input.clinical.language, p_candidate_plan: input.candidatePlan,
+        ...(bindings ? {p_source_profile_bindings:bindings} : {}),
       });
       if (response.error) throw new Error();
       data = response.data;
@@ -100,7 +127,7 @@ export class MedicalMotionExecutionContextRepository {
     const result = row(singleRow(data), owner);
     // Verify the returned snapshot matches submitted content. JSONB can reorder
     // keys; compare canonical JSON data rather than serialized key order.
-    if (!sameContent(input, result)) throw new ExecutionContextError("INVALID_CONTEXT_RESULT");
+    if (!sameContent(input, result) || canonicalExplanationJson(bindings ?? null) !== canonicalExplanationJson(result.sourceProfileBindings ?? null)) throw new ExecutionContextError("INVALID_CONTEXT_RESULT");
     return result;
   }
 
@@ -127,7 +154,15 @@ export class MedicalMotionExecutionContextRepository {
     if (getOrganModule(plan.plan.organ)?.assetVersion !== context.assetVersion) {
       throw new ExecutionContextError("CONTEXT_VERSION_UNAVAILABLE");
     }
-    return { schemaVersion: context.schemaVersion, clinical: context.clinical, plan: context.candidatePlan, sceneIndex };
+    const input: MedicalMotionExecutionInput = { schemaVersion: context.schemaVersion, clinical: context.clinical, plan: context.candidatePlan, sceneIndex };
+    if (context.sourceProfileBindings) {
+      const binding = context.sourceProfileBindings.scenes.find(s=>s.sceneIndex===sceneIndex);
+      // A profile-aware context cannot silently reconstruct an unbound scene.
+      if (!binding) throw new ExecutionContextError("CONTEXT_VERSION_UNAVAILABLE");
+      try { reconstructedProfiles.set(input,resolveStoredSourceProfile(binding.profile,this.profiles)); }
+      catch { throw new ExecutionContextError("CONTEXT_VERSION_UNAVAILABLE"); }
+    }
+    return input;
   }
 }
 

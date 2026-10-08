@@ -16,6 +16,7 @@ export type RenderResolution = "720p" | "1080p";
 export type RenderMedia = "still" | "video";
 
 export type SceneDefinition = {
+  sourceProfile?: import("./source-profile").SourceProfileCacheIdentity;
   mechanismIdentity?: import("./mechanism").MechanismIdentity;
   anatomyIdentity?: import("./anatomy-foundation").AnatomyRenderIdentity;
   organ: OrganId;

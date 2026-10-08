@@ -8,7 +8,7 @@ import { JOB_TYPES } from "../job-types";
 import type { BackgroundJob } from "../job-types";
 import { isUuid } from "@/lib/validation/uuid";
 import { validateMedicalMotionJobPayload } from "@/lib/medical-motion/job.repository";
-import { ExecutionContextError, MedicalMotionExecutionContextRepository } from "@/lib/medical-motion/execution-context.repository";
+import { ExecutionContextError, MedicalMotionExecutionContextRepository, readReconstructedSourceProfile } from "@/lib/medical-motion/execution-context.repository";
 import { executeMedicalMotionRequest } from "@/lib/medical-motion/execute-medical-motion";
 import { readExecutionResources, recordCandidateOwnership } from "@/lib/medical-motion/render/execution-resources";
 import { discardArtifact } from "@/lib/medical-motion/render/artifact-output";
@@ -90,7 +90,10 @@ export function createMedicalMotionRenderHandler(client: SupabaseClient, policy:
           const context = await deps.contexts.read(payload.executionContextId, job.userId);
           const input = await deps.contexts.reconstruct(payload.executionContextId, job.userId, payload.sceneIndex);
           if (signal.aborted) return { status: "succeeded", value: lost() };
-          const serverOptions = { clinicalContextId: context.id, assetVersion: context.assetVersion, mode, outputPath: "render.mp4" };
+          const sourceProfile = readReconstructedSourceProfile(input);
+          if (context.sourceProfileBindings && !sourceProfile) throw new ExecutionContextError("CONTEXT_VERSION_UNAVAILABLE");
+          const serverOptions = { clinicalContextId: context.id, assetVersion: context.assetVersion, mode, outputPath: "render.mp4",
+            ...(sourceProfile ? {sourceProfile} : {}) };
           if (artifacts) {
             // Stored bytes are not clinical authority. Reuse the complete
             // current authorization/readiness gates before any recovery read.

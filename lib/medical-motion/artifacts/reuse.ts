@@ -17,7 +17,8 @@ import { checkAssetReadiness } from "@/lib/symptom-explanation/asset-readiness";
 
 export type CacheDisposition = "CACHE_HIT" | "CACHE_MISS" | "CACHE_INELIGIBLE" | "CACHE_STALE" | "CACHE_INVALID" | "CACHE_CONFLICT";
 export type ReuseIdentity = Readonly<{ key:string; baseFingerprint:string; outputFingerprint:string; renderSignature:string;
-  scope:"internal-review"|"patient-facing"; media:"still"|"video"; sceneDslVersion:"1"; compilerVersion:"1"; mechanismId:string; mechanismVersion:string }>;
+  scope:"internal-review"|"patient-facing"; media:"still"|"video"; sceneDslVersion:"1"; compilerVersion:"1"; mechanismId:string; mechanismVersion:string;
+  sourceProfile?: import("../contracts/source-profile").SourceProfileCacheIdentity }>;
 export type ReuseEvent = Readonly<{ event:"MEDICAL_MOTION_CACHE"; disposition:CacheDisposition|"CACHE_LOOKUP"|"RENDER_CREATED"|"CONCURRENT_REUSE" }>;
 type ReuseRow = { outcome:"CACHE_HIT"|"CACHE_MISS"|"CACHE_INVALID"|"CACHE_CONFLICT"; epoch:number;
   artifact_id:string|null; media:"still"|"video"|null; byte_size:number|null; sha256:string|null; persisted:boolean|null; deep_required:boolean };
@@ -31,7 +32,7 @@ export function reusableArtifactIdentity(compiled:CompiledMedicalScene,renderSig
   if(!validateCompiledMedicalScene(compiled)||compiled.reuse.classification!=="reusable-base"||!hex(renderSignature)||
     !["still","video"].includes(media)||(media==="still")!==(compiled.scene.renderIntent==="still")||!/^[A-Za-z][A-Za-z0-9_-]{0,127}$/.test(compiled.scene.mechanismId)||
     !/^[A-Za-z0-9_.-]{1,64}$/.test(compiled.scene.mechanismVersion)) return null;
-  const core={baseFingerprint:compiled.baseFingerprint,outputFingerprint:compiled.outputFingerprint,renderSignature,
+  const core={...(compiled.scene.sourceProfile ? {sourceProfile:compiled.scene.sourceProfile} : {}),baseFingerprint:compiled.baseFingerprint,outputFingerprint:compiled.outputFingerprint,renderSignature,
     scope:compiled.scene.usage,media,sceneDslVersion:compiled.scene.sceneDslVersion,compilerVersion:compiled.scene.compilerContractVersion,
     mechanismId:compiled.scene.mechanismId,mechanismVersion:compiled.scene.mechanismVersion};
   return Object.freeze({key:hash({reuseIdentityVersion:"1",...core}),...core});

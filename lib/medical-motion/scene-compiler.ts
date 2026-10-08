@@ -10,6 +10,7 @@ import { evaluateMechanismCandidate, checkVisualizationOperation, type Mechanism
 import { checkMechanismAnatomy } from "./mechanism-readiness";
 import { checkAssetReadiness } from "../symptom-explanation/asset-readiness";
 import { STRUCTURE_REPRESENTATIONS } from "./contracts/organ-module";
+import { checkSourceProfileCohesion } from "./source-profiles";
 
 export function canonicalSceneJson(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(canonicalSceneJson).join(",")}]`;
@@ -36,6 +37,8 @@ export const SCENE_VISUAL_OPERATIONS = Object.freeze({
 } as const);
 freeze(SCENE_VISUAL_OPERATIONS);
 export type SceneCompilerContext = MechanismEvaluationContext & {
+  sourceProfile?: import("./contracts/source-profile").SourceProfileSelection;
+  cameraTargets?: readonly string[];
   registry: MechanismRegistry;
   getModule: (organ: string) => OrganModule | null;
   catalog: WholeBodyAnatomyCatalog;
@@ -110,7 +113,18 @@ export function compileMedicalScene(candidate: unknown, context: SceneCompilerCo
       requireVerified: !!(a?.requireVerified || b?.requireVerified), completeCoverage: !!(a?.completeCoverage || b?.completeCoverage),
       requireClinicalApproval: !!(a?.requireClinicalApproval || b?.requireClinicalApproval), requiredRegions: sorted([...(a?.requiredRegions ?? []), ...(b?.requiredRegions ?? [])]) };
   }
-  const used = sorted([...ids, ...highlights, profile.primaryStructure, ...profile.secondaryStructures]);
+  const used = sorted([...ids, ...highlights, profile.primaryStructure, ...profile.secondaryStructures,
+    ...(context.sourceProfile !== undefined ? modules.flatMap(module=>module.anatomyRegistry.filter(e=>e.availability!=="missing").map(e=>e.id)) : [])]);
+  let profileIdentity: ReturnType<typeof checkSourceProfileCohesion> | undefined;
+  if (context.sourceProfile !== undefined) {
+    try {
+      if (modules.length !== 1 || !context.cameraTargets?.length) return failure(["Source profile requires one organ and explicit camera targets."]);
+      profileIdentity = checkSourceProfileCohesion(modules[0], context.sourceProfile, context.catalog, {
+        structures: used, labels: profile.labelIntent === "structure-names" ? sorted([profile.primaryStructure, ...profile.secondaryStructures]) : [],
+        cameraTargets: context.cameraTargets, usage: context.mode === "production" ? "patient-facing" : "internal-review",
+      });
+    } catch { return failure(["Source profile cohesion failed; no fallback is permitted."]); }
+  }
   // Camera/labels also depend on anatomy even if optional or not highlighted.
   for (const organ of m.affectedOrgans) {
     const organRequirements = Object.fromEntries(Object.entries(requirements).filter(([id]) => id.startsWith(`${organ}.`)));
@@ -123,9 +137,11 @@ export function compileMedicalScene(candidate: unknown, context: SceneCompilerCo
     if (targets.some(id => !accepted.includes(modules.flatMap(module => module.anatomyRegistry).find(entry => entry.id === id)!.representation))) return failure(["Visual operation representation is unsupported; no substitution permitted."]);
   }
   const scene: MedicalSceneDsl = {
+    ...(profileIdentity ? { sourceProfile: profileIdentity.sourceProfile, profileAnatomyIdentity: profileIdentity,
+      profileCameraTargets: sorted(context.cameraTargets!) } : {}),
     sceneDslVersion: "1", compilerContractVersion: "1", renderIdentityVersion: "1",
     mechanismId: m.mechanismId, mechanismVersion: m.version, bodySystemIds: sorted(m.bodySystems), organIds: sorted(m.affectedOrgans),
-    anatomy: modules.map(module => ({ organId: module.id, anatomyVersion: module.anatomyVersion!, assetVersion: module.assetVersion, sources: anatomyRenderIdentity(module).sources.map(s => ({ ...s })).sort((a,b) => a.sourceId.localeCompare(b.sourceId) || a.sourceVersion.localeCompare(b.sourceVersion)) })),
+    anatomy: modules.map(module => ({ organId: module.id, anatomyVersion: module.anatomyVersion!, assetVersion: module.assetVersion, sources: (profileIdentity ?? anatomyRenderIdentity(module)).sources.map(s => ({ ...s })).sort((a,b) => a.sourceId.localeCompare(b.sourceId) || a.sourceVersion.localeCompare(b.sourceVersion)) })),
     requiredStructures: requirements,
     representations: used.map(id => ({ structureId: id, representation: modules.flatMap(module => module.anatomyRegistry).find(entry => entry.id === id)!.representation })),
     highlightedStructures: highlights,

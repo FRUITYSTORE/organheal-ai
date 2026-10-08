@@ -15,6 +15,7 @@ import type { SceneDefinition } from "@/lib/medical-motion/contracts/scene";
 export function computeRenderSignature(scene: SceneDefinition, assetVersion: string,
   medicalIdentity?: Pick<import("./contracts/medical-scene").CompiledMedicalScene, "baseFingerprint" | "outputFingerprint">): string {
   const canonical = JSON.stringify({
+    ...(scene.sourceProfile ? { sourceProfile: scene.sourceProfile, profileAnatomyIdentity: scene.anatomyIdentity } : {}),
     ...(medicalIdentity ? { medicalSceneIdentity: { version: "1", baseFingerprint: medicalIdentity.baseFingerprint, outputFingerprint: medicalIdentity.outputFingerprint } } : {}),
     ...(scene.mechanismIdentity ? { mechanismIdentity: { mechanismId: scene.mechanismIdentity.mechanismId, mechanismVersion: scene.mechanismIdentity.mechanismVersion } } : {}),
     ...(scene.anatomyIdentity ? { anatomyIdentity: {

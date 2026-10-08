@@ -38,6 +38,8 @@ export type AnatomyAssessment = {
 export type AnatomyLifecycle = "missing" | "discovered" | "imported" | "semantically-unverified" |
   "geometry-verified" | "anatomically-verified" | "clinically-approved" | "rejected";
 export type AnatomyRenderIdentity = {
+  sourceProfile?: import("./source-profile").SourceProfileCacheIdentity;
+  structureSources?: readonly { structureId: import("./anatomy").AnatomyStructureId; representation: import("./organ-module").StructureRepresentation; sourceId: string; sourceVersion: string }[];
   anatomyVersion: string;
   sources: readonly { sourceId: string; sourceVersion: string }[];
 };

@@ -9,6 +9,9 @@ export type SceneOutputProfile = { aspectRatio: AspectRatio; resolution: RenderR
 export type ReuseDecision = { classification: "reusable-base" | "patient-specific-render-required" | "unsupported"; reasons: readonly string[] };
 /** Renderer-neutral base. No clinical facts, patient identifiers, prose or object names. */
 export type MedicalSceneDsl = {
+  sourceProfile?: import("./source-profile").SourceProfileCacheIdentity;
+  profileAnatomyIdentity?: import("./anatomy-foundation").AnatomyRenderIdentity;
+  profileCameraTargets?: readonly string[];
   sceneDslVersion: "1"; compilerContractVersion: "1"; renderIdentityVersion: "1";
   mechanismId: string; mechanismVersion: string;
   bodySystemIds: readonly string[]; organIds: readonly string[];

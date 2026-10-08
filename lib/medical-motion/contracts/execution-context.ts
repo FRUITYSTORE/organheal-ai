@@ -12,4 +12,5 @@ export type MedicalMotionExecutionContext = MedicalMotionContextContent & {
   id: string;
   userId: string;
   createdAt: string;
+  sourceProfileBindings?: import("./source-profile").SourceProfileBindings;
 };
