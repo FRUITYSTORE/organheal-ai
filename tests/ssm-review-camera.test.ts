@@ -1,0 +1,24 @@
+import { expect, it } from "vitest";
+import { writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { SSM_HEART_CANDIDATE as candidate } from "../lib/medical-motion/organs/heart/ssm-heart-candidate";
+import { resolveCameraShot } from "../lib/medical-motion/render/blender-renderer";
+import manifest from "../medical-assets/candidates/zenodo-4506463-v2/selection-manifest.json";
+it("uses only existing exact SSM references and a deterministic source-derived review direction", () => {
+  const camera=candidate.cameraTargets[0];
+  expect(camera.id).toBe("CAM_SSM_REVIEW_VENTRICLES");
+  expect(camera.lookAt).toEqual(candidate.scaleReference);
+  expect(candidate.landmarks).toHaveLength(2);
+  for (const id of camera.lookAt) expect(candidate.landmarks.some(l => l.id===id && l.blenderObject.startsWith("LM_heart.ssm."))).toBe(true);
+  const center=(filename:string)=>{ const a=manifest.assets.find(a=>a.derivedFilename===filename)!; return a.bounds[0].map((v,i)=>(v+a.bounds[1][i])/2); };
+  const lv=center("lv-endocardial-surface.obj"),rv=center("rv-endocardial-surface.obj"),base=center("basal-patch.obj"),apex=center("apex-reference.obj");
+  const a=lv.map((v,i)=>v-rv[i]),b=base.map((v,i)=>v-apex[i]);
+  expect(camera.viewDirection.reduce((sum,v,i)=>sum+v*a[i],0)).toBeCloseTo(0,10);
+  expect(camera.viewDirection.reduce((sum,v,i)=>sum+v*b[i],0)).toBeCloseTo(0,10);
+  expect(Math.hypot(...camera.viewDirection)).toBeCloseTo(1,10);
+  const shot=resolveCameraShot(candidate,camera.id);
+  expect(shot).toEqual(resolveCameraShot(candidate,camera.id));
+  expect(shot).not.toBeNull();
+  writeFileSync(path.join(tmpdir(),"organheal-ssm-review-shot.json"),JSON.stringify(shot));
+});

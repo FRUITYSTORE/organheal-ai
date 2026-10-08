@@ -6,6 +6,8 @@ import { jsonSnapshot } from "./validation/json-snapshot";
 import type { OrganModule } from "./contracts/organ-module";
 import type { AnatomyStructureId } from "./contracts/anatomy";
 import type { WholeBodyAnatomyCatalog } from "./contracts/anatomy-foundation";
+import { BP3D_HEART_SOURCE_PROFILE } from "./organs/heart/bp3d-source-profile";
+import { SSM_HEART_SOURCE_PROFILE } from "./organs/heart/ssm-source-profile";
 
 const issued = new WeakMap<object, Readonly<AnatomySourceProfile>>();
 const text = (s: unknown): s is string => typeof s === "string" && !!s.trim() && s.length <= 1024;
@@ -46,8 +48,8 @@ export function createSourceProfileRegistry(definitions: readonly AnatomySourceP
   } });
 }
 export type SourceProfileRegistry = ReturnType<typeof createSourceProfileRegistry>;
-// No research candidate or patient-facing profile is registered by this milestone.
-export const SOURCE_PROFILES = createSourceProfileRegistry([]);
+// BP3D source-part internal review only; no patient-facing profile.
+export const SOURCE_PROFILES = createSourceProfileRegistry([BP3D_HEART_SOURCE_PROFILE, SSM_HEART_SOURCE_PROFILE]);
 
 export function sourceProfileSnapshot(selection: SourceProfileSelection): SourceProfileSnapshot {
   const p = readSourceProfile(selection);

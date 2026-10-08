@@ -14,7 +14,8 @@ import type { AnatomicalDirection, LandmarkId, OrganModule } from "@/lib/medical
 import type { RenderMedia, SceneDefinition } from "@/lib/medical-motion/contracts/scene";
 import { getOrganModule, getOrganModuleForAsset } from "@/lib/medical-motion/organ-modules";
 import { anatomyRenderIdentity } from "@/lib/medical-motion/anatomy-foundation";
-import { checkSourceProfileCohesion } from "../source-profiles";
+import { checkSourceProfileCohesion, readSourceProfile } from "../source-profiles";
+import type { SourceProfileSelection } from "../contracts/source-profile";
 import { WHOLE_BODY_ANATOMY } from "../whole-body-anatomy";
 import { checkAssetReadiness, checkExplanationPlanReadiness, type RenderMode } from "@/lib/symptom-explanation/asset-readiness";
 import { readExplanationAuthorization } from "@/lib/symptom-explanation/explanation-authorization";
@@ -72,6 +73,8 @@ export type RenderOptions = {
   explanationPlan?: unknown;
   /** Clinical context requires server runtime authorization, never plain metadata. */
   clinicalAuthorization?: unknown;
+  /** Opaque server-issued capability for non-clinical development review only. */
+  internalReviewSourceProfile?: SourceProfileSelection;
 };
 
 /** A camera shot resolved to the objects the Blender build creates. */
@@ -151,13 +154,26 @@ export async function renderHeartScene(
     assetVersion,
     explanationPlan,
     clinicalAuthorization,
+    internalReviewSourceProfile,
     timeoutMs = scene.output.media === "video" ? DEFAULT_VIDEO_RENDER_TIMEOUT_MS : DEFAULT_RENDER_TIMEOUT_MS,
   } = options;
   // Generic scenes are internal non-clinical review. Clinical metadata cannot
   // select that path or supply its own authorization.
-  if (Object.keys(options).some((key) => !["mode", "assetVersion", "timeoutMs", "explanationPlan", "clinicalAuthorization"].includes(key)) ||
+  if (Object.keys(options).some((key) => !["mode", "assetVersion", "timeoutMs", "explanationPlan", "clinicalAuthorization", "internalReviewSourceProfile"].includes(key)) ||
       Object.keys(scene).some((key) => !["sourceProfile", "organ", "sceneVersion", "durationSeconds", "focus", "camera", "motion", "highlight", "anatomyRequirements", "anatomyIdentity", "mechanismIdentity", "output"].includes(key))) {
     return invalidScene("Unsupported render metadata; clinical requests must use the authorized boundary.");
+  }
+  const internalReview = "internalReviewSourceProfile" in options;
+  if (internalReview) {
+    if (mode !== "development" || "explanationPlan" in options || "clinicalAuthorization" in options || scene.mechanismIdentity) {
+      return invalidScene("Source-profile internal review requires a non-clinical development request.");
+    }
+    try {
+      const profile = readSourceProfile(internalReviewSourceProfile);
+      if (!assetVersion || assetVersion !== profile.assetVersion || scene.organ !== profile.organId || !profile.usage.includes("internal-review")) {
+        return invalidScene("Internal-review profile and exact asset must match.");
+      }
+    } catch { return invalidScene("Trusted internal-review source profile is required."); }
   }
   if ("explanationPlan" in options || "clinicalAuthorization" in options) {
     const authorized = readExplanationAuthorization(clinicalAuthorization);
@@ -220,7 +236,19 @@ export async function renderHeartScene(
   // Source/semantic revisions must match the asset actually about to render.
   // Legacy internal scenes may omit identity; patient-facing scenes may not.
   try {
-    if (scene.sourceProfile) {
+    if (internalReview) {
+      const identity = checkSourceProfileCohesion(organModule, internalReviewSourceProfile!, WHOLE_BODY_ANATOMY, {
+        structures: organModule.anatomyRegistry.filter(e => e.availability !== "missing").map(e => e.id),
+        labels: scene.highlight.structures,
+        cameraTargets: [scene.camera.preset, ...(scene.camera.from ? [scene.camera.from] : [])],
+        usage: "internal-review",
+      });
+      if ((scene.sourceProfile && canonicalExplanationJson(scene.sourceProfile) !== canonicalExplanationJson(identity.sourceProfile)) ||
+          (scene.anatomyIdentity && canonicalExplanationJson(scene.anatomyIdentity) !== canonicalExplanationJson(identity))) {
+        return invalidScene("Internal-review source identity does not match the authorized asset.");
+      }
+      scene = { ...scene, sourceProfile: identity.sourceProfile, anatomyIdentity: identity };
+    } else if (scene.sourceProfile) {
       const authorized = readExplanationAuthorization(clinicalAuthorization);
       if (!authorized?.options.sourceProfile || !authorized.request.medicalScene) return invalidScene("Trusted source profile authorization is required.");
       // The existing Blender builder renders the entire present inventory. It

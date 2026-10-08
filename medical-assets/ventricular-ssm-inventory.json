@@ -1,0 +1,594 @@
+{
+  "schemaVersion": "1",
+  "sourceId": "zenodo-4506463",
+  "sourceVersion": "v2",
+  "recordId": 4506463,
+  "doi": "10.5281/zenodo.4506463",
+  "usage": [
+    "internal-review"
+  ],
+  "runtimeActivated": false,
+  "evidenceMethod": "Preserved full appended-compressed VTK decode/topology audit reused after verifying both source SHA-256 pins; no geometry conversion.",
+  "evidenceFiles": [
+    {
+      "filename": "geometry-evidence.json",
+      "sha256": "3a4245cd4ede2fc109f5309235ec31695616a74875090500a221a78f7cabe7c0"
+    },
+    {
+      "filename": "blender-review-evidence.json",
+      "sha256": "4a35eaeab299bea5fe6b392c4dd225e8f11d282076e1f1f5dbf95663c4c090cb"
+    },
+    {
+      "filename": "zenodo-record.json",
+      "sha256": "e837e7ab685d9281ffe0b28ef4dbf7e3f35fcfc4b56327bb72187850d39f3c9d"
+    }
+  ],
+  "artifacts": [
+    {
+      "filename": "heart_sur.vtp",
+      "bytes": 3294001,
+      "sha256": "a94041d700b6a373deb1a59d9f8c0d75fe4692c2a9ca7c2bab4c0ed8e9a478b1",
+      "publisherMd5": "md5:11069c64928db9faf60d34ffe916b73d",
+      "url": "https://zenodo.org/api/records/4506463/files/heart_sur.vtp/content"
+    },
+    {
+      "filename": "heart_vol.vtu",
+      "bytes": 62502707,
+      "sha256": "c1f426654ed94609a54c2fac4ca70a511a5747cc0edc467d7977fa160f553e0b",
+      "publisherMd5": "md5:9929ac1855094229b6afada85f95f563",
+      "url": "https://zenodo.org/api/records/4506463/files/heart_vol.vtu/content"
+    }
+  ],
+  "surface": {
+    "datasetType": "PolyData",
+    "points": 99953,
+    "triangles": 199902,
+    "edges": 299853,
+    "bounds": [
+      [
+        -77.61900329589844,
+        -43.519256591796875,
+        -51.75328063964844
+      ],
+      [
+        31.440839767456055,
+        55.65492248535156,
+        48.254051208496094
+      ]
+    ],
+    "nonfiniteCoordinates": 0,
+    "duplicatePoints": 0,
+    "duplicateTriangles": 0,
+    "repeatedIndexTriangles": 0,
+    "zeroAreaTriangles": 0,
+    "minTriangleArea": 0.1282109555528627,
+    "maxTriangleArea": 0.4926545299180167,
+    "boundaryEdges": 0,
+    "nonManifoldEdges": 0,
+    "inconsistentWindingEdges": 0,
+    "componentPointCounts": [
+      99953
+    ],
+    "signedVolume": 145018.12743999364,
+    "meanEdgeLength": 0.8301631808280945,
+    "eulerCharacteristic": 2,
+    "arrays": [
+      {
+        "key": "PointData/class",
+        "type": "UInt8",
+        "components": 1,
+        "tuples": 99953,
+        "uncompressedBytes": 99953
+      },
+      {
+        "key": "Points/Points",
+        "type": "Float32",
+        "components": 3,
+        "tuples": 99953,
+        "uncompressedBytes": 1199436
+      },
+      {
+        "key": "Verts/connectivity",
+        "type": "Int64",
+        "components": 1,
+        "tuples": 0,
+        "uncompressedBytes": 0
+      },
+      {
+        "key": "Verts/offsets",
+        "type": "Int64",
+        "components": 1,
+        "tuples": 0,
+        "uncompressedBytes": 0
+      },
+      {
+        "key": "Lines/connectivity",
+        "type": "Int64",
+        "components": 1,
+        "tuples": 0,
+        "uncompressedBytes": 0
+      },
+      {
+        "key": "Lines/offsets",
+        "type": "Int64",
+        "components": 1,
+        "tuples": 0,
+        "uncompressedBytes": 0
+      },
+      {
+        "key": "Strips/connectivity",
+        "type": "Int64",
+        "components": 1,
+        "tuples": 0,
+        "uncompressedBytes": 0
+      },
+      {
+        "key": "Strips/offsets",
+        "type": "Int64",
+        "components": 1,
+        "tuples": 0,
+        "uncompressedBytes": 0
+      },
+      {
+        "key": "Polys/connectivity",
+        "type": "Int64",
+        "components": 1,
+        "tuples": 599706,
+        "uncompressedBytes": 4797648
+      },
+      {
+        "key": "Polys/offsets",
+        "type": "Int64",
+        "components": 1,
+        "tuples": 199902,
+        "uncompressedBytes": 1599216
+      }
+    ]
+  },
+  "volume": {
+    "datasetType": "UnstructuredGrid",
+    "points": 478820,
+    "tetrahedra": 2555157,
+    "cellTypeCounts": {
+      "10": 2555157
+    },
+    "bounds": [
+      [
+        -77.619,
+        -43.5193,
+        -51.7533
+      ],
+      [
+        31.4408,
+        55.6549,
+        48.2541
+      ]
+    ],
+    "nonfiniteCoordinates": 0,
+    "duplicatePoints": 0,
+    "duplicateTetrahedra": 0,
+    "zeroVolumeTetrahedra": 0,
+    "negativeSignedTetrahedra": 0,
+    "minSignedTetrahedronVolume": 0.01859621012683441,
+    "maxSignedTetrahedronVolume": 0.17595508532021484,
+    "summedSignedVolume": 145018.13228208286,
+    "boundaryTriangles": 199902,
+    "boundaryPoints": 99953,
+    "interiorFaces": 5010363,
+    "nonManifoldFaces": 0,
+    "componentPointCounts": [
+      478820
+    ],
+    "arrays": [
+      {
+        "key": "Points/Points",
+        "type": "Float64",
+        "components": 3,
+        "tuples": 478820,
+        "uncompressedBytes": 11491680
+      },
+      {
+        "key": "Cells/connectivity",
+        "type": "Int64",
+        "components": 1,
+        "tuples": 10220628,
+        "uncompressedBytes": 81765024
+      },
+      {
+        "key": "Cells/offsets",
+        "type": "Int64",
+        "components": 1,
+        "tuples": 2555157,
+        "uncompressedBytes": 20441256
+      },
+      {
+        "key": "Cells/types",
+        "type": "UInt8",
+        "components": 1,
+        "tuples": 2555157,
+        "uncompressedBytes": 2555157
+      }
+    ],
+    "tissueRegionLabels": []
+  },
+  "surfaceVolumeCorrespondence": {
+    "maxCoordinateDistanceMm": 0.00008589424396632239,
+    "meanCoordinateDistanceMm": 0.000041759964105180006,
+    "uniqueMatches": 99953,
+    "boundaryPoints": 99953,
+    "triangleConnectivityEqual": true,
+    "toleranceMm": 0.001
+  },
+  "regions": [
+    {
+      "label": 1,
+      "name": "base",
+      "pointCount": 2118,
+      "pureTriangleCount": 3425,
+      "centroid": [
+        -21.300811767578125,
+        7.525900363922119,
+        43.92093276977539
+      ],
+      "bounds": [
+        [
+          -63.44021987915039,
+          -34.486175537109375,
+          39.93818664550781
+        ],
+        [
+          23.41061782836914,
+          52.11033630371094,
+          48.254051208496094
+        ]
+      ],
+      "patch": {
+        "points": 2118,
+        "triangles": 3425,
+        "edges": 5544,
+        "bounds": [
+          [
+            -63.44021987915039,
+            -34.486175537109375,
+            39.93818664550781
+          ],
+          [
+            23.41061782836914,
+            52.11033630371094,
+            48.254051208496094
+          ]
+        ],
+        "nonfiniteCoordinates": 0,
+        "duplicatePoints": 0,
+        "duplicateTriangles": 0,
+        "repeatedIndexTriangles": 0,
+        "zeroAreaTriangles": 0,
+        "minTriangleArea": 0.1282109555528627,
+        "maxTriangleArea": 0.44864190088905154,
+        "boundaryEdges": 813,
+        "nonManifoldEdges": 0,
+        "inconsistentWindingEdges": 0,
+        "componentPointCounts": [
+          2118
+        ],
+        "signedVolume": 13489.859977485414,
+        "meanEdgeLength": 0.813477635383606,
+        "eulerCharacteristic": -1
+      }
+    },
+    {
+      "label": 2,
+      "name": "epicardium",
+      "pointCount": 45580,
+      "pureTriangleCount": 90786,
+      "centroid": [
+        -25.37975311279297,
+        0.5782677531242371,
+        2.189978837966919
+      ],
+      "bounds": [
+        [
+          -77.61900329589844,
+          -43.519256591796875,
+          -51.75328063964844
+        ],
+        [
+          31.440839767456055,
+          55.65492248535156,
+          46.969757080078125
+        ]
+      ],
+      "patch": {
+        "points": 45580,
+        "triangles": 90786,
+        "edges": 136366,
+        "bounds": [
+          [
+            -77.61900329589844,
+            -43.519256591796875,
+            -51.75328063964844
+          ],
+          [
+            31.440839767456055,
+            55.65492248535156,
+            46.969757080078125
+          ]
+        ],
+        "nonfiniteCoordinates": 0,
+        "duplicatePoints": 0,
+        "duplicateTriangles": 0,
+        "repeatedIndexTriangles": 0,
+        "zeroAreaTriangles": 0,
+        "minTriangleArea": 0.12926929563715087,
+        "maxTriangleArea": 0.4926545299180167,
+        "boundaryEdges": 374,
+        "nonManifoldEdges": 0,
+        "inconsistentWindingEdges": 0,
+        "componentPointCounts": [
+          45580
+        ],
+        "signedVolume": 390803.5575739069,
+        "meanEdgeLength": 0.8307643532752991,
+        "eulerCharacteristic": 0
+      }
+    },
+    {
+      "label": 3,
+      "name": "LV endocardium",
+      "pointCount": 22821,
+      "pureTriangleCount": 45465,
+      "centroid": [
+        -43.763484954833984,
+        4.697240352630615,
+        3.1083784103393555
+      ],
+      "bounds": [
+        [
+          -70.95489501953125,
+          -23.375043869018555,
+          -47.742210388183594
+        ],
+        [
+          -13.96448040008545,
+          34.597354888916016,
+          47.009151458740234
+        ]
+      ],
+      "patch": {
+        "points": 22821,
+        "triangles": 45465,
+        "edges": 68285,
+        "bounds": [
+          [
+            -70.95489501953125,
+            -23.375043869018555,
+            -47.742210388183594
+          ],
+          [
+            -13.96448040008545,
+            34.597354888916016,
+            47.009151458740234
+          ]
+        ],
+        "nonfiniteCoordinates": 0,
+        "duplicatePoints": 0,
+        "duplicateTriangles": 0,
+        "repeatedIndexTriangles": 0,
+        "zeroAreaTriangles": 0,
+        "minTriangleArea": 0.16348311755836423,
+        "maxTriangleArea": 0.4705930146454658,
+        "boundaryEdges": 175,
+        "nonManifoldEdges": 0,
+        "inconsistentWindingEdges": 0,
+        "componentPointCounts": [
+          22821
+        ],
+        "signedVolume": -129288.68557913225,
+        "meanEdgeLength": 0.8313010334968567,
+        "eulerCharacteristic": 1
+      }
+    },
+    {
+      "label": 4,
+      "name": "RV endocardium",
+      "pointCount": 29433,
+      "pureTriangleCount": 58590,
+      "centroid": [
+        -5.2542924880981445,
+        -2.588902711868286,
+        6.770084381103516
+      ],
+      "bounds": [
+        [
+          -32.884464263916016,
+          -40.52063751220703,
+          -43.337093353271484
+        ],
+        [
+          28.444679260253906,
+          52.65139389038086,
+          44.26070022583008
+        ]
+      ],
+      "patch": {
+        "points": 29433,
+        "triangles": 58590,
+        "edges": 88022,
+        "bounds": [
+          [
+            -32.884464263916016,
+            -40.52063751220703,
+            -43.337093353271484
+          ],
+          [
+            28.444679260253906,
+            52.65139389038086,
+            44.26070022583008
+          ]
+        ],
+        "nonfiniteCoordinates": 0,
+        "duplicatePoints": 0,
+        "duplicateTriangles": 0,
+        "repeatedIndexTriangles": 0,
+        "zeroAreaTriangles": 0,
+        "minTriangleArea": 0.14234503657783312,
+        "maxTriangleArea": 0.45599480396148756,
+        "boundaryEdges": 274,
+        "nonManifoldEdges": 0,
+        "inconsistentWindingEdges": 0,
+        "componentPointCounts": [
+          29433
+        ],
+        "signedVolume": -134621.29263227741,
+        "meanEdgeLength": 0.8301887512207031,
+        "eulerCharacteristic": 1
+      }
+    },
+    {
+      "label": 5,
+      "name": "apex",
+      "pointCount": 1,
+      "pureTriangleCount": 0,
+      "centroid": [
+        -41.918968200683594,
+        -5.760156154632568,
+        -51.52216339111328
+      ],
+      "bounds": [
+        [
+          -41.918968200683594,
+          -5.760156154632568,
+          -51.52216339111328
+        ],
+        [
+          -41.918968200683594,
+          -5.760156154632568,
+          -51.52216339111328
+        ]
+      ],
+      "patch": null
+    }
+  ],
+  "mixedClassTriangles": 1636,
+  "faceClassPolicy": "Only triangles whose three point classes agree belong to a class patch; mixed triangles remain unclassified. Apex is one point, not tissue.",
+  "coordinates": {
+    "units": "millimeter",
+    "unitsEvidence": "Official record mean edge length 0.83 mm agrees with measured surface edge length 0.8301631808280945.",
+    "orientation": "UNRESOLVED",
+    "axisConvention": null,
+    "transform": "unchanged source coordinates",
+    "orientationLimitation": "No authoritative patient-left/anterior/superior axis convention established; base/apex labels do not establish all anatomical axes."
+  },
+  "mappings": [
+    {
+      "sourceRegion": "class:1",
+      "proposedStructureId": null,
+      "representation": "surface",
+      "classification": "QUALIFIED_INTERNAL_REVIEW",
+      "limitations": [
+        "Basal closure patch, not valve annuli or a complete named organ structure."
+      ]
+    },
+    {
+      "sourceRegion": "class:2",
+      "proposedStructureId": null,
+      "representation": "surface",
+      "classification": "QUALIFIED_INTERNAL_REVIEW",
+      "limitations": [
+        "Composite ventricular epicardial patch; no independent LV/RV epicardial territory labels; not tissue."
+      ]
+    },
+    {
+      "sourceRegion": "class:3",
+      "proposedStructureId": "heart.leftVentricle",
+      "representation": "surface",
+      "classification": "QUALIFIED_INTERNAL_REVIEW",
+      "limitations": [
+        "LV endocardial boundary only; not complete LV wall/tissue or cavity volume."
+      ]
+    },
+    {
+      "sourceRegion": "class:4",
+      "proposedStructureId": "heart.rightVentricle",
+      "representation": "surface",
+      "classification": "QUALIFIED_INTERNAL_REVIEW",
+      "limitations": [
+        "RV endocardial boundary only; not complete RV wall/tissue or cavity volume."
+      ]
+    },
+    {
+      "sourceRegion": "class:5",
+      "proposedStructureId": null,
+      "representation": "landmark",
+      "classification": "QUALIFIED_INTERNAL_REVIEW",
+      "limitations": [
+        "Single source apex point; no independent apical tissue segmentation."
+      ]
+    },
+    {
+      "sourceRegion": "heart_vol.vtu",
+      "proposedStructureId": null,
+      "representation": "tissue",
+      "classification": "QUALIFIED_INTERNAL_REVIEW",
+      "limitations": [
+        "Composite modeled ventricular tissue only; no region labels; RV epicardium constructed with fixed 3 mm displacement, not measured patient thickness."
+      ]
+    },
+    {
+      "sourceRegion": "heart_vol.vtu",
+      "proposedStructureId": "heart.myocardium",
+      "representation": "tissue",
+      "classification": "UNRESOLVED",
+      "limitations": [
+        "Does not establish all canonical myocardial regions, including LA/RA; no complete-heart binding."
+      ]
+    },
+    {
+      "sourceRegion": null,
+      "proposedStructureId": "heart.septum.interventricular",
+      "representation": "tissue",
+      "classification": "UNRESOLVED",
+      "limitations": [
+        "No independent septum label; do not infer from tissue between chambers."
+      ]
+    },
+    {
+      "sourceRegion": null,
+      "proposedStructureId": "heart.septum.interatrial",
+      "representation": "tissue",
+      "classification": "UNRESOLVED",
+      "limitations": [
+        "Atria absent."
+      ]
+    },
+    {
+      "sourceRegion": "class:3/4",
+      "proposedStructureId": null,
+      "representation": "wall",
+      "classification": "REJECTED",
+      "limitations": [
+        "Endocardial surface cannot substitute for complete muscular chamber walls."
+      ]
+    },
+    {
+      "sourceRegion": "class:5",
+      "proposedStructureId": "heart.myocardium",
+      "representation": "tissue",
+      "classification": "REJECTED",
+      "limitations": [
+        "Apex point cannot substitute for myocardial tissue or coverage."
+      ]
+    }
+  ],
+  "safety": {
+    "verification": "unverified",
+    "clinicalApproval": "unreviewed",
+    "completeMyocardiumAvailable": false,
+    "independentSeptumAvailable": false,
+    "limitations": [
+      "Static statistical mean; no cardiac motion or pathology.",
+      "No exhaustive self-intersection or clinical accuracy certification.",
+      "No cross-source registration or merging."
+    ]
+  }
+}

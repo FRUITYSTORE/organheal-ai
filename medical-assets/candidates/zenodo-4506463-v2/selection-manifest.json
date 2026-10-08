@@ -1,0 +1,405 @@
+{
+  "schemaVersion": "1",
+  "sourceId": "zenodo-4506463",
+  "sourceVersion": "v2",
+  "usage": [
+    "internal-review"
+  ],
+  "runtimeActivated": false,
+  "assets": [
+    {
+      "sourceFilename": "heart_sur.vtp",
+      "sourceHash": "a94041d700b6a373deb1a59d9f8c0d75fe4692c2a9ca7c2bab4c0ed8e9a478b1",
+      "derivedFilename": "basal-patch.obj",
+      "derivedHash": "c568afbba645398f44e3c88a28eea0972c6ce85d3fce862192f663fbdc31fbaf",
+      "points": 2118,
+      "vertices": 2118,
+      "cells": 3425,
+      "faces": 3425,
+      "referencePoints": 0,
+      "bounds": [
+        [
+          -63.44021987915039,
+          -34.486175537109375,
+          39.93818664550781
+        ],
+        [
+          23.41061782836914,
+          52.11033630371094,
+          48.254051208496094
+        ]
+      ],
+      "connectedComponents": 1,
+      "fileSize": 179484,
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter",
+        "anatomicalAxes": "UNRESOLVED"
+      },
+      "maxCoordinateDeviation": 0,
+      "topologyChanged": false,
+      "meaning": [
+        "Basal closure patch, not valve annuli or a complete named organ structure."
+      ],
+      "qualification": "QUALIFIED_INTERNAL_REVIEW",
+      "proposedStructureId": null,
+      "sourceRegion": "class:1",
+      "sourceLabeledPointCount": 2118
+    },
+    {
+      "sourceFilename": "heart_sur.vtp",
+      "sourceHash": "a94041d700b6a373deb1a59d9f8c0d75fe4692c2a9ca7c2bab4c0ed8e9a478b1",
+      "derivedFilename": "ventricular-epicardial-patch.obj",
+      "derivedHash": "22921be17545e3b6353d00d4a683c100cf317a351cb44d890d3a3fb391f00e48",
+      "points": 45580,
+      "vertices": 45580,
+      "cells": 90786,
+      "faces": 90786,
+      "referencePoints": 0,
+      "bounds": [
+        [
+          -77.61900329589844,
+          -43.519256591796875,
+          -51.75328063964844
+        ],
+        [
+          31.440839767456055,
+          55.65492248535156,
+          46.969757080078125
+        ]
+      ],
+      "connectedComponents": 1,
+      "fileSize": 4501210,
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter",
+        "anatomicalAxes": "UNRESOLVED"
+      },
+      "maxCoordinateDeviation": 0,
+      "topologyChanged": false,
+      "meaning": [
+        "Composite ventricular epicardial patch; no independent LV/RV epicardial territory labels; not tissue."
+      ],
+      "qualification": "QUALIFIED_INTERNAL_REVIEW",
+      "proposedStructureId": null,
+      "sourceRegion": "class:2",
+      "sourceLabeledPointCount": 45580
+    },
+    {
+      "sourceFilename": "heart_sur.vtp",
+      "sourceHash": "a94041d700b6a373deb1a59d9f8c0d75fe4692c2a9ca7c2bab4c0ed8e9a478b1",
+      "derivedFilename": "lv-endocardial-surface.obj",
+      "derivedHash": "603e8d27728cbed4d95d42210f1b2de3f4715ee0fcc71b73e34223c2cc5fe6f8",
+      "points": 22821,
+      "vertices": 22821,
+      "cells": 45465,
+      "faces": 45465,
+      "referencePoints": 0,
+      "bounds": [
+        [
+          -70.95489501953125,
+          -23.375043869018555,
+          -47.742210388183594
+        ],
+        [
+          -13.96448040008545,
+          34.597354888916016,
+          47.009151458740234
+        ]
+      ],
+      "connectedComponents": 1,
+      "fileSize": 2225335,
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter",
+        "anatomicalAxes": "UNRESOLVED"
+      },
+      "maxCoordinateDeviation": 0,
+      "topologyChanged": false,
+      "meaning": [
+        "LV endocardial boundary only; not complete LV wall/tissue or cavity volume."
+      ],
+      "qualification": "QUALIFIED_INTERNAL_REVIEW",
+      "proposedStructureId": "heart.leftVentricle",
+      "sourceRegion": "class:3",
+      "sourceLabeledPointCount": 22821
+    },
+    {
+      "sourceFilename": "heart_sur.vtp",
+      "sourceHash": "a94041d700b6a373deb1a59d9f8c0d75fe4692c2a9ca7c2bab4c0ed8e9a478b1",
+      "derivedFilename": "rv-endocardial-surface.obj",
+      "derivedHash": "43b20b9a52669e360bd1fc9eb0fb962b9784e1e567c224f9a5bda641113c1d85",
+      "points": 29433,
+      "vertices": 29433,
+      "cells": 58590,
+      "faces": 58590,
+      "referencePoints": 0,
+      "bounds": [
+        [
+          -32.884464263916016,
+          -40.52063751220703,
+          -43.337093353271484
+        ],
+        [
+          28.444679260253906,
+          52.65139389038086,
+          44.26070022583008
+        ]
+      ],
+      "connectedComponents": 1,
+      "fileSize": 2880642,
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter",
+        "anatomicalAxes": "UNRESOLVED"
+      },
+      "maxCoordinateDeviation": 0,
+      "topologyChanged": false,
+      "meaning": [
+        "RV endocardial boundary only; not complete RV wall/tissue or cavity volume."
+      ],
+      "qualification": "QUALIFIED_INTERNAL_REVIEW",
+      "proposedStructureId": "heart.rightVentricle",
+      "sourceRegion": "class:4",
+      "sourceLabeledPointCount": 29433
+    },
+    {
+      "sourceFilename": "heart_sur.vtp",
+      "sourceHash": "a94041d700b6a373deb1a59d9f8c0d75fe4692c2a9ca7c2bab4c0ed8e9a478b1",
+      "derivedFilename": "apex-reference.obj",
+      "derivedHash": "77a9c0176a74c76cc6c53028dda2e78db54ee2925b0953e5862cec7c2d9a76f0",
+      "points": 1,
+      "vertices": 1,
+      "cells": 0,
+      "faces": 0,
+      "referencePoints": 1,
+      "bounds": [
+        [
+          -41.918968200683594,
+          -5.760156154632568,
+          -51.52216339111328
+        ],
+        [
+          -41.918968200683594,
+          -5.760156154632568,
+          -51.52216339111328
+        ]
+      ],
+      "connectedComponents": 1,
+      "fileSize": 83,
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter",
+        "anatomicalAxes": "UNRESOLVED"
+      },
+      "maxCoordinateDeviation": 0,
+      "topologyChanged": false,
+      "meaning": [
+        "Single source apex point; no independent apical tissue segmentation."
+      ],
+      "qualification": "QUALIFIED_INTERNAL_REVIEW",
+      "proposedStructureId": null,
+      "sourceRegion": "class:5",
+      "sourceLabeledPointCount": 1
+    },
+    {
+      "sourceFilename": "heart_vol.vtu",
+      "sourceHash": "c1f426654ed94609a54c2fac4ca70a511a5747cc0edc467d7977fa160f553e0b",
+      "derivedFilename": "composite-ventricular-tissue-boundary.obj",
+      "derivedHash": "78f95af4a5f461aadb3217799cb2babd5a8a66cb33f966faacc24ac34ef2baa5",
+      "points": 99953,
+      "vertices": 99953,
+      "cells": 199902,
+      "faces": 199902,
+      "referencePoints": 0,
+      "bounds": [
+        [
+          -77.619,
+          -43.5193,
+          -51.7533
+        ],
+        [
+          31.4408,
+          55.6549,
+          48.2541
+        ]
+      ],
+      "connectedComponents": 1,
+      "fileSize": 9172524,
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter",
+        "anatomicalAxes": "UNRESOLVED"
+      },
+      "maxCoordinateDeviation": 0,
+      "topologyChanged": false,
+      "meaning": [
+        "Exterior boundary of original composite ventricular tetrahedral tissue, including endocardial/basal surfaces.",
+        "Boundary-only review representation; no tetrahedral interior in OBJ, no separate septum, no complete heart.myocardium."
+      ],
+      "qualification": "QUALIFIED_INTERNAL_REVIEW",
+      "proposedStructureId": null,
+      "sourceRegion": "heart_vol.vtu",
+      "sourcePoints": 478820,
+      "sourceCells": 2555157,
+      "representation": "surface-boundary-of-tissue",
+      "interiorVolumePreserved": false
+    }
+  ],
+  "mixedClassTrianglesOmitted": 1636,
+  "limitations": [
+    "Class patches contain pure-class triangles only; unused labeled vertices omitted.",
+    "No coordinate registration, mesh repair, smoothing, anatomy synthesis or cross-source merging.",
+    "Apex OBJ contains a point primitive, not a surface. Blender mesh import may require an empty/reference adapter later."
+  ]
+}

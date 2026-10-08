@@ -1,0 +1,3351 @@
+{
+  "sourceId": "bodyparts3d-current-archive",
+  "release": "4.0",
+  "archive": "isa_BP3D_4.0_obj_99.zip",
+  "archiveSha256": "40665852c49f218326590e204db91064a1ecfc3c6f8cbd7bbbcaac62c7cd409e",
+  "selectionPolicy": "Only QUALIFIED_INTERNAL_REVIEW; each representation is independent; constituent objects remain separate; no canonical whole aggregation.",
+  "runtimeActivated": false,
+  "myocardiumAvailable": false,
+  "septumAvailable": false,
+  "assets": [
+    {
+      "conceptId": "FMA10951",
+      "representationId": "BP10311",
+      "proposedOrganHealStructureId": "heart.inferiorVenaCava",
+      "representation": "vessel",
+      "derivedFile": "FMA10951_BP10311.obj",
+      "derivedHash": "5afb326ded71341dba9dba33771fc9b81339feca92933c1f28fbde423c360b91",
+      "fileSize": 95088,
+      "sources": [
+        {
+          "sourceFilename": "FJ3441.obj",
+          "sourceHash": "7b03ef0464b622d0a839c3c55aedcec2a713b4399112e7ce6efa1ac51861b606",
+          "fileSize": 89003,
+          "objectCount": 1,
+          "vertexCount": 793,
+          "faceCount": 1410,
+          "connectedComponents": 10,
+          "boundingBox": [
+            [
+              -26.8256,
+              -126.538,
+              1094.94
+            ],
+            [
+              -3.96953,
+              -103.552,
+              1190.53
+            ]
+          ]
+        },
+        {
+          "sourceFilename": "FJ3659.obj",
+          "sourceHash": "2241af6de027922eb74cb58d882433a5d0ffb7ecce41a1925f05e13dd78d666c",
+          "fileSize": 107453,
+          "objectCount": 1,
+          "vertexCount": 968,
+          "faceCount": 1670,
+          "connectedComponents": 14,
+          "boundingBox": [
+            [
+              -23.796,
+              -128.79,
+              950.892
+            ],
+            [
+              -2.0585,
+              -105.582,
+              1095.03
+            ]
+          ]
+        }
+      ],
+      "derived": {
+        "objectCount": 2,
+        "vertexCount": 1761,
+        "faceCount": 3080,
+        "connectedComponents": 24,
+        "boundingBox": [
+          [
+            -26.8256,
+            -128.79,
+            950.892
+          ],
+          [
+            -2.0585,
+            -103.552,
+            1190.53
+          ]
+        ]
+      },
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter"
+      },
+      "deviation": {
+        "maximumVertexDistance": 0,
+        "topologyChanged": false,
+        "method": "Numeric coordinates retained exactly; only object labels, OBJ formatting and index offsets change. Normals/UV/material references omitted; no welding, repair or surface reconstruction."
+      },
+      "qualification": "INTERNAL-REVIEW",
+      "anatomicalVerification": false,
+      "clinicalApproval": false
+    },
+    {
+      "conceptId": "FMA11359",
+      "representationId": "BP8677",
+      "proposedOrganHealStructureId": "heart.rightAtrium",
+      "representation": "cavity",
+      "derivedFile": "FMA11359_BP8677.obj",
+      "derivedHash": "9cd927449a415f08790abc18c95c720dbe160ea32589bcff6c076c495a88980a",
+      "fileSize": 64605,
+      "sources": [
+        {
+          "sourceFilename": "FJ2424.obj",
+          "sourceHash": "53739664c1d4a5bb635ca48c216b54deb16bb947d76a4ad75635adf69c8fa11c",
+          "fileSize": 139097,
+          "objectCount": 1,
+          "vertexCount": 1193,
+          "faceCount": 2244,
+          "connectedComponents": 3,
+          "boundingBox": [
+            [
+              -34.203,
+              -153.569,
+              1185.26
+            ],
+            [
+              3.18705,
+              -92.4415,
+              1277.52
+            ]
+          ]
+        }
+      ],
+      "derived": {
+        "objectCount": 1,
+        "vertexCount": 1193,
+        "faceCount": 2244,
+        "connectedComponents": 3,
+        "boundingBox": [
+          [
+            -34.203,
+            -153.569,
+            1185.26
+          ],
+          [
+            3.18705,
+            -92.4415,
+            1277.52
+          ]
+        ]
+      },
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter"
+      },
+      "deviation": {
+        "maximumVertexDistance": 0,
+        "topologyChanged": false,
+        "method": "Numeric coordinates retained exactly; only object labels, OBJ formatting and index offsets change. Normals/UV/material references omitted; no welding, repair or surface reconstruction."
+      },
+      "qualification": "INTERNAL-REVIEW",
+      "anatomicalVerification": false,
+      "clinicalApproval": false
+    },
+    {
+      "conceptId": "FMA3736",
+      "representationId": "BP10329",
+      "proposedOrganHealStructureId": "heart.aorta",
+      "representation": "vessel",
+      "derivedFile": "FMA3736_BP10329.obj",
+      "derivedHash": "e4976cc6026e7ab0f4b7ecd28c526fedad127e825f3b090a22a4e26f1757dd95",
+      "fileSize": 11097,
+      "sources": [
+        {
+          "sourceFilename": "FJ3413.obj",
+          "sourceHash": "764f23e432a9308e0780c586f9d1638db1fbcc52a5019ae61817b4b1de323870",
+          "fileSize": 24686,
+          "objectCount": 1,
+          "vertexCount": 229,
+          "faceCount": 396,
+          "connectedComponents": 3,
+          "boundingBox": [
+            [
+              -6.82218,
+              -137.439,
+              1234.06
+            ],
+            [
+              28.943,
+              -106.662,
+              1281.9
+            ]
+          ]
+        }
+      ],
+      "derived": {
+        "objectCount": 1,
+        "vertexCount": 229,
+        "faceCount": 396,
+        "connectedComponents": 3,
+        "boundingBox": [
+          [
+            -6.82218,
+            -137.439,
+            1234.06
+          ],
+          [
+            28.943,
+            -106.662,
+            1281.9
+          ]
+        ]
+      },
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter"
+      },
+      "deviation": {
+        "maximumVertexDistance": 0,
+        "topologyChanged": false,
+        "method": "Numeric coordinates retained exactly; only object labels, OBJ formatting and index offsets change. Normals/UV/material references omitted; no welding, repair or surface reconstruction."
+      },
+      "qualification": "INTERNAL-REVIEW",
+      "anatomicalVerification": false,
+      "clinicalApproval": false
+    },
+    {
+      "conceptId": "FMA3802",
+      "representationId": "BP8221",
+      "proposedOrganHealStructureId": "heart.coronary.rca",
+      "representation": "vessel",
+      "derivedFile": "FMA3802_BP8221.obj",
+      "derivedHash": "7be9209286e32db4641c6d76cff2412a5661af619d26950e47e02889562d2792",
+      "fileSize": 131092,
+      "sources": [
+        {
+          "sourceFilename": "FJ2723.obj",
+          "sourceHash": "cd008769cb9d565a75bf6b91b5ad3bd482932e37c4747837f6c9446cd23b73a2",
+          "fileSize": 281611,
+          "objectCount": 1,
+          "vertexCount": 2255,
+          "faceCount": 4502,
+          "connectedComponents": 1,
+          "boundingBox": [
+            [
+              -21.7476,
+              -162.494,
+              1187.94
+            ],
+            [
+              20.7385,
+              -93.3042,
+              1261.07
+            ]
+          ]
+        }
+      ],
+      "derived": {
+        "objectCount": 1,
+        "vertexCount": 2255,
+        "faceCount": 4502,
+        "connectedComponents": 1,
+        "boundingBox": [
+          [
+            -21.7476,
+            -162.494,
+            1187.94
+          ],
+          [
+            20.7385,
+            -93.3042,
+            1261.07
+          ]
+        ]
+      },
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter"
+      },
+      "deviation": {
+        "maximumVertexDistance": 0,
+        "topologyChanged": false,
+        "method": "Numeric coordinates retained exactly; only object labels, OBJ formatting and index offsets change. Normals/UV/material references omitted; no welding, repair or surface reconstruction."
+      },
+      "qualification": "INTERNAL-REVIEW",
+      "anatomicalVerification": false,
+      "clinicalApproval": false
+    },
+    {
+      "conceptId": "FMA3855",
+      "representationId": "BP8961",
+      "proposedOrganHealStructureId": "heart.coronary.leftMain",
+      "representation": "vessel",
+      "derivedFile": "FMA3855_BP8961.obj",
+      "derivedHash": "6a5636fe0e59854dba9da47b696da1b990371b4f5ff492bc5e082d578321f049",
+      "fileSize": 5506,
+      "sources": [
+        {
+          "sourceFilename": "FJ2737.obj",
+          "sourceHash": "22aa075132e33f9a3d3be135515362b03ab84f12a0d641edde35e260fb2cd65b",
+          "fileSize": 12641,
+          "objectCount": 1,
+          "vertexCount": 121,
+          "faceCount": 204,
+          "connectedComponents": 2,
+          "boundingBox": [
+            [
+              23.3893,
+              -123.425,
+              1253.95
+            ],
+            [
+              34.405,
+              -117.304,
+              1260.82
+            ]
+          ]
+        }
+      ],
+      "derived": {
+        "objectCount": 1,
+        "vertexCount": 121,
+        "faceCount": 204,
+        "connectedComponents": 2,
+        "boundingBox": [
+          [
+            23.3893,
+            -123.425,
+            1253.95
+          ],
+          [
+            34.405,
+            -117.304,
+            1260.82
+          ]
+        ]
+      },
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter"
+      },
+      "deviation": {
+        "maximumVertexDistance": 0,
+        "topologyChanged": false,
+        "method": "Numeric coordinates retained exactly; only object labels, OBJ formatting and index offsets change. Normals/UV/material references omitted; no welding, repair or surface reconstruction."
+      },
+      "qualification": "INTERNAL-REVIEW",
+      "anatomicalVerification": false,
+      "clinicalApproval": false
+    },
+    {
+      "conceptId": "FMA3895",
+      "representationId": "BP8397",
+      "proposedOrganHealStructureId": "heart.coronary.lcx",
+      "representation": "vessel",
+      "derivedFile": "FMA3895_BP8397.obj",
+      "derivedHash": "a72cda3fed9943f8d54f95b7b42aad994ee2f938ba62558ae2fa465a15464c42",
+      "fileSize": 99496,
+      "sources": [
+        {
+          "sourceFilename": "FJ2649.obj",
+          "sourceHash": "d4833bb0b60ee79f526150ad7ba9124e326aba8cd48000711bf3a6b0997b0ce0",
+          "fileSize": 81031,
+          "objectCount": 1,
+          "vertexCount": 692,
+          "faceCount": 1380,
+          "connectedComponents": 1,
+          "boundingBox": [
+            [
+              34.3553,
+              -121.957,
+              1222.38
+            ],
+            [
+              50.5177,
+              -86.9805,
+              1256.31
+            ]
+          ]
+        },
+        {
+          "sourceFilename": "FJ2650.obj",
+          "sourceHash": "dd2c38fdc784311c955fb8b0420d70dfbdf16f0ce6e236a086dc5f350faae04c",
+          "fileSize": 29816,
+          "objectCount": 1,
+          "vertexCount": 316,
+          "faceCount": 396,
+          "connectedComponents": 8,
+          "boundingBox": [
+            [
+              55.2865,
+              -95.7634,
+              1199.68
+            ],
+            [
+              59.8176,
+              -89.4264,
+              1216.54
+            ]
+          ]
+        },
+        {
+          "sourceFilename": "FJ2651.obj",
+          "sourceHash": "864567c4b15c3add5a8184edb142766538936e2ef17af4efa25acca67f4344d8",
+          "fileSize": 37854,
+          "objectCount": 1,
+          "vertexCount": 395,
+          "faceCount": 510,
+          "connectedComponents": 4,
+          "boundingBox": [
+            [
+              58.756,
+              -115.551,
+              1211.07
+            ],
+            [
+              75.6332,
+              -92.2562,
+              1218.22
+            ]
+          ]
+        },
+        {
+          "sourceFilename": "FJ2652.obj",
+          "sourceHash": "fd5ee304558da1d1ffebb01ca7f59b374087667e71d473fe5401f355a2ff161f",
+          "fileSize": 22767,
+          "objectCount": 1,
+          "vertexCount": 240,
+          "faceCount": 308,
+          "connectedComponents": 6,
+          "boundingBox": [
+            [
+              64.1856,
+              -107.278,
+              1194.65
+            ],
+            [
+              68.2426,
+              -97.3195,
+              1209.61
+            ]
+          ]
+        },
+        {
+          "sourceFilename": "FJ2653.obj",
+          "sourceHash": "74fc42fbc783857619dccb5a753b06cbfce9abc6403f14e38f55bbb9fafdad80",
+          "fileSize": 20958,
+          "objectCount": 1,
+          "vertexCount": 232,
+          "faceCount": 252,
+          "connectedComponents": 9,
+          "boundingBox": [
+            [
+              73.7457,
+              -128.307,
+              1188.33
+            ],
+            [
+              76.8311,
+              -119.449,
+              1198.68
+            ]
+          ]
+        },
+        {
+          "sourceFilename": "FJ2654.obj",
+          "sourceHash": "4e8467b12ca3374d25807d5de058cfb8d147ad2decd99f6debe57847a83099a1",
+          "fileSize": 13776,
+          "objectCount": 1,
+          "vertexCount": 150,
+          "faceCount": 172,
+          "connectedComponents": 9,
+          "boundingBox": [
+            [
+              74.1667,
+              -142.845,
+              1187.82
+            ],
+            [
+              76.4916,
+              -131.297,
+              1192.21
+            ]
+          ]
+        }
+      ],
+      "derived": {
+        "objectCount": 6,
+        "vertexCount": 2025,
+        "faceCount": 3018,
+        "connectedComponents": 37,
+        "boundingBox": [
+          [
+            34.3553,
+            -142.845,
+            1187.82
+          ],
+          [
+            76.8311,
+            -86.9805,
+            1256.31
+          ]
+        ]
+      },
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter"
+      },
+      "deviation": {
+        "maximumVertexDistance": 0,
+        "topologyChanged": false,
+        "method": "Numeric coordinates retained exactly; only object labels, OBJ formatting and index offsets change. Normals/UV/material references omitted; no welding, repair or surface reconstruction."
+      },
+      "qualification": "INTERNAL-REVIEW",
+      "anatomicalVerification": false,
+      "clinicalApproval": false
+    },
+    {
+      "conceptId": "FMA4720",
+      "representationId": "BP10292",
+      "proposedOrganHealStructureId": "heart.superiorVenaCava",
+      "representation": "vessel",
+      "derivedFile": "FMA4720_BP10292.obj",
+      "derivedHash": "4d1b0a9dc296e5849c9f507d755fbc0a6582439df9d4a25ae65f8dfcd8df119c",
+      "fileSize": 16552,
+      "sources": [
+        {
+          "sourceFilename": "FJ3645.obj",
+          "sourceHash": "5cc007c2ea51255df641225630e83ddbf3e5c4545dffe4814b098c9199ceb26c",
+          "fileSize": 36208,
+          "objectCount": 1,
+          "vertexCount": 318,
+          "faceCount": 598,
+          "connectedComponents": 1,
+          "boundingBox": [
+            [
+              -26.6349,
+              -127.276,
+              1274.81
+            ],
+            [
+              -4.10943,
+              -103.587,
+              1309.81
+            ]
+          ]
+        }
+      ],
+      "derived": {
+        "objectCount": 1,
+        "vertexCount": 318,
+        "faceCount": 598,
+        "connectedComponents": 1,
+        "boundingBox": [
+          [
+            -26.6349,
+            -127.276,
+            1274.81
+          ],
+          [
+            -4.10943,
+            -103.587,
+            1309.81
+          ]
+        ]
+      },
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter"
+      },
+      "deviation": {
+        "maximumVertexDistance": 0,
+        "topologyChanged": false,
+        "method": "Numeric coordinates retained exactly; only object labels, OBJ formatting and index offsets change. Normals/UV/material references omitted; no welding, repair or surface reconstruction."
+      },
+      "qualification": "INTERNAL-REVIEW",
+      "anatomicalVerification": false,
+      "clinicalApproval": false
+    },
+    {
+      "conceptId": "FMA49911",
+      "representationId": "BP8784",
+      "proposedOrganHealStructureId": "heart.pulmonaryVeins",
+      "representation": "vessel",
+      "derivedFile": "FMA49911_BP8784.obj",
+      "derivedHash": "98544c4697f6730f7eb094d160bf942ad083fa5fd3f00658bdcdc55c8c7ff306",
+      "fileSize": 5294,
+      "sources": [
+        {
+          "sourceFilename": "FJ3040.obj",
+          "sourceHash": "2e15b98f227f16c3dcacab1a93a26d42e07cd2c2d72ba34b1ef438396f598a12",
+          "fileSize": 12047,
+          "objectCount": 1,
+          "vertexCount": 113,
+          "faceCount": 196,
+          "connectedComponents": 1,
+          "boundingBox": [
+            [
+              -33.8068,
+              -89.0205,
+              1211.28
+            ],
+            [
+              -6.28302,
+              -76.0429,
+              1228.89
+            ]
+          ]
+        }
+      ],
+      "derived": {
+        "objectCount": 1,
+        "vertexCount": 113,
+        "faceCount": 196,
+        "connectedComponents": 1,
+        "boundingBox": [
+          [
+            -33.8068,
+            -89.0205,
+            1211.28
+          ],
+          [
+            -6.28302,
+            -76.0429,
+            1228.89
+          ]
+        ]
+      },
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter"
+      },
+      "deviation": {
+        "maximumVertexDistance": 0,
+        "topologyChanged": false,
+        "method": "Numeric coordinates retained exactly; only object labels, OBJ formatting and index offsets change. Normals/UV/material references omitted; no welding, repair or surface reconstruction."
+      },
+      "qualification": "INTERNAL-REVIEW",
+      "anatomicalVerification": false,
+      "clinicalApproval": false
+    },
+    {
+      "conceptId": "FMA49913",
+      "representationId": "BP8334",
+      "proposedOrganHealStructureId": "heart.pulmonaryVeins",
+      "representation": "vessel",
+      "derivedFile": "FMA49913_BP8334.obj",
+      "derivedHash": "4a7809b1b90d89bf2180d406b24413f4cdc571d00e723c6bdaa15424d2dff87f",
+      "fileSize": 32156,
+      "sources": [
+        {
+          "sourceFilename": "FJ2944.obj",
+          "sourceHash": "a531b898f54ae008b1ad0c0f0993158e1a15cfbebee79098033ea8c2d2f84372",
+          "fileSize": 17821,
+          "objectCount": 1,
+          "vertexCount": 157,
+          "faceCount": 310,
+          "connectedComponents": 1,
+          "boundingBox": [
+            [
+              42.6331,
+              -78.0178,
+              1201.54
+            ],
+            [
+              56.0191,
+              -53.5181,
+              1229.51
+            ]
+          ]
+        },
+        {
+          "sourceFilename": "FJ2950.obj",
+          "sourceHash": "f32bbffccdb0528ed085041ad4243b5b4817a26aa82a73669f9132d6c54f17de",
+          "fileSize": 18779,
+          "objectCount": 1,
+          "vertexCount": 165,
+          "faceCount": 326,
+          "connectedComponents": 1,
+          "boundingBox": [
+            [
+              37.6384,
+              -83.4903,
+              1210.4
+            ],
+            [
+              65.3636,
+              -71.841,
+              1229.82
+            ]
+          ]
+        },
+        {
+          "sourceFilename": "FJ2955.obj",
+          "sourceHash": "bfbb5067eb2da9857069139f12d019bb0f599babc89730aeb4accb1a77916991",
+          "fileSize": 32317,
+          "objectCount": 1,
+          "vertexCount": 280,
+          "faceCount": 556,
+          "connectedComponents": 1,
+          "boundingBox": [
+            [
+              32.8489,
+              -91.3169,
+              1214.12
+            ],
+            [
+              72.9742,
+              -70.9183,
+              1236.36
+            ]
+          ]
+        }
+      ],
+      "derived": {
+        "objectCount": 3,
+        "vertexCount": 602,
+        "faceCount": 1192,
+        "connectedComponents": 3,
+        "boundingBox": [
+          [
+            32.8489,
+            -91.3169,
+            1201.54
+          ],
+          [
+            72.9742,
+            -53.5181,
+            1236.36
+          ]
+        ]
+      },
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter"
+      },
+      "deviation": {
+        "maximumVertexDistance": 0,
+        "topologyChanged": false,
+        "method": "Numeric coordinates retained exactly; only object labels, OBJ formatting and index offsets change. Normals/UV/material references omitted; no welding, repair or surface reconstruction."
+      },
+      "qualification": "INTERNAL-REVIEW",
+      "anatomicalVerification": false,
+      "clinicalApproval": false
+    },
+    {
+      "conceptId": "FMA49914",
+      "representationId": "BP8580",
+      "proposedOrganHealStructureId": "heart.pulmonaryVeins",
+      "representation": "vessel",
+      "derivedFile": "FMA49914_BP8580.obj",
+      "derivedHash": "30d092413054a7fc4a9b9d476be261b97af374c71d92ae2f3d5373d606e85e30",
+      "fileSize": 8664,
+      "sources": [
+        {
+          "sourceFilename": "FJ3020.obj",
+          "sourceHash": "074ba67bb3db8f93d6ac7d4e9d2bd1ddcca6e54a2bcb765ec146a9fd30bb3aa8",
+          "fileSize": 19237,
+          "objectCount": 1,
+          "vertexCount": 171,
+          "faceCount": 324,
+          "connectedComponents": 1,
+          "boundingBox": [
+            [
+              -37.1408,
+              -106.536,
+              1234.93
+            ],
+            [
+              -14.0164,
+              -88.3313,
+              1261.77
+            ]
+          ]
+        }
+      ],
+      "derived": {
+        "objectCount": 1,
+        "vertexCount": 171,
+        "faceCount": 324,
+        "connectedComponents": 1,
+        "boundingBox": [
+          [
+            -37.1408,
+            -106.536,
+            1234.93
+          ],
+          [
+            -14.0164,
+            -88.3313,
+            1261.77
+          ]
+        ]
+      },
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter"
+      },
+      "deviation": {
+        "maximumVertexDistance": 0,
+        "topologyChanged": false,
+        "method": "Numeric coordinates retained exactly; only object labels, OBJ formatting and index offsets change. Normals/UV/material references omitted; no welding, repair or surface reconstruction."
+      },
+      "qualification": "INTERNAL-REVIEW",
+      "anatomicalVerification": false,
+      "clinicalApproval": false
+    },
+    {
+      "conceptId": "FMA49916",
+      "representationId": "BP8556",
+      "proposedOrganHealStructureId": "heart.pulmonaryVeins",
+      "representation": "vessel",
+      "derivedFile": "FMA49916_BP8556.obj",
+      "derivedHash": "01b284ea611710011c7ace738b62fd55db9f4e17c443c2174e68d4e07cf9734f",
+      "fileSize": 23776,
+      "sources": [
+        {
+          "sourceFilename": "FJ2925.obj",
+          "sourceHash": "e87124704e4ca94bfe3206a571e464fe8ccc41afe0f36ee5ccf46cf00aaf4918",
+          "fileSize": 23979,
+          "objectCount": 1,
+          "vertexCount": 209,
+          "faceCount": 414,
+          "connectedComponents": 1,
+          "boundingBox": [
+            [
+              34.7494,
+              -99.608,
+              1251.45
+            ],
+            [
+              55.1678,
+              -82.1238,
+              1273.22
+            ]
+          ]
+        },
+        {
+          "sourceFilename": "FJ2933.obj",
+          "sourceHash": "64e0d2deec1d847be95f41a25c616935c9b400f233a2c07a8c453a3441f80a35",
+          "fileSize": 27459,
+          "objectCount": 1,
+          "vertexCount": 239,
+          "faceCount": 472,
+          "connectedComponents": 1,
+          "boundingBox": [
+            [
+              33.6998,
+              -110.848,
+              1218.88
+            ],
+            [
+              81.8161,
+              -81.5478,
+              1258.09
+            ]
+          ]
+        }
+      ],
+      "derived": {
+        "objectCount": 2,
+        "vertexCount": 448,
+        "faceCount": 886,
+        "connectedComponents": 2,
+        "boundingBox": [
+          [
+            33.6998,
+            -110.848,
+            1218.88
+          ],
+          [
+            81.8161,
+            -81.5478,
+            1273.22
+          ]
+        ]
+      },
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter"
+      },
+      "deviation": {
+        "maximumVertexDistance": 0,
+        "topologyChanged": false,
+        "method": "Numeric coordinates retained exactly; only object labels, OBJ formatting and index offsets change. Normals/UV/material references omitted; no welding, repair or surface reconstruction."
+      },
+      "qualification": "INTERNAL-REVIEW",
+      "anatomicalVerification": false,
+      "clinicalApproval": false
+    },
+    {
+      "conceptId": "FMA50872",
+      "representationId": "BP8968",
+      "proposedOrganHealStructureId": "heart.rightPulmonaryArtery",
+      "representation": "vessel",
+      "derivedFile": "FMA50872_BP8968.obj",
+      "derivedHash": "ac59ac5de8a6331c2c0275167759115bdeeb69d957cf49ed012061ba6890a7b5",
+      "fileSize": 18161,
+      "sources": [
+        {
+          "sourceFilename": "FJ3019.obj",
+          "sourceHash": "c773fc2d3d3f79544699c16f38f56619730a6d5a1a2c8bb4d8f0dc2ab6889d97",
+          "fileSize": 39748,
+          "objectCount": 1,
+          "vertexCount": 341,
+          "faceCount": 678,
+          "connectedComponents": 1,
+          "boundingBox": [
+            [
+              -58.9455,
+              -131.2,
+              1224.4
+            ],
+            [
+              36.938,
+              -62.9648,
+              1294.01
+            ]
+          ]
+        }
+      ],
+      "derived": {
+        "objectCount": 1,
+        "vertexCount": 341,
+        "faceCount": 678,
+        "connectedComponents": 1,
+        "boundingBox": [
+          [
+            -58.9455,
+            -131.2,
+            1224.4
+          ],
+          [
+            36.938,
+            -62.9648,
+            1294.01
+          ]
+        ]
+      },
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter"
+      },
+      "deviation": {
+        "maximumVertexDistance": 0,
+        "topologyChanged": false,
+        "method": "Numeric coordinates retained exactly; only object labels, OBJ formatting and index offsets change. Normals/UV/material references omitted; no welding, repair or surface reconstruction."
+      },
+      "qualification": "INTERNAL-REVIEW",
+      "anatomicalVerification": false,
+      "clinicalApproval": false
+    },
+    {
+      "conceptId": "FMA50873",
+      "representationId": "BP8463",
+      "proposedOrganHealStructureId": "heart.leftPulmonaryArtery",
+      "representation": "vessel",
+      "derivedFile": "FMA50873_BP8463.obj",
+      "derivedHash": "6b6db6b9066edc8fe30e18d41844570d2e46df0cfdfc91bad4b88e7d10c10ad9",
+      "fileSize": 158809,
+      "sources": [
+        {
+          "sourceFilename": "FJ2924.obj",
+          "sourceHash": "0cb5312cf816387fdad0d3809a5b5cae1445806ce85546adea39240bc72d2580",
+          "fileSize": 342258,
+          "objectCount": 1,
+          "vertexCount": 2727,
+          "faceCount": 5450,
+          "connectedComponents": 1,
+          "boundingBox": [
+            [
+              14.7515,
+              -136.595,
+              1226.21
+            ],
+            [
+              79.084,
+              -58.0499,
+              1294.05
+            ]
+          ]
+        }
+      ],
+      "derived": {
+        "objectCount": 1,
+        "vertexCount": 2727,
+        "faceCount": 5450,
+        "connectedComponents": 1,
+        "boundingBox": [
+          [
+            14.7515,
+            -136.595,
+            1226.21
+          ],
+          [
+            79.084,
+            -58.0499,
+            1294.05
+          ]
+        ]
+      },
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter"
+      },
+      "deviation": {
+        "maximumVertexDistance": 0,
+        "topologyChanged": false,
+        "method": "Numeric coordinates retained exactly; only object labels, OBJ formatting and index offsets change. Normals/UV/material references omitted; no welding, repair or surface reconstruction."
+      },
+      "qualification": "INTERNAL-REVIEW",
+      "anatomicalVerification": false,
+      "clinicalApproval": false
+    },
+    {
+      "conceptId": "FMA7238",
+      "representationId": "BP8711",
+      "proposedOrganHealStructureId": "heart.valve.tricuspid",
+      "representation": "tissue",
+      "derivedFile": "FMA7238_BP8711.obj",
+      "derivedHash": "bcdeb617f93e42f4fa788f0e149f97c8bfb52c66c9073b1bc22a446df49b6940",
+      "fileSize": 248741,
+      "sources": [
+        {
+          "sourceFilename": "FJ2421.obj",
+          "sourceHash": "7303c55e6d9c2e294759f7f7e01d23fc120eba74bce9ade0a01cc4bdb2bd4200",
+          "fileSize": 532771,
+          "objectCount": 1,
+          "vertexCount": 4282,
+          "faceCount": 8160,
+          "connectedComponents": 19,
+          "boundingBox": [
+            [
+              -21.0772,
+              -156.313,
+              1198.11
+            ],
+            [
+              23.2047,
+              -129.198,
+              1236.21
+            ]
+          ]
+        }
+      ],
+      "derived": {
+        "objectCount": 1,
+        "vertexCount": 4282,
+        "faceCount": 8160,
+        "connectedComponents": 19,
+        "boundingBox": [
+          [
+            -21.0772,
+            -156.313,
+            1198.11
+          ],
+          [
+            23.2047,
+            -129.198,
+            1236.21
+          ]
+        ]
+      },
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter"
+      },
+      "deviation": {
+        "maximumVertexDistance": 0,
+        "topologyChanged": false,
+        "method": "Numeric coordinates retained exactly; only object labels, OBJ formatting and index offsets change. Normals/UV/material references omitted; no welding, repair or surface reconstruction."
+      },
+      "qualification": "INTERNAL-REVIEW",
+      "anatomicalVerification": false,
+      "clinicalApproval": false
+    },
+    {
+      "conceptId": "FMA7239",
+      "representationId": "BP8544",
+      "proposedOrganHealStructureId": "heart.valve.tricuspid",
+      "representation": "tissue",
+      "derivedFile": "FMA7239_BP8544.obj",
+      "derivedHash": "1640044f58ae92dd51867a57421171036b63bf26787bb67189f0e9534a0ad417",
+      "fileSize": 151803,
+      "sources": [
+        {
+          "sourceFilename": "FJ2433.obj",
+          "sourceHash": "6519afbf9aa2eb3c0dc25d8e332a0208fd2ad68956c1dfe1ef6b010f04984d55",
+          "fileSize": 325359,
+          "objectCount": 1,
+          "vertexCount": 2729,
+          "faceCount": 4926,
+          "connectedComponents": 18,
+          "boundingBox": [
+            [
+              -18.9578,
+              -145.256,
+              1188.64
+            ],
+            [
+              16.4701,
+              -113.717,
+              1216.2
+            ]
+          ]
+        }
+      ],
+      "derived": {
+        "objectCount": 1,
+        "vertexCount": 2729,
+        "faceCount": 4926,
+        "connectedComponents": 18,
+        "boundingBox": [
+          [
+            -18.9578,
+            -145.256,
+            1188.64
+          ],
+          [
+            16.4701,
+            -113.717,
+            1216.2
+          ]
+        ]
+      },
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter"
+      },
+      "deviation": {
+        "maximumVertexDistance": 0,
+        "topologyChanged": false,
+        "method": "Numeric coordinates retained exactly; only object labels, OBJ formatting and index offsets change. Normals/UV/material references omitted; no welding, repair or surface reconstruction."
+      },
+      "qualification": "INTERNAL-REVIEW",
+      "anatomicalVerification": false,
+      "clinicalApproval": false
+    },
+    {
+      "conceptId": "FMA7240",
+      "representationId": "BP8648",
+      "proposedOrganHealStructureId": "heart.valve.tricuspid",
+      "representation": "tissue",
+      "derivedFile": "FMA7240_BP8648.obj",
+      "derivedHash": "e3b0c51ef3db03d56e7fdb9c863bd270b7f8c81ad76eb9ef33d8bbd3f925e9ed",
+      "fileSize": 140887,
+      "sources": [
+        {
+          "sourceFilename": "FJ2436.obj",
+          "sourceHash": "f0572079c56ea2a00eff869b07c4910defd624c5bda3fddd2403e4f1831f6be1",
+          "fileSize": 302591,
+          "objectCount": 1,
+          "vertexCount": 2591,
+          "faceCount": 4526,
+          "connectedComponents": 27,
+          "boundingBox": [
+            [
+              -6.484,
+              -137.745,
+              1213.14
+            ],
+            [
+              29.5014,
+              -113.573,
+              1236.48
+            ]
+          ]
+        }
+      ],
+      "derived": {
+        "objectCount": 1,
+        "vertexCount": 2591,
+        "faceCount": 4526,
+        "connectedComponents": 27,
+        "boundingBox": [
+          [
+            -6.484,
+            -137.745,
+            1213.14
+          ],
+          [
+            29.5014,
+            -113.573,
+            1236.48
+          ]
+        ]
+      },
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter"
+      },
+      "deviation": {
+        "maximumVertexDistance": 0,
+        "topologyChanged": false,
+        "method": "Numeric coordinates retained exactly; only object labels, OBJ formatting and index offsets change. Normals/UV/material references omitted; no welding, repair or surface reconstruction."
+      },
+      "qualification": "INTERNAL-REVIEW",
+      "anatomicalVerification": false,
+      "clinicalApproval": false
+    },
+    {
+      "conceptId": "FMA7242",
+      "representationId": "BP8614",
+      "proposedOrganHealStructureId": "heart.valve.mitral",
+      "representation": "tissue",
+      "derivedFile": "FMA7242_BP8614.obj",
+      "derivedHash": "de986cd82ce208b3852a1359c78e5420b69436f8b8694f58e30902db1b009b5d",
+      "fileSize": 229909,
+      "sources": [
+        {
+          "sourceFilename": "FJ2420.obj",
+          "sourceHash": "f0294cbbd35096d1df5e8bdc92f17dbed5ebf981e62024a07e7ca18e31eb1a94",
+          "fileSize": 495300,
+          "objectCount": 1,
+          "vertexCount": 4052,
+          "faceCount": 7558,
+          "connectedComponents": 28,
+          "boundingBox": [
+            [
+              11.7217,
+              -141.625,
+              1204.46
+            ],
+            [
+              45.8879,
+              -93.1022,
+              1235.92
+            ]
+          ]
+        }
+      ],
+      "derived": {
+        "objectCount": 1,
+        "vertexCount": 4052,
+        "faceCount": 7558,
+        "connectedComponents": 28,
+        "boundingBox": [
+          [
+            11.7217,
+            -141.625,
+            1204.46
+          ],
+          [
+            45.8879,
+            -93.1022,
+            1235.92
+          ]
+        ]
+      },
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter"
+      },
+      "deviation": {
+        "maximumVertexDistance": 0,
+        "topologyChanged": false,
+        "method": "Numeric coordinates retained exactly; only object labels, OBJ formatting and index offsets change. Normals/UV/material references omitted; no welding, repair or surface reconstruction."
+      },
+      "qualification": "INTERNAL-REVIEW",
+      "anatomicalVerification": false,
+      "clinicalApproval": false
+    },
+    {
+      "conceptId": "FMA7243",
+      "representationId": "BP8834",
+      "proposedOrganHealStructureId": "heart.valve.mitral",
+      "representation": "tissue",
+      "derivedFile": "FMA7243_BP8834.obj",
+      "derivedHash": "0590588bcd3c4c5f0a4ce99feecbf22d38c2729d962e0f741fab91ac0f75b143",
+      "fileSize": 127101,
+      "sources": [
+        {
+          "sourceFilename": "FJ2432.obj",
+          "sourceHash": "0b296151ecceff395da5c435bcf65cf6dfca390e72eb0be71d778fee84bc216b",
+          "fileSize": 274620,
+          "objectCount": 1,
+          "vertexCount": 2560,
+          "faceCount": 3820,
+          "connectedComponents": 73,
+          "boundingBox": [
+            [
+              13.5745,
+              -123.267,
+              1199.6
+            ],
+            [
+              62.8543,
+              -85.4446,
+              1231.65
+            ]
+          ]
+        }
+      ],
+      "derived": {
+        "objectCount": 1,
+        "vertexCount": 2560,
+        "faceCount": 3820,
+        "connectedComponents": 73,
+        "boundingBox": [
+          [
+            13.5745,
+            -123.267,
+            1199.6
+          ],
+          [
+            62.8543,
+            -85.4446,
+            1231.65
+          ]
+        ]
+      },
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter"
+      },
+      "deviation": {
+        "maximumVertexDistance": 0,
+        "topologyChanged": false,
+        "method": "Numeric coordinates retained exactly; only object labels, OBJ formatting and index offsets change. Normals/UV/material references omitted; no welding, repair or surface reconstruction."
+      },
+      "qualification": "INTERNAL-REVIEW",
+      "anatomicalVerification": false,
+      "clinicalApproval": false
+    },
+    {
+      "conceptId": "FMA7247",
+      "representationId": "BP9071",
+      "proposedOrganHealStructureId": "heart.valve.pulmonary",
+      "representation": "tissue",
+      "derivedFile": "FMA7247_BP9071.obj",
+      "derivedHash": "f19ef3f481a7976c3c4dc6680299083f8585591d6eb0ee2d0479a04131d55bcc",
+      "fileSize": 36007,
+      "sources": [
+        {
+          "sourceFilename": "FJ2417.obj",
+          "sourceHash": "12d2dccc78efa7d21f6f4af53ae08603be473613ec4e04b0beb9c0239b96da56",
+          "fileSize": 78664,
+          "objectCount": 1,
+          "vertexCount": 708,
+          "faceCount": 1272,
+          "connectedComponents": 11,
+          "boundingBox": [
+            [
+              23.1402,
+              -159.581,
+              1244.9
+            ],
+            [
+              40.9215,
+              -139.537,
+              1261.45
+            ]
+          ]
+        }
+      ],
+      "derived": {
+        "objectCount": 1,
+        "vertexCount": 708,
+        "faceCount": 1272,
+        "connectedComponents": 11,
+        "boundingBox": [
+          [
+            23.1402,
+            -159.581,
+            1244.9
+          ],
+          [
+            40.9215,
+            -139.537,
+            1261.45
+          ]
+        ]
+      },
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter"
+      },
+      "deviation": {
+        "maximumVertexDistance": 0,
+        "topologyChanged": false,
+        "method": "Numeric coordinates retained exactly; only object labels, OBJ formatting and index offsets change. Normals/UV/material references omitted; no welding, repair or surface reconstruction."
+      },
+      "qualification": "INTERNAL-REVIEW",
+      "anatomicalVerification": false,
+      "clinicalApproval": false
+    },
+    {
+      "conceptId": "FMA7249",
+      "representationId": "BP9033",
+      "proposedOrganHealStructureId": "heart.valve.pulmonary",
+      "representation": "tissue",
+      "derivedFile": "FMA7249_BP9033.obj",
+      "derivedHash": "592b5b58778f05a5dcd5c1ca718c4510e449cea3b533e1a7391c0e326a986c24",
+      "fileSize": 39058,
+      "sources": [
+        {
+          "sourceFilename": "FJ2434.obj",
+          "sourceHash": "ed432a90e8fbfe9742d524044c0bd20c165f2a9a820ee585f00635cc47c5b5c0",
+          "fileSize": 85105,
+          "objectCount": 1,
+          "vertexCount": 769,
+          "faceCount": 1370,
+          "connectedComponents": 15,
+          "boundingBox": [
+            [
+              8.76793,
+              -156.869,
+              1248.07
+            ],
+            [
+              27.5245,
+              -132.88,
+              1265.27
+            ]
+          ]
+        }
+      ],
+      "derived": {
+        "objectCount": 1,
+        "vertexCount": 769,
+        "faceCount": 1370,
+        "connectedComponents": 15,
+        "boundingBox": [
+          [
+            8.76793,
+            -156.869,
+            1248.07
+          ],
+          [
+            27.5245,
+            -132.88,
+            1265.27
+          ]
+        ]
+      },
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter"
+      },
+      "deviation": {
+        "maximumVertexDistance": 0,
+        "topologyChanged": false,
+        "method": "Numeric coordinates retained exactly; only object labels, OBJ formatting and index offsets change. Normals/UV/material references omitted; no welding, repair or surface reconstruction."
+      },
+      "qualification": "INTERNAL-REVIEW",
+      "anatomicalVerification": false,
+      "clinicalApproval": false
+    },
+    {
+      "conceptId": "FMA7250",
+      "representationId": "BP8601",
+      "proposedOrganHealStructureId": "heart.valve.pulmonary",
+      "representation": "tissue",
+      "derivedFile": "FMA7250_BP8601.obj",
+      "derivedHash": "fb7f8324862e5456a4540b06fa5111877e95d1bd102bc4875903e46cda519ae6",
+      "fileSize": 28609,
+      "sources": [
+        {
+          "sourceFilename": "FJ2427.obj",
+          "sourceHash": "eb867fa648f3da04036d925e6a740d4e3a922b893d74a20dec40d8d763a18414",
+          "fileSize": 62530,
+          "objectCount": 1,
+          "vertexCount": 573,
+          "faceCount": 996,
+          "connectedComponents": 9,
+          "boundingBox": [
+            [
+              23.5494,
+              -142.209,
+              1245.19
+            ],
+            [
+              40.5959,
+              -127.603,
+              1261.62
+            ]
+          ]
+        }
+      ],
+      "derived": {
+        "objectCount": 1,
+        "vertexCount": 573,
+        "faceCount": 996,
+        "connectedComponents": 9,
+        "boundingBox": [
+          [
+            23.5494,
+            -142.209,
+            1245.19
+          ],
+          [
+            40.5959,
+            -127.603,
+            1261.62
+          ]
+        ]
+      },
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter"
+      },
+      "deviation": {
+        "maximumVertexDistance": 0,
+        "topologyChanged": false,
+        "method": "Numeric coordinates retained exactly; only object labels, OBJ formatting and index offsets change. Normals/UV/material references omitted; no welding, repair or surface reconstruction."
+      },
+      "qualification": "INTERNAL-REVIEW",
+      "anatomicalVerification": false,
+      "clinicalApproval": false
+    },
+    {
+      "conceptId": "FMA7252",
+      "representationId": "BP7905",
+      "proposedOrganHealStructureId": "heart.valve.aortic",
+      "representation": "tissue",
+      "derivedFile": "FMA7252_BP7905.obj",
+      "derivedHash": "9209ff6419d1c72df6c23a92c7110dbddeacb95b83789c692e1c16850e363764",
+      "fileSize": 9576,
+      "sources": [
+        {
+          "sourceFilename": "FJ2431.obj",
+          "sourceHash": "40ae6e23decbb5fe2ea3800d44d517302f219078266abd8dcbc7d86ebc246799",
+          "fileSize": 21434,
+          "objectCount": 1,
+          "vertexCount": 215,
+          "faceCount": 316,
+          "connectedComponents": 5,
+          "boundingBox": [
+            [
+              5.66774,
+              -123.847,
+              1233.41
+            ],
+            [
+              23.2396,
+              -104.826,
+              1250.52
+            ]
+          ]
+        }
+      ],
+      "derived": {
+        "objectCount": 1,
+        "vertexCount": 215,
+        "faceCount": 316,
+        "connectedComponents": 5,
+        "boundingBox": [
+          [
+            5.66774,
+            -123.847,
+            1233.41
+          ],
+          [
+            23.2396,
+            -104.826,
+            1250.52
+          ]
+        ]
+      },
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter"
+      },
+      "deviation": {
+        "maximumVertexDistance": 0,
+        "topologyChanged": false,
+        "method": "Numeric coordinates retained exactly; only object labels, OBJ formatting and index offsets change. Normals/UV/material references omitted; no welding, repair or surface reconstruction."
+      },
+      "qualification": "INTERNAL-REVIEW",
+      "anatomicalVerification": false,
+      "clinicalApproval": false
+    },
+    {
+      "conceptId": "FMA7253",
+      "representationId": "BP8415",
+      "proposedOrganHealStructureId": "heart.valve.aortic",
+      "representation": "tissue",
+      "derivedFile": "FMA7253_BP8415.obj",
+      "derivedHash": "3647e0805436ee8d52e9c7d507c41c67d3d35e59734bda3ca7a6fca4807dacf1",
+      "fileSize": 25792,
+      "sources": [
+        {
+          "sourceFilename": "FJ2435.obj",
+          "sourceHash": "b498ef286aa1ba0bfeaf2114298f43078007beab66fc81f422ff6017c309bd7a",
+          "fileSize": 56513,
+          "objectCount": 1,
+          "vertexCount": 508,
+          "faceCount": 920,
+          "connectedComponents": 4,
+          "boundingBox": [
+            [
+              6.99224,
+              -132.441,
+              1234.7
+            ],
+            [
+              26.6562,
+              -118.971,
+              1252.73
+            ]
+          ]
+        }
+      ],
+      "derived": {
+        "objectCount": 1,
+        "vertexCount": 508,
+        "faceCount": 920,
+        "connectedComponents": 4,
+        "boundingBox": [
+          [
+            6.99224,
+            -132.441,
+            1234.7
+          ],
+          [
+            26.6562,
+            -118.971,
+            1252.73
+          ]
+        ]
+      },
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter"
+      },
+      "deviation": {
+        "maximumVertexDistance": 0,
+        "topologyChanged": false,
+        "method": "Numeric coordinates retained exactly; only object labels, OBJ formatting and index offsets change. Normals/UV/material references omitted; no welding, repair or surface reconstruction."
+      },
+      "qualification": "INTERNAL-REVIEW",
+      "anatomicalVerification": false,
+      "clinicalApproval": false
+    },
+    {
+      "conceptId": "FMA7254",
+      "representationId": "BP8827",
+      "proposedOrganHealStructureId": "heart.valve.aortic",
+      "representation": "tissue",
+      "derivedFile": "FMA7254_BP8827.obj",
+      "derivedHash": "a55f9adc8802369fd141f4fb33e9de91fbd94aa04cb3f4e3e95a399fa4e18aa4",
+      "fileSize": 26214,
+      "sources": [
+        {
+          "sourceFilename": "FJ2426.obj",
+          "sourceHash": "86fa5ef6decf47a91d33f826e1b5579bbecd94795c206b2d797f52c36c3e1020",
+          "fileSize": 57407,
+          "objectCount": 1,
+          "vertexCount": 526,
+          "faceCount": 914,
+          "connectedComponents": 11,
+          "boundingBox": [
+            [
+              16.5969,
+              -126.656,
+              1240.7
+            ],
+            [
+              32.3882,
+              -106.41,
+              1255.08
+            ]
+          ]
+        }
+      ],
+      "derived": {
+        "objectCount": 1,
+        "vertexCount": 526,
+        "faceCount": 914,
+        "connectedComponents": 11,
+        "boundingBox": [
+          [
+            16.5969,
+            -126.656,
+            1240.7
+          ],
+          [
+            32.3882,
+            -106.41,
+            1255.08
+          ]
+        ]
+      },
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter"
+      },
+      "deviation": {
+        "maximumVertexDistance": 0,
+        "topologyChanged": false,
+        "method": "Numeric coordinates retained exactly; only object labels, OBJ formatting and index offsets change. Normals/UV/material references omitted; no welding, repair or surface reconstruction."
+      },
+      "qualification": "INTERNAL-REVIEW",
+      "anatomicalVerification": false,
+      "clinicalApproval": false
+    },
+    {
+      "conceptId": "FMA7260",
+      "representationId": "BP9283",
+      "proposedOrganHealStructureId": null,
+      "representation": "tissue",
+      "derivedFile": "FMA7260_BP9283.obj",
+      "derivedHash": "7d9732d66a975536f30e45773c327ef5c6f18d4e762ad65634ea3d8a74dcb410",
+      "fileSize": 27229,
+      "sources": [
+        {
+          "sourceFilename": "FJ2419.obj",
+          "sourceHash": "1169b9b927ff75aac2dc2406a700b962bb9f3c95b860c5271548414d9e1226da",
+          "fileSize": 59575,
+          "objectCount": 1,
+          "vertexCount": 580,
+          "faceCount": 882,
+          "connectedComponents": 5,
+          "boundingBox": [
+            [
+              12.0583,
+              -172.71,
+              1179.8
+            ],
+            [
+              47.1424,
+              -151.131,
+              1209.05
+            ]
+          ]
+        }
+      ],
+      "derived": {
+        "objectCount": 1,
+        "vertexCount": 580,
+        "faceCount": 882,
+        "connectedComponents": 5,
+        "boundingBox": [
+          [
+            12.0583,
+            -172.71,
+            1179.8
+          ],
+          [
+            47.1424,
+            -151.131,
+            1209.05
+          ]
+        ]
+      },
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter"
+      },
+      "deviation": {
+        "maximumVertexDistance": 0,
+        "topologyChanged": false,
+        "method": "Numeric coordinates retained exactly; only object labels, OBJ formatting and index offsets change. Normals/UV/material references omitted; no welding, repair or surface reconstruction."
+      },
+      "qualification": "INTERNAL-REVIEW",
+      "anatomicalVerification": false,
+      "clinicalApproval": false
+    },
+    {
+      "conceptId": "FMA7261",
+      "representationId": "BP8146",
+      "proposedOrganHealStructureId": null,
+      "representation": "tissue",
+      "derivedFile": "FMA7261_BP8146.obj",
+      "derivedHash": "3313b6fa73fd50d83f20243562df8b8aaac7a9f969515f38f678f4b66bcf74dd",
+      "fileSize": 22039,
+      "sources": [
+        {
+          "sourceFilename": "FJ2430.obj",
+          "sourceHash": "971ab49fff2908862fc230653f5f0980424e2030ae7f29f7f96637e8b636c4e8",
+          "fileSize": 48375,
+          "objectCount": 1,
+          "vertexCount": 484,
+          "faceCount": 692,
+          "connectedComponents": 8,
+          "boundingBox": [
+            [
+              7.16454,
+              -160.418,
+              1178.44
+            ],
+            [
+              36.7766,
+              -131.886,
+              1192.79
+            ]
+          ]
+        }
+      ],
+      "derived": {
+        "objectCount": 1,
+        "vertexCount": 484,
+        "faceCount": 692,
+        "connectedComponents": 8,
+        "boundingBox": [
+          [
+            7.16454,
+            -160.418,
+            1178.44
+          ],
+          [
+            36.7766,
+            -131.886,
+            1192.79
+          ]
+        ]
+      },
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter"
+      },
+      "deviation": {
+        "maximumVertexDistance": 0,
+        "topologyChanged": false,
+        "method": "Numeric coordinates retained exactly; only object labels, OBJ formatting and index offsets change. Normals/UV/material references omitted; no welding, repair or surface reconstruction."
+      },
+      "qualification": "INTERNAL-REVIEW",
+      "anatomicalVerification": false,
+      "clinicalApproval": false
+    },
+    {
+      "conceptId": "FMA7262",
+      "representationId": "BP8088",
+      "proposedOrganHealStructureId": null,
+      "representation": "tissue",
+      "derivedFile": "FMA7262_BP8088.obj",
+      "derivedHash": "a177c6ff3abf2a17bf1791c2877c60ac3851f3333a93a577974f229ef8ff2945",
+      "fileSize": 25614,
+      "sources": [
+        {
+          "sourceFilename": "FJ2437.obj",
+          "sourceHash": "8ac0c0aa95adc3f41e82f51bbd8e8a74681f4e58af7f7edd4bc9c5aafffa97c7",
+          "fileSize": 56351,
+          "objectCount": 1,
+          "vertexCount": 539,
+          "faceCount": 844,
+          "connectedComponents": 13,
+          "boundingBox": [
+            [
+              12.8912,
+              -143.599,
+              1213.46
+            ],
+            [
+              32.1741,
+              -128.195,
+              1240.17
+            ]
+          ]
+        }
+      ],
+      "derived": {
+        "objectCount": 1,
+        "vertexCount": 539,
+        "faceCount": 844,
+        "connectedComponents": 13,
+        "boundingBox": [
+          [
+            12.8912,
+            -143.599,
+            1213.46
+          ],
+          [
+            32.1741,
+            -128.195,
+            1240.17
+          ]
+        ]
+      },
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter"
+      },
+      "deviation": {
+        "maximumVertexDistance": 0,
+        "topologyChanged": false,
+        "method": "Numeric coordinates retained exactly; only object labels, OBJ formatting and index offsets change. Normals/UV/material references omitted; no welding, repair or surface reconstruction."
+      },
+      "qualification": "INTERNAL-REVIEW",
+      "anatomicalVerification": false,
+      "clinicalApproval": false
+    },
+    {
+      "conceptId": "FMA7264",
+      "representationId": "BP8949",
+      "proposedOrganHealStructureId": null,
+      "representation": "tissue",
+      "derivedFile": "FMA7264_BP8949.obj",
+      "derivedHash": "9804377b214bb5bcac103c166f1a5227e2813dcd6ee64cfb2a9e4f44266fac27",
+      "fileSize": 23297,
+      "sources": [
+        {
+          "sourceFilename": "FJ2429.obj",
+          "sourceHash": "2f02411a806eedacfcb662b2dee47ca60f8448eb5243f48fb32083df66541ca4",
+          "fileSize": 51282,
+          "objectCount": 1,
+          "vertexCount": 487,
+          "faceCount": 780,
+          "connectedComponents": 8,
+          "boundingBox": [
+            [
+              46.4648,
+              -146.92,
+              1188.44
+            ],
+            [
+              74.5404,
+              -104.767,
+              1218.26
+            ]
+          ]
+        }
+      ],
+      "derived": {
+        "objectCount": 1,
+        "vertexCount": 487,
+        "faceCount": 780,
+        "connectedComponents": 8,
+        "boundingBox": [
+          [
+            46.4648,
+            -146.92,
+            1188.44
+          ],
+          [
+            74.5404,
+            -104.767,
+            1218.26
+          ]
+        ]
+      },
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter"
+      },
+      "deviation": {
+        "maximumVertexDistance": 0,
+        "topologyChanged": false,
+        "method": "Numeric coordinates retained exactly; only object labels, OBJ formatting and index offsets change. Normals/UV/material references omitted; no welding, repair or surface reconstruction."
+      },
+      "qualification": "INTERNAL-REVIEW",
+      "anatomicalVerification": false,
+      "clinicalApproval": false
+    },
+    {
+      "conceptId": "FMA7265",
+      "representationId": "BP8573",
+      "proposedOrganHealStructureId": null,
+      "representation": "tissue",
+      "derivedFile": "FMA7265_BP8573.obj",
+      "derivedHash": "fa3fc9e92f175c153869417136ad36da7846fb7cdfcefdcde2d30427e7499abe",
+      "fileSize": 24988,
+      "sources": [
+        {
+          "sourceFilename": "FJ2418.obj",
+          "sourceHash": "ad6dbf98d5afb2dd5010c42df9d707bf172b0ecc4f6e22c70716d022660aadc8",
+          "fileSize": 54778,
+          "objectCount": 1,
+          "vertexCount": 532,
+          "faceCount": 816,
+          "connectedComponents": 18,
+          "boundingBox": [
+            [
+              31.5447,
+              -160.032,
+              1191.81
+            ],
+            [
+              56.5892,
+              -124.512,
+              1224.65
+            ]
+          ]
+        }
+      ],
+      "derived": {
+        "objectCount": 1,
+        "vertexCount": 532,
+        "faceCount": 816,
+        "connectedComponents": 18,
+        "boundingBox": [
+          [
+            31.5447,
+            -160.032,
+            1191.81
+          ],
+          [
+            56.5892,
+            -124.512,
+            1224.65
+          ]
+        ]
+      },
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter"
+      },
+      "deviation": {
+        "maximumVertexDistance": 0,
+        "topologyChanged": false,
+        "method": "Numeric coordinates retained exactly; only object labels, OBJ formatting and index offsets change. Normals/UV/material references omitted; no welding, repair or surface reconstruction."
+      },
+      "qualification": "INTERNAL-REVIEW",
+      "anatomicalVerification": false,
+      "clinicalApproval": false
+    },
+    {
+      "conceptId": "FMA74912",
+      "representationId": "BP8970",
+      "proposedOrganHealStructureId": "heart.coronary.lad",
+      "representation": "vessel",
+      "derivedFile": "FMA74912_BP8970.obj",
+      "derivedHash": "9157ae8fbb08074caa927bc369e1e96142c3bfcc74c43cb125de1cd8e214165b",
+      "fileSize": 86420,
+      "sources": [
+        {
+          "sourceFilename": "FJ2631.obj",
+          "sourceHash": "ca7d8c0c82982ef1c838cd2224650c810adc3e52aaf6b345f0cdb77d7b068c5e",
+          "fileSize": 187038,
+          "objectCount": 1,
+          "vertexCount": 1549,
+          "faceCount": 3032,
+          "connectedComponents": 3,
+          "boundingBox": [
+            [
+              33.2928,
+              -168.008,
+              1179.54
+            ],
+            [
+              63.8413,
+              -120.073,
+              1257.62
+            ]
+          ]
+        }
+      ],
+      "derived": {
+        "objectCount": 1,
+        "vertexCount": 1549,
+        "faceCount": 3032,
+        "connectedComponents": 3,
+        "boundingBox": [
+          [
+            33.2928,
+            -168.008,
+            1179.54
+          ],
+          [
+            63.8413,
+            -120.073,
+            1257.62
+          ]
+        ]
+      },
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter"
+      },
+      "deviation": {
+        "maximumVertexDistance": 0,
+        "topologyChanged": false,
+        "method": "Numeric coordinates retained exactly; only object labels, OBJ formatting and index offsets change. Normals/UV/material references omitted; no welding, repair or surface reconstruction."
+      },
+      "qualification": "INTERNAL-REVIEW",
+      "anatomicalVerification": false,
+      "clinicalApproval": false
+    },
+    {
+      "conceptId": "FMA8612",
+      "representationId": "BP8690",
+      "proposedOrganHealStructureId": "heart.pulmonaryTrunk",
+      "representation": "vessel",
+      "derivedFile": "FMA8612_BP8690.obj",
+      "derivedHash": "1cacb216e6697b99a4838f93d019f74732e8fb07b588340843686ec1fc8fd90e",
+      "fileSize": 41048,
+      "sources": [
+        {
+          "sourceFilename": "FJ2966.obj",
+          "sourceHash": "7d4fbfbeebdb541b4053e62e6ba9e55bdbc8d1354de8192f94d7c6008812ab3f",
+          "fileSize": 89640,
+          "objectCount": 1,
+          "vertexCount": 871,
+          "faceCount": 1302,
+          "connectedComponents": 31,
+          "boundingBox": [
+            [
+              11.2747,
+              -158.864,
+              1256.5
+            ],
+            [
+              42.075,
+              -116.516,
+              1293.61
+            ]
+          ]
+        }
+      ],
+      "derived": {
+        "objectCount": 1,
+        "vertexCount": 871,
+        "faceCount": 1302,
+        "connectedComponents": 31,
+        "boundingBox": [
+          [
+            11.2747,
+            -158.864,
+            1256.5
+          ],
+          [
+            42.075,
+            -116.516,
+            1293.61
+          ]
+        ]
+      },
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter"
+      },
+      "deviation": {
+        "maximumVertexDistance": 0,
+        "topologyChanged": false,
+        "method": "Numeric coordinates retained exactly; only object labels, OBJ formatting and index offsets change. Normals/UV/material references omitted; no welding, repair or surface reconstruction."
+      },
+      "qualification": "INTERNAL-REVIEW",
+      "anatomicalVerification": false,
+      "clinicalApproval": false
+    },
+    {
+      "conceptId": "FMA9291",
+      "representationId": "BP9227",
+      "proposedOrganHealStructureId": "heart.rightVentricle",
+      "representation": "cavity",
+      "derivedFile": "FMA9291_BP9227.obj",
+      "derivedHash": "ef037d515e0ec16d6516217919ec3fefc369736f0b4dfabfc11ea2c474c47a4a",
+      "fileSize": 52387,
+      "sources": [
+        {
+          "sourceFilename": "FJ2423.obj",
+          "sourceHash": "f0d7cbf9e10c0fcefe96741700605e7080d4a627fe214b4c8d5647d970e085f7",
+          "fileSize": 113621,
+          "objectCount": 1,
+          "vertexCount": 973,
+          "faceCount": 1918,
+          "connectedComponents": 1,
+          "boundingBox": [
+            [
+              -18.8458,
+              -173.418,
+              1179.48
+            ],
+            [
+              52.6634,
+              -115.195,
+              1260.03
+            ]
+          ]
+        }
+      ],
+      "derived": {
+        "objectCount": 1,
+        "vertexCount": 973,
+        "faceCount": 1918,
+        "connectedComponents": 1,
+        "boundingBox": [
+          [
+            -18.8458,
+            -173.418,
+            1179.48
+          ],
+          [
+            52.6634,
+            -115.195,
+            1260.03
+          ]
+        ]
+      },
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter"
+      },
+      "deviation": {
+        "maximumVertexDistance": 0,
+        "topologyChanged": false,
+        "method": "Numeric coordinates retained exactly; only object labels, OBJ formatting and index offsets change. Normals/UV/material references omitted; no welding, repair or surface reconstruction."
+      },
+      "qualification": "INTERNAL-REVIEW",
+      "anatomicalVerification": false,
+      "clinicalApproval": false
+    },
+    {
+      "conceptId": "FMA9457",
+      "representationId": "BP8712",
+      "proposedOrganHealStructureId": "heart.rightAtrium",
+      "representation": "wall",
+      "derivedFile": "FMA9457_BP8712.obj",
+      "derivedHash": "68a9aa171355ca63374094a3e21133c44a39ad97e453239139cb4e21a8907758",
+      "fileSize": 567823,
+      "sources": [
+        {
+          "sourceFilename": "FJ2439.obj",
+          "sourceHash": "6e87510c607541b53b124f8224b6be74cb9b7351e29102246053b30a7260d8dd",
+          "fileSize": 1211683,
+          "objectCount": 1,
+          "vertexCount": 9887,
+          "faceCount": 17784,
+          "connectedComponents": 124,
+          "boundingBox": [
+            [
+              -36.3037,
+              -162.645,
+              1183.08
+            ],
+            [
+              6.77791,
+              -96.345,
+              1279.5
+            ]
+          ]
+        }
+      ],
+      "derived": {
+        "objectCount": 1,
+        "vertexCount": 9887,
+        "faceCount": 17784,
+        "connectedComponents": 124,
+        "boundingBox": [
+          [
+            -36.3037,
+            -162.645,
+            1183.08
+          ],
+          [
+            6.77791,
+            -96.345,
+            1279.5
+          ]
+        ]
+      },
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter"
+      },
+      "deviation": {
+        "maximumVertexDistance": 0,
+        "topologyChanged": false,
+        "method": "Numeric coordinates retained exactly; only object labels, OBJ formatting and index offsets change. Normals/UV/material references omitted; no welding, repair or surface reconstruction."
+      },
+      "qualification": "INTERNAL-REVIEW",
+      "anatomicalVerification": false,
+      "clinicalApproval": false
+    },
+    {
+      "conceptId": "FMA9465",
+      "representationId": "BP8719",
+      "proposedOrganHealStructureId": "heart.leftAtrium",
+      "representation": "cavity",
+      "derivedFile": "FMA9465_BP8719.obj",
+      "derivedHash": "5a6c057170fef0a3a45fee0305672d828a63f31d09cba543f9816b41e4124b7a",
+      "fileSize": 30166,
+      "sources": [
+        {
+          "sourceFilename": "FJ2425.obj",
+          "sourceHash": "d93197cc47f47d6d084de017917c88de039a4ab632b421893cede03264f43384",
+          "fileSize": 65824,
+          "objectCount": 1,
+          "vertexCount": 587,
+          "faceCount": 1064,
+          "connectedComponents": 3,
+          "boundingBox": [
+            [
+              -20.3846,
+              -126.761,
+              1206.45
+            ],
+            [
+              48.3237,
+              -70.9905,
+              1268.29
+            ]
+          ]
+        }
+      ],
+      "derived": {
+        "objectCount": 1,
+        "vertexCount": 587,
+        "faceCount": 1064,
+        "connectedComponents": 3,
+        "boundingBox": [
+          [
+            -20.3846,
+            -126.761,
+            1206.45
+          ],
+          [
+            48.3237,
+            -70.9905,
+            1268.29
+          ]
+        ]
+      },
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter"
+      },
+      "deviation": {
+        "maximumVertexDistance": 0,
+        "topologyChanged": false,
+        "method": "Numeric coordinates retained exactly; only object labels, OBJ formatting and index offsets change. Normals/UV/material references omitted; no welding, repair or surface reconstruction."
+      },
+      "qualification": "INTERNAL-REVIEW",
+      "anatomicalVerification": false,
+      "clinicalApproval": false
+    },
+    {
+      "conceptId": "FMA9466",
+      "representationId": "BP8928",
+      "proposedOrganHealStructureId": "heart.leftVentricle",
+      "representation": "cavity",
+      "derivedFile": "FMA9466_BP8928.obj",
+      "derivedHash": "381562fb5fe12d7c378ce60c6f48ab783a67c1d1ac4bd56e372c14f9fdcd7546",
+      "fileSize": 46900,
+      "sources": [
+        {
+          "sourceFilename": "FJ2422.obj",
+          "sourceHash": "8844c5fc464d23fdc785d1d254d666a4d3b70b14b73ec90ca0c77ba4aff3dd37",
+          "fileSize": 102171,
+          "objectCount": 1,
+          "vertexCount": 879,
+          "faceCount": 1722,
+          "connectedComponents": 1,
+          "boundingBox": [
+            [
+              6.46745,
+              -158.522,
+              1184.07
+            ],
+            [
+              70.2463,
+              -86.4016,
+              1251.55
+            ]
+          ]
+        }
+      ],
+      "derived": {
+        "objectCount": 1,
+        "vertexCount": 879,
+        "faceCount": 1722,
+        "connectedComponents": 1,
+        "boundingBox": [
+          [
+            6.46745,
+            -158.522,
+            1184.07
+          ],
+          [
+            70.2463,
+            -86.4016,
+            1251.55
+          ]
+        ]
+      },
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter"
+      },
+      "deviation": {
+        "maximumVertexDistance": 0,
+        "topologyChanged": false,
+        "method": "Numeric coordinates retained exactly; only object labels, OBJ formatting and index offsets change. Normals/UV/material references omitted; no welding, repair or surface reconstruction."
+      },
+      "qualification": "INTERNAL-REVIEW",
+      "anatomicalVerification": false,
+      "clinicalApproval": false
+    },
+    {
+      "conceptId": "FMA9531",
+      "representationId": "BP9267",
+      "proposedOrganHealStructureId": "heart.leftAtrium",
+      "representation": "wall",
+      "derivedFile": "FMA9531_BP9267.obj",
+      "derivedHash": "c76407c113d9dfd4140cb1e5dc98bf3d7a2dc28f6c02c204b7f9f888bb45eb1e",
+      "fileSize": 236899,
+      "sources": [
+        {
+          "sourceFilename": "FJ2438.obj",
+          "sourceHash": "ad28c5925374c6648bafb77ac9a89163316c101559cb730906208c96266ae078",
+          "fileSize": 510077,
+          "objectCount": 1,
+          "vertexCount": 4284,
+          "faceCount": 7544,
+          "connectedComponents": 32,
+          "boundingBox": [
+            [
+              -22.8801,
+              -151.151,
+              1199.43
+            ],
+            [
+              63.2392,
+              -70.1704,
+              1272.4
+            ]
+          ]
+        }
+      ],
+      "derived": {
+        "objectCount": 1,
+        "vertexCount": 4284,
+        "faceCount": 7544,
+        "connectedComponents": 32,
+        "boundingBox": [
+          [
+            -22.8801,
+            -151.151,
+            1199.43
+          ],
+          [
+            63.2392,
+            -70.1704,
+            1272.4
+          ]
+        ]
+      },
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "units": "millimeter"
+      },
+      "deviation": {
+        "maximumVertexDistance": 0,
+        "topologyChanged": false,
+        "method": "Numeric coordinates retained exactly; only object labels, OBJ formatting and index offsets change. Normals/UV/material references omitted; no welding, repair or surface reconstruction."
+      },
+      "qualification": "INTERNAL-REVIEW",
+      "anatomicalVerification": false,
+      "clinicalApproval": false
+    }
+  ],
+  "coordinateSystem": {
+    "verification": "official-source-verified",
+    "physicalUnit": "millimeter",
+    "axes": {
+      "positiveX": "patient-left",
+      "negativeX": "patient-right",
+      "positiveY": "posterior",
+      "negativeY": "anterior",
+      "positiveZ": "superior"
+    },
+    "organHealAxisCompatible": true,
+    "evidence": {
+      "url": "https://dbarchive.biosciencedbc.jp/data/bodyparts3d/20130619/coordinate_system.png",
+      "sha256": "338736275c11eac8c89531fdc14193c9a8adf5baab674033d9d89259f152a5f6",
+      "release": "4.0"
+    },
+    "transformDecision": "Identity; no rotation or rescaling required. Source documentation establishes the convention, not clinical approval."
+  }
+}

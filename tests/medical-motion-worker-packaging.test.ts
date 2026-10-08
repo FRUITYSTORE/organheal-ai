@@ -36,11 +36,27 @@ describe("supervised worker packaging",()=>{
     const build=path.resolve("scripts/build-medical-motion-worker.cjs"),launcher=path.resolve("scripts/medical-motion-package.cjs");
     expect(spawnSync(process.execPath,[build],{windowsHide:true}).status).toBe(0);
     const manifest=readFileSync("dist/medical-motion-worker/manifest.json","utf8");
+    const files=JSON.parse(manifest).files as {file:string;sha256:string}[];
+    for(const file of ["medical-assets/candidates/bodyparts3d-4.0/selection-manifest.json","medical-assets/candidates/zenodo-4506463-v2/selection-manifest.json"]){
+      const bytes=readFileSync(path.join("dist/medical-motion-worker",file));
+      expect(bytes).toEqual(readFileSync(file));
+      expect(files.find(item=>item.file===file)?.sha256).toBe(createHash("sha256").update(bytes).digest("hex"));
+    }
     expect(spawnSync(process.execPath,[build],{windowsHide:true}).status).toBe(0);
     expect(readFileSync("dist/medical-motion-worker/manifest.json","utf8")).toBe(manifest);
     const code=`const M=require('module'),r=M._resolveFilename;M._resolveFilename=function(s,...a){if(s==='typescript'||s.endsWith('.ts'))throw Error();return r.call(this,s,...a)};const p=require(${JSON.stringify(launcher)}).load();if(typeof p.runIsolatedWorker!=='function')process.exit(1);`;
     expect(spawnSync(process.execPath,["-e",code],{cwd:tmpdir(),windowsHide:true,encoding:"utf8",env:{...process.env,PATH:"",NODE_PATH:"",ORGANHEAL_TEST_PSQL:undefined}}).status).toBe(0);
   },20000);
+  it.each(["medical-assets/candidates/bodyparts3d-4.0/selection-manifest.json","medical-assets/candidates/zenodo-4506463-v2/selection-manifest.json","medical-assets/candidates/other/selection-manifest.json"])("rejects tampered or unlisted candidate JSON: %s",file=>{
+    const exports:{load?:()=>unknown}={};const realRequire=createRequire(path.resolve("scripts/medical-motion-package.cjs"));
+    const fakeFs={lstatSync:()=>({isSymbolicLink:()=>false,isDirectory:()=>true,isFile:()=>true}),statSync:()=>({size:1}),realpathSync:(value:string)=>value,
+      readFileSync:(value:string)=>value.endsWith("manifest.json")&&value.endsWith("worker/manifest.json")?JSON.stringify({schemaVersion:1,nodeMajor:24,files:[
+        {file:"lib/medical-motion/worker/entry.js",sha256:createHash("sha256").update("entry").digest("hex")},
+        {file,sha256:createHash("sha256").update("original").digest("hex")},
+      ]}):value.endsWith("entry.js")?"entry":"tampered"};
+    vm.runInNewContext(readFileSync("scripts/medical-motion-package.cjs","utf8"),{require:(name:string)=>name==="node:fs"?fakeFs:realRequire(name),__dirname:path.resolve("scripts"),exports,process:{versions:{node:"24.16.0"},env:{}}});
+    expect(()=>exports.load!()).toThrow();
+  });
   it.each([64,69,75,76,78])("preserves sanitized startup exit category %s before claims",async workerExitCode=>{
     let claims=0;const host=new MedicalMotionWorkerHost(readWorkerConfig({}),{preflight:async()=>{throw Object.assign(Error("secret"),{workerExitCode});},recover:async()=>{},processNext:async()=>{claims++;return false;}});
     expect(host.health().phase).toBe("starting");expect((await host.run()).exitCode).toBe(workerExitCode);expect(host.health().phase).toBe("fatal");expect(claims).toBe(0);
@@ -68,6 +84,6 @@ describe("supervised worker packaging",()=>{
   it("has a build-time TypeScript dependency only",()=>{
     expect(readFileSync("scripts/medical-motion-worker.cjs","utf8")).not.toContain("medical-motion-loader");
     const manifest=JSON.parse(readFileSync("dist/medical-motion-worker/manifest.json","utf8"));
-    expect(manifest.files.every((item:{file:string})=>item.file.endsWith(".js")&&existsSync(path.join("dist/medical-motion-worker",item.file)))).toBe(true);
+    expect(manifest.files.every((item:{file:string})=>(item.file.endsWith(".js")||["medical-assets/candidates/bodyparts3d-4.0/selection-manifest.json","medical-assets/candidates/zenodo-4506463-v2/selection-manifest.json"].includes(item.file))&&existsSync(path.join("dist/medical-motion-worker",item.file)))).toBe(true);
   });
 });

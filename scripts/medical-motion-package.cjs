@@ -1,5 +1,6 @@
 const fs=require('node:fs'),path=require('node:path'),Module=require('node:module'),crypto=require('node:crypto');
 const root=path.resolve(__dirname,'..'),bundle=path.join(root,'dist','medical-motion-worker');
+const candidateJson=new Set(['medical-assets/candidates/bodyparts3d-4.0/selection-manifest.json','medical-assets/candidates/zenodo-4506463-v2/selection-manifest.json']);
 exports.load=function(){
   const version=process.versions.node.split('.').map(Number);
   if(version[0]!==24||version[1]<16)throw Object.assign(Error(),{workerExitCode:64});
@@ -15,7 +16,7 @@ exports.load=function(){
     if(typeof item.file!=='string'||typeof item.sha256!=='string'||!/^[a-f0-9]{64}$/.test(item.sha256))throw Error();
     const file=path.resolve(bundle,item.file);
     const relative=path.relative(realBundle,fs.realpathSync(file));
-    if(!file.startsWith(bundle+path.sep)||!(/^(lib\/.*\.(js|json)|sentry\.server\.config\.js)$/.test(item.file))||fs.lstatSync(file).isSymbolicLink()||
+    if(!file.startsWith(bundle+path.sep)||!(/^(lib\/.*\.(js|json)|sentry\.server\.config\.js)$/.test(item.file)||candidateJson.has(item.file))||fs.lstatSync(file).isSymbolicLink()||
       !relative||relative.startsWith('..'+path.sep)||path.isAbsolute(relative)||!fs.lstatSync(file).isFile()||
       crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex')!==item.sha256)throw Error();
   }

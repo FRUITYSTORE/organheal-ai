@@ -1,0 +1,2442 @@
+{
+  "sourceId": "bodyparts3d-current-archive",
+  "release": "4.0",
+  "archive": "isa_BP3D_4.0_obj_99.zip",
+  "archiveSha256": "40665852c49f218326590e204db91064a1ecfc3c6f8cbd7bbbcaac62c7cd409e",
+  "intakeStatus": "INTERNAL-REVIEW",
+  "selectionScope": "39 previously selected heart-related source representations; not an exhaustive whole archive anatomy taxonomy.",
+  "geometryConverted": false,
+  "runtimeActivated": false,
+  "myocardium": {
+    "mapping": null,
+    "verification": "unverified",
+    "decision": "unresolved; source ventricular-wall and PART-OF labels do not prove complete myocardial coverage"
+  },
+  "septum": {
+    "mapping": null,
+    "verification": "unverified",
+    "decision": "unresolved; no independent verified septum representation in selected components"
+  },
+  "representations": [
+    {
+      "conceptId": "FMA10951",
+      "representationId": "BP10311",
+      "officialName": "inferior vena cava",
+      "sourceTable": "isa_parts_list_e.txt",
+      "compositionTable": "isa_element_parts.txt",
+      "componentCount": 2,
+      "compound": true,
+      "overlappingFiles": [],
+      "candidateStructureMapping": "heart.inferiorVenaCava",
+      "candidateRepresentation": "vessel",
+      "verification": "unverified",
+      "completeCoverage": false,
+      "usableForInternalReview": true,
+      "usableAsVerifiedAnatomy": false,
+      "limitations": [
+        "No anatomical equivalence or complete coverage claim. Leaflets are parts of valves; trunks/segments are parts of vessels; cavities are not walls/tissue. Generic ventricular wall has no separate LV/RV binding.",
+        "Source labels do not establish complete anatomy or medical suitability. Physical units and axes are established by the recorded official coordinate evidence.",
+        "Review usability permits source inspection only; rejected full-wall bindings remain unusable for canonical wall intake."
+      ],
+      "confidence": "proposal-only / semantically-unverified",
+      "components": [
+        {
+          "sourceFilename": "FJ3441.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ3441.obj",
+          "sha256": "7b03ef0464b622d0a839c3c55aedcec2a713b4399112e7ce6efa1ac51861b606",
+          "fileSize": 89003,
+          "objectCount": 1,
+          "vertexCount": 793,
+          "faceCount": 1410,
+          "connectedComponents": 10,
+          "boundingBox": [
+            [
+              -26.8256,
+              -126.538,
+              1094.94
+            ],
+            [
+              -3.96953,
+              -103.552,
+              1190.53
+            ]
+          ]
+        },
+        {
+          "sourceFilename": "FJ3659.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ3659.obj",
+          "sha256": "2241af6de027922eb74cb58d882433a5d0ffb7ecce41a1925f05e13dd78d666c",
+          "fileSize": 107453,
+          "objectCount": 1,
+          "vertexCount": 968,
+          "faceCount": 1670,
+          "connectedComponents": 14,
+          "boundingBox": [
+            [
+              -23.796,
+              -128.79,
+              950.892
+            ],
+            [
+              -2.0585,
+              -105.582,
+              1095.03
+            ]
+          ]
+        }
+      ],
+      "category": "vessel",
+      "conversionQualification": "QUALIFIED_INTERNAL_REVIEW",
+      "qualificationReason": "Exact pinned IS-A concept ID, representation ID, English structure label and complete source ELEMENT file list match. Qualified only to preserve this named source part for visual inspection.",
+      "qualificationLimitations": [
+        "Source concept specificity only; anatomical verification, clinical approval and complete coverage remain unestablished.",
+        "Preserve original source concept and representation; candidate OrganHeal mapping is not an approved binding.",
+        "Keep exact source-defined constituent set; no inferred union, repair or new anatomical component."
+      ]
+    },
+    {
+      "conceptId": "FMA11359",
+      "representationId": "BP8677",
+      "officialName": "cavity of right atrium",
+      "sourceTable": "isa_parts_list_e.txt",
+      "compositionTable": "isa_element_parts.txt",
+      "componentCount": 1,
+      "compound": false,
+      "overlappingFiles": [],
+      "candidateStructureMapping": "heart.rightAtrium",
+      "candidateRepresentation": "cavity",
+      "verification": "unverified",
+      "completeCoverage": false,
+      "usableForInternalReview": true,
+      "usableAsVerifiedAnatomy": false,
+      "limitations": [
+        "No anatomical equivalence or complete coverage claim. Leaflets are parts of valves; trunks/segments are parts of vessels; cavities are not walls/tissue. Generic ventricular wall has no separate LV/RV binding.",
+        "Source labels do not establish complete anatomy or medical suitability. Physical units and axes are established by the recorded official coordinate evidence.",
+        "Review usability permits source inspection only; rejected full-wall bindings remain unusable for canonical wall intake."
+      ],
+      "confidence": "proposal-only / semantically-unverified",
+      "components": [
+        {
+          "sourceFilename": "FJ2424.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2424.obj",
+          "sha256": "53739664c1d4a5bb635ca48c216b54deb16bb947d76a4ad75635adf69c8fa11c",
+          "fileSize": 139097,
+          "objectCount": 1,
+          "vertexCount": 1193,
+          "faceCount": 2244,
+          "connectedComponents": 3,
+          "boundingBox": [
+            [
+              -34.203,
+              -153.569,
+              1185.26
+            ],
+            [
+              3.18705,
+              -92.4415,
+              1277.52
+            ]
+          ]
+        }
+      ],
+      "category": "chamber-cavity-surface",
+      "conversionQualification": "QUALIFIED_INTERNAL_REVIEW",
+      "qualificationReason": "Exact pinned IS-A concept ID, representation ID, English structure label and complete source ELEMENT file list match. Qualified only to preserve this named source part for visual inspection.",
+      "qualificationLimitations": [
+        "Source concept specificity only; anatomical verification, clinical approval and complete coverage remain unestablished.",
+        "Preserve original source concept and representation; candidate OrganHeal mapping is not an approved binding.",
+        "Cavity surface only, never chamber wall or tissue."
+      ]
+    },
+    {
+      "conceptId": "FMA13884",
+      "representationId": "BP7815",
+      "officialName": "wall of ventricle",
+      "sourceTable": "isa_parts_list_e.txt",
+      "compositionTable": "isa_element_parts.txt",
+      "componentCount": 1,
+      "compound": false,
+      "overlappingFiles": [],
+      "candidateStructureMapping": null,
+      "candidateRepresentation": "wall",
+      "verification": "unverified",
+      "completeCoverage": false,
+      "usableForInternalReview": true,
+      "usableAsVerifiedAnatomy": false,
+      "limitations": [
+        "No anatomical equivalence or complete coverage claim. Leaflets are parts of valves; trunks/segments are parts of vessels; cavities are not walls/tissue. Generic ventricular wall has no separate LV/RV binding.",
+        "Source labels do not establish complete anatomy or medical suitability. Physical units and axes are established by the recorded official coordinate evidence.",
+        "Review usability permits source inspection only; rejected full-wall bindings remain unusable for canonical wall intake."
+      ],
+      "confidence": "proposal-only / semantically-unverified",
+      "components": [
+        {
+          "sourceFilename": "FJ2428.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2428.obj",
+          "sha256": "ac3c7d6714bed8cf549c97b013546541cf67e189dad2107092a59758aa3ccc45",
+          "fileSize": 2660930,
+          "objectCount": 1,
+          "vertexCount": 21053,
+          "faceCount": 37442,
+          "connectedComponents": 560,
+          "boundingBox": [
+            [
+              -23.0179,
+              -176.605,
+              1174.19
+            ],
+            [
+              79.1396,
+              -83.1177,
+              1265.92
+            ]
+          ]
+        }
+      ],
+      "category": "wall-tissue",
+      "conversionQualification": "UNRESOLVED",
+      "qualificationReason": "Generic ventricular wall has no chamber-specific semantics, or PART-OF ventricular wall compound overlaps differently labeled IS-A components; no wall, myocardium or septum equivalence established.",
+      "qualificationLimitations": [
+        "Source concept specificity only; anatomical verification, clinical approval and complete coverage remain unestablished.",
+        "Preserve original source concept and representation; candidate OrganHeal mapping is not an approved binding.",
+        "No supported canonical OrganHeal structure mapping; keep null."
+      ]
+    },
+    {
+      "conceptId": "FMA3736",
+      "representationId": "BP10329",
+      "officialName": "ascending aorta",
+      "sourceTable": "isa_parts_list_e.txt",
+      "compositionTable": "isa_element_parts.txt",
+      "componentCount": 1,
+      "compound": false,
+      "overlappingFiles": [],
+      "candidateStructureMapping": "heart.aorta",
+      "candidateRepresentation": "vessel",
+      "verification": "unverified",
+      "completeCoverage": false,
+      "usableForInternalReview": true,
+      "usableAsVerifiedAnatomy": false,
+      "limitations": [
+        "No anatomical equivalence or complete coverage claim. Leaflets are parts of valves; trunks/segments are parts of vessels; cavities are not walls/tissue. Generic ventricular wall has no separate LV/RV binding.",
+        "Source labels do not establish complete anatomy or medical suitability. Physical units and axes are established by the recorded official coordinate evidence.",
+        "Review usability permits source inspection only; rejected full-wall bindings remain unusable for canonical wall intake."
+      ],
+      "confidence": "proposal-only / semantically-unverified",
+      "components": [
+        {
+          "sourceFilename": "FJ3413.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ3413.obj",
+          "sha256": "764f23e432a9308e0780c586f9d1638db1fbcc52a5019ae61817b4b1de323870",
+          "fileSize": 24686,
+          "objectCount": 1,
+          "vertexCount": 229,
+          "faceCount": 396,
+          "connectedComponents": 3,
+          "boundingBox": [
+            [
+              -6.82218,
+              -137.439,
+              1234.06
+            ],
+            [
+              28.943,
+              -106.662,
+              1281.9
+            ]
+          ]
+        }
+      ],
+      "category": "vessel",
+      "conversionQualification": "QUALIFIED_INTERNAL_REVIEW",
+      "qualificationReason": "Exact pinned IS-A concept ID, representation ID, English structure label and complete source ELEMENT file list match. Qualified only to preserve this named source part for visual inspection.",
+      "qualificationLimitations": [
+        "Source concept specificity only; anatomical verification, clinical approval and complete coverage remain unestablished.",
+        "Preserve original source concept and representation; candidate OrganHeal mapping is not an approved binding."
+      ]
+    },
+    {
+      "conceptId": "FMA3802",
+      "representationId": "BP8221",
+      "officialName": "trunk of right coronary artery",
+      "sourceTable": "isa_parts_list_e.txt",
+      "compositionTable": "isa_element_parts.txt",
+      "componentCount": 1,
+      "compound": false,
+      "overlappingFiles": [],
+      "candidateStructureMapping": "heart.coronary.rca",
+      "candidateRepresentation": "vessel",
+      "verification": "unverified",
+      "completeCoverage": false,
+      "usableForInternalReview": true,
+      "usableAsVerifiedAnatomy": false,
+      "limitations": [
+        "No anatomical equivalence or complete coverage claim. Leaflets are parts of valves; trunks/segments are parts of vessels; cavities are not walls/tissue. Generic ventricular wall has no separate LV/RV binding.",
+        "Source labels do not establish complete anatomy or medical suitability. Physical units and axes are established by the recorded official coordinate evidence.",
+        "Review usability permits source inspection only; rejected full-wall bindings remain unusable for canonical wall intake."
+      ],
+      "confidence": "proposal-only / semantically-unverified",
+      "components": [
+        {
+          "sourceFilename": "FJ2723.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2723.obj",
+          "sha256": "cd008769cb9d565a75bf6b91b5ad3bd482932e37c4747837f6c9446cd23b73a2",
+          "fileSize": 281611,
+          "objectCount": 1,
+          "vertexCount": 2255,
+          "faceCount": 4502,
+          "connectedComponents": 1,
+          "boundingBox": [
+            [
+              -21.7476,
+              -162.494,
+              1187.94
+            ],
+            [
+              20.7385,
+              -93.3042,
+              1261.07
+            ]
+          ]
+        }
+      ],
+      "category": "vessel",
+      "conversionQualification": "QUALIFIED_INTERNAL_REVIEW",
+      "qualificationReason": "Exact pinned IS-A concept ID, representation ID, English structure label and complete source ELEMENT file list match. Qualified only to preserve this named source part for visual inspection.",
+      "qualificationLimitations": [
+        "Source concept specificity only; anatomical verification, clinical approval and complete coverage remain unestablished.",
+        "Preserve original source concept and representation; candidate OrganHeal mapping is not an approved binding."
+      ]
+    },
+    {
+      "conceptId": "FMA3855",
+      "representationId": "BP8961",
+      "officialName": "trunk of left coronary artery",
+      "sourceTable": "isa_parts_list_e.txt",
+      "compositionTable": "isa_element_parts.txt",
+      "componentCount": 1,
+      "compound": false,
+      "overlappingFiles": [],
+      "candidateStructureMapping": "heart.coronary.leftMain",
+      "candidateRepresentation": "vessel",
+      "verification": "unverified",
+      "completeCoverage": false,
+      "usableForInternalReview": true,
+      "usableAsVerifiedAnatomy": false,
+      "limitations": [
+        "No anatomical equivalence or complete coverage claim. Leaflets are parts of valves; trunks/segments are parts of vessels; cavities are not walls/tissue. Generic ventricular wall has no separate LV/RV binding.",
+        "Source labels do not establish complete anatomy or medical suitability. Physical units and axes are established by the recorded official coordinate evidence.",
+        "Review usability permits source inspection only; rejected full-wall bindings remain unusable for canonical wall intake."
+      ],
+      "confidence": "proposal-only / semantically-unverified",
+      "components": [
+        {
+          "sourceFilename": "FJ2737.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2737.obj",
+          "sha256": "22aa075132e33f9a3d3be135515362b03ab84f12a0d641edde35e260fb2cd65b",
+          "fileSize": 12641,
+          "objectCount": 1,
+          "vertexCount": 121,
+          "faceCount": 204,
+          "connectedComponents": 2,
+          "boundingBox": [
+            [
+              23.3893,
+              -123.425,
+              1253.95
+            ],
+            [
+              34.405,
+              -117.304,
+              1260.82
+            ]
+          ]
+        }
+      ],
+      "category": "vessel",
+      "conversionQualification": "QUALIFIED_INTERNAL_REVIEW",
+      "qualificationReason": "Exact pinned IS-A concept ID, representation ID, English structure label and complete source ELEMENT file list match. Qualified only to preserve this named source part for visual inspection.",
+      "qualificationLimitations": [
+        "Source concept specificity only; anatomical verification, clinical approval and complete coverage remain unestablished.",
+        "Preserve original source concept and representation; candidate OrganHeal mapping is not an approved binding."
+      ]
+    },
+    {
+      "conceptId": "FMA3895",
+      "representationId": "BP8397",
+      "officialName": "circumflex branch of left coronary artery",
+      "sourceTable": "isa_parts_list_e.txt",
+      "compositionTable": "isa_element_parts.txt",
+      "componentCount": 6,
+      "compound": true,
+      "overlappingFiles": [],
+      "candidateStructureMapping": "heart.coronary.lcx",
+      "candidateRepresentation": "vessel",
+      "verification": "unverified",
+      "completeCoverage": false,
+      "usableForInternalReview": true,
+      "usableAsVerifiedAnatomy": false,
+      "limitations": [
+        "No anatomical equivalence or complete coverage claim. Leaflets are parts of valves; trunks/segments are parts of vessels; cavities are not walls/tissue. Generic ventricular wall has no separate LV/RV binding.",
+        "Source labels do not establish complete anatomy or medical suitability. Physical units and axes are established by the recorded official coordinate evidence.",
+        "Review usability permits source inspection only; rejected full-wall bindings remain unusable for canonical wall intake."
+      ],
+      "confidence": "proposal-only / semantically-unverified",
+      "components": [
+        {
+          "sourceFilename": "FJ2649.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2649.obj",
+          "sha256": "d4833bb0b60ee79f526150ad7ba9124e326aba8cd48000711bf3a6b0997b0ce0",
+          "fileSize": 81031,
+          "objectCount": 1,
+          "vertexCount": 692,
+          "faceCount": 1380,
+          "connectedComponents": 1,
+          "boundingBox": [
+            [
+              34.3553,
+              -121.957,
+              1222.38
+            ],
+            [
+              50.5177,
+              -86.9805,
+              1256.31
+            ]
+          ]
+        },
+        {
+          "sourceFilename": "FJ2650.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2650.obj",
+          "sha256": "dd2c38fdc784311c955fb8b0420d70dfbdf16f0ce6e236a086dc5f350faae04c",
+          "fileSize": 29816,
+          "objectCount": 1,
+          "vertexCount": 316,
+          "faceCount": 396,
+          "connectedComponents": 8,
+          "boundingBox": [
+            [
+              55.2865,
+              -95.7634,
+              1199.68
+            ],
+            [
+              59.8176,
+              -89.4264,
+              1216.54
+            ]
+          ]
+        },
+        {
+          "sourceFilename": "FJ2651.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2651.obj",
+          "sha256": "864567c4b15c3add5a8184edb142766538936e2ef17af4efa25acca67f4344d8",
+          "fileSize": 37854,
+          "objectCount": 1,
+          "vertexCount": 395,
+          "faceCount": 510,
+          "connectedComponents": 4,
+          "boundingBox": [
+            [
+              58.756,
+              -115.551,
+              1211.07
+            ],
+            [
+              75.6332,
+              -92.2562,
+              1218.22
+            ]
+          ]
+        },
+        {
+          "sourceFilename": "FJ2652.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2652.obj",
+          "sha256": "fd5ee304558da1d1ffebb01ca7f59b374087667e71d473fe5401f355a2ff161f",
+          "fileSize": 22767,
+          "objectCount": 1,
+          "vertexCount": 240,
+          "faceCount": 308,
+          "connectedComponents": 6,
+          "boundingBox": [
+            [
+              64.1856,
+              -107.278,
+              1194.65
+            ],
+            [
+              68.2426,
+              -97.3195,
+              1209.61
+            ]
+          ]
+        },
+        {
+          "sourceFilename": "FJ2653.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2653.obj",
+          "sha256": "74fc42fbc783857619dccb5a753b06cbfce9abc6403f14e38f55bbb9fafdad80",
+          "fileSize": 20958,
+          "objectCount": 1,
+          "vertexCount": 232,
+          "faceCount": 252,
+          "connectedComponents": 9,
+          "boundingBox": [
+            [
+              73.7457,
+              -128.307,
+              1188.33
+            ],
+            [
+              76.8311,
+              -119.449,
+              1198.68
+            ]
+          ]
+        },
+        {
+          "sourceFilename": "FJ2654.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2654.obj",
+          "sha256": "4e8467b12ca3374d25807d5de058cfb8d147ad2decd99f6debe57847a83099a1",
+          "fileSize": 13776,
+          "objectCount": 1,
+          "vertexCount": 150,
+          "faceCount": 172,
+          "connectedComponents": 9,
+          "boundingBox": [
+            [
+              74.1667,
+              -142.845,
+              1187.82
+            ],
+            [
+              76.4916,
+              -131.297,
+              1192.21
+            ]
+          ]
+        }
+      ],
+      "category": "vessel",
+      "conversionQualification": "QUALIFIED_INTERNAL_REVIEW",
+      "qualificationReason": "Exact pinned IS-A concept ID, representation ID, English structure label and complete source ELEMENT file list match. Qualified only to preserve this named source part for visual inspection.",
+      "qualificationLimitations": [
+        "Source concept specificity only; anatomical verification, clinical approval and complete coverage remain unestablished.",
+        "Preserve original source concept and representation; candidate OrganHeal mapping is not an approved binding.",
+        "Keep exact source-defined constituent set; no inferred union, repair or new anatomical component."
+      ]
+    },
+    {
+      "conceptId": "FMA4720",
+      "representationId": "BP10292",
+      "officialName": "superior vena cava",
+      "sourceTable": "isa_parts_list_e.txt",
+      "compositionTable": "isa_element_parts.txt",
+      "componentCount": 1,
+      "compound": false,
+      "overlappingFiles": [],
+      "candidateStructureMapping": "heart.superiorVenaCava",
+      "candidateRepresentation": "vessel",
+      "verification": "unverified",
+      "completeCoverage": false,
+      "usableForInternalReview": true,
+      "usableAsVerifiedAnatomy": false,
+      "limitations": [
+        "No anatomical equivalence or complete coverage claim. Leaflets are parts of valves; trunks/segments are parts of vessels; cavities are not walls/tissue. Generic ventricular wall has no separate LV/RV binding.",
+        "Source labels do not establish complete anatomy or medical suitability. Physical units and axes are established by the recorded official coordinate evidence.",
+        "Review usability permits source inspection only; rejected full-wall bindings remain unusable for canonical wall intake."
+      ],
+      "confidence": "proposal-only / semantically-unverified",
+      "components": [
+        {
+          "sourceFilename": "FJ3645.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ3645.obj",
+          "sha256": "5cc007c2ea51255df641225630e83ddbf3e5c4545dffe4814b098c9199ceb26c",
+          "fileSize": 36208,
+          "objectCount": 1,
+          "vertexCount": 318,
+          "faceCount": 598,
+          "connectedComponents": 1,
+          "boundingBox": [
+            [
+              -26.6349,
+              -127.276,
+              1274.81
+            ],
+            [
+              -4.10943,
+              -103.587,
+              1309.81
+            ]
+          ]
+        }
+      ],
+      "category": "vessel",
+      "conversionQualification": "QUALIFIED_INTERNAL_REVIEW",
+      "qualificationReason": "Exact pinned IS-A concept ID, representation ID, English structure label and complete source ELEMENT file list match. Qualified only to preserve this named source part for visual inspection.",
+      "qualificationLimitations": [
+        "Source concept specificity only; anatomical verification, clinical approval and complete coverage remain unestablished.",
+        "Preserve original source concept and representation; candidate OrganHeal mapping is not an approved binding."
+      ]
+    },
+    {
+      "conceptId": "FMA49911",
+      "representationId": "BP8784",
+      "officialName": "right inferior pulmonary vein",
+      "sourceTable": "isa_parts_list_e.txt",
+      "compositionTable": "isa_element_parts.txt",
+      "componentCount": 1,
+      "compound": false,
+      "overlappingFiles": [],
+      "candidateStructureMapping": "heart.pulmonaryVeins",
+      "candidateRepresentation": "vessel",
+      "verification": "unverified",
+      "completeCoverage": false,
+      "usableForInternalReview": true,
+      "usableAsVerifiedAnatomy": false,
+      "limitations": [
+        "No anatomical equivalence or complete coverage claim. Leaflets are parts of valves; trunks/segments are parts of vessels; cavities are not walls/tissue. Generic ventricular wall has no separate LV/RV binding.",
+        "Source labels do not establish complete anatomy or medical suitability. Physical units and axes are established by the recorded official coordinate evidence.",
+        "Review usability permits source inspection only; rejected full-wall bindings remain unusable for canonical wall intake."
+      ],
+      "confidence": "proposal-only / semantically-unverified",
+      "components": [
+        {
+          "sourceFilename": "FJ3040.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ3040.obj",
+          "sha256": "2e15b98f227f16c3dcacab1a93a26d42e07cd2c2d72ba34b1ef438396f598a12",
+          "fileSize": 12047,
+          "objectCount": 1,
+          "vertexCount": 113,
+          "faceCount": 196,
+          "connectedComponents": 1,
+          "boundingBox": [
+            [
+              -33.8068,
+              -89.0205,
+              1211.28
+            ],
+            [
+              -6.28302,
+              -76.0429,
+              1228.89
+            ]
+          ]
+        }
+      ],
+      "category": "vessel",
+      "conversionQualification": "QUALIFIED_INTERNAL_REVIEW",
+      "qualificationReason": "Exact pinned IS-A concept ID, representation ID, English structure label and complete source ELEMENT file list match. Qualified only to preserve this named source part for visual inspection.",
+      "qualificationLimitations": [
+        "Source concept specificity only; anatomical verification, clinical approval and complete coverage remain unestablished.",
+        "Preserve original source concept and representation; candidate OrganHeal mapping is not an approved binding."
+      ]
+    },
+    {
+      "conceptId": "FMA49913",
+      "representationId": "BP8334",
+      "officialName": "left inferior pulmonary vein",
+      "sourceTable": "isa_parts_list_e.txt",
+      "compositionTable": "isa_element_parts.txt",
+      "componentCount": 3,
+      "compound": true,
+      "overlappingFiles": [],
+      "candidateStructureMapping": "heart.pulmonaryVeins",
+      "candidateRepresentation": "vessel",
+      "verification": "unverified",
+      "completeCoverage": false,
+      "usableForInternalReview": true,
+      "usableAsVerifiedAnatomy": false,
+      "limitations": [
+        "No anatomical equivalence or complete coverage claim. Leaflets are parts of valves; trunks/segments are parts of vessels; cavities are not walls/tissue. Generic ventricular wall has no separate LV/RV binding.",
+        "Source labels do not establish complete anatomy or medical suitability. Physical units and axes are established by the recorded official coordinate evidence.",
+        "Review usability permits source inspection only; rejected full-wall bindings remain unusable for canonical wall intake."
+      ],
+      "confidence": "proposal-only / semantically-unverified",
+      "components": [
+        {
+          "sourceFilename": "FJ2944.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2944.obj",
+          "sha256": "a531b898f54ae008b1ad0c0f0993158e1a15cfbebee79098033ea8c2d2f84372",
+          "fileSize": 17821,
+          "objectCount": 1,
+          "vertexCount": 157,
+          "faceCount": 310,
+          "connectedComponents": 1,
+          "boundingBox": [
+            [
+              42.6331,
+              -78.0178,
+              1201.54
+            ],
+            [
+              56.0191,
+              -53.5181,
+              1229.51
+            ]
+          ]
+        },
+        {
+          "sourceFilename": "FJ2950.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2950.obj",
+          "sha256": "f32bbffccdb0528ed085041ad4243b5b4817a26aa82a73669f9132d6c54f17de",
+          "fileSize": 18779,
+          "objectCount": 1,
+          "vertexCount": 165,
+          "faceCount": 326,
+          "connectedComponents": 1,
+          "boundingBox": [
+            [
+              37.6384,
+              -83.4903,
+              1210.4
+            ],
+            [
+              65.3636,
+              -71.841,
+              1229.82
+            ]
+          ]
+        },
+        {
+          "sourceFilename": "FJ2955.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2955.obj",
+          "sha256": "bfbb5067eb2da9857069139f12d019bb0f599babc89730aeb4accb1a77916991",
+          "fileSize": 32317,
+          "objectCount": 1,
+          "vertexCount": 280,
+          "faceCount": 556,
+          "connectedComponents": 1,
+          "boundingBox": [
+            [
+              32.8489,
+              -91.3169,
+              1214.12
+            ],
+            [
+              72.9742,
+              -70.9183,
+              1236.36
+            ]
+          ]
+        }
+      ],
+      "category": "vessel",
+      "conversionQualification": "QUALIFIED_INTERNAL_REVIEW",
+      "qualificationReason": "Exact pinned IS-A concept ID, representation ID, English structure label and complete source ELEMENT file list match. Qualified only to preserve this named source part for visual inspection.",
+      "qualificationLimitations": [
+        "Source concept specificity only; anatomical verification, clinical approval and complete coverage remain unestablished.",
+        "Preserve original source concept and representation; candidate OrganHeal mapping is not an approved binding.",
+        "Keep exact source-defined constituent set; no inferred union, repair or new anatomical component."
+      ]
+    },
+    {
+      "conceptId": "FMA49914",
+      "representationId": "BP8580",
+      "officialName": "right superior pulmonary vein",
+      "sourceTable": "isa_parts_list_e.txt",
+      "compositionTable": "isa_element_parts.txt",
+      "componentCount": 1,
+      "compound": false,
+      "overlappingFiles": [],
+      "candidateStructureMapping": "heart.pulmonaryVeins",
+      "candidateRepresentation": "vessel",
+      "verification": "unverified",
+      "completeCoverage": false,
+      "usableForInternalReview": true,
+      "usableAsVerifiedAnatomy": false,
+      "limitations": [
+        "No anatomical equivalence or complete coverage claim. Leaflets are parts of valves; trunks/segments are parts of vessels; cavities are not walls/tissue. Generic ventricular wall has no separate LV/RV binding.",
+        "Source labels do not establish complete anatomy or medical suitability. Physical units and axes are established by the recorded official coordinate evidence.",
+        "Review usability permits source inspection only; rejected full-wall bindings remain unusable for canonical wall intake."
+      ],
+      "confidence": "proposal-only / semantically-unverified",
+      "components": [
+        {
+          "sourceFilename": "FJ3020.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ3020.obj",
+          "sha256": "074ba67bb3db8f93d6ac7d4e9d2bd1ddcca6e54a2bcb765ec146a9fd30bb3aa8",
+          "fileSize": 19237,
+          "objectCount": 1,
+          "vertexCount": 171,
+          "faceCount": 324,
+          "connectedComponents": 1,
+          "boundingBox": [
+            [
+              -37.1408,
+              -106.536,
+              1234.93
+            ],
+            [
+              -14.0164,
+              -88.3313,
+              1261.77
+            ]
+          ]
+        }
+      ],
+      "category": "vessel",
+      "conversionQualification": "QUALIFIED_INTERNAL_REVIEW",
+      "qualificationReason": "Exact pinned IS-A concept ID, representation ID, English structure label and complete source ELEMENT file list match. Qualified only to preserve this named source part for visual inspection.",
+      "qualificationLimitations": [
+        "Source concept specificity only; anatomical verification, clinical approval and complete coverage remain unestablished.",
+        "Preserve original source concept and representation; candidate OrganHeal mapping is not an approved binding."
+      ]
+    },
+    {
+      "conceptId": "FMA49916",
+      "representationId": "BP8556",
+      "officialName": "left superior pulmonary vein",
+      "sourceTable": "isa_parts_list_e.txt",
+      "compositionTable": "isa_element_parts.txt",
+      "componentCount": 2,
+      "compound": true,
+      "overlappingFiles": [],
+      "candidateStructureMapping": "heart.pulmonaryVeins",
+      "candidateRepresentation": "vessel",
+      "verification": "unverified",
+      "completeCoverage": false,
+      "usableForInternalReview": true,
+      "usableAsVerifiedAnatomy": false,
+      "limitations": [
+        "No anatomical equivalence or complete coverage claim. Leaflets are parts of valves; trunks/segments are parts of vessels; cavities are not walls/tissue. Generic ventricular wall has no separate LV/RV binding.",
+        "Source labels do not establish complete anatomy or medical suitability. Physical units and axes are established by the recorded official coordinate evidence.",
+        "Review usability permits source inspection only; rejected full-wall bindings remain unusable for canonical wall intake."
+      ],
+      "confidence": "proposal-only / semantically-unverified",
+      "components": [
+        {
+          "sourceFilename": "FJ2925.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2925.obj",
+          "sha256": "e87124704e4ca94bfe3206a571e464fe8ccc41afe0f36ee5ccf46cf00aaf4918",
+          "fileSize": 23979,
+          "objectCount": 1,
+          "vertexCount": 209,
+          "faceCount": 414,
+          "connectedComponents": 1,
+          "boundingBox": [
+            [
+              34.7494,
+              -99.608,
+              1251.45
+            ],
+            [
+              55.1678,
+              -82.1238,
+              1273.22
+            ]
+          ]
+        },
+        {
+          "sourceFilename": "FJ2933.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2933.obj",
+          "sha256": "64e0d2deec1d847be95f41a25c616935c9b400f233a2c07a8c453a3441f80a35",
+          "fileSize": 27459,
+          "objectCount": 1,
+          "vertexCount": 239,
+          "faceCount": 472,
+          "connectedComponents": 1,
+          "boundingBox": [
+            [
+              33.6998,
+              -110.848,
+              1218.88
+            ],
+            [
+              81.8161,
+              -81.5478,
+              1258.09
+            ]
+          ]
+        }
+      ],
+      "category": "vessel",
+      "conversionQualification": "QUALIFIED_INTERNAL_REVIEW",
+      "qualificationReason": "Exact pinned IS-A concept ID, representation ID, English structure label and complete source ELEMENT file list match. Qualified only to preserve this named source part for visual inspection.",
+      "qualificationLimitations": [
+        "Source concept specificity only; anatomical verification, clinical approval and complete coverage remain unestablished.",
+        "Preserve original source concept and representation; candidate OrganHeal mapping is not an approved binding.",
+        "Keep exact source-defined constituent set; no inferred union, repair or new anatomical component."
+      ]
+    },
+    {
+      "conceptId": "FMA50872",
+      "representationId": "BP8968",
+      "officialName": "right pulmonary artery",
+      "sourceTable": "isa_parts_list_e.txt",
+      "compositionTable": "isa_element_parts.txt",
+      "componentCount": 1,
+      "compound": false,
+      "overlappingFiles": [],
+      "candidateStructureMapping": "heart.rightPulmonaryArtery",
+      "candidateRepresentation": "vessel",
+      "verification": "unverified",
+      "completeCoverage": false,
+      "usableForInternalReview": true,
+      "usableAsVerifiedAnatomy": false,
+      "limitations": [
+        "No anatomical equivalence or complete coverage claim. Leaflets are parts of valves; trunks/segments are parts of vessels; cavities are not walls/tissue. Generic ventricular wall has no separate LV/RV binding.",
+        "Source labels do not establish complete anatomy or medical suitability. Physical units and axes are established by the recorded official coordinate evidence.",
+        "Review usability permits source inspection only; rejected full-wall bindings remain unusable for canonical wall intake."
+      ],
+      "confidence": "proposal-only / semantically-unverified",
+      "components": [
+        {
+          "sourceFilename": "FJ3019.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ3019.obj",
+          "sha256": "c773fc2d3d3f79544699c16f38f56619730a6d5a1a2c8bb4d8f0dc2ab6889d97",
+          "fileSize": 39748,
+          "objectCount": 1,
+          "vertexCount": 341,
+          "faceCount": 678,
+          "connectedComponents": 1,
+          "boundingBox": [
+            [
+              -58.9455,
+              -131.2,
+              1224.4
+            ],
+            [
+              36.938,
+              -62.9648,
+              1294.01
+            ]
+          ]
+        }
+      ],
+      "category": "vessel",
+      "conversionQualification": "QUALIFIED_INTERNAL_REVIEW",
+      "qualificationReason": "Exact pinned IS-A concept ID, representation ID, English structure label and complete source ELEMENT file list match. Qualified only to preserve this named source part for visual inspection.",
+      "qualificationLimitations": [
+        "Source concept specificity only; anatomical verification, clinical approval and complete coverage remain unestablished.",
+        "Preserve original source concept and representation; candidate OrganHeal mapping is not an approved binding."
+      ]
+    },
+    {
+      "conceptId": "FMA50873",
+      "representationId": "BP8463",
+      "officialName": "left pulmonary artery",
+      "sourceTable": "isa_parts_list_e.txt",
+      "compositionTable": "isa_element_parts.txt",
+      "componentCount": 1,
+      "compound": false,
+      "overlappingFiles": [],
+      "candidateStructureMapping": "heart.leftPulmonaryArtery",
+      "candidateRepresentation": "vessel",
+      "verification": "unverified",
+      "completeCoverage": false,
+      "usableForInternalReview": true,
+      "usableAsVerifiedAnatomy": false,
+      "limitations": [
+        "No anatomical equivalence or complete coverage claim. Leaflets are parts of valves; trunks/segments are parts of vessels; cavities are not walls/tissue. Generic ventricular wall has no separate LV/RV binding.",
+        "Source labels do not establish complete anatomy or medical suitability. Physical units and axes are established by the recorded official coordinate evidence.",
+        "Review usability permits source inspection only; rejected full-wall bindings remain unusable for canonical wall intake."
+      ],
+      "confidence": "proposal-only / semantically-unverified",
+      "components": [
+        {
+          "sourceFilename": "FJ2924.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2924.obj",
+          "sha256": "0cb5312cf816387fdad0d3809a5b5cae1445806ce85546adea39240bc72d2580",
+          "fileSize": 342258,
+          "objectCount": 1,
+          "vertexCount": 2727,
+          "faceCount": 5450,
+          "connectedComponents": 1,
+          "boundingBox": [
+            [
+              14.7515,
+              -136.595,
+              1226.21
+            ],
+            [
+              79.084,
+              -58.0499,
+              1294.05
+            ]
+          ]
+        }
+      ],
+      "category": "vessel",
+      "conversionQualification": "QUALIFIED_INTERNAL_REVIEW",
+      "qualificationReason": "Exact pinned IS-A concept ID, representation ID, English structure label and complete source ELEMENT file list match. Qualified only to preserve this named source part for visual inspection.",
+      "qualificationLimitations": [
+        "Source concept specificity only; anatomical verification, clinical approval and complete coverage remain unestablished.",
+        "Preserve original source concept and representation; candidate OrganHeal mapping is not an approved binding."
+      ]
+    },
+    {
+      "conceptId": "FMA7238",
+      "representationId": "BP8711",
+      "officialName": "anterior leaflet of tricuspid valve",
+      "sourceTable": "isa_parts_list_e.txt",
+      "compositionTable": "isa_element_parts.txt",
+      "componentCount": 1,
+      "compound": false,
+      "overlappingFiles": [],
+      "candidateStructureMapping": "heart.valve.tricuspid",
+      "candidateRepresentation": "tissue",
+      "verification": "unverified",
+      "completeCoverage": false,
+      "usableForInternalReview": true,
+      "usableAsVerifiedAnatomy": false,
+      "limitations": [
+        "No anatomical equivalence or complete coverage claim. Leaflets are parts of valves; trunks/segments are parts of vessels; cavities are not walls/tissue. Generic ventricular wall has no separate LV/RV binding.",
+        "Source labels do not establish complete anatomy or medical suitability. Physical units and axes are established by the recorded official coordinate evidence.",
+        "Review usability permits source inspection only; rejected full-wall bindings remain unusable for canonical wall intake."
+      ],
+      "confidence": "proposal-only / semantically-unverified",
+      "components": [
+        {
+          "sourceFilename": "FJ2421.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2421.obj",
+          "sha256": "7303c55e6d9c2e294759f7f7e01d23fc120eba74bce9ade0a01cc4bdb2bd4200",
+          "fileSize": 532771,
+          "objectCount": 1,
+          "vertexCount": 4282,
+          "faceCount": 8160,
+          "connectedComponents": 19,
+          "boundingBox": [
+            [
+              -21.0772,
+              -156.313,
+              1198.11
+            ],
+            [
+              23.2047,
+              -129.198,
+              1236.21
+            ]
+          ]
+        }
+      ],
+      "category": "valve-component",
+      "conversionQualification": "QUALIFIED_INTERNAL_REVIEW",
+      "qualificationReason": "Exact pinned IS-A concept ID, representation ID, English structure label and complete source ELEMENT file list match. Qualified only to preserve this named source part for visual inspection.",
+      "qualificationLimitations": [
+        "Source concept specificity only; anatomical verification, clinical approval and complete coverage remain unestablished.",
+        "Preserve original source concept and representation; candidate OrganHeal mapping is not an approved binding.",
+        "Leaflet/cusp only, never a complete valve; septal leaflet is not interventricular septum."
+      ]
+    },
+    {
+      "conceptId": "FMA7239",
+      "representationId": "BP8544",
+      "officialName": "posterior leaflet of tricuspid valve",
+      "sourceTable": "isa_parts_list_e.txt",
+      "compositionTable": "isa_element_parts.txt",
+      "componentCount": 1,
+      "compound": false,
+      "overlappingFiles": [],
+      "candidateStructureMapping": "heart.valve.tricuspid",
+      "candidateRepresentation": "tissue",
+      "verification": "unverified",
+      "completeCoverage": false,
+      "usableForInternalReview": true,
+      "usableAsVerifiedAnatomy": false,
+      "limitations": [
+        "No anatomical equivalence or complete coverage claim. Leaflets are parts of valves; trunks/segments are parts of vessels; cavities are not walls/tissue. Generic ventricular wall has no separate LV/RV binding.",
+        "Source labels do not establish complete anatomy or medical suitability. Physical units and axes are established by the recorded official coordinate evidence.",
+        "Review usability permits source inspection only; rejected full-wall bindings remain unusable for canonical wall intake."
+      ],
+      "confidence": "proposal-only / semantically-unverified",
+      "components": [
+        {
+          "sourceFilename": "FJ2433.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2433.obj",
+          "sha256": "6519afbf9aa2eb3c0dc25d8e332a0208fd2ad68956c1dfe1ef6b010f04984d55",
+          "fileSize": 325359,
+          "objectCount": 1,
+          "vertexCount": 2729,
+          "faceCount": 4926,
+          "connectedComponents": 18,
+          "boundingBox": [
+            [
+              -18.9578,
+              -145.256,
+              1188.64
+            ],
+            [
+              16.4701,
+              -113.717,
+              1216.2
+            ]
+          ]
+        }
+      ],
+      "category": "valve-component",
+      "conversionQualification": "QUALIFIED_INTERNAL_REVIEW",
+      "qualificationReason": "Exact pinned IS-A concept ID, representation ID, English structure label and complete source ELEMENT file list match. Qualified only to preserve this named source part for visual inspection.",
+      "qualificationLimitations": [
+        "Source concept specificity only; anatomical verification, clinical approval and complete coverage remain unestablished.",
+        "Preserve original source concept and representation; candidate OrganHeal mapping is not an approved binding.",
+        "Leaflet/cusp only, never a complete valve; septal leaflet is not interventricular septum."
+      ]
+    },
+    {
+      "conceptId": "FMA7240",
+      "representationId": "BP8648",
+      "officialName": "septal leaflet of tricuspid valve",
+      "sourceTable": "isa_parts_list_e.txt",
+      "compositionTable": "isa_element_parts.txt",
+      "componentCount": 1,
+      "compound": false,
+      "overlappingFiles": [],
+      "candidateStructureMapping": "heart.valve.tricuspid",
+      "candidateRepresentation": "tissue",
+      "verification": "unverified",
+      "completeCoverage": false,
+      "usableForInternalReview": true,
+      "usableAsVerifiedAnatomy": false,
+      "limitations": [
+        "No anatomical equivalence or complete coverage claim. Leaflets are parts of valves; trunks/segments are parts of vessels; cavities are not walls/tissue. Generic ventricular wall has no separate LV/RV binding.",
+        "Source labels do not establish complete anatomy or medical suitability. Physical units and axes are established by the recorded official coordinate evidence.",
+        "Review usability permits source inspection only; rejected full-wall bindings remain unusable for canonical wall intake."
+      ],
+      "confidence": "proposal-only / semantically-unverified",
+      "components": [
+        {
+          "sourceFilename": "FJ2436.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2436.obj",
+          "sha256": "f0572079c56ea2a00eff869b07c4910defd624c5bda3fddd2403e4f1831f6be1",
+          "fileSize": 302591,
+          "objectCount": 1,
+          "vertexCount": 2591,
+          "faceCount": 4526,
+          "connectedComponents": 27,
+          "boundingBox": [
+            [
+              -6.484,
+              -137.745,
+              1213.14
+            ],
+            [
+              29.5014,
+              -113.573,
+              1236.48
+            ]
+          ]
+        }
+      ],
+      "category": "valve-component",
+      "conversionQualification": "QUALIFIED_INTERNAL_REVIEW",
+      "qualificationReason": "Exact pinned IS-A concept ID, representation ID, English structure label and complete source ELEMENT file list match. Qualified only to preserve this named source part for visual inspection.",
+      "qualificationLimitations": [
+        "Source concept specificity only; anatomical verification, clinical approval and complete coverage remain unestablished.",
+        "Preserve original source concept and representation; candidate OrganHeal mapping is not an approved binding.",
+        "Leaflet/cusp only, never a complete valve; septal leaflet is not interventricular septum."
+      ]
+    },
+    {
+      "conceptId": "FMA7242",
+      "representationId": "BP8614",
+      "officialName": "anterior leaflet of mitral valve",
+      "sourceTable": "isa_parts_list_e.txt",
+      "compositionTable": "isa_element_parts.txt",
+      "componentCount": 1,
+      "compound": false,
+      "overlappingFiles": [],
+      "candidateStructureMapping": "heart.valve.mitral",
+      "candidateRepresentation": "tissue",
+      "verification": "unverified",
+      "completeCoverage": false,
+      "usableForInternalReview": true,
+      "usableAsVerifiedAnatomy": false,
+      "limitations": [
+        "No anatomical equivalence or complete coverage claim. Leaflets are parts of valves; trunks/segments are parts of vessels; cavities are not walls/tissue. Generic ventricular wall has no separate LV/RV binding.",
+        "Source labels do not establish complete anatomy or medical suitability. Physical units and axes are established by the recorded official coordinate evidence.",
+        "Review usability permits source inspection only; rejected full-wall bindings remain unusable for canonical wall intake."
+      ],
+      "confidence": "proposal-only / semantically-unverified",
+      "components": [
+        {
+          "sourceFilename": "FJ2420.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2420.obj",
+          "sha256": "f0294cbbd35096d1df5e8bdc92f17dbed5ebf981e62024a07e7ca18e31eb1a94",
+          "fileSize": 495300,
+          "objectCount": 1,
+          "vertexCount": 4052,
+          "faceCount": 7558,
+          "connectedComponents": 28,
+          "boundingBox": [
+            [
+              11.7217,
+              -141.625,
+              1204.46
+            ],
+            [
+              45.8879,
+              -93.1022,
+              1235.92
+            ]
+          ]
+        }
+      ],
+      "category": "valve-component",
+      "conversionQualification": "QUALIFIED_INTERNAL_REVIEW",
+      "qualificationReason": "Exact pinned IS-A concept ID, representation ID, English structure label and complete source ELEMENT file list match. Qualified only to preserve this named source part for visual inspection.",
+      "qualificationLimitations": [
+        "Source concept specificity only; anatomical verification, clinical approval and complete coverage remain unestablished.",
+        "Preserve original source concept and representation; candidate OrganHeal mapping is not an approved binding.",
+        "Leaflet/cusp only, never a complete valve; septal leaflet is not interventricular septum."
+      ]
+    },
+    {
+      "conceptId": "FMA7243",
+      "representationId": "BP8834",
+      "officialName": "posterior leaflet of mitral valve",
+      "sourceTable": "isa_parts_list_e.txt",
+      "compositionTable": "isa_element_parts.txt",
+      "componentCount": 1,
+      "compound": false,
+      "overlappingFiles": [
+        "FJ2432.obj"
+      ],
+      "candidateStructureMapping": "heart.valve.mitral",
+      "candidateRepresentation": "tissue",
+      "verification": "unverified",
+      "completeCoverage": false,
+      "usableForInternalReview": true,
+      "usableAsVerifiedAnatomy": false,
+      "limitations": [
+        "No anatomical equivalence or complete coverage claim. Leaflets are parts of valves; trunks/segments are parts of vessels; cavities are not walls/tissue. Generic ventricular wall has no separate LV/RV binding.",
+        "Source labels do not establish complete anatomy or medical suitability. Physical units and axes are established by the recorded official coordinate evidence.",
+        "Review usability permits source inspection only; rejected full-wall bindings remain unusable for canonical wall intake."
+      ],
+      "confidence": "proposal-only / semantically-unverified",
+      "components": [
+        {
+          "sourceFilename": "FJ2432.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2432.obj",
+          "sha256": "0b296151ecceff395da5c435bcf65cf6dfca390e72eb0be71d778fee84bc216b",
+          "fileSize": 274620,
+          "objectCount": 1,
+          "vertexCount": 2560,
+          "faceCount": 3820,
+          "connectedComponents": 73,
+          "boundingBox": [
+            [
+              13.5745,
+              -123.267,
+              1199.6
+            ],
+            [
+              62.8543,
+              -85.4446,
+              1231.65
+            ]
+          ]
+        }
+      ],
+      "category": "valve-component",
+      "conversionQualification": "QUALIFIED_INTERNAL_REVIEW",
+      "qualificationReason": "Exact pinned IS-A concept ID, representation ID, English structure label and complete source ELEMENT file list match. Qualified only to preserve this named source part for visual inspection.",
+      "qualificationLimitations": [
+        "Source concept specificity only; anatomical verification, clinical approval and complete coverage remain unestablished.",
+        "Preserve original source concept and representation; candidate OrganHeal mapping is not an approved binding.",
+        "Leaflet/cusp only, never a complete valve; septal leaflet is not interventricular septum."
+      ]
+    },
+    {
+      "conceptId": "FMA7247",
+      "representationId": "BP9071",
+      "officialName": "left anterior cusp of pulmonary valve",
+      "sourceTable": "isa_parts_list_e.txt",
+      "compositionTable": "isa_element_parts.txt",
+      "componentCount": 1,
+      "compound": false,
+      "overlappingFiles": [],
+      "candidateStructureMapping": "heart.valve.pulmonary",
+      "candidateRepresentation": "tissue",
+      "verification": "unverified",
+      "completeCoverage": false,
+      "usableForInternalReview": true,
+      "usableAsVerifiedAnatomy": false,
+      "limitations": [
+        "No anatomical equivalence or complete coverage claim. Leaflets are parts of valves; trunks/segments are parts of vessels; cavities are not walls/tissue. Generic ventricular wall has no separate LV/RV binding.",
+        "Source labels do not establish complete anatomy or medical suitability. Physical units and axes are established by the recorded official coordinate evidence.",
+        "Review usability permits source inspection only; rejected full-wall bindings remain unusable for canonical wall intake."
+      ],
+      "confidence": "proposal-only / semantically-unverified",
+      "components": [
+        {
+          "sourceFilename": "FJ2417.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2417.obj",
+          "sha256": "12d2dccc78efa7d21f6f4af53ae08603be473613ec4e04b0beb9c0239b96da56",
+          "fileSize": 78664,
+          "objectCount": 1,
+          "vertexCount": 708,
+          "faceCount": 1272,
+          "connectedComponents": 11,
+          "boundingBox": [
+            [
+              23.1402,
+              -159.581,
+              1244.9
+            ],
+            [
+              40.9215,
+              -139.537,
+              1261.45
+            ]
+          ]
+        }
+      ],
+      "category": "valve-component",
+      "conversionQualification": "QUALIFIED_INTERNAL_REVIEW",
+      "qualificationReason": "Exact pinned IS-A concept ID, representation ID, English structure label and complete source ELEMENT file list match. Qualified only to preserve this named source part for visual inspection.",
+      "qualificationLimitations": [
+        "Source concept specificity only; anatomical verification, clinical approval and complete coverage remain unestablished.",
+        "Preserve original source concept and representation; candidate OrganHeal mapping is not an approved binding.",
+        "Leaflet/cusp only, never a complete valve; septal leaflet is not interventricular septum."
+      ]
+    },
+    {
+      "conceptId": "FMA7249",
+      "representationId": "BP9033",
+      "officialName": "right anterior cusp of pulmonary valve",
+      "sourceTable": "isa_parts_list_e.txt",
+      "compositionTable": "isa_element_parts.txt",
+      "componentCount": 1,
+      "compound": false,
+      "overlappingFiles": [],
+      "candidateStructureMapping": "heart.valve.pulmonary",
+      "candidateRepresentation": "tissue",
+      "verification": "unverified",
+      "completeCoverage": false,
+      "usableForInternalReview": true,
+      "usableAsVerifiedAnatomy": false,
+      "limitations": [
+        "No anatomical equivalence or complete coverage claim. Leaflets are parts of valves; trunks/segments are parts of vessels; cavities are not walls/tissue. Generic ventricular wall has no separate LV/RV binding.",
+        "Source labels do not establish complete anatomy or medical suitability. Physical units and axes are established by the recorded official coordinate evidence.",
+        "Review usability permits source inspection only; rejected full-wall bindings remain unusable for canonical wall intake."
+      ],
+      "confidence": "proposal-only / semantically-unverified",
+      "components": [
+        {
+          "sourceFilename": "FJ2434.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2434.obj",
+          "sha256": "ed432a90e8fbfe9742d524044c0bd20c165f2a9a820ee585f00635cc47c5b5c0",
+          "fileSize": 85105,
+          "objectCount": 1,
+          "vertexCount": 769,
+          "faceCount": 1370,
+          "connectedComponents": 15,
+          "boundingBox": [
+            [
+              8.76793,
+              -156.869,
+              1248.07
+            ],
+            [
+              27.5245,
+              -132.88,
+              1265.27
+            ]
+          ]
+        }
+      ],
+      "category": "valve-component",
+      "conversionQualification": "QUALIFIED_INTERNAL_REVIEW",
+      "qualificationReason": "Exact pinned IS-A concept ID, representation ID, English structure label and complete source ELEMENT file list match. Qualified only to preserve this named source part for visual inspection.",
+      "qualificationLimitations": [
+        "Source concept specificity only; anatomical verification, clinical approval and complete coverage remain unestablished.",
+        "Preserve original source concept and representation; candidate OrganHeal mapping is not an approved binding.",
+        "Leaflet/cusp only, never a complete valve; septal leaflet is not interventricular septum."
+      ]
+    },
+    {
+      "conceptId": "FMA7250",
+      "representationId": "BP8601",
+      "officialName": "posterior cusp of pulmonary valve",
+      "sourceTable": "isa_parts_list_e.txt",
+      "compositionTable": "isa_element_parts.txt",
+      "componentCount": 1,
+      "compound": false,
+      "overlappingFiles": [],
+      "candidateStructureMapping": "heart.valve.pulmonary",
+      "candidateRepresentation": "tissue",
+      "verification": "unverified",
+      "completeCoverage": false,
+      "usableForInternalReview": true,
+      "usableAsVerifiedAnatomy": false,
+      "limitations": [
+        "No anatomical equivalence or complete coverage claim. Leaflets are parts of valves; trunks/segments are parts of vessels; cavities are not walls/tissue. Generic ventricular wall has no separate LV/RV binding.",
+        "Source labels do not establish complete anatomy or medical suitability. Physical units and axes are established by the recorded official coordinate evidence.",
+        "Review usability permits source inspection only; rejected full-wall bindings remain unusable for canonical wall intake."
+      ],
+      "confidence": "proposal-only / semantically-unverified",
+      "components": [
+        {
+          "sourceFilename": "FJ2427.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2427.obj",
+          "sha256": "eb867fa648f3da04036d925e6a740d4e3a922b893d74a20dec40d8d763a18414",
+          "fileSize": 62530,
+          "objectCount": 1,
+          "vertexCount": 573,
+          "faceCount": 996,
+          "connectedComponents": 9,
+          "boundingBox": [
+            [
+              23.5494,
+              -142.209,
+              1245.19
+            ],
+            [
+              40.5959,
+              -127.603,
+              1261.62
+            ]
+          ]
+        }
+      ],
+      "category": "valve-component",
+      "conversionQualification": "QUALIFIED_INTERNAL_REVIEW",
+      "qualificationReason": "Exact pinned IS-A concept ID, representation ID, English structure label and complete source ELEMENT file list match. Qualified only to preserve this named source part for visual inspection.",
+      "qualificationLimitations": [
+        "Source concept specificity only; anatomical verification, clinical approval and complete coverage remain unestablished.",
+        "Preserve original source concept and representation; candidate OrganHeal mapping is not an approved binding.",
+        "Leaflet/cusp only, never a complete valve; septal leaflet is not interventricular septum."
+      ]
+    },
+    {
+      "conceptId": "FMA7252",
+      "representationId": "BP7905",
+      "officialName": "right posterior cusp of aortic valve",
+      "sourceTable": "isa_parts_list_e.txt",
+      "compositionTable": "isa_element_parts.txt",
+      "componentCount": 1,
+      "compound": false,
+      "overlappingFiles": [],
+      "candidateStructureMapping": "heart.valve.aortic",
+      "candidateRepresentation": "tissue",
+      "verification": "unverified",
+      "completeCoverage": false,
+      "usableForInternalReview": true,
+      "usableAsVerifiedAnatomy": false,
+      "limitations": [
+        "No anatomical equivalence or complete coverage claim. Leaflets are parts of valves; trunks/segments are parts of vessels; cavities are not walls/tissue. Generic ventricular wall has no separate LV/RV binding.",
+        "Source labels do not establish complete anatomy or medical suitability. Physical units and axes are established by the recorded official coordinate evidence.",
+        "Review usability permits source inspection only; rejected full-wall bindings remain unusable for canonical wall intake."
+      ],
+      "confidence": "proposal-only / semantically-unverified",
+      "components": [
+        {
+          "sourceFilename": "FJ2431.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2431.obj",
+          "sha256": "40ae6e23decbb5fe2ea3800d44d517302f219078266abd8dcbc7d86ebc246799",
+          "fileSize": 21434,
+          "objectCount": 1,
+          "vertexCount": 215,
+          "faceCount": 316,
+          "connectedComponents": 5,
+          "boundingBox": [
+            [
+              5.66774,
+              -123.847,
+              1233.41
+            ],
+            [
+              23.2396,
+              -104.826,
+              1250.52
+            ]
+          ]
+        }
+      ],
+      "category": "valve-component",
+      "conversionQualification": "QUALIFIED_INTERNAL_REVIEW",
+      "qualificationReason": "Exact pinned IS-A concept ID, representation ID, English structure label and complete source ELEMENT file list match. Qualified only to preserve this named source part for visual inspection.",
+      "qualificationLimitations": [
+        "Source concept specificity only; anatomical verification, clinical approval and complete coverage remain unestablished.",
+        "Preserve original source concept and representation; candidate OrganHeal mapping is not an approved binding.",
+        "Leaflet/cusp only, never a complete valve; septal leaflet is not interventricular septum."
+      ]
+    },
+    {
+      "conceptId": "FMA7253",
+      "representationId": "BP8415",
+      "officialName": "anterior cusp of aortic valve",
+      "sourceTable": "isa_parts_list_e.txt",
+      "compositionTable": "isa_element_parts.txt",
+      "componentCount": 1,
+      "compound": false,
+      "overlappingFiles": [],
+      "candidateStructureMapping": "heart.valve.aortic",
+      "candidateRepresentation": "tissue",
+      "verification": "unverified",
+      "completeCoverage": false,
+      "usableForInternalReview": true,
+      "usableAsVerifiedAnatomy": false,
+      "limitations": [
+        "No anatomical equivalence or complete coverage claim. Leaflets are parts of valves; trunks/segments are parts of vessels; cavities are not walls/tissue. Generic ventricular wall has no separate LV/RV binding.",
+        "Source labels do not establish complete anatomy or medical suitability. Physical units and axes are established by the recorded official coordinate evidence.",
+        "Review usability permits source inspection only; rejected full-wall bindings remain unusable for canonical wall intake."
+      ],
+      "confidence": "proposal-only / semantically-unverified",
+      "components": [
+        {
+          "sourceFilename": "FJ2435.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2435.obj",
+          "sha256": "b498ef286aa1ba0bfeaf2114298f43078007beab66fc81f422ff6017c309bd7a",
+          "fileSize": 56513,
+          "objectCount": 1,
+          "vertexCount": 508,
+          "faceCount": 920,
+          "connectedComponents": 4,
+          "boundingBox": [
+            [
+              6.99224,
+              -132.441,
+              1234.7
+            ],
+            [
+              26.6562,
+              -118.971,
+              1252.73
+            ]
+          ]
+        }
+      ],
+      "category": "valve-component",
+      "conversionQualification": "QUALIFIED_INTERNAL_REVIEW",
+      "qualificationReason": "Exact pinned IS-A concept ID, representation ID, English structure label and complete source ELEMENT file list match. Qualified only to preserve this named source part for visual inspection.",
+      "qualificationLimitations": [
+        "Source concept specificity only; anatomical verification, clinical approval and complete coverage remain unestablished.",
+        "Preserve original source concept and representation; candidate OrganHeal mapping is not an approved binding.",
+        "Leaflet/cusp only, never a complete valve; septal leaflet is not interventricular septum."
+      ]
+    },
+    {
+      "conceptId": "FMA7254",
+      "representationId": "BP8827",
+      "officialName": "left posterior cusp of aortic valve",
+      "sourceTable": "isa_parts_list_e.txt",
+      "compositionTable": "isa_element_parts.txt",
+      "componentCount": 1,
+      "compound": false,
+      "overlappingFiles": [],
+      "candidateStructureMapping": "heart.valve.aortic",
+      "candidateRepresentation": "tissue",
+      "verification": "unverified",
+      "completeCoverage": false,
+      "usableForInternalReview": true,
+      "usableAsVerifiedAnatomy": false,
+      "limitations": [
+        "No anatomical equivalence or complete coverage claim. Leaflets are parts of valves; trunks/segments are parts of vessels; cavities are not walls/tissue. Generic ventricular wall has no separate LV/RV binding.",
+        "Source labels do not establish complete anatomy or medical suitability. Physical units and axes are established by the recorded official coordinate evidence.",
+        "Review usability permits source inspection only; rejected full-wall bindings remain unusable for canonical wall intake."
+      ],
+      "confidence": "proposal-only / semantically-unverified",
+      "components": [
+        {
+          "sourceFilename": "FJ2426.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2426.obj",
+          "sha256": "86fa5ef6decf47a91d33f826e1b5579bbecd94795c206b2d797f52c36c3e1020",
+          "fileSize": 57407,
+          "objectCount": 1,
+          "vertexCount": 526,
+          "faceCount": 914,
+          "connectedComponents": 11,
+          "boundingBox": [
+            [
+              16.5969,
+              -126.656,
+              1240.7
+            ],
+            [
+              32.3882,
+              -106.41,
+              1255.08
+            ]
+          ]
+        }
+      ],
+      "category": "valve-component",
+      "conversionQualification": "QUALIFIED_INTERNAL_REVIEW",
+      "qualificationReason": "Exact pinned IS-A concept ID, representation ID, English structure label and complete source ELEMENT file list match. Qualified only to preserve this named source part for visual inspection.",
+      "qualificationLimitations": [
+        "Source concept specificity only; anatomical verification, clinical approval and complete coverage remain unestablished.",
+        "Preserve original source concept and representation; candidate OrganHeal mapping is not an approved binding.",
+        "Leaflet/cusp only, never a complete valve; septal leaflet is not interventricular septum."
+      ]
+    },
+    {
+      "conceptId": "FMA7260",
+      "representationId": "BP9283",
+      "officialName": "anterior papillary muscle of right ventricle",
+      "sourceTable": "isa_parts_list_e.txt",
+      "compositionTable": "isa_element_parts.txt",
+      "componentCount": 1,
+      "compound": false,
+      "overlappingFiles": [
+        "FJ2419.obj"
+      ],
+      "candidateStructureMapping": null,
+      "candidateRepresentation": "tissue",
+      "verification": "unverified",
+      "completeCoverage": false,
+      "usableForInternalReview": true,
+      "usableAsVerifiedAnatomy": false,
+      "limitations": [
+        "No anatomical equivalence or complete coverage claim. Leaflets are parts of valves; trunks/segments are parts of vessels; cavities are not walls/tissue. Generic ventricular wall has no separate LV/RV binding.",
+        "Source labels do not establish complete anatomy or medical suitability. Physical units and axes are established by the recorded official coordinate evidence.",
+        "Review usability permits source inspection only; rejected full-wall bindings remain unusable for canonical wall intake."
+      ],
+      "confidence": "proposal-only / semantically-unverified",
+      "components": [
+        {
+          "sourceFilename": "FJ2419.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2419.obj",
+          "sha256": "1169b9b927ff75aac2dc2406a700b962bb9f3c95b860c5271548414d9e1226da",
+          "fileSize": 59575,
+          "objectCount": 1,
+          "vertexCount": 580,
+          "faceCount": 882,
+          "connectedComponents": 5,
+          "boundingBox": [
+            [
+              12.0583,
+              -172.71,
+              1179.8
+            ],
+            [
+              47.1424,
+              -151.131,
+              1209.05
+            ]
+          ]
+        }
+      ],
+      "category": "wall-tissue",
+      "conversionQualification": "QUALIFIED_INTERNAL_REVIEW",
+      "qualificationReason": "Exact pinned IS-A concept ID, representation ID, English structure label and complete source ELEMENT file list match. Qualified only to preserve this named source part for visual inspection.",
+      "qualificationLimitations": [
+        "Source concept specificity only; anatomical verification, clinical approval and complete coverage remain unestablished.",
+        "Preserve original source concept and representation; candidate OrganHeal mapping is not an approved binding.",
+        "No supported canonical OrganHeal structure mapping; keep null."
+      ]
+    },
+    {
+      "conceptId": "FMA7261",
+      "representationId": "BP8146",
+      "officialName": "posterior papillary muscle of right ventricle",
+      "sourceTable": "isa_parts_list_e.txt",
+      "compositionTable": "isa_element_parts.txt",
+      "componentCount": 1,
+      "compound": false,
+      "overlappingFiles": [
+        "FJ2430.obj"
+      ],
+      "candidateStructureMapping": null,
+      "candidateRepresentation": "tissue",
+      "verification": "unverified",
+      "completeCoverage": false,
+      "usableForInternalReview": true,
+      "usableAsVerifiedAnatomy": false,
+      "limitations": [
+        "No anatomical equivalence or complete coverage claim. Leaflets are parts of valves; trunks/segments are parts of vessels; cavities are not walls/tissue. Generic ventricular wall has no separate LV/RV binding.",
+        "Source labels do not establish complete anatomy or medical suitability. Physical units and axes are established by the recorded official coordinate evidence.",
+        "Review usability permits source inspection only; rejected full-wall bindings remain unusable for canonical wall intake."
+      ],
+      "confidence": "proposal-only / semantically-unverified",
+      "components": [
+        {
+          "sourceFilename": "FJ2430.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2430.obj",
+          "sha256": "971ab49fff2908862fc230653f5f0980424e2030ae7f29f7f96637e8b636c4e8",
+          "fileSize": 48375,
+          "objectCount": 1,
+          "vertexCount": 484,
+          "faceCount": 692,
+          "connectedComponents": 8,
+          "boundingBox": [
+            [
+              7.16454,
+              -160.418,
+              1178.44
+            ],
+            [
+              36.7766,
+              -131.886,
+              1192.79
+            ]
+          ]
+        }
+      ],
+      "category": "wall-tissue",
+      "conversionQualification": "QUALIFIED_INTERNAL_REVIEW",
+      "qualificationReason": "Exact pinned IS-A concept ID, representation ID, English structure label and complete source ELEMENT file list match. Qualified only to preserve this named source part for visual inspection.",
+      "qualificationLimitations": [
+        "Source concept specificity only; anatomical verification, clinical approval and complete coverage remain unestablished.",
+        "Preserve original source concept and representation; candidate OrganHeal mapping is not an approved binding.",
+        "No supported canonical OrganHeal structure mapping; keep null."
+      ]
+    },
+    {
+      "conceptId": "FMA7262",
+      "representationId": "BP8088",
+      "officialName": "septal papillary muscle of right ventricle",
+      "sourceTable": "isa_parts_list_e.txt",
+      "compositionTable": "isa_element_parts.txt",
+      "componentCount": 1,
+      "compound": false,
+      "overlappingFiles": [
+        "FJ2437.obj"
+      ],
+      "candidateStructureMapping": null,
+      "candidateRepresentation": "tissue",
+      "verification": "unverified",
+      "completeCoverage": false,
+      "usableForInternalReview": true,
+      "usableAsVerifiedAnatomy": false,
+      "limitations": [
+        "No anatomical equivalence or complete coverage claim. Leaflets are parts of valves; trunks/segments are parts of vessels; cavities are not walls/tissue. Generic ventricular wall has no separate LV/RV binding.",
+        "Source labels do not establish complete anatomy or medical suitability. Physical units and axes are established by the recorded official coordinate evidence.",
+        "Review usability permits source inspection only; rejected full-wall bindings remain unusable for canonical wall intake."
+      ],
+      "confidence": "proposal-only / semantically-unverified",
+      "components": [
+        {
+          "sourceFilename": "FJ2437.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2437.obj",
+          "sha256": "8ac0c0aa95adc3f41e82f51bbd8e8a74681f4e58af7f7edd4bc9c5aafffa97c7",
+          "fileSize": 56351,
+          "objectCount": 1,
+          "vertexCount": 539,
+          "faceCount": 844,
+          "connectedComponents": 13,
+          "boundingBox": [
+            [
+              12.8912,
+              -143.599,
+              1213.46
+            ],
+            [
+              32.1741,
+              -128.195,
+              1240.17
+            ]
+          ]
+        }
+      ],
+      "category": "wall-tissue",
+      "conversionQualification": "QUALIFIED_INTERNAL_REVIEW",
+      "qualificationReason": "Exact pinned IS-A concept ID, representation ID, English structure label and complete source ELEMENT file list match. Qualified only to preserve this named source part for visual inspection.",
+      "qualificationLimitations": [
+        "Source concept specificity only; anatomical verification, clinical approval and complete coverage remain unestablished.",
+        "Preserve original source concept and representation; candidate OrganHeal mapping is not an approved binding.",
+        "No supported canonical OrganHeal structure mapping; keep null."
+      ]
+    },
+    {
+      "conceptId": "FMA7264",
+      "representationId": "BP8949",
+      "officialName": "lateral papillary muscle of left ventricle",
+      "sourceTable": "isa_parts_list_e.txt",
+      "compositionTable": "isa_element_parts.txt",
+      "componentCount": 1,
+      "compound": false,
+      "overlappingFiles": [
+        "FJ2429.obj"
+      ],
+      "candidateStructureMapping": null,
+      "candidateRepresentation": "tissue",
+      "verification": "unverified",
+      "completeCoverage": false,
+      "usableForInternalReview": true,
+      "usableAsVerifiedAnatomy": false,
+      "limitations": [
+        "No anatomical equivalence or complete coverage claim. Leaflets are parts of valves; trunks/segments are parts of vessels; cavities are not walls/tissue. Generic ventricular wall has no separate LV/RV binding.",
+        "Source labels do not establish complete anatomy or medical suitability. Physical units and axes are established by the recorded official coordinate evidence.",
+        "Review usability permits source inspection only; rejected full-wall bindings remain unusable for canonical wall intake."
+      ],
+      "confidence": "proposal-only / semantically-unverified",
+      "components": [
+        {
+          "sourceFilename": "FJ2429.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2429.obj",
+          "sha256": "2f02411a806eedacfcb662b2dee47ca60f8448eb5243f48fb32083df66541ca4",
+          "fileSize": 51282,
+          "objectCount": 1,
+          "vertexCount": 487,
+          "faceCount": 780,
+          "connectedComponents": 8,
+          "boundingBox": [
+            [
+              46.4648,
+              -146.92,
+              1188.44
+            ],
+            [
+              74.5404,
+              -104.767,
+              1218.26
+            ]
+          ]
+        }
+      ],
+      "category": "wall-tissue",
+      "conversionQualification": "QUALIFIED_INTERNAL_REVIEW",
+      "qualificationReason": "Exact pinned IS-A concept ID, representation ID, English structure label and complete source ELEMENT file list match. Qualified only to preserve this named source part for visual inspection.",
+      "qualificationLimitations": [
+        "Source concept specificity only; anatomical verification, clinical approval and complete coverage remain unestablished.",
+        "Preserve original source concept and representation; candidate OrganHeal mapping is not an approved binding.",
+        "No supported canonical OrganHeal structure mapping; keep null."
+      ]
+    },
+    {
+      "conceptId": "FMA7265",
+      "representationId": "BP8573",
+      "officialName": "anterolateral head of lateral papillary muscle of left ventricle",
+      "sourceTable": "isa_parts_list_e.txt",
+      "compositionTable": "isa_element_parts.txt",
+      "componentCount": 1,
+      "compound": false,
+      "overlappingFiles": [
+        "FJ2418.obj"
+      ],
+      "candidateStructureMapping": null,
+      "candidateRepresentation": "tissue",
+      "verification": "unverified",
+      "completeCoverage": false,
+      "usableForInternalReview": true,
+      "usableAsVerifiedAnatomy": false,
+      "limitations": [
+        "No anatomical equivalence or complete coverage claim. Leaflets are parts of valves; trunks/segments are parts of vessels; cavities are not walls/tissue. Generic ventricular wall has no separate LV/RV binding.",
+        "Source labels do not establish complete anatomy or medical suitability. Physical units and axes are established by the recorded official coordinate evidence.",
+        "Review usability permits source inspection only; rejected full-wall bindings remain unusable for canonical wall intake."
+      ],
+      "confidence": "proposal-only / semantically-unverified",
+      "components": [
+        {
+          "sourceFilename": "FJ2418.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2418.obj",
+          "sha256": "ad6dbf98d5afb2dd5010c42df9d707bf172b0ecc4f6e22c70716d022660aadc8",
+          "fileSize": 54778,
+          "objectCount": 1,
+          "vertexCount": 532,
+          "faceCount": 816,
+          "connectedComponents": 18,
+          "boundingBox": [
+            [
+              31.5447,
+              -160.032,
+              1191.81
+            ],
+            [
+              56.5892,
+              -124.512,
+              1224.65
+            ]
+          ]
+        }
+      ],
+      "category": "wall-tissue",
+      "conversionQualification": "QUALIFIED_INTERNAL_REVIEW",
+      "qualificationReason": "Exact pinned IS-A concept ID, representation ID, English structure label and complete source ELEMENT file list match. Qualified only to preserve this named source part for visual inspection.",
+      "qualificationLimitations": [
+        "Source concept specificity only; anatomical verification, clinical approval and complete coverage remain unestablished.",
+        "Preserve original source concept and representation; candidate OrganHeal mapping is not an approved binding.",
+        "No supported canonical OrganHeal structure mapping; keep null."
+      ]
+    },
+    {
+      "conceptId": "FMA74912",
+      "representationId": "BP8970",
+      "officialName": "trunk of anterior interventricular branch of left coronary artery",
+      "sourceTable": "isa_parts_list_e.txt",
+      "compositionTable": "isa_element_parts.txt",
+      "componentCount": 1,
+      "compound": false,
+      "overlappingFiles": [],
+      "candidateStructureMapping": "heart.coronary.lad",
+      "candidateRepresentation": "vessel",
+      "verification": "unverified",
+      "completeCoverage": false,
+      "usableForInternalReview": true,
+      "usableAsVerifiedAnatomy": false,
+      "limitations": [
+        "No anatomical equivalence or complete coverage claim. Leaflets are parts of valves; trunks/segments are parts of vessels; cavities are not walls/tissue. Generic ventricular wall has no separate LV/RV binding.",
+        "Source labels do not establish complete anatomy or medical suitability. Physical units and axes are established by the recorded official coordinate evidence.",
+        "Review usability permits source inspection only; rejected full-wall bindings remain unusable for canonical wall intake."
+      ],
+      "confidence": "proposal-only / semantically-unverified",
+      "components": [
+        {
+          "sourceFilename": "FJ2631.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2631.obj",
+          "sha256": "ca7d8c0c82982ef1c838cd2224650c810adc3e52aaf6b345f0cdb77d7b068c5e",
+          "fileSize": 187038,
+          "objectCount": 1,
+          "vertexCount": 1549,
+          "faceCount": 3032,
+          "connectedComponents": 3,
+          "boundingBox": [
+            [
+              33.2928,
+              -168.008,
+              1179.54
+            ],
+            [
+              63.8413,
+              -120.073,
+              1257.62
+            ]
+          ]
+        }
+      ],
+      "category": "vessel",
+      "conversionQualification": "QUALIFIED_INTERNAL_REVIEW",
+      "qualificationReason": "Exact pinned IS-A concept ID, representation ID, English structure label and complete source ELEMENT file list match. Qualified only to preserve this named source part for visual inspection.",
+      "qualificationLimitations": [
+        "Source concept specificity only; anatomical verification, clinical approval and complete coverage remain unestablished.",
+        "Preserve original source concept and representation; candidate OrganHeal mapping is not an approved binding."
+      ]
+    },
+    {
+      "conceptId": "FMA8612",
+      "representationId": "BP8690",
+      "officialName": "pulmonary trunk",
+      "sourceTable": "isa_parts_list_e.txt",
+      "compositionTable": "isa_element_parts.txt",
+      "componentCount": 1,
+      "compound": false,
+      "overlappingFiles": [],
+      "candidateStructureMapping": "heart.pulmonaryTrunk",
+      "candidateRepresentation": "vessel",
+      "verification": "unverified",
+      "completeCoverage": false,
+      "usableForInternalReview": true,
+      "usableAsVerifiedAnatomy": false,
+      "limitations": [
+        "No anatomical equivalence or complete coverage claim. Leaflets are parts of valves; trunks/segments are parts of vessels; cavities are not walls/tissue. Generic ventricular wall has no separate LV/RV binding.",
+        "Source labels do not establish complete anatomy or medical suitability. Physical units and axes are established by the recorded official coordinate evidence.",
+        "Review usability permits source inspection only; rejected full-wall bindings remain unusable for canonical wall intake."
+      ],
+      "confidence": "proposal-only / semantically-unverified",
+      "components": [
+        {
+          "sourceFilename": "FJ2966.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2966.obj",
+          "sha256": "7d4fbfbeebdb541b4053e62e6ba9e55bdbc8d1354de8192f94d7c6008812ab3f",
+          "fileSize": 89640,
+          "objectCount": 1,
+          "vertexCount": 871,
+          "faceCount": 1302,
+          "connectedComponents": 31,
+          "boundingBox": [
+            [
+              11.2747,
+              -158.864,
+              1256.5
+            ],
+            [
+              42.075,
+              -116.516,
+              1293.61
+            ]
+          ]
+        }
+      ],
+      "category": "vessel",
+      "conversionQualification": "QUALIFIED_INTERNAL_REVIEW",
+      "qualificationReason": "Exact pinned IS-A concept ID, representation ID, English structure label and complete source ELEMENT file list match. Qualified only to preserve this named source part for visual inspection.",
+      "qualificationLimitations": [
+        "Source concept specificity only; anatomical verification, clinical approval and complete coverage remain unestablished.",
+        "Preserve original source concept and representation; candidate OrganHeal mapping is not an approved binding."
+      ]
+    },
+    {
+      "conceptId": "FMA9291",
+      "representationId": "BP9227",
+      "officialName": "cavity of right ventricle",
+      "sourceTable": "isa_parts_list_e.txt",
+      "compositionTable": "isa_element_parts.txt",
+      "componentCount": 1,
+      "compound": false,
+      "overlappingFiles": [],
+      "candidateStructureMapping": "heart.rightVentricle",
+      "candidateRepresentation": "cavity",
+      "verification": "unverified",
+      "completeCoverage": false,
+      "usableForInternalReview": true,
+      "usableAsVerifiedAnatomy": false,
+      "limitations": [
+        "No anatomical equivalence or complete coverage claim. Leaflets are parts of valves; trunks/segments are parts of vessels; cavities are not walls/tissue. Generic ventricular wall has no separate LV/RV binding.",
+        "Source labels do not establish complete anatomy or medical suitability. Physical units and axes are established by the recorded official coordinate evidence.",
+        "Review usability permits source inspection only; rejected full-wall bindings remain unusable for canonical wall intake."
+      ],
+      "confidence": "proposal-only / semantically-unverified",
+      "components": [
+        {
+          "sourceFilename": "FJ2423.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2423.obj",
+          "sha256": "f0d7cbf9e10c0fcefe96741700605e7080d4a627fe214b4c8d5647d970e085f7",
+          "fileSize": 113621,
+          "objectCount": 1,
+          "vertexCount": 973,
+          "faceCount": 1918,
+          "connectedComponents": 1,
+          "boundingBox": [
+            [
+              -18.8458,
+              -173.418,
+              1179.48
+            ],
+            [
+              52.6634,
+              -115.195,
+              1260.03
+            ]
+          ]
+        }
+      ],
+      "category": "chamber-cavity-surface",
+      "conversionQualification": "QUALIFIED_INTERNAL_REVIEW",
+      "qualificationReason": "Exact pinned IS-A concept ID, representation ID, English structure label and complete source ELEMENT file list match. Qualified only to preserve this named source part for visual inspection.",
+      "qualificationLimitations": [
+        "Source concept specificity only; anatomical verification, clinical approval and complete coverage remain unestablished.",
+        "Preserve original source concept and representation; candidate OrganHeal mapping is not an approved binding.",
+        "Cavity surface only, never chamber wall or tissue."
+      ]
+    },
+    {
+      "conceptId": "FMA9457",
+      "representationId": "BP8712",
+      "officialName": "wall of right atrium",
+      "sourceTable": "isa_parts_list_e.txt",
+      "compositionTable": "isa_element_parts.txt",
+      "componentCount": 1,
+      "compound": false,
+      "overlappingFiles": [],
+      "candidateStructureMapping": "heart.rightAtrium",
+      "candidateRepresentation": "wall",
+      "verification": "unverified",
+      "completeCoverage": false,
+      "usableForInternalReview": true,
+      "usableAsVerifiedAnatomy": false,
+      "limitations": [
+        "No anatomical equivalence or complete coverage claim. Leaflets are parts of valves; trunks/segments are parts of vessels; cavities are not walls/tissue. Generic ventricular wall has no separate LV/RV binding.",
+        "Source labels do not establish complete anatomy or medical suitability. Physical units and axes are established by the recorded official coordinate evidence.",
+        "Review usability permits source inspection only; rejected full-wall bindings remain unusable for canonical wall intake."
+      ],
+      "confidence": "proposal-only / semantically-unverified",
+      "components": [
+        {
+          "sourceFilename": "FJ2439.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2439.obj",
+          "sha256": "6e87510c607541b53b124f8224b6be74cb9b7351e29102246053b30a7260d8dd",
+          "fileSize": 1211683,
+          "objectCount": 1,
+          "vertexCount": 9887,
+          "faceCount": 17784,
+          "connectedComponents": 124,
+          "boundingBox": [
+            [
+              -36.3037,
+              -162.645,
+              1183.08
+            ],
+            [
+              6.77791,
+              -96.345,
+              1279.5
+            ]
+          ]
+        }
+      ],
+      "category": "wall-tissue",
+      "conversionQualification": "QUALIFIED_INTERNAL_REVIEW",
+      "qualificationReason": "Exact pinned IS-A concept ID, representation ID, English structure label and complete source ELEMENT file list match. Qualified only to preserve this named source part for visual inspection.",
+      "qualificationLimitations": [
+        "Source concept specificity only; anatomical verification, clinical approval and complete coverage remain unestablished.",
+        "Preserve original source concept and representation; candidate OrganHeal mapping is not an approved binding."
+      ]
+    },
+    {
+      "conceptId": "FMA9465",
+      "representationId": "BP8719",
+      "officialName": "cavity of left atrium",
+      "sourceTable": "isa_parts_list_e.txt",
+      "compositionTable": "isa_element_parts.txt",
+      "componentCount": 1,
+      "compound": false,
+      "overlappingFiles": [],
+      "candidateStructureMapping": "heart.leftAtrium",
+      "candidateRepresentation": "cavity",
+      "verification": "unverified",
+      "completeCoverage": false,
+      "usableForInternalReview": true,
+      "usableAsVerifiedAnatomy": false,
+      "limitations": [
+        "No anatomical equivalence or complete coverage claim. Leaflets are parts of valves; trunks/segments are parts of vessels; cavities are not walls/tissue. Generic ventricular wall has no separate LV/RV binding.",
+        "Source labels do not establish complete anatomy or medical suitability. Physical units and axes are established by the recorded official coordinate evidence.",
+        "Review usability permits source inspection only; rejected full-wall bindings remain unusable for canonical wall intake."
+      ],
+      "confidence": "proposal-only / semantically-unverified",
+      "components": [
+        {
+          "sourceFilename": "FJ2425.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2425.obj",
+          "sha256": "d93197cc47f47d6d084de017917c88de039a4ab632b421893cede03264f43384",
+          "fileSize": 65824,
+          "objectCount": 1,
+          "vertexCount": 587,
+          "faceCount": 1064,
+          "connectedComponents": 3,
+          "boundingBox": [
+            [
+              -20.3846,
+              -126.761,
+              1206.45
+            ],
+            [
+              48.3237,
+              -70.9905,
+              1268.29
+            ]
+          ]
+        }
+      ],
+      "category": "chamber-cavity-surface",
+      "conversionQualification": "QUALIFIED_INTERNAL_REVIEW",
+      "qualificationReason": "Exact pinned IS-A concept ID, representation ID, English structure label and complete source ELEMENT file list match. Qualified only to preserve this named source part for visual inspection.",
+      "qualificationLimitations": [
+        "Source concept specificity only; anatomical verification, clinical approval and complete coverage remain unestablished.",
+        "Preserve original source concept and representation; candidate OrganHeal mapping is not an approved binding.",
+        "Cavity surface only, never chamber wall or tissue."
+      ]
+    },
+    {
+      "conceptId": "FMA9466",
+      "representationId": "BP8928",
+      "officialName": "cavity of left ventricle",
+      "sourceTable": "isa_parts_list_e.txt",
+      "compositionTable": "isa_element_parts.txt",
+      "componentCount": 1,
+      "compound": false,
+      "overlappingFiles": [],
+      "candidateStructureMapping": "heart.leftVentricle",
+      "candidateRepresentation": "cavity",
+      "verification": "unverified",
+      "completeCoverage": false,
+      "usableForInternalReview": true,
+      "usableAsVerifiedAnatomy": false,
+      "limitations": [
+        "No anatomical equivalence or complete coverage claim. Leaflets are parts of valves; trunks/segments are parts of vessels; cavities are not walls/tissue. Generic ventricular wall has no separate LV/RV binding.",
+        "Source labels do not establish complete anatomy or medical suitability. Physical units and axes are established by the recorded official coordinate evidence.",
+        "Review usability permits source inspection only; rejected full-wall bindings remain unusable for canonical wall intake."
+      ],
+      "confidence": "proposal-only / semantically-unverified",
+      "components": [
+        {
+          "sourceFilename": "FJ2422.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2422.obj",
+          "sha256": "8844c5fc464d23fdc785d1d254d666a4d3b70b14b73ec90ca0c77ba4aff3dd37",
+          "fileSize": 102171,
+          "objectCount": 1,
+          "vertexCount": 879,
+          "faceCount": 1722,
+          "connectedComponents": 1,
+          "boundingBox": [
+            [
+              6.46745,
+              -158.522,
+              1184.07
+            ],
+            [
+              70.2463,
+              -86.4016,
+              1251.55
+            ]
+          ]
+        }
+      ],
+      "category": "chamber-cavity-surface",
+      "conversionQualification": "QUALIFIED_INTERNAL_REVIEW",
+      "qualificationReason": "Exact pinned IS-A concept ID, representation ID, English structure label and complete source ELEMENT file list match. Qualified only to preserve this named source part for visual inspection.",
+      "qualificationLimitations": [
+        "Source concept specificity only; anatomical verification, clinical approval and complete coverage remain unestablished.",
+        "Preserve original source concept and representation; candidate OrganHeal mapping is not an approved binding.",
+        "Cavity surface only, never chamber wall or tissue."
+      ]
+    },
+    {
+      "conceptId": "FMA9531",
+      "representationId": "BP9267",
+      "officialName": "wall of left atrium",
+      "sourceTable": "isa_parts_list_e.txt",
+      "compositionTable": "isa_element_parts.txt",
+      "componentCount": 1,
+      "compound": false,
+      "overlappingFiles": [],
+      "candidateStructureMapping": "heart.leftAtrium",
+      "candidateRepresentation": "wall",
+      "verification": "unverified",
+      "completeCoverage": false,
+      "usableForInternalReview": true,
+      "usableAsVerifiedAnatomy": false,
+      "limitations": [
+        "No anatomical equivalence or complete coverage claim. Leaflets are parts of valves; trunks/segments are parts of vessels; cavities are not walls/tissue. Generic ventricular wall has no separate LV/RV binding.",
+        "Source labels do not establish complete anatomy or medical suitability. Physical units and axes are established by the recorded official coordinate evidence.",
+        "Review usability permits source inspection only; rejected full-wall bindings remain unusable for canonical wall intake."
+      ],
+      "confidence": "proposal-only / semantically-unverified",
+      "components": [
+        {
+          "sourceFilename": "FJ2438.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2438.obj",
+          "sha256": "ad28c5925374c6648bafb77ac9a89163316c101559cb730906208c96266ae078",
+          "fileSize": 510077,
+          "objectCount": 1,
+          "vertexCount": 4284,
+          "faceCount": 7544,
+          "connectedComponents": 32,
+          "boundingBox": [
+            [
+              -22.8801,
+              -151.151,
+              1199.43
+            ],
+            [
+              63.2392,
+              -70.1704,
+              1272.4
+            ]
+          ]
+        }
+      ],
+      "category": "wall-tissue",
+      "conversionQualification": "QUALIFIED_INTERNAL_REVIEW",
+      "qualificationReason": "Exact pinned IS-A concept ID, representation ID, English structure label and complete source ELEMENT file list match. Qualified only to preserve this named source part for visual inspection.",
+      "qualificationLimitations": [
+        "Source concept specificity only; anatomical verification, clinical approval and complete coverage remain unestablished.",
+        "Preserve original source concept and representation; candidate OrganHeal mapping is not an approved binding."
+      ]
+    },
+    {
+      "conceptId": "FMA9533",
+      "representationId": "BP9596",
+      "officialName": "wall of right ventricle",
+      "sourceTable": "partof_parts_list_e.txt",
+      "compositionTable": "partof_element_parts.txt",
+      "componentCount": 3,
+      "compound": true,
+      "overlappingFiles": [
+        "FJ2419.obj",
+        "FJ2430.obj",
+        "FJ2437.obj"
+      ],
+      "candidateStructureMapping": null,
+      "candidateRepresentation": "wall",
+      "verification": "unverified",
+      "completeCoverage": false,
+      "usableForInternalReview": true,
+      "usableAsVerifiedAnatomy": false,
+      "limitations": [
+        "PART-OF constituent meshes are papillary muscle / mitral leaflet ELEMENTs according to IS-A. No independent complete ventricular exterior identified. Do not remap these to a full chamber or myocardium.",
+        "Source labels do not establish complete anatomy or medical suitability. Physical units and axes are established by the recorded official coordinate evidence.",
+        "Review usability permits source inspection only; rejected full-wall bindings remain unusable for canonical wall intake."
+      ],
+      "confidence": "rejected for full-wall binding",
+      "components": [
+        {
+          "sourceFilename": "FJ2419.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2419.obj",
+          "sha256": "1169b9b927ff75aac2dc2406a700b962bb9f3c95b860c5271548414d9e1226da",
+          "fileSize": 59575,
+          "objectCount": 1,
+          "vertexCount": 580,
+          "faceCount": 882,
+          "connectedComponents": 5,
+          "boundingBox": [
+            [
+              12.0583,
+              -172.71,
+              1179.8
+            ],
+            [
+              47.1424,
+              -151.131,
+              1209.05
+            ]
+          ]
+        },
+        {
+          "sourceFilename": "FJ2430.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2430.obj",
+          "sha256": "971ab49fff2908862fc230653f5f0980424e2030ae7f29f7f96637e8b636c4e8",
+          "fileSize": 48375,
+          "objectCount": 1,
+          "vertexCount": 484,
+          "faceCount": 692,
+          "connectedComponents": 8,
+          "boundingBox": [
+            [
+              7.16454,
+              -160.418,
+              1178.44
+            ],
+            [
+              36.7766,
+              -131.886,
+              1192.79
+            ]
+          ]
+        },
+        {
+          "sourceFilename": "FJ2437.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2437.obj",
+          "sha256": "8ac0c0aa95adc3f41e82f51bbd8e8a74681f4e58af7f7edd4bc9c5aafffa97c7",
+          "fileSize": 56351,
+          "objectCount": 1,
+          "vertexCount": 539,
+          "faceCount": 844,
+          "connectedComponents": 13,
+          "boundingBox": [
+            [
+              12.8912,
+              -143.599,
+              1213.46
+            ],
+            [
+              32.1741,
+              -128.195,
+              1240.17
+            ]
+          ]
+        }
+      ],
+      "category": "wall-tissue",
+      "conversionQualification": "UNRESOLVED",
+      "qualificationReason": "Generic ventricular wall has no chamber-specific semantics, or PART-OF ventricular wall compound overlaps differently labeled IS-A components; no wall, myocardium or septum equivalence established.",
+      "qualificationLimitations": [
+        "Source concept specificity only; anatomical verification, clinical approval and complete coverage remain unestablished.",
+        "Preserve original source concept and representation; candidate OrganHeal mapping is not an approved binding.",
+        "Keep exact source-defined constituent set; no inferred union, repair or new anatomical component.",
+        "No supported canonical OrganHeal structure mapping; keep null."
+      ]
+    },
+    {
+      "conceptId": "FMA9556",
+      "representationId": "BP9847",
+      "officialName": "wall of left ventricle",
+      "sourceTable": "partof_parts_list_e.txt",
+      "compositionTable": "partof_element_parts.txt",
+      "componentCount": 3,
+      "compound": true,
+      "overlappingFiles": [
+        "FJ2418.obj",
+        "FJ2429.obj",
+        "FJ2432.obj"
+      ],
+      "candidateStructureMapping": null,
+      "candidateRepresentation": "wall",
+      "verification": "unverified",
+      "completeCoverage": false,
+      "usableForInternalReview": true,
+      "usableAsVerifiedAnatomy": false,
+      "limitations": [
+        "PART-OF constituent meshes are papillary muscle / mitral leaflet ELEMENTs according to IS-A. No independent complete ventricular exterior identified. Do not remap these to a full chamber or myocardium.",
+        "Source labels do not establish complete anatomy or medical suitability. Physical units and axes are established by the recorded official coordinate evidence.",
+        "Review usability permits source inspection only; rejected full-wall bindings remain unusable for canonical wall intake."
+      ],
+      "confidence": "rejected for full-wall binding",
+      "components": [
+        {
+          "sourceFilename": "FJ2418.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2418.obj",
+          "sha256": "ad6dbf98d5afb2dd5010c42df9d707bf172b0ecc4f6e22c70716d022660aadc8",
+          "fileSize": 54778,
+          "objectCount": 1,
+          "vertexCount": 532,
+          "faceCount": 816,
+          "connectedComponents": 18,
+          "boundingBox": [
+            [
+              31.5447,
+              -160.032,
+              1191.81
+            ],
+            [
+              56.5892,
+              -124.512,
+              1224.65
+            ]
+          ]
+        },
+        {
+          "sourceFilename": "FJ2429.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2429.obj",
+          "sha256": "2f02411a806eedacfcb662b2dee47ca60f8448eb5243f48fb32083df66541ca4",
+          "fileSize": 51282,
+          "objectCount": 1,
+          "vertexCount": 487,
+          "faceCount": 780,
+          "connectedComponents": 8,
+          "boundingBox": [
+            [
+              46.4648,
+              -146.92,
+              1188.44
+            ],
+            [
+              74.5404,
+              -104.767,
+              1218.26
+            ]
+          ]
+        },
+        {
+          "sourceFilename": "FJ2432.obj",
+          "archiveEntry": "isa_BP3D_4.0_obj_99/FJ2432.obj",
+          "sha256": "0b296151ecceff395da5c435bcf65cf6dfca390e72eb0be71d778fee84bc216b",
+          "fileSize": 274620,
+          "objectCount": 1,
+          "vertexCount": 2560,
+          "faceCount": 3820,
+          "connectedComponents": 73,
+          "boundingBox": [
+            [
+              13.5745,
+              -123.267,
+              1199.6
+            ],
+            [
+              62.8543,
+              -85.4446,
+              1231.65
+            ]
+          ]
+        }
+      ],
+      "category": "wall-tissue",
+      "conversionQualification": "UNRESOLVED",
+      "qualificationReason": "Generic ventricular wall has no chamber-specific semantics, or PART-OF ventricular wall compound overlaps differently labeled IS-A components; no wall, myocardium or septum equivalence established.",
+      "qualificationLimitations": [
+        "Source concept specificity only; anatomical verification, clinical approval and complete coverage remain unestablished.",
+        "Preserve original source concept and representation; candidate OrganHeal mapping is not an approved binding.",
+        "Keep exact source-defined constituent set; no inferred union, repair or new anatomical component.",
+        "No supported canonical OrganHeal structure mapping; keep null."
+      ]
+    }
+  ],
+  "coordinateSystem": {
+    "verification": "official-source-verified",
+    "physicalUnit": "millimeter",
+    "axes": {
+      "positiveX": "patient-left",
+      "negativeX": "patient-right",
+      "positiveY": "posterior",
+      "negativeY": "anterior",
+      "positiveZ": "superior"
+    },
+    "organHealAxisCompatible": true,
+    "evidence": {
+      "url": "https://dbarchive.biosciencedbc.jp/data/bodyparts3d/20130619/coordinate_system.png",
+      "sha256": "338736275c11eac8c89531fdc14193c9a8adf5baab674033d9d89259f152a5f6",
+      "release": "4.0"
+    },
+    "transformDecision": "Identity; no rotation or rescaling required. Source documentation establishes the convention, not clinical approval."
+  }
+}

@@ -22,6 +22,10 @@ export const WHOLE_BODY_ANATOMY = createWholeBodyAnatomyCatalog({
     { id: "brain", canonicalName: "Brain", bodySystemIds: ["neurologic"] },
   ],
   structures: [
+    ...["basalPatch", "ventricularEpicardialPatch", "compositeVentricularTissueBoundary"].map(name => ({
+      id: `heart.ssm.${name}` as const, organId: "heart", canonicalName: `SSM internal-review source part: ${name}`,
+      evidenceRefs: ["https://zenodo.org/records/4506463", "medical-assets/ventricular-ssm-inventory.json"],
+    })),
     ...HEART_ORGAN_MODULE.anatomyRegistry.map(entry => ({ id: entry.id, organId: "heart", canonicalName: entry.id.slice(6).replace(/\./g, " ").replace(/([a-z])([A-Z])/g, "$1 $2"), evidenceRefs: ["lib/medical-motion/organs/heart/heart-organ-module.ts"] })),
     { id: "lungs.upperLobeLeft", organId: "lungs", canonicalName: "Left upper lung lobe (candidate lung_upper_lobe_left label)", evidenceRefs: [map] },
     { id: "kidneys.left", organId: "kidneys", canonicalName: "Left kidney (candidate kidney_left label)", evidenceRefs: [map] },
