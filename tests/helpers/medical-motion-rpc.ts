@@ -14,7 +14,7 @@ export const client = { rpc: async (name: string, p: Record<string, unknown>) =>
     let call: string;
     if(name==='product_operation'){const r=await sql(`set role service_role;select public.product_operation(${literal(p.p_owner)}::uuid,${literal(p.p_action)},${p.p_id?literal(p.p_id)+'::uuid':'null'},${p.p_input===null?'null':literal(JSON.stringify(p.p_input))+'::jsonb'});`);return {data:JSON.parse(r||'null'),error:null};}
     else if(name==='motion_delivery_operation'){const r=await sql(`set role service_role;select public.motion_delivery_operation(${p.p_user_id?literal(p.p_user_id)+'::uuid':'null'},${literal(p.p_action)},${p.p_request_id?literal(p.p_request_id)+'::uuid':'null'},${p.p_input===null?'null':literal(JSON.stringify(p.p_input))+'::jsonb'});`);return {data:JSON.parse(r||'null'),error:null};}
-    else if (name === "approve_motion_personalization") call = `public.approve_motion_personalization(${literal(p.p_user_id)}::uuid,${literal(JSON.stringify(p.p_content))}::jsonb)`;
+    else if ((name === "approve_motion_personalization" || name === "approve_motion_timeline_v2")) call = `public.${name}(${literal(p.p_user_id)}::uuid,${literal(JSON.stringify(p.p_content))}::jsonb)`;
     else if(name==='motion_composition_attempt_current'){const r=await sql(`set role service_role;select public.motion_composition_attempt_current(${literal(p.p_spec_id)}::uuid,${literal(p.p_user_id)}::uuid,${literal(p.p_attempt_token)}::uuid);`);return {data:r==='t',error:null};}
     else if(name==='cancel_motion_personalization'){const r=await sql(`set role service_role;select public.cancel_motion_personalization(${literal(p.p_spec_id)}::uuid,${literal(p.p_user_id)}::uuid);`);return {data:r==='t',error:null};}
     else if (name === "read_approved_motion_personalization") call = `public.read_approved_motion_personalization(${literal(p.p_spec_id)}::uuid,${literal(p.p_user_id)}::uuid)`;
@@ -39,6 +39,7 @@ export const client = { rpc: async (name: string, p: Record<string, unknown>) =>
       ${literal(p.p_action)},${literal(JSON.stringify(p.p_identity))}::jsonb,${p.p_epoch===null?"null":Number(p.p_epoch)},${p.p_artifact_id?literal(p.p_artifact_id)+"::uuid":"null"})`;
     else if (name === "publish_background_job_result") call = `public.publish_background_job_result(${literal(p.p_job_id)}::uuid,${literal(p.p_attempt_token)}::uuid,${literal(p.p_result_kind)},${literal(p.p_reference_id)}::uuid)`;
     else if (name === "read_published_motion_artifact") call = `public.read_published_motion_artifact(${literal(p.p_job_id)}::uuid,${literal(p.p_user_id)}::uuid)`;
+    else if(name==='motion_timeline_operation_v2') { const output=await sql(`set role service_role;select public.motion_timeline_operation_v2(${literal(p.p_job_id)}::uuid,${literal(p.p_user_id)}::uuid,${literal(p.p_attempt_token)}::uuid,${literal(p.p_action)},${p.p_artifact_id?literal(p.p_artifact_id)+'::uuid':'null'});`);return {data:output||null,error:null};}
     else if (name === "read_motion_composition_intent") {
       const output = await sql(`set role service_role; select public.read_motion_composition_intent(${literal(p.p_job_id)}::uuid,
         ${literal(p.p_user_id)}::uuid,${literal(p.p_attempt_token)}::uuid,${literal(p.p_fingerprint)});`);

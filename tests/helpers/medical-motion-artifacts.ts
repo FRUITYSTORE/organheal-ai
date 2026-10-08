@@ -28,6 +28,13 @@ export async function cleanupArtifactOwner(owner:string) {
     await sql(`begin; alter table public.medical_motion_delivery_requests disable trigger motion_delivery_identity;
       delete from public.medical_motion_delivery_requests where user_id='${owner}';
       alter table public.medical_motion_delivery_requests enable trigger motion_delivery_identity; commit;`);
+  if(await sql("select to_regclass('public.medical_motion_timeline_compositions') is not null;")==="t")
+    await sql(`begin;alter table public.medical_motion_timeline_segments disable trigger timeline_segments_immutable;
+      alter table public.medical_motion_timeline_compositions disable trigger timeline_compositions_immutable;
+      delete from public.medical_motion_timeline_segments where artifact_id in(select artifact_id from public.medical_motion_timeline_compositions where user_id='${owner}');
+      delete from public.medical_motion_timeline_compositions where user_id='${owner}';
+      alter table public.medical_motion_timeline_segments enable trigger timeline_segments_immutable;
+      alter table public.medical_motion_timeline_compositions enable trigger timeline_compositions_immutable;commit;`);
   if(await sql("select to_regclass('public.medical_motion_compositions') is not null;")==="t")
     await sql(`begin; alter table public.medical_motion_compositions disable trigger medical_motion_compositions_immutable;
       delete from public.medical_motion_compositions where user_id='${owner}';

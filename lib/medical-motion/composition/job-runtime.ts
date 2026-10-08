@@ -4,11 +4,14 @@ import { BackgroundJobWorkerRepository, type DurableBackgroundJob } from "@/lib/
 import { DurableBackgroundJobWorker } from "@/lib/jobs/background-job-worker";
 import { JobDispatcher } from "@/lib/jobs/job-dispatcher";
 import { ApprovedPersonalizationRepository } from "./approved-spec.repository";
-import { validateCompositionJobPayload } from "./approved-spec";
+import { validateCompositionJobPayload, validateApprovedContent } from "./approved-spec";
+import { validateTimelineContent } from "./timeline-specification";
 import { executeOwnedComposition } from "./operation";
 import type { MedicalMotionCompositionService } from "./service";
 import { CompositionError } from "./specification";
 import type { JobHandlerResult } from "@/lib/jobs/job-handler";
+import { ApprovedTimelineRepository } from "./timeline.repository";
+import { isUuid } from "@/lib/validation/uuid";
 
 /** Explicit long-lived server capability only. Never registered with request/cron workers.
  * Existing host can poll this runtime alongside render; no additional OS service. */
@@ -35,10 +38,14 @@ export function createCompositionJobRuntime(client: SupabaseClient, service: Med
       timer = setTimeout(() => { checking = check(); }, 1000);
     };
     try {
-      const spec = await specs.read(validateCompositionJobPayload(job.payload).approvedPersonalizationSpecId, job.userId);
+      const payload=job.payload as {approvedPersonalizationSpecId:string;compositionVersion:string};
+      const timeline=payload?.compositionVersion === "2";
+      if(timeline && (Object.keys(payload).length!==2 || !isUuid(payload.approvedPersonalizationSpecId))) throw new CompositionError("COMPOSITION_INVALID");
+      const spec = timeline ? await new ApprovedTimelineRepository(client).read(payload.approvedPersonalizationSpecId,job.userId)
+        : await specs.read(validateCompositionJobPayload(job.payload).approvedPersonalizationSpecId, job.userId);
       if (spec.jobId !== job.id) return { disposition: "fail", errorCode: "COMPOSITION_SPEC_JOB_MISMATCH" };
       watch(spec.id);
-      const result = await executeOwnedComposition(client, service, job, spec.baseJobId, spec.specification, signal);
+      const result = await executeOwnedComposition(client, service, job, "segments" in spec ? spec.segments[0].baseJobId : spec.baseJobId, spec.specification, signal);
       if (result.outcome === "applied" || result.outcome === "already-finalized") { counters.published++; return { disposition: "already-finalized" }; }
       if (result.outcome === "ownership-lost" || signal.aborted) { counters.ownershipLost++; return { disposition: "ownership-lost" }; }
       counters.failures++;
@@ -59,7 +66,14 @@ export function createCompositionJobRuntime(client: SupabaseClient, service: Med
   return { repository, dispatcher, specs, processNext: () => bounded(() => worker.processNext()),
     processById: (id: string) => bounded(() => worker.processById(id)),
     recover: () => repository.recoverStaleJobs({ maximumJobs: 10 }),
-    cancel: async (id: string, owner: string) => { const spec = await specs.read(id, owner);
+    cancel: async (id: string, owner: string) => {
+      // Cancellation only needs the owner-scoped durable job binding, not a V1 content interpretation.
+      if(!isUuid(id)||!isUuid(owner))throw new CompositionError("COMPOSITION_INVALID");
+      const r=await client.rpc("read_approved_motion_personalization",{p_spec_id:id,p_user_id:owner});
+      if(r.error||!Array.isArray(r.data)||r.data.length!==1||Object.keys(r.data[0]).length!==5||r.data[0].id!==id||r.data[0].user_id!==owner||!isUuid(r.data[0].job_id))throw new CompositionError("COMPOSITION_INVALID");
+      const content=r.data[0].content?.compositionVersion === "2" ? validateTimelineContent(r.data[0].content) : validateApprovedContent(r.data[0].content);
+      if(content.userId!==owner)throw new CompositionError("COMPOSITION_INVALID");
+      const spec={jobId:r.data[0].job_id};
       const cancelled = await specs.cancel(id, owner); if (cancelled) controllers.get(spec.jobId)?.abort(); return cancelled; },
     metrics: () => Object.freeze({ ...counters }),
     capacity: () => Object.freeze({ active, maximum: policy.concurrency, databaseMaximum: 4 }) };

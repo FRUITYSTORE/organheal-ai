@@ -16,6 +16,7 @@ import { composePersonalizedMedia, type AudioResolver, type CompositionEvent, ty
 import type { FfmpegRuntime } from "./ffmpeg-runtime";
 import { DEFAULT_SCENE_PRESENTATION } from "../scene-compiler";
 import type { OverlayKind } from "../contracts/medical-scene";
+import { composeTrustedTimeline } from "./timeline-service";
 
 /** Explicit trusted server composition operation, not a public route or shared-cache producer.
  * Caller runs this inside ExecutionOwnership.run and publishes via that same fenced ownership.
@@ -38,6 +39,8 @@ export class MedicalMotionCompositionService {
   }
 
   async compose(job: DurableBackgroundJob, baseJobId: string, specification: unknown, signal: AbortSignal) {
+    if (job.type === "medical-motion-compose" && (job.payload as {compositionVersion?:string})?.compositionVersion === "2")
+      return composeTrustedTimeline(this.client,this.artifacts,this.storage,this.runtime,job,signal,this.audio,this.observe);
     const approved = job.type === "medical-motion-compose" ? await new ApprovedPersonalizationRepository(this.client)
       .read(validateCompositionJobPayload(job.payload).approvedPersonalizationSpecId, job.userId) : undefined;
     if (approved && (approved.jobId !== job.id || approved.baseJobId !== baseJobId ||

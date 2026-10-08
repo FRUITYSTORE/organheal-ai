@@ -1,0 +1,32 @@
+import {describe,it,expect} from "vitest";
+import {timelineFixture,rehashTimeline} from "./helpers/timeline-fixture";
+import {validateTimelineContent,authorizeTimelineMedia,issueTimeline,isIssuedTimeline,isAuthorizedTimelineMedia} from "../lib/medical-motion/composition/timeline-specification";
+describe("trusted internal source-boundary timeline V2",()=>{
+ it.each([2,8])("accepts %i ordered segments",n=>{const f=timelineFixture(n);expect(issueTimeline(f.content,f.scenes).segments).toHaveLength(n);});
+ it.each([1,9])("rejects %i segments",n=>expect(()=>validateTimelineContent(timelineFixture(n).content)).toThrow());
+ it.each(["index","duplicate-index","duplicate-base","missing-profile","wrong-sha","extra","profile-version","source-profile"])("rejects %s",kind=>{
+  const f=timelineFixture(),c=structuredClone(f.content) as any;
+  if(kind==="index")c.segments[0].segmentIndex=1;if(kind==="duplicate-index")c.segments[1].segmentIndex=0;
+  if(kind==="duplicate-base")c.segments[1].baseArtifactId=c.segments[0].baseArtifactId;
+  if(kind==="missing-profile")delete c.segments[0].sourceProfile;if(kind==="wrong-sha")c.segments[0].baseSha256="bad";
+  if(kind==="extra")c.segments[0].file="untrusted";
+  if(kind==="profile-version")c.segments[0].sourceProfile.profileVersion="2";
+  if(kind==="source-profile")c.segments[0].sourceProfile.fingerprint="c".repeat(64);
+  expect(()=>authorizeTimelineMedia(rehashTimeline(c),f.scenes)).toThrow();
+ });
+ it.each(["crossfade","morph","unknown"])("rejects %s transition",kind=>{const c=structuredClone(timelineFixture().content) as any;c.transitions[0].kind=kind;expect(()=>validateTimelineContent(rehashTimeline(c))).toThrow();});
+ it.each([.1,.8,-1])("rejects fade duration %s",duration=>{const c=structuredClone(timelineFixture().content) as any;c.transitions[0]={boundaryIndex:0,kind:"fade-through-neutral",duration};expect(()=>validateTimelineContent(rehashTimeline(c))).toThrow();});
+ it("accepts cross-profile fade through neutral",()=>{const f=timelineFixture(),c=structuredClone(f.content) as any;c.transitions[0]={boundaryIndex:0,kind:"fade-through-neutral",duration:.4};expect(authorizeTimelineMedia(rehashTimeline(c),f.scenes).content.duration).toBe(6);});
+ it("JSON copies cannot mint approved or media authority",()=>{const f=timelineFixture(),c=issueTimeline(f.content,f.scenes);expect(isIssuedTimeline(c)).toBe(true);expect(isIssuedTimeline(structuredClone(c))).toBe(false);const a=authorizeTimelineMedia(c,f.scenes);expect(isAuthorizedTimelineMedia(structuredClone(a))).toBe(false);});
+ it.each(["text","audio"])("global %s cannot exceed timeline",kind=>{const f=timelineFixture(),c=structuredClone(f.content) as any;
+  if(kind==="text")c.specification.textOverlays=[{slot:"subtitle",start:0,end:7,text:"TEST"}];
+  else c.specification.audioSegments=[{slot:"voice-segment",start:6,segment:{duration:1}}];
+  expect(()=>authorizeTimelineMedia(rehashTimeline(c),f.scenes)).toThrow();});
+ it("patient-facing usage cannot authorize internal V2",()=>{const f=timelineFixture();const scenes=structuredClone(f.scenes);scenes[0].scene.usage="patient-facing";expect(()=>authorizeTimelineMedia(f.content,scenes)).toThrow();});
+ it("deterministic identity binds order, profile and boundary",()=>{const c=timelineFixture().content;expect(rehashTimeline(c)).toEqual(c);const reversed=structuredClone(c) as any;reversed.segments.reverse().forEach((s:any,i:number)=>s.segmentIndex=i);expect(rehashTimeline(reversed).timelineFingerprint).not.toBe(c.timelineFingerprint);
+  const changed=structuredClone(c) as any;changed.segments[0].sourceProfile.profileVersion="2";expect(rehashTimeline(changed).timelineFingerprint).not.toBe(c.timelineFingerprint);});
+ it("same-profile cut remains explicit and accepted",()=>{const f=timelineFixture(),c=structuredClone(f.content) as any;c.segments[1]={...c.segments[1],sourceProfile:c.segments[0].sourceProfile,baseFingerprint:c.segments[0].baseFingerprint,baseOutputFingerprint:c.segments[0].baseOutputFingerprint};expect(authorizeTimelineMedia(rehashTimeline(c),[f.scenes[0],f.scenes[0]]).content.transitions[0].kind).toBe('cut');});
+ it.each(['sourceId','sourceVersion','anatomyVersion','assetVersion','organId'])('source snapshot %s tampering fails',key=>{const f=timelineFixture(),c=structuredClone(f.content) as any;c.segments[0].sourceProfile[key]='wrong';expect(()=>authorizeTimelineMedia(rehashTimeline(c),f.scenes)).toThrow();});
+ it("overlapping narration slots fail",()=>{const f=timelineFixture(),c=structuredClone(f.content) as any;const segment={segmentId:'TEST',version:'1',language:'en',textFingerprint:'a'.repeat(64),medicalReviewStatus:'approved',audioArtifactId:'01234567-89ab-4def-8123-456789abcdef',audioSha256:'a'.repeat(64),duration:2,reuseScope:'reusable-no-phi'};c.specification.audioSegments=[{slot:'voice-segment',start:0,segment},{slot:'voice-segment',start:1,segment}];expect(()=>authorizeTimelineMedia(rehashTimeline(c),f.scenes)).toThrow();});
+ it("sum beyond 60 and nonrepresentable actual timing fail explicitly",()=>{for(const duration of [31,3.001]){const f=timelineFixture(),c=structuredClone(f.content) as any;c.segments.forEach((s:any)=>s.duration=duration);expect(()=>validateTimelineContent(rehashTimeline(c))).toThrow();}});
+});
