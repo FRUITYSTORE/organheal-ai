@@ -32,7 +32,7 @@ describe("mandatory PostgreSQL pending artifact execution safety",()=>{
     if r.outcome<>'already-finalized' then raise exception 'replay failed'; end if;`));
   it("pending work cannot be claimed by ID or next",()=>check(`${defer}
     if exists(select 1 from public.claim_background_job_by_id(claimed.id,array['medical-motion-render'])) or
-      exists(select 1 from public.claim_next_background_job(array['medical-motion-render'])) then raise exception 'pending reclaimed'; end if;`));
+      exists(select 1 from public.claim_next_background_job(array['medical-motion-render']) next_job where next_job.id=claimed.id) then raise exception 'pending reclaimed'; end if;`));
   it("recovery ignores publication-pending state",()=>check(`${defer}
     select * into r from public.recover_stale_background_jobs();
     if r.recovered_retrying<>0 or r.recovered_failed<>0 then raise exception 'pending recovered'; end if;`));

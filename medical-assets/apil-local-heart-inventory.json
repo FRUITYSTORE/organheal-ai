@@ -1,0 +1,615 @@
+{
+  "sourceCandidate": "HEART_REFERENCE",
+  "localArtifactIdentity": "VERIFIED_BY_CONTENT",
+  "exactSketchfabArtifactIdentity": "UNRESOLVED",
+  "licenseClearance": "unresolved",
+  "clinicalApproval": "unreviewed",
+  "patientFacing": false,
+  "outerArchiveSha256": "77c985a82328fe3179a03e7de6413b23be175113b7236a9a2470889664677913",
+  "outerFiles": [
+    {
+      "filename": "source/APIL Heart One coloured.zip",
+      "bytes": 29268926,
+      "sha256": "3eedc632120a5f850e243c2d2c88daee8181ac3e06082e3dec778906183b7f05"
+    },
+    {
+      "filename": "textures/APIL HEART ONE Diffuse Color.png",
+      "bytes": 1785799,
+      "sha256": "7d48194e35568ba259034721dce21f68d8e5cfb639d53d2efb5de627f2bdf690"
+    },
+    {
+      "filename": "textures/LA Diffuse Color.png",
+      "bytes": 693108,
+      "sha256": "d1952dc7d950060b3bdb0c07337af56819f59a40c2082f780039893693735c12"
+    },
+    {
+      "filename": "textures/RARV Diffuse Colo.png",
+      "bytes": 1298723,
+      "sha256": "3fd311102f3ead3b0f31fed88e1adb65e4512889b5424b44eeac7dc644c875d8"
+    },
+    {
+      "filename": "textures/Ao Diffuse Color.png",
+      "bytes": 1210808,
+      "sha256": "5acd57bfd667ad0c243c2fe1038b59b87b067baa0188069b496dae81cbee132c"
+    }
+  ],
+  "nestedFiles": [
+    {
+      "filename": "Ao Diffuse Color.png",
+      "bytes": 1849080,
+      "sha256": "8e5697db7bf520c11ccaacae9a6c883e928bf2dd942702505f4b4b5eb110bc9a"
+    },
+    {
+      "filename": "APIL HEART ONE Diffuse Color.png",
+      "bytes": 2510309,
+      "sha256": "9028c05da8372e9a24ef5f83e09b12d77b0b73843aefd246668ff3ac3a762a63"
+    },
+    {
+      "filename": "APIL_HEART_ONE_FULL_COLOUR.fbx",
+      "bytes": 22848300,
+      "sha256": "e5a2a81a38f456c54e8d556b1db1c9c2000fcbf342374aa42b5f7369484dbf27"
+    },
+    {
+      "filename": "LA Diffuse Color.png",
+      "bytes": 938752,
+      "sha256": "1932d4bd0f42fd439f4336b3fbf47b4f59a57df9a978527aaa92d4365fee5378"
+    },
+    {
+      "filename": "RARV Diffuse Colo.png",
+      "bytes": 1874764,
+      "sha256": "efe9d5383b18f369cbe6715586d22be41fdac0c771d088158b69723ae1b294f4"
+    }
+  ],
+  "nestedArchiveSha256": "3eedc632120a5f850e243c2d2c88daee8181ac3e06082e3dec778906183b7f05",
+  "fbxSha256": "e5a2a81a38f456c54e8d556b1db1c9c2000fcbf342374aa42b5f7369484dbf27",
+  "blenderVersion": "5.2.1 LTS",
+  "fbxVersion": 7400,
+  "fbxGlobalSettings": {
+    "UpAxis": [
+      1
+    ],
+    "UpAxisSign": [
+      1
+    ],
+    "FrontAxis": [
+      2
+    ],
+    "FrontAxisSign": [
+      1
+    ],
+    "CoordAxis": [
+      0
+    ],
+    "CoordAxisSign": [
+      1
+    ],
+    "OriginalUpAxis": [
+      -1
+    ],
+    "OriginalUpAxisSign": [
+      1
+    ],
+    "UnitScaleFactor": [
+      100
+    ],
+    "OriginalUnitScaleFactor": [
+      100
+    ],
+    "AmbientColor": [
+      0,
+      0,
+      0
+    ],
+    "DefaultCamera": [
+      "Producer Perspective"
+    ],
+    "TimeMode": [
+      11
+    ],
+    "TimeSpanStart": [
+      0
+    ],
+    "TimeSpanStop": [
+      46186158000
+    ],
+    "CustomFrameRate": [
+      24
+    ]
+  },
+  "meshInventory": [
+    {
+      "objectName": "APIL HEART 1 AORTA Edit",
+      "meshName": "APIL HEART 1 AORTA Edit",
+      "vertices": 38057,
+      "faces": 76122,
+      "triangles": 76122,
+      "connectedComponents": 1,
+      "boundaryEdges": 0,
+      "nonManifoldEdgesIncludingBoundaries": 0,
+      "zeroAreaTriangles": 0,
+      "duplicateFaces": 0,
+      "localBounds": [
+        [
+          -22.963603973388672,
+          -20.503570556640625,
+          -32.931915283203125
+        ],
+        [
+          24.503814697265625,
+          23.569564819335938,
+          32.82444763183594
+        ]
+      ],
+      "worldBounds": [
+        [
+          -29.310195922851562,
+          -12.919063568115234,
+          7.616168022155762
+        ],
+        [
+          18.157222747802734,
+          31.15407371520996,
+          73.3725357055664
+        ]
+      ],
+      "matrixWorld": [
+        [
+          1,
+          0,
+          0,
+          -6.346592426300049
+        ],
+        [
+          0,
+          1,
+          1.6292068494294654e-7,
+          7.584510803222656
+        ],
+        [
+          0,
+          -1.6292068494294654e-7,
+          1,
+          40.5480842590332
+        ],
+        [
+          0,
+          0,
+          0,
+          1
+        ]
+      ],
+      "location": [
+        -6.346592426300049,
+        7.584510803222656,
+        40.5480842590332
+      ],
+      "rotationEuler": [
+        -1.6292068494294654e-7,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "hasCustomNormals": true,
+      "nonfiniteNormals": 0,
+      "smoothFaces": 76122,
+      "materials": [
+        "LA"
+      ]
+    },
+    {
+      "objectName": "APIL HEART 1 LA Edit",
+      "meshName": "APIL HEART 1 LA Edit",
+      "vertices": 46127,
+      "faces": 92618,
+      "triangles": 92618,
+      "connectedComponents": 1,
+      "boundaryEdges": 0,
+      "nonManifoldEdgesIncludingBoundaries": 0,
+      "zeroAreaTriangles": 0,
+      "duplicateFaces": 0,
+      "localBounds": [
+        [
+          -72.54216003417969,
+          -52.64659118652344,
+          -52.26628112792969
+        ],
+        [
+          57.978309631347656,
+          39.45942687988281,
+          49.43778991699219
+        ]
+      ],
+      "worldBounds": [
+        [
+          -72.54216003417969,
+          -1.8686944246292114,
+          -24.924652099609375
+        ],
+        [
+          57.978309631347656,
+          90.2373275756836,
+          76.7794189453125
+        ]
+      ],
+      "matrixWorld": [
+        [
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1.6292068494294654e-7,
+          50.777896881103516
+        ],
+        [
+          0,
+          -1.6292068494294654e-7,
+          1,
+          27.341629028320312
+        ],
+        [
+          0,
+          0,
+          0,
+          1
+        ]
+      ],
+      "location": [
+        0,
+        50.777896881103516,
+        27.341629028320312
+      ],
+      "rotationEuler": [
+        -1.6292068494294654e-7,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "hasCustomNormals": true,
+      "nonfiniteNormals": 0,
+      "smoothFaces": 92618,
+      "materials": [
+        "LA Colour"
+      ]
+    },
+    {
+      "objectName": "APIL HEART 1 LV Edit",
+      "meshName": "APIL HEART 1 LV Edit",
+      "vertices": 90485,
+      "faces": 183157,
+      "triangles": 183157,
+      "connectedComponents": 1,
+      "boundaryEdges": 1,
+      "nonManifoldEdgesIncludingBoundaries": 4,
+      "zeroAreaTriangles": 0,
+      "duplicateFaces": 0,
+      "localBounds": [
+        [
+          -52.21272277832031,
+          -53.60400390625,
+          -47.48114013671875
+        ],
+        [
+          49.509193420410156,
+          53.755531311035156,
+          55.62249755859375
+        ]
+      ],
+      "worldBounds": [
+        [
+          -9.913555145263672,
+          -27.33405113220215,
+          -70.9808578491211
+        ],
+        [
+          91.80836486816406,
+          80.02548217773438,
+          32.122779846191406
+        ]
+      ],
+      "matrixWorld": [
+        [
+          1,
+          0,
+          0,
+          42.29916763305664
+        ],
+        [
+          0,
+          1,
+          1.6292068494294654e-7,
+          26.269948959350586
+        ],
+        [
+          0,
+          -1.6292068494294654e-7,
+          1,
+          -23.49971580505371
+        ],
+        [
+          0,
+          0,
+          0,
+          1
+        ]
+      ],
+      "location": [
+        42.29916763305664,
+        26.269948959350586,
+        -23.49971580505371
+      ],
+      "rotationEuler": [
+        -1.6292068494294654e-7,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "hasCustomNormals": true,
+      "nonfiniteNormals": 0,
+      "smoothFaces": 183157,
+      "materials": [
+        "APIL HEART ONE"
+      ]
+    },
+    {
+      "objectName": "APIL HEART 1 RARV Edit",
+      "meshName": "APIL HEART 1 RARV Edit",
+      "vertices": 70770,
+      "faces": 141628,
+      "triangles": 141628,
+      "connectedComponents": 1,
+      "boundaryEdges": 0,
+      "nonManifoldEdgesIncludingBoundaries": 0,
+      "zeroAreaTriangles": 0,
+      "duplicateFaces": 0,
+      "localBounds": [
+        [
+          -53.166954040527344,
+          -39.77763366699219,
+          -67.77377319335938
+        ],
+        [
+          51.65863800048828,
+          54.980316162109375,
+          76.56930541992188
+        ]
+      ],
+      "worldBounds": [
+        [
+          -53.166954040527344,
+          -39.77763748168945,
+          -67.77377319335938
+        ],
+        [
+          51.65863800048828,
+          54.98031234741211,
+          76.56929779052734
+        ]
+      ],
+      "matrixWorld": [
+        [
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1.6292068494294654e-7,
+          0
+        ],
+        [
+          0,
+          -1.6292068494294654e-7,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1
+        ]
+      ],
+      "location": [
+        0,
+        0,
+        0
+      ],
+      "rotationEuler": [
+        -1.6292068494294654e-7,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "hasCustomNormals": true,
+      "nonfiniteNormals": 0,
+      "smoothFaces": 141628,
+      "materials": [
+        "RARV"
+      ]
+    }
+  ],
+  "materials": [
+    {
+      "name": "APIL HEART ONE",
+      "textures": [
+        {
+          "image": "APIL HEART ONE Diffuse Color.png",
+          "filepath": "C:\\Users\\baraa\\AppData\\Local\\Temp\\organheal-apil-local-idp3sdk_\\APIL HEART ONE Diffuse Color.png",
+          "size": [
+            2048,
+            2048
+          ]
+        },
+        {
+          "image": "APIL HEART ONE Diffuse Color.png.002",
+          "filepath": "C:\\Users\\baraa\\AppData\\Local\\Temp\\organheal-apil-local-idp3sdk_\\APIL HEART ONE Diffuse Color.png",
+          "size": [
+            2048,
+            2048
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Dots Stroke",
+      "textures": []
+    },
+    {
+      "name": "LA",
+      "textures": [
+        {
+          "image": "LA Color",
+          "filepath": "C:\\Users\\baraa\\AppData\\Local\\Temp\\organheal-apil-local-idp3sdk_\\Ao Diffuse Color.png",
+          "size": [
+            2048,
+            2048
+          ]
+        },
+        {
+          "image": "LA Color.002",
+          "filepath": "C:\\Users\\baraa\\AppData\\Local\\Temp\\organheal-apil-local-idp3sdk_\\Ao Diffuse Color.png",
+          "size": [
+            2048,
+            2048
+          ]
+        }
+      ]
+    },
+    {
+      "name": "LA Colour",
+      "textures": [
+        {
+          "image": "LA Diffuse Color.png",
+          "filepath": "C:\\Users\\baraa\\AppData\\Local\\Temp\\organheal-apil-local-idp3sdk_\\LA Diffuse Color.png",
+          "size": [
+            1024,
+            1024
+          ]
+        },
+        {
+          "image": "LA Diffuse Color.png.002",
+          "filepath": "C:\\Users\\baraa\\AppData\\Local\\Temp\\organheal-apil-local-idp3sdk_\\LA Diffuse Color.png",
+          "size": [
+            1024,
+            1024
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Material",
+      "textures": []
+    },
+    {
+      "name": "RARV",
+      "textures": [
+        {
+          "image": "RARV Diffuse Color.001",
+          "filepath": "C:\\Users\\baraa\\AppData\\Local\\Temp\\organheal-apil-local-idp3sdk_\\RARV Diffuse Colo.png",
+          "size": [
+            2048,
+            2048
+          ]
+        },
+        {
+          "image": "RARV Diffuse Color.003",
+          "filepath": "C:\\Users\\baraa\\AppData\\Local\\Temp\\organheal-apil-local-idp3sdk_\\RARV Diffuse Colo.png",
+          "size": [
+            2048,
+            2048
+          ]
+        }
+      ]
+    }
+  ],
+  "totalVertices": 245439,
+  "totalTriangles": 493525,
+  "worldBounds": [
+    [
+      -72.54216003417969,
+      -39.77763748168945,
+      -70.9808578491211
+    ],
+    [
+      91.80836486816406,
+      90.2373275756836,
+      76.7794189453125
+    ]
+  ],
+  "overlapEvidence": {
+    "method": "AABB broad phase only; exact surface intersections not measured",
+    "overlappingPairs": [
+      [
+        "APIL HEART 1 AORTA Edit",
+        "APIL HEART 1 LA Edit"
+      ],
+      [
+        "APIL HEART 1 AORTA Edit",
+        "APIL HEART 1 LV Edit"
+      ],
+      [
+        "APIL HEART 1 AORTA Edit",
+        "APIL HEART 1 RARV Edit"
+      ],
+      [
+        "APIL HEART 1 LA Edit",
+        "APIL HEART 1 LV Edit"
+      ],
+      [
+        "APIL HEART 1 LA Edit",
+        "APIL HEART 1 RARV Edit"
+      ],
+      [
+        "APIL HEART 1 LV Edit",
+        "APIL HEART 1 RARV Edit"
+      ]
+    ]
+  },
+  "unitsDecision": "FBX UnitScaleFactor=100 and OriginalUnitScaleFactor=100: declared source unit is meter (100 centimeters). Anatomical physical scale is not independently validated.",
+  "anatomicalOrientation": "UNRESOLVED; FBX technical coordinate axes do not establish patient anatomical axes",
+  "semantics": {
+    "APIL HEART 1 LV Edit": "source-labeled LV candidate only",
+    "APIL HEART 1 LA Edit": "source-labeled LA candidate only",
+    "APIL HEART 1 AORTA Edit": "source-labeled aorta candidate only",
+    "APIL HEART 1 RARV Edit": "combined RA/RV candidate; no separate RA/RV binding"
+  },
+  "unavailableInferences": [
+    "myocardium",
+    "septum",
+    "valves",
+    "coronaries",
+    "pulmonary veins"
+  ],
+  "importResult": "PASS",
+  "diagnosticPng": "C:\\Users\\baraa\\AppData\\Local\\Temp\\organheal-apil-local-idp3sdk_\\diagnostic.png",
+  "elapsedSeconds": 24.727781200082973,
+  "importTransformPolicy": "Blender native FBX metadata axis/unit interpretation only; no user-applied rotation/rescale or mesh edits. Local and world bounds and imported transforms recorded separately.",
+  "normalsDecision": "Imported custom normals present on all four meshes; zero nonfinite vertex normals. Smooth-face flags are inherited from source; no smoothing operation performed. Outward orientation not independently verified.",
+  "diagnosticLimitations": [
+    "Neutral diagnostic illumination, not hero visual acceptance; bright highlights obscure some surface detail.",
+    "AABB overlap is not proof of surface intersections or duplicate anatomy.",
+    "No canonical anatomy promotion; combined RARV stays combined."
+  ]
+}

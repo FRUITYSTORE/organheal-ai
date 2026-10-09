@@ -23,6 +23,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from heart_builder import build_heart  # noqa: E402
 from bp3d_heart_builder import build_bp3d_heart  # noqa: E402
 from ssm_heart_builder import build_ssm_heart  # noqa: E402
+from apil_heart_builder import build_apil_heart  # noqa: E402
 from heart_motion import MOTION_CONTROLLERS  # noqa: E402
 from scene_presets import apply_camera_move, apply_camera_shot, apply_highlight, camera_shot_objects  # noqa: E402
 
@@ -168,7 +169,8 @@ def _configure_gpu_cycles():
 
 _ASSET_BUILDERS = {("heart", "heart-v2-development"): build_heart,
                    ("heart", "heart-bp3d-4.0-internal-review-v1"): build_bp3d_heart,
-                   ("heart", "heart-ssm-4506463-v2-internal-review-v1"): build_ssm_heart}
+                   ("heart", "heart-ssm-4506463-v2-internal-review-v1"): build_ssm_heart,
+                   ("heart", "heart-apil-local-reference-v1"): build_apil_heart}
 
 
 def resolve_asset_builder(organ, asset_version):

@@ -125,5 +125,326 @@
         "clinicalEvidenceRefs": []
       }
     }
+  ],
+  "productionHeartCandidates": [
+    {
+      "id": "HEART_REFERENCE",
+      "title": "Full Patient Heart from CT - with texture",
+      "role": "reference",
+      "modelUid": "ae1c46e7f44547b3aea4d79acdb6e6ab",
+      "sourceUrl": "https://sketchfab.com/3d-models/full-patient-heart-from-ct-with-texture-ae1c46e7f44547b3aea4d79acdb6e6ab",
+      "intakeStatus": "INTERNAL-REVIEW",
+      "anatomicallyValidated": false,
+      "patientFacing": false,
+      "geometryMixingAllowed": false,
+      "authorUploader": "APIL",
+      "attributionStatus": "verified public metadata supplied by owner; asset-specific clearance remains unresolved",
+      "attributionEvidenceRefs": [
+        "https://sketchfab.com/3d-models/full-patient-heart-from-ct-with-texture-ae1c46e7f44547b3aea4d79acdb6e6ab"
+      ],
+      "license": "CC Attribution",
+      "licenseVersion": "unresolved",
+      "licenseUrl": null,
+      "licenseEvidenceStatus": "CC Attribution family verified public metadata supplied by owner; exact version unresolved",
+      "files": [],
+      "archiveSha256": null,
+      "acquisitionEvidenceStatus": "unresolved; matching local filename is not positive model identity evidence",
+      "provenance": {
+        "sourceId": "HEART_REFERENCE",
+        "sourceVersion": "sketchfab-ae1c46e7f44547b3aea4d79acdb6e6ab-revision-unresolved",
+        "licenseId": "HEART_REFERENCE-license-unresolved",
+        "evidenceRefs": [
+          "https://sketchfab.com/3d-models/full-patient-heart-from-ct-with-texture-ae1c46e7f44547b3aea4d79acdb6e6ab"
+        ],
+        "derivation": "Source candidate registration only; no geometry import, conversion or mixing.",
+        "licenseReview": {
+          "status": "unresolved",
+          "evidenceRefs": []
+        }
+      },
+      "assessment": {
+        "geometryStatus": "not-imported",
+        "semanticStatus": "unverified",
+        "clinicalApprovalStatus": "unreviewed",
+        "renderCompatibility": "unvalidated",
+        "geometryEvidenceRefs": [],
+        "semanticEvidenceRefs": [],
+        "clinicalEvidenceRefs": []
+      },
+      "uploaderHandle": "apil_tgh",
+      "organizationContext": "Advanced Perioperative Imaging Lab / Toronto Heart Atlas",
+      "publicMetadataEvidence": {
+        "basis": "Owner-supplied verified public metadata, MM-PROD-5B-R1 STEP R1.1B",
+        "recordedDate": "2026-10-09"
+      },
+      "licenseFamily": "CC Attribution",
+      "ownerAssignedRole": "reference"
+    },
+    {
+      "id": "HEART_HERO",
+      "title": "Anatomically Correct Human Heart",
+      "role": "hero visual candidate",
+      "modelUid": "54fa880728d14c11afff78be8721620a",
+      "sourceUrl": "https://sketchfab.com/3d-models/anatomically-correct-human-heart-54fa880728d14c11afff78be8721620a",
+      "intakeStatus": "INTERNAL-REVIEW",
+      "anatomicallyValidated": false,
+      "patientFacing": false,
+      "geometryMixingAllowed": false,
+      "authorUploader": "Pigcraft",
+      "attributionStatus": "verified public metadata supplied by owner; asset-specific clearance remains unresolved",
+      "attributionEvidenceRefs": [
+        "https://sketchfab.com/3d-models/anatomically-correct-human-heart-54fa880728d14c11afff78be8721620a"
+      ],
+      "license": "CC Attribution",
+      "licenseVersion": "unresolved",
+      "licenseUrl": null,
+      "licenseEvidenceStatus": "CC Attribution family verified public metadata supplied by owner; exact version unresolved",
+      "files": [],
+      "archiveSha256": null,
+      "acquisitionEvidenceStatus": "unresolved; matching local filename is not positive model identity evidence",
+      "provenance": {
+        "sourceId": "HEART_HERO",
+        "sourceVersion": "sketchfab-54fa880728d14c11afff78be8721620a-revision-unresolved",
+        "licenseId": "HEART_HERO-license-unresolved",
+        "evidenceRefs": [
+          "https://sketchfab.com/3d-models/anatomically-correct-human-heart-54fa880728d14c11afff78be8721620a"
+        ],
+        "derivation": "Source candidate registration only; no geometry import, conversion or mixing.",
+        "licenseReview": {
+          "status": "unresolved",
+          "evidenceRefs": []
+        }
+      },
+      "assessment": {
+        "geometryStatus": "not-imported",
+        "semanticStatus": "unverified",
+        "clinicalApprovalStatus": "unreviewed",
+        "renderCompatibility": "unvalidated",
+        "geometryEvidenceRefs": [],
+        "semanticEvidenceRefs": [],
+        "clinicalEvidenceRefs": []
+      },
+      "uploaderHandle": "s8819296",
+      "publicMetadataEvidence": {
+        "basis": "Owner-supplied verified public metadata, MM-PROD-5B-R1 STEP R1.1B",
+        "recordedDate": "2026-10-09"
+      },
+      "licenseFamily": "CC Attribution",
+      "originalSourceVisualDecision": {
+        "decision": "REJECTED_AS_PRODUCTION_HERO_MASTER",
+        "retainedUse": "MEDIUM_SHOT_VISUAL_REFERENCE_ONLY",
+        "reason": "Illustrative/plastic appearance; insufficient close-up quality."
+      },
+      "ownerVisualSelection": {
+        "selectedLocalAsset": "realistic-human-heart",
+        "archive": "Downloads/realistic-human-heart.zip",
+        "sourceFile": "source/Heart.fbx",
+        "organHealRole": "HEART_HERO_V1",
+        "decision": "ACCEPT_WITH_VISUAL_POLISH",
+        "intendedUse": "medium/hero medical explanation shots",
+        "preserveOriginalGeometry": true,
+        "anatomicalAuthority": false,
+        "anatomicallyValidated": false,
+        "clinicalApprovalStatus": "unreviewed",
+        "patientFacing": false,
+        "productionApproved": false,
+        "provenanceLicenseClearance": "unresolved",
+        "sourceIdentityBoundary": "Separate local visual selection; original Pigcraft source metadata and license do not establish this local asset provenance or rights.",
+        "basis": "Owner visual selection, MM-PROD-5B-R1 STEP R1.5"
+      }
+    },
+    {
+      "id": "HEART_INTERNAL",
+      "title": "Human Heart Internal Structure 3D Model",
+      "role": "internal/cutaway candidate",
+      "modelUid": "21d346f72230432e8ed5fe448b03cca5",
+      "sourceUrl": "https://sketchfab.com/3d-models/human-heart-internal-structure-3d-model-21d346f72230432e8ed5fe448b03cca5",
+      "intakeStatus": "INTERNAL-REVIEW",
+      "anatomicallyValidated": false,
+      "patientFacing": false,
+      "geometryMixingAllowed": false,
+      "authorUploader": "Haiqa Arif",
+      "attributionStatus": "verified public metadata supplied by owner; asset-specific clearance remains unresolved",
+      "attributionEvidenceRefs": [
+        "https://sketchfab.com/models/21d346f72230432e8ed5fe448b03cca5/embed",
+        "https://sketchfab.com/3d-models/human-heart-internal-structure-3d-model-21d346f72230432e8ed5fe448b03cca5"
+      ],
+      "license": "CC Attribution",
+      "licenseVersion": "unresolved",
+      "licenseUrl": null,
+      "licenseEvidenceStatus": "CC Attribution family verified public metadata supplied by owner; exact version unresolved",
+      "files": [],
+      "archiveSha256": null,
+      "acquisitionEvidenceStatus": "unresolved; matching local filename is not positive model identity evidence",
+      "provenance": {
+        "sourceId": "HEART_INTERNAL",
+        "sourceVersion": "sketchfab-21d346f72230432e8ed5fe448b03cca5-revision-unresolved",
+        "licenseId": "HEART_INTERNAL-license-unresolved",
+        "evidenceRefs": [
+          "https://sketchfab.com/3d-models/human-heart-internal-structure-3d-model-21d346f72230432e8ed5fe448b03cca5"
+        ],
+        "derivation": "Source candidate registration only; no geometry import, conversion or mixing.",
+        "licenseReview": {
+          "status": "unresolved",
+          "evidenceRefs": []
+        }
+      },
+      "assessment": {
+        "geometryStatus": "not-imported",
+        "semanticStatus": "unverified",
+        "clinicalApprovalStatus": "unreviewed",
+        "renderCompatibility": "unvalidated",
+        "geometryEvidenceRefs": [],
+        "semanticEvidenceRefs": [],
+        "clinicalEvidenceRefs": []
+      },
+      "uploaderHandle": "ansarihaiqaarif",
+      "originalCreator": "Haiqa Arif",
+      "publicMetadataEvidence": {
+        "basis": "Owner-supplied verified public metadata, MM-PROD-5B-R1 STEP R1.1B",
+        "recordedDate": "2026-10-09"
+      },
+      "licenseFamily": "CC Attribution",
+      "ownerAssignedRole": "cutaway/internal"
+    },
+    {
+      "id": "HEART_CORONARY",
+      "title": "3D Digital Model of Coronary Arteries",
+      "role": "coronary candidate",
+      "modelUid": "cb63e7714a574984835160530957748b",
+      "sourceUrl": "https://sketchfab.com/3d-models/3d-digital-model-of-coronary-arteries-cb63e7714a574984835160530957748b",
+      "intakeStatus": "INTERNAL-REVIEW",
+      "anatomicallyValidated": false,
+      "patientFacing": false,
+      "geometryMixingAllowed": false,
+      "authorUploader": "Jeslyn Poo Hwee Ming",
+      "attributionStatus": "verified public metadata supplied by owner; asset-specific clearance remains unresolved",
+      "attributionEvidenceRefs": [
+        "https://sketchfab.com/3d-models/3d-digital-model-of-coronary-arteries-cb63e7714a574984835160530957748b"
+      ],
+      "license": "CC Attribution",
+      "licenseVersion": "unresolved",
+      "licenseUrl": null,
+      "licenseEvidenceStatus": "CC Attribution family verified public metadata supplied by owner; exact version unresolved",
+      "files": [],
+      "archiveSha256": null,
+      "acquisitionEvidenceStatus": "unresolved; matching local filename is not positive model identity evidence",
+      "provenance": {
+        "sourceId": "HEART_CORONARY",
+        "sourceVersion": "sketchfab-cb63e7714a574984835160530957748b-revision-unresolved",
+        "licenseId": "HEART_CORONARY-license-unresolved",
+        "evidenceRefs": [
+          "https://sketchfab.com/3d-models/3d-digital-model-of-coronary-arteries-cb63e7714a574984835160530957748b"
+        ],
+        "derivation": "Source candidate registration only; no geometry import, conversion or mixing.",
+        "licenseReview": {
+          "status": "unresolved",
+          "evidenceRefs": []
+        }
+      },
+      "assessment": {
+        "geometryStatus": "not-imported",
+        "semanticStatus": "unverified",
+        "clinicalApprovalStatus": "unreviewed",
+        "renderCompatibility": "unvalidated",
+        "geometryEvidenceRefs": [],
+        "semanticEvidenceRefs": [],
+        "clinicalEvidenceRefs": []
+      },
+      "uploaderHandle": "jeslynpoo",
+      "originalCreator": "Jeslyn Poo Hwee Ming",
+      "supportAttribution": "Department of Physiology, National University of Singapore (NUS)",
+      "publicMetadataEvidence": {
+        "basis": "Owner-supplied verified public metadata, MM-PROD-5B-R1 STEP R1.1B",
+        "recordedDate": "2026-10-09"
+      },
+      "licenseFamily": "CC Attribution",
+      "ownerAssignedRole": "coronary reference"
+    },
+    {
+      "id": "HEART_MOTION",
+      "title": "Beating-heart",
+      "role": "motion candidate",
+      "modelUid": "d9845afb1ee64ad094adc96320c67d98",
+      "sourceUrl": "https://sketchfab.com/3d-models/beating-heart-d9845afb1ee64ad094adc96320c67d98",
+      "intakeStatus": "INTERNAL-REVIEW",
+      "anatomicallyValidated": false,
+      "patientFacing": false,
+      "geometryMixingAllowed": false,
+      "authorUploader": "jalmer",
+      "attributionStatus": "verified public metadata supplied by owner; asset-specific clearance remains unresolved",
+      "attributionEvidenceRefs": [
+        "https://sketchfab.com/3d-models/beating-heart-d9845afb1ee64ad094adc96320c67d98"
+      ],
+      "license": "CC BY 4.0",
+      "licenseVersion": "4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "licenseEvidenceStatus": "CC BY 4.0 verified public metadata supplied by owner; asset-specific license review unresolved",
+      "files": [],
+      "archiveSha256": null,
+      "acquisitionEvidenceStatus": "unresolved; matching local filename is not positive model identity evidence",
+      "provenance": {
+        "sourceId": "HEART_MOTION",
+        "sourceVersion": "sketchfab-d9845afb1ee64ad094adc96320c67d98-revision-unresolved",
+        "licenseId": "HEART_MOTION-license-unresolved",
+        "evidenceRefs": [
+          "https://sketchfab.com/3d-models/beating-heart-d9845afb1ee64ad094adc96320c67d98"
+        ],
+        "derivation": "Source candidate registration only; no geometry import, conversion or mixing.",
+        "licenseReview": {
+          "status": "unresolved",
+          "evidenceRefs": []
+        }
+      },
+      "assessment": {
+        "geometryStatus": "not-imported",
+        "semanticStatus": "unverified",
+        "clinicalApprovalStatus": "unreviewed",
+        "renderCompatibility": "unvalidated",
+        "geometryEvidenceRefs": [],
+        "semanticEvidenceRefs": [],
+        "clinicalEvidenceRefs": []
+      },
+      "originalCreator": "Dreamwasabducted",
+      "publicMetadataEvidence": {
+        "basis": "Owner-supplied verified public metadata, MM-PROD-5B-R1 STEP R1.1B",
+        "recordedDate": "2026-10-09"
+      },
+      "licenseFamily": "CC Attribution",
+      "ownerVisualSelection": {
+        "selectedLocalAsset": "beating-heart",
+        "archive": "Downloads/beating-heart.zip",
+        "sourceFile": "source/Beating heart.glb",
+        "organHealRole": "HEART_MOTION_V1",
+        "decision": "ACCEPT_WITH_VISUAL_POLISH",
+        "preserveNativeHeartbeatAndLeafletAnimation": true,
+        "inventedDeformationAllowed": false,
+        "pathologicalRhythmsClinicallyValidated": false,
+        "anatomicallyValidated": false,
+        "clinicalApprovalStatus": "unreviewed",
+        "patientFacing": false,
+        "productionApproved": false,
+        "provenanceLicenseClearance": "unresolved",
+        "normalHeartbeat": {
+          "id": "NORMAL_HEARTBEAT_V1",
+          "definition": "Native source heartbeat cycle only.",
+          "action": "test",
+          "sourceFrameRange": [
+            0,
+            24
+          ],
+          "sourceAnimationCurvesUnchanged": true,
+          "diseaseLabelAloneMayAlterMotion": false,
+          "futureRateRhythmPersonalizationRequires": "Validated clinical input/preset."
+        },
+        "excludedLocalMotionReference": {
+          "sourceFile": "source/s prog heart 31.fbx",
+          "retainedUse": "MOTION_REFERENCE_ONLY",
+          "textureIssue": "unresolved",
+          "repairOrRemapAuthorized": false
+        },
+        "basis": "Owner visual selection, MM-PROD-5B-R1 STEP R1.5"
+      }
+    }
   ]
 }

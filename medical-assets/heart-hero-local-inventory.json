@@ -1,0 +1,620 @@
+{
+  "sourceCandidate": "HEART_HERO",
+  "role": "hero visual candidate only; not medical authority",
+  "localArtifactIdentity": "VERIFIED_BY_CONTENT",
+  "exactSketchfabArtifactIdentity": "UNRESOLVED",
+  "licenseClearance": "unresolved",
+  "clinicalApproval": "unreviewed",
+  "patientFacing": false,
+  "outerArchiveSha256": "7b2ad3593e168bb15f1f094728ad9bec5ddc96ef6e8aa5e75c9bf57e5789f62c",
+  "files": [
+    {
+      "filename": "source/anatomisches+herz+3d-modell.fbx",
+      "bytes": 30799260,
+      "sha256": "2091d877ce87b452f10dcddcd28ae04b6369d220728baddfb10341bed5e86bed"
+    },
+    {
+      "filename": "textures/tripo_image_a904c0bd_2.jpeg",
+      "bytes": 117955,
+      "sha256": "efe1e7aab5062999d99c7e3d2847db29640b4cea99254de7da8264af34e96067"
+    },
+    {
+      "filename": "textures/tripo_image_a904c0bd_0.jpeg",
+      "bytes": 218715,
+      "sha256": "b556d3eeb249f8483a157d7abf6569d079f5083b92612295d7b3c9b6d56ad076"
+    },
+    {
+      "filename": "textures/tripo_image_a904c0bd-961b-4fad-b764-9211e62a804d_Metallic.jpeg",
+      "bytes": 99496,
+      "sha256": "4cdfe88bd1aee622fa26950ec845c47f2d571df5630979b0528c16d329df9a1c"
+    },
+    {
+      "filename": "textures/tripo_image_a904c0bd-961b-4fad-b764-9211e62a804d_Roughness.jpeg",
+      "bytes": 107390,
+      "sha256": "265f7404a0f86fe8fb7ac6d9857867af422d22c43184c29c8676be82d924273e"
+    }
+  ],
+  "provenanceNotes": [
+    "Tripo-related texture filenames preserved as tool/provenance clues, not medical evidence."
+  ],
+  "anatomicalMappings": [],
+  "format": "FBX",
+  "fbxVersion": 7400,
+  "embeddedMetadata": {
+    "CreationTimeStamp": {
+      "id": "CreationTimeStamp",
+      "values": [],
+      "children": [
+        {
+          "id": "Version",
+          "values": [
+            1000
+          ],
+          "children": []
+        },
+        {
+          "id": "Year",
+          "values": [
+            2025
+          ],
+          "children": []
+        },
+        {
+          "id": "Month",
+          "values": [
+            11
+          ],
+          "children": []
+        },
+        {
+          "id": "Day",
+          "values": [
+            17
+          ],
+          "children": []
+        },
+        {
+          "id": "Hour",
+          "values": [
+            17
+          ],
+          "children": []
+        },
+        {
+          "id": "Minute",
+          "values": [
+            48
+          ],
+          "children": []
+        },
+        {
+          "id": "Second",
+          "values": [
+            17
+          ],
+          "children": []
+        },
+        {
+          "id": "Millisecond",
+          "values": [
+            49
+          ],
+          "children": []
+        }
+      ]
+    },
+    "Creator": {
+      "id": "Creator",
+      "values": [
+        "Blender (stable FBX IO) - 4.5.2 LTS - 5.13.0"
+      ],
+      "children": []
+    },
+    "GlobalSettings": {
+      "id": "GlobalSettings",
+      "values": [],
+      "children": [
+        {
+          "id": "Version",
+          "values": [
+            1000
+          ],
+          "children": []
+        },
+        {
+          "id": "Properties70",
+          "values": [],
+          "children": [
+            {
+              "id": "P",
+              "values": [
+                "UpAxis",
+                "int",
+                "Integer",
+                "",
+                1
+              ],
+              "children": []
+            },
+            {
+              "id": "P",
+              "values": [
+                "UpAxisSign",
+                "int",
+                "Integer",
+                "",
+                1
+              ],
+              "children": []
+            },
+            {
+              "id": "P",
+              "values": [
+                "FrontAxis",
+                "int",
+                "Integer",
+                "",
+                2
+              ],
+              "children": []
+            },
+            {
+              "id": "P",
+              "values": [
+                "FrontAxisSign",
+                "int",
+                "Integer",
+                "",
+                1
+              ],
+              "children": []
+            },
+            {
+              "id": "P",
+              "values": [
+                "CoordAxis",
+                "int",
+                "Integer",
+                "",
+                0
+              ],
+              "children": []
+            },
+            {
+              "id": "P",
+              "values": [
+                "CoordAxisSign",
+                "int",
+                "Integer",
+                "",
+                1
+              ],
+              "children": []
+            },
+            {
+              "id": "P",
+              "values": [
+                "OriginalUpAxis",
+                "int",
+                "Integer",
+                "",
+                -1
+              ],
+              "children": []
+            },
+            {
+              "id": "P",
+              "values": [
+                "OriginalUpAxisSign",
+                "int",
+                "Integer",
+                "",
+                1
+              ],
+              "children": []
+            },
+            {
+              "id": "P",
+              "values": [
+                "UnitScaleFactor",
+                "double",
+                "Number",
+                "",
+                100
+              ],
+              "children": []
+            },
+            {
+              "id": "P",
+              "values": [
+                "OriginalUnitScaleFactor",
+                "double",
+                "Number",
+                "",
+                100
+              ],
+              "children": []
+            },
+            {
+              "id": "P",
+              "values": [
+                "AmbientColor",
+                "ColorRGB",
+                "Color",
+                "",
+                0,
+                0,
+                0
+              ],
+              "children": []
+            },
+            {
+              "id": "P",
+              "values": [
+                "DefaultCamera",
+                "KString",
+                "",
+                "",
+                "Producer Perspective"
+              ],
+              "children": []
+            },
+            {
+              "id": "P",
+              "values": [
+                "TimeMode",
+                "enum",
+                "",
+                "",
+                11
+              ],
+              "children": []
+            },
+            {
+              "id": "P",
+              "values": [
+                "TimeSpanStart",
+                "KTime",
+                "Time",
+                "",
+                0
+              ],
+              "children": []
+            },
+            {
+              "id": "P",
+              "values": [
+                "TimeSpanStop",
+                "KTime",
+                "Time",
+                "",
+                46186158000
+              ],
+              "children": []
+            },
+            {
+              "id": "P",
+              "values": [
+                "CustomFrameRate",
+                "double",
+                "Number",
+                "",
+                24
+              ],
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "meshInventory": [
+    {
+      "objectName": "tripo_node_a904c0bd",
+      "meshName": "tripo_mesh_a904c0bd",
+      "vertices": 499992,
+      "faces": 1000048,
+      "triangles": 1000048,
+      "connectedComponents": 11,
+      "localBounds": [
+        [
+          -0.269683837890625,
+          -0.313568115234375,
+          -0.5
+        ],
+        [
+          0.269683837890625,
+          0.313568115234375,
+          0.5
+        ]
+      ],
+      "worldBounds": [
+        [
+          -0.269683837890625,
+          -0.313568115234375,
+          -0.5
+        ],
+        [
+          0.269683837890625,
+          0.313568115234375,
+          0.5
+        ]
+      ],
+      "matrixWorld": [
+        [
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          4.371138828673793e-8,
+          0
+        ],
+        [
+          0,
+          -4.371138828673793e-8,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1
+        ]
+      ],
+      "location": [
+        0,
+        0,
+        0
+      ],
+      "rotationEuler": [
+        -4.371138828673793e-8,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "nonfiniteCoordinates": 0,
+      "boundaryEdges": 3,
+      "nonManifoldEdgesIncludingBoundaries": 4,
+      "duplicateFaces": 0,
+      "zeroAreaTriangles": 2,
+      "hasCustomNormals": true,
+      "nonfiniteNormals": 0,
+      "smoothFaces": 899558,
+      "uvSets": [
+        {
+          "name": "UVMap",
+          "loopCount": 3000144,
+          "finiteLoops": 3000144,
+          "bounds": [
+            [
+              0.000244140625,
+              0.000244140625
+            ],
+            [
+              0.99609375,
+              1
+            ]
+          ],
+          "nonzeroUvTriangles": 998471
+        }
+      ],
+      "materials": [
+        "tripo_mat_a904c0bd"
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "name": "tripo_node_a904c0bd",
+      "type": "MESH"
+    }
+  ],
+  "materials": [
+    {
+      "name": "Dots Stroke",
+      "nodes": [
+        {
+          "name": "Frame",
+          "type": "FRAME",
+          "image": null
+        },
+        {
+          "name": "Material Output",
+          "type": "OUTPUT_MATERIAL",
+          "image": null
+        },
+        {
+          "name": "Principled BSDF",
+          "type": "BSDF_PRINCIPLED",
+          "image": null
+        },
+        {
+          "name": "Material Output.001",
+          "type": "OUTPUT_MATERIAL",
+          "image": null
+        },
+        {
+          "name": "Diffuse BSDF",
+          "type": "BSDF_DIFFUSE",
+          "image": null
+        }
+      ]
+    },
+    {
+      "name": "Material",
+      "nodes": [
+        {
+          "name": "Material Output",
+          "type": "OUTPUT_MATERIAL",
+          "image": null
+        },
+        {
+          "name": "Principled BSDF",
+          "type": "BSDF_PRINCIPLED",
+          "image": null
+        }
+      ]
+    },
+    {
+      "name": "tripo_mat_a904c0bd",
+      "nodes": [
+        {
+          "name": "Principled BSDF",
+          "type": "BSDF_PRINCIPLED",
+          "image": null
+        },
+        {
+          "name": "Material Output",
+          "type": "OUTPUT_MATERIAL",
+          "image": null
+        },
+        {
+          "name": "Normal Map",
+          "type": "NORMAL_MAP",
+          "image": null
+        },
+        {
+          "name": "Image Texture",
+          "type": "TEX_IMAGE",
+          "image": "tripo_image_a904c0bd_0"
+        },
+        {
+          "name": "Image Texture.001",
+          "type": "TEX_IMAGE",
+          "image": "tripo_image_a904c0bd_2"
+        },
+        {
+          "name": "Image Texture.002",
+          "type": "TEX_IMAGE",
+          "image": "tripo_image_a904c0bd_4"
+        },
+        {
+          "name": "Image Texture.003",
+          "type": "TEX_IMAGE",
+          "image": "tripo_image_a904c0bd_3"
+        }
+      ]
+    }
+  ],
+  "textures": [
+    {
+      "name": "tripo_image_a904c0bd_0",
+      "filepath": "C:\\Users\\baraa\\AppData\\Local\\Temp\\organheal-hero-audit-pl_nojgd\\source\\tripo_convert_a904c0bd-961b-4fad-b764-9211e62a804d.fbm\\tripo_image_a904c0bd_0.jpg",
+      "dimensions": [
+        2048,
+        2048
+      ],
+      "channels": 4,
+      "fileFormat": "JPEG",
+      "colorSpace": "sRGB"
+    },
+    {
+      "name": "tripo_image_a904c0bd_2",
+      "filepath": "C:\\Users\\baraa\\AppData\\Local\\Temp\\organheal-hero-audit-pl_nojgd\\source\\tripo_convert_a904c0bd-961b-4fad-b764-9211e62a804d.fbm\\tripo_image_a904c0bd_2.jpg",
+      "dimensions": [
+        2048,
+        2048
+      ],
+      "channels": 4,
+      "fileFormat": "JPEG",
+      "colorSpace": "Non-Color"
+    },
+    {
+      "name": "tripo_image_a904c0bd_3",
+      "filepath": "C:\\Users\\baraa\\AppData\\Local\\Temp\\organheal-hero-audit-pl_nojgd\\source\\tripo_convert_a904c0bd-961b-4fad-b764-9211e62a804d.fbm\\tripo_image_a904c0bd-961b-4fad-b764-9211e62a804d_Metallic.jpg",
+      "dimensions": [
+        2048,
+        2048
+      ],
+      "channels": 4,
+      "fileFormat": "JPEG",
+      "colorSpace": "Non-Color"
+    },
+    {
+      "name": "tripo_image_a904c0bd_4",
+      "filepath": "C:\\Users\\baraa\\AppData\\Local\\Temp\\organheal-hero-audit-pl_nojgd\\source\\tripo_convert_a904c0bd-961b-4fad-b764-9211e62a804d.fbm\\tripo_image_a904c0bd-961b-4fad-b764-9211e62a804d_Roughness.jpg",
+      "dimensions": [
+        2048,
+        2048
+      ],
+      "channels": 4,
+      "fileFormat": "JPEG",
+      "colorSpace": "Non-Color"
+    }
+  ],
+  "textureResolution": [],
+  "totalVertices": 499992,
+  "totalTriangles": 1000048,
+  "worldBounds": [
+    [
+      -0.269683837890625,
+      -0.313568115234375,
+      -0.5
+    ],
+    [
+      0.269683837890625,
+      0.313568115234375,
+      0.5
+    ]
+  ],
+  "normalsStatus": "Imported custom/smooth flags preserved; outward orientation unverified",
+  "intersectionEvidence": "Not measured; no exact self-intersection clearance",
+  "anatomicalOrientation": "UNRESOLVED; technical FBX axes are not patient axes",
+  "physicalScale": "FBX declares meter units (UnitScaleFactor=100 centimeters per source unit); normalized 1-unit extent does not prove physiological size. Anatomical physical scale UNRESOLVED.",
+  "blenderVersion": "5.2.1 LTS",
+  "renders": [
+    {
+      "angleDegrees": 0,
+      "path": "C:\\Users\\baraa\\AppData\\Local\\Temp\\organheal-hero-audit-pl_nojgd\\orbit-0.png",
+      "dimensions": [
+        1080,
+        1080
+      ],
+      "seconds": 8.50065890001133,
+      "bytes": 1083663
+    },
+    {
+      "angleDegrees": 120,
+      "path": "C:\\Users\\baraa\\AppData\\Local\\Temp\\organheal-hero-audit-pl_nojgd\\orbit-120.png",
+      "dimensions": [
+        1080,
+        1080
+      ],
+      "seconds": 8.100549099966884,
+      "bytes": 1233649
+    },
+    {
+      "angleDegrees": 240,
+      "path": "C:\\Users\\baraa\\AppData\\Local\\Temp\\organheal-hero-audit-pl_nojgd\\orbit-240.png",
+      "dimensions": [
+        1080,
+        1080
+      ],
+      "seconds": 8.284241399960592,
+      "bytes": 1098818
+    }
+  ],
+  "blenderResult": "PASS",
+  "sourceModelSha256": "2091d877ce87b452f10dcddcd28ae04b6369d220728baddfb10341bed5e86bed",
+  "visualFindings": {
+    "recognizability": "Recognizable conventional human-heart silhouette; not medical validation",
+    "silhouette": "Readable in all three orbit views; no frame clipping observed",
+    "vesselDetail": "Visible large tubular forms and thin branching surface detail; no anatomical names or coverage inferred",
+    "textureRealism": "Illustrative pink/red/blue palette, broadly smooth shading with coarse surface relief; not demonstrated photorealistic tissue",
+    "artifacts": "Soft/blended color boundaries, rough or fused-looking small branch detail and irregular rims; topology defects measured separately",
+    "mediumShot": "Potentially useful for further hero visual review at medium distance; not approved",
+    "closeUp": "Not accepted for close-up: fine detail and texture/geometry fidelity remain insufficiently qualified",
+    "highlighting": "One mesh/material; no independently addressable named anatomy. Structure highlighting unresolved"
+  },
+  "sourceGeometryPolicy": "No geometry edits, modifiers, smoothing changes, rotation or rescale. Native FBX import interpretation only. Temporary camera/lights added.",
+  "textureNotes": "Four source images loaded through FBX embedded texture extraction; source shader assignments preserved. Tripo object/material/texture labels and converter paths are provenance notes, not medical evidence."
+}

@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { randomUUID, createHash } from "node:crypto";
 import { mkdtemp, mkdir, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -40,6 +40,7 @@ describe("REAL isolated internal multi-scene orchestration (synthetic media only
  });
  it.each([false, true])("durable real-media workflow; invalidate before publication=%s", async invalidate => {
   f = await orchestrationFixture();
+  f = { ...f, segments: f.segments.map(s => ({ ...s, renderSignature: createHash("sha256").update(randomUUID()).digest("hex") })) };
   root = await mkdtemp(path.join(tmpdir(), "organheal-mm-prod-4c-acceptance-"));
   const storageRoot = path.join(root, "private-objects"); await mkdir(storageRoot, { mode: 0o700 });
   vi.stubEnv("MEDICAL_MOTION_OUTPUT_ROOT", path.join(root, "owned-media"));
@@ -81,6 +82,7 @@ describe("REAL isolated internal multi-scene orchestration (synthetic media only
    const job = (await worker.claimById(baseJobs[i]))!; expect(job).toBeDefined();
    const identity = reusableArtifactIdentity(f.scenes[i], f.segments[i].renderSignature, "video")!;
    const reuse = new ReusableArtifactRepository(client), reservation = await reuse.operation(job, "reserve", identity);
+   expect(reservation.outcome).toBe("CACHE_MISS");
    reuseDisposition.push(reservation.outcome);
    const owner = await createArtifactOwnership(`base-${i}.mp4`, "video");
    // Synthetic candidate bookkeeping; this fixture does not assert render latency.

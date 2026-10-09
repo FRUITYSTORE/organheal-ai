@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { randomUUID, createHash } from "node:crypto";
 import { describe, it, expect, beforeAll, beforeEach, afterEach } from "vitest";
 import { approvedSpecSchema } from "./helpers/approved-personalization";
 import { client, literal } from "./helpers/medical-motion-rpc";
@@ -19,13 +19,15 @@ describe("real local PostgreSQL approved private jobs, coordination and replay",
   let owner: string, baseJob: DurableBackgroundJob, base: ArtifactRecord;
   const specs = new ApprovedPersonalizationRepository(client), artifacts = new MedicalMotionArtifactRepository(client);
   const render = new BackgroundJobWorkerRepository(client, ["medical-motion-render"]), compose = new BackgroundJobWorkerRepository(client, ["medical-motion-compose"]);
-  const identity = reusableArtifactIdentity(compositionScene(), "b".repeat(64), "video")!;
+  let identity: NonNullable<ReturnType<typeof reusableArtifactIdentity>>;
   beforeAll(approvedSpecSchema);
   beforeEach(async () => {
+    identity = reusableArtifactIdentity(compositionScene(), createHash("sha256").update(randomUUID()).digest("hex"), "video")!;
     owner = randomUUID(); await sql(`insert into auth.users(id) values('${owner}');`);
     const q = await new MedicalMotionJobRepository(client).enqueue(owner, randomUUID(), contextContent(), 0);
     baseJob = (await render.claimById(q.jobId))!;
     const reuse = new ReusableArtifactRepository(client), miss = await reuse.operation(baseJob, "reserve", identity);
+    expect(miss.outcome).toBe("CACHE_MISS");
     base = await artifacts.reserve(baseJob, { media: "video", byteSize: 123, sha256: "a".repeat(64) });
     await artifacts.persist(baseJob, base.id); await reuse.operation(baseJob, "ready", identity, miss.epoch, base.id);
     await new BackgroundJobResultRepository(client).publish({ jobId: baseJob.id, attemptToken: baseJob.attemptToken,

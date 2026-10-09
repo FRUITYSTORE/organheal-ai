@@ -15,15 +15,17 @@ import { BackgroundJobResultRepository } from "../lib/jobs/background-job-result
 describe("real isolated PostgreSQL private composition provenance and fencing", () => {
   let user: string, baseJob: DurableBackgroundJob, finalJob: DurableBackgroundJob, base: ArtifactRecord, final: ArtifactRecord;
   const artifacts = new MedicalMotionArtifactRepository(client), reuse = new ReusableArtifactRepository(client), results = new BackgroundJobResultRepository(client);
-  const identity = reusableArtifactIdentity(compositionScene(), "b".repeat(64), "video")!;
+  let identity: NonNullable<ReturnType<typeof reusableArtifactIdentity>>;
   const attempts = new BackgroundJobWorkerRepository(client, ["medical-motion-render"]);
   beforeAll(compositionSchema);
   beforeEach(async () => {
+    identity = reusableArtifactIdentity(compositionScene(), createHash("sha256").update(randomUUID()).digest("hex"), "video")!;
     user = randomUUID(); await sql(`insert into auth.users(id) values('${user}');`);
     const jobs = new MedicalMotionJobRepository(client);
     baseJob = (await attempts.claimById((await jobs.enqueue(user, randomUUID(), contextContent(), 0)).jobId))!;
     finalJob = (await attempts.claimById((await jobs.enqueue(user, randomUUID(), contextContent(), 0)).jobId))!;
     const miss = await reuse.operation(baseJob, "reserve", identity);
+    expect(miss.outcome).toBe("CACHE_MISS");
     base = await artifacts.reserve(baseJob, { media: "video", byteSize: 123, sha256: createHash("sha256").update("TEST BASE").digest("hex") });
     await artifacts.persist(baseJob, base.id); await reuse.operation(baseJob, "ready", identity, miss.epoch, base.id);
     await results.publish({ jobId: baseJob.id, attemptToken: baseJob.attemptToken, manifest: { kind: "artifact", referenceId: base.id } });

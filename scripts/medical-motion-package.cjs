@@ -1,6 +1,6 @@
 const fs=require('node:fs'),path=require('node:path'),Module=require('node:module'),crypto=require('node:crypto');
 const root=path.resolve(__dirname,'..'),bundle=path.join(root,'dist','medical-motion-worker');
-const candidateJson=new Set(['medical-assets/candidates/bodyparts3d-4.0/selection-manifest.json','medical-assets/candidates/zenodo-4506463-v2/selection-manifest.json']);
+const candidateJson=new Set(['medical-assets/candidates/bodyparts3d-4.0/selection-manifest.json','medical-assets/candidates/zenodo-4506463-v2/selection-manifest.json','medical-assets/apil-local-heart-inventory.json']);
 exports.load=function(){
   const version=process.versions.node.split('.').map(Number);
   if(version[0]!==24||version[1]<16)throw Object.assign(Error(),{workerExitCode:64});

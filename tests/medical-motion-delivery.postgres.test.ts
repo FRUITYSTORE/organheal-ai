@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { randomUUID, createHash } from "node:crypto";
 import { beforeAll,beforeEach,afterEach,describe,it,expect,vi } from "vitest";
 import { client } from "./helpers/medical-motion-rpc";
 import { sql } from "./helpers/medical-motion-postgres";
@@ -32,7 +32,8 @@ describe("isolated local PostgreSQL delivery product lifecycle",()=>{
   base=(await new MedicalMotionJobRepository(client).enqueue(owner,revision,contextContent(),0)).jobId;vi.mocked(gate.prepareCompositionScene).mockResolvedValue(undefined as never);});
  afterEach(async()=>{await cleanupArtifactOwner(other);await cleanupArtifactOwner(owner);vi.restoreAllMocks();});
  async function approved(language:"en"|"ar"="en") {
-  const job=(await jobs.claimById(base))!,identity=reusableArtifactIdentity(compositionScene(),"b".repeat(64),"video")!,reuse=new ReusableArtifactRepository(client),miss=await reuse.operation(job,"reserve",identity),ar=new MedicalMotionArtifactRepository(client);
+  const job=(await jobs.claimById(base))!,identity=reusableArtifactIdentity(compositionScene(),createHash("sha256").update(randomUUID()).digest("hex"),"video")!,reuse=new ReusableArtifactRepository(client),miss=await reuse.operation(job,"reserve",identity),ar=new MedicalMotionArtifactRepository(client);
+  expect(miss.outcome).toBe("CACHE_MISS");
   const artifact=await ar.reserve(job,{media:"video",byteSize:123,sha256:"a".repeat(64)});await ar.persist(job,artifact.id);await reuse.operation(job,"ready",identity,miss.epoch,artifact.id);
   await new BackgroundJobResultRepository(client).publish({jobId:job.id,attemptToken:job.attemptToken,manifest:{kind:"artifact",referenceId:artifact.id}});
   const contextId=(job.payload as {executionContextId:string}).executionContextId,specification={...compositionSpecification(),baseArtifactId:artifact.id,language};

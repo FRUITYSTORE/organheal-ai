@@ -1,5 +1,5 @@
 import {describe,it,expect,beforeAll,beforeEach,afterEach,vi,type Mock} from "vitest";
-import {randomUUID} from "node:crypto";
+import {randomUUID,createHash} from "node:crypto";
 import {orchestrationSchema,orchestrationFixture,client} from "./helpers/orchestration";
 import {sql} from "./helpers/medical-motion-postgres";
 import {cleanupArtifactOwner} from "./helpers/medical-motion-artifacts";
@@ -27,6 +27,7 @@ describe("real isolated durable internal orchestration",()=>{
  beforeAll(orchestrationSchema);
  beforeEach(async()=>{
   f=await orchestrationFixture();
+  f={...f,segments:f.segments.map(s=>({...s,renderSignature:createHash("sha256").update(randomUUID()).digest("hex")}))};
   vi.mocked(prepareCompositionScene).mockImplementation(async(_client,owner,ctx,index)=>{
    const context=await new MedicalMotionExecutionContextRepository(client,f.profiles).read(ctx,owner);
    return {context,presentation:f.scenes[index],checked:{ok:true,request:{renderSignature:f.segments[index].renderSignature}}} as unknown as Awaited<ReturnType<typeof prepareCompositionScene>>;
@@ -43,6 +44,7 @@ describe("real isolated durable internal orchestration",()=>{
   for(let i=0;i<count;i++){const job=(await worker.claimById(row.base_job_ids[i]))!;
    const identity=reusableArtifactIdentity(f.scenes[i],f.segments[i].renderSignature,"video")!;
    const reuse=new ReusableArtifactRepository(client),r=await reuse.operation(job,"reserve",identity);
+   expect(r.outcome).toBe("CACHE_MISS");
    const a=await artifacts.reserve(job,{media:"video",byteSize:123,sha256:"a".repeat(64)});await artifacts.persist(job,a.id);await reuse.operation(job,"ready",identity,r.epoch,a.id);
    await new BackgroundJobResultRepository(client).publish({jobId:job.id,attemptToken:job.attemptToken,manifest:{kind:"artifact",referenceId:a.id}});
   }
@@ -53,6 +55,7 @@ describe("real isolated durable internal orchestration",()=>{
   const jobs=row.base_job_ids;await restart().advancePending(signal());expect((await repo.read(f.owner,f.request)).base_job_ids).toEqual(jobs);
   await publishBases(1);await restart().advancePending(signal());expect(producer).not.toHaveBeenCalled();
   const second=(await worker.claimById(jobs[1]))!,identity=reusableArtifactIdentity(f.scenes[1],f.segments[1].renderSignature,"video")!,reuse=new ReusableArtifactRepository(client),r=await reuse.operation(second,"reserve",identity);
+  expect(r.outcome).toBe("CACHE_MISS");
   const a=await artifacts.reserve(second,{media:"video",byteSize:123,sha256:"a".repeat(64)});await artifacts.persist(second,a.id);await reuse.operation(second,"ready",identity,r.epoch,a.id);
   await new BackgroundJobResultRepository(client).publish({jobId:second.id,attemptToken:second.attemptToken,manifest:{kind:"artifact",referenceId:a.id}});
   await restart().advancePending(signal());row=await repo.read(f.owner,f.request);expect(row.status).toBe("composing");expect(producer).toHaveBeenCalledTimes(1);

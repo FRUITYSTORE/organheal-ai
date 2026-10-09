@@ -82,7 +82,8 @@ describe("real isolated PostgreSQL reusable artifact coordination",()=>{
     const compiled=compileMedicalScene({mechanismId:mechanism.mechanismId,mechanismVersion:mechanism.version},{registry:createMechanismRegistry([mechanism],MECHANISM_TEST_CATALOG),getModule:()=>module,catalog:MECHANISM_TEST_CATALOG,
       safety:{allowVideo:true,level:"none"},mode:"development",claim:"possible-mechanism",evidence:mechanism.requiredEvidence.map(r=>({...r,origin:r.origin??"server-intake",assertion:"present",evidenceRef:"TEST ONLY SERVER"}))});
     expect(compiled.ok).toBe(true);if(!compiled.ok)throw Error("TEST_COMPILER_FAILED");
-    const key=reusableArtifactIdentity(compiled.compiled,"a".repeat(64),"video")!;
+    const renderSignature=createHash("sha256").update(randomUUID()).digest("hex");
+    const key=reusableArtifactIdentity(compiled.compiled,renderSignature,"video")!;
     const miss=await repository.operation(job,"reserve",key);expect(miss.outcome).toBe("CACHE_MISS");
     const bytes=mp4Fixture(),record=await artifacts.repository.reserve(job,{media:"video",byteSize:bytes.length,sha256:createHash("sha256").update(bytes).digest("hex")});
     await storage.put(record.id,bytes,"video/mp4");await artifacts.repository.persist(job,record.id);

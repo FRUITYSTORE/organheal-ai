@@ -1,7 +1,7 @@
 // Build-time TypeScript only. The emitted package requires no TS runtime.
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),ts=require('typescript');
 const root=path.resolve(__dirname,'..'),output=path.join(root,'dist','medical-motion-worker');
-const candidateJson=new Set(['medical-assets/candidates/bodyparts3d-4.0/selection-manifest.json','medical-assets/candidates/zenodo-4506463-v2/selection-manifest.json'].map(file=>path.resolve(root,file)));
+const candidateJson=new Set(['medical-assets/candidates/bodyparts3d-4.0/selection-manifest.json','medical-assets/candidates/zenodo-4506463-v2/selection-manifest.json','medical-assets/apil-local-heart-inventory.json'].map(file=>path.resolve(root,file)));
 const options=ts.parseJsonConfigFileContent(ts.readConfigFile(path.join(root,'tsconfig.json'),ts.sys.readFile).config,ts.sys,root).options;
 function inside(file,base){return file.startsWith(base+path.sep)&&file!==base;}
 function safeRemove(file){if(!inside(file,path.join(root,'dist'))||fs.lstatSync(file).isSymbolicLink())throw Error('UNSAFE_BUILD_LOCATION');fs.rmSync(file,{recursive:true,force:true});}

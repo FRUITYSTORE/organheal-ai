@@ -3,6 +3,7 @@ import type { OrganId } from "./contracts/organ";
 import { HEART_ORGAN_MODULE } from "./organs/heart/heart-organ-module";
 import { BP3D_HEART_CANDIDATE } from "./organs/heart/bp3d-heart-candidate";
 import { SSM_HEART_CANDIDATE } from "./organs/heart/ssm-heart-candidate";
+import { APIL_LOCAL_HEART_CANDIDATE } from "./organs/heart/apil-local-heart-candidate";
 
 /** Trusted server configuration only; registrations are detached immutable snapshots. */
 export function createOrganModuleRegistry(definitions: readonly OrganModule[]) {
@@ -22,7 +23,7 @@ export function createOrganModuleRegistry(definitions: readonly OrganModule[]) {
     return modules.get(JSON.stringify([organ, assetVersion])) ?? null;
   } });
 }
-const ASSET_MODULES = createOrganModuleRegistry([HEART_ORGAN_MODULE, BP3D_HEART_CANDIDATE, SSM_HEART_CANDIDATE]);
+const ASSET_MODULES = createOrganModuleRegistry([HEART_ORGAN_MODULE, BP3D_HEART_CANDIDATE, SSM_HEART_CANDIDATE, APIL_LOCAL_HEART_CANDIDATE]);
 export function getOrganModuleForAsset(organ: OrganId, assetVersion: string): OrganModule | null {
   return ASSET_MODULES.resolve(organ, assetVersion);
 }
