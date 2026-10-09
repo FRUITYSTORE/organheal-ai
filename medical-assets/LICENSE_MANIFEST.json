@@ -415,6 +415,9 @@
       "licenseFamily": "CC Attribution",
       "ownerVisualSelection": {
         "selectedLocalAsset": "beating-heart",
+        "sourceSha256": "0e52a7fe26bb12a267796b532de2312b1e023d228b7e76b3e40c5c4314bcdc59",
+        "archiveEntry": "source/beating-heart.zip -> source/Beating heart.glb",
+        "motionPresetRef": "render/blender/heartbeat_motion_master.json",
         "archive": "Downloads/beating-heart.zip",
         "sourceFile": "source/Beating heart.glb",
         "organHealRole": "HEART_MOTION_V1",

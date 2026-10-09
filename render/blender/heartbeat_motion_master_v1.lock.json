@@ -1,0 +1,9 @@
+{
+  "id": "HEARTBEAT_MOTION_MASTER_V1",
+  "version": "1",
+  "configurationSha256": "e0289191e58e588ac94e0c86e436a54fdb0c5fe7c0ce4217277338bd670c63bc",
+  "builderRef": "render/blender/heartbeat_motion_master.py",
+  "builderSha256": "87933ec29b1ce080f4c6fb5564c431cce79dc3ed88b5f4081b528fb4fab1155d",
+  "usage": "internal-review",
+  "patientFacing": false
+}
