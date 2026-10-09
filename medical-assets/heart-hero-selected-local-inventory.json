@@ -1,0 +1,41 @@
+{
+  "sourceCandidate": "HEART_HERO",
+  "organHealRole": "HEART_HERO_V1",
+  "selectedLocalAsset": "realistic-human-heart",
+  "archive": "Downloads/realistic-human-heart.zip",
+  "outerArchiveSha256": "1256e9e5a742ea6dac0aa25ed623a74b1e44a2889770b77d333425f37e1e2c43",
+  "sourceFile": "source/Heart.fbx",
+  "sourceModelSha256": "3c117d9d212c5368897b70698c7d6d915868a2a0c7c2d31202a093a5e63e7761",
+  "localArtifactIdentity": "VERIFIED_BY_CONTENT",
+  "identityBasis": "Archive entry bytes match the preserved R2.1 source FBX; all texture files SHA-256 verified against archive entries.",
+  "exactSketchfabArtifactIdentity": "UNRESOLVED",
+  "authorUploader": null,
+  "license": null,
+  "licenseClearance": "unresolved",
+  "sourceIdentityBoundary": "Separate local visual selection; original Pigcraft source metadata and license do not establish this local asset provenance or rights.",
+  "usage": ["internal-review"],
+  "anatomicallyValidated": false,
+  "clinicalApproval": "unreviewed",
+  "patientFacing": false,
+  "productionApproved": false,
+  "ownerVisualDecision": "ACCEPT_WITH_VISUAL_POLISH",
+  "preserveOriginalGeometry": true,
+  "anatomicalMappings": [],
+  "historicalReferenceInventory": "medical-assets/heart-hero-local-inventory.json",
+  "files": [
+    { "filename": "source/Heart.fbx", "bytes": 16017612, "sha256": "3c117d9d212c5368897b70698c7d6d915868a2a0c7c2d31202a093a5e63e7761" },
+    { "filename": "textures/hart_UV_low01_Normal.hart_UV_low_defaultMat.png", "bytes": 13109320, "sha256": "02e02a93e97113fe2d4fc1af3bbe8b056fd5e137a14ede35000558621aad7747" },
+    { "filename": "textures/hart_UV_low01_Roughness.hart_UV_low_defaultMat.png", "bytes": 62688, "sha256": "48941d4d10d786d1ea8d16618771457a751ea4378953950e56e1df3be76b61b8" },
+    { "filename": "textures/hart_UV_low01_BaseColor.hart_UV_low_defaultMat.png", "bytes": 2101834, "sha256": "df6f6b0be78b3e32eb48de6272606f67ef254de998be318f96e48aebe0c41d64" },
+    { "filename": "textures/hart_UV_low01_Metalness.hart_UV_low_defaultMat.png", "bytes": 589, "sha256": "5666a8fad9f2a1731165815013453ba36b13dc24bc0bb7fe4c61d4a45b3b3860" }
+  ],
+  "meshInventory": [{ "objectName": "hart:ZBrush_defualt_group", "vertices": 11281, "triangles": 22562, "materials": ["Heart Tex"] }],
+  "textures": [
+    { "filename": "textures/hart_UV_low01_BaseColor.hart_UV_low_defaultMat.png", "type": "BaseColor", "dimensions": [2048, 2048] },
+    { "filename": "textures/hart_UV_low01_Normal.hart_UV_low_defaultMat.png", "type": "Normal", "dimensions": [2048, 2048] },
+    { "filename": "textures/hart_UV_low01_Roughness.hart_UV_low_defaultMat.png", "type": "Roughness", "dimensions": [2048, 2048] },
+    { "filename": "textures/hart_UV_low01_Metalness.hart_UV_low_defaultMat.png", "type": "Metalness", "dimensions": [2048, 2048] }
+  ],
+  "evidenceRefs": ["medical-assets/LICENSE_MANIFEST.json#HEART_HERO/ownerVisualSelection", "render/blender/heart_hero_master.json"],
+  "limitations": ["Visual candidate only, not anatomical authority.", "Source units/anatomical orientation and independently addressable anatomy remain unresolved."]
+}

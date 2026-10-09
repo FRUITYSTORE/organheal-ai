@@ -1,0 +1,12 @@
+{
+  "id": "HEART_MASTER_VISUAL_V1",
+  "version": "1",
+  "approval": "owner-visual-only",
+  "presetRef": "render/blender/heart_hero_master.json",
+  "builderRef": "render/blender/heart_hero_master.py",
+  "configurationSha256": "2ae1eb02c9229c1d08b573580e636ca23875274c7134f081ba7add6e38853227",
+  "builderSha256": "51e8b34364b545cde1d063e2c207242b27cf281ce84fda66bad5785d0d4cac6c",
+  "usage": "internal-review",
+  "patientFacing": false,
+  "licenseClearance": "unresolved"
+}

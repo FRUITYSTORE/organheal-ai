@@ -237,6 +237,8 @@
       },
       "ownerVisualSelection": {
         "selectedLocalAsset": "realistic-human-heart",
+        "inventoryRef": "medical-assets/heart-hero-selected-local-inventory.json",
+        "sourceSha256": "3c117d9d212c5368897b70698c7d6d915868a2a0c7c2d31202a093a5e63e7761",
         "archive": "Downloads/realistic-human-heart.zip",
         "sourceFile": "source/Heart.fbx",
         "organHealRole": "HEART_HERO_V1",

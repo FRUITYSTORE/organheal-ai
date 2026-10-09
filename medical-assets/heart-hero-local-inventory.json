@@ -1,5 +1,9 @@
 {
   "sourceCandidate": "HEART_HERO",
+  "organHealRole": "MEDIUM_SHOT_VISUAL_REFERENCE_ONLY",
+  "ownerVisualDecision": "REJECTED_AS_PRODUCTION_HERO_MASTER",
+  "historicalEvidence": true,
+  "selectedHeroInventory": "medical-assets/heart-hero-selected-local-inventory.json",
   "role": "hero visual candidate only; not medical authority",
   "localArtifactIdentity": "VERIFIED_BY_CONTENT",
   "exactSketchfabArtifactIdentity": "UNRESOLVED",

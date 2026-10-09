@@ -1,0 +1,36 @@
+{
+  "preset": "HEART_HERO_V1",
+  "inventoryRef": "medical-assets/heart-hero-selected-local-inventory.json",
+  "visualEngineVersion": "1",
+  "sceneRecipeVersion": "1",
+  "visualPreset": "ORGANHEAL_HEART_V1",
+  "outputProfile": "MOBILE_VERTICAL_9_16",
+  "width": 1080,
+  "height": 1920,
+  "usage": "internal-review",
+  "patientFacing": false,
+  "licenseClearance": "unresolved",
+  "geometryOperations": [],
+  "source": {
+    "filename": "Heart.fbx",
+    "sha256": "3c117d9d212c5368897b70698c7d6d915868a2a0c7c2d31202a093a5e63e7761",
+    "object": "hart:ZBrush_defualt_group",
+    "vertices": 11281,
+    "triangles": 22562,
+    "textures": {
+      "hart_UV_low01_BaseColor.hart_UV_low_defaultMat.png": "df6f6b0be78b3e32eb48de6272606f67ef254de998be318f96e48aebe0c41d64",
+      "hart_UV_low01_Metalness.hart_UV_low_defaultMat.png": "5666a8fad9f2a1731165815013453ba36b13dc24bc0bb7fe4c61d4a45b3b3860",
+      "hart_UV_low01_Normal.hart_UV_low_defaultMat.png": "02e02a93e97113fe2d4fc1af3bbe8b056fd5e137a14ede35000558621aad7747",
+      "hart_UV_low01_Roughness.hart_UV_low_defaultMat.png": "48941d4d10d786d1ea8d16618771457a751ea4378953950e56e1df3be76b61b8"
+    }
+  },
+  "materialPresentation": { "roughnessScale": 0.8, "roughnessOffset": 0.2, "specularScale": 0.45 },
+  "camera": { "direction": [0, -1, 0.25], "lensMm": 70, "safeOrganRectangle": [0.08, 0.23, 0.92, 0.90] },
+  "lighting": {
+    "key": { "offset": [-0.8, -1.2, 1.2], "energyPerSquaredExtent": 30, "sizePerExtent": 1.8 },
+    "fill": { "offset": [1, -1.1, -0.15], "energyPerSquaredExtent": 19, "sizePerExtent": 1.8 },
+    "rim": { "offset": [0.5, 0.7, 0.9], "energyPerSquaredExtent": 16, "sizePerExtent": 1.4 }
+  },
+  "background": { "charcoal": "#10151D", "navy": "#111C2B", "strength": 0.25 },
+  "render": { "engine": "CYCLES", "samples": 64, "seed": 0, "viewTransform": "AgX", "look": "AgX - Medium High Contrast", "exposure": -0.25, "gamma": 1 }
+}
