@@ -20,14 +20,27 @@ const texts = {
   en: ["This is an educational heart model.", "We move from an exterior view to an internal view.",
     "The model shows its original source heartbeat motion.", "This educational view does not diagnose a medical condition."],
 } as const;
+const educationTexts = {
+  ar: ["هذا نموذج تعليمي للقلب، العضلة التي تدفع الدم عبر الجسم.",
+    "نبدأ برؤيته من الخارج، ثم نقترب تدريجيًا لفهم شكله.",
+    "الآن ننتقل إلى مقطع داخلي تعليمي.",
+    "نرى هنا حركة النبض الأصلية في هذا المصدر، من دون تعديل إيقاعها.",
+    "هذا العرض مخصّص للشرح، ولا يمثّل تشخيصًا لحالة مرضية."],
+  en: ["This is an educational model of the heart, the muscle that pumps blood through the body.",
+    "We begin with its exterior, then move closer to understand its shape.",
+    "Now we transition to an educational internal view.",
+    "Here we see the source's original heartbeat motion, without changing its rhythm.",
+    "This presentation is for education and does not diagnose a medical condition."],
+} as const;
 /** Only this versioned neutral educational catalogue is executable in R2.5A.
  * Raw/AI/patient prose and claimed medical approval cannot issue a capability. */
 export function resolveEducationalNarration(value: unknown) {
   if(!exactAudio(value,["scriptId","version"]) || value.version!=="1" ||
-    !["HEART_EDUCATIONAL_DEMO_AR","HEART_EDUCATIONAL_DEMO_EN"].includes(String(value.scriptId)))audioInvalid("NARRATION_SCRIPT_UNAVAILABLE");
-  const language:"ar"|"en"=value.scriptId==="HEART_EDUCATIONAL_DEMO_AR"?"ar":"en";
+    !["HEART_EDUCATIONAL_DEMO_AR","HEART_EDUCATIONAL_DEMO_EN","HEART_EDUCATION_AR_V1","HEART_EDUCATION_EN_V1"].includes(String(value.scriptId)))audioInvalid("NARRATION_SCRIPT_UNAVAILABLE");
+  const language:"ar"|"en"=String(value.scriptId).includes("_AR")?"ar":"en";
+  const educational=String(value.scriptId).startsWith("HEART_EDUCATION_");
   const content={scriptId:String(value.scriptId),version:"1" as const,language,medicalContentVersion:"educational-neutral-1" as const,
-    segments:texts[language].map((text,i)=>({segmentId:`segment-${i}`,text,kind:i===2?"explanation":"orientation-or-disclaimer"})),
+    segments:(educational?educationTexts[language]:texts[language]).map((text,i)=>({segmentId:`segment-${i}`,text,kind:i===2||educational&&i===3?"explanation":"orientation-or-disclaimer"})),
     safety:{usage:"internal-review",patientFacing:false,clinicalApproval:"unreviewed",visualMeaning:"educational-only",
       diagnosisCertainty:"not-implied",pathologyNarration:false,rhythmClaim:false,personalization:false}};
   const script=deepAudioFreeze({...content,scriptHash:audioIdentity(content)});scripts.add(script);return script;
@@ -56,6 +69,19 @@ export function approveNarrationFixture(script:ApprovedNarrationScript,value:unk
 }
 export const isApprovedNarrationAsset=(v:unknown):v is ApprovedNarrationAsset=>!!v&&typeof v==="object"&&assets.has(v);
 export function narrationFixtureBytes(asset:ApprovedNarrationAsset) { const bytes=assets.get(asset);if(!bytes)audioInvalid("NARRATION_AUTHORITY_INVALID");return Buffer.from(bytes); }
+/** Server provider intake shares the existing private media authority. A hash is
+ * integrity evidence, not proof of spoken meaning or subjective voice quality. */
+export function approveMeasuredNarration(script:ApprovedNarrationScript,metadata:NarrationAssetMetadata,bytes:Buffer):ApprovedNarrationAsset {
+  if(!isApprovedNarrationScript(script)||!["EXTERNAL_TTS","OWNED_TTS","PRERECORDED_HUMAN","TEST_FIXTURE"].includes(metadata.providerType)||
+    metadata.voiceProfileId!==`${script.language.toUpperCase()}_CLINICAL_CALM_V1`||metadata.fixtureReference!==null||
+    metadata.narrationAssetId!==`voice:${metadata.sha256}`||typeof metadata.providerAssetReference!=="string"||
+    !/^[a-zA-Z0-9:_-]{1,160}$/.test(metadata.providerAssetReference))audioInvalid("NARRATION_ASSET_INVALID");
+  // Reuse the strict canonical PCM/header/hash validator without granting fixture identity.
+  approveNarrationFixture(script,{...metadata,narrationAssetId:`fixture:${metadata.sha256}`,voiceProfileId:"fixture-tone-v1",
+    providerType:"TEST_FIXTURE",providerAssetReference:null,fixtureReference:"deterministic-tone-v1"},bytes);
+  const m=jsonSnapshot(metadata) as unknown as NarrationAssetMetadata;
+  const result=deepAudioFreeze({metadata:m,identity:audioIdentity(m)});assets.set(result,Buffer.from(bytes));return result;
+}
 /** Pure reproducible fixture generation; the caller writes it only to TEMP. Not speech/TTS. */
 export function generateNarrationFixture(script:ApprovedNarrationScript,durationMs:number,voiceProfileId="fixture-tone-v1") {
   if(!isApprovedNarrationScript(script)||!Number.isSafeInteger(durationMs)||durationMs<1000||durationMs>60000||

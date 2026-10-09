@@ -3,16 +3,16 @@ import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
 
 const databaseUrl = process.env.ORGANHEAL_OWNERSHIP_TEST_DATABASE_URL;
-const fixture = `
-do $$ begin if exists(select 1 from public.background_jobs)
- or exists(select 1 from public.background_job_results) then raise exception 'Dedicated database must be empty'; end if; end $$;
-insert into auth.users(id) values('11111111-1111-4111-8111-111111111111');
-insert into public.background_jobs(id,user_id,job_type) values('22222222-2222-4222-8222-222222222222','11111111-1111-4111-8111-111111111111','follow-up-delivery');
-`;
-const jobId = "22222222-2222-4222-8222-222222222222";
-const reference = "33333333-3333-4333-8333-333333333333";
+function publicationFixture() {
+  const user = randomUUID(), jobId = randomUUID(), reference = randomUUID();
+  return { jobId, reference, fixture: `
+insert into auth.users(id) values('${user}');
+insert into public.background_jobs(id,user_id,job_type) values('${jobId}','${user}','follow-up-delivery');
+` };
+}
 describe.skipIf(!databaseUrl)("Real PostgreSQL fenced publication", () => {
   it("atomically publishes, reconciles identity, rejects conflict and cannot reclaim completion", async () => {
+    const { fixture, jobId, reference } = publicationFixture();
     const output = await sql(`begin; ${fixture}
 do $$ declare token uuid; first_id uuid; r record; begin
  select attempt_token into token from public.claim_background_job_by_id('${jobId}');
@@ -27,17 +27,18 @@ do $$ declare token uuid; first_id uuid; r record; begin
  if r.outcome <> 'already-finalized' or r.result_id<>first_id then raise exception 'Replay identity changed'; end if;
  select * into r from public.publish_background_job_result('${jobId}',token,'artifact',gen_random_uuid());
  if r.outcome <> 'conflict' or r.result_id is not null then raise exception 'Conflict accepted'; end if;
- if (select count(*) from public.background_job_results)<>1 then raise exception 'Duplicate results'; end if;
+ if (select count(*) from public.background_job_results where job_id='${jobId}')<>1 then raise exception 'Duplicate results'; end if;
  if exists(select 1 from public.claim_background_job_by_id('${jobId}')) then raise exception 'Completed reclaimed'; end if;
  reset role;
 end $$; select 'PASSED'; rollback;`);
     expect(output).toContain("PASSED");
   });
   it("forced completion failure rolls back an inserted result and completion together", async () => {
+    const { fixture, jobId, reference } = publicationFixture();
     const output = await sql(`begin; ${fixture}
 create function pg_temp.reject_completion() returns trigger language plpgsql as $$ begin raise exception 'forced completion failure'; end $$;
 create trigger publication_test_failure before update on public.background_jobs
-for each row when (new.status='completed') execute function pg_temp.reject_completion();
+for each row when (new.status='completed' and new.id='${jobId}') execute function pg_temp.reject_completion();
 do $$ declare token uuid; begin
  select attempt_token into token from public.claim_background_job_by_id('${jobId}');
  begin
@@ -45,12 +46,13 @@ do $$ declare token uuid; begin
   raise exception 'Expected failure absent' using errcode='22023';
  exception when raise_exception then null;
  end;
- if exists(select 1 from public.background_job_results) or not exists(
+ if exists(select 1 from public.background_job_results where job_id='${jobId}') or not exists(
  select 1 from public.background_jobs where id='${jobId}' and status='running' and attempt_token=token) then raise exception 'Partial commit'; end if;
 end $$; select 'PASSED'; rollback;`);
     expect(output).toContain("PASSED");
   });
   it("rejects missing, expired and superseded ownership and invalid identities", async () => {
+    const { fixture, jobId, reference } = publicationFixture();
     const output = await sql(`begin; ${fixture}
 do $$ declare a uuid; b uuid; r record; begin
  select * into r from public.publish_background_job_result(gen_random_uuid(),gen_random_uuid(),'artifact','${reference}');
@@ -74,6 +76,7 @@ end $$; select 'PASSED'; rollback;`);
     expect(output).toContain("PASSED");
   });
   it("denies direct writes for every application role and rejects privileged row mutation", async () => {
+    const { fixture, jobId, reference } = publicationFixture();
     const output = await sql(`begin; ${fixture}
 do $$ declare token uuid; role_name text; begin
  select attempt_token into token from public.claim_background_job_by_id('${jobId}');
@@ -82,9 +85,9 @@ do $$ declare token uuid; role_name text; begin
   execute format('set local role %I',role_name);
   begin insert into public.background_job_results(job_id,attempt_token,result_kind,reference_id) values('${jobId}',token,'artifact','${reference}');
   raise exception 'Direct insert accepted'; exception when insufficient_privilege then null; end;
-  begin update public.background_job_results set reference_id=gen_random_uuid();
+  begin update public.background_job_results set reference_id=gen_random_uuid() where job_id='${jobId}';
   raise exception 'Direct update accepted'; exception when insufficient_privilege then null; end;
-  begin delete from public.background_job_results;
+  begin delete from public.background_job_results where job_id='${jobId}';
   raise exception 'Direct delete accepted'; exception when insufficient_privilege then null; end;
   if role_name<>'service_role' then
    begin perform public.publish_background_job_result('${jobId}',token,'artifact','${reference}');
@@ -92,32 +95,32 @@ do $$ declare token uuid; role_name text; begin
   end if;
   reset role;
  end loop;
- begin update public.background_job_results set reference_id=gen_random_uuid();
+ begin update public.background_job_results set reference_id=gen_random_uuid() where job_id='${jobId}';
  raise exception 'Immutable update accepted' using errcode='22023'; exception when object_not_in_prerequisite_state then null; end;
- begin delete from public.background_job_results;
+ begin delete from public.background_job_results where job_id='${jobId}';
  raise exception 'Immutable delete accepted' using errcode='22023'; exception when object_not_in_prerequisite_state then null; end;
 end $$; select 'PASSED'; rollback;`);
     expect(output).toContain("PASSED");
   });
   it("rolls back when the lease expires during result insertion", async () => {
+    const { fixture, jobId, reference } = publicationFixture();
     const output = await sql(`begin; ${fixture}
 create function pg_temp.delay_publication() returns trigger language plpgsql as $$ begin perform pg_sleep(0.2); return new; end $$;
 create trigger publication_test_delay before insert on public.background_job_results
-for each row execute function pg_temp.delay_publication();
+for each row when (new.job_id='${jobId}') execute function pg_temp.delay_publication();
 do $$ declare token uuid; begin
  select attempt_token into token from public.claim_background_job_by_id('${jobId}');
  update public.background_jobs set lease_expires_at=clock_timestamp()+interval '0.1 seconds' where id='${jobId}';
  begin perform public.publish_background_job_result('${jobId}',token,'artifact','${reference}');
  raise exception 'Expired insertion accepted' using errcode='22023'; exception when object_not_in_prerequisite_state then null; end;
- if exists(select 1 from public.background_job_results) or not exists(select 1 from public.background_jobs
+ if exists(select 1 from public.background_job_results where job_id='${jobId}') or not exists(select 1 from public.background_jobs
  where id='${jobId}' and status='running') then raise exception 'Expired partial commit'; end if;
 end $$; select 'PASSED'; rollback;`);
     expect(output).toContain("PASSED");
   });
   it("two real connections race to publish one stable logical result", async () => {
     const user = randomUUID(), job = randomUUID(), ref = randomUUID();
-    await sql(`do $$ begin if exists(select 1 from public.background_jobs) then raise exception 'Database must be empty'; end if; end $$;
-insert into auth.users(id) values('${user}');
+    await sql(`insert into auth.users(id) values('${user}');
 insert into public.background_jobs(id,user_id,job_type) values('${job}','${user}','follow-up-delivery');`);
     let first: Promise<string> | undefined;
     try {
@@ -149,8 +152,7 @@ delete from auth.users where id='${user}'; commit;`);
   }, 15000);
   it("uses database time after waiting for a job lock", async () => {
     const user = randomUUID(), job = randomUUID(), ref = randomUUID();
-    await sql(`do $$ begin if exists(select 1 from public.background_jobs) then raise exception 'Database must be empty'; end if; end $$;
-insert into auth.users(id) values('${user}');
+    await sql(`insert into auth.users(id) values('${user}');
 insert into public.background_jobs(id,user_id,job_type) values('${job}','${user}','follow-up-delivery');`);
     let holder: Promise<string> | undefined;
     try {

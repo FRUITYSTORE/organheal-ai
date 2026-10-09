@@ -9,6 +9,9 @@ import { NO_DEAD_VISUAL_TIME_V1,heroPresentationRatio,validateVisualActivity } f
 import { audioInvalid,audioIdentity,deepAudioFreeze,exactAudio,isApprovedNarrationScript,isApprovedNarrationAsset,
   type ApprovedNarrationScript,type ApprovedNarrationAsset } from "./narration-foundation";
 import { isApprovedAudioVisual,isApprovedSubtitleFont,type ApprovedAudioVisual,type ApprovedSubtitleFont } from "./audio-media-authority";
+import { isApprovedMedicalVoice,type ApprovedMedicalVoice } from "./voice-runtime";
+import { isApprovedMedicalAvSync,type ApprovedMedicalAvSync } from "./medical-av-sync";
+import { auditHeroEntrance,HERO_ENTRANCE_V1 } from "../render/hero-entrance";
 
 export const MEDICAL_AUDIO_COMPOSITION_V1=deepAudioFreeze({id:"MEDICAL_AUDIO_COMPOSITION_V1",version:"1",narration:"primary",
   mixPreset:"MEDICAL_SPEECH_V1",targetLufs:-18,truePeakDb:-2,limiterPeakDb:-2,outputSampleRate:48000,outputChannels:2,
@@ -108,8 +111,37 @@ export function compileAudioComposition(visual:ApprovedAudioVisual,font:Approved
     language:script.language,narration:narration.metadata,narrationIdentity:narration.identity,subtitles,labels,music,
     presentationMode:value.presentationMode,plan,mix:MEDICAL_AUDIO_COMPOSITION_V1,subtitlePolicy:MEDICAL_SUBTITLE_V1,font,
     visualActivityPolicy:NO_DEAD_VISUAL_TIME_V1,narrationStartMs:contentStartMs,
+    voiceSync:null,voiceBenchmark:null,safety:script.safety,usage:"internal-review",patientFacing:false};
+  const result=deepAudioFreeze({specification,fingerprint:audioIdentity(specification),visual,font,script,narration});issued.add(result);return result;
+}
+/** Additive voice compilation, sharing the R2.5A media, subtitle, music, identity
+ * and owned compositor boundaries. Raw/copied voice or timing JSON is rejected. */
+export function compileVoiceComposition(visual:ApprovedAudioVisual,font:ApprovedSubtitleFont,voice:ApprovedMedicalVoice,sync:ApprovedMedicalAvSync){
+  if(!isApprovedAudioVisual(visual)||!isApprovedSubtitleFont(font)||!isApprovedMedicalVoice(voice)||!isApprovedMedicalAvSync(sync)||
+    sync.voiceAudioIdentity!==voice.voiceAudioIdentity||sync.scriptHash!==voice.script.scriptHash||
+    visual.compiled.timeline.frameCount!==276||visual.compiled.timeline.scenes[4].motionPreset!=="NORMAL_HEARTBEAT_V1"||
+    visual.compiled.timeline.scenes[4].cameraGuidance.movement!=="hold"||visual.compiled.timeline.scenes[4].startFrame!==168||
+    visual.compiled.timeline.scenes[4].endFrameExclusive!==240)audioInvalid("AUDIO_AUTHORITY_INVALID");
+  const projection=visual.heroProjection.find(p=>p.sceneIndex===0&&p.frame===0);
+  if(!projection)audioInvalid("HERO_PRESENTATION_BOUNDS_UNAVAILABLE");
+  const entrance=auditHeroEntrance(projection.projectedBounds,sync.heroFrames);
+  const safe=CINEMATIC_CAMERA_V1.safeOrganRectangle,p=projection.projectedBounds.map(v=>.5+(v-.5)*sync.policy.maximumHeroPush);
+  if(p[0]<safe[0]||p[1]<safe[1]||p[2]>safe[2]||p[3]>safe[3])audioInvalid("HERO_PRESENTATION_CLIPPING");
+  const plan={id:"NARRATION_SAFE_V1",loopCount:sync.nativeCycles,frameCount:sync.frameCount,durationMs:sync.durationMs,fps:24,
+    strategy:"LOOP_APPROVED_MOTION_AND_TRANSITION_SHIFT" as const,cycleFrames:24,speedRatio:1,cycleSourceStartFrame:168,insertionFrame:240,scenes:sync.scenes};
+  const script=voice.script,narration=voice.narration;
+  const subtitles=validateSubtitleCues(sync.evidence.map(e=>({cueId:e.subtitleCueReference,text:script.segments.find(s=>s.segmentId===e.segmentId)!.text,
+    language:script.language,startMs:e.startMs,endMs:e.endMs,sceneIndices:e.sceneIndices,narrationSegmentId:e.segmentId,
+    placement:"lower-safe",style:"MEDICAL_SUBTITLE_V1",scriptHash:script.scriptHash})),script,plan);
+  const specification={contract:MEDICAL_AUDIO_COMPOSITION_V1.id,version:"1",visualIdentity:visual.visualIdentity,visualSha256:visual.sha256,
+    scriptId:script.scriptId,scriptVersion:script.version,scriptHash:script.scriptHash,medicalContentVersion:script.medicalContentVersion,
+    language:script.language,narration:narration.metadata,narrationIdentity:narration.identity,subtitles,labels:validateAnatomicalLabels([],visual.supportedLabels,plan.durationMs),
+    music:resolveMusicPolicy("CLINICAL_REVIEW","MUSIC_OFF"),presentationMode:"CLINICAL_REVIEW",plan,mix:MEDICAL_AUDIO_COMPOSITION_V1,
+    subtitlePolicy:MEDICAL_SUBTITLE_V1,font,visualActivityPolicy:NO_DEAD_VISUAL_TIME_V1,narrationStartMs:400,
+    voiceSync:sync,heroEntrance:{preset:HERO_ENTRANCE_V1,audit:entrance},voiceBenchmark:{providerType:voice.benchmark.providerType,providerReference:voice.benchmark.providerReference,
+      modelRevision:voice.benchmark.modelRevision,voiceRevision:voice.benchmark.voiceRevision,qualityApproval:voice.benchmark.qualityApproval},
     safety:script.safety,usage:"internal-review",patientFacing:false};
   const result=deepAudioFreeze({specification,fingerprint:audioIdentity(specification),visual,font,script,narration});issued.add(result);return result;
 }
-export type CompiledAudioComposition=ReturnType<typeof compileAudioComposition>;
+export type CompiledAudioComposition=ReturnType<typeof compileAudioComposition>|ReturnType<typeof compileVoiceComposition>;
 export const isCompiledAudioComposition=(v:unknown):v is CompiledAudioComposition=>!!v&&typeof v==="object"&&issued.has(v);

@@ -11,6 +11,7 @@ import { audioHash,audioInvalid,narrationFixtureBytes } from "./narration-founda
 import { isCompiledAudioComposition,type CompiledAudioComposition } from "./audio-specification";
 import { rasterizeMedicalSubtitle } from "./audio-overlays";
 import { heroPresentationFilter } from "../render/no-dead-visual-time";
+import { heroEntranceFilter } from "../render/hero-entrance";
 
 /** Additive post-composition adapter. Authority comes from the existing owned
  * execution and opaque approved media/specification, never request paths/text. */
@@ -22,7 +23,8 @@ export async function composeOwnedAudio(ownership:ExecutionOwnership,compiled:Co
     const result=await ownership.run(async ownedSignal=>{
       try{
         const totalStart=performance.now(),s=compiled.specification;
-        owner=await createArtifactOwnership("heart-cinematic-audio-foundation-v1.mp4","video");
+        const outputBase=s.voiceSync?`heart-cinematic-voice-${s.language}-v1-polish`:"heart-cinematic-audio-foundation-v1";
+        owner=await createArtifactOwnership(`${outputBase}.mp4`,"video");
         const cwd=owner.directory;
         const visualStart=performance.now(),visual=approvedVisualBytes(compiled.visual);
         if(audioHash(visual)!==s.visualSha256)audioInvalid();
@@ -43,12 +45,21 @@ export async function composeOwnedAudio(ownership:ExecutionOwnership,compiled:Co
         }
         const subtitlePreparationMs=performance.now()-subtitleStart;
         const filters:string[]=[],loops=s.plan.loopCount;
-        if(loops){
+        if(s.voiceSync){
+          const v=s.voiceSync,heroSeconds=v.heroFrames/24,nativeSeconds=v.nativeFrames/24;
+          // Still-frame reuse with measured-duration bounded push. Fade to black
+          // before concatenating a different source: no crossfade/morph/retarget.
+          filters.push("[0:v]split=2[external][internal]",
+            `[external]trim=end_frame=1,setpts=PTS-STARTPTS,loop=loop=-1:size=1:start=0,trim=end_frame=${v.heroFrames},setpts=PTS-STARTPTS,${heroEntranceFilter(v.heroFrames)},fade=t=out:st=${heroSeconds-.2}:d=0.2[hero]`,
+            `[internal]trim=start_frame=168:end_frame=192,setpts=PTS-STARTPTS,loop=loop=${v.nativeCycles-1}:size=24:start=0,trim=end_frame=${v.nativeFrames},setpts=PTS-STARTPTS,fade=t=in:st=0:d=0.2[native]`,
+            "[hero][native]concat=n=2:v=1:a=0[presented]");
+          if(nativeSeconds<2)audioInvalid();
+        }else if(loops){
           filters.push("[0:v]split=3[h][c][t]","[h]trim=end_frame=240,setpts=PTS-STARTPTS[head]",
             `[c]trim=start_frame=168:end_frame=192,setpts=PTS-STARTPTS,loop=loop=${loops-1}:size=24:start=0,trim=end_frame=${loops*24},setpts=PTS-STARTPTS[extra]`,
             "[t]trim=start_frame=240:end_frame=276,setpts=PTS-STARTPTS[tail]","[head][extra][tail]concat=n=3:v=1:a=0[v0]");
         }else filters.push("[0:v]setpts=PTS-STARTPTS[v0]");
-        filters.push("[v0]split=2[external][internal]",`[external]trim=end_frame=132,setpts=PTS-STARTPTS,${heroPresentationFilter()}[hero]`,
+        if(!s.voiceSync)filters.push("[v0]split=2[external][internal]",`[external]trim=end_frame=132,setpts=PTS-STARTPTS,${heroPresentationFilter()}[hero]`,
           "[internal]trim=start_frame=132,setpts=PTS-STARTPTS[native]","[hero][native]concat=n=2:v=1:a=0[presented]");
         overlays.forEach((o,i)=>filters.push(`[${i===0?"presented":`v${i}`}][${i+2}:v]overlay=${o.left}:${o.top}:enable='gte(t,${o.startMs/1000})*lt(t,${o.endMs/1000})'[v${i+1}]`));
         const duration=s.plan.durationMs/1000,audioDuration=s.narration.durationMs/1000;
@@ -63,7 +74,7 @@ export async function composeOwnedAudio(ownership:ExecutionOwnership,compiled:Co
         registerComposedAudio(owner);
         if(!(await validateArtifact(owner,{width:1080,height:1920})).ok)audioInvalid("AUDIO_OUTPUT_INVALID");
         const full=await inspectMedia(media,path.basename(owner.outputPath),cwd,ownedSignal);
-        if(full.width!==1080||full.height!==1920||full.frameRate!==24||full.frameCount!==s.plan.frameCount||full.duration!==duration||!full.audio)audioInvalid("AUDIO_OUTPUT_INVALID");
+        if(full.width!==1080||full.height!==1920||full.frameRate!==24||full.frameCount!==s.plan.frameCount||Math.abs(full.duration-duration)>0.00001||!full.audio)audioInvalid("AUDIO_OUTPUT_INVALID");
         const audioProbe=JSON.parse(await executeMediaProcess(media,"ffprobe",["-v","error","-select_streams","a","-show_entries","stream=codec_name,sample_rate,channels,duration","-of","json",path.basename(owner.outputPath)],cwd,ownedSignal));
         const stream=audioProbe.streams?.[0];
         if(audioProbe.streams?.length!==1||stream.codec_name!=="aac"||stream.sample_rate!=="48000"||stream.channels!==2||Math.abs(Number(stream.duration)-duration)>.05)audioInvalid("AUDIO_OUTPUT_INVALID");
@@ -71,15 +82,16 @@ export async function composeOwnedAudio(ownership:ExecutionOwnership,compiled:Co
         if((await stat(path.join(cwd,"audio-peaks.txt"))).size>4*1024*1024)audioInvalid();
         const peaks=[...(await readFile(path.join(cwd,"audio-peaks.txt"),"utf8")).matchAll(/Peak_level=(-?[\d.]+)/g)].map(m=>Number(m[1]));
         const samplePeakDb=Math.max(...peaks);if(!Number.isFinite(samplePeakDb)||samplePeakDb>-1)audioInvalid("AUDIO_PEAK_INVALID");
-        const reviewName="heart-cinematic-audio-foundation-v1-review.mp4",reviewStart=performance.now();
+        const reviewName=`${outputBase}-review.mp4`,reviewStart=performance.now();
         await executeMediaProcess(media,"ffmpeg",["-v","error","-nostdin","-y","-i",path.basename(owner.outputPath),"-vf","scale=540:960","-c:v","libx264","-preset","fast","-crf","25","-threads","2","-c:a","copy","-movflags","+faststart",reviewName],cwd,ownedSignal);
         const reviewTranscodeMs=performance.now()-reviewStart,review=await inspectMedia(media,reviewName,cwd,ownedSignal);
-        if(review.width!==540||review.height!==960||review.frameCount!==full.frameCount||review.frameRate!==24||review.duration!==duration||!review.audio)audioInvalid("AUDIO_OUTPUT_INVALID");
+        if(review.width!==540||review.height!==960||review.frameCount!==full.frameCount||review.frameRate!==24||Math.abs(review.duration-duration)>0.00001||!review.audio)audioInvalid("AUDIO_OUTPUT_INVALID");
         const evidence={specification:s,fingerprint:compiled.fingerprint,full,review,audio:stream,samplePeakDb,visualReused:true,blenderInvocations:0,
           outputSha256:audioHash(await readFile(owner.outputPath)),reviewSha256:audioHash(await readFile(path.join(cwd,reviewName))),
           bytes:(await stat(owner.outputPath)).size,reviewBytes:(await stat(path.join(cwd,reviewName))).size,
           milliseconds:{visualReuseMs,audioPreparationMs,subtitlePreparationMs,compositionMs,reviewTranscodeMs,totalPostCompositionMs:performance.now()-totalStart},
-          usage:"internal-review",patientFacing:false,fixture:"non-human-test-tone-not-final-narration"};
+          usage:"internal-review",patientFacing:false,fixture:s.narration.providerType==="TEST_FIXTURE"?"non-human-test-tone-not-final-narration":null,
+          voiceQualityApproval:s.voiceSync?"pending-owner-listening":null};
         const evidencePath=path.join(cwd,"composition-evidence.json"),subtitleEvidencePath=path.join(cwd,"subtitle-cues.json");
         await writeFile(evidencePath,JSON.stringify(evidence,null,2),{flag:"wx"});
         await writeFile(subtitleEvidencePath,JSON.stringify({font:compiled.font,policy:s.subtitlePolicy,cues:overlays},null,2),{flag:"wx"});

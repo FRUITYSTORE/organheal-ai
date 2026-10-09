@@ -1,5 +1,5 @@
 /** Provider-independent data contracts. Data/JSON alone never authorizes execution. */
-export type NarrationProviderType = "EXTERNAL_TTS" | "OWNED_TTS" | "PREGENERATED" | "TEST_FIXTURE";
+export type NarrationProviderType = "EXTERNAL_TTS" | "OWNED_TTS" | "PRERECORDED_HUMAN" | "PREGENERATED" | "TEST_FIXTURE";
 export type NarrationLanguage = "ar" | "en";
 export type NarrationAssetMetadata = Readonly<{
   narrationAssetId: string; language: NarrationLanguage; locale: string; voiceProfileId: string;
