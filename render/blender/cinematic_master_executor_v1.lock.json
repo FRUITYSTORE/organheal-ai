@@ -1,0 +1,8 @@
+{
+  "id": "CINEMATIC_MASTER_EXECUTOR_V1",
+  "version": "1",
+  "builderRef": "render/blender/cinematic_master_executor.py",
+  "builderSha256": "0b420e8e53757182e82f21f4affbe4285045ca99a5bcf688f55920ec1ae1457f",
+  "usage": "internal-review",
+  "patientFacing": false
+}
