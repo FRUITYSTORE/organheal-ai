@@ -1,4 +1,5 @@
 import "server-only";
+import { recipePresentationFilter } from "../render/explanation-visual-recipe";
 import path from "node:path";
 import { readFile,writeFile,stat } from "node:fs/promises";
 import { performance } from "node:perf_hooks";
@@ -49,7 +50,17 @@ export async function composeOwnedAudio(ownership:ExecutionOwnership,compiled:Co
           const v=s.voiceSync,heroSeconds=v.heroFrames/24,nativeSeconds=v.nativeFrames/24;
           // Still-frame reuse with measured-duration bounded push. Fade to black
           // before concatenating a different source: no crossfade/morph/retarget.
-          filters.push("[0:v]split=2[external][internal]",
+          if(v.visualRecipe){
+            const r=v.visualRecipe,outro=v.returnExteriorFrame,internalFrames=outro===null?v.nativeFrames:outro-v.heroFrames;
+            filters.push(outro===null?"[0:v]split=2[external][internal]":"[0:v]split=3[external][internal][outroSource]",
+              `[external]trim=end_frame=1,setpts=PTS-STARTPTS,loop=loop=-1:size=1:start=0,trim=end_frame=${v.heroFrames},setpts=PTS-STARTPTS,${recipePresentationFilter(v.heroFrames,r.heroStart,r.heroEnd)},fade=t=out:st=${heroSeconds-.2}:d=0.2[hero]`,
+              `[internal]trim=start_frame=168:end_frame=192,setpts=PTS-STARTPTS,loop=loop=${internalFrames/24-1}:size=24:start=0,trim=end_frame=${internalFrames},setpts=PTS-STARTPTS,${recipePresentationFilter(internalFrames,r.nativeStart,r.nativeEnd)},fade=t=in:st=0:d=0.2${outro===null?"":`,fade=t=out:st=${internalFrames/24-.2}:d=0.2`}[native]`);
+            if(outro!==null){
+              const frames=v.frameCount-outro;
+              filters.push(`[outroSource]trim=end_frame=1,setpts=PTS-STARTPTS,loop=loop=-1:size=1:start=0,trim=end_frame=${frames},setpts=PTS-STARTPTS,${recipePresentationFilter(frames,1.02,.9)},fade=t=in:st=0:d=0.2[outro]`,
+                "[hero][native][outro]concat=n=3:v=1:a=0[presented]");
+            }else filters.push("[hero][native]concat=n=2:v=1:a=0[presented]");
+          }else filters.push("[0:v]split=2[external][internal]",
             `[external]trim=end_frame=1,setpts=PTS-STARTPTS,loop=loop=-1:size=1:start=0,trim=end_frame=${v.heroFrames},setpts=PTS-STARTPTS,${heroEntranceFilter(v.heroFrames)},fade=t=out:st=${heroSeconds-.2}:d=0.2[hero]`,
             `[internal]trim=start_frame=168:end_frame=192,setpts=PTS-STARTPTS,loop=loop=${v.nativeCycles-1}:size=24:start=0,trim=end_frame=${v.nativeFrames},setpts=PTS-STARTPTS,fade=t=in:st=0:d=0.2[native]`,
             "[hero][native]concat=n=2:v=1:a=0[presented]");

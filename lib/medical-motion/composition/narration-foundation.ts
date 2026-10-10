@@ -3,6 +3,8 @@ import { createHash } from "node:crypto";
 import { canonicalSceneJson } from "../scene-compiler";
 import { jsonSnapshot } from "../validation/json-snapshot";
 import type { NarrationAssetMetadata } from "../contracts/audio-composition";
+import { buildExecutionNarration } from "../execution-narration";
+import type { ExecutionChapter } from "../explanation-execution";
 
 export const audioHash = (v: Buffer | string) => createHash("sha256").update(v).digest("hex");
 export function audioIdentity(v: unknown) { return audioHash(canonicalSceneJson(v)); }
@@ -45,7 +47,17 @@ export function resolveEducationalNarration(value: unknown) {
       diagnosisCertainty:"not-implied",pathologyNarration:false,rhythmClaim:false,personalization:false}};
   const script=deepAudioFreeze({...content,scriptHash:audioIdentity(content)});scripts.add(script);return script;
 }
-export type ApprovedNarrationScript = ReturnType<typeof resolveEducationalNarration>;
+export type ApprovedNarrationScript = Omit<ReturnType<typeof resolveEducationalNarration>,"segments"> &
+  {segments:{segmentId:string;text:string;kind:string}[]};
+/** Only an opaque, validated execution chapter may issue additional scripts. */
+export function resolveExecutionNarration(chapter:ExecutionChapter):ApprovedNarrationScript {
+  const narration=buildExecutionNarration(chapter);
+  const template=resolveEducationalNarration({scriptId:chapter.language==="ar"?"HEART_EDUCATION_AR_V1":"HEART_EDUCATION_EN_V1",version:"1"});
+  const content={...template,scriptId:`execution:${narration.narrationScriptId}`,
+    segments:narration.sections.map((s,i)=>({segmentId:`segment-${i}`,text:s.text,kind:i===3?"explanation":"orientation-or-disclaimer"}))};
+  const {scriptHash:previous,...identityContent}=content;void previous;
+  const script=deepAudioFreeze({...identityContent,scriptHash:audioIdentity(identityContent)});scripts.add(script);return script;
+}
 export const isApprovedNarrationScript=(s:unknown):s is ApprovedNarrationScript=>!!s&&typeof s==="object"&&scripts.has(s);
 export type ApprovedNarrationAsset = Readonly<{ metadata: NarrationAssetMetadata; identity: string }>;
 /** Trusted server adapter intake. Future provider types are modelled, not activated.

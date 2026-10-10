@@ -1,8 +1,10 @@
 import "server-only";
+import type { ExplanationVisualRecipe } from "../render/explanation-visual-recipe";
 import type { SemanticVisualCue, VoiceQualityReview } from "../contracts/voice-runtime";
-import { audioIdentity, audioInvalid, deepAudioFreeze } from "./narration-foundation";
+import { audioIdentity, audioInvalid, deepAudioFreeze,resolveExecutionNarration } from "./narration-foundation";
 import { isApprovedMedicalVoice, type ApprovedMedicalVoice, evaluateVoiceQuality } from "./voice-runtime";
 import { validateVisualActivity } from "../render/no-dead-visual-time";
+import { isExecutionChapter, type ExecutionChapter } from "../explanation-execution";
 
 export const MEDICAL_AV_SYNC_V1=deepAudioFreeze({id:"MEDICAL_AV_SYNC_V1",version:"1",fps:24,
   openingContentMs:400,transitionMs:400,subtitleToleranceMs:50,cueLeadToleranceMs:250,cueLagToleranceMs:500,
@@ -51,10 +53,27 @@ export function planMedicalAvSync(voice:ApprovedMedicalVoice){
   const content={id:MEDICAL_AV_SYNC_V1.id,version:"1",voiceAudioIdentity:voice.voiceAudioIdentity,
     scriptHash:voice.script.scriptHash,profileId:voice.profile.id,frameCount,durationMs,fps:24,heroFrames,nativeFrames,
     nativeCycles:nativeFrames/24,speedRatio:1,cycleFrames:24,cycleSourceStartFrame:168,transitionStartMs,transitionEndMs,
-    boundaryMs,scenes,evidence,policy:MEDICAL_AV_SYNC_V1,blenderRerenders:0,usage:"internal-review",patientFacing:false};
+    boundaryMs,scenes,evidence,visualRecipe:null as ExplanationVisualRecipe|null,returnExteriorFrame:null as number|null,
+    policy:MEDICAL_AV_SYNC_V1,blenderRerenders:0,usage:"internal-review",patientFacing:false};
   const plan=deepAudioFreeze({...content,identity:audioIdentity(content)});issued.add(plan);return plan;
 }
 export type ApprovedMedicalAvSync=ReturnType<typeof planMedicalAvSync>;
 export const isApprovedMedicalAvSync=(v:unknown):v is ApprovedMedicalAvSync=>!!v&&typeof v==="object"&&issued.has(v);
+/** Execution chunks retain the 60s media boundary. Long chapters comprise
+ * independently owned chunks; a short proof is explicitly incomplete. */
+export function planExecutionChapterSync(voice:ApprovedMedicalVoice,chapter:ExecutionChapter){
+  if(!isExecutionChapter(chapter)||chapter.executionBlocked||!isApprovedMedicalVoice(voice)||chapter.visualStrategy!=="CACHED_SCENE_COMPOSE"||
+    voice.script.language!==chapter.language||voice.script.scriptHash!==resolveExecutionNarration(chapter).scriptHash)audioInvalid("CHAPTER_SYNC_AUTHORITY_INVALID");
+  const base=planMedicalAvSync(voice),minimum=Math.min(Math.floor(60-base.heroFrames/24)+base.heroFrames/24,chapter.targetDuration);
+  const nativeCycles=Math.max(base.nativeCycles,Math.ceil(minimum-base.heroFrames/24));
+  const nativeFrames=nativeCycles*24,frameCount=base.heroFrames+nativeFrames;
+  if(frameCount>1440)audioInvalid("CHAPTER_CHUNK_DURATION_EXCEEDED");
+  const durationMs=frameCount/24*1000;
+  const returnFrame=chapter.visualRecipe?.returnExterior?
+    base.heroFrames+Math.max(2,Math.ceil((voice.timings[4].startMs+400-base.boundaryMs)/1000))*24:null;
+  const content={...base,visualRecipe:chapter.visualRecipe,returnExteriorFrame:returnFrame!==null&&returnFrame<frameCount-24?returnFrame:null,
+    nativeCycles,nativeFrames,frameCount,durationMs,scenes:base.scenes.map((s,i)=>i===base.scenes.length-1?{...s,endMs:durationMs}:s)};
+  const result=deepAudioFreeze({...content,identity:audioIdentity(content)});issued.add(result);return result;
+}
 /** Optional review data never issues execution authority or medical approval. */
 export function reviewedVoiceScorecard(review:VoiceQualityReview){return evaluateVoiceQuality(review);}

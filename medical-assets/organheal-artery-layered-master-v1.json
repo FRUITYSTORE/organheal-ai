@@ -1,0 +1,511 @@
+{
+  "id": "ORGANHEAL_ARTERY_LAYERED_MASTER_V1",
+  "version": 1,
+  "createdUtc": "2026-10-10T00:09:47.580601+00:00",
+  "origin": "ORGANHEAL_RECONSTRUCTION_FROM_PUBLIC_DOMAIN_REFERENCE",
+  "patientFacing": false,
+  "medicalReviewStatus": "PENDING",
+  "clinicalApproval": "unreviewed",
+  "anatomicallyValidated": false,
+  "runtimeActivated": false,
+  "masterPath": "medical-assets/archive/legacy-prototypes/organheal-artery-layered-master-v1/master.svg",
+  "archiveDisposition": {"status": "LEGACY_PROTOTYPE_ARCHIVE", "runtimeUse": "NOT_RUNTIME", "patientUse": "NOT_PATIENT_FACING", "supersededBy": "SUPERSEDED_BY_MASTER_VISUAL_LIBRARY", "originalPath": "medical-assets/candidates/organheal-artery-layered-master-v1/master.svg"},
+  "masterSHA256": "1374b5dde6c2a8851e76d546ab6bf84f188fcb605c931cf59dddf5860295dd6f",
+  "sourceLock": {
+    "referenceId": "NHLBI_ATHEROSCLEROSIS_DIAGRAM_PNG",
+    "title": "Atherosclerosis diagram.png",
+    "institution": "NHLBI / NIH / HHS",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Atherosclerosis_diagram.png",
+    "officialSourceUrl": "https://www.nhlbi.nih.gov/health/atherosclerosis",
+    "rightsEvidenceUrl": "https://commons.wikimedia.org/w/index.php?title=File:Atherosclerosis_diagram.png&oldid=1283005813",
+    "rightsStatus": "PUBLIC_DOMAIN_CONFIRMED",
+    "rightsBasis": "Federal HHS official-duty work; PD-US-HHS exact-file evidence, corroborated by pixel-identical official NHLBI GIF",
+    "sourceSHA256": "9a9865390c625960d6bfcee88baecddb18bd74a21c611e9de2659f6f32203e48",
+    "supportedStructures": [
+      "healthy artery",
+      "wall",
+      "lumen",
+      "blood-flow region",
+      "wall-associated plaque",
+      "narrowed lumen"
+    ],
+    "unsupportedStructures": [
+      "early lesion/fatty streak",
+      "thrombus",
+      "microscopic histology",
+      "patient-specific plaque morphology",
+      "rupture",
+      "calcification"
+    ],
+    "medicalReviewStatus": "PENDING",
+    "patientFacing": false
+  },
+  "structureContract": {
+    "id": "ARTERY_LAYERED_STRUCTURE_CONTRACT_V1",
+    "purpose": "Candidate editable research asset, no duplicate runtime engine or clinical contract",
+    "layers": [
+      {
+        "id": "ARTERY_OUTER",
+        "family": "ANATOMY",
+        "objectId": "artery-outer",
+        "meaning": "Visible outer envelope of the educational longitudinal cutaway",
+        "semanticState": "EXPLICITLY_AUTHORED",
+        "medicalReviewRequired": true
+      },
+      {
+        "id": "ARTERY_WALL",
+        "family": "ANATOMY",
+        "objectId": "artery-wall",
+        "meaning": "Outer envelope minus common healthy lumen; no microscopic layers",
+        "semanticState": "EXPLICITLY_AUTHORED",
+        "medicalReviewRequired": true
+      },
+      {
+        "id": "LUMEN",
+        "family": "ANATOMY",
+        "objectId": "lumen",
+        "meaning": "Common healthy flow-space boundary",
+        "semanticState": "EXPLICITLY_AUTHORED",
+        "medicalReviewRequired": true
+      },
+      {
+        "id": "BLOOD_REGION",
+        "family": "BLOOD",
+        "objectId": "blood-region",
+        "meaning": "Blood-filled lumen presentation, not separate invented tissue",
+        "semanticState": "EXPLICITLY_AUTHORED",
+        "medicalReviewRequired": true
+      },
+      {
+        "id": "PLAQUE",
+        "family": "PATHOLOGY",
+        "objectId": "plaque",
+        "meaning": "Wall-associated lesion from source panelB; clipped to lumen",
+        "semanticState": "EXPLICITLY_AUTHORED",
+        "medicalReviewRequired": true
+      },
+      {
+        "id": "NARROWED_LUMEN_STATE",
+        "family": "PATHOLOGY",
+        "objectId": "narrowed-lumen-state",
+        "meaning": "Residual lumen derived by subtracting plaque; same lesion as plaque state",
+        "semanticState": "EXPLICITLY_AUTHORED",
+        "medicalReviewRequired": true
+      },
+      {
+        "id": "BACKGROUND",
+        "family": "PRESENTATION",
+        "objectId": "organheal-background",
+        "meaning": "Environment only",
+        "semanticState": "EXPLICITLY_AUTHORED",
+        "medicalReviewRequired": true
+      },
+      {
+        "id": "SHADING",
+        "family": "PRESENTATION",
+        "objectId": "whole-vessel-shadow",
+        "meaning": "Whole visible-envelope shadow only",
+        "semanticState": "EXPLICITLY_AUTHORED",
+        "medicalReviewRequired": true
+      },
+      {
+        "id": "HIGHLIGHT",
+        "family": "PRESENTATION",
+        "objectId": "soft-wall-edge",
+        "meaning": "Surface shading/texture; no histological meaning",
+        "semanticState": "EXPLICITLY_AUTHORED",
+        "medicalReviewRequired": true
+      },
+      {
+        "id": "CAMERA_SAFE_REGION",
+        "family": "PRESENTATION",
+        "objectId": "future-subtitle-safe-region",
+        "meaning": "Hidden presentation reservation; no text rendered",
+        "semanticState": "EXPLICITLY_AUTHORED",
+        "medicalReviewRequired": true
+      }
+    ]
+  },
+  "states": {
+    "HEALTHY": {
+      "id": "HEALTHY_ARTERY_STATE_V1",
+      "masterId": "ORGANHEAL_ARTERY_LAYERED_MASTER_V1",
+      "pathologyVisible": false,
+      "lumen": "healthy-lumen-clip"
+    },
+    "PLAQUE": {
+      "id": "ATHEROSCLEROTIC_PLAQUE_STATE_V1",
+      "masterId": "ORGANHEAL_ARTERY_LAYERED_MASTER_V1",
+      "pathologyVisible": true,
+      "plaqueLayer": "PLAQUE",
+      "lumen": "residual-lumen-mask"
+    },
+    "NARROWED": {
+      "id": "ATHEROSCLEROTIC_NARROWING_STATE_V1",
+      "masterId": "ORGANHEAL_ARTERY_LAYERED_MASTER_V1",
+      "pathologyVisible": true,
+      "plaqueLayer": "PLAQUE",
+      "lumen": "residual-lumen-mask",
+      "sameLesionAs": "PLAQUE",
+      "difference": "Residual-lumen edge emphasis only; no severity change"
+    }
+  },
+  "modes": [
+    "MEDICAL_BASE_MODE",
+    "ORGANHEAL_PRESENTATION_MODE"
+  ],
+  "outputDimensions": [
+    1080,
+    1920
+  ],
+  "reviewDimensions": [
+    540,
+    960
+  ],
+  "geometryEditingByMode": false,
+  "assumptions": {
+    "id": "ARTERY_LAYERED_MASTER_ASSUMPTIONS_V1",
+    "educationalScaleNonLiteral": true,
+    "entries": [
+      {
+        "category": "Visible",
+        "decision": "Source normal/plaque longitudinal artery and wall/lumen cross-section comparison",
+        "sourceOrReason": "Source labeled panels and outlines",
+        "limitations": "Reference geometry is educational, not measured patient anatomy",
+        "medicalReviewRequired": true
+      },
+      {
+        "category": "Simplified",
+        "decision": "A single2D longitudinal cutaway envelope; inset cross-section and source layout omitted",
+        "sourceOrReason": "Avoids duplication and preserves visible artery/plaque relationship",
+        "limitations": "No inferred back surface or3D wall thickness",
+        "medicalReviewRequired": true
+      },
+      {
+        "category": "Simplified",
+        "decision": "Curves are independently authored controls, not automatic raster trace",
+        "sourceOrReason": "Source contains mild curvature, taper and rounded distal profile",
+        "limitations": "Educational scale, not physical units or centerline registration",
+        "medicalReviewRequired": true
+      },
+      {
+        "category": "Simplified",
+        "decision": "Wall is one addressable region",
+        "sourceOrReason": "Source visibly distinguishes wall and lumen but not microscopic histology",
+        "limitations": "No intima/media/adventitia naming or hidden tissue",
+        "medicalReviewRequired": true
+      },
+      {
+        "category": "Simplified",
+        "decision": "Plaque spans upper luminal wall with a smooth visible intrusion",
+        "sourceOrReason": "Source wall-associated yellow/tan lesion",
+        "limitations": "No calcification, rupture, cap/core subtype or composition diagnosis",
+        "medicalReviewRequired": true
+      },
+      {
+        "category": "State",
+        "decision": "PLAQUE and NARROWED share identical lesion geometry",
+        "sourceOrReason": "Source shows healthy and one narrowed/plaque state, not a severity series",
+        "limitations": "NARROWED is residual-lumen emphasis; no progression or percentage",
+        "medicalReviewRequired": true
+      },
+      {
+        "category": "State",
+        "decision": "Turning off pathology restores the source-supported healthy counterpart",
+        "sourceOrReason": "Source explicitly includes normal panelA",
+        "limitations": "Healthy lumen is authored from normal reference, not guessed beneath disease",
+        "medicalReviewRequired": true
+      },
+      {
+        "category": "Presentation",
+        "decision": "Red/brown gradient, muted ochre lesion and low-opacity procedural grain",
+        "sourceOrReason": "Source wall/blood/plaque colors inform visual meaning only",
+        "limitations": "Not histology, oxygenation data, plaque-composition or source texture",
+        "medicalReviewRequired": true
+      },
+      {
+        "category": "Omitted",
+        "decision": "Flow arrows and labels, classroom layout, inset anatomy, early lesion, thrombus",
+        "sourceOrReason": "Only artery/plaque/narrowing supported for this milestone",
+        "limitations": "No RBC/LDL particles, no unsupported pathological geometry",
+        "medicalReviewRequired": true
+      },
+      {
+        "category": "Presentation",
+        "decision": "Portrait canvas, fixed framing, safe lower text region and soft shadow",
+        "sourceOrReason": "Owner presentation requirement",
+        "limitations": "Camera/parallax future only; flat layers do not provide true3D depth",
+        "medicalReviewRequired": true
+      }
+    ]
+  },
+  "structuralReview": {
+    "status": "SEMANTIC_STRUCTURE_PASS",
+    "scope": "Explicit semantic ownership, containment, wall contact and common-state identity checks; not clinical validation",
+    "medicalApproval": false
+  },
+  "qualityGate": {
+    "semanticStructure": "SEMANTIC_STRUCTURE_PASS",
+    "sourceFidelity": "SOURCE_FIDELITY_PASS",
+    "sourceFidelityScope": "Qualitative educational wall/plaque/lumen relationship only",
+    "visualBase": "VISUAL_BASE_FAIL",
+    "finalStatus": "MEDICAL_STRUCTURE_PASS_VISUAL_FAIL",
+    "answer": "NO",
+    "reason": "Single presentation pass still reads as a schematic tube/cut channel; not an accepted biological artery animation base"
+  },
+  "animationReadiness": {
+    "activationAuthorized": false,
+    "geometryTargets": {
+      "BLOOD_FLOW_OVERLAY": "LUMEN + residual-lumen-mask; overlay only, no flow physiology inferred",
+      "LDL_FLOW_OVERLAY": "Same lumen space; no particles or instant LDL-to-plaque mechanism authored",
+      "PLAQUE_FOCUS": "PLAQUE",
+      "PLAQUE_REVEAL": "PLAQUE; presentation/reveal, not lesion growth",
+      "HEALTHY_TO_PLAQUE_COMPARISON": "Same master; explicit state comparison, not morph/progression",
+      "LUMEN_EMPHASIS": "LUMEN / NARROWED_LUMEN_STATE",
+      "NARROWING_COMPARE": "Healthy vs source-supported narrowed state; no clinical percent",
+      "CAMERA_PARALLAX": "Whole2D artwork presentation only; no depth disclosure or newly revealed anatomy"
+    },
+    "prohibited": [
+      "plaque growth",
+      "severity morph",
+      "quantitative stenosis mapping",
+      "thrombus reveal",
+      "patient release",
+      "invented hidden surfaces"
+    ],
+    "status": "BLOCKED_VISUAL_GATE"
+  },
+  "servierDisposition": {
+    "role": "REFERENCE_ONLY",
+    "semanticStatus": "SEMANTIC_LAYER_BLOCKER",
+    "visualQuality": "VISUAL_BASE_REFERENCE_ONLY",
+    "usedInThisMaster": false
+  },
+  "recommendedCredit": "Source reference: NHLBI; NIH; U.S. Department of Health and Human Services. OrganHeal independently authored semantic reconstruction and presentation; simplified educational scale; no endorsement.",
+  "externalAssetCostUsd": 0,
+  "validation": {
+    "sourceHashVerified": true,
+    "masterHashVerified": true,
+    "explicitVectorPaths": 4,
+    "addressableShapesAndUses": 18,
+    "deterministicIds": 39,
+    "unresolvedMedicalPaths": 0,
+    "presentationGeometryEqual": true,
+    "healthyRecovery": true,
+    "plaqueContained": true,
+    "wallContact": true,
+    "residualLumenVerified": true,
+    "proofDimensionsVerified": 12,
+    "focusedTests": "PASS12/12",
+    "typescript": "PASS",
+    "diffCheck": "PASS",
+    "preExistingFilesPreserved": 57
+  },
+  "proofs": {
+    "masterId": "ORGANHEAL_ARTERY_LAYERED_MASTER_V1",
+    "masterSHA256": "1374b5dde6c2a8851e76d546ab6bf84f188fcb605c931cf59dddf5860295dd6f",
+    "sourceSHA256": "9a9865390c625960d6bfcee88baecddb18bd74a21c611e9de2659f6f32203e48",
+    "patientFacing": false,
+    "rendered": [
+      {
+        "state": "HEALTHY",
+        "mode": "MEDICAL_BASE_MODE",
+        "fullPath": "C:\\Users\\baraa\\AppData\\Local\\Temp\\organheal-artery-layered-master-v1\\healthy-medical-base.png",
+        "reviewPath": "C:\\Users\\baraa\\AppData\\Local\\Temp\\organheal-artery-layered-master-v1\\healthy-medical-base-review.png",
+        "dimensions": [
+          1080,
+          1920
+        ],
+        "reviewDimensions": [
+          540,
+          960
+        ],
+        "sha256": "a6b800d76262a6a3f85be66f2795af034a4cf1cb0ba483a34c257a1fad1d7fb2",
+        "reviewSHA256": "2115538f6e2959939e1b0ebf94ad08887df80f9dc961f779f4f05248839bc79d",
+        "bytes": 62639
+      },
+      {
+        "state": "HEALTHY",
+        "mode": "ORGANHEAL_PRESENTATION_MODE",
+        "fullPath": "C:\\Users\\baraa\\AppData\\Local\\Temp\\organheal-artery-layered-master-v1\\healthy-organheal-presentation.png",
+        "reviewPath": "C:\\Users\\baraa\\AppData\\Local\\Temp\\organheal-artery-layered-master-v1\\healthy-organheal-presentation-review.png",
+        "dimensions": [
+          1080,
+          1920
+        ],
+        "reviewDimensions": [
+          540,
+          960
+        ],
+        "sha256": "67012d4eb4f56c226c577f93de92aec93667cd922fe67e3c6a441027215d3f09",
+        "reviewSHA256": "48560d0e90ae915e349f4a2d28f7786f782aa0ed07ea49857001d648420b04fc",
+        "bytes": 207616
+      },
+      {
+        "state": "PLAQUE",
+        "mode": "MEDICAL_BASE_MODE",
+        "fullPath": "C:\\Users\\baraa\\AppData\\Local\\Temp\\organheal-artery-layered-master-v1\\plaque-medical-base.png",
+        "reviewPath": "C:\\Users\\baraa\\AppData\\Local\\Temp\\organheal-artery-layered-master-v1\\plaque-medical-base-review.png",
+        "dimensions": [
+          1080,
+          1920
+        ],
+        "reviewDimensions": [
+          540,
+          960
+        ],
+        "sha256": "31b0a013b7fd29c1158b88ccd66519d0c7e6c29b38b7b05b079c18e56923f7cf",
+        "reviewSHA256": "951f7ba7e7f8a7d5d146baae452542f9a7a8db56d4a5c285d9f2cad4fbe78524",
+        "bytes": 74243
+      },
+      {
+        "state": "PLAQUE",
+        "mode": "ORGANHEAL_PRESENTATION_MODE",
+        "fullPath": "C:\\Users\\baraa\\AppData\\Local\\Temp\\organheal-artery-layered-master-v1\\plaque-organheal-presentation.png",
+        "reviewPath": "C:\\Users\\baraa\\AppData\\Local\\Temp\\organheal-artery-layered-master-v1\\plaque-organheal-presentation-review.png",
+        "dimensions": [
+          1080,
+          1920
+        ],
+        "reviewDimensions": [
+          540,
+          960
+        ],
+        "sha256": "d35671cd5fd5380a68a76df9e02357b7f8e8ab689d0876bb637d6795ba7e74cc",
+        "reviewSHA256": "c6e58f90cdad791927cc4c2ac342eac5af0abd5b4ec7ea05db813a556471e93b",
+        "bytes": 219155
+      },
+      {
+        "state": "NARROWED",
+        "mode": "MEDICAL_BASE_MODE",
+        "fullPath": "C:\\Users\\baraa\\AppData\\Local\\Temp\\organheal-artery-layered-master-v1\\narrowed-medical-base.png",
+        "reviewPath": "C:\\Users\\baraa\\AppData\\Local\\Temp\\organheal-artery-layered-master-v1\\narrowed-medical-base-review.png",
+        "dimensions": [
+          1080,
+          1920
+        ],
+        "reviewDimensions": [
+          540,
+          960
+        ],
+        "sha256": "6f534cabe02d36fc09646e59080c357ec5e9f49545130ad55caa26d5be1bd25f",
+        "reviewSHA256": "db14ed523ed1fd253b6c758aa96ba26ecb3e8532606fc53528113f7481804f68",
+        "bytes": 75088
+      },
+      {
+        "state": "NARROWED",
+        "mode": "ORGANHEAL_PRESENTATION_MODE",
+        "fullPath": "C:\\Users\\baraa\\AppData\\Local\\Temp\\organheal-artery-layered-master-v1\\narrowed-organheal-presentation.png",
+        "reviewPath": "C:\\Users\\baraa\\AppData\\Local\\Temp\\organheal-artery-layered-master-v1\\narrowed-organheal-presentation-review.png",
+        "dimensions": [
+          1080,
+          1920
+        ],
+        "reviewDimensions": [
+          540,
+          960
+        ],
+        "sha256": "d7be1ec01d529f1bad6a7d1146ad9f445ef3a3b8fc66c0e7dba9b052dd74ef02",
+        "reviewSHA256": "28fd14293ab5f814fe9dff2f189ce3e08d7981306088af1904f29e73a5e4677b",
+        "bytes": 221345
+      }
+    ],
+    "geometryUnchangedBetweenModes": true,
+    "ARTERY_WALL_mask": {
+      "path": "C:\\Users\\baraa\\AppData\\Local\\Temp\\organheal-artery-layered-master-v1\\artery_wall-mask.png",
+      "sha256": "49c8759388ce8bc7b1862735af06d30cac8b8d8554ac816a706365203c50f9e5",
+      "dimensions": [
+        1080,
+        1920
+      ]
+    },
+    "LUMEN_mask": {
+      "path": "C:\\Users\\baraa\\AppData\\Local\\Temp\\organheal-artery-layered-master-v1\\lumen-mask.png",
+      "sha256": "deffc0030dae00d2e3340b855db99a0300ac72cba2ff753740b199b1f5d789cd",
+      "dimensions": [
+        1080,
+        1920
+      ]
+    },
+    "BLOOD_REGION_mask": {
+      "path": "C:\\Users\\baraa\\AppData\\Local\\Temp\\organheal-artery-layered-master-v1\\blood_region-mask.png",
+      "sha256": "deffc0030dae00d2e3340b855db99a0300ac72cba2ff753740b199b1f5d789cd",
+      "dimensions": [
+        1080,
+        1920
+      ]
+    },
+    "PLAQUE_mask": {
+      "path": "C:\\Users\\baraa\\AppData\\Local\\Temp\\organheal-artery-layered-master-v1\\plaque-mask.png",
+      "sha256": "9f814573a9c6c31b46d41a3542125c84731e84c6bf44af94da6fc64a28877f0f",
+      "dimensions": [
+        1080,
+        1920
+      ]
+    },
+    "contactSheet": "C:\\Users\\baraa\\AppData\\Local\\Temp\\organheal-artery-layered-master-v1\\source-reconstruction-presentation-contact.png",
+    "contactSheetSHA256": "1fe8834f0232be7204a81b751888795f3b8734159f65d68844ffc0032de2ad73",
+    "geometryQA": {
+      "vectorPaths": 4,
+      "addressableShapesAndUses": 18,
+      "allSemanticOwnersExplicit": true,
+      "healthyNoPathology": true,
+      "wallLumenDisjoint": true,
+      "plaqueContainedInHealthyLumen": true,
+      "plaqueWallContact": true,
+      "healthyLumenOpaquePixels": 180881,
+      "residualLumenOpaquePixels": 122093,
+      "residualOutsideHealthy": 0,
+      "areaValues": "Raster artwork checks, not clinical stenosis values",
+      "sameGeometryAcrossModes": true,
+      "proofDimensionsVerified": 12,
+      "sourceFidelity": {
+        "verdict": "SOURCE_FIDELITY_PASS",
+        "scope": "Qualitative educational concept only; medical-review pending",
+        "checks": [
+          "common visible artery envelope",
+          "wall surrounds lumen",
+          "blood occupies lumen",
+          "plaque associated with upper wall",
+          "residual lumen narrowed by plaque",
+          "healthy reference recoverable by disabling pathology"
+        ],
+        "omissions": [
+          "source inset cross-sections",
+          "labels/arrows/layout",
+          "microscopic detail",
+          "physical scale",
+          "severity mapping"
+        ]
+      },
+      "visualQuality": {
+        "verdict": "VISUAL_BASE_FAIL",
+        "observations": [
+          "Longitudinal silhouette and wall ring still read as a schematic tube/cut channel",
+          "Gradient adds depth but tissue remains too smooth and generic",
+          "Plaque is wall-associated geometrically but visually reads as a simple shaped insert",
+          "Portrait framing leaves substantial unused space",
+          "Does not meet professional biomedical tissue presentation target"
+        ],
+        "stylingPasses": 1,
+        "automaticSecondPass": false
+      },
+      "finalStatus": "MEDICAL_STRUCTURE_PASS_VISUAL_FAIL",
+      "animationBaseReady": false
+    },
+    "residualLumenMask": {
+      "path": "C:\\Users\\baraa\\AppData\\Local\\Temp\\organheal-artery-layered-master-v1\\residual-lumen-mask.png",
+      "sha256": "6cb183f975e4fc4493da2a0b237ef8fbabfdfb97a89a6e0f7ec8c7f9889a0aae",
+      "dimensions": [
+        1080,
+        1920
+      ]
+    },
+    "finalMasterPixelsMatchProofs": true,
+    "finalMasterInventory": {
+      "vectorPaths": 4,
+      "addressableShapesAndUses": 18,
+      "deterministicIds": 39
+    }
+  }
+}

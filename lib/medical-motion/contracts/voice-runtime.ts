@@ -6,7 +6,8 @@ export type PronunciationHint = Readonly<{ canonicalTerm: string; language: Narr
   spokenForm: string; source: string; version: "1" }>;
 export type VoiceRequest = Readonly<{ script: ApprovedNarrationScript; language: NarrationLanguage; locale: string;
   voiceProfileId: string; voiceStylePreset: "ORGANHEAL_VOICE_SIGNATURE_V1"; speechRatePreset: SpeechRatePreset;
-  pronunciationHints: readonly PronunciationHint[]; segments: ApprovedNarrationScript["segments"]; requestIdentity: string }>;
+  pronunciationHints: readonly PronunciationHint[];
+  segments: readonly (ApprovedNarrationScript["segments"][number] & {readonly spokenText?: string})[]; requestIdentity: string }>;
 /** Adapters return canonical 48kHz mono PCM segments. Timing is measured from
  * samples, not characters. Core contains neither credentials nor vendor SSML. */
 export type VoiceSegment = Readonly<{ segmentId: string; textHash: string; pcm: Buffer;

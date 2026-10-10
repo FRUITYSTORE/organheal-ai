@@ -1,4 +1,5 @@
 import "server-only";
+import { medicalSpokenTextMatches } from "./spoken-token-verification";
 import type { MedicalNarrationProvider, SpeechRatePreset, PronunciationHint, VoiceQualityReview, VoiceRequest } from "../contracts/voice-runtime";
 import { audioHash, audioIdentity, audioInvalid, deepAudioFreeze, exactAudio, isApprovedNarrationScript,
   approveMeasuredNarration, type ApprovedNarrationScript } from "./narration-foundation";
@@ -52,20 +53,27 @@ export function canonicalNarrationWav(pcm:Buffer){
 const issued=new WeakSet<object>();
 /** Orthographic normalization only. No translation, stemming, number conversion
  * or clinical synonym substitution may conceal a change in spoken meaning. */
-export function normalizedSpokenText(text:string){
-  if(typeof text!=="string"||!text||text.length>800||/[\u0000-\u001f\u007f\u202a-\u202e\u2066-\u2069]/.test(text))audioInvalid("VOICE_TRANSCRIPT_INVALID");
-  return text.normalize("NFC").replace(/[\u064b-\u065f\u0670\u0640]/g,"").replace(/[^\p{L}\p{N}]/gu,"");
+export { normalizedSpokenText } from "./spoken-token-verification";
+/** Exact editorial pronunciation mapping, not arbitrary text replacement.
+ * Display/script authority remains semantic; the provider request hashes this form. */
+export function narrationSpokenForm(text:string,language:"ar"|"en"){
+  return language==="ar"&&text==="يحمل الكوليسترول في الدم بواسطة جسيمات، ومنها إل دي إل."?
+    "يحمل الكُولِيسْتِرُول في الدم بواسطة جسيمات، ومنها إِلْ، دِي، إِلْ.":text;
 }
 /** A server-supplied adapter is the authority to generate/import voice. Neither
  * copied provider JSON nor a claimed quality score can issue a voice capability. */
 export async function renderMedicalNarration(script:ApprovedNarrationScript,profile:MedicalVoiceProfile,
   provider:MedicalNarrationProvider,rate:SpeechRatePreset,signal:AbortSignal){
   if(!isApprovedNarrationScript(script)||!profileAuthority.has(profile)||profile.language!==script.language||
-    !script.scriptId.startsWith("HEART_EDUCATION_")||!["EXTERNAL_TTS","OWNED_TTS","PRERECORDED_HUMAN","TEST_FIXTURE"].includes(provider.type)||
+    !(script.scriptId.startsWith("HEART_EDUCATION_")||script.scriptId.startsWith("execution:"))||!["EXTERNAL_TTS","OWNED_TTS","PRERECORDED_HUMAN","TEST_FIXTURE"].includes(provider.type)||
     typeof provider.render!=="function"||!["CLINICAL_SLOW","CLINICAL_STANDARD"].includes(rate)||!provider.supportedRates.includes(rate))audioInvalid("VOICE_AUTHORITY_INVALID");
   const hints=PRONUNCIATION_V1.filter(h=>h.language===script.language&&script.segments.some(s=>s.text.includes(h.canonicalTerm)));
   const requestBase={script,language:script.language,locale:profile.locale,voiceProfileId:profile.id,
-    voiceStylePreset:"ORGANHEAL_VOICE_SIGNATURE_V1" as const,speechRatePreset:rate,pronunciationHints:hints,segments:script.segments};
+    voiceStylePreset:"ORGANHEAL_VOICE_SIGNATURE_V1" as const,speechRatePreset:rate,pronunciationHints:hints,
+    segments:script.segments.map(s=>{
+      const spokenText=narrationSpokenForm(s.text,script.language);
+      return spokenText===s.text?s:{...s,spokenText};
+    })};
   const request:VoiceRequest=deepAudioFreeze({...requestBase,requestIdentity:audioIdentity(requestBase)});
   const bounded=AbortSignal.any([signal,AbortSignal.timeout(VOICE_RUNTIME_V1.maximumGenerationMs)]);
   if(bounded.aborted)audioInvalid("VOICE_CANCELLED");
@@ -92,7 +100,7 @@ export async function renderMedicalNarration(script:ApprovedNarrationScript,prof
     const verification=segment.spokenTextVerification;
     if(!exactAudio(verification,["transcript","method"])||typeof verification.transcript!=="string"||
       (provider.type==="TEST_FIXTURE"?verification.method!=="fixture":!["independent-transcription","human-reviewed-transcript"].includes(String(verification.method)))||
-      normalizedSpokenText(verification.transcript)!==normalizedSpokenText(definition.text))audioInvalid("VOICE_SPOKEN_CONTENT_MISMATCH");
+      !medicalSpokenTextMatches(request.segments[i].spokenText??definition.text,verification.transcript))audioInvalid("VOICE_SPOKEN_CONTENT_MISMATCH");
     const ms=Math.ceil(segment.pcm.length/96),pcm=Buffer.alloc(ms*96);segment.pcm.copy(pcm);
     if(words){let previous=0;if(!Array.isArray(words)||words.length>200)audioInvalid();
       words.forEach(w=>{if(!exactAudio(w,["word","startMs","endMs"])||typeof w.word!=="string"||!w.word||w.word.length>120||

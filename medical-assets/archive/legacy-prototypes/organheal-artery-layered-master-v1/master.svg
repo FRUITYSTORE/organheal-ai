@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920" data-master="ORGANHEAL_ARTERY_LAYERED_MASTER_V1" data-state="HEALTHY" data-mode="MEDICAL_BASE_MODE" data-patient-facing="false">
+  <title>OrganHeal source-guided artery cutaway â€” internal review</title>
+  <metadata>ORGANHEAL_RECONSTRUCTION_FROM_PUBLIC_DOMAIN_REFERENCE; NHLBI Atherosclerosis diagram.png; sourceSHA256=9a9865390c625960d6bfcee88baecddb18bd74a21c611e9de2659f6f32203e48; MEDICAL_REVIEW_PENDING; educational nonliteral scale. No histology, thrombus, early lesion or clinical percentage.</metadata>
+  <defs>
+    <linearGradient id="tissue" x1="0" y1="0" x2="0.2" y2="1" data-family="PRESENTATION"><stop offset="0" stop-color="#aa5f59"/><stop offset="0.28" stop-color="#91504b"/><stop offset="0.7" stop-color="#673b3b"/><stop offset="1" stop-color="#44292e"/></linearGradient>
+    <linearGradient id="wall-tissue" x1="0" y1="0" x2="0.6" y2="1" data-family="PRESENTATION"><stop offset="0" stop-color="#be8578"/><stop offset="0.22" stop-color="#9e6257"/><stop offset="0.58" stop-color="#80483f"/><stop offset="1" stop-color="#ba8170"/></linearGradient>
+    <linearGradient id="blood-depth" x1="0" y1="0" x2="0.2" y2="1" data-family="PRESENTATION"><stop offset="0" stop-color="#3e141b"/><stop offset="0.33" stop-color="#79242b"/><stop offset="0.68" stop-color="#8d3233"/><stop offset="1" stop-color="#48151f"/></linearGradient>
+    <linearGradient id="plaque-tissue" x1="0" y1="0" x2="0.2" y2="1" data-family="PRESENTATION"><stop offset="0" stop-color="#a48a5f"/><stop offset="0.45" stop-color="#c0a877"/><stop offset="0.72" stop-color="#af8e59"/><stop offset="1" stop-color="#7c5a3f"/></linearGradient>
+    <radialGradient id="environment" cx="0.5" cy="0.48" r="0.7" data-family="PRESENTATION"><stop offset="0" stop-color="#29343e"/><stop offset="0.5" stop-color="#18232e"/><stop offset="1" stop-color="#090f18"/></radialGradient>
+    <filter id="soft-shadow" x="-30%" y="-50%" width="160%" height="200%" data-family="PRESENTATION"><feGaussianBlur stdDeviation="22"/></filter>
+    <filter id="tissue-presentation" x="0" y="0" width="100%" height="100%" data-family="PRESENTATION"><feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="17" result="grain"/><feColorMatrix in="grain" type="saturate" values="0"/><feComponentTransfer><feFuncA type="linear" slope="0.075"/></feComponentTransfer><feBlend in="SourceGraphic" mode="soft-light"/></filter>
+    <clipPath id="outer-clip" data-family="ANATOMY"><use id="outer-clip-reference" href="#artery-outer"/></clipPath>
+    <clipPath id="healthy-lumen-clip" data-family="ANATOMY"><use id="healthy-lumen-clip-reference" href="#lumen"/></clipPath>
+    <clipPath id="plaque-clip" data-family="PATHOLOGY"><use id="plaque-clip-reference" href="#plaque"/></clipPath>
+    <mask id="residual-lumen-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="1080" height="1920" data-family="PATHOLOGY"><use id="residual-healthy-region" href="#lumen" fill="white" stroke="none"/><use id="residual-plaque-subtraction" href="#plaque" fill="black" stroke="none"/></mask>
+  </defs>
+  <style>
+    .presentation { display:none; }
+    .pathology { display:none; }
+    #ARTERY_OUTER {fill:#a96b63;} #ARTERY_WALL {fill:#bd8275;fill-rule:evenodd;}
+    #LUMEN {fill:#651f28;} #BLOOD_REGION {fill:#8c3439;}
+    #PLAQUE {fill:#baa06a;stroke:#947349;stroke-width:2;stroke-linejoin:round;}
+    #NARROWED_LUMEN_STATE {fill:none;stroke:#debbb0;stroke-width:2;opacity:0.65;}
+    svg[data-state="PLAQUE"] .pathology,svg[data-state="NARROWED"] .pathology {display:inline;}
+    svg[data-state="NARROWED"] #NARROWED_LUMEN_STATE {stroke-width:3;opacity:0.85;}
+    svg[data-mode="ORGANHEAL_PRESENTATION_MODE"] .presentation {display:inline;}
+    svg[data-mode="ORGANHEAL_PRESENTATION_MODE"] #ARTERY_OUTER {fill:url(#tissue);}
+    svg[data-mode="ORGANHEAL_PRESENTATION_MODE"] #ARTERY_WALL {fill:url(#wall-tissue);}
+    svg[data-mode="ORGANHEAL_PRESENTATION_MODE"] #LUMEN {fill:#46151e;}
+    svg[data-mode="ORGANHEAL_PRESENTATION_MODE"] #BLOOD_REGION {fill:url(#blood-depth);}
+    svg[data-mode="ORGANHEAL_PRESENTATION_MODE"] #PLAQUE {fill:url(#plaque-tissue);stroke:#896b4b;}
+  </style>
+  <g id="BACKGROUND" data-family="PRESENTATION"><rect id="medical-background" width="1080" height="1920" fill="#f3ede5"/><rect id="organheal-background" class="presentation" width="1080" height="1920" fill="url(#environment)"/></g>
+  <g id="SHADING" data-family="PRESENTATION" class="presentation"><use id="whole-vessel-shadow" href="#artery-outer" transform="translate(0 38)" fill="#020509" opacity="0.48" filter="url(#soft-shadow)"/></g>
+  <g id="ARTERY_OUTER" data-family="ANATOMY"><path id="artery-outer" d="M125 835 C290 780 480 735 680 750 C805 756 914 786 957 865 C1029 985 905 1085 804 1112 C610 1165 420 1166 191 1205 L110 1138 Z"/></g>
+  <g id="ARTERY_WALL" data-family="ANATOMY"><path id="artery-wall" fill-rule="evenodd" d="M125 835 C290 780 480 735 680 750 C805 756 914 786 957 865 C1029 985 905 1085 804 1112 C610 1165 420 1166 191 1205 L110 1138 Z M180 885 C340 832 490 808 659 819 C755 823 847 858 871 910 C901 975 854 1033 779 1058 C588 1099 440 1116 219 1151 L169 1095 Z"/></g>
+  <g id="LUMEN" data-family="ANATOMY"><path id="lumen" d="M180 885 C340 832 490 808 659 819 C755 823 847 858 871 910 C901 975 854 1033 779 1058 C588 1099 440 1116 219 1151 L169 1095 Z"/></g>
+  <g id="BLOOD_REGION" data-family="BLOOD" clip-path="url(#healthy-lumen-clip)"><use id="blood-region" href="#lumen"/></g>
+  <g id="PLAQUE" data-family="PATHOLOGY" class="pathology" clip-path="url(#healthy-lumen-clip)"><path id="plaque" d="M326 848 C450 815 554 815 659 819 C755 823 847 858 871 910 L870 957 C829 990 773 1008 726 969 C628 921 550 927 474 925 C404 928 358 894 326 848 Z"/></g>
+  <g id="NARROWED_LUMEN_STATE" data-family="PATHOLOGY" class="pathology" mask="url(#residual-lumen-mask)"><use id="narrowed-lumen-state" href="#lumen"/></g>
+  <g id="HIGHLIGHT" data-family="PRESENTATION" class="presentation" clip-path="url(#outer-clip)">
+    <use id="wall-grain" href="#artery-wall" fill="#fff" opacity="0.08" filter="url(#tissue-presentation)"/>
+    <use id="soft-wall-edge" href="#artery-wall" fill="none" stroke="#e5afa0" stroke-width="2" opacity="0.28"/>
+    <use id="soft-blood-edge" href="#lumen" fill="none" stroke="#bc6560" stroke-width="2" opacity="0.22"/>
+  </g>
+  <g id="CAMERA_SAFE_REGION" data-family="PRESENTATION" visibility="hidden"><rect id="future-subtitle-safe-region" x="100" y="1450" width="880" height="300" fill="none"/></g>
+</svg>

@@ -3,6 +3,8 @@ export type VoiceSynthesisLanguage =
   | "ar";
 
 export type VoiceSynthesisInput = {
+  /** Explicit server-selected Medical Motion voice; legacy callers retain defaults. */
+  voice?: "marin" | "cedar";
   text:
     string;
 
@@ -104,6 +106,7 @@ function getVoiceInstructions(
 }
 
 export async function synthesizeVoice({
+  voice: selectedVoice,
   text,
   language,
   signal,
@@ -136,7 +139,8 @@ export async function synthesizeVoice({
     getSynthesisModel();
 
   const voice =
-    getSynthesisVoice();
+    selectedVoice ?? getSynthesisVoice();
+  if (selectedVoice !== undefined && !["marin", "cedar"].includes(selectedVoice)) throw new Error("Voice selection is unavailable.");
 
   const response =
     await fetch(
@@ -178,6 +182,9 @@ export async function synthesizeVoice({
   if (
     !response.ok
   ) {
+    if (selectedVoice !== undefined && [429, 503].includes(response.status)) {
+      throw new Error("VOICE_PROVIDER_UNAVAILABLE");
+    }
     throw new Error(
       `Voice synthesis provider returned status ${response.status}.`
     );

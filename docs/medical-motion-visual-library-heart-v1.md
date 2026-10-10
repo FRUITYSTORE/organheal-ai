@@ -1,0 +1,21 @@
+# Master Visual Library — Heart integration V1
+
+Status: internal-review LDL video proof produced from existing verified marin audio; owner visual review pending. No patient-facing activation.
+
+The server explicitly supplies an external immutable library root to `loadVisualLibrary()`. No workstation path is embedded in runtime code. The adapter pins the three reviewed metadata hashes, validates all 18 packs and 473 asset hashes, and exposes 64 Heart references. Missing files, changed hashes, unsupported authority, traversal and symlinks fail closed. Recheck selected bytes at composition time. JSON copies cannot manufacture registry, scene, context, chapter, voice or ownership authority.
+
+`visual-library/visual-library-resolver.ts` contains editorial concept routes. Disease filenames confer no diagnosis authority. All selected scenes remain GENERAL_EDUCATIONAL, REFERENCE_ONLY, PENDING medical review and patientFacing=false. Validated personalization remains upstream and cannot create patient pathology. CONFIRMED_PATHOLOGY_REQUIRED execution remains blocked. No PNG is added to the anatomy OrganModule registry or used as native heartbeat.
+
+The existing context adapter and explanation planner issue the chapter. Supplying the opaque registry opts LDL and Heart Age into LIBRARY_REFERENCE_COMPOSE. The original cinematic path remains unchanged for retained explicitly selected cinematic media. The reference backend uses existing narration generation, measured segment timing, subtitle shaping, FFmpeg subprocess limits, artifact ownership and handoff fencing. Narration ownership and composition ownership remain separate. Five narration sections schedule seven LDL reference scenes; pauses are intentional narration/reading holds. No anatomical labels, music, Blender or heartbeat mutation are introduced.
+
+LDL sequence: external orientation → coronary context → LDL transport → healthy artery → general educational plaque reference → risk factors → healthy lifestyle/next action. A persistent educational notice rejects patient-finding interpretation. Entire images are fitted above the existing subtitle region; source art and any source labels are preserved. These are reference images, not clinically reviewed structure-addressable assets.
+
+Source limitations discovered during integration: external orientation has a .png filename but GIF bytes; it is decoded as a still only. Several Heart references are 384×256 and contain burned-in English/source filename text. Upscaling does not restore detail or confer visual approval. Evidence records actual container, original dimensions and presentation scaling. Rights/medical review must not be inferred from the library consolidation.
+
+Deployment must mount/materialize the pinned external library, preserve content identities and separately retain original rights records. Worker packages include adapter code, not 473 media files. Do not use a Desktop path as a deployment default. Future materialization needs explicit immutable storage and rights policy; it is not implemented here.
+
+Composition identity includes selected library/asset identities, approved voice identity, font identity, chapter identity and backend version. No cache hit is claimed without verified bytes. Initial evidence distinguishes pinned source reads from a new owned composition miss. Narration bytes have their existing independent voice identity.
+
+Spoken verification uses strict ordered tokens after neutral orthographic normalization. The owner-approved lexical map contains only LDL / Arabic spoken letter names and the three specified Arabic cholesterol spellings. Negation, risk language, word count/order, numbers and percentages remain significant. No fuzzy matching or clinical synonym inference is permitted. Semantic/subtitle identity remains separate from the bounded TTS spoken form; the spoken form participates in provider request identity. Local proof reuse makes no new speech/transcription requests and invokes no Blender.
+
+Legacy deletion remains deferred. All eight audited prototype files and every rights/quality/source report are retained until real acceptance and validation gates are complete. No schema, website, public endpoint, patient delivery or queue architecture change is made.

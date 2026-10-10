@@ -3,7 +3,8 @@ import { writeFile } from "node:fs/promises";
 import path from "node:path";
 import { existingSpeechNarrationProvider } from "../lib/voice/medical-narration-provider";
 import { resolveEducationalNarration,audioHash } from "../lib/medical-motion/composition/narration-foundation";
-import { renderMedicalNarration,resolveMedicalVoiceProfile } from "../lib/medical-motion/composition/voice-runtime";
+import { renderMedicalNarration,resolveMedicalVoiceProfile,narrationSpokenForm,normalizedSpokenText } from "../lib/medical-motion/composition/voice-runtime";
+import { audioIdentity } from "../lib/medical-motion/composition/narration-foundation";
 import type { VoiceRequest } from "../lib/medical-motion/contracts/voice-runtime";
 const mocks=vi.hoisted(()=>({speech:vi.fn(),process:vi.fn(),transcribe:vi.fn()}));
 vi.mock("../lib/voice/voice-synthesis.service",()=>({synthesizeVoice:mocks.speech}));
@@ -19,6 +20,17 @@ beforeEach(()=>{
   });
 });
 const runtime={ffmpeg:"test",ffprobe:"test",timeoutMs:1000};
+it("keeps exact LDL semantic text separate from bounded spoken form and cache identity",()=>{
+  const semantic="يحمل الكوليسترول في الدم بواسطة جسيمات، ومنها إل دي إل.";
+  const spoken=narrationSpokenForm(semantic,"ar");
+  expect(spoken).not.toBe(semantic);
+  expect(normalizedSpokenText(spoken)).toBe(normalizedSpokenText(semantic));
+  expect(audioIdentity({text:semantic,spokenText:spoken})).not.toBe(audioIdentity({text:semantic}));
+  expect(narrationSpokenForm("لا يثبت وجود انسداد.","ar")).toBe("لا يثبت وجود انسداد.");
+  expect(narrationSpokenForm(semantic,"en")).toBe(semantic);
+  expect(normalizedSpokenText("LDL")).not.toBe(normalizedSpokenText("إل دي إل"));
+  expect(normalizedSpokenText("الكولستيرول")).not.toBe(normalizedSpokenText("الكوليسترول"));
+});
 it("reuses the existing speech service and decodes independent segments without tempo filters",async()=>{
   const voice=await renderMedicalNarration(resolveEducationalNarration({scriptId:"HEART_EDUCATION_AR_V1",version:"1"}),
     resolveMedicalVoiceProfile("AR_CLINICAL_CALM_V1"),existingSpeechNarrationProvider(runtime),"CLINICAL_STANDARD",new AbortController().signal);
